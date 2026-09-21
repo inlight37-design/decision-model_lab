@@ -1,49 +1,48 @@
 # decision-model_lab
 
-Jev / System-One 계열의 판단 모델과 기존 AI 에이전트를 결합하여, **품질을 유지하면서 프론티어 모델 사용량과 프로젝트 수행 비용을 줄이는 방법**을 조사하는 저장소입니다.
+Jev류 판단 모델과 기존 코딩 에이전트를 조합하여, **품질을 유지하면서 프론티어 사용량과 수용 결과당 비용을 줄이는 방법**을 연구합니다.
 
-> **현재 상태 — 2026-09-21:** 공개 자료 조사와 아키텍처 제안 v0.1을 정리했습니다. 실행 가능한 협업 런타임, 실제 모델 비교, 비용 절감률 검증까지 완료한 상태는 아닙니다. JSON 계약 예시와 오프라인 검사 25개는 실행하여 통과를 확인했습니다.
+> **현재: 사례 기반 설계 v0.2 / 2026-09-21.** 기존 구현·공개 성과를 조사해 설계를 구체화했습니다. v0.2 합성 계약 검사 28개를 실행·재실행하여 통과했고, 검사 파일과 원격 커밋의 hash도 일치합니다. 실제 모델·하네스 연결이나 사용자 프로젝트의 절감률을 검증한 상태는 아닙니다.
 
-## 먼저 읽을 문서
+## 지금 읽을 문서
 
-**[아키텍처 전체 안내](docs/architecture/README.md)** → **[핵심 구조](docs/architecture/02-reference-architecture.md)** 순서로 읽으면 됩니다.
+**[v0.2 전체 안내](docs/architecture/v0.2/README.md)**에서 시작합니다.
 
-| 문서 | 내용 |
+| 문서 | 핵심 내용 |
 |---|---|
-| [01. 조사 결과와 근거 지도](docs/architecture/01-evidence-and-landscape.md) | Jev·로컬 대안·Antigravity·공개 구현·커뮤니티 조사, 출처별 한계 |
-| [02. 제안 아키텍처](docs/architecture/02-reference-architecture.md) | 코드 기반 제어부, 선택적 판단 모델, 워커, 독립 검증, 재개·통합·보안 |
-| [03. 계약과 문맥 관리](docs/architecture/03-protocol-and-context.md) | JSON 통신과 실제 토큰 절약의 구분, 데이터 계약, 산출물 참조, 메모리·캐시 |
-| [04. 평가와 비용](docs/architecture/04-evaluation-and-economics.md) | 동일 품질 기준선, 실패·검증 포함 총비용, 확률 보정, 단계별 실험 |
-| [05. 도구 재사용과 도입 순서](docs/architecture/05-tooling-and-roadmap.md) | LiteLLM·LangGraph·OpenHands·Gas Town·Beads 등의 비교, ADR, P0–P5 |
-| [검증 기록](docs/architecture/VALIDATION.md) | 실제 실행한 검사, 커밋 파일과의 해시 일치, 아직 검증하지 않은 범위 |
-| [작업 기록 / 인수인계](docs/architecture/WORKLOG.md) | 중간 커밋, 보존한 자료, 미확보 원문, 다음 구현의 시작점 |
+| [01. 실제 성과와 설계 사례](docs/architecture/v0.2/01-case-studies.md) | Cursor Router·Switchyard·SWE-Pruner·Symphony·mini-swe-agent·Attractor·JevGrep 등의 근거와 적용 한계 |
+| [02. 구체 설계](docs/architecture/v0.2/02-concrete-blueprint.md) | v0.1에서 바꾼 점, 실용/실험 두 경로, bounded_patch 절차, 실제 코드 경계 |
+| [03. 평가·구현 백로그](docs/architecture/v0.2/03-experiments-and-backlog.md) | 고가/저가 단독 기준선, 문맥·router 대조군, milestone 검증, 구현 ticket 8개 |
+| [검증 기록](docs/architecture/v0.2/VALIDATION.md) / [작업 기록](docs/architecture/v0.2/WORKLOG.md) | 실제 검사 범위·파일 동일성·중간 커밋·미실시 항목 |
 
-## 핵심 설계 제안
+## 현재 설계의 중심
 
-코드가 상태·권한·예산·의존성을 관리하고, Jev류 모델은 좁은 판단을 제안합니다. 저비용 또는 프론티어 워커는 제한된 작업을 수행하며, 독립 검증과 통합 검사를 통과한 결과만 수용합니다.
+기존 실행기를 활용하고, 우리가 직접 정의하는 부분은 작업·문맥·권한·검증·비용의 경계로 제한합니다. 실용 경로는 native coding 하네스와 Symphony의 운영 구조를 참고하고, 경제성 실험은 mini-swe-agent 같은 고정된 작은 하네스에서 수행하는 방향입니다.
 
-Jev를 전체 프로젝트의 만능 지휘자로 고정하지 않습니다. JSON을 쓴다는 이유만으로 비용이 절감된다고 보지 않습니다. 작은 단일 워커 구성부터 측정하고, 라우팅과 병렬화를 각각 검증한 뒤 추가합니다. 이러한 결정은 **제안**이며 특정 모델의 최종 채택을 의미하지 않습니다.
+Jev는 필수 지휘자가 아닙니다. 실제 배정에 영향을 주지 않는 shadow 판단이나 원문 코드 후보 선별부터 비교합니다. 기존 router보다 나은지뿐 아니라 **저가 모델만 사용해도 충분한지**를 확인합니다. 자동 main merge와 무제한 AI 관리자 회의는 초기 범위에서 제외합니다.
 
-## 계약 예시의 오프라인 검사
+이것은 도구 전체를 설치한다는 결정이 아닙니다. **한 task, 한 worker, 독립 검증, 사람에게 인계**하는 bounded_patch부터 실제 성과를 측정할 계획입니다.
+
+## 오프라인 검사
 
 ```bash
 python -m pip install -r requirements-design.txt
-python tools/validate_design.py
+python tools/validate_v02.py
+python -m unittest discover -s tests -p 'test_v02.py' -v
 ```
 
-[계약 설명](contracts/README.md), [JSON Schema](contracts/v0.1.schema.json), [합성 예제](examples/contracts-v0.1.json)를 함께 확인하세요. 검사는 API 호출이나 로컬 모델 실행 없이 동작하며, 실제 운영 보안·장애 복구·모델 성능 검증을 대신하지 않습니다.
+[계약 설명](contracts/v0.2/README.md)을 먼저 확인하세요. 합성 fixture에는 실제 API 키·모델 설정·실행 명령이 없고 backend는 `unconfigured`입니다. 모델 실행, 보안 인증, 취소·복구, 비용 제한 강제 기능을 구현한 것이 아닙니다.
 
-## 기존 Research notes
+## 보존한 v0.1 자료
 
-- [2026-09-21 — Jev 및 공개 decision-model 구현 조사](docs/research-notes-2026-09-21.md)
+[아키텍처 버전 지도](docs/architecture/README.md)에 기존 다섯 문서와 이전 검증 기록을 연결했습니다. v0.2는 초기 구현 순서를 구체화한 후속 제안이며, 기존 상세 설계와 source-only 노트를 삭제하지 않았습니다.
 
-위 원래 조사 노트는 변경하지 않고 보존했습니다. 후속 조사에서 확인된 변경 사항은 새 조사 지도에 기록했습니다. 특히 Kev의 과거 0.5B 설명과 현재 0.8B/4B/9B 계열을 같은 스냅샷으로 혼용하지 않습니다.
+- [원래 Jev / 공개 decision-model 조사](docs/research-notes-2026-09-21.md)
+- [v0.1 기본 아키텍처](docs/architecture/02-reference-architecture.md)
+- [v0.1 계약 검사](contracts/README.md)
+
+후속 실행에서는 현재 v0.2의 구체 결정부터 읽고, 이전 문서는 근거·상세 원칙을 확인할 때 사용합니다. 문서 전체를 매번 agent 프롬프트에 넣지 않습니다.
 
 ## 기록 원칙
 
-- 공식 문서·저장소·논문을 우선하고, 프로젝트 자체 성능 수치는 **self-reported**로 표시합니다.
-- 다른 하드웨어·데이터·캐시·재시도 조건의 수치를 직접적인 순위로 바꾸지 않습니다.
-- 확인된 사실, 커뮤니티 경험, 설계 제안, 미검증 가정을 구분합니다.
-- 접근에 실패한 원문은 읽었다고 주장하지 않습니다. 사용자 제시 haejoe 원문과 일부 X 본문은 미확보 상태입니다.
-- 특정 모델·라이브러리·플랜은 실행 전에 버전·권한·요금을 재확인합니다.
-- API 키, 원본 실행 trace, 민감 데이터는 공개 코드 저장소에 자동 저장하지 않습니다.
+공식 사양·논문·실제 코드, 제작자 자체 보고, 커뮤니티 경험, 우리 설계 제안을 구분합니다. 다른 과제·장비·캐시·분모의 성능 수치를 합치지 않습니다. 원문 접근 실패, 실측하지 않은 비용·품질, 모르는 사용량은 그대로 표시합니다. API 키와 민감 raw trace를 코드 Git에 자동 저장하지 않습니다.
