@@ -1,0 +1,23 @@
+[
+  {
+    "schema_version":"0.1","kind":"task","project_id":"demo-project","task_id":"T-017","state_version":1,
+    "base_commit":"1111111111111111111111111111111111111111",
+    "goal":"기존 공개 인터페이스를 유지하면서 입력 검증을 추가한다.",
+    "depends_on":["T-010"],"write_paths":["src/parser.py","tests/test_parser.py"],
+    "acceptance_ids":["ACC-017-v1"],"context_ids":["CTX-017-v1"],"risk":"low",
+    "budget":{"input_token_limit":16000,"output_token_limit":3000,"max_attempts":2}
+  },
+  {
+    "schema_version":"0.1","kind":"decision","task_id":"T-017","state_version":1,
+    "model_ref":"mock/decision-v0","status":"ok","advice":"cheap_worker",
+    "probabilities":{"cheap_worker":0.82,"frontier":0.13,"needs_context":0.05},
+    "provider_confidence":0.71,"context_id":"CTX-017-v1"
+  },
+  {
+    "schema_version":"0.1","kind":"worker_result","task_id":"T-017","attempt_id":"A-017-01",
+    "status":"candidate_ready","artifact_ids":["PATCH-017-01"],
+    "summary":"허용된 두 파일의 변경 후보를 제출했다.",
+    "limitations":["독립 수용 검증은 아직 수행되지 않았다."],
+    "usage":{"input_tokens":1200,"cached_input_tokens":0,"output_tokens":350,"usd":null}
+  }
+]

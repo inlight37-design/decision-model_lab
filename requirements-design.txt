@@ -1,0 +1,2 @@
+# Offline design validation only; no model/runtime dependency.
+jsonschema==4.26.0
