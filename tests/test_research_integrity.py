@@ -190,6 +190,23 @@ class ResearchIntegrityTests(unittest.TestCase):
         self.assertTrue(paths, "검사 대상 파일을 하나도 찾지 못했다")
         self.assertEqual(problems(paths), [])
 
+    def test_encoding_check_rejects_control_characters(self):
+        """스크립트로 문서를 고치다 '\\b'가 백스페이스가 되어 경로 글자가 사라진 일이 있었다."""
+        import tempfile
+        from tools.check_encoding import problems
+
+        with tempfile.TemporaryDirectory() as tmp:
+            broken = Path(tmp, "broken.md")
+            broken.write_bytes("첫 줄\n경로 ~\\.local".encode("utf-8") + bytes([0x08]) + b"in\n")
+            found = problems([broken])
+            self.assertEqual(len(found), 1)
+            self.assertIn(":2:", found[0])
+            self.assertIn("0x08", found[0])
+            self.assertNotIn(chr(0x08), found[0])
+            fine = Path(tmp, "fine.md")
+            fine.write_bytes("탭\t과 CRLF\r\n정상\n".encode("utf-8"))
+            self.assertEqual(problems([fine]), [])
+
     def test_markdown_relative_link_targets_exist(self):
         # Inline Markdown file links only; external URLs and heading anchors are not checked.
         paths = list(ROOT.glob("*.md"))
