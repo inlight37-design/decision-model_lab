@@ -27,9 +27,15 @@ TRACKED = (
     "tools/validate_sources.py",
     "tools/validate_design_tokens.py",
     "tools/check_encoding.py",
+    "tools/review_boundary.py",
+    "tools/audit_design_contrast.py",
+    "tools/runtime_inventory.py",
     "tests/test_frontier_protocol.py",
     "tests/test_research_integrity.py",
     "tests/test_v02.py",
+    "tests/test_review_boundary.py",
+    "tests/test_design_contrast.py",
+    "tests/test_runtime_inventory.py",
 )
 
 
