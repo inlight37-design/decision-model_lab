@@ -1,0 +1,8 @@
+# probe: P3-claude
+# command: claude -p "Reply with exactly: OK" --permission-mode notamode
+# cwd: empty folder outside the repository
+# environment: fresh (AI-tool variables removed)
+# exit: 1
+# duration_ms: 159
+
+error: option '--permission-mode <mode>' argument 'notamode' is invalid. Allowed choices are acceptEdits, auto, bypassPermissions, manual, dontAsk, plan.

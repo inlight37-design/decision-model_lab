@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-23** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout) · 브랜치 `claude/v04-01-aux-pc-20260923`
+최종 갱신 **2026-09-23** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout) · 브랜치 `claude/v04-01-tier2-aux-pc-20260923`
 
 이 파일 하나에서 시작한다. 절 구성은 고정이고 CI가 확인한다. 규칙은 [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있다.
 
@@ -38,6 +38,7 @@
 - 로그인: Claude Code는 claude.ai 구독(`firstParty`), Codex는 ChatGPT 로그인 — 둘 다 데스크톱 앱의 기존 자격증명으로 이미 로그인돼 있었다. **agy는 미확인**(상태 명령 없음).
 - 과금 경로를 바꾸는 환경변수는 사용자·시스템 설정에 없다. Claude 데스크톱 앱의 셸에는 앱이 넣은 변수 26개(`CLAUDECODE`, `ANTHROPIC_BASE_URL` 등)가 있어서, AI 세션이 기록할 때는 `--fresh-env`를 쓴다.
 - tier 1: 문서의 플래그는 모두 help에 있다. **ACP는 세 CLI 모두 help에 없다.**
+- tier 2(Claude Code·Codex): 구독 인증으로 비대화형 호출 성공, 잘못된 제한 인자는 실행 전 거절, `--bare`는 구독 불가(F25 재현). Claude `-p`는 빈 폴더에서도 사용자 전역 플러그인·MCP 연결을 싣는다. Codex는 사용자 설정을 무시해도 구독으로 돈다.
 - 운용 PC는 아직 관측한 세션이 없다.
 
 ### 열린 결정
@@ -67,21 +68,17 @@
 
 ## 3. 진행 중인 작업
 
-| 브랜치 | 작성 | 내용 | 상태 |
-|---|---|---|---|
-세 브랜치는 한 줄로 쌓여 있다: `review/mcp-ui-runtime-20260923`(PR #3) → `claude/align-and-v04-01-prep-20260923` → `claude/v04-01-aux-pc-20260923`. **맨 위 브랜치 하나를 main에 병합하면 셋이 모두 들어간다.**
+PR #3과 오늘의 두 claude 브랜치는 2026-09-23 사용자 요청으로 main에 병합했다(merge `3203590`).
 
 | 브랜치 | 작성 | 내용 | 상태 |
 |---|---|---|---|
-| `review/mcp-ui-runtime-20260923` — [PR #3](https://github.com/inlight37-design/decision-model_lab/pull/3) | 다른 AI 세션(웹 컨테이너, 사용자 PC 접근 없음) | MCP·기존 앱·Ledger UI 검토, 경계 실험, 대비 감사 | 열림. 아래 브랜치에 포함됨 |
-| `claude/align-and-v04-01-prep-20260923` | claude | PR #3 정리, 문서 어긋남 수정, 협업 규칙, V04-01 도구와 절차서 | CI 녹색. 아래 브랜치에 포함됨 |
-| `claude/v04-01-aux-pc-20260923` | claude | aux-pc 설치·tier 1 기록, `--fresh-env`, 제어 문자 검사, GitHub 공유 규칙 | **main 병합 대기.** 이 앱의 권한 검사가 AI 세션의 main push를 막았다 — 사용자가 GitHub에서 병합하거나 권한을 준다 |
+| `claude/v04-01-tier2-aux-pc-20260923` | claude | aux-pc tier 2 관측(Claude Code·Codex), 결과 기록 | CI 녹색 확인 후 main 병합 — 사용자가 AI 세션의 직접 병합을 허락했다 |
 
 ## 4. 다음 작업
 
-1. **(사용자)** `claude/v04-01-aux-pc-20260923`을 main에 병합한다. 그래야 GitHub만 보는 세션이 최신 상태를 본다.
-2. **(사용자)** aux-pc에서 `agy`에 로그인한다 — 일반 PowerShell 창에서 `agy`를 실행해 브라우저 로그인. Claude Code와 Codex는 이미 구독 로그인 상태다.
-3. **(사용자 승인 후 AI 세션)** [절차서](docs/experiments/v04-01-inventory/README.md) 4–6절: tier 2 관측(소량 한도)과 정책 확인 → [aux-pc RESULTS](docs/experiments/v04-01-inventory/hosts/aux-pc/RESULTS.md) → tier 2 manifest → 판정(V04-03 진행 가능 여부, Q1).
+1. **(사용자)** aux-pc에서 `agy`에 로그인한다 — 새 PowerShell 창에서 `agy`를 실행해 브라우저 로그인. Claude Code와 Codex는 이미 구독 로그인 상태다.
+2. **(AI 세션, 승인됨)** Antigravity의 tier 2(P1·P3·P5)를 실행해 [aux-pc RESULTS](docs/experiments/v04-01-inventory/hosts/aux-pc/RESULTS.md)를 채우고, 관측한 기능만 `observed`로 적은 tier 2 manifest를 만든다. [절차서](docs/experiments/v04-01-inventory/README.md) 5절 정책 확인도 한다.
+3. **Claude Code의 깨끗한 blind 문맥 찾기** — `--bare`는 구독을 못 쓰고, 기본 `-p`는 사용자 플러그인·MCP 연결을 모두 싣는다(RESULTS의 설계 입력 1). 별도 `CLAUDE_CONFIG_DIR` 로그인과 `--strict-mcp-config`를 시험한다. V04-03 전에 풀어야 한다.
 4. 그 다음 V04-03(두 native 경로의 읽기 전용 독립 답변) → 승인된 테스트만 실행하는 trusted runner → 필요한 만큼 MCP로 노출 → UI 연결.
 
 급하지 않은 것:
