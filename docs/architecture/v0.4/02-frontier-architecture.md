@@ -195,7 +195,7 @@ Git에는 연구 문서·설계 결정·재현 가능한 테스트와 **정제�
 | D14 | 어려운 계획·의미 검토·합성에도 상급 profile 허용, Jev는 선택 부품 | F02/F03/F08/F09/F11. 실제 작업군/가용 모델로 선택; vendor 고정 순위 없음 |
 | D15 | 단일 writer, read-only 논의자, 실행 sandbox·data-egress 경계 | F05/F16/F17/F19/F24/F26/F27. 실제 OS/adapter 시험 전 안전성 완료 주장 금지. 필수 제한을 적용할 수 없으면 실행 후 경고가 아니라 프로세스 생성 전에 차단 |
 | D16 | 하나의 controller와 durable artifact/journal, 명시 session 재개 | F14/F26, 기존 D03/D06. 분산 infra는 운영 요구가 생길 때만. 실행 부품이 스스로 실행 방식을 바꾸면 controller의 단일 소유가 깨짐 |
-| D17 | 동일 예산 단일 모델/ensemble 대조군과 오류 전이·합성 손실 평가 | F07–F12/F15/F16/F20/F21/F22/F23/F24/F28. native end-to-end와 모델 인과 효과를 분리. 화면 제시 방식도 조건이며 선호도가 아니라 오류 발견·소요 시간으로 잰다(F28) |
-| D18 | 구독·가용 모델·정족수 preflight, silent fallback 금지 | F04/F05/F06/F17/F18/F19/F25/F26. 실제 entitlement/transport conformance 필요. silent fallback은 정책 전환만이 아니라 플래그 하나(F25)나 실행 모드 강등(F26)으로도 일어남 |
+| D17 | 동일 예산 단일 모델/ensemble 대조군과 오류 전이·합성 손실 평가 | F07–F12/F15/F16/F20/F21/F22/F23/F24/F28/F29. native end-to-end와 모델 인과 효과를 분리. 화면 제시 방식도 조건이며 선호도가 아니라 오류 발견·소요 시간으로 잰다(F28). 사용량 수치는 기기 한 대의 국소 추정치이므로 실측 분모로 쓰기 전에 범위를 밝힌다(F29) |
+| D18 | 구독·가용 모델·정족수 preflight, silent fallback 금지 | F04/F05/F06/F17/F18/F19/F25/F26/F29. 실제 entitlement/transport conformance 필요. silent fallback은 정책 전환만이 아니라 플래그 하나(F25)나 실행 모드 강등(F26)으로도 일어남. 남은 한도를 정확히 알 수 없으므로(F29) preflight는 잔여량 추정이 아니라 경로 확인에 기댄다 |
 
 D10–D18은 사용자가 확정한 제품 사양이 아니라, 이번 근거를 바탕으로 제안하는 설계 결정이다. 이후 실측이 반박하면 원래 근거와 변경 이유를 남기고 수정한다.
