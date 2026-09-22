@@ -60,7 +60,8 @@ python tools/runtime_inventory.py --host-label main-pc
 python tools/runtime_inventory.py --validate docs/experiments/v04-01-inventory/hosts/main-pc/manifest.json
 ```
 
-- 첫 줄은 실행할 명령만 보여 준다. 실제로 도는 것은 각 CLI의 `--version`과 `--help`뿐이다.
+- 첫 줄은 실행할 명령과 **실제로 실행될 파일 경로**만 보여 주고 아무것도 실행하지 않는다. 실제로 도는 것은 각 CLI의 `--version`과 `--help`뿐이다.
+- **경로가 CLI가 아니면 멈춘다.** Windows는 대소문자를 가리지 않아서, 데스크톱 앱 폴더가 PATH에 있으면 `claude`가 GUI 앱 `Claude.exe`로 풀릴 수 있다.
 - 결과는 `hosts/main-pc/manifest.json`과 `hosts/main-pc/help/*.txt`다. 홈 경로와 비밀처럼 보이는 문자열은 가려서 쓴다.
 - **환경변수 경고가 나오면 멈춘다.** `ANTHROPIC_API_KEY`가 있으면 `claude -p`는 묻지 않고 그 키를 쓴다(API 과금). 값은 기록하지 않는다. 해당 변수를 어떻게 할지는 사용자가 정한다.
 - 커밋 전에 `help/` 파일을 한 번 훑어 개인 정보가 없는지 본다. 버전이 바뀌면 `--force`로 다시 기록한다.

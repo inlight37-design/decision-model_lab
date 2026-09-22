@@ -403,9 +403,16 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--timeout must be positive")
 
     if args.dry_run:
-        print("실행할 명령 (설치된 것만 실행된다):")
-        for command in planned_commands():
-            print("  " + " ".join(command))
+        # Windows는 파일 이름의 대소문자를 가리지 않는다. 데스크톱 앱 폴더가 PATH에 있으면
+        # 'claude'가 GUI 실행 파일로 풀릴 수 있으므로 실행 전에 실제 경로를 보여 준다.
+        redact = make_redactor(str(Path.home()))
+        print("실행할 명령 (PATH에 있는 것만 실행된다):")
+        for adapter in ADAPTERS:
+            resolved = shutil.which(adapter.command)
+            print(f"  [{adapter.command}] " + (redact(resolved) if resolved else "PATH에 없음 — 실행하지 않음"))
+            for args in (adapter.version_args, *adapter.help_args):
+                print("    " + " ".join([adapter.command, *args]))
+        print("경로가 해당 CLI가 아니면(예: 데스크톱 앱 실행 파일) 실행하지 말고 PATH를 확인한다.")
         print("환경변수는 이름의 존재만, 설정 파일은 경로의 존재만 확인한다. 값과 내용은 읽지 않는다.")
         return 0
 
