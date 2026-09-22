@@ -1,0 +1,14 @@
+# 줄바꿈은 저장소 안에서 LF 로 통일한다. Windows 편집기가 CRLF 로 바꿔도
+# 커밋에는 LF 가 들어가므로, Linux CI 와 로컬의 파일 해시가 갈리지 않는다.
+* text=auto eol=lf
+
+# 본문이 한글을 담는 파일. diff 를 텍스트로 처리한다.
+*.md   text eol=lf
+*.json text eol=lf
+*.py   text eol=lf
+*.yml  text eol=lf
+*.toml text eol=lf
+
+# 라이선스 원문은 받은 그대로 둔다.
+LICENSE      -text
+LICENSE-DOCS -text

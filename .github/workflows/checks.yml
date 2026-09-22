@@ -24,6 +24,10 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      # pre-commit hook 이 --no-verify 로 우회됐을 때의 뒷단.
+      - name: text encoding
+        run: python tools/check_encoding.py
+
       # 표준 라이브러리만으로 동작해야 하는 경로를 의존성 설치 전에 먼저 확인한다.
       - name: stdlib-only frontier checker
         run: |

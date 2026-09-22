@@ -1,0 +1,31 @@
+#!/bin/sh
+# 스테이징된 텍스트 파일의 인코딩을 검사한다. 손상된 내용이 history 에 들어가기 전에 막는다.
+#
+# 설치:  git config core.hooksPath .githooks
+# 우회:  git commit --no-verify   (그러면 CI 가 같은 검사로 잡는다)
+#
+# 사후 탐지(테스트, CI)는 이미 있다. 이 hook 은 그 앞단이다 — 한 번 커밋되면
+# 되돌리는 데 git 이력이 필요하고, 이력이 없으면 원문이 사라진다.
+
+set -e
+
+staged=$(git diff --cached --name-only --diff-filter=ACM)
+[ -z "$staged" ] && exit 0
+
+# 후보를 찾기만 하지 않고 실제로 실행해 본다. Windows 의 `python3` 는 Microsoft Store
+# 실행 별칭 스텁인 경우가 있어 command -v 로는 찾히지만 실행하면 실패한다.
+python_bin=""
+for candidate in python python3 py; do
+  if "$candidate" -c "import sys" >/dev/null 2>&1; then
+    python_bin="$candidate"
+    break
+  fi
+done
+
+if [ -z "$python_bin" ]; then
+  echo "pre-commit: python 을 찾지 못해 인코딩 검사를 건너뜁니다." >&2
+  exit 0
+fi
+
+# shellcheck disable=SC2086
+"$python_bin" tools/check_encoding.py $staged

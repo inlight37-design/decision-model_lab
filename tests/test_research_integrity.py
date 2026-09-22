@@ -124,27 +124,13 @@ class ResearchIntegrityTests(unittest.TestCase):
                 self.assertEqual(errors_for(registry, definition, schema), [])
 
     def test_text_files_are_utf8_without_a_bom(self):
-        """Windows PowerShell 5.1 의 Get-Content/Set-Content 왕복은 BOM 을 붙이고
-        BOM 없는 UTF-8 을 ANSI 로 잘못 읽어 한글을 '?' 로 날린다. 한국어 저장소에서
-        반복되는 사고이므로 검사한다. 테스트가 잡는 것은 BOM 과 디코딩 실패뿐이고,
-        CP949 로 잘못 읽혀 생긴 '그럴듯한 다른 한글'은 이것으로 잡히지 않는다."""
-        paths = list(ROOT.glob("*.md")) + list(ROOT.glob("*.toml"))
-        for folder in ("docs", "contracts", "tools", "tests", ".github"):
-            directory = ROOT / folder
-            if directory.is_dir():
-                for pattern in ("*.md", "*.json", "*.py", "*.yml"):
-                    paths.extend(directory.rglob(pattern))
-        self.assertTrue(paths)
-        for path in paths:
-            if "__pycache__" in path.parts:
-                continue
-            raw = path.read_bytes()
-            with self.subTest(path=path.relative_to(ROOT)):
-                self.assertFalse(raw.startswith(b"\xef\xbb\xbf"), "UTF-8 BOM")
-                try:
-                    raw.decode("utf-8")
-                except UnicodeDecodeError as error:
-                    self.fail(f"not valid UTF-8: {error}")
+        """pre-commit hook 과 같은 검사를 한 번 더 돈다. hook 은 --no-verify 로 우회할 수
+        있으므로 CI 에서도 확인한다. 구현은 tools/check_encoding.py 하나뿐이다."""
+        from tools.check_encoding import problems, tracked_files
+
+        paths = tracked_files()
+        self.assertTrue(paths, "검사 대상 파일을 하나도 찾지 못했다")
+        self.assertEqual(problems(paths), [])
 
     def test_markdown_relative_link_targets_exist(self):
         # Inline Markdown file links only; external URLs and heading anchors are not checked.
