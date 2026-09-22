@@ -20,7 +20,7 @@ REGISTRIES = (
     ("v0.3", "E", range(1, 32), range(1, 10), "04-decisions-and-evaluation.md",
      ("title", "kind", "locator", "claim", "limitations", "verification"),
      ("published",)),
-    ("v0.4", "F", range(1, 28), range(10, 19), "02-frontier-architecture.md",
+    ("v0.4", "F", range(1, 29), range(10, 19), "02-frontier-architecture.md",
      ("title", "kind", "locator", "claim", "limits", "inspection"),
      ("published", "revised", "revision")),
 )
@@ -122,6 +122,29 @@ class ResearchIntegrityTests(unittest.TestCase):
             with self.subTest(registry=relative):
                 registry = strict_load(ROOT / relative)
                 self.assertEqual(errors_for(registry, definition, schema), [])
+
+    def test_text_files_are_utf8_without_a_bom(self):
+        """Windows PowerShell 5.1 의 Get-Content/Set-Content 왕복은 BOM 을 붙이고
+        BOM 없는 UTF-8 을 ANSI 로 잘못 읽어 한글을 '?' 로 날린다. 한국어 저장소에서
+        반복되는 사고이므로 검사한다. 테스트가 잡는 것은 BOM 과 디코딩 실패뿐이고,
+        CP949 로 잘못 읽혀 생긴 '그럴듯한 다른 한글'은 이것으로 잡히지 않는다."""
+        paths = list(ROOT.glob("*.md")) + list(ROOT.glob("*.toml"))
+        for folder in ("docs", "contracts", "tools", "tests", ".github"):
+            directory = ROOT / folder
+            if directory.is_dir():
+                for pattern in ("*.md", "*.json", "*.py", "*.yml"):
+                    paths.extend(directory.rglob(pattern))
+        self.assertTrue(paths)
+        for path in paths:
+            if "__pycache__" in path.parts:
+                continue
+            raw = path.read_bytes()
+            with self.subTest(path=path.relative_to(ROOT)):
+                self.assertFalse(raw.startswith(b"\xef\xbb\xbf"), "UTF-8 BOM")
+                try:
+                    raw.decode("utf-8")
+                except UnicodeDecodeError as error:
+                    self.fail(f"not valid UTF-8: {error}")
 
     def test_markdown_relative_link_targets_exist(self):
         # Inline Markdown file links only; external URLs and heading anchors are not checked.
