@@ -1,0 +1,68 @@
+<!-- @dsCard group="Run" height=470 subtitle="제출 여부만. 내용은 전달조차 하지 않는다" -->
+<style>
+  body { margin: 0; padding: 24px; background: var(--surface-000); font-family: var(--font-sans); color: var(--ink-000); }
+  .panel { background: var(--surface-100); border: 1px solid var(--rule-200); border-radius: var(--radius-md); overflow: hidden; max-width: 540px; }
+  .head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
+          padding: 11px var(--space-4); border-bottom: 1px solid var(--rule-200); background: var(--surface-200); }
+  .head .t { font-size: 13.5px; font-weight: 600; }
+  .lock { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: .09em;
+          text-transform: uppercase; color: var(--sealed); border-bottom: 2px solid currentColor; padding-bottom: 2px; }
+
+  .p { display: flex; align-items: center; gap: var(--space-3); padding: 12px var(--space-4); border-bottom: 1px solid var(--rule-100); }
+  .who { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+  .who .n { font-size: 13.5px; }
+  .who .v { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-200); }
+  .st { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: .09em;
+        text-transform: uppercase; white-space: nowrap; padding-bottom: 2px; border-bottom: 2px solid currentColor; }
+  .sealed { color: var(--sealed); }
+  .failed { color: var(--danger); }
+  .flag { font-family: var(--font-mono); font-size: 11px; color: var(--qualified);
+          border: 1px solid currentColor; border-radius: var(--radius-sm); padding: 1px 6px; white-space: nowrap; }
+
+  .foot { padding: 13px var(--space-4); border-top: 2px solid var(--unresolved); }
+  .foot .warn { font-size: 13px; color: var(--unresolved); font-weight: 600; }
+  .foot .sub { font-size: 12.5px; color: var(--ink-100); margin-top: 4px; line-height: 19px; }
+
+  .note { font-size: 12px; line-height: 19px; color: var(--ink-100); margin: 20px 0 0; max-width: 60ch; }
+  .note + .note { margin-top: 7px; }
+  .note b { color: var(--ink-000); font-weight: 600; }
+</style>
+
+<div class="panel">
+  <div class="head">
+    <span class="t">P1 · 독립 초안</span>
+    <span class="lock">sealed 2 / 3</span>
+  </div>
+
+  <div class="p">
+    <div class="who"><span class="n">참여자 A</span><span class="v">openai</span></div>
+    <span class="st sealed">제출됨</span>
+  </div>
+
+  <div class="p">
+    <div class="who"><span class="n">참여자 B</span><span class="v">anthropic</span></div>
+    <span class="flag">문맥 오염 가능</span>
+    <span class="st sealed">제출됨</span>
+  </div>
+
+  <div class="p">
+    <div class="who"><span class="n">참여자 C</span><span class="v">google</span></div>
+    <span class="st failed">권한 거절</span>
+  </div>
+
+  <div class="foot">
+    <div class="warn">요청한 3인 구성이 완료되지 않았습니다.</div>
+    <div class="sub">남은 2인의 답변으로 진행하려면 축소 승인이 필요합니다. 자동으로 진행하지 않습니다.</div>
+  </div>
+</div>
+
+<p class="note">
+  제출됐다는 사실 외에 아무것도 새어 나가지 않는다 — 길이도, 미리보기도, 토큰 수도. <b>답변의 길이조차 단서다.</b>
+</p>
+<p class="note">
+  내용을 흐리게 처리하지 않는다. 블러 처리한 글자는 복사할 수 있고 스크린샷에 남는다. <b>아예 전달하지 않는 것</b>이 유일하게 확실한 차단이다.
+</p>
+<p class="note">
+  참여자 B 의 표시는 공유 memory 나 검색 캐시처럼 완전히 통제하지 못한 영향이 있었다는 뜻이다.
+  C 의 실패는 "2인 완료" 로 치환되지 않는다.
+</p>

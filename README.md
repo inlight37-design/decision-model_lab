@@ -9,6 +9,17 @@ Jev류 판단 모델은 교체 가능한 선택 부품이며, 전체 시스템�
 
 > **현재: v0.4 상급 모델 협업 확장 (2026-09-22).** 실제 제품·공개 구현·논문과 반례를 F01–F24로 정리하고, 네 실행 모드·P0–P5 프로토콜·D10–D18 결정·비교 실험을 추가했습니다. 최종 검토에서 기존 계약·합성 기록·문서 참조 검사 71개를 통과했고, 이후 외부 검토에서 검사를 **74개**로 늘렸습니다([검토와 수정](docs/architecture/v0.4/REVIEW_FIXES.md)). **실제 세 모델 연결·사용자 환경의 권한/과금·품질 향상률을 검증한 상태는 아닙니다.** v0.3 기반과 v0.2 계약은 유지합니다. [최종 검토와 수정 내역](docs/architecture/v0.4/FINAL_REVIEW.md). 이후 남은 출처 27개와 최근 논문 4개를 확인한 [후속 근거 검토](docs/architecture/v0.4/EVIDENCE_FOLLOWUP.md)에서 PAL 설명을 수정하고 평가 기준을 보강했습니다.
 
+## 이어서 작업한다면
+
+**[NEXT-SESSION.md](NEXT-SESSION.md)부터 읽습니다.** 환경, 확정된 방침, 열린 결정, 다음 작업이 한 장에 있습니다. 다른 기기에서 clone 한 경우에도 그 문서 하나로 이어갈 수 있습니다.
+
+| 갈래 | 위치 |
+|---|---|
+| 작업 개념도 (한 장) | [docs/concept/](docs/concept/README.md) |
+| 셸 디자인 시스템 | [design/](design/README.md) |
+| 외부 검토 원문 | [docs/reviews/](docs/reviews/README.md) |
+| 첫 cross_check 실험 기록 | [docs/experiments/2026-09-22-cross-check/](docs/experiments/2026-09-22-cross-check/README.md) |
+
 ## 지금 읽을 문서
 
 **[v0.4 개요](docs/architecture/v0.4/README.md)**에서 시작합니다. 다른 세션에서 이어갈 때는 **[v0.4 HANDOFF](docs/architecture/v0.4/HANDOFF.md)**를 먼저 읽습니다.

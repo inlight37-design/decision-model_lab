@@ -1,0 +1,41 @@
+<!-- @dsCard group="Epistemic state" height=340 subtitle="네 가지 처리와 관측 실패" -->
+<style>
+  body { margin: 0; padding: 24px; background: var(--surface-000); font-family: var(--font-sans); color: var(--ink-000); }
+  .cap { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: .09em;
+         text-transform: uppercase; color: var(--ink-200); margin: 0 0 10px; }
+  .row { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-end; margin-bottom: 22px; }
+
+  /* 채움이 아니라 괘선. 알약 배지는 어느 제품에나 있고 상태의 무게를 평평하게 만든다. */
+  .m { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: .09em;
+       text-transform: uppercase; padding: 0 1px 4px; border-bottom: 2px solid currentColor; white-space: nowrap; }
+  .supported  { color: var(--supported); }
+  .qualified  { color: var(--qualified); }
+  .rejected   { color: var(--rejected); }
+  .unresolved { color: var(--unresolved); border-bottom-width: 3px; }
+  .unknown    { color: var(--unknown); border-bottom: 1px dashed currentColor; }
+
+  .note { font-size: 12px; line-height: 19px; color: var(--ink-100); margin: 0; max-width: 58ch; }
+  .note + .note { margin-top: 7px; }
+  .note b { color: var(--ink-000); font-weight: 600; }
+  hr { border: 0; border-top: 1px solid var(--rule-100); margin: 22px 0; }
+</style>
+
+<p class="cap">disposition</p>
+<div class="row">
+  <span class="m supported">supported</span>
+  <span class="m qualified">qualified</span>
+  <span class="m rejected">rejected</span>
+  <span class="m unresolved">unresolved</span>
+</div>
+
+<p class="cap">관측 실패</p>
+<div class="row">
+  <span class="m unknown">unknown</span>
+</div>
+
+<hr>
+
+<p class="note"><b>unresolved</b> 만 괘선이 두껍다. 이 시스템이 존재하는 이유가 그것을 지우지 않는 것이기 때문이다.</p>
+<p class="note"><b>rejected</b> 는 회색이다 — 반박은 실패가 아니라 검증이 제 일을 한 결과다.</p>
+<p class="note"><b>unknown</b> 은 파선이고 바탕을 채우지 않는다. 채우면 나머지와 같은 확정 상태로 읽힌다.</p>
+<p class="note">알약 모양 배지를 쓰지 않는 이유: 네 상태가 모두 같은 크기의 색 덩어리가 되면 <b>무게 차이가 사라진다.</b> 괘선은 글자를 읽게 두고 색은 잉크로만 쓴다.</p>

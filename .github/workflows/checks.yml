@@ -28,6 +28,10 @@ jobs:
       - name: text encoding
         run: python tools/check_encoding.py
 
+      # 잘못된 값 하나가 토큰을 통째로 드롭시키는데 화면에서는 티가 나지 않는다.
+      - name: design tokens
+        run: python tools/validate_design_tokens.py
+
       # 표준 라이브러리만으로 동작해야 하는 경로를 의존성 설치 전에 먼저 확인한다.
       - name: stdlib-only frontier checker
         run: |

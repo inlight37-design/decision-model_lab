@@ -1,0 +1,65 @@
+<!-- @dsCard group="Epistemic state" height=400 subtitle="kind와 status를 함께 싣는다" -->
+<style>
+  body { margin: 0; padding: 24px; background: var(--surface-000); font-family: var(--font-sans); color: var(--ink-000); }
+  .cap { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: .09em;
+         text-transform: uppercase; color: var(--ink-200); margin: 0 0 10px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 20px; }
+
+  .c { display: inline-flex; align-items: baseline; gap: 5px;
+       font-family: var(--font-mono); font-size: 11.5px; line-height: 18px;
+       padding: 2px 8px; border: 1px solid var(--rule-200); border-radius: var(--radius-sm);
+       background: var(--surface-100); color: var(--ink-100); white-space: nowrap; }
+  .c b { font-weight: 600; color: var(--ink-000); }
+  .c .s { color: var(--ink-200); }
+
+  .pass  { border-color: var(--supported); }
+  .pass .s { color: var(--supported); font-weight: 600; }
+  .fail  { border-color: var(--unresolved); border-width: 2px; }
+  .fail .s { color: var(--unresolved); font-weight: 600; }
+  .incon { border-color: var(--qualified); }
+  .incon .s { color: var(--qualified); font-weight: 600; }
+  .skip  { border-style: dashed; border-color: var(--unknown); background: none; }
+  .skip .s { color: var(--unknown); }
+  .weak  { border-color: var(--rule-100); background: var(--surface-200); color: var(--ink-200); }
+  .weak b { color: var(--ink-200); font-weight: 600; }
+
+  .note { font-size: 12px; line-height: 19px; color: var(--ink-100); margin: 0; max-width: 60ch; }
+  .note + .note { margin-top: 7px; }
+  .note b { color: var(--ink-000); font-weight: 600; }
+  .note code { font-family: var(--font-mono); font-size: 11.5px; }
+  hr { border: 0; border-top: 1px solid var(--rule-100); margin: 20px 0; }
+</style>
+
+<p class="cap">승격에 쓸 수 있는 근거</p>
+<div class="row">
+  <span class="c pass"><b>test</b><span class="s">passed</span></span>
+  <span class="c pass"><b>source</b><span class="s">passed</span></span>
+  <span class="c pass"><b>calculation</b><span class="s">passed</span></span>
+</div>
+
+<p class="cap">해결되지 않은 것</p>
+<div class="row">
+  <span class="c fail"><b>test</b><span class="s">failed</span></span>
+  <span class="c incon"><b>source</b><span class="s">inconclusive</span></span>
+  <span class="c skip"><b>test</b><span class="s">skipped</span></span>
+  <span class="c skip"><b>source</b><span class="s">denied</span></span>
+</div>
+
+<p class="cap">승격 불가 — passed 여도 긍정색이 아니다</p>
+<div class="row">
+  <span class="c weak"><b>vote</b><span class="s">passed</span></span>
+  <span class="c weak"><b>self_report</b><span class="s">passed</span></span>
+</div>
+
+<hr>
+
+<p class="note">
+  모델 두 개가 동의한 <code>vote:passed</code> 와 테스트가 통과한 <code>test:passed</code> 는 같은 글자지만 다른 근거다.
+  checker 가 <code>supported</code> 승격에서 <code>vote</code> 와 <code>self_report</code> 를 세지 않으므로 화면도 같은 구분을 유지한다.
+</p>
+<p class="note">
+  <b>kind 를 접거나 아이콘으로 바꾸지 않는다.</b> <code>passed</code> 만 남기면 화면이 거짓말을 한다.
+</p>
+<p class="note">
+  <code>skipped</code> 는 빈칸이 아니라 파선으로 그려 "검사하지 않음"을 남긴다. <code>failed</code> 는 테두리가 두껍고 접힌 상태에서도 보인다.
+</p>

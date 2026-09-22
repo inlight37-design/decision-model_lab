@@ -1,0 +1,19 @@
+{
+  "v": 3,
+  "layout": "files",
+  "createdOnFiles": { "v": 1, "at": "2026-09-22T13:45:00Z" },
+  "title": "Ledger",
+  "namespace": "Ledger",
+  "libraries": [],
+  "sections": {},
+  "groups": [],
+  "assetGroups": {},
+  "blobs": {},
+  "docs": { "readme": "project/README.md", "sections": [] },
+  "lastChange": {
+    "by": "Claude",
+    "via": "Claude Code",
+    "at": "2026-09-23T02:10:00Z",
+    "note": "Rules instead of fills: annotation-ink palette, 2-3px radius, line-heights that clear descenders, taller previews"
+  }
+}

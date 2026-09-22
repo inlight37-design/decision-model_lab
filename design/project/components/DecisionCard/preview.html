@@ -1,0 +1,118 @@
+<!-- @dsCard group="Screens" height=700 width=620 subtitle="1층: 결정과 그것을 뒤집을 조건" -->
+<style>
+  body { margin: 0; padding: 24px; background: var(--surface-000); font-family: var(--font-sans); color: var(--ink-000); }
+  .card { background: var(--surface-100); border: 1px solid var(--rule-200); border-radius: var(--radius-md); max-width: 560px; overflow: hidden; }
+
+  .hd { padding: var(--space-4) var(--space-4) var(--space-3); }
+  .kicker { display: flex; align-items: center; gap: 14px; margin-bottom: 9px; }
+  .lbl { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--ink-200); }
+  .state { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase;
+           color: var(--qualified); border-bottom: 2px solid currentColor; padding-bottom: 2px; }
+  h1 { font-size: 19px; line-height: 30px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+
+  .rec { padding: 0 var(--space-4) var(--space-4); }
+  .rec p { font-size: 13.5px; line-height: 21px; margin: 0; }
+
+  .overturn { margin: 0 var(--space-4) var(--space-4); padding: var(--space-3) 0 var(--space-3) var(--space-3);
+              border-left: 3px solid var(--unresolved); }
+  .overturn .lbl { color: var(--unresolved); }
+  .overturn ul { margin: 9px 0 0; padding-left: 18px; }
+  .overturn li { font-size: 13px; line-height: 20px; margin-bottom: 6px; }
+  .overturn li:last-child { margin-bottom: 0; }
+
+  .cov { padding: 0 var(--space-4) var(--space-4); }
+  .covbar { display: flex; height: 6px; gap: 2px; margin: 9px 0; }
+  .s1 { background: var(--supported); }
+  .s2 { background: var(--qualified); }
+  .s3 { background: var(--rejected); }
+  .s4 { background: var(--unresolved); }
+  .covkey { display: flex; flex-wrap: wrap; gap: 14px; }
+  .k { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-100); font-variant-numeric: tabular-nums; }
+  .k i { width: 9px; height: 9px; display: inline-block; flex: none; }
+
+  .sec { border-top: 1px solid var(--rule-100); padding: var(--space-3) var(--space-4); }
+  .sec h2 { font-size: 13px; font-weight: 600; margin: 0 0 9px; }
+  .item { display: flex; gap: 10px; align-items: flex-start; padding: 5px 0; }
+  .id { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-200); flex: none; padding-top: 2px; min-width: 24px; }
+  .txt { font-size: 12.5px; line-height: 20px; color: var(--ink-100); }
+  .txt b { color: var(--ink-000); font-weight: 600; }
+
+  .more { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
+          border-top: 1px solid var(--rule-200); padding: 12px var(--space-4); background: var(--surface-200); }
+  .more .t { font-size: 12.5px; color: var(--ink-100); }
+  .more button { font-family: var(--font-sans); font-size: 12.5px; font-weight: 500; color: var(--accent);
+                 background: none; border: 1px solid var(--rule-200); border-radius: var(--radius-sm);
+                 padding: 5px 11px; cursor: pointer; }
+  .more button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .note { font-size: 12px; line-height: 19px; color: var(--ink-100); margin: 20px 0 0; max-width: 60ch; }
+  .note + .note { margin-top: 7px; }
+  .note b { color: var(--ink-000); font-weight: 600; }
+  .note code { font-family: var(--font-mono); font-size: 11.5px; }
+</style>
+
+<div class="card">
+  <div class="hd">
+    <div class="kicker">
+      <span class="lbl">검토할 결정</span>
+      <span class="state">qualified</span>
+    </div>
+    <h1>구독 한도 소모를 화면에 실시간으로 보여줄 수 있는가</h1>
+  </div>
+
+  <div class="rec">
+    <p>부분적으로만. <b>이 기기에서 관측한 값</b>과 <b>계정 전체의 실제 잔여</b>를 다른 줄로 표시하고, 후자는 확정값으로 쓰지 않는다.</p>
+  </div>
+
+  <div class="overturn">
+    <span class="lbl">이 결정을 뒤집을 조건</span>
+    <ul>
+      <li>세 공급자 모두에서 <b>계정 단위 잔여 한도</b>를 개인 구독으로 조회할 공식 경로가 확인되면 한 줄로 합칠 수 있다</li>
+      <li>반대로 수치가 기기별로 갈리는 것이 확인되면 <b>합계 표시 자체를 포기</b>하고 기기별로만 보여준다</li>
+    </ul>
+  </div>
+
+  <div class="cov">
+    <span class="lbl">주장 구성</span>
+    <div class="covbar">
+      <div class="s1" style="flex:4"></div>
+      <div class="s2" style="flex:2"></div>
+      <div class="s3" style="flex:1"></div>
+      <div class="s4" style="flex:3"></div>
+    </div>
+    <div class="covkey">
+      <span class="k"><i class="s1"></i>supported 4</span>
+      <span class="k"><i class="s2"></i>qualified 2</span>
+      <span class="k"><i class="s3"></i>rejected 1</span>
+      <span class="k"><i class="s4"></i>unresolved 3</span>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h2>미해결로 남은 것</h2>
+    <div class="item"><span class="id">c3</span><span class="txt">Codex 와 Antigravity 의 잔여 한도 조회 경로 <b>미확인</b></span></div>
+    <div class="item"><span class="id">c7</span><span class="txt">사용량 수치가 <b>다른 기기의 사용을 포함하지 않는다</b>는 공식 문구 — 합계를 신뢰할 수 없음</span></div>
+    <div class="item"><span class="id">c9</span><span class="txt">5시간 창과 주간 창이 동시에 걸리는데 화면에 <b>어느 쪽을 보여줄지</b> 미정</span></div>
+  </div>
+
+  <div class="sec">
+    <h2>다음으로 가치 있는 검사</h2>
+    <div class="item"><span class="id">→</span><span class="txt">OpenTelemetry 내보내기로 토큰·비용을 실제로 받아 보고, 같은 시각 공급자 화면의 수치와 대조한다</span></div>
+  </div>
+
+  <div class="more">
+    <span class="t">주장별 대조 · 참여자 원문 · 검사 기록</span>
+    <button type="button">상세 보기</button>
+  </div>
+</div>
+
+<p class="note">
+  <code>unresolved</code> 가 남아 있으므로 카드 상태는 <code>qualified</code> 다 — <code>REVIEW_READY</code> 가 될 수 없다.
+</p>
+<p class="note">
+  <b>"뒤집을 조건" 은 비울 수 없는 슬롯이다.</b> 채우지 못하면 그 결정은 아직 카드가 되지 않는다.
+  결론만 위에 두는 것이 아니라 <b>결정을 바꿀 수 있는 것</b>을 위에 둔다.
+</p>
+<p class="note">
+  전체 대조표는 한 단계 뒤에 있다. 근거를 다 펼치는 것과 사람이 더 나은 판단을 하는 것은 다른 일이기 때문이다 (F28).
+</p>

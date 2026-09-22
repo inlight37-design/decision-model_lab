@@ -1,0 +1,51 @@
+<!-- @dsCard group="Cover" height=420 width=900 page -->
+<style>
+  body { margin: 0; background: var(--surface-000); font-family: var(--font-sans); color: var(--ink-000); }
+  .cover { padding: 48px 40px; }
+  .grid { display: flex; gap: 48px; align-items: flex-start; flex-wrap: wrap; }
+  .left { flex: 1 1 340px; min-width: 300px; }
+  .right { flex: 0 1 320px; min-width: 270px; }
+
+  .eyebrow { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: .14em;
+             text-transform: uppercase; color: var(--ink-200); margin: 0 0 16px; }
+  h1 { font-size: 30px; line-height: 44px; font-weight: 600; letter-spacing: -.015em; margin: 0 0 16px; }
+  .rule { font-size: 14.5px; line-height: 23px; color: var(--ink-100); margin: 0; max-width: 40ch; }
+  .rule b { color: var(--ink-000); font-weight: 600; }
+
+  .ledger { margin-top: 26px; border-top: 1px solid var(--rule-200); }
+  .r { display: flex; align-items: baseline; gap: 16px; padding: 11px 0; border-bottom: 1px solid var(--rule-100); }
+  .m { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: .09em;
+       text-transform: uppercase; padding-bottom: 3px; border-bottom: 2px solid currentColor;
+       min-width: 96px; flex: none; }
+  .s { color: var(--supported); }
+  .q { color: var(--qualified); }
+  .j { color: var(--rejected); }
+  .u { color: var(--unresolved); border-bottom-width: 3px; }
+  .k { color: var(--unknown); border-bottom: 1px dashed currentColor; }
+  .d { font-size: 13px; color: var(--ink-100); }
+  .d em { font-style: normal; color: var(--ink-000); font-weight: 600; }
+</style>
+
+<div class="cover">
+  <div class="grid">
+    <div class="left">
+      <p class="eyebrow">decision-model_lab · 셸 디자인 시스템</p>
+      <h1>Ledger</h1>
+      <p class="rule">
+        여러 상급 모델의 독립 답변을 주장·근거 단위로 대조하는 화면.
+        색은 장식이 아니라 상태이고, 상태는 채움이 아니라 괘선으로 표시한다.
+        하나의 규칙이 나머지를 결정한다 — <b>미검증이 검증처럼 보이면 안 된다.</b>
+      </p>
+    </div>
+
+    <div class="right">
+      <div class="ledger">
+        <div class="r"><span class="m s">supported</span><span class="d">외부 검사가 <em>통과했다</em></span></div>
+        <div class="r"><span class="m q">qualified</span><span class="d">조건부로 성립한다</span></div>
+        <div class="r"><span class="m j">rejected</span><span class="d">반박됐다 — <em>해결된 상태</em></span></div>
+        <div class="r"><span class="m u">unresolved</span><span class="d"><em>가장 큰 목소리</em></span></div>
+        <div class="r"><span class="m k">unknown</span><span class="d">관측 실패 — <em>0이 아니다</em></span></div>
+      </div>
+    </div>
+  </div>
+</div>

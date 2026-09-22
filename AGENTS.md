@@ -2,7 +2,7 @@
 
 This is a research and architecture repository with offline synthetic checks, not a working multi-provider orchestrator.
 
-- Start with [v0.4 HANDOFF](docs/architecture/v0.4/HANDOFF.md); read only the relevant design and source sections.
+- **Start with [NEXT-SESSION.md](NEXT-SESSION.md).** It carries the environment, what the user has settled, the open decisions and the next task, and points onward. Read it before anything else; the per-version [v0.4 HANDOFF](docs/architecture/v0.4/HANDOFF.md) is the next stop.
 - Current architecture: [v0.4](docs/architecture/v0.4/README.md). It adds frontier-model independent reasoning, bounded cross-review and evidence-based synthesis alongside economy routing. Difficult planning and evaluation may also use strong models.
 - Preserve [v0.3](docs/architecture/v0.3/README.md) native-harness/accounting foundations and [v0.2](contracts/v0.2/README.md) contracts. Architecture v0.4 is not a production wire-schema upgrade.
 - Official native subscription CLIs first; paid API/extra-credit fallback requires opt-in. Antigravity agy is not Gemini CLI. Jev-like components remain optional.
@@ -12,5 +12,6 @@ This is a research and architecture repository with offline synthetic checks, no
 - Run checks from the repository root: `python -m unittest discover -s tests -v` (75 tests). Without `jsonschema` the schema-dependent tests skip rather than fail; a skip is not a pass. [CI](.github/workflows/checks.yml) runs every check on push and pull request.
 - **Never bulk-edit these documents through PowerShell `Get-Content`/`Set-Content`.** On Windows PowerShell 5.1 that round trip reads BOM-less UTF-8 as the ANSI codepage and writes a BOM, replacing Korean text with `?`. It has already destroyed three documents here. Use your editing tool, or `[IO.File]::ReadAllText`/`WriteAllText` with an explicit `[Text.UTF8Encoding]::new($false)`. Install the guard once with `git config core.hooksPath .githooks`; [`tools/check_encoding.py`](tools/check_encoding.py) also runs in CI, and neither catches plausible-but-wrong Hangul from a CP949 misread.
 - Evidence registries obey [contracts/sources.schema.json](contracts/sources.schema.json). Every entry needs a non-empty `limits`/`limitations` and a dating field; write `"published": null` when the date is unknown instead of omitting it.
+- The shell's design system lives in [design/](design/README.md) and mirrors a published artifact one file at a time; change the source here, run `python tools/validate_design_tokens.py`, then publish. Never leave the two sides diverged.
 - Recheck installed versions, effective permissions, authentication/funding and model availability before wiring adapters. Never copy credentials or sensitive raw traces into research artifacts.
 - Preserve blind first drafts, unresolved counterevidence and explicit call/quorum limits. Agreement is not verification. Save bounded progress and next steps in commits; do not feed the whole archive into each agent prompt.
