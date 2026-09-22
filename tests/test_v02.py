@@ -11,8 +11,24 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 from validate_v02 import fingerprint, strict_load, validate_plan, validate_proof
 
+# validate_v02 는 jsonschema 를 함수 안에서 import 하므로 이 모듈은 의존성 없이도 읽힌다.
+# 그러나 schema 검사에 의존하는 test 는 설치 없이 실행하면 ModuleNotFoundError 로 터진다.
+# 없는 의존성을 실패가 아니라 skip 으로 표시한다. 미설치와 계약 위반은 다른 상태다.
+try:
+    import jsonschema  # noqa: F401
+    HAS_JSONSCHEMA = True
+except ImportError:  # pragma: no cover - 환경에 따라 달라진다
+    HAS_JSONSCHEMA = False
 
-class DesignContracts(unittest.TestCase):
+NEEDS_JSONSCHEMA = unittest.skipUnless(
+    HAS_JSONSCHEMA,
+    "jsonschema 미설치: python -m pip install -r requirements-design.txt",
+)
+
+
+class Fixtures(unittest.TestCase):
+    """합성 fixture 로딩만 담당한다. 로딩 자체는 표준 라이브러리로 충분하다."""
+
     def setUp(self) -> None:
         self.plan = strict_load(ROOT / "examples/v0.2/pilot.json")
         fixture = strict_load(ROOT / "examples/v0.2/proof-fixture.json")
@@ -20,6 +36,26 @@ class DesignContracts(unittest.TestCase):
 
     def proof_errors(self) -> list[str]:
         return validate_proof(self.plan, self.expected, self.proof)
+
+
+class SerializationAndParsing(Fixtures):
+    """schema 없이도 성립해야 하는 순수 데이터 불변 조건."""
+
+    def test_stable_serialization(self):
+        reordered = dict(reversed(list(copy.deepcopy(self.plan).items())))
+        self.assertEqual(fingerprint(self.plan), fingerprint(reordered))
+
+    def test_duplicate_json_key(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "duplicate.json"
+            path.write_text('{"a":1,"a":2}', encoding="utf-8")
+            with self.assertRaises(ValueError):
+                strict_load(path)
+
+
+@NEEDS_JSONSCHEMA
+class DesignContracts(Fixtures):
+    """plan/proof 의 schema 결합 검사. jsonschema 가 필요하다."""
 
     def test_valid_offline_fixture(self):
         self.assertEqual(self.proof_errors(), [])
@@ -126,17 +162,6 @@ class DesignContracts(unittest.TestCase):
     def test_nonfinite_cost(self):
         self.proof["usage"] = {"status": "measured", "total_usd": float("nan")}
         self.assertTrue(self.proof_errors())
-
-    def test_stable_serialization(self):
-        reordered = dict(reversed(list(copy.deepcopy(self.plan).items())))
-        self.assertEqual(fingerprint(self.plan), fingerprint(reordered))
-
-    def test_duplicate_json_key(self):
-        with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "duplicate.json"
-            path.write_text('{"a":1,"a":2}', encoding="utf-8")
-            with self.assertRaises(ValueError):
-                strict_load(path)
 
 
 if __name__ == "__main__":
