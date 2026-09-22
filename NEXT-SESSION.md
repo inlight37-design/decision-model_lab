@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-23** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout) · 브랜치 `claude/v04-01-tier2-aux-pc-20260923`
+최종 갱신 **2026-09-23** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout) · 브랜치 `claude/v04-01-agy-fix-aux-pc-20260923`
 
 이 파일 하나에서 시작한다. 절 구성은 고정이고 CI가 확인한다. 규칙은 [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있다.
 
@@ -33,8 +33,9 @@
 
 사용자 승인 후 이 세션이 세 CLI를 설치하고 tier 1을 기록했다. 상세는 [aux-pc 결과](docs/experiments/v04-01-inventory/hosts/aux-pc/RESULTS.md).
 
-- 설치: Claude Code 2.1.280, Codex 0.155.1, agy 1.2.8. 셋 다 설치 스크립트가 해시를 검증했고 제조사 서명이 유효하다. `gemini`, `node`, `gh`는 없다.
-- Claude 설치 프로그램이 PATH를 등록하지 않아 사용자 PATH에 `%USERPROFILE%\.local\bin`을 추가했다(백업: `%TEMP%\v0401-user-path-backup.txt`).
+- 설치 위치: Claude Code 2.1.280 `~\.local\bin`, Codex 0.155.1 `%LOCALAPPDATA%\Programs\OpenAI\Codex\bin`(→ `~\.codex`), agy 1.2.8 **`~\.local\agy\bin`**. 셋 다 설치 스크립트가 해시를 검증했고 제조사 서명이 유효하다. `gemini`, `node`, `gh`는 없다.
+- **agy는 처음에 Claude 데스크톱 앱의 가상 공간에 설치돼 사용자 터미널에서 보이지 않았다.** AppData 밖으로 재설치했다. 원인과 대처는 절차서의 "AI 세션이 Claude 데스크톱 앱 안에서 대신 실행할 때" 절.
+- PATH: Claude 설치 프로그램이 등록하지 않아 `%USERPROFILE%\.local\bin`을 추가했고, agy의 옛 항목을 지우고 새 폴더가 등록됐다(백업: `%TEMP%\v0401-user-path-backup.txt`, `...-backup-2.txt`).
 - 로그인: Claude Code는 claude.ai 구독(`firstParty`), Codex는 ChatGPT 로그인 — 둘 다 데스크톱 앱의 기존 자격증명으로 이미 로그인돼 있었다. **agy는 미확인**(상태 명령 없음).
 - 과금 경로를 바꾸는 환경변수는 사용자·시스템 설정에 없다. Claude 데스크톱 앱의 셸에는 앱이 넣은 변수 26개(`CLAUDECODE`, `ANTHROPIC_BASE_URL` 등)가 있어서, AI 세션이 기록할 때는 `--fresh-env`를 쓴다.
 - tier 1: 문서의 플래그는 모두 help에 있다. **ACP는 세 CLI 모두 help에 없다.**
@@ -68,18 +69,49 @@
 
 ## 3. 진행 중인 작업
 
-PR #3과 오늘의 두 claude 브랜치는 2026-09-23 사용자 요청으로 main에 병합했다(merge `3203590`).
+PR #3과 오늘의 claude 브랜치들은 사용자 요청으로 main에 병합됐다. 사용자는 **CI 녹색을 확인한 claude 세션이 main에 직접 병합하는 것**을 허락했다(2026-09-23). 병합 전 작업이 있으면 이 표에 브랜치로 적는다.
 
 | 브랜치 | 작성 | 내용 | 상태 |
 |---|---|---|---|
-| `claude/v04-01-tier2-aux-pc-20260923` | claude | aux-pc tier 2 관측(Claude Code·Codex), 결과 기록 | CI 녹색 확인 후 main 병합 — 사용자가 AI 세션의 직접 병합을 허락했다 |
+| `claude/v04-01-agy-fix-aux-pc-20260923` | claude | agy 재설치(가상화 문제), `tools/v04-01/` 보조 스크립트, 이어가기 지침 | CI 녹색 확인 후 main 병합 |
 
 ## 4. 다음 작업
 
-1. **(사용자)** aux-pc에서 `agy`에 로그인한다 — 새 PowerShell 창에서 `agy`를 실행해 브라우저 로그인. Claude Code와 Codex는 이미 구독 로그인 상태다.
-2. **(AI 세션, 승인됨)** Antigravity의 tier 2(P1·P3·P5)를 실행해 [aux-pc RESULTS](docs/experiments/v04-01-inventory/hosts/aux-pc/RESULTS.md)를 채우고, 관측한 기능만 `observed`로 적은 tier 2 manifest를 만든다. [절차서](docs/experiments/v04-01-inventory/README.md) 5절 정책 확인도 한다.
-3. **Claude Code의 깨끗한 blind 문맥 찾기** — `--bare`는 구독을 못 쓰고, 기본 `-p`는 사용자 플러그인·MCP 연결을 모두 싣는다(RESULTS의 설계 입력 1). 별도 `CLAUDE_CONFIG_DIR` 로그인과 `--strict-mcp-config`를 시험한다. V04-03 전에 풀어야 한다.
-4. 그 다음 V04-03(두 native 경로의 읽기 전용 독립 답변) → 승인된 테스트만 실행하는 trusted runner → 필요한 만큼 MCP로 노출 → UI 연결.
+**V04-01을 aux-pc에서 이어간다.** 남은 것은 Antigravity 로그인과 관측, 정책 확인, 판정이다. 아래 순서 그대로 한다. 명령은 저장소 루트 기준이다.
+
+**① 사용자 — 앱 밖에서 세 CLI가 보이는지 확인하고 agy에 로그인** (한도 소모 없음)
+
+새 PowerShell 창(시작 메뉴) 또는 앱의 터미널 탭에서:
+
+```powershell
+$env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User'); foreach ($c in 'claude','codex','agy') { $x = Get-Command $c -ErrorAction SilentlyContinue; if ($x) { "$c -> " + $x.Source } else { "$c -> NOT FOUND" } }
+agy
+```
+
+첫 줄의 결과 세 개가 모두 경로로 나와야 한다(`NOT FOUND`면 멈추고 절차서의 "AI 세션이 Claude 데스크톱 앱 안에서 대신 실행할 때" 절). 둘째 줄의 `agy`는 브라우저 로그인을 연다. Antigravity용 Google 계정으로 로그인하고, 대화 화면이 뜨면 `Ctrl+C`로 나온다. API 키 방식은 고르지 않는다.
+
+**② AI 세션 — Antigravity tier 2** (사용자 승인됨. P1만 모델 호출 1회)
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/v04-01/fresh-shell.ps1 -Script tools/v04-01/check-versions.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/v04-01/fresh-shell.ps1 -Script tools/v04-01/probe.ps1 P3-agy aux-pc
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/v04-01/fresh-shell.ps1 -Script tools/v04-01/probe.ps1 P5-agy aux-pc
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/v04-01/fresh-shell.ps1 -Script tools/v04-01/probe.ps1 P1-agy aux-pc
+```
+
+한 줄씩 실행하고 결과를 읽은 뒤 다음으로 간다. P3는 모델 호출 없이 거절돼야 하고, P1이 로그인 여부를 간접 확인한다. 결과는 `hosts/aux-pc/tier2/`에 저장되니 [aux-pc RESULTS](docs/experiments/v04-01-inventory/hosts/aux-pc/RESULTS.md)의 tier 2 표에 Antigravity 줄을 채운다. Git Bash에서 부를 때는 경로를 위처럼 슬래시로 쓴다.
+
+**③ AI 세션 — 정리와 판정** (한도 소모 없음)
+
+1. 절차서 5절 정책 확인(문서 읽기)을 RESULTS의 정책 표에 채운다.
+2. tier 2 manifest를 만든다: `hosts/aux-pc/manifest.json`을 복사해 `tier: 2`로 두고, RESULTS에서 **관측한 기능만** `observed` + `observed_at` + 증거(P 번호)로 바꾼다. `python tools/runtime_inventory.py --validate <파일>`이 통과해야 한다.
+3. RESULTS의 판정 표(V04-03 진행 가능 여부, Q1)를 갱신한다.
+4. 커밋 → push → CI 녹색 → main 병합 → 이 문서 3·4절 갱신.
+
+**④ 그 다음**
+
+- **Claude Code의 깨끗한 blind 문맥 찾기** — `--bare`는 구독을 못 쓰고, 기본 `-p`는 사용자 플러그인·MCP 연결을 모두 싣는다(RESULTS의 설계 입력 1). 별도 `CLAUDE_CONFIG_DIR` 로그인과 `--strict-mcp-config`를 시험한다. V04-03 전에 풀어야 한다.
+- V04-03(두 native 경로의 읽기 전용 독립 답변) → 승인된 테스트만 실행하는 trusted runner → 필요한 만큼 MCP로 노출 → UI 연결.
 
 급하지 않은 것:
 
@@ -95,6 +127,7 @@ PR #3과 오늘의 두 claude 브랜치는 2026-09-23 사용자 요청으로 mai
 - API 키 설정, 추가 크레딧, 권한 우회 플래그를 쓰지 않는다. 인증 파일과 환경변수 값을 기록하지 않는다.
 - 문서만 보고 `configured = true`로 만들지 않는다.
 - **백슬래시가 든 텍스트(Windows 경로 등)를 셸 heredoc 안의 파이썬으로 고치지 않는다.** 이 환경의 heredoc은 `\\`를 `\`로 바꿔 넘겨서 `\b`·`\v`가 제어 문자가 됐다(두 번 발생). 편집 도구를 쓴다. 인코딩 검사가 이제 제어 문자를 잡는다.
+- **Claude 데스크톱 앱 안에서 `%LOCALAPPDATA%`에 새로 설치하지 않는다.** 앱 전용 가상 공간에 들어가 사용자 터미널에서 보이지 않는다(agy에서 발생). AppData 밖 경로(`--dir`)를 쓰고, 설치 확인은 `check-versions.ps1`과 사용자 터미널에서 한다.
 - **실측 전에 설계 문서나 원장 항목을 더 늘리지 않는다.** 지금 막혀 있는 질문은 모두 실제 CLI 결과로만 풀린다.
 
 ## 6. 검사
