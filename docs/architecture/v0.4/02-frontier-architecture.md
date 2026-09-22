@@ -190,12 +190,12 @@ Git에는 연구 문서·설계 결정·재현 가능한 테스트와 **정제�
 |---|---|---|
 | D10 | 경제성 경로와 상급 협업을 정식 모드로 분리 | F01/F02/F03/F06/F08/F16/F21. 품질 이득이 없는 작업군은 single 유지 |
 | D11 | blind first pass, 원 초안 보존, peer 익명화/순서 기록/자기 평가 분리 | F02/F04/F05/F07/F09/F12/F20. 독립성 자체도 검사 대상이며 완전 독립을 가정하지 않음 |
-| D12 | claim/evidence 중심 합성, 미합의 허용, 투표≠검증 | F01/F04/F07/F12/F13/F20/F21. acceptance가 없는 사실 수용은 보류 |
-| D13 | 기본 0/1 review round, 호출·시간·재시도 전체 상한 | F03/F04/F06/F10/F12/F21. 추가 round는 paired 이득과 예산 확인 후 |
+| D12 | claim/evidence 중심 합성, 미합의 허용, 투표≠검증 | F01/F04/F07/F12/F13/F20/F21/F22/F24. acceptance가 없는 사실 수용은 보류 |
+| D13 | 기본 0/1 review round, 호출·시간·재시도 전체 상한 | F03/F04/F06/F10/F12/F21/F24. 추가 round는 paired 이득과 예산 확인 후 |
 | D14 | 어려운 계획·의미 검토·합성에도 상급 profile 허용, Jev는 선택 부품 | F02/F03/F08/F09/F11. 실제 작업군/가용 모델로 선택; vendor 고정 순위 없음 |
-| D15 | 단일 writer, read-only 논의자, 실행 sandbox·data-egress 경계 | F05/F16/F17/F19. 실제 OS/adapter 시험 전 안전성 완료 주장 금지 |
+| D15 | 단일 writer, read-only 논의자, 실행 sandbox·data-egress 경계 | F05/F16/F17/F19/F24. 실제 OS/adapter 시험 전 안전성 완료 주장 금지 |
 | D16 | 하나의 controller와 durable artifact/journal, 명시 session 재개 | F14, 기존 D03/D06. 분산 infra는 운영 요구가 생길 때만 |
-| D17 | 동일 예산 단일 모델/ensemble 대조군과 오류 전이·합성 손실 평가 | F07–F12/F15/F16/F20/F21. native end-to-end와 모델 인과 효과를 분리 |
+| D17 | 동일 예산 단일 모델/ensemble 대조군과 오류 전이·합성 손실 평가 | F07–F12/F15/F16/F20/F21/F22/F23/F24. native end-to-end와 모델 인과 효과를 분리 |
 | D18 | 구독·가용 모델·정족수 preflight, silent fallback 금지 | F04/F05/F06/F17/F18/F19. 실제 entitlement/transport conformance 필요 |
 
 D10–D18은 사용자가 확정한 제품 사양이 아니라, 이번 근거를 바탕으로 제안하는 설계 결정이다. 이후 실측이 반박하면 원래 근거와 변경 이유를 남기고 수정한다.

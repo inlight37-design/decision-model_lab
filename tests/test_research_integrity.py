@@ -9,7 +9,7 @@ from tools.validate_v02 import strict_load
 ROOT = Path(__file__).resolve().parents[1]
 REGISTRIES = (
     ("v0.3", "E", range(1, 32), range(1, 10), "04-decisions-and-evaluation.md"),
-    ("v0.4", "F", range(1, 22), range(10, 19), "02-frontier-architecture.md"),
+    ("v0.4", "F", range(1, 25), range(10, 19), "02-frontier-architecture.md"),
 )
 
 

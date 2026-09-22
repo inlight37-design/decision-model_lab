@@ -49,7 +49,9 @@ README는 유지보수를 약속하지 않는 주말 prototype임을 명시한�
 
 ### 3.2 PAL: `consensus`와 `clink`를 혼동하지 않기
 
-[F06 consensus 문서](https://github.com/BeehiveInnovations/pal-mcp-server/blob/main/docs/tools/consensus.md)는 지지·반대·중립 입장을 수집하고 합성하는 절차와 순차 처리를 설명한다. 문서의 시연은 **가상 예시**다. 이 문서만으로 정확도 향상이나 native 구독 실행을 검증했다고 할 수 없다. 실제 provider transport 경로는 추가 코드 감사 대상이다.
+[F06 고정 문서](https://github.com/BeehiveInnovations/pal-mcp-server/blob/7afc7c1cc96e23992c8f105f960132c657883bb1/docs/tools/consensus.md)는 입장별 의견 수집·순차 처리를 설명하며 시연은 **가상 예시**다. 후속 [코드 검토](https://github.com/BeehiveInnovations/pal-mcp-server/blob/7afc7c1cc96e23992c8f105f960132c657883bb1/tools/consensus.py#L574)에서 `ModelProviderRegistry`를 거쳐 `provider.generate_content`를 호출하는 API/custom endpoint 경로를 확인했다. `clink`나 native 구독 CLI를 호출하지 않는다. custom endpoint는 로컬일 수도 있으므로 모든 호출이 유료라는 뜻도 아니다.
+
+문서의 추론 강도 선택 설명과 달리 해당 코드의 schema는 `thinking_mode`를 제외하고 호출에는 `medium`을 전달한다. 이 값의 실제 모델별 처리나 비용은 실행하지 않았다. 따라서 문서에 적힌 옵션을 구현된 capability로 등록하지 않는다.
 
 별개의 [F05 clink](https://github.com/BeehiveInnovations/pal-mcp-server/blob/main/docs/tools/clink.md)는 Codex·Claude Code·Gemini CLI를 연결한다. **Gemini CLI 지원은 Antigravity `agy` 지원이 아니다.** 문맥을 넘기거나 대화를 계속할 수 있다는 편리함은 독립 초안 단계에서는 오염 경로가 되기도 한다. 새 프로세스라도 부모의 결론을 함께 전달하면 blind solve가 아니다.
 
@@ -106,8 +108,8 @@ F10/F11/F20은 이번 조사에서 abstract 수준으로 사용한다. F12는 �
 | 상급 모델 독립 초안과 교차검증 | v0.4의 정식 실행 모드로 설계. 품질 이득은 사용자 workload에서 검증 예정 |
 | Perplexity / Microsoft | 기능·제품 구조의 reference. 사용자의 구독 bridge로 대체 도입하지 않음 |
 | karpathy council | 간결한 프로토콜 reference. 운영 core로 그대로 채택하지 않음 |
-| PAL consensus/clink | 연결·입장 분리 reference. transport/권한/agy 호환성 감사 전 필수 의존성 채택 보류 |
+| PAL consensus/clink | consensus의 API/custom 경로와 문서/코드 차이를 확인. 권한·실행·agy 호환성 미검증으로 필수 의존성 채택 보류 |
 | 별도 hosted multi-agent 서비스 | [F14 Managed Agents](https://www.anthropic.com/engineering/managed-agents)의 상태/하네스/격리 분리는 참고. 구독 우선 core를 대체하지 않음 |
 | Jev / 저가 분류 모델 | 작업 분류·중복 후보 선별·shadow 판단 후보. 상급 검증자의 판정을 대체하지 않음 |
 
-21개 F 기록은 21개의 독립 실험을 뜻하지 않는다. 제품 문서·코드·논문·정책 재확인을 합친 근거 원장이다. 기존 E01–E31 중 F17/F18/F19는 각각 E02/E05/E08의 재확인이다. X·커뮤니티·검색 결과는 발견 경로였으며 확인하지 못한 사용 후기, 인기, star 수를 성공률 근거로 쓰지 않았다. 전수 조사나 무결점 검증을 주장하지 않는다.
+24개 F 기록은 24개의 독립 실험을 뜻하지 않는다. F22–F24의 최근 연구와 보류한 SatCom 논문은 [후속 근거 검토](EVIDENCE_FOLLOWUP.md)에 별도로 정리했다. 제품 문서·코드·논문·정책 재확인을 합친 근거 원장이다. 기존 E01–E31 중 F17/F18/F19는 각각 E02/E05/E08의 재확인이다. X·커뮤니티·검색 결과는 발견 경로였으며 확인하지 못한 사용 후기, 인기, star 수를 성공률 근거로 쓰지 않았다. 전수 조사나 무결점 검증을 주장하지 않는다.
