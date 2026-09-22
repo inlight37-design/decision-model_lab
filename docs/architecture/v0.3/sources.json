@@ -1,0 +1,585 @@
+{
+  "format_version": 1,
+  "scope": "v0.3 architecture research, not runtime evidence",
+  "checked_on": "2026-09-22",
+  "independently_reproduced": false,
+  "reading_rule": "Claims are bounded by locator/version. Numbers are external reports; design decisions are project inferences. Recheck mutable authentication, billing and CLI interfaces before implementation.",
+  "sources": [
+    {
+      "id": "E01",
+      "title": "Codex authentication",
+      "kind": "official_documentation",
+      "url": "https://learn.chatgpt.com/docs/auth",
+      "supplemental_urls": [],
+      "published": null,
+      "checked_on": "2026-09-22",
+      "locator": "OpenAI authentication; Sign in with an API key; Check sign-in status",
+      "claim": "ChatGPT 로그인과 API 키는 서로 다른 과금 경로다. local Codex는 둘을 지원한다.",
+      "limitations": "구독 종류·조직 권한·실제 로그인 상태는 이 사용자 환경에서 검사하지 않았다.",
+      "verification": "primary_source_read",
+      "decisions": [
+        "D01",
+        "D07"
+      ],
+      "recheck": "before_adapter_implementation_or_upgrade"
+    },
+    {
+      "id": "E02",
+      "title": "Codex non-interactive mode",
+      "kind": "official_documentation",
+      "url": "https://learn.chatgpt.com/docs/non-interactive-mode",
+      "supplemental_urls": [],
+      "published": null,
+      "checked_on": "2026-09-22",
+      "locator": "Make output machine-readable; structured output; resume",
+      "claim": "codex exec는 JSONL 이벤트와 별도 최종 schema 출력을 제공한다. 저장된 CLI 인증을 재사용할 수 있다.",
+      "limitations": "문서 확인이며 설치 버전의 실행·취소·사용량 정확성은 미시험.",
+      "verification": "primary_source_read",
+      "decisions": [
+        "D01",
+        "D03",
+        "D05"
+      ],
+      "recheck": "before_adapter_implementation_or_upgrade"
+    },
+    {
+      "id": "E03",
+      "title": "Codex MCP boundary",
+      "kind": "official_documentation",
+      "url": "https://learn.chatgpt.com/docs/mcp-server",
+      "supplemental_urls": [
+        "https://learn.chatgpt.com/docs/extend/mcp?surface=cli",
+        "https://learn.chatgpt.com/docs/app-server",
+        "https://learn.chatgpt.com/docs/codex-sdk"
+      ],
+      "published": null,
+      "checked_on": "2026-09-22",
+      "locator": "Codex MCP server removal; Use the Codex app server",
+      "claim": "codex mcp-server는 제거됐고 external MCP client는 유지된다. App Server는 별도 JSON-RPC이며 현재 experimental이다.",
+      "limitations": "MCP bridge가 부모 Codex의 전체 도구/토큰/대화를 관측한다는 뜻은 아니다.",
+      "verification": "primary_source_read",
+      "decisions": [
+        "D01",
+        "D03"
+      ],
+      "recheck": "before_adapter_implementation_or_upgrade"
+    },
+    {
+      "id": "E04",
+      "title": "Claude Code subscription authentication",
+      "kind": "official_documentation",
+      "url": "https://support.claude.com/en/articles/11145838-use-claude-code-with-your-pro-or-max-plan",
+      "supplemental_urls": [],
+      "published": "2026-08-19",
+      "checked_on": "2026-09-22",
+      "locator": "How to connect; ANTHROPIC_API_KEY warning",
+      "claim": "Pro/Max 구독으로 Claude Code를 이용하며 ANTHROPIC_API_KEY가 있으면 API 인증·과금이 우선한다.",
+      "limitations": "사용자가 구독 상품의 정확한 tier를 말하지 않았으므로 실제 권한은 미확인.",
+      "verification": "primary_source_read",
+      "decisions": [
+        "D01",
+        "D07"
+      ],
+      "recheck": "before_adapter_implementation_or_upgrade"
+    },
+    {
+      "id": "E05",
+      "title": "Claude Agent SDK subscription policy update",
+      "kind": "official_documentation",
+      "url": "https://support.claude.com/en/articles/15036540-use-the-claude-agent-sdk-with-your-claude-plan",
+      "supplemental_urls": [],
+      "published": "2026-06-16",
+      "checked_on": "2026-09-22",
+      "locator": "Top: Update June 15; historical content disclaimer",
+      "claim": "상단 업데이트는 변경 보류와 SDK/claude -p/third-party app의 기존 구독 한도 사용 지속을 명시한다.",
+      "limitations": "아래 별도 월간 credit 표는 철회된 시행 계획의 보존 내용이다. 앞으로 변경될 수 있어 구현 직전 재확인.",
+      "verification": "primary_source_read",
+      "decisions": [
+        "D01",
+        "D07"
+      ],
+      "recheck": "before_adapter_implementation_or_upgrade"
+    },
+    {
+      "id": "E06",
+      "title": "Run Claude Code programmatically",
+      "kind": "official_documentation",
+      "url": "https://code.claude.com/docs/en/headless",
+      "supplemental_urls": [],
+      "published": null,
+      "checked_on": "2026-09-22",
+      "locator": "Output formats; Get structured output; cost reporting; resume",
+      "claim": "JSON/stream-json과 schema 출력이 있다. 재개 시 비용 합계에 이전 실행이 포함되고 비용은 client estimate다.",
+      "limitations": "total_cost_usd를 구독의 실제 추가 청구액으로 볼 수 없다.",
+      "verification": "primary_source_read",
+      "decisions": [
+        "D01",
+        "D03",
+        "D05",
+        "D07"
+      ],
+      "recheck": "before_adapter_implementation_or_upgrade"
+    },
+    {
+      "id": "E07",
+      "title": "Antigravity CLI installation and authentication",
+      "kind": "official_documentation",
+      "url": "https://www.antigravity.google/docs/cli/install/",
+      "supplemental_urls": [],
+      "published": null,
+      "checked_on": "2026-09-22",
+      "locator": "Authentication workflows; Using a Gemini API key",
+      "claim": "agy는 Windows를 포함한 native CLI다. 저장된 인증을 사용하며 API key 모드에는 modelProvider 설정도 필요하다.",
+      "limitations": "문서 지원과 사용자에게 설치된 버전의 지원은 다르다. 키 내용은 수집하지 않는다.",
+      "verification": "primary_source_read",
+      "decisions": [
+        "D01",
+        "D07"
+      ],
+      "recheck": "before_adapter_implementation_or_upgrade"
+    },
+    {
+      "id": "E08",
+      "title": "Antigravity CLI headless mode",
+      "kind": "official_documentation",
+      "url": "https://www.antigravity.google/docs/cli/headless/",
+      "supplemental_urls": [],
+      "published": null,
+      "checked_on": "2026-09-22",
+      "locator": "Output formats; Continue a conversation; Permissions in headless mode",
+      "claim": "agy -p는 JSON/NDJSON/schema·usage·명시적 conversation ID 재개를 지원한다. headless 권한 거절에도 exit 0이 가능하다.",
+      "limitations": "exit 0 또는 SUCCESS는 우리 작업의 독립 검증 통과가 아니다. 실제 설치 버전 미시험.",
+      "verification": "primary_source_read",
+      "decisions": [
+        "D01",
+        "D03",
+        "D05",
+        "D06"
+      ],
+      "recheck": "before_adapter_implementation_or_upgrade"
+    },
+    {
+      "id": "E09",
+      "title": "Antigravity AI credits",
+      "kind": "official_documentation",
+      "url": "https://www.antigravity.google/docs/cli/credits/",
+      "supplemental_urls": [],
+      "published": null,
+      "checked_on": "2026-09-22",
+      "locator": "Quota Tracking; Settings Configuration",
+      "claim": "구독 quota와 credits를 관측하며 useG1Credits 설정이 quota 소진 후 개인 credits 사용을 제어한다.",
+      "limitations": "TUI 표시는 안정적인 machine-readable quota API의 증거가 아니다. 구독별 정확한 한도 미확인.",
+      "verification": "primary_source_read",
+      "decisions": [
+        "D01",
+        "D07"
+      ],
+      "recheck": "before_adapter_implementation_or_upgrade"
+    },
+    {
+      "id": "E10",
+      "title": "Antigravity SDK overview",
+      "kind": "official_documentation",
+      "url": "https://www.antigravity.google/docs/sdk/overview/",
+      "supplemental_urls": [],
+      "published": null,
+      "checked_on": "2026-09-22",
+      "locator": "Quickstart; Gemini Enterprise Agent Platform",
+      "claim": "Python SDK quickstart는 Gemini API 키 또는 Vertex 경로를 설명한다.",
+      "limitations": "이 페이지로 SDK가 개인 Antigravity 구독 인증을 재사용한다고 단정할 수 없다.",
+      "verification": "primary_source_read",
+      "decisions": [
+        "D01"
+      ],
+      "recheck": "before_adapter_implementation_or_upgrade"
+    },
+    {
+      "id": "E11",
+      "title": "Antigravity Teamwork preview",
+      "kind": "official_documentation",
+      "url": "https://www.antigravity.google/docs/teamwork/",
+      "supplemental_urls": [],
+      "published": null,
+      "checked_on": "2026-09-22",
+      "locator": "Architecture and roles; Execution paths",
+      "claim": "공식 preview는 탐색·구현·독립 검증 역할, milestone, 격리 디렉터리를 사용한다.",
+      "limitations": "제품 기능 설명이며 비용 절감 대조 실험은 아니다. 자체 팀과 외부 팀을 중첩할 이유가 되지 않는다.",
+      "verification": "primary_source_read",
+      "decisions": [
+        "D02",
+        "D04",
+        "D06"
+      ],
+      "recheck": "before_adapter_implementation_or_upgrade"
+    },
+    {
+      "id": "E12",
+      "title": "FrugalGPT",
+      "kind": "research_preprint",
+      "url": "https://arxiv.org/html/2305.05176v1",
+      "supplemental_urls": [],
+      "published": "2023-05-09",
+      "checked_on": "2026-09-22",
+      "locator": "Section 4; Table 2; Table 3",
+      "claim": "학습한 cascade의 같은 정확도 비용 절감은 HEADLINES 98.3%, OVERRULING 73.3%, COQA 59.2%로 보고됐다.",
+      "limitations": "2023년 API·정적 QA 데이터·당시 가격 결과다. 구독 CLI 코딩이나 전체 시스템 비용의 보장은 아니다.",
+      "verification": "primary_source_read",
+      "decisions": [
+        "D02",
+        "D07",
+        "D08"
+      ],
+      "recheck": "when_replicating_or_changing_assumptions"
+    },
+    {
+      "id": "E13",
+      "title": "RouteLLM",
+      "kind": "peer_reviewed_research",
+      "url": "https://arxiv.org/html/2406.18665v4",
+      "supplemental_urls": [
+        "https://proceedings.iclr.cc/paper_files/paper/2025/hash/5503a7c69d48a2f86fc00b3dc09de686-Abstract-Conference.html"
+      ],
+      "published": "2025-02-23",
+      "checked_on": "2026-09-22",
+      "locator": "Sections 3–5; ICLR 2025 proceedings",
+      "claim": "선호 데이터 기반 strong/weak 사전 라우팅을 제시하고 공개 평가에서 2배 이상 비용 절감을 보고한다.",
+      "limitations": "응답 품질 지표와 모델 쌍에 대한 결과이며 상태 있는 코딩 agent의 성공·구독 quota 절약을 입증하지 않는다.",
+      "verification": "primary_source_read",
+      "decisions": [
+        "D02",
+        "D08",
+        "D09"
+      ],
+      "recheck": "when_replicating_or_changing_assumptions"
+    },
+    {
+      "id": "E14",
+      "title": "Why Do Multi-Agent LLM Systems Fail? / MAST",
+      "kind": "research_preprint",
+      "url": "https://arxiv.org/abs/2503.13657v3",
+      "supplemental_urls": [],
+      "published": "2025-10-26",
+      "checked_on": "2026-09-22",
+      "locator": "Abstract; MAST taxonomy",
+      "claim": "7개 MAS framework에서 1600+ trace를 수집하고 14개 실패 유형을 설계·agent간 정렬·검증의 3범주로 정리한다.",
+      "limitations": "이 기록은 v3 abstract의 범위와 분류를 사용한다. 실패 유형별 우리 발생률은 측정하지 않았다.",
+      "verification": "primary_source_read",
+      "decisions": [
+        "D04",
+        "D06"
+      ],
+      "recheck": "when_replicating_or_changing_assumptions"
+    },
+    {
+      "id": "E15",
+      "title": "Towards a Science of Scaling Agent Systems",
+      "kind": "research_preprint",
+      "url": "https://arxiv.org/html/2512.08296v3",
+      "supplemental_urls": ["https://arxiv.org/html/2512.08296v1"],
+      "published": "2026-04-08",
+      "checked_on": "2026-09-22",
+      "locator": "Abstract; Sections 4–5; Appendix F; compare v1 180 vs v3 260 configurations",
+      "claim": "v3는 6 benchmark의 260설정으로 확대했다. 분해 가능성·조정 비용·검증 구조에 따라 다중 agent의 효과가 달라진다.",
+      "limitations": "v1의 180설정·계수와 섞지 않는다. 최신판도 모델군 내부의 제한된 이질성 실험이며 세 구독의 상호운용 평가가 아니다.",
+      "verification": "primary_source_read",
+      "decisions": [
+        "D02",
+        "D04",
+        "D08"
+      ],
+      "recheck": "when_replicating_or_changing_assumptions"
+    },
+    {
+      "id": "E16",
+      "title": "SWE-Pruner",
+      "kind": "research_preprint",
+      "url": "https://arxiv.org/html/2601.16746v4",
+      "supplemental_urls": ["https://arxiv.org/html/2601.16746v1"],
+      "published": "2026-05-07",
+      "checked_on": "2026-09-22",
+      "locator": "Section 5.1, Table 1; Section 6 limitations; compare v1 table",
+      "claim": "v4 SWE-bench Verified: Sonnet 353→360/500, GLM 277→283/500; token -23.1%/-38.3%. v1은 351/274 해결이었다.",
+      "limitations": "판본 간 결과가 바뀌었다. 현재 권고는 v4 기준이며 이유·독립 재현은 미확인. SWE-QA 일부 GLM 점수는 감소하고 로컬 pruning 지연/구독 절감은 별도 검증 필요.",
+      "verification": "primary_source_read",
+      "decisions": [
+        "D05",
+        "D08",
+        "D09"
+      ],
+      "recheck": "when_replicating_or_changing_assumptions"
+    },
+    {
+      "id": "E17",
+      "title": "Aider architect/editor experiment",
+      "kind": "maintainer_benchmark",
+      "url": "https://aider.chat/2024/09/26/architect.html",
+      "supplemental_urls": [],
+      "published": "2024-09-26",
+      "checked_on": "2026-09-22",
+      "locator": "Motivation; Results; Full results",
+      "claim": "추론과 편집 분리에서 o1-preview+o1-mini/DeepSeek 조합은 85%를 보고했다.",
+      "limitations": "제작자 당시 code-editing benchmark. 최고 조합은 whole-file 출력으로 느리다고 본문이 명시한다. 일반 비용 절감 증거가 아니다.",
+      "verification": "primary_source_read",
+      "decisions": [
+        "D02",
+        "D04"
+      ],
+      "recheck": "when_replicating_or_changing_assumptions"
+    },
+    {
+      "id": "E18",
+      "title": "Cursor agent swarms and model economics",
+      "kind": "vendor_case_study",
+      "url": "https://cursor.com/blog/agent-swarm-model-economics",
+      "supplemental_urls": [],
+      "published": "2026-07-20",
+      "checked_on": "2026-09-22",
+      "locator": "SQLite experiment; Role specialization; cost comparison",
+      "claim": "Rust SQLite 구현 사례에서 planner/worker 역할 분리와 이종 모델 조합의 비용·완료 품질을 비교했다.",
+      "limitations": "특정 장기 과제의 제작자 보고다. $1,339 대 $10,565를 사용자 작업의 예상 절감률로 사용하지 않는다.",
+      "verification": "primary_source_read",
+      "decisions": [
+        "D02",
+        "D04",
+        "D08"
+      ],
+      "recheck": "when_replicating_or_changing_assumptions"
+    },
+    {
+      "id": "E19",
+      "title": "Switchyard agent routing benchmark",
+      "kind": "maintainer_benchmark",
+      "url": "https://www.langchain.com/blog/switchyard-agent-routing-benchmark",
+      "supplemental_urls": [],
+      "published": "2026-08-11",
+      "checked_on": "2026-09-22",
+      "locator": "Results; cost breakdown; variance discussion",
+      "claim": "145개 multi-turn 과제에서 frontier 86%/$11.45, routed 80%/$3, cheap 77.7%/$0.72. judge가 routed 비용의 21.2%다.",
+      "limitations": "cheap 대비 2.3pp 이득은 보고된 2.7pp run 변동보다 작다. routing이 cheap 단독보다 확실히 우월하다는 증거는 부족하다.",
+      "verification": "primary_source_read",
+      "decisions": [
+        "D02",
+        "D07",
+        "D08"
+      ],
+      "recheck": "when_replicating_or_changing_assumptions"
+    },
+    {
+      "id": "E20",
+      "title": "Anthropic multi-agent research system",
+      "kind": "vendor_case_study",
+      "url": "https://www.anthropic.com/engineering/multi-agent-research-system",
+      "supplemental_urls": [],
+      "published": "2025-06-13",
+      "checked_on": "2026-09-22",
+      "locator": "Evaluation; token usage; when multi-agent helps",
+      "claim": "내부 research 평가의 상대 개선 90.2%와 높은 token 소비를 함께 보고한다.",
+      "limitations": "15배 token은 multi-agent 대 일반 chat 비교다. single-agent 대비 15배 또는 코딩 개선률로 바꾸지 않는다.",
+      "verification": "primary_source_read",
+      "decisions": [
+        "D04",
+        "D08"
+      ],
+      "recheck": "when_replicating_or_changing_assumptions"
+    },
+    {
+      "id": "E21",
+      "title": "LiteLLM Fusion Terminal-Bench experiment",
+      "kind": "maintainer_benchmark",
+      "url": "https://docs.litellm.ai/blog/fusion-terminal-bench-benchmark",
+      "supplemental_urls": [],
+      "published": "2026-09-01",
+      "checked_on": "2026-09-22",
+      "locator": "21-task results; latency and cost tables",
+      "claim": "21과제에서 single 9/$67.13, Fusion 14/$91.64. 해결당 비용은 감소하지만 총비용과 지연은 증가했다.",
+      "limitations": "작은 제작자 실험. 항상 여러 모델을 동시에 실행하는 기본 정책의 근거는 아니다.",
+      "verification": "primary_source_read",
+      "decisions": [
+        "D04",
+        "D07",
+        "D08"
+      ],
+      "recheck": "when_replicating_or_changing_assumptions"
+    },
+    {
+      "id": "E22",
+      "title": "Lite-Harness implementation snapshot",
+      "kind": "repository_code",
+      "url": "https://github.com/LiteLLM-Labs/lite-harness/blob/dd99cfdfc68dbb6b3f7f986d54efd42572373a6c/src/sdk/server/providers/codex/index.mjs",
+      "supplemental_urls": [
+        "https://github.com/LiteLLM-Labs/lite-harness/blob/dd99cfdfc68dbb6b3f7f986d54efd42572373a6c/README.md"
+      ],
+      "published": null,
+      "checked_on": "2026-09-22",
+      "locator": "buildCodexOptions; createRuntime.runTurn; setPermissionMode; README",
+      "claim": "공통 이벤트 wrapper를 제공하나 해당 Codex adapter는 runTurn마다 startThread, setPermissionMode no-op, gateway 인증용 process.env 변경을 포함한다.",
+      "limitations": "이 commit에 대한 정적 inspection이다. 전체 제품 취약성 주장이나 실행시험 결과가 아니다. README상 npm/PyPI 미출시 preview.",
+      "verification": "static_source_inspection",
+      "decisions": [
+        "D01",
+        "D03"
+      ],
+      "recheck": "when_replicating_or_changing_assumptions"
+    },
+    {
+      "id": "E23",
+      "title": "Symphony specification snapshot",
+      "kind": "repository_specification",
+      "url": "https://github.com/openai/symphony/blob/be10a1b79df723d6d7612b5651c8522704dafb2e/SPEC.md",
+      "supplemental_urls": [
+        "https://github.com/openai/symphony/blob/be10a1b79df723d6d7612b5651c8522704dafb2e/README.md"
+      ],
+      "published": null,
+      "checked_on": "2026-09-22",
+      "locator": "Sections 3, 7, 8; workspace; retries; token accounting",
+      "claim": "작업 상태 소유자, 격리 workspace, 재시도·재시작 조정, usage 처리를 하네스 밖에 둔다. DB 없는 복구도 명세 목표다.",
+      "limitations": "README상 trusted-environment engineering preview. Elixir/Codex/Linear 참고 구현을 현재 세 구독의 완성된 공통 실행기로 볼 수 없다.",
+      "verification": "primary_source_read",
+      "decisions": [
+        "D03",
+        "D06"
+      ],
+      "recheck": "when_replicating_or_changing_assumptions"
+    },
+    {
+      "id": "E24",
+      "title": "Introducing System One models and Jev",
+      "kind": "vendor_announcement",
+      "url": "https://typesafe.ai/blog/introducing-system-one-models-and-jev",
+      "supplemental_urls": [],
+      "published": "2026-09-15",
+      "checked_on": "2026-09-22",
+      "locator": "Jev introduction; availability",
+      "claim": "작은 typed decision을 별도 모델에 맡기는 구상을 소개한다.",
+      "limitations": "공개 local 가중치·이 사용자의 장비에서 실행·한국어 code 라우팅 품질을 확인하지 못했다.",
+      "verification": "primary_source_read",
+      "decisions": [
+        "D09"
+      ],
+      "recheck": "when_replicating_or_changing_assumptions"
+    },
+    {
+      "id": "E25",
+      "title": "Jev Auto Router benchmark",
+      "kind": "maintainer_benchmark",
+      "url": "https://docs.litellm.ai/blog/jev-auto-router-benchmark",
+      "supplemental_urls": [],
+      "published": "2026-09-20",
+      "checked_on": "2026-09-22",
+      "locator": "80 prompts × 3; results; limitations",
+      "claim": "분류 단계에서 Jev/Haiku label agreement와 비용·latency를 비교한다.",
+      "limitations": "작성자 label 기반 synthetic 분류 실험이다. 96% 비용 감소는 코딩 작업 전체 절감률이 아니다. 실행일 2026-09-18.",
+      "verification": "primary_source_read",
+      "decisions": [
+        "D08",
+        "D09"
+      ],
+      "recheck": "when_replicating_or_changing_assumptions"
+    },
+    {
+      "id": "E26",
+      "title": "Jev compaction example",
+      "kind": "maintainer_example",
+      "url": "https://docs.litellm.ai/blog/typesafe-jev-compaction",
+      "supplemental_urls": [],
+      "published": "2026-09-18",
+      "checked_on": "2026-09-22",
+      "locator": "Compaction example; preserved messages",
+      "claim": "오래된 tool result를 정리하면서 call 구조·최신 문맥을 보존하는 사례를 보여준다.",
+      "limitations": "toy 예시이며 장기 coding 정확도/구독 quota 절감 검증은 아니다.",
+      "verification": "primary_source_read",
+      "decisions": [
+        "D05",
+        "D09"
+      ],
+      "recheck": "when_replicating_or_changing_assumptions"
+    },
+    {
+      "id": "E27",
+      "title": "Effective context engineering for AI agents",
+      "kind": "vendor_engineering",
+      "url": "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents",
+      "supplemental_urls": [],
+      "published": "2025-09-29",
+      "checked_on": "2026-09-22",
+      "locator": "Just-in-time retrieval; compaction; sub-agents",
+      "claim": "식별자 기반 필요시 조회와 상태·문맥 관리의 방향을 설명한다.",
+      "limitations": "설계 참고 자료다. JSON 또는 특정 요약 길이가 자동으로 절감을 보장하지 않는다.",
+      "verification": "primary_source_read",
+      "decisions": [
+        "D05"
+      ],
+      "recheck": "when_replicating_or_changing_assumptions"
+    },
+    {
+      "id": "E28",
+      "title": "OpenAI prompt caching",
+      "kind": "official_documentation",
+      "url": "https://developers.openai.com/api/docs/guides/prompt-caching",
+      "supplemental_urls": [],
+      "published": null,
+      "checked_on": "2026-09-22",
+      "locator": "Cache hits; prompt layout; supported model behavior",
+      "claim": "캐시는 동일 prefix와 지원되는 cache 처리 조건에 의존한다.",
+      "limitations": "API caching 설명을 모든 subscription quota 차감 규칙에 그대로 적용하지 않는다.",
+      "verification": "primary_source_read",
+      "decisions": [
+        "D05",
+        "D07"
+      ],
+      "recheck": "before_adapter_implementation_or_upgrade"
+    },
+    {
+      "id": "E29",
+      "title": "Code execution with MCP",
+      "kind": "vendor_engineering",
+      "url": "https://www.anthropic.com/engineering/code-execution-with-mcp",
+      "supplemental_urls": [],
+      "published": "2025-11-04",
+      "checked_on": "2026-09-22",
+      "locator": "Tool discovery; data processing example",
+      "claim": "도구 정의와 대량 결과를 코드에서 처리한 특정 예에서 150k→2k token을 제시한다.",
+      "limitations": "98.7%는 예시의 문맥 절감이다. 전체 coding workload 평균 절감이나 구현된 우리 기능이 아니다.",
+      "verification": "primary_source_read",
+      "decisions": [
+        "D05"
+      ],
+      "recheck": "when_replicating_or_changing_assumptions"
+    },
+    {
+      "id": "E30",
+      "title": "Cursor Router",
+      "kind": "vendor_case_study",
+      "url": "https://cursor.com/blog/how-cursor-router-works",
+      "supplemental_urls": [],
+      "published": "2026-08-06",
+      "checked_on": "2026-09-22",
+      "locator": "Production routing; user satisfaction; cache switching",
+      "claim": "실제 traffic의 품질 proxy와 비용·캐시를 함께 고려한 routing 사례를 설명한다.",
+      "limitations": "비공개 router와 회사 자체 평가다. 학습 데이터·판단기를 그대로 재현할 수 없다.",
+      "verification": "primary_source_read",
+      "decisions": [
+        "D02",
+        "D08"
+      ],
+      "recheck": "when_replicating_or_changing_assumptions"
+    },
+    {
+      "id": "E31",
+      "title": "LiteLLM Auto Router capability benchmark",
+      "kind": "maintainer_benchmark",
+      "url": "https://docs.litellm.ai/blog/auto-router-capability-benchmark",
+      "supplemental_urls": [],
+      "published": "2026-09-11",
+      "checked_on": "2026-09-22",
+      "locator": "25-task SWE-bench Verified results",
+      "claim": "25과제에서 router와 Opus가 각각 23 해결, 보고 비용 $11.15/$20.27.",
+      "limitations": "설정별 1회 실행이고 해결 과제가 같지 않다. 동일 품질의 일반화된 절감률로 볼 수 없다.",
+      "verification": "primary_source_read",
+      "decisions": [
+        "D08"
+      ],
+      "recheck": "when_replicating_or_changing_assumptions"
+    }
+  ]
+}
