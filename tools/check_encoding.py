@@ -26,7 +26,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 # 본문이 한글을 담을 수 있는 텍스트 파일. 바이너리와 생성물은 대상이 아니다.
-SUFFIXES = (".md", ".json", ".py", ".yml", ".yaml", ".toml", ".txt", ".html", ".css", ".js")
+SUFFIXES = (".md", ".json", ".py", ".yml", ".yaml", ".toml", ".txt", ".html", ".css", ".js", ".ps1")
 SKIP_PARTS = ("__pycache__", ".git", ".venv", "venv", "node_modules")
 
 BOM = b"\xef\xbb\xbf"

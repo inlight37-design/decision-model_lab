@@ -207,6 +207,15 @@ class ResearchIntegrityTests(unittest.TestCase):
             fine.write_bytes("탭\t과 CRLF\r\n정상\n".encode("utf-8"))
             self.assertEqual(problems([fine]), [])
 
+    def test_powershell_scripts_are_ascii(self):
+        """Windows PowerShell 5.1 은 BOM 없는 UTF-8 .ps1 을 ANSI(CP949)로 읽는다. 한글 주석 하나가
+        문자열 경계를 깨뜨릴 수 있으므로 저장소의 .ps1 은 ASCII 로만 쓴다."""
+        scripts = sorted(ROOT.glob("tools/**/*.ps1"))
+        self.assertTrue(scripts, "tools/ 아래 .ps1 을 찾지 못했다")
+        for path in scripts:
+            with self.subTest(path=path.relative_to(ROOT).as_posix()):
+                self.assertTrue(path.read_bytes().isascii())
+
     def test_markdown_relative_link_targets_exist(self):
         # Inline Markdown file links only; external URLs and heading anchors are not checked.
         paths = list(ROOT.glob("*.md"))

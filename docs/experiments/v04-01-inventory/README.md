@@ -33,6 +33,29 @@ git switch -c human/v04-01-main-pc-20260924
 
 이미 clone이 있으면 `git pull`만 한다. Python 3.12 이상이 필요하고 pip 설치는 필요 없다.
 
+### AI 세션이 Claude 데스크톱 앱 안에서 대신 실행할 때 — 먼저 읽는다
+
+보조 PC(`aux-pc`)에서 실제로 걸린 함정이다. 사람이 일반 PowerShell 창에서 직접 할 때는 해당하지 않는다. 보조 스크립트는 [`tools/v04-01/`](../../../tools/v04-01/README.md)에 있다.
+
+| 함정 | 증상 | 대처 |
+|---|---|---|
+| **앱 전용 가상 폴더.** Windows용 Claude 데스크톱 앱은 Microsoft Store(MSIX) 방식이라, 앱 안에서 실행된 프로그램이 `%LOCALAPPDATA%` 아래에 **새 폴더**를 만들면 앱 전용 공간(`%LOCALAPPDATA%\Packages\Claude_…\LocalCache\Local\…`)으로 옮겨진다 | 앱 안의 세션에는 설치된 것으로 보이는데, 사용자 터미널에서는 "인식되지 않습니다" | Antigravity는 기본 설치 폴더가 `%LOCALAPPDATA%\agy\bin`이라 걸렸다 → 설치 스크립트에 `--dir "$env:USERPROFILE\.local\agy\bin"`을 준다. Claude(`~\.local\bin`)와 Codex(`~\.codex`로 가는 연결 폴더)는 영향이 없었다. PATH 레지스트리는 실제로 반영됐다. `check-versions.ps1`이 가상 공간에 빠진 설치를 경고한다 |
+| **AI 도구의 셸 변수.** 앱이 넣은 변수 26개(`CLAUDECODE`, `ANTHROPIC_BASE_URL` 등) | 측정이 사용자 환경과 달라지고, `claude`가 중첩 세션으로 인식될 수 있다 | tier 1은 `--fresh-env`, 나머지는 `tools/v04-01/fresh-shell.ps1`을 거쳐 실행한다 |
+| **낡은 PATH.** 앱과 앱이 여는 터미널 탭은 앱이 시작할 때의 PATH를 물려받는다 | 설치 직후 탭에서 `agy`, `codex`를 못 찾는다 | 탭에서 `$env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User')`를 먼저 실행하거나, 시작 메뉴에서 새 PowerShell을 연다 |
+| **백슬래시가 사라진다.** Git Bash는 따옴표 없는 `tools\v04-01\x.ps1`의 `\`를 먹고, heredoc 안의 파이썬은 `\\`를 `\`로 받아 `\b`가 백스페이스가 된다 | 경로가 붙어 버리거나 문서에 제어 문자가 들어간다(인코딩 검사가 잡는다) | 명령의 경로는 슬래시(`tools/v04-01/x.ps1`)나 따옴표로 쓰고, 문서는 편집 도구로 고친다 |
+| **열린 표준입력.** `codex exec`는 stdin이 열려 있으면 추가 입력을 기다린다 | 호출이 끝나지 않는다 | stdin을 닫고 실행한다(`probe.ps1`이 그렇게 한다) |
+
+설치 전에 설치 스크립트를 받아 **읽고** 나서 실행한다. aux-pc에서는 이렇게 했다(Antigravity 예):
+
+```powershell
+$f = Join-Path $env:TEMP 'agy-install.ps1'
+Invoke-WebRequest https://antigravity.google/cli/install.ps1 -OutFile $f
+# $f 를 읽어 받는 주소·해시 검증·설치 위치를 확인한 뒤
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/v04-01/fresh-shell.ps1 -Script $f --dir "$env:USERPROFILE\.local\agy\bin"
+```
+
+`--dir`로 설치해도 agy 1.2.8의 마지막 안내 문구는 기본 경로(`AppData\Local\agy\bin`)를 출력한다. 실제 위치는 `check-versions.ps1`로 확인한다.
+
 ## 1. 설치 — 사용자
 
 공식 주소만 쓴다. 설치 스크립트는 인터넷에서 받은 코드를 실행하므로 제3자 안내나 미러를 따르지 않는다. 설치 후에는 **새 PowerShell 창**을 열어 PATH를 반영한다.
@@ -41,7 +64,7 @@ git switch -c human/v04-01-main-pc-20260924
 |---|---|---|---|
 | Claude Code | `irm https://claude.ai/install.ps1 \| iex` | `winget install Anthropic.ClaudeCode` | `claude --version`, `claude doctor` |
 | Codex | `powershell -ExecutionPolicy ByPass -c "irm https://chatgpt.com/codex/install.ps1 \| iex"` | `npm install -g @openai/codex` (Node.js 필요) | `codex --version` |
-| Antigravity | `irm https://antigravity.google/cli/install.ps1 \| iex` | — | `agy --help` (`--version`은 문서에 없음) |
+| Antigravity | `irm https://antigravity.google/cli/install.ps1 \| iex` | AI 세션이 Claude 앱 안에서 설치할 때는 위 절처럼 `--dir "$env:USERPROFILE\.local\agy\bin"` | `agy --version` (문서엔 없지만 1.2.8에서 동작) |
 
 알아 둘 것:
 

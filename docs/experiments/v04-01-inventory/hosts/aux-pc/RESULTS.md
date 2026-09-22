@@ -15,7 +15,17 @@
 |---|---|---|---|---|---|
 | Claude Code | 공식 PowerShell 설치 스크립트 | 2.1.280 | Anthropic, PBC — Valid | `claude auth status`: `loggedIn: true`, `authMethod: claude.ai`, `apiProvider: firstParty` | **설치 프로그램이 PATH를 등록하지 않았다.** 안내 문구에 따라 사용자 PATH에 `%USERPROFILE%\.local\bin`을 추가(사용자 승인 범위). 로그인은 새로 하지 않았다 — 데스크톱 앱과 같은 `~/.claude` 자격증명으로 보인다 |
 | Codex | 공식 PowerShell 설치 스크립트 | codex-cli 0.155.1 | OpenAI OpCo, LLC — Valid | `codex login status`: Logged in using ChatGPT | 설치 프로그램이 사용자 PATH를 등록했다. Windows 샌드박스: 미설정(elevated 설정은 관리자 승인 필요 — 사용자 판단) |
-| Antigravity | 공식 PowerShell 설치 스크립트 | 1.2.8 | Google LLC — Valid | **미확인** — 상태 확인 명령이 help에 없고 `~/.gemini/antigravity-cli/settings.json`도 없다 | 설치 프로그램이 사용자 PATH를 등록했다. `--version`은 문서에 없지만 동작했다 |
+| Antigravity | 공식 PowerShell 설치 스크립트, **`--dir ~\.local\agy\bin`으로 재설치** | 1.2.8 | Google LLC — Valid | **미확인** — 상태 확인 명령이 help에 없고 `~/.gemini/antigravity-cli/settings.json`도 없다 | 첫 설치는 기본 폴더 `%LOCALAPPDATA%\agy\bin`에 했는데, **Claude 데스크톱 앱(MSIX)의 전용 가상 공간으로 들어가** 사용자 터미널에서 "인식되지 않음"이 났다(아래). 가상 사본과 그 PATH 항목을 지우고 AppData 밖에 다시 설치했다. `--dir`로 설치해도 마지막 안내는 기본 경로를 출력한다(표시 문제). `--version`은 문서에 없지만 동작했다 |
+
+### 설치 위치 문제 — Claude 데스크톱 앱의 가상화
+
+이 세션은 Claude 데스크톱 앱(Microsoft Store 방식, `Get-AppxPackage`: Claude 2.2553.13.0) 안에서 실행됐다. 앱 안의 프로세스가 `%LOCALAPPDATA%` 아래에 새로 만든 `agy` 폴더는 `%LOCALAPPDATA%\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\agy\`로 옮겨졌다. 앱 안의 세션에는 원래 경로에 있는 것처럼 보였고(tier 1이 그 사본을 실행했다), 사용자가 앱의 터미널 탭에서 실행하자 파일이 없었다.
+
+- 영향 없었던 것: Claude(`~\.local\bin`, AppData 밖), Codex(`%LOCALAPPDATA%\Programs\OpenAI\Codex\bin`은 `~\.codex\packages\standalone\current\bin`으로 가는 연결 폴더이고, 가상 공간에 생기지 않았다), PATH 레지스트리(앱의 가상 레지스트리 파일은 설치 전 시각 이후 바뀌지 않았다)
+- 조치: PATH를 백업(`%TEMP%\v0401-user-path-backup-2.txt`)하고 `%LOCALAPPDATA%\agy\bin` 항목을 지웠다. 가상 사본을 정확한 경로로 지우고, 같은 공식 스크립트로 `~\.local\agy\bin`에 다시 설치했다. 설치 프로그램이 그 폴더를 사용자 PATH에 등록했다
+- 사용자 터미널에서의 재확인: 아래 로그인 단계에서 한다
+
+tier 1 기록의 Antigravity 줄은 가상 사본을 실행한 결과다. 두 설치 모두 같은 1.2.8 manifest의 SHA512로 설치 프로그램이 검증했고 크기(197,157,016 바이트)가 같다. 재설치 후 버전과 서명자가 같음을 `tools/v04-01/check-versions.ps1`로 확인했다.
 
 과금 경로를 바꾸는 환경변수: **없음.** 사용자·시스템 설정 범위에서 절차서의 변수 전부가 없다. `ANTHROPIC_BASE_URL`은 데스크톱 앱 셸에만 있었다.
 
