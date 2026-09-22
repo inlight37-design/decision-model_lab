@@ -33,6 +33,7 @@ LIVING_DOCS = (
     "README.md",
     "AGENTS.md",
     "NEXT-SESSION.md",
+    "docs/COLLABORATION.md",
     "docs/architecture/README.md",
     "docs/architecture/v0.4/README.md",
     "docs/architecture/v0.4/HANDOFF.md",
