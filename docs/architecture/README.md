@@ -9,7 +9,7 @@
 | [v0.4 사례와 반례](v0.4/01-cases-and-findings.md) | 실제 council/critique 제품, 공개 코드 검토, 성과와 실패 근거 |
 | [v0.4 상급 협업 설계](v0.4/02-frontier-architecture.md) | 네 실행 모드, 독립 초안·제한 검토·검증·미합의, D10–D18 |
 | [v0.4 평가·ticket](v0.4/03-evaluation-and-roadmap.md) | 같은 예산 단일 모델/ensemble 대조군, 오류 전이, 단계별 구현 |
-| [v0.4 출처](v0.4/sources.json) / [검증 범위](v0.4/VALIDATION.md) | F01–F21, 원문 검토 범위, 합성 검사와 runtime 미검증 구분 |
+| [v0.4 출처](v0.4/sources.json) / [검증 범위](v0.4/VALIDATION.md) | F01–F24, 원문 검토 범위, 합성 검사와 runtime 미검증 구분 |
 
 오케스트레이션은 저가 모델 분업만을 뜻하지 않습니다. 어려운 계획과 검토에는 상급 모델을 사용할 수 있고, 일반 코드는 상태·권한·예산을 관리합니다. 합의는 검증이 아니므로 미해결 반례를 삭제하지 않습니다. 경제성 경로와 품질 강화 경로를 각각 평가합니다.
 

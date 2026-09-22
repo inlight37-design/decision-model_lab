@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/inlight37-design/decision-model_lab/contracts/sources.schema.json",
+  "title": "Evidence registry contract",
+  "description": "근거 원장(sources.json)의 구조 계약. 원문의 진실성·인용 적합성·접근 가능성을 검증하지 않는다. v0.3(E)과 v0.4(F)는 필드 이름이 다르므로 별도 정의를 둔다.",
+  "$defs": {
+    "id_e": {
+      "type": "string",
+      "pattern": "^E[0-9]{2}$"
+    },
+    "id_f": {
+      "type": "string",
+      "pattern": "^F[0-9]{2}$"
+    },
+    "decision_id": {
+      "type": "string",
+      "pattern": "^D[0-9]{2}$"
+    },
+    "decisions": {
+      "description": "이 근거가 뒷받침하는 설계 결정. 비어 있으면 원장에 남길 이유가 없다.",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/decision_id" }
+    },
+    "https_url": {
+      "type": "string",
+      "pattern": "^https://",
+      "minLength": 12
+    },
+    "nonempty_text": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "date": {
+      "description": "우리가 관측한 날짜. 접근·재확인 시점이므로 전체 정밀도를 요구한다.",
+      "type": ["string", "null"],
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    },
+    "published_date": {
+      "description": "원문의 공개 시점. ISO 8601 축소 정밀도를 허용한다. 학회 논문은 연도만, preprint 는 연-월만 알 수 있는 경우가 있으며 아는 것보다 더 정밀하게 적지 않는다. 기록하지 않았으면 null 로 명시하고 필드를 생략하지 않는다.",
+      "type": ["string", "null"],
+      "pattern": "^[0-9]{4}(-[0-9]{2}(-[0-9]{2})?)?$"
+    },
+    "recheck": {
+      "description": "v0.3이 확립한 어휘. 가변 공급자 문서와 재현 가정을 구분한다.",
+      "enum": [
+        "before_adapter_implementation_or_upgrade",
+        "when_replicating_or_changing_assumptions"
+      ]
+    },
+
+    "entry_v03": {
+      "type": "object",
+      "required": [
+        "id", "title", "kind", "url", "published", "checked_on",
+        "locator", "claim", "limitations", "verification", "decisions", "recheck"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/id_e" },
+        "title": { "$ref": "#/$defs/nonempty_text" },
+        "kind": { "$ref": "#/$defs/nonempty_text" },
+        "url": { "$ref": "#/$defs/https_url" },
+        "supplemental_urls": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/https_url" }
+        },
+        "published": { "$ref": "#/$defs/published_date" },
+        "checked_on": { "$ref": "#/$defs/date" },
+        "locator": {
+          "description": "원문 안에서 주장이 있는 위치. 없으면 '읽었다'를 확인할 수 없다.",
+          "$ref": "#/$defs/nonempty_text"
+        },
+        "claim": { "$ref": "#/$defs/nonempty_text" },
+        "limitations": {
+          "description": "이 근거로 말할 수 없는 것. 원장의 핵심 가치이므로 비울 수 없다.",
+          "$ref": "#/$defs/nonempty_text"
+        },
+        "verification": {
+          "enum": ["primary_source_read", "static_source_inspection"]
+        },
+        "decisions": { "$ref": "#/$defs/decisions" },
+        "recheck": { "$ref": "#/$defs/recheck" }
+      }
+    },
+
+    "entry_v04": {
+      "type": "object",
+      "required": ["id", "title", "url", "kind", "inspection", "locator", "claim", "limits", "decisions"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id_f" },
+        "title": { "$ref": "#/$defs/nonempty_text" },
+        "url": { "$ref": "#/$defs/https_url" },
+        "related_url": { "$ref": "#/$defs/https_url" },
+        "supplemental_urls": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/https_url" }
+        },
+        "kind": { "$ref": "#/$defs/nonempty_text" },
+        "inspection": {
+          "description": "실제로 읽은 범위. v0.3의 verification 에 대응한다.",
+          "$ref": "#/$defs/nonempty_text"
+        },
+        "locator": { "$ref": "#/$defs/nonempty_text" },
+        "claim": { "$ref": "#/$defs/nonempty_text" },
+        "limits": {
+          "description": "v0.3의 limitations 에 대응한다. 비울 수 없다.",
+          "$ref": "#/$defs/nonempty_text"
+        },
+        "published": { "$ref": "#/$defs/published_date" },
+        "revised": { "$ref": "#/$defs/date" },
+        "revision": {
+          "description": "commit SHA 또는 논문 판본 같은 고정 revision 식별자.",
+          "$ref": "#/$defs/nonempty_text"
+        },
+        "revision_date": { "$ref": "#/$defs/date" },
+        "decisions": { "$ref": "#/$defs/decisions" },
+        "recheck": { "$ref": "#/$defs/recheck" }
+      },
+      "anyOf": [
+        { "required": ["published"] },
+        { "required": ["revised"] },
+        { "required": ["revision"] }
+      ],
+      "$comment": "가변 문서일수록 날짜가 중요하다. 모르면 published: null 로 명시하고 생략하지 않는다."
+    },
+
+    "registry_v03": {
+      "type": "object",
+      "required": ["format_version", "scope", "checked_on", "independently_reproduced", "reading_rule", "sources"],
+      "properties": {
+        "format_version": { "type": "integer" },
+        "scope": { "$ref": "#/$defs/nonempty_text" },
+        "checked_on": { "$ref": "#/$defs/date" },
+        "independently_reproduced": { "type": "boolean" },
+        "reading_rule": { "$ref": "#/$defs/nonempty_text" },
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/entry_v03" }
+        }
+      }
+    },
+
+    "registry_v04": {
+      "type": "object",
+      "required": ["registry_version", "checked_at", "scope", "sources"],
+      "properties": {
+        "registry_version": { "$ref": "#/$defs/nonempty_text" },
+        "checked_at": { "$ref": "#/$defs/date" },
+        "timezone": { "$ref": "#/$defs/nonempty_text" },
+        "scope": { "$ref": "#/$defs/nonempty_text" },
+        "previous_registry": { "$ref": "#/$defs/nonempty_text" },
+        "notes": { "type": "array", "items": { "$ref": "#/$defs/nonempty_text" } },
+        "access_notes": { "type": "array", "items": { "$ref": "#/$defs/nonempty_text" } },
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/entry_v04" }
+        }
+      }
+    }
+  }
+}
