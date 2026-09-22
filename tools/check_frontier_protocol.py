@@ -17,6 +17,21 @@ def require(condition: bool, message: str) -> None:
         raise ProtocolError(message)
 
 
+def load_record(text: str) -> Any:
+    """Reject ambiguous keys and non-standard JSON numbers at the input boundary."""
+    def unique_object(pairs):
+        result = {}
+        for key, value in pairs:
+            require(key not in result, f"duplicate JSON key: {key}")
+            result[key] = value
+        return result
+
+    def reject_constant(value):
+        raise ProtocolError(f"non-standard JSON number: {value}")
+
+    return json.loads(text, object_pairs_hook=unique_object, parse_constant=reject_constant)
+
+
 def indexed(value: Any, label: str) -> dict[str, dict[str, Any]]:
     require(isinstance(value, list), f"{label}: list required")
     result = {}
@@ -33,6 +48,8 @@ def validate(record: Any) -> None:
     """첫 위반에 ProtocolError. 합성 기록만 지원하며 운영 schema가 아니다."""
     try:
         require(isinstance(record, dict), "root: object required")
+        # Also catches exponent overflow (1e999) and nonfinite values in extra fields.
+        json.dumps(record, allow_nan=False)
         require(record["schema"] == "frontier-record-experiment/0", "unsupported schema")
         require(record["synthetic"] is True, "synthetic records only")
         mode = record["mode"]
@@ -97,8 +114,10 @@ def validate(record: Any) -> None:
         claims = indexed(record["claims"], "claims")
         checks = indexed(record["checks"], "checks")
         require(bool(claims), "empty claim ledger")
+        checks_by_claim = {claim_id: set() for claim_id in claims}
         for check in checks.values():
             require(check["target"] in claims, "dangling check target")
+            checks_by_claim[check["target"]].add(check["id"])
             require(check["status"] in ("passed", "failed", "inconclusive", "denied", "skipped"), "invalid check status")
             require(check["kind"] in ("test", "source", "calculation", "vote", "self_report"), "invalid check kind")
             require(isinstance(check["log_ref"], str) and bool(check["log_ref"].strip()), "missing check log")
@@ -109,6 +128,7 @@ def validate(record: Any) -> None:
             require(isinstance(refs, list) and len(set(refs)) == len(refs), "invalid check refs")
             for ref in refs:
                 require(ref in checks and checks[ref]["target"] == claim["id"], "check binding mismatch")
+            require(set(refs) == checks_by_claim[claim["id"]], "claim omits declared checks")
             if claim["disposition"] == "supported":
                 require(any(checks[r]["status"] == "passed" and checks[r]["kind"] in ("test", "source", "calculation") for r in refs), "unsupported promotion")
                 require(not any(checks[r]["status"] == "failed" for r in refs), "unresolved counterevidence")
@@ -121,7 +141,9 @@ def validate(record: Any) -> None:
         require(report["status"] in ("qualified", "review_ready"), "invalid report status")
         if report["unresolved"] or report["qualified"]:
             require(report["status"] == "qualified", "unresolved report mislabeled")
-    except (KeyError, TypeError, AttributeError) as exc:
+    except ProtocolError:
+        raise
+    except (KeyError, TypeError, AttributeError, ValueError) as exc:
         raise ProtocolError(f"malformed record: {exc}") from exc
 
 
@@ -149,7 +171,7 @@ def main() -> int:
     parser.add_argument("record", nargs="?", type=Path, help="합성 JSON; 생략하면 내장 예시")
     args = parser.parse_args()
     try:
-        record = json.loads(args.record.read_text(encoding="utf-8")) if args.record else demo()
+        record = load_record(args.record.read_text(encoding="utf-8")) if args.record else demo()
         validate(record)
     except (OSError, ValueError) as exc:
         print(f"INVALID: {exc}")

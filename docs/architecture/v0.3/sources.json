@@ -113,6 +113,7 @@
       "limitations": "total_cost_usd를 구독의 실제 추가 청구액으로 볼 수 없다.",
       "verification": "primary_source_read",
       "decisions": [
+        "D01",
         "D03",
         "D05",
         "D07"

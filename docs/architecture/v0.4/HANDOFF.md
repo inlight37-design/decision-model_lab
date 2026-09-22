@@ -1,7 +1,9 @@
 # v0.4 인계 — 상급 모델 협업 확장
 
-기준일 **2026-09-22 (Asia/Seoul)**. 브랜치 `docs/jev-free-codex-bridge-20260922`.
-시작 head: `634d34b2b6639ef60bd6469190cec053826b4385`.
+기준일 **2026-09-22 (Asia/Seoul)**. 개발 브랜치: `docs/jev-free-codex-bridge-20260922`.
+초기 v0.4 작업 시작 head: `634d34b2b6639ef60bd6469190cec053826b4385`.
+
+**최종 검토 보강:** [FINAL_REVIEW](FINAL_REVIEW.md)를 먼저 확인한다. Windows Python 3.12에서 전체 71개 테스트를 통과했고, 출처 양방향 연결·누락된 반대 근거·모호한 JSON 입력을 수정했다. 사용자가 최종 검토 후 main 병합을 명시적으로 요청했다. 현재 병합 상태와 최종 commit은 [PR #1](https://github.com/inlight37-design/decision-model_lab/pull/1)이 기준이다. 아래 7–8절의 컨테이너/30개 검사/미병합 기록은 초기 작업 당시의 이력이다.
 
 ## 1. 현재 결과
 
@@ -14,10 +16,11 @@
 | Q0–Q6 대조군, 오류 전이·합성 손실·총비용, 8개 적용 recipe, V04-01–06 | [03-evaluation-and-roadmap](03-evaluation-and-roadmap.md) |
 | F01–F21 원문·날짜/버전·검토 범위·한계·결정 연결 | [sources.json](sources.json) |
 | 합성 완료 기록 checker와 내장 demo | [tools/check_frontier_protocol.py](../../../tools/check_frontier_protocol.py) |
-| 오프라인 테스트 30개 | [tests/test_frontier_protocol.py](../../../tests/test_frontier_protocol.py) |
+| frontier/CLI 테스트 40개 | [tests/test_frontier_protocol.py](../../../tests/test_frontier_protocol.py) |
+| 출처 양방향 연결·상대 링크 검사 3개 | [tests/test_research_integrity.py](../../../tests/test_research_integrity.py) |
 | 실행 환경·검사 결과·원격 hash 대조·미검증 범위 | [VALIDATION](VALIDATION.md) |
 
-root README·AGENTS·architecture 버전 지도와 기존 PR #1의 제목/본문을 v0.4로 갱신했다. PR의 base/open 상태는 바꾸지 않았고 main merge/rebase는 하지 않았다. 최종 head는 현재 브랜치/PR에서 확인한다. 이 문서 자체의 미래 commit SHA를 추정하지 않는다.
+root README·AGENTS·architecture 버전 지도와 기존 PR #1은 v0.4 기준이다. 최종 head와 병합 상태는 PR에서 확인한다. 이 문서 자체의 미래 commit SHA를 추정하지 않는다.
 
 ## 2. 다음 세션의 최소 읽기 순서
 
@@ -52,7 +55,7 @@ python tools/check_frontier_protocol.py
 python -m unittest discover -s tests -p 'test_frontier_protocol.py' -v
 ```
 
-현재 도구는 Python 표준 라이브러리만 사용하는 **축소 합성 완료 기록 검사**다. `frontier-record-experiment/0`, synthetic=true, cross_check/deliberate에 한정한다. 30개 테스트는 이 기록의 불변식 검사이지 모델 능력·출처 의미·실제 정책 강제 검증이 아니다. 모든 운영 schema 필드를 검사하지도 않는다.
+현재 도구는 Python 표준 라이브러리만 사용하는 **축소 합성 완료 기록 검사**다. `frontier-record-experiment/0`, synthetic=true, cross_check/deliberate에 한정한다. 40개 frontier/CLI 테스트는 기록의 불변식과 입력 처리를 검사하며 모델 능력·출처 의미·실제 정책 강제를 검증하지 않는다. 모든 운영 schema 필드를 검사하지도 않는다. 각 claim은 그 claim을 대상으로 기록한 모든 check를 참조해야 한다.
 
 후속 구현은 기록에 적힌 provider/quality/digest/check 상태를 실제 계정·artifact·검증 로그와 대조해야 한다. 현재 `supported`의 최소 참조 조건을 운영 진실 판정 gate로 사용하지 않는다. 별도 합성 profile, partial/degraded 결과의 승인/표시, signature/provenance, timeout/cancellation reconciliation, native 내부 usage는 아직 필요하다. 전체 범위는 VALIDATION 5–6절에 있다.
 
@@ -66,7 +69,7 @@ F09/F10/F11/F20은 abstract 수준 확인이다. 관련 수치나 세부 방법�
 
 F17/F18/F19는 기존 E02/E05/E08 재확인이다. Claude SDK 정책의 상단 보류 안내와 하단 과거표, agy headless 쓰기 허용/soft-denial exit 0, Codex read-only 기본값의 의미를 실제 설치 설정과 대조해야 한다. 전체 source URL 자동 점검·전체 논문 재현·커뮤니티 전수 조사는 하지 않았다.
 
-## 7. 실제 검사와 환경 경계
+## 7. 초기 v0.4 작업 당시의 검사와 환경 경계
 
 대화 컨테이너 Python 3.13.5에서 새 unit test **30개 OK**, demo/파일 입력·정상/오류 exit code·문법 컴파일을 확인했다. 테스트한 코드와 GitHub snapshot `8025e1dde0195f3a0992f8a65fada4545e438eda`의 두 Python blob hash가 일치한다. 정확한 값은 VALIDATION에 있다.
 

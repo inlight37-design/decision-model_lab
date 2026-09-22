@@ -8,8 +8,8 @@ v0.3 설계 제안이며 구현 완료 사양이 아니다.
 
 | ID | 채택하는 결정 | 근거/이유 | 대안과 재검토 조건 |
 |---|---|---|---|
-| D01 | Native CLI adapter를 구독의 우선 실행 경로로 사용. API/extra credits는 별도 opt-in profile | E01–E10. 실제 인증·과금이 제품마다 다름 | 통합 API gateway 우선은 현재 요구와 불일치. 공식 구독 재사용·기능 동등성이 확인되면 SDK/wrapper로 교체 가능 |
-| D02 | task 또는 명확한 phase 단위로 배정. 시작은 deterministic rule + 작업군별 profile | E12/E13/E18/E19/E30. routing 비용과 전환 문맥을 최소화 | 매 turn judge·학습 router는 저가 단독 대비 순이익과 calibration이 확인될 때 |
+| D01 | Native CLI adapter를 구독의 우선 실행 경로로 사용. API/extra credits는 별도 opt-in profile | E01–E10/E22. 실제 인증·과금이 제품마다 다름 | 통합 API gateway 우선은 현재 요구와 불일치. 공식 구독 재사용·기능 동등성이 확인되면 SDK/wrapper로 교체 가능 |
+| D02 | task 또는 명확한 phase 단위로 배정. 시작은 deterministic rule + 작업군별 profile | E11/E12/E13/E15/E17/E18/E19/E30. routing 비용과 전환 문맥을 최소화 | 매 turn judge·학습 router는 저가 단독 대비 순이익과 calibration이 확인될 때 |
 | D03 | 공통 실행 계약을 정의하되 native event·기능 차이를 보존 | E02/E03/E06/E08/E22/E23. wrapper만으로 resume/권한/usage 동등성이 생기지 않음 | Lite-Harness 등 기존 wrapper가 conformance를 충족하면 직접 adapter 코드를 줄일 수 있음 |
 | D04 | 한 작업 한 worker를 기본값으로 하고 분해 가능한 역할만 추가 | E11/E14/E15/E17/E18/E20/E21. 조정 비용과 오류 전파의 조건부 효과 | 독립 task 병렬화가 순차 실행보다 deadline/수용률/전체비용을 개선하면 확장 |
 | D05 | 기계 manifest와 모델 packet 분리. 원문 참조·필요 부분 조회·명시 session affinity | E02/E06/E08/E16/E26/E27/E28/E29. 반복 입력과 누계 중복을 줄이고 원문 재검증 가능하게 함 | 요약/선별이 사실 누락·repair를 늘리면 해당 selector 중단; 캐시 이득도 실측 |

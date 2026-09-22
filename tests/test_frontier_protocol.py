@@ -1,4 +1,9 @@
 """합성 기록 검사. 실제 provider, 사용량, 인용 의미, sandbox를 검증하지 않는다."""
+import json
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
 import unittest
 
 from tools.check_frontier_protocol import ProtocolError, demo, validate
@@ -114,6 +119,97 @@ class FrontierProtocolTests(unittest.TestCase):
         for record in (None, [], {}, {"schema": "wrong"}):
             with self.subTest(record=record), self.assertRaises(ProtocolError):
                 validate(record)
+
+    def test_unlinked_counterevidence_cannot_be_hidden(self):
+        self.assert_invalid(lambda r: r["checks"].append({
+            "id": "hidden-failure", "target": "c1", "kind": "test",
+            "status": "failed", "log_ref": "synthetic://failure",
+        }))
+
+    def test_every_declared_check_is_linked(self):
+        self.assert_invalid(lambda r: r["checks"].append({
+            "id": "omitted", "target": "c2", "kind": "source",
+            "status": "inconclusive", "log_ref": "synthetic://inconclusive",
+        }))
+
+    def test_qualified_claim_preserves_counterevidence(self):
+        record = demo()
+        record["checks"].append({"id": "e2", "target": "c1", "kind": "test",
+                                 "status": "failed", "log_ref": "synthetic://e2"})
+        record["claims"][0].update(disposition="qualified", check_refs=["e1", "e2"])
+        record["report"].update(supported=[], qualified=["c1"])
+        validate(record)
+
+    def test_nonfinite_values_in_extra_fields_are_rejected(self):
+        for value in (float("nan"), float("inf"), -float("inf")):
+            with self.subTest(value=value):
+                self.assert_invalid(lambda r: r.update(extra={"usage": [value]}))
+
+    def test_two_provider_modes(self):
+        for mode in ("cross_check", "deliberate"):
+            with self.subTest(mode=mode):
+                record = demo()
+                record["mode"] = mode
+                record["required_participants"] = 2
+                record["participants"].pop()
+                record["drafts"].pop()
+                record["calls"] = [c for c in record["calls"] if c["participant"] != "C"
+                                   and (mode == "deliberate" or c["role"] != "review")]
+                for call in record["calls"]:
+                    if call["role"] == "review":
+                        call["peer_draft_ids"].remove("draft-C")
+                record["limits"] = {"max_calls": len(record["calls"]),
+                                    "max_review_rounds": int(mode == "deliberate")}
+                validate(record)
+
+    def test_ring_review_is_supported(self):
+        record = demo()
+        for call, peer in zip(record["calls"][3:6], ("draft-B", "draft-C", "draft-A")):
+            call["peer_draft_ids"] = [peer]
+        validate(record)
+
+
+class FrontierCliTests(unittest.TestCase):
+    def run_record(self, content):
+        script = Path(__file__).resolve().parents[1] / "tools/check_frontier_protocol.py"
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "record.json"
+            path.write_text(content, encoding="utf-8")
+            return subprocess.run([sys.executable, str(script), str(path)],
+                                  capture_output=True, text=True, encoding="utf-8")
+
+    def test_valid_json_file(self):
+        result = self.run_record(json.dumps(demo()))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("PASS:", result.stdout)
+
+    def test_duplicate_keys_are_rejected(self):
+        source = json.dumps(demo())
+        cases = [source.replace('"paid_fallback": false',
+                                '"paid_fallback": true, "paid_fallback": false'),
+                 source.replace('"max_calls": 7', '"max_calls": 1, "max_calls": 7'),
+                 source.replace('"unresolved": ["c2"]',
+                                '"unresolved": [], "unresolved": ["c2"]')]
+        for content in cases:
+            with self.subTest(content=content):
+                result = self.run_record(content)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn("INVALID:", result.stdout)
+                self.assertNotIn("Traceback", result.stderr)
+
+    def test_nonstandard_and_overflow_numbers_are_rejected(self):
+        for literal in ("NaN", "Infinity", "-Infinity", "1e999"):
+            with self.subTest(literal=literal):
+                content = json.dumps(demo())[:-1] + ', "extra": ' + literal + '}'
+                result = self.run_record(content)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn("INVALID:", result.stdout)
+                self.assertNotIn("Traceback", result.stderr)
+
+    def test_malformed_json_is_rejected(self):
+        result = self.run_record('{"schema":')
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("INVALID:", result.stdout)
 
 
 if __name__ == "__main__":
