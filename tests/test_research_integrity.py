@@ -144,6 +144,21 @@ class ResearchIntegrityTests(unittest.TestCase):
                 with self.subTest(doc=relative, line=number, found=found.group(0)):
                     self.fail(f"{relative}:{number}: '{found.group(0)}' — link the CI log instead")
 
+    def test_handoff_keeps_its_fixed_layout(self):
+        """여러 세션이 번갈아 쓰는 인계 문서는 같은 자리에서 같은 것을 찾을 수 있어야 한다.
+        '진행 중인 작업' 절이 없으면 main 의 인계가 열린 PR 을 모르는 일이 되풀이된다."""
+        lines = (ROOT / "NEXT-SESSION.md").read_text(encoding="utf-8").splitlines()
+        self.assertEqual(lines[0], "# 다음 세션 인계 — decision-model_lab")
+        self.assertTrue(
+            any(re.match(r"최종 갱신 \*\*\d{4}-\d{2}-\d{2}\*\* · 작성 세션: \S", line) for line in lines[:5]),
+            "second block must read '최종 갱신 **YYYY-MM-DD** · 작성 세션: <agent>'",
+        )
+        self.assertEqual(
+            [line for line in lines if line.startswith("## ")],
+            ["## 0. 먼저 확인할 것", "## 1. 지금 상태", "## 2. 사용자가 확정한 것",
+             "## 3. 진행 중인 작업", "## 4. 다음 작업", "## 5. 하지 말 것", "## 6. 검사"],
+        )
+
     def test_restated_count_pattern_matches_past_drift(self):
         """위 검사가 실제로 있었던 어긋남을 잡는지, 정상 문장을 잡지 않는지 고정한다."""
         for text in ("(75 tests)", "Ran 74 tests", "현재 전체 **74개**다", "검사 75개",

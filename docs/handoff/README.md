@@ -5,6 +5,7 @@
 | 파일 | 무엇 | 교체한 곳 |
 |---|---|---|
 | [`2026-09-23-before-review.md`](2026-09-23-before-review.md) | MCP·UI 검토([PR #3](https://github.com/inlight37-design/decision-model_lab/pull/3)) 전의 전체 인계. 환경, 사용자 결정, 디자인 규칙, 생태계 표 | PR #3이 루트에 날짜를 붙여 보존했고, 인계 파일을 하나로 두기 위해 이 폴더로 옮겼다 |
+| [`2026-09-23-after-mcp-ui-review.md`](2026-09-23-after-mcp-ui-review.md) | PR #3 세션이 쓴 인계. MCP·UI 검토의 정정 사항과 다음 실행 순서 | 협업 규칙의 고정 절 구성으로 새로 쓰면서 옮겼다. 정정 사항은 새 인계와 [검토 기록](../reviews/2026-09-23-mcp-ui-runtime/README.md)에 이어진다 |
 
 ## 규칙
 
