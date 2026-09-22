@@ -43,7 +43,7 @@ root README·AGENTS·architecture 버전 지도와 기존 PR #1은 v0.4 기준�
 
 ## 4. 가장 먼저 수행할 다음 작업
 
-**V04-01: 실제 실행 환경과 adapter inventory.** 연결 가능한 사용자 실행 환경에서 OS, 실제 CLI 설치/버전, 해당 버전의 help, native 로그인 방식, 사용 가능한 상급 모델/effort, output/schema/session/권한/cancel 기능을 확인한다. API key·인증 token·전체 환경 변수를 문서나 Git에 출력하지 않는다. 현재 문서만 보고 configured=true로 만들지 않는다.
+**V04-01: 실제 실행 환경과 adapter inventory.** 연결 가능한 사용자 실행 환경에서 OS, 실제 CLI 설치/버전, 해당 버전의 help, native 로그인 방식, 사용 가능한 상급 모델/effort, output/schema/session/권한/cancel 기능을 확인한다. API key·인증 token·전체 환경 변수를 문서나 Git에 출력하지 않는다. 현재 문서만 보고 configured=true로 만들지 않는다. 설치부터 판정까지의 순서는 [V04-01 절차서](../../experiments/v04-01-inventory/README.md)에 있다.
 
 아직 CLI adapter·MCP bridge가 구현된 경로는 없다. 첫 구현 파일 경로/언어 구조는 실제 저장소 상태와 환경 확인 후 정한다. 단순 문서의 함수 이름을 이미 동작하는 API로 호출하지 않는다. native 도구의 실제 입출력 fixture와 공통 capability/preflight/start/events/collect/cancel 계약을 작은 단위로 연결한다.
 
@@ -58,7 +58,7 @@ python tools/check_frontier_protocol.py
 python -m unittest discover -s tests -p 'test_frontier_protocol.py' -v
 ```
 
-현재 도구는 Python 표준 라이브러리만 사용하는 **축소 합성 완료 기록 검사**다. `frontier-record-experiment/0`, synthetic=true, cross_check/deliberate에 한정한다. 40개 frontier/CLI 테스트는 기록의 불변식과 입력 처리를 검사하며 모델 능력·출처 의미·실제 정책 강제를 검증하지 않는다. 모든 운영 schema 필드를 검사하지도 않는다. 각 claim은 그 claim을 대상으로 기록한 모든 check를 참조해야 한다.
+현재 도구는 Python 표준 라이브러리만 사용하는 **축소 합성 완료 기록 검사**다. `frontier-record-experiment/0`, synthetic=true, cross_check/deliberate에 한정한다. frontier/CLI 테스트는 기록의 불변식과 입력 처리를 검사하며 모델 능력·출처 의미·실제 정책 강제를 검증하지 않는다. 모든 운영 schema 필드를 검사하지도 않는다. 각 claim은 그 claim을 대상으로 기록한 모든 check를 참조해야 한다.
 
 후속 구현은 기록에 적힌 provider/quality/digest/check 상태를 실제 계정·artifact·검증 로그와 대조해야 한다. 현재 `supported`의 최소 참조 조건을 운영 진실 판정 gate로 사용하지 않는다. 별도 합성 profile, partial/degraded 결과의 승인/표시, signature/provenance, timeout/cancellation reconciliation, native 내부 usage는 아직 필요하다. 전체 범위는 VALIDATION 5–6절에 있다.
 

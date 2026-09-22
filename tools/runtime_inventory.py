@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""V04-01 1단계: 설치된 CLI의 버전과 help를 비밀 값 없이 기록한다. 표준 라이브러리만 쓴다.
+"""V04-01 tier 1: 설치된 CLI의 버전과 help를 비밀 값 없이 기록한다. 표준 라이브러리만 쓴다.
 
 실행하는 것: 아래 ADAPTERS에 적힌 `--version`과 `--help`뿐이다.
 하지 않는 것: 로그인, 모델 호출, 설정 변경, 한도 조회, 설정·인증 파일 열기, 환경변수
@@ -7,7 +7,7 @@
 
 이 도구가 기능에 붙이는 상태는 `in_help`, `not_in_help`, `unknown` 세 가지뿐이다. help에
 플래그가 있다는 것은 이 계정·이 버전에서 그 플래그가 실제로 적용된다는 뜻이 아니다.
-그것은 2단계 절차서의 관측(`observed`)이 정한다. 그래서 1단계 manifest의
+그것은 절차서 tier 2의 관측(`observed`)이 정한다. 그래서 tier 1 manifest의
 `configured`는 언제나 false다. 절차: docs/experiments/v04-01-inventory/README.md
 
 실행:
@@ -37,7 +37,7 @@ SCHEMA = "runtime-inventory/1"
 DEFAULT_OUT = ROOT / "docs/experiments/v04-01-inventory/hosts"
 
 # unknown: 확인 못 함 · documented: 공식 문서에만 있음 · in_help/not_in_help: 이 버전 help에
-# 플래그가 있음/없음 · observed: 실제 실행으로 확인(2단계) · unsupported: 실행으로 거절 확인
+# 플래그가 있음/없음 · observed: 실제 실행으로 확인(tier 2) · unsupported: 실행으로 거절 확인
 STATUSES = ("unknown", "documented", "in_help", "not_in_help", "observed", "unsupported")
 TIER1_STATUSES = ("unknown", "in_help", "not_in_help")
 
@@ -218,7 +218,7 @@ def collect(label: str, *, adapters: tuple[Adapter, ...] = ADAPTERS,
             "installed": resolved is not None,
             "resolved_path": redact(resolved) if resolved else None,
             "runtime_version": None, "probes": [], "capabilities": {},
-            # v0.3 01-system.md의 registry 필드. 1단계는 아래를 알 수 없다.
+            # v0.3 01-system.md의 registry 필드. tier 1은 아래를 알 수 없다.
             "auth_mode": "unknown", "funding_mode": "unknown", "model_profile_id": None,
             "quota_pool_id": None, "policy_checked_on": None, "health": "unknown",
             "observability": "unknown", "configured": False,
@@ -371,7 +371,7 @@ def summary(manifest: dict[str, Any]) -> list[str]:
     present = [name for name, entry in manifest["env_presence"].items() if entry["present"]]
     if present:
         lines.append("경고: 과금·인증 경로를 바꿀 수 있는 환경변수가 있다(값은 읽지 않음): " + ", ".join(present))
-    lines.append("1단계는 help 문자열만 봤다. 실제 동작은 절차서 2단계에서 관측한다.")
+    lines.append("tier 1은 help 문자열만 봤다. 실제 동작은 절차서 tier 2에서 관측한다.")
     return lines
 
 

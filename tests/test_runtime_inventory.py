@@ -1,4 +1,4 @@
-"""V04-01 1단계 도구 검사. 실제 CLI·로그인·모델을 쓰지 않는다. 가짜 실행기와 python 자신만 쓴다."""
+"""V04-01 tier 1 도구 검사. 실제 CLI·로그인·모델을 쓰지 않는다. 가짜 실행기와 python 자신만 쓴다."""
 from datetime import datetime, timezone
 import json
 from pathlib import Path
