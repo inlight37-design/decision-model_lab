@@ -1,5 +1,7 @@
 # Codex 하네스를 유지하는 연결 설계
 
+> 후속 기준: [v0.3 구독 우선 구조](../architecture/v0.3/README.md). 사용자가 Antigravity·ChatGPT·Claude 구독 CLI 우선을 선택했으므로 아래 저가 API 경로는 선택 사항이다. 최신 연결/과금 비교는 [v0.3 adapter](../architecture/v0.3/02-adapters.md)를 우선한다.
+
 2026-09-22 설계안. [조사 결론](README.md)과 [측정 계획](measurement-and-rollout.md)을 함께 읽는다. 아래 도구 이름·JSON·폴더 구조는 **제안이며 아직 구현되지 않았다.** 공식 기능과 우리에게 필요한 추가 구현을 구분한다.
 
 ## 1. ‘하네스 유지’의 두 가지 의미
