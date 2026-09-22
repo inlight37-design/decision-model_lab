@@ -191,6 +191,45 @@ class ManifestRuleTests(unittest.TestCase):
                 self.assertTrue(validate_manifest(manifest))
 
 
+class FreshEnvironmentTests(unittest.TestCase):
+    """AI 도구 셸에서 잰 값이 사용자의 새 터미널 값인 것처럼 기록되지 않게 한다."""
+    BASE = {"CLAUDECODE": "1", "ANTHROPIC_BASE_URL": "https://example.invalid", "MCP_X": "1",
+            "OPENAI_API_KEY": "user-set", "SYSTEMROOT": r"C:\Windows", "PATH": r"C:\tool-only"}
+
+    def test_removes_only_process_only_ai_variables(self):
+        env, removed = inv.fresh_environment(self.BASE, {"Path": r"C:\Windows"},
+                                             {"OPENAI_API_KEY": "x", "Path": r"C:\Users\a\bin"})
+        self.assertEqual(removed, ["ANTHROPIC_BASE_URL", "CLAUDECODE", "MCP_X"])
+        self.assertIn("OPENAI_API_KEY", env)   # 사용자가 직접 설정한 것은 남긴다
+        self.assertIn("SYSTEMROOT", env)
+        self.assertEqual(env["PATH"], r"C:\Windows;C:\Users\a\bin")
+
+    def test_manifest_records_mode_and_names_only(self):
+        env, removed = inv.fresh_environment(self.BASE, {"Path": ""}, {})
+        manifest, _ = claude_manifest(environ=env, removed_vars=removed)
+        self.assertEqual(manifest["environment"], {"mode": "fresh", "removed": removed})
+        self.assertFalse(manifest["env_presence"]["ANTHROPIC_BASE_URL"]["present"])
+        self.assertNotIn("example.invalid", json.dumps(manifest))
+        self.assertEqual(validate_manifest(manifest), [])
+        manifest["environment"]["removed"].append("ANTHROPIC_BASE_URL=https://example.invalid")
+        self.assertTrue(validate_manifest(manifest))
+
+    def test_process_mode_is_the_default(self):
+        manifest, _ = claude_manifest()
+        self.assertEqual(manifest["environment"], {"mode": "process", "removed": []})
+
+    def test_fresh_env_is_windows_only(self):
+        with mock.patch.object(inv, "IS_WINDOWS", False), mock.patch("sys.stderr"), \
+                self.assertRaises(SystemExit):
+            inv.main(["--host-label", "test-pc", "--dry-run", "--fresh-env"])
+
+    @unittest.skipUnless(inv.IS_WINDOWS, "Windows registry only")
+    def test_registry_environment_reads_both_scopes(self):
+        machine, user = inv.registry_environment()
+        self.assertIn("PATH", {name.upper() for name in machine})
+        self.assertIsInstance(user, dict)
+
+
 class CliTests(unittest.TestCase):
     def test_dry_run_executes_nothing(self):
         with mock.patch.object(inv, "run_probe", side_effect=AssertionError("executed")), \

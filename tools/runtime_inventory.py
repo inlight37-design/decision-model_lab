@@ -14,6 +14,7 @@
     python tools/runtime_inventory.py --host-label main-pc --dry-run   # 실행할 명령만 출력
     python tools/runtime_inventory.py --host-label main-pc             # 기록
     python tools/runtime_inventory.py --validate <manifest.json>       # 기존 기록 검사
+    AI 도구 안의 터미널에서 실행한다면(Windows) --fresh-env를 붙인다.
 """
 from __future__ import annotations
 
@@ -149,6 +150,11 @@ SECRET = re.compile(
 USER_PATH = re.compile(r"(?i)([A-Z]:[\\/]+Users[\\/]+)(?!<user>)[^\\/\s\"']+|(/(?:home|Users)/)(?!<user>)[^/\s\"']+")
 ANSI = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
 LABEL = re.compile(r"[a-z0-9][a-z0-9-]{1,39}")
+ENV_NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_()]*")
+# AI 도구는 자기 셸에 이런 변수를 넣는다(보조 PC의 Claude 데스크톱 앱 셸에서 26개 관측).
+# 그 셸에서 잰 환경은 사용자가 새 터미널을 열었을 때의 환경이 아니다.
+AI_TOOL_VARS = re.compile(r"(?i)(?:CLAUDE|ANTHROPIC|CODEX|OPENAI|GEMINI|GOOGLE_|MCP_)")
+IS_WINDOWS = os.name == "nt"
 
 Runner = Callable[[list[str], float], dict[str, Any]]
 
@@ -176,9 +182,50 @@ def decode(data: bytes | str | None) -> str:
     return ANSI.sub("", text).replace("\r\n", "\n")
 
 
-def run_probe(argv: list[str], timeout: float) -> dict[str, Any]:
+def fresh_environment(base: Mapping[str, str], machine: Mapping[str, str],
+                      user: Mapping[str, str]) -> tuple[dict[str, str], list[str]]:
+    """새 터미널에 가까운 환경과 지운 변수 이름을 돌려준다. 설정은 바꾸지 않는다.
+
+    base에만 있고 시스템·사용자 설정에는 없는 AI 도구 변수를 지우고, PATH를 시스템 +
+    사용자 설정으로 다시 만든다. 사용자가 직접 설정한 변수는 AI 접두사여도 남긴다.
+    """
+    persistent = {name.upper() for name in (*machine, *user)}
+    removed = sorted(name for name in base
+                     if AI_TOOL_VARS.match(name) and name.upper() not in persistent)
+    env = {name: value for name, value in base.items() if name not in removed}
+    upper = lambda values: {k.upper(): v for k, v in values.items()}  # noqa: E731
+    paths = [upper(scope).get("PATH", "") for scope in (machine, user)]
+    for name in [n for n in env if n.upper() == "PATH"]:
+        del env[name]
+    env["PATH"] = ";".join(p.strip(";") for p in paths if p)
+    return env, removed
+
+
+def registry_environment() -> tuple[dict[str, str], dict[str, str]]:  # pragma: no cover - Windows 전용
+    """새 로그온 세션이 받는 시스템·사용자 환경변수. 값은 PATH 재구성에만 쓰고 기록하지 않는다."""
+    import winreg
+
+    def read(root: Any, subkey: str) -> dict[str, str]:
+        values: dict[str, str] = {}
+        with winreg.OpenKey(root, subkey) as key:
+            index = 0
+            while True:
+                try:
+                    name, value, kind = winreg.EnumValue(key, index)
+                except OSError:
+                    return values
+                if isinstance(value, str):
+                    values[name] = (winreg.ExpandEnvironmentStrings(value)
+                                    if kind == winreg.REG_EXPAND_SZ else value)
+                index += 1
+
+    return (read(winreg.HKEY_LOCAL_MACHINE, r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment"),
+            read(winreg.HKEY_CURRENT_USER, "Environment"))
+
+
+def run_probe(argv: list[str], timeout: float, env: Mapping[str, str] | None = None) -> dict[str, Any]:
     """stdin을 닫고 한 번 실행한다. 대화형 입력을 기다리는 명령은 timeout으로 끝난다."""
-    env = dict(os.environ, NO_COLOR="1")
+    env = dict(os.environ if env is None else env, NO_COLOR="1")
     started = time.monotonic()
     try:
         proc = subprocess.run(argv, stdin=subprocess.DEVNULL, capture_output=True,
@@ -203,8 +250,13 @@ def collect(label: str, *, adapters: tuple[Adapter, ...] = ADAPTERS,
             which: Callable[[str], str | None] = shutil.which, run: Runner | None = None,
             environ: Mapping[str, str] | None = None, home: str | None = None,
             exists: Callable[[str], bool] = os.path.exists, timeout: float = 20.0,
-            now: datetime | None = None) -> tuple[dict[str, Any], dict[str, str]]:
-    """manifest와 저장할 help 원문({상대 경로: 텍스트})을 돌려준다. 파일은 쓰지 않는다."""
+            now: datetime | None = None, removed_vars: list[str] | None = None,
+            ) -> tuple[dict[str, Any], dict[str, str]]:
+    """manifest와 저장할 help 원문({상대 경로: 텍스트})을 돌려준다. 파일은 쓰지 않는다.
+
+    removed_vars가 None이면 이 프로세스의 환경을 그대로 쟀다는 뜻이고, 목록이면
+    fresh_environment()로 지운 변수 이름이다.
+    """
     run = run or run_probe
     environ = os.environ if environ is None else environ
     home = str(Path.home()) if home is None else home
@@ -268,6 +320,8 @@ def collect(label: str, *, adapters: tuple[Adapter, ...] = ADAPTERS,
                  "git_blob_sha1": git_blob_sha1(Path(__file__).read_bytes())},
         "scope": {"executed": "only the --version/--help commands listed in probes",
                   "not_checked": list(NOT_CHECKED)},
+        "environment": {"mode": "process" if removed_vars is None else "fresh",
+                        "removed": list(removed_vars or [])},
         "env_presence": {name: {"present": name in environ, "adapter": adapter_id, "why": why}
                          for name, adapter_id, why in ENV_VARS},
         "config_presence": {path: {"present": bool(exists(os.path.expanduser(path.replace("~", home, 1)))),
@@ -336,6 +390,11 @@ def validate_manifest(manifest: Any) -> list[str]:
     for name, entry in (manifest.get("env_presence") or {}).items():
         if not isinstance(entry, dict) or type(entry.get("present")) is not bool:
             errors.append(f"env_presence.{name}: record presence as a boolean only")
+    environment = manifest.get("environment")
+    if not (isinstance(environment, dict) and environment.get("mode") in ("process", "fresh")
+            and isinstance(environment.get("removed"), list)
+            and all(isinstance(n, str) and ENV_NAME.fullmatch(n) for n in environment["removed"])):
+        errors.append("environment must record mode process|fresh and removed variable names only")
     for text in strings(manifest):
         if SECRET.search(text):
             errors.append("manifest contains a secret-like string")
@@ -383,6 +442,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--dry-run", action="store_true", help="실행할 명령만 출력하고 아무것도 실행하지 않는다")
     parser.add_argument("--force", action="store_true", help="기존 manifest를 덮어쓴다")
     parser.add_argument("--validate", type=Path, metavar="MANIFEST", help="기존 manifest만 검사한다")
+    parser.add_argument("--fresh-env", action="store_true",
+                        help="Windows 전용. AI 도구 셸에만 있는 변수를 빼고 PATH를 시스템·사용자 설정으로 "
+                             "다시 만든 환경에서 잰다. AI 도구 안에서 실행할 때 쓴다")
     args = parser.parse_args(argv)
 
     if args.validate:
@@ -401,6 +463,14 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--host-label is required: 2-40 chars of a-z, 0-9 and '-'")
     if args.timeout <= 0:
         parser.error("--timeout must be positive")
+    if args.fresh_env and not IS_WINDOWS:
+        parser.error("--fresh-env reads the Windows registry and is Windows-only")
+
+    environ: Mapping[str, str] = os.environ
+    removed: list[str] | None = None
+    if args.fresh_env:
+        environ, removed = fresh_environment(os.environ, *registry_environment())
+    which = lambda command: shutil.which(command, path=environ.get("PATH"))  # noqa: E731
 
     if args.dry_run:
         # Windows는 파일 이름의 대소문자를 가리지 않는다. 데스크톱 앱 폴더가 PATH에 있으면
@@ -408,15 +478,19 @@ def main(argv: list[str] | None = None) -> int:
         redact = make_redactor(str(Path.home()))
         print("실행할 명령 (PATH에 있는 것만 실행된다):")
         for adapter in ADAPTERS:
-            resolved = shutil.which(adapter.command)
+            resolved = which(adapter.command)
             print(f"  [{adapter.command}] " + (redact(resolved) if resolved else "PATH에 없음 — 실행하지 않음"))
             for args in (adapter.version_args, *adapter.help_args):
                 print("    " + " ".join([adapter.command, *args]))
         print("경로가 해당 CLI가 아니면(예: 데스크톱 앱 실행 파일) 실행하지 말고 PATH를 확인한다.")
         print("환경변수는 이름의 존재만, 설정 파일은 경로의 존재만 확인한다. 값과 내용은 읽지 않는다.")
+        if removed is not None:
+            print(f"--fresh-env: 이 셸에만 있는 AI 도구 변수 {len(removed)}개를 빼고 잰다.")
         return 0
 
-    manifest, outputs = collect(args.host_label, timeout=args.timeout)
+    manifest, outputs = collect(
+        args.host_label, timeout=args.timeout, which=which, environ=environ, removed_vars=removed,
+        run=lambda argv, timeout: run_probe(argv, timeout, env=environ))
     errors = validate_manifest(manifest)
     if errors:
         for error in errors:
