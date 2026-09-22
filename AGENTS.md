@@ -6,6 +6,7 @@ This is a research and architecture repository with offline synthetic checks, no
 
 The user works with several AI sessions (Claude, Codex, ChatGPT and others) that cannot see each other's conversations. The repository is the only thing they share, so every session follows [docs/COLLABORATION.md](docs/COLLABORATION.md). In short:
 
+- **GitHub is the only shared surface.** Web-chat sessions (ChatGPT on the web, for one) see GitHub and nothing on the user's PC. Push every commit's branch right away, merge finished CI-green work into `main` without delay, and move PC-only observations into repository files.
 - **Start:** `git fetch --all --prune`, then check open pull requests and remote branches before trusting [NEXT-SESSION.md](NEXT-SESSION.md). If the handoff does not list an open PR you can see, the handoff is stale.
 - **Branch and PR:** work on `<agent>/<topic>-<YYYYMMDD>` (`claude`, `codex`, `chatgpt`, `agy`, `human`) and propose through a pull request. Do not push to `main` unless the user says so in that session. Do not push to another session's branch; base on it or wait.
 - **Say what you could reach:** your PR states whether you worked on the user's PC (which one), in a web container, or on GitHub only, and whether you saw the CLIs yourself. Record environment facts only when you observed them there; otherwise write "not checked" and leave earlier records alone.
