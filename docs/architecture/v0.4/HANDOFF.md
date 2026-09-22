@@ -1,39 +1,95 @@
-# v0.4 작업 인계 — 상급 모델 협업 확장
+# v0.4 인계 — 상급 모델 협업 확장
 
-기준일: 2026-09-22 (Asia/Seoul). 시작 원격 head: `634d34b2b6639ef60bd6469190cec053826b4385`.
-브랜치: `docs/jev-free-codex-bridge-20260922`. main에 병합하지 않는다.
+기준일 **2026-09-22 (Asia/Seoul)**. 브랜치 `docs/jev-free-codex-bridge-20260922`.
+시작 head: `634d34b2b6639ef60bd6469190cec053826b4385`.
 
-## 이번 사용자 요청
+## 1. 현재 결과
 
-기존 오케스트레이션·저비용 역할 분담 연구를 확장하여, 회사별 상급 추론 모델들의 독립 답변·토론·교차검증을 조사한다. 실제 사례와 최신 1차 근거, 반례를 확인한 후 자료·뼈대·아키텍처를 단계적으로 구체화한다. 중단에 대비해 다음 작업까지 적고 중간 커밋한다.
+**[v0.4 개요](README.md)**가 현재 읽기 시작점이다. 비용/구독 한도 최적화뿐 아니라 상급 모델의 독립 추론·교차검토·근거 확인을 정식 모드로 추가했다. 실제 구독 모델을 연결해 실행한 것은 아니다.
 
-## 유지할 제약
+| 완료한 산출물 | 위치 |
+|---|---|
+| 제품·공개 코드·논문·반례의 사례 정리 | [01-cases-and-findings](01-cases-and-findings.md) |
+| 네 모드, P0–P5, profile/claim/evidence/권한/예산/복구, D10–D18 | [02-frontier-architecture](02-frontier-architecture.md) |
+| Q0–Q6 대조군, 오류 전이·합성 손실·총비용, 8개 적용 recipe, V04-01–06 | [03-evaluation-and-roadmap](03-evaluation-and-roadmap.md) |
+| F01–F21 원문·날짜/버전·검토 범위·한계·결정 연결 | [sources.json](sources.json) |
+| 합성 완료 기록 checker와 내장 demo | [tools/check_frontier_protocol.py](../../../tools/check_frontier_protocol.py) |
+| 오프라인 테스트 30개 | [tests/test_frontier_protocol.py](../../../tests/test_frontier_protocol.py) |
+| 실행 환경·검사 결과·원격 hash 대조·미검증 범위 | [VALIDATION](VALIDATION.md) |
 
-- v0.3의 공식 구독 CLI 우선, native 하네스 유지, API/추가 credits로 조용히 전환하지 않는 원칙을 유지한다.
-- Jev는 교체 가능한 선택 부품이다. 핵심 추론·검증 권한을 필수적으로 맡기지 않는다.
-- 상급 모델 협업은 비용 절감 모드와 목적함수가 다른 정식 모드로 검토한다. 다중 호출의 품질 이득은 아직 실측하지 않았다.
-- 사용자 요금제·모델 가용성·CLI 설치 버전은 미확인이다. 최신 모델 이름이나 subscription entitlement를 추정해 확정하지 않는다.
-- 기존 v0.2 계약·fixture를 깨뜨리지 않고, 신규 계약은 별도 버전/디렉터리에서 검토한다.
-- 자료 조사, 설계 제안, 오프라인 검사, 실제 모델 실행을 엄격하게 구분한다.
+root README·AGENTS·architecture 버전 지도와 기존 PR #1의 제목/본문을 v0.4로 갱신했다. PR의 base/open 상태는 바꾸지 않았고 main merge/rebase는 하지 않았다. 최종 head는 현재 브랜치/PR에서 확인한다. 이 문서 자체의 미래 commit SHA를 추정하지 않는다.
 
-## 시작 시 확인한 문서
+## 2. 다음 세션의 최소 읽기 순서
 
-README, v0.3 HANDOFF, 01-system, 02-adapters, 03-evidence를 GitHub 연결로 읽었다. 일부 긴 응답의 끝부분은 잘렸으므로 관련 부분은 범위 지정 재조회한다. v0.3 전체에 비용과 품질 경계는 있지만 별도 frontier deliberation protocol과 평가는 아직 이번 작업의 보강 대상이다.
+이 문서 → 필요한 mode의 02 절 → 03의 해당 ticket을 읽는다. 결정 이유는 D10–D18에서 F ID를 찾고 sources.json의 정확한 version/locator/limits로 이동한다. 공식 연결/회계는 [v0.3 adapter](../v0.3/02-adapters.md)와 [결정/평가](../v0.3/04-decisions-and-evaluation.md)를 필요한 만큼만 읽는다. 모든 과거 문서를 한꺼번에 prompt에 넣지 않는다.
 
-## 현재 상태 (첫 checkpoint)
+## 3. 유지할 요구와 바꾸면 안 되는 의미
 
-- 외부 사례 검색을 시작했으나 아직 채택·성과 판정을 확정하지 않았다.
-- 후보: 실제 multi-model council 제품, 공개 council 구현, architect/reviewer 패턴, multi-agent debate 연구 및 실패 반례.
-- 파일/실행 환경: 대화 컨테이너의 GitHub clone은 DNS 해석 실패. GitHub connector의 읽기·쓰기 경로를 사용한다. 로컬 clone 성공이나 원격 모델 실행을 주장하지 않는다.
+- 공식 구독 CLI와 native 하네스를 우선한다. API/extra credits는 명시 opt-in이며 조용한 전환은 금지한다. 사용자 실제 요금제·모델 가용성·CLI 버전은 아직 모른다.
+- Antigravity `agy`는 Gemini CLI와 다르다. PAL이 Gemini CLI를 지원한다는 이유로 agy 호환을 주장하지 않는다.
+- 경제성 경로와 상급 협업을 나란히 둔다. 고급 계획·검토·합성도 상급 모델에게 맡길 수 있다. 일반 코드는 상태·횟수·권한을 관리한다.
+- Jev/저가 classifier는 선택 부품이다. 상급 reviewer, 최종 수용 기준, 권한, 예산을 대신 결정하지 않는다.
+- 독립 초안은 다른 모델 답변/부모의 결론에 오염시키지 않는다. 새 프로세스도 history/memory가 전달되면 blind가 아니다.
+- 투표·자기 확신·익명화는 진실의 증명이 아니다. claim/evidence를 대조하고 중요한 소수 반례·미합의를 최종 보고서에 남긴다.
+- 초기 review는 0/1 round. 추가 planner/extractor/retry도 총예산에 포함한다. 외부 invocation 수는 native 내부 model turn/token 상한이 아니다.
+- 논의자는 read-only, 구현자는 한 writer를 기본값으로 한다. prompt의 수정 금지 문장은 OS sandbox를 대신하지 않는다.
+- v0.2 schema/fixture를 변경하지 않는다. v0.4는 production wire-schema 업그레이드가 아니다.
 
-## 재개 순서
+## 4. 가장 먼저 수행할 다음 작업
 
-1. v0.3의 남은 관련 부분, 결정/평가, 출처 레지스트리와 현재 tree를 확인한다.
-2. 상급 모델 협업 제품·공개 구현·연구를 원문으로 확인한다. release/publish 날짜와 조회일, 코드 commit, 독립 재현 여부를 기록한다.
-3. 반례: 독립성 상실, 설득에 의한 오답 전파, judge 편향, majority != truth, compute-matched baseline 부재를 검토한다.
-4. 실행 모드를 single/economy, independent cross-check, bounded deliberation, implementation+review로 분리한다.
-5. 독립 초안 → 주장/반례 정리 → 제한적 교차검토 → 도구 기반 검증 → 합성/미합의 인계를 설계한다. 임의로 모든 agent가 같은 긴 대화를 공유하지 않게 한다.
-6. source registry·ADR·평가 계획·합성 계약과 오프라인 검사 범위를 작성한다. 실제 API/CLI 호출은 별도 미실시로 둔다.
-7. README와 v0.3 읽기 경로를 연결하고 이 HANDOFF를 결과·검증·정확한 다음 단계로 갱신한다. 각 단계에서 원격 커밋을 확인한다.
+**V04-01: 실제 실행 환경과 adapter inventory.** 연결 가능한 사용자 실행 환경에서 OS, 실제 CLI 설치/버전, 해당 버전의 help, native 로그인 방식, 사용 가능한 상급 모델/effort, output/schema/session/권한/cancel 기능을 확인한다. API key·인증 token·전체 환경 변수를 문서나 Git에 출력하지 않는다. 현재 문서만 보고 configured=true로 만들지 않는다.
 
-미완료 작업을 완료라고 읽지 않도록 이 문서는 조사 단계마다 갱신한다.
+아직 CLI adapter·MCP bridge가 구현된 경로는 없다. 첫 구현 파일 경로/언어 구조는 실제 저장소 상태와 환경 확인 후 정한다. 단순 문서의 함수 이름을 이미 동작하는 API로 호출하지 않는다. native 도구의 실제 입출력 fixture와 공통 capability/preflight/start/events/collect/cancel 계약을 작은 단위로 연결한다.
+
+이후 **V04-03: 두 native 경로의 읽기 전용 독립 답변 pilot**을 구현한다. 필요한 입력과 승인 범위를 고정하고, 실제 두 모델의 별도 session/artifact, 사용량 관측 범위, 거절·실패·timeout/취소 상태를 기록한다. 모델 부족·funding 불명·읽기 전용 보장 실패를 성공으로 넘기지 않는다. 실제 endpoint 호출 전에 효과적인 계정별 설정을 확인한다.
+
+그 다음 Q0/Q1/Q3/Q5의 작은 비교에서 유망한 task군을 찾고 **V04-04의 세 모델 + 제한 교차검토**로 간다. 토론 없는 독립 합성과 비교하지 않은 채 토론 이득을 주장하지 않는다. build_review, Jev shadow, 장기 journal/SQLite는 해당 ticket 조건이 충족될 때 추가한다.
+
+## 5. checker를 이어서 개발할 때 주의
+
+```bash
+python tools/check_frontier_protocol.py
+python -m unittest discover -s tests -p 'test_frontier_protocol.py' -v
+```
+
+현재 도구는 Python 표준 라이브러리만 사용하는 **축소 합성 완료 기록 검사**다. `frontier-record-experiment/0`, synthetic=true, cross_check/deliberate에 한정한다. 30개 테스트는 이 기록의 불변식 검사이지 모델 능력·출처 의미·실제 정책 강제 검증이 아니다. 모든 운영 schema 필드를 검사하지도 않는다.
+
+후속 구현은 기록에 적힌 provider/quality/digest/check 상태를 실제 계정·artifact·검증 로그와 대조해야 한다. 현재 `supported`의 최소 참조 조건을 운영 진실 판정 gate로 사용하지 않는다. 별도 합성 profile, partial/degraded 결과의 승인/표시, signature/provenance, timeout/cancellation reconciliation, native 내부 usage는 아직 필요하다. 전체 범위는 VALIDATION 5–6절에 있다.
+
+## 6. 확인한 중요한 사실과 미완료 조사
+
+F02의 Perplexity Model Council 문서는 2026-09-04, F03 effort 문서는 2026-09-18 갱신이다. 독립 상급 모델 협업이 실제 제품에 존재하지만 사용자의 세 구독을 재사용하는 bridge는 아니다. F01 Microsoft는 Critique와 Council을 구분한다. 제품 기능을 정확도 비교 실험으로 부르지 않는다.
+
+F04의 Karpathy 코드에서는 자기 답변 포함·공통 순서·합성 단계 모델 이름 노출·실패 초기 응답 제외를 확인했다. F05 PAL의 고정 Codex preset에는 승인/sandbox 우회 옵션이 있다. 그대로 도입하지 않는다. PAL consensus의 실제 provider transport와 현재 agy/CLI 호환성은 추가 감사가 필요하다.
+
+F09/F10/F11/F20은 abstract 수준 확인이다. 관련 수치나 세부 방법이 필요하면 전체 원문을 추가로 읽어야 한다. F10 PDF와 Microsoft 연결 기술 글 접근은 실패했다. F13 제목/날짜/v1 이력은 후속 확인해 원장에 반영했다. F07의 자신감 가중치를 검증된 보편적 확률로 취급하지 않는다.
+
+F17/F18/F19는 기존 E02/E05/E08 재확인이다. Claude SDK 정책의 상단 보류 안내와 하단 과거표, agy headless 쓰기 허용/soft-denial exit 0, Codex read-only 기본값의 의미를 실제 설치 설정과 대조해야 한다. 전체 source URL 자동 점검·전체 논문 재현·커뮤니티 전수 조사는 하지 않았다.
+
+## 7. 실제 검사와 환경 경계
+
+대화 컨테이너 Python 3.13.5에서 새 unit test **30개 OK**, demo/파일 입력·정상/오류 exit code·문법 컴파일을 확인했다. 테스트한 코드와 GitHub snapshot `8025e1dde0195f3a0992f8a65fada4545e438eda`의 두 Python blob hash가 일치한다. 정확한 값은 VALIDATION에 있다.
+
+컨테이너 GitHub clone/raw 다운로드는 DNS 실패였다. 로컬 snapshot은 Git checkout이 아니며 원격 저장은 GitHub connector로 수행했다. 사용자 PC의 도구·설정을 변경하지 않았다. 기존 v0.2 전체 테스트, CI, 실제 모델 연결·과금·권한·취소/복구·품질 향상은 미검증이다.
+
+시작 head 대비 `407eb9e...`까지 compare 결과는 12 commits/11 changed files이며 기존 v0.2 계약·기존 상세 문서/검사 파일 변경은 없었다. 그 후 VALIDATION과 이 HANDOFF를 저장한다. PR 조회 시 open/merged=false, mergeable=false였으나 원인은 조사하지 않았다. merge 충돌을 단정하거나 임의로 해결/재배치하지 않는다.
+
+## 8. 중간 checkpoint 기록
+
+| Commit | 보존한 진행 |
+|---|---|
+| `472d2dd5691b85a9c70a73213f1d24f6faaa4ff9` | 조사 범위·요구·재개 순서의 첫 checkpoint |
+| `4fba79de16d352b9090e1d8610cabc64d129559d` | F01–F21 근거 원장 첫 게시 |
+| `86e1d6e676446bc0f68ba33ee7884ca62badd993` | 사례와 반례, 공개 코드 채택 경계 |
+| `79dcf5b838c3a6395e3d34ec4c88631ae7207651` | 상급 협업 아키텍처·P0–P5·D10–D18 |
+| `fce1a5dcfcadd156cc928c7fd4f91764dcaa2038` | 평가/recipe/구현 ticket |
+| `ed7c76db34ae7b0113b0d96e242c61b495007db6` | 논문 제목·버전·calibration 한계 보정 |
+| `ea9e9758e64c1e6139dd500e80e75c5e846b57bd` | 오프라인 checker |
+| `8025e1dde0195f3a0992f8a65fada4545e438eda` | 30개 테스트; 코드 blob 대조 기준 |
+| `e337737a1d1428f9a7a4beca1f5dba1ed19bcc40` | v0.4 읽기 시작점 |
+| `d917cb2670b14f5df4d0afc0d90d094f596bf06f` | root README 갱신 |
+| `22e63271aa9d93e309748172bbddf76fa5656a88` | AGENTS 갱신 |
+| `407eb9e029404430c56de4c465b58a574a179dfe` | architecture 버전 지도 갱신 |
+| `7a0a5ed47715cc598512c4dba83f74392eb46327` | 실제 검증 결과·미실시 범위 게시 |
+
+PR #1의 제목/본문도 v0.4로 수정했다. 이 최종 인계 파일의 commit은 Git history에서 확인한다. 후속 작업은 신규 사실을 확인하면 해당 F/D와 검증 범위를 함께 갱신하고, 실패와 다음 행동까지 작은 checkpoint로 남긴다.
