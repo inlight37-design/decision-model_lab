@@ -24,7 +24,7 @@
 | [01 사례와 반례](01-cases-and-findings.md) | Perplexity/Microsoft의 실제 모드, Karpathy/PAL 정적 검토, ReConcile/MoA, 강한 모델 분업, debate 실패와 judge 편향 |
 | [02 아키텍처](02-frontier-architecture.md) | 네 실행 모드, P0–P5 절차, profile·주장/근거·권한·예산·복구 계약, 결정 D10–D18 |
 | [03 평가·구현 순서](03-evaluation-and-roadmap.md) | compute-aware 대조군, 오류 전이·합성 손실, 8가지 적용 recipe, V04-01–06 ticket |
-| [근거 원장](sources.json) | F01–F24의 원문·날짜/버전·확인 범위·한계·설계 결정 연결 |
+| [근거 원장](sources.json) | F01–F27의 원문·날짜/버전·확인 범위·한계·설계 결정 연결 |
 | [검증 범위](VALIDATION.md) | 실제 실행한 합성 검사와 하지 않은 검증 |
 | [다음 세션 인계](HANDOFF.md) | 완료 결과, 중간 commit, 다음 작업과 금지할 가정 |
 
@@ -36,7 +36,9 @@ Perplexity의 2026-09-04 Model Council 문서(F02)는 세 회사 frontier 구성
 
 반대로 공개 prototype의 익명 순위 평가에는 자기 답변·공통 순서가 남아 있었고(F04), PAL의 Codex preset은 sandbox/approval 우회 옵션을 포함했다(F05). 논문들도 무조건적인 debate 우월성을 지지하지 않는다(F10–F12). 그래서 참고할 원리와 즉시 도입할 코드를 구분했다. 자세한 원문과 제한은 01과 sources.json에 있다.
 
-F01–F24는 24개의 독립 실험이 아니다. 제품·코드·논문·정책 재확인 기록이며 F17–F19는 기존 E02/E05/E08 재확인이다. F22–F24의 추가 근거와 채택 범위는 [후속 검토](EVIDENCE_FOLLOWUP.md)에 있다. 외부 성과를 이 프로젝트의 실측 결과로 사용하지 않는다.
+F01–F27은 27개의 독립 실험이 아니다. 제품·코드·논문·정책 재확인 기록이며 F17–F19는 기존 E02/E05/E08 재확인이다. F22–F24의 추가 근거와 채택 범위는 [후속 검토](EVIDENCE_FOLLOWUP.md)에, F25–F27은 [외부 검토 기록](REVIEW_FIXES.md)에 있다. 외부 성과를 이 프로젝트의 실측 결과로 사용하지 않는다.
+
+F25–F27은 이 저장소가 설계한 협업 구조를 **처음으로 실제 문제에 적용해 얻은 근거**다. 세 건 모두 원문·코드·로컬 재현으로 확인했으며, 설계 문서만 읽어서는 드러나지 않았던 것들이다.
 
 ## 실제로 실행할 수 있는 작은 뼈대
 
