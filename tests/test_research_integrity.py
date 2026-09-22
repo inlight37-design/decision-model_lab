@@ -138,6 +138,9 @@ class ResearchIntegrityTests(unittest.TestCase):
         for folder in ("docs", "contracts"):
             paths.extend((ROOT / folder).rglob("*.md"))
         for path in paths:
+            # 보관한 인계 문서는 루트에서 쓴 원문을 바이트 그대로 둔다(docs/handoff/README.md).
+            if path.parent == ROOT / "docs/handoff" and path.name != "README.md":
+                continue
             content = re.sub(r"```.*?```", "", path.read_text(encoding="utf-8"), flags=re.S)
             for target in re.findall(r"\[[^\]\n]*\]\(([^)\s]+)\)", content):
                 parts = urlsplit(target)

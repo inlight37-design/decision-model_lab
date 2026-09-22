@@ -14,7 +14,7 @@
 | [출처 19개와 한계](docs/reviews/2026-09-23-mcp-ui-runtime/SOURCES.md) | 공식 문서/README의 정확한 확인 범위. 기존 E/F 원장과 별개 |
 | [검증 기록](docs/reviews/2026-09-23-mcp-ui-runtime/VALIDATION.md) | GitHub CI, 로컬 경계 테스트, 브라우저 smoke, 알려진 대비 실패 |
 | [미발행 UI 비교 시안](docs/reviews/2026-09-23-mcp-ui-runtime/preview.html) | 결정/대조표 순서, 두 테마, 4가지 합성 상태. 실행 기능 없음 |
-| [기존 전체 인수인계 — 원문 보존](NEXT-SESSION.2026-09-23-before-review.md) | 이전 사용자 결정, 디자인 규칙, 환경 이력과 열린 질문. 일부 과장/숫자는 아래 정정 우선 |
+| [기존 전체 인수인계 — 원문 보존](docs/handoff/2026-09-23-before-review.md) | 이전 사용자 결정, 디자인 규칙, 환경 이력과 열린 질문. 일부 과장/숫자는 아래 정정 우선 |
 | [v0.4 HANDOFF](docs/architecture/v0.4/HANDOFF.md) | 전체 아키텍처 및 V04-01/V04-03의 원래 맥락 |
 
 코드 commit `85e3cb1f3641c52278dd1d391fe845024b23b7df`에서 Python 3.12/3.13 CI success, 3.13 로그 **112 tests OK / skip 없음**을 확인했다. 추가 37개(경계 31 + 대비 6)다. 기존 원장은 E01–E31/F01–F29로 **60개**이며 이번 검토가 원장을 증설한 것은 아니다. 숫자는 해당 commit 기준이고 최신 결과는 CI로 확인한다.
