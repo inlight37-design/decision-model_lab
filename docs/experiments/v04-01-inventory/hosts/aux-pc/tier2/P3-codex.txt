@@ -1,0 +1,11 @@
+# probe: P3-codex
+# command: codex exec --skip-git-repo-check --sandbox notamode "Reply with exactly: OK"
+# cwd: empty folder outside the repository
+# environment: fresh (AI-tool variables removed)
+# exit: 2
+# duration_ms: 43
+
+error: invalid value 'notamode' for '--sandbox <SANDBOX_MODE>'
+  [possible values: read-only, workspace-write, danger-full-access]
+System.Management.Automation.RemoteException
+For more information, try '--help'.

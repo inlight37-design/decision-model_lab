@@ -1,0 +1,12 @@
+# probe: P1-codex
+# command: codex exec --json --skip-git-repo-check --ephemeral "Reply with exactly: OK"
+# cwd: empty folder outside the repository
+# environment: fresh (AI-tool variables removed)
+# exit: 0
+# duration_ms: 5832
+
+Reading additional input from stdin...
+{"type":"thread.started","thread_id":"<uuid>"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_0","type":"agent_message","text":"OK"}}
+{"type":"turn.completed","usage":{"input_tokens":15268,"cached_input_tokens":0,"cache_write_input_tokens":0,"output_tokens":5,"reasoning_output_tokens":0}}
