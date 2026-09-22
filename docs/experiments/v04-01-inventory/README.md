@@ -21,7 +21,7 @@
 ## 0. 시작 전
 
 - **기기 이름표**를 정한다. 예: `main-pc`. 실제 hostname은 쓰지 않는다. 결과는 `hosts/<이름표>/`에 쌓인다.
-- **일반 PowerShell 창**에서 실행한다. AI 도구 안의 터미널은 자기 환경변수를 넣는다 — 이 저장소의 보조 PC에서 Claude 데스크톱 앱의 셸에 `ANTHROPIC_BASE_URL`이 잡힌 것을 관측했다. 그 창에서 잰 환경은 사용자의 실제 환경이 아니다.
+- **일반 PowerShell 창**에서 실행한다. AI 도구 안의 터미널은 자기 환경변수를 넣는다 — 보조 PC의 Claude 데스크톱 앱 셸에는 `CLAUDECODE`, `ANTHROPIC_BASE_URL` 등 26개가 있었다. 그 창에서 잰 환경은 사용자의 실제 환경이 아니다. **AI 세션이 대신 실행한다면** tier 1에 `--fresh-env`를 붙인다(Windows) — 그 변수들을 빼고 PATH를 사용자·시스템 설정으로 다시 만든 환경에서 잰다.
 - 저장소를 최신으로 받고, 작업 브랜치를 만든다. 브랜치 이름 규칙은 [협업 규칙](../../COLLABORATION.md) 3절.
 
 ```powershell
@@ -48,6 +48,8 @@ git switch -c human/v04-01-main-pc-20260924
 - **Claude Code 기본 설치는 백그라운드에서 스스로 업데이트된다.** 실험 도중 버전이 바뀔 수 있으므로 매번 버전을 기록한다(tier 1 도구가 한다). 고정하려면 WinGet 설치나 버전 지정 설치를 쓴다: `& ([scriptblock]::Create((irm https://claude.ai/install.ps1))) <버전>`.
 - Claude Code는 Git for Windows가 있으면 Bash 도구를, 없으면 PowerShell 도구를 쓴다. 이 저장소의 검사에는 영향이 없다.
 - **Codex의 Windows 샌드박스:** 권장 모드(elevated)는 설정할 때 관리자 승인이 필요하고 로컬 사용자·방화벽·정책을 바꾼다. **보안 설정 변경이므로 사용자가 직접 판단한다.** 설정하지 못하면 제한된 토큰과 ACL 기반 모드(unelevated)로 내려간다. 어느 쪽이 적용됐는지 결과에 적는다 — 읽기 전용 보장의 근거가 달라진다.
+- **Claude Code 설치 프로그램이 PATH를 등록하지 않을 수 있다.** 보조 PC(2.1.280)에서 설치는 성공했지만 `~\.local\bin is not in your PATH`라고 안내하고 끝났다. 그러면 사용자 PATH에 `%USERPROFILE%\.local\bin`을 추가하고 새 창을 연다. Codex와 Antigravity는 스스로 등록했다.
+- 설치 후 서명을 확인한다: `Get-AuthenticodeSignature (Get-Command claude).Source` — Anthropic, PBC / OpenAI OpCo, LLC / Google LLC이고 `Valid`여야 한다.
 - **데스크톱 앱에 들어 있는 CLI는 PATH에 없을 수 있다.** 보조 PC에서는 앱들이 남긴 로그인 파일(`~/.codex/auth.json`, `~/.claude/.credentials.json`)은 있는데 CLI는 PATH에 없었다. tier 1 도구는 PATH 기준으로만 찾는다.
 
 ## 2. 자동 기록 — tier 1 (한도 소모 없음)
@@ -60,6 +62,8 @@ python tools/runtime_inventory.py --host-label main-pc
 python tools/runtime_inventory.py --validate docs/experiments/v04-01-inventory/hosts/main-pc/manifest.json
 ```
 
+AI 도구 안에서 실행할 때는 앞의 두 줄에 `--fresh-env`를 붙인다.
+
 - 첫 줄은 실행할 명령과 **실제로 실행될 파일 경로**만 보여 주고 아무것도 실행하지 않는다. 실제로 도는 것은 각 CLI의 `--version`과 `--help`뿐이다.
 - **경로가 CLI가 아니면 멈춘다.** Windows는 대소문자를 가리지 않아서, 데스크톱 앱 폴더가 PATH에 있으면 `claude`가 GUI 앱 `Claude.exe`로 풀릴 수 있다.
 - 결과는 `hosts/main-pc/manifest.json`과 `hosts/main-pc/help/*.txt`다. 홈 경로와 비밀처럼 보이는 문자열은 가려서 쓴다.
@@ -68,13 +72,13 @@ python tools/runtime_inventory.py --validate docs/experiments/v04-01-inventory/h
 
 ## 3. 로그인 — 사용자
 
-API 키 경로를 쓰지 않는다. 구독 로그인만 한다.
+API 키 경로를 쓰지 않는다. 구독 로그인만 한다. **데스크톱 앱의 로그인이 이미 있으면 CLI도 로그인된 상태일 수 있다** — 보조 PC에서는 Claude Code와 Codex가 설치 직후부터 구독 로그인 상태였다. 먼저 확인하고, 안 돼 있을 때만 로그인한다.
 
 | 도구 | 로그인 | 확인 | 하지 않을 것 |
 |---|---|---|---|
-| Claude Code | `claude` 실행 → 브라우저 로그인 | 대화형 `/status`의 로그인 방식 | API 키 승인 프롬프트가 나오면 **거절** |
+| Claude Code | `claude` 실행 → 브라우저 로그인 | `claude auth status` — JSON의 `authMethod`가 `claude.ai`, `apiProvider`가 `firstParty`인지. 대화형 `/status`도 된다 | API 키 승인 프롬프트가 나오면 **거절** |
 | Codex | `codex login` (브라우저). 브라우저가 없으면 `codex login --device-auth` | `codex login status` | `codex login --with-api-key` |
-| Antigravity | `agy` 실행 → OS keyring 또는 브라우저 로그인 | 상태 확인 명령은 문서에 없음 — "미문서화"로 기록 | `modelProvider: gemini` + `GEMINI_API_KEY` 모드 |
+| Antigravity | `agy` 실행 → OS keyring 또는 브라우저 로그인 | 상태 확인 명령이 문서·help(1.2.8)에 없음 — tier 2 P1의 성공으로 간접 확인 | `modelProvider: gemini` + `GEMINI_API_KEY` 모드 |
 
 ## 4. 관측 — tier 2 (소량 한도)
 
