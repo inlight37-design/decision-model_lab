@@ -1,12 +1,23 @@
 # decision-model_lab
 
-Jev류 판단 모델과 기존 코딩 에이전트를 조합하여, **품질을 유지하면서 프론티어 사용량과 수용 결과당 비용을 줄이는 방법**을 연구합니다.
+Antigravity·ChatGPT·Claude의 native 하네스를 연결하여, **품질을 유지하면서 구독 한도·토큰 낭비와 수용 결과당 비용을 줄이는 작업 구조**를 연구합니다. Jev류 판단 모델은 나중에 추가할 수 있는 교체 가능한 부품입니다.
 
-> **현재: 사례 기반 설계 v0.2 + 2026-09-22 후속 조사.** Jev 없이 시작하는 다중 모델 협업, 최신 Codex 연결 방식, 토큰·비용 측정을 보강했습니다. 기존 v0.2의 합성 계약 검사 28개 통과 기록은 보존합니다. 실제 모델·하네스 연결이나 사용자 프로젝트의 절감률을 검증한 상태는 아닙니다.
+> **현재: 구독 CLI 우선 아키텍처 v0.3 (2026-09-22).** 세 구독의 공식 연결 경로, 전체 작업 구조, 역할 배정, 31개 근거 기록과 9개 설계 결정을 정리했습니다. API는 선택 사항입니다. 실제 모델·하네스 연결이나 사용자 프로젝트의 절감률을 검증한 상태는 아닙니다. 기존 v0.2 합성 계약은 유지합니다.
 
 ## 지금 읽을 문서
 
-**[9월 22일 조사·권고](docs/research-2026-09-22/README.md)**에서 시작합니다. 기존 계약과 실행 절차는 [v0.2 전체 안내](docs/architecture/v0.2/README.md)를 함께 봅니다.
+**[v0.3 전체 구조](docs/architecture/v0.3/README.md)**에서 시작합니다. 다른 세션에서 이어갈 때는 **[HANDOFF](docs/architecture/v0.3/HANDOFF.md)**를 먼저 읽습니다.
+
+| 현재 기준 문서 | 핵심 내용 |
+|---|---|
+| [시스템 구조](docs/architecture/v0.3/01-system.md) | native 하네스와 외부 작업 코어, 역할·상태·문맥·확장 계약 |
+| [어댑터와 하네스](docs/architecture/v0.3/02-adapters.md) | 세 구독의 인증/과금, Codex 입구 유지, 실제 wrapper 코드 검토 |
+| [근거 평가](docs/architecture/v0.3/03-evidence.md) | 논문·실제 성과·반례, 수치의 분모와 적용 한계 |
+| [결정과 평가](docs/architecture/v0.3/04-decisions-and-evaluation.md) | ADR D01–D09, quota/cash 회계, 비교 실험, 첫 구현 완료 조건 |
+| [출처 레지스트리](docs/architecture/v0.3/sources.json) | E01–E31 원문·버전·locator·확인일·한계·관련 결정 |
+| [검증 범위](docs/architecture/v0.3/VALIDATION.md) | 문서·참조 검증과 실제 런타임 미검증 구분 |
+
+이전 상세 조사는 아래에 보존합니다. 내용이 겹치면 v0.3의 구독 우선 결정이 기준입니다.
 
 | 새 문서 | 핵심 내용 |
 |---|---|
@@ -49,7 +60,7 @@ python -m unittest discover -s tests -p 'test_v02.py' -v
 - [v0.1 기본 아키텍처](docs/architecture/02-reference-architecture.md)
 - [v0.1 계약 검사](contracts/README.md)
 
-후속 실행에서는 9월 22일 보강 문서와 v0.2의 구체 결정을 읽고, 이전 문서는 근거·상세 원칙을 확인할 때 사용합니다. 문서 전체를 매번 agent 프롬프트에 넣지 않습니다.
+후속 실행에서는 v0.3 HANDOFF와 필요한 결정부터 읽고, 기존 v0.2 계약과 이전 문서는 관련 부분만 조회합니다. 문서 전체를 매번 agent 프롬프트에 넣지 않습니다.
 
 ## 기록 원칙
 
