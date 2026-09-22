@@ -25,15 +25,34 @@ REGISTRIES = (
      ("published", "revised", "revision")),
 )
 
-# 현재 안내 문서. 과거 검토 기록(FINAL_REVIEW, VALIDATION 1-4절)은 그 시점의
-# 숫자를 유지하는 것이 정확하므로 여기에 넣지 않는다.
-CURRENT_GUIDANCE = (
+# 계속 갱신되는 안내 문서. 여러 세션과 여러 AI가 번갈아 고치므로 숫자가 가장 쉽게
+# 어긋난다(75/74/71 검사, F01–F24 범위가 동시에 남아 있던 적이 있다).
+# 과거 검토 기록(FINAL_REVIEW, VALIDATION 1-4절, docs/reviews/, 보관한 인계)은
+# 그 시점의 숫자를 유지하는 것이 정확하므로 넣지 않는다. docs/COLLABORATION.md 참조.
+LIVING_DOCS = (
+    "README.md",
+    "AGENTS.md",
+    "NEXT-SESSION.md",
     "docs/architecture/README.md",
     "docs/architecture/v0.4/README.md",
     "docs/architecture/v0.4/HANDOFF.md",
+    "docs/reviews/README.md",
+    "docs/handoff/README.md",
+    "design/README.md",
 )
 
 COMMIT_SHA = re.compile(r"\b[0-9a-f]{40}\b")
+
+# 안내 문서가 다시 적으면 안 되는 개수. 기준은 CI 로그 하나다.
+RESTATED_COUNT = re.compile(
+    r"\b\d+\s*tests?\b"
+    r"|(?:검사|테스트)[은는이가도를]?\s*\*{0,2}\d+\s*개"
+    r"|\*{0,2}\d+\s*개\*{0,2}\s*(?:의\s*)?(?:검사|테스트)"
+    r"|전체[은는]?\s*\*{0,2}\d+\s*개"
+    r"|원장[은는이가]?\s*\*{0,2}\d+\s*(?:건|개)"
+    r"|commit\s*\*{0,2}\d+\b",
+    re.IGNORECASE,
+)
 
 
 def evidence_ids(text):
@@ -94,23 +113,46 @@ class ResearchIntegrityTests(unittest.TestCase):
             with self.subTest(version=version):
                 self.assertEqual(actual, expected)
 
+    def living_lines(self):
+        """안내 문서의 줄. commit SHA 가 있는 줄은 그 시점의 이력이므로 건너뛴다."""
+        for relative in LIVING_DOCS:
+            for number, line in enumerate((ROOT / relative).read_text(encoding="utf-8").splitlines(), 1):
+                if not COMMIT_SHA.search(line):
+                    yield relative, number, line
+
     def test_current_guidance_states_the_actual_registry_range(self):
         """원장이 커지면 안내 문서의 범위 표기도 따라와야 한다. F22-F24 추가 때 놓쳤던 회귀."""
         for version, prefix, numbers, _, _, _, _ in REGISTRIES:
-            expected = f"{prefix}01–{prefix}{max(numbers):02}"
-            stale = re.compile(rf"{prefix}01–(?:{prefix})?\d{{2}}")
-            for relative in CURRENT_GUIDANCE:
-                for number, line in enumerate((ROOT / relative).read_text(encoding="utf-8").splitlines(), 1):
-                    # commit SHA 가 있는 줄은 그 시점의 이력이므로 당시 범위가 정확하다.
-                    if COMMIT_SHA.search(line):
-                        continue
-                    for found in stale.finditer(line):
-                        with self.subTest(doc=relative, line=number, found=found.group(0)):
-                            self.assertEqual(
-                                found.group(0), expected,
-                                f"{relative}:{number}: stale registry range; "
-                                f"registry holds {len(numbers)} entries",
-                            )
+            # en dash 와 hyphen 을 모두 잡는다. AGENTS.md 의 'F01-F24' 는 hyphen 이라 빠져 있었다.
+            stale = re.compile(rf"{prefix}01[–-](?:{prefix})?(\d{{2}})")
+            for relative, number, line in self.living_lines():
+                for found in stale.finditer(line):
+                    with self.subTest(doc=relative, line=number, found=found.group(0)):
+                        self.assertEqual(
+                            int(found.group(1)), max(numbers),
+                            f"{relative}:{number}: stale registry range; "
+                            f"registry holds {prefix}01–{prefix}{max(numbers):02}",
+                        )
+
+    def test_living_documents_do_not_restate_counts(self):
+        """검사 수·원장 건수·commit 수는 CI 로그와 원장이 기준이다. 안내 문서에 다시 적으면
+        다음 세션이 고치지 않는 한 틀린 채로 남는다. 그 시점의 숫자가 필요하면 commit SHA 와
+        같은 줄에 적는다 — 그 줄은 이력으로 취급한다."""
+        for relative, number, line in self.living_lines():
+            for found in RESTATED_COUNT.finditer(line):
+                with self.subTest(doc=relative, line=number, found=found.group(0)):
+                    self.fail(f"{relative}:{number}: '{found.group(0)}' — link the CI log instead")
+
+    def test_restated_count_pattern_matches_past_drift(self):
+        """위 검사가 실제로 있었던 어긋남을 잡는지, 정상 문장을 잡지 않는지 고정한다."""
+        for text in ("(75 tests)", "Ran 74 tests", "현재 전체 **74개**다", "검사 75개",
+                     "테스트는 40개이며", "112개 테스트", "근거 원장 59건", "commit 63"):
+            with self.subTest(text=text):
+                self.assertRegex(text, RESTATED_COUNT)
+        for text in ("# v0.1 계약 25개", "F01–F29는 29개의 독립 실험이 아니다",
+                     "검토 기록은 시간순으로 다섯이다", "Python 3.12/3.13"):
+            with self.subTest(text=text):
+                self.assertNotRegex(text, RESTATED_COUNT)
 
     @unittest.skipUnless(HAS_JSONSCHEMA,
                          "jsonschema 미설치: python -m pip install -r requirements-design.txt")

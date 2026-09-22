@@ -3,7 +3,7 @@
 기준일 **2026-09-22 (Asia/Seoul)**. 개발 브랜치: `docs/jev-free-codex-bridge-20260922`.
 초기 v0.4 작업 시작 head: `634d34b2b6639ef60bd6469190cec053826b4385`.
 
-**최종 검토 보강:** [FINAL_REVIEW](FINAL_REVIEW.md)를 먼저 확인한다. Windows Python 3.12에서 전체 71개 테스트를 통과했고, 출처 양방향 연결·누락된 반대 근거·모호한 JSON 입력을 수정했다. 그 뒤 외부 검토에서 CI·의존성 skip·원장 계약을 보강해 현재 **74개**다([REVIEW_FIXES](REVIEW_FIXES.md)). 사용자가 최종 검토 후 main 병합을 명시적으로 요청했다. 현재 병합 상태와 최종 commit은 [PR #1](https://github.com/inlight37-design/decision-model_lab/pull/1)이 기준이다. 아래 7–8절의 컨테이너/30개 검사/미병합 기록은 초기 작업 당시의 이력이다.
+**최종 검토 보강:** [FINAL_REVIEW](FINAL_REVIEW.md)를 먼저 확인한다. 최종 검토에서 출처 양방향 연결·누락된 반대 근거·모호한 JSON 입력을 수정했고, 그 뒤 외부 검토에서 CI·의존성 skip·원장 계약을 보강했다([REVIEW_FIXES](REVIEW_FIXES.md)). 각 시점의 검사 수는 그 기록에 남아 있고, 현재 검사 수는 CI 로그가 기준이다. 사용자가 최종 검토 후 main 병합을 명시적으로 요청했다. 현재 병합 상태와 최종 commit은 [PR #1](https://github.com/inlight37-design/decision-model_lab/pull/1)이 기준이다. 아래 7–8절의 컨테이너 검사·미병합 기록은 초기 작업 당시의 이력이다.
 
 **후속 근거 검토:** [EVIDENCE_FOLLOWUP](EVIDENCE_FOLLOWUP.md)에 남은 27개 출처의 재확인 범위와 최근 논문 4개의 채택/보류 판단을 기록했다. F22–F24를 추가했고, F06은 provider 경로 및 문서/코드 차이를 확인했다. 새로운 실모델 실험 결과는 없다.
 
@@ -18,8 +18,8 @@
 | Q0–Q6 대조군, 오류 전이·합성 손실·총비용, 8개 적용 recipe, V04-01–06 | [03-evaluation-and-roadmap](03-evaluation-and-roadmap.md) |
 | F01–F29 원문·날짜/버전·검토 범위·한계·결정 연결 | [sources.json](sources.json) |
 | 합성 완료 기록 checker와 내장 demo | [tools/check_frontier_protocol.py](../../../tools/check_frontier_protocol.py) |
-| frontier/CLI 테스트 40개 | [tests/test_frontier_protocol.py](../../../tests/test_frontier_protocol.py) |
-| 출처 양방향 연결·필수 필드·범위 표기·상대 링크 검사 6개 | [tests/test_research_integrity.py](../../../tests/test_research_integrity.py) |
+| frontier/CLI 테스트 | [tests/test_frontier_protocol.py](../../../tests/test_frontier_protocol.py) |
+| 출처 양방향 연결·필수 필드·범위 표기·인코딩·상대 링크 검사 | [tests/test_research_integrity.py](../../../tests/test_research_integrity.py) |
 | 근거 원장 구조 계약과 검사기 | [contracts/sources.schema.json](../../../contracts/sources.schema.json), [tools/validate_sources.py](../../../tools/validate_sources.py) |
 | 실행 환경·검사 결과·원격 hash 대조·미검증 범위 | [VALIDATION](VALIDATION.md) |
 
