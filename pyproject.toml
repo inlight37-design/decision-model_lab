@@ -1,0 +1,19 @@
+# 이 파일은 패키지 배포용이 아니라 검사 실행 환경을 고정하기 위한 것이다.
+# 저장소는 여전히 연구·설계 자료이며 설치 가능한 orchestrator가 아니다.
+
+[project]
+name = "decision-model-lab"
+version = "0.4.0"
+description = "Research and architecture for subscription-first, evidence-based multi-model collaboration"
+requires-python = ">=3.12"
+dependencies = []
+
+[project.optional-dependencies]
+# 오프라인 설계 검사에만 필요하다. frontier checker는 표준 라이브러리만 사용한다.
+design = ["jsonschema==4.26.0"]
+
+[tool.pytest.ini_options]
+# tests/ 가 `from tools...` 를 import 하므로 저장소 루트를 경로에 넣는다.
+# 이것이 없으면 루트 밖에서 실행할 때 ModuleNotFoundError 가 난다.
+pythonpath = ["."]
+testpaths = ["tests"]

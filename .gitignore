@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+
+# 가상환경
+.venv/
+venv/
+env/
+
+# 편집기 / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# 연구 산출물: raw trace와 비밀은 저장소에 자동 커밋하지 않는다.
+# 정제한 HANDOFF와 재현 가능한 합성 fixture만 커밋한다.
+*.local.json
+secrets/
+raw-traces/
