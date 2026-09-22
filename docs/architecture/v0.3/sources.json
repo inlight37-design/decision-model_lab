@@ -451,7 +451,7 @@
       "checked_on": "2026-09-22",
       "locator": "Jev introduction; availability",
       "claim": "작은 typed decision을 별도 모델에 맡기는 구상을 소개한다.",
-      "limitations": "공개 local 가중치·이 사용자의 장비에서 실행·한국어 code 라우팅 품질을 확인하지 못했다.",
+      "limitations": "공개 local 가중치·이 사용자의 장비에서 실행·한국어 code 라우팅 품질을 확인하지 못했다. Typed output의 형식 보장은 의미적 정답 보장이 아니다. 발표의 workflow 평가는 강한 모델의 reference probabilities와 비교한 것이며 독립 ground truth와 구분한다.",
       "verification": "primary_source_read",
       "decisions": [
         "D09"
@@ -467,7 +467,7 @@
       "published": "2026-09-20",
       "checked_on": "2026-09-22",
       "locator": "80 prompts × 3; results; limitations",
-      "claim": "분류 단계에서 Jev/Haiku label agreement와 비용·latency를 비교한다.",
+      "claim": "각 분류기와 작성자 expected-tier label의 일치율 및 분류 비용·latency를 비교한다. 분류기끼리의 agreement는 별도 지표다.",
       "limitations": "작성자 label 기반 synthetic 분류 실험이다. 96% 비용 감소는 코딩 작업 전체 절감률이 아니다. 실행일 2026-09-18.",
       "verification": "primary_source_read",
       "decisions": [
@@ -519,8 +519,8 @@
       "supplemental_urls": [],
       "published": null,
       "checked_on": "2026-09-22",
-      "locator": "Cache hits; prompt layout; supported model behavior",
-      "claim": "캐시는 동일 prefix와 지원되는 cache 처리 조건에 의존한다.",
+      "locator": "Model comparison; cache write/read pricing; cache lifetime; Monitor cache performance; Calculate input cost",
+      "claim": "캐시는 동일 prefix와 모델별 조건에 의존한다. 2026-09-22 문서의 GPT-5.6+ API는 cache write 1.25배, read 0.1배를 설명하며 일반 input과 별도로 계측한다.",
       "limitations": "API caching 설명을 모든 subscription quota 차감 규칙에 그대로 적용하지 않는다.",
       "verification": "primary_source_read",
       "decisions": [

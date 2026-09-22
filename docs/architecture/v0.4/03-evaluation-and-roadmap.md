@@ -56,15 +56,23 @@
 
 자신감 숫자를 수집하더라도 먼저 hold-out label에 대해 calibration을 평가한다. calibration이 없으면 가중 투표·자동 승인 기준으로 쓰지 않는다. Agreement는 진단 항목일 수 있으나 accuracy의 대체물이 아니다.
 
+### 주관적 채점과 코드 리뷰의 다른 검증 기준
+
+F22의 strict/lenient 채점 결과를 근거로, 주관적 rubric 평가는 **중립 단독 judge**와 **같은 중립 rubric의 다중 judge**부터 비교한다. 비판적 역할을 넣으면 역할 교환 조건도 두고 사람 reference와의 오차·순위 일치도를 본다. 합의율 상승만으로 채택하지 않는다. 초기 독립 초안 보존과 이후 채점 중 점수 공개/가림은 서로 다른 변수다.
+
+코드 리뷰에는 F24를 참고해 각 finding에 `artifact_digest`, 코드 위치, 재현 조건, 관측 증거, 작업 범위 관련성을 붙이는 실험을 추가한다. 코드로 확인한 반론과 아직 확인하지 못한 우려를 구분하고, 우려는 검사할 가설로 남긴다. 검토 중 diff를 고정하고 범위 밖 우려만으로 writer가 수정을 늘리지 않게 한다. 구체적 반증 검토를 금지한다는 뜻은 아니다. 기존 0/1 round 상한을 유지하며, reviewer 수보다 검증된 결함·거짓 경보·불필요 수정과 비용을 비교한다. 이것은 향후 실험 지침이며 현재 checker가 이 필드를 검사하는 것은 아니다.
+
 ## 5. 공정성과 통계
 
 첫 20–30개 과제는 배선·계측·실패 분류를 확인하기 위한 pilot 제안이다. 통계적으로 충분한 표본이라고 주장하지 않는다. 쉬운/어려운 문제, 검증 가능한/설계 판단 문제를 구분하고 일부를 반복해 실행 변동을 본다. 평가 세트로 프롬프트를 계속 조정하지 않고 tuning과 hold-out을 나눈다.
 
 같은 문제의 조건 간 paired 차이를 사용하고 실행 순서를 섞는다. 반복 실행들을 독립 문제인 것처럼 부풀리지 않는다. 신뢰구간을 계산할 때 문제 단위 cluster/bootstrap 등 의존성을 반영하며, 이후 표본 크기는 관측 분산과 검출하려는 개선 폭에 근거해 정한다. 작은 pilot에서 p-value 하나로 채택 여부를 결정하지 않는다.
 
-F15의 infrastructure 보고는 특정 실험에서 환경 차이만으로 6 percentage-point 차이가 생겼다고 설명한다. 따라서 CPU/RAM/네트워크·timeout·tool 권한·repo snapshot·cache warm/cold·실행 순서도 manifest에 기록한다. 서비스 장애와 quota 제한은 모델 추론 실패와 구분하되 사용자 관점 가용성 비용에서는 빠뜨리지 않는다.
+F15의 infrastructure 보고는 특정 실험에서 환경 차이만으로 6 percentage-point 차이가 생겼다고 설명한다. 따라서 CPU/RAM의 보장 할당량과 hard kill limit을 각각 기록하고, 네트워크·timeout·tool 권한·repo snapshot·cache warm/cold·실행 순서도 manifest에 기록한다. 서비스 장애와 quota 제한은 모델 추론 실패와 구분하되 사용자 관점 가용성 비용에서는 빠뜨리지 않는다.
 
 권장 ablation은 서로 다른 vendor(Q2↔Q3), 토론(Q3↔Q4), 동일/다른 합성자, 이름 공개/익명화, 답변 제시 순서, 자기 평가 제외, 공통/독립 source 검색, 풀이 방법 다양성이다. 여러 요인을 동시에 바꿨다면 그 한계를 결과에 적는다.
+
+F23을 참고해 실험 manifest에 참여자/역할·모델/effort, 통신 연결과 순서, 교환하는 내용, history/memory 접근, round/중단 조건, 최종 결정 주체와 합성 규칙을 명시한다. 서로 다른 프로토콜을 모두 같은 “debate” 조건으로 묶지 않는다. rubric·prompt를 결과 확인 후 바꾸면 새 revision으로 남기고 새 hold-out에서 평가한다. 같은 세트에서 조정한 뒤의 점수는 탐색 결과로 표시한다.
 
 ## 6. 회계와 성능 판정
 
@@ -73,6 +81,12 @@ F15의 infrastructure 보고는 특정 실험에서 환경 차이만으로 6 per
 월 구독료, 실제 추가 API/credit 청구, API 등가 추정치를 분리한다. '추가 현금 0'이어도 구독 한도와 지연이 증가할 수 있다. 반대로 총지출이 늘어도 수용 결과당 비용이 줄 수 있다. 품질이 다른 결과를 단순 건당 token으로 비교하지 않는다. 부분 계측이면 전체 절감률을 발표하지 않는다.
 
 채택 기준은 특정 개선율을 미리 만들어 쓰는 대신 작업군별로 정한다. 예를 들어 복잡한 설계 검토에서는 검증된 중요 오류 감소가 추가 시간보다 가치 있는지, 반복 코드 작업에서는 단독 기준선과 동등한 수용률에서 quota/사람 수정 시간이 줄었는지를 본다. 결과는 quality–cash–quota–latency의 trade-off로 제시한다. 상급 모델 협업이 항상 경제적이거나 항상 더 정확하다는 보장은 없다.
+
+### 모델별 캐시 회계 보강
+
+[E28 공식 API 문서](https://developers.openai.com/api/docs/guides/prompt-caching)를 기준으로 모델/version, 가격 확인일, ordinary input·cache read·cache write를 나눈다. **2026-09-22의 GPT-5.6+ API 예시**는 write 1.25배·read 0.1배다. 같은 prefix를 한 번 쓰고 한 번 완전히 재사용하면 일반 input 비용 단위로 1.35, 두 번 비캐시 처리하면 2다. 출력·도구·추가 요청 비용을 제외한 설명이며 구독 quota 공식이 아니다. 이 배수를 모든 provider나 예전 모델에 공통 적용하지 않는다.
+
+cold start / 같은 모델 warm 재사용 / 모델 전환 / 만료 또는 prefix 변경을 따로 측정한다. 캐시를 채우기 위한 요청도 포함하며, 실제 `cached_tokens`와 지원되는 `cache_write_tokens`를 수집한다. 공급자별 합계에 read/write가 이미 포함되는지 확인해 중복 합산을 막는다. CLI가 이를 노출하지 않으면 unknown으로 두고 API 등가 추정과 실제 추가 청구를 분리한다. 캐시가 늘었어도 총비용·수용률·지연이 개선됐는지 확인한다.
 
 ## 7. 적용해 볼 구체적인 사용법 — 모두 제안 예시
 
@@ -111,7 +125,7 @@ Q3와 Q4를 동일한 task에서 비교하고 처음 맞던 답변의 손실과 
 
 ### V04-05 — `build_review` 연결
 
-기존 v0.2 bounded_patch에 협업 계획/검토 artifact를 선택적으로 연결한다. 구현 writer는 하나이며 read-only reviewer와 독립 test runner를 구분한다. acceptance는 원래 작업의 권한 범위를 유지한다. 자동 main merge는 초기 완료 조건이 아니다.
+기존 v0.2 bounded_patch에 협업 계획/검토 artifact를 선택적으로 연결한다. 구현 writer는 하나이며 read-only reviewer와 독립 test runner를 구분한다. acceptance는 원래 작업의 권한 범위를 유지한다. 자동 main merge는 초기 완료 조건이 아니다. F24의 코드 근거/미검증 우려 구분과 scope 검사를 pilot에 포함하되, 논문의 개선율이나 더 긴 review loop를 기본값으로 복제하지 않는다.
 
 ### V04-06 — routing/Jev는 그 다음
 

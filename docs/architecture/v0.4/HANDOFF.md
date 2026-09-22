@@ -5,6 +5,8 @@
 
 **최종 검토 보강:** [FINAL_REVIEW](FINAL_REVIEW.md)를 먼저 확인한다. Windows Python 3.12에서 전체 71개 테스트를 통과했고, 출처 양방향 연결·누락된 반대 근거·모호한 JSON 입력을 수정했다. 사용자가 최종 검토 후 main 병합을 명시적으로 요청했다. 현재 병합 상태와 최종 commit은 [PR #1](https://github.com/inlight37-design/decision-model_lab/pull/1)이 기준이다. 아래 7–8절의 컨테이너/30개 검사/미병합 기록은 초기 작업 당시의 이력이다.
 
+**후속 근거 검토:** [EVIDENCE_FOLLOWUP](EVIDENCE_FOLLOWUP.md)에 남은 27개 출처의 재확인 범위와 최근 논문 4개의 채택/보류 판단을 기록했다. F22–F24를 추가했고, F06은 provider 경로 및 문서/코드 차이를 확인했다. 새로운 실모델 실험 결과는 없다.
+
 ## 1. 현재 결과
 
 **[v0.4 개요](README.md)**가 현재 읽기 시작점이다. 비용/구독 한도 최적화뿐 아니라 상급 모델의 독립 추론·교차검토·근거 확인을 정식 모드로 추가했다. 실제 구독 모델을 연결해 실행한 것은 아니다.
@@ -14,7 +16,7 @@
 | 제품·공개 코드·논문·반례의 사례 정리 | [01-cases-and-findings](01-cases-and-findings.md) |
 | 네 모드, P0–P5, profile/claim/evidence/권한/예산/복구, D10–D18 | [02-frontier-architecture](02-frontier-architecture.md) |
 | Q0–Q6 대조군, 오류 전이·합성 손실·총비용, 8개 적용 recipe, V04-01–06 | [03-evaluation-and-roadmap](03-evaluation-and-roadmap.md) |
-| F01–F21 원문·날짜/버전·검토 범위·한계·결정 연결 | [sources.json](sources.json) |
+| F01–F24 원문·날짜/버전·검토 범위·한계·결정 연결 | [sources.json](sources.json) |
 | 합성 완료 기록 checker와 내장 demo | [tools/check_frontier_protocol.py](../../../tools/check_frontier_protocol.py) |
 | frontier/CLI 테스트 40개 | [tests/test_frontier_protocol.py](../../../tests/test_frontier_protocol.py) |
 | 출처 양방향 연결·상대 링크 검사 3개 | [tests/test_research_integrity.py](../../../tests/test_research_integrity.py) |
@@ -63,7 +65,7 @@ python -m unittest discover -s tests -p 'test_frontier_protocol.py' -v
 
 F02의 Perplexity Model Council 문서는 2026-09-04, F03 effort 문서는 2026-09-18 갱신이다. 독립 상급 모델 협업이 실제 제품에 존재하지만 사용자의 세 구독을 재사용하는 bridge는 아니다. F01 Microsoft는 Critique와 Council을 구분한다. 제품 기능을 정확도 비교 실험으로 부르지 않는다.
 
-F04의 Karpathy 코드에서는 자기 답변 포함·공통 순서·합성 단계 모델 이름 노출·실패 초기 응답 제외를 확인했다. F05 PAL의 고정 Codex preset에는 승인/sandbox 우회 옵션이 있다. 그대로 도입하지 않는다. PAL consensus의 실제 provider transport와 현재 agy/CLI 호환성은 추가 감사가 필요하다.
+F04의 Karpathy 코드에서는 자기 답변 포함·공통 순서·합성 단계 모델 이름 노출·실패 초기 응답 제외를 확인했다. F05 PAL의 고정 Codex preset에는 승인/sandbox 우회 옵션이 있다. 그대로 도입하지 않는다. 후속 정적 감사에서 PAL consensus는 API/custom provider 경로이며 thinking_mode=medium을 전달함을 확인했다(F06). 현재 agy/CLI 호환성·실제 과금·실행 동작은 미검증이다.
 
 F09/F10/F11/F20은 abstract 수준 확인이다. 관련 수치나 세부 방법이 필요하면 전체 원문을 추가로 읽어야 한다. F10 PDF와 Microsoft 연결 기술 글 접근은 실패했다. F13 제목/날짜/v1 이력은 후속 확인해 원장에 반영했다. F07의 자신감 가중치를 검증된 보편적 확률로 취급하지 않는다.
 
