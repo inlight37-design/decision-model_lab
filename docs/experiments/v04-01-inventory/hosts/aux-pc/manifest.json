@@ -1,0 +1,523 @@
+{
+  "schema": "runtime-inventory/1",
+  "tier": 1,
+  "collected_at": "2026-09-22T17:54:09Z",
+  "host": {
+    "label": "aux-pc",
+    "os": "Windows",
+    "os_release": "11",
+    "os_version": "10.0.26200",
+    "machine": "AMD64",
+    "python": "3.12.6"
+  },
+  "tool": {
+    "path": "tools/runtime_inventory.py",
+    "git_blob_sha1": "26e5c7eb10a81fefa36c92c5e6fc341f2430c11c"
+  },
+  "scope": {
+    "executed": "only the --version/--help commands listed in probes",
+    "not_checked": [
+      "로그인 상태와 인증 방식",
+      "사용 가능한 모델과 effort",
+      "구조화 출력·resume·cancel의 실제 동작",
+      "권한 제한이 실행 전에 적용되는지",
+      "사용량·한도 조회",
+      "과금 경로",
+      "OS 격리"
+    ]
+  },
+  "environment": {
+    "mode": "fresh",
+    "removed": [
+      "ANTHROPIC_BASE_URL",
+      "CLAUDECODE",
+      "CLAUDE_AGENT_SDK_VERSION",
+      "CLAUDE_CODE_CHILD_SESSION",
+      "CLAUDE_CODE_DESKTOP_APP_VERSION",
+      "CLAUDE_CODE_DISABLE_CRON",
+      "CLAUDE_CODE_DISABLE_TERMINAL_TITLE",
+      "CLAUDE_CODE_EAGER_FLUSH",
+      "CLAUDE_CODE_EMIT_TOOL_USE_SUMMARIES",
+      "CLAUDE_CODE_ENABLE_ASK_USER_QUESTION_TOOL",
+      "CLAUDE_CODE_ENABLE_SDK_FILE_CHECKPOINTING",
+      "CLAUDE_CODE_ENTRYPOINT",
+      "CLAUDE_CODE_EXECPATH",
+      "CLAUDE_CODE_HOST_SESSION_ID",
+      "CLAUDE_CODE_MESSAGING_SOCKET",
+      "CLAUDE_CODE_MESSAGING_TOKEN",
+      "CLAUDE_CODE_OAUTH_SCOPES",
+      "CLAUDE_CODE_REPORT_FINDINGS",
+      "CLAUDE_CODE_SDK_HAS_HOST_AUTH_REFRESH",
+      "CLAUDE_CODE_SESSION_ATTENDED",
+      "CLAUDE_CODE_SESSION_ID",
+      "CLAUDE_EFFORT",
+      "CLAUDE_PID",
+      "CLAUDE_PREVIEW_CLASSIFIER_FLOOR",
+      "MCP_CONNECTION_NONBLOCKING",
+      "MCP_SERVER_CONNECTION_BATCH_SIZE"
+    ]
+  },
+  "env_presence": {
+    "CLAUDE_CODE_USE_BEDROCK": {
+      "present": false,
+      "adapter": "claude-code",
+      "why": "클라우드 provider 인증이 최우선"
+    },
+    "CLAUDE_CODE_USE_VERTEX": {
+      "present": false,
+      "adapter": "claude-code",
+      "why": "클라우드 provider 인증이 최우선"
+    },
+    "CLAUDE_CODE_USE_FOUNDRY": {
+      "present": false,
+      "adapter": "claude-code",
+      "why": "클라우드 provider 인증이 최우선"
+    },
+    "ANTHROPIC_AUTH_TOKEN": {
+      "present": false,
+      "adapter": "claude-code",
+      "why": "구독 로그인보다 우선"
+    },
+    "ANTHROPIC_API_KEY": {
+      "present": false,
+      "adapter": "claude-code",
+      "why": "-p에서는 묻지 않고 사용 — API 과금"
+    },
+    "CLAUDE_CODE_OAUTH_TOKEN": {
+      "present": false,
+      "adapter": "claude-code",
+      "why": "장기 구독 토큰. --bare는 읽지 않음"
+    },
+    "ANTHROPIC_PROFILE": {
+      "present": false,
+      "adapter": "claude-code",
+      "why": "명명된 profile이 /login보다 우선"
+    },
+    "ANTHROPIC_BASE_URL": {
+      "present": false,
+      "adapter": "claude-code",
+      "why": "요청 대상 endpoint 변경"
+    },
+    "CLAUDE_CONFIG_DIR": {
+      "present": false,
+      "adapter": "claude-code",
+      "why": "설정·자격증명 위치 변경"
+    },
+    "OPENAI_API_KEY": {
+      "present": false,
+      "adapter": "codex",
+      "why": "API 키 로그인에 쓰일 수 있음"
+    },
+    "CODEX_API_KEY": {
+      "present": false,
+      "adapter": "codex",
+      "why": "exec 자동화용 API 키"
+    },
+    "CODEX_HOME": {
+      "present": false,
+      "adapter": "codex",
+      "why": "설정·자격증명 위치 변경"
+    },
+    "GEMINI_API_KEY": {
+      "present": false,
+      "adapter": "antigravity",
+      "why": "modelProvider=gemini와 함께 API 키 모드"
+    },
+    "GOOGLE_API_KEY": {
+      "present": false,
+      "adapter": "antigravity",
+      "why": "Google API 키 경로"
+    },
+    "GOOGLE_GENAI_USE_VERTEXAI": {
+      "present": false,
+      "adapter": "antigravity",
+      "why": "Vertex 경로 전환"
+    }
+  },
+  "config_presence": {
+    "~/.claude/.credentials.json": {
+      "present": true,
+      "adapter": "claude-code",
+      "opened": false
+    },
+    "~/.claude/settings.json": {
+      "present": true,
+      "adapter": "claude-code",
+      "opened": false
+    },
+    "~/.codex/auth.json": {
+      "present": true,
+      "adapter": "codex",
+      "opened": false
+    },
+    "~/.codex/config.toml": {
+      "present": true,
+      "adapter": "codex",
+      "opened": false
+    },
+    "~/.gemini/antigravity-cli/settings.json": {
+      "present": false,
+      "adapter": "antigravity",
+      "opened": false
+    }
+  },
+  "adapters": [
+    {
+      "adapter_id": "claude-code",
+      "command": "claude",
+      "note": "Claude Code. ANTHROPIC_API_KEY가 있으면 -p 실행은 묻지 않고 그 키를 쓴다(API 과금).",
+      "installed": true,
+      "resolved_path": "~\\.local\\bin\\claude.EXE",
+      "runtime_version": "2.1.280 (Claude Code)",
+      "probes": [
+        {
+          "argv": [
+            "claude",
+            "--version"
+          ],
+          "exit_code": 0,
+          "timed_out": false,
+          "error": null,
+          "duration_ms": 30,
+          "output_file": "help/claude-code-0.txt",
+          "output_sha256": "df949515ffdb6d599aca902006cb97c3a11033d1d6e4824f07fdc7c1301d3ab4"
+        },
+        {
+          "argv": [
+            "claude",
+            "--help"
+          ],
+          "exit_code": 0,
+          "timed_out": false,
+          "error": null,
+          "duration_ms": 203,
+          "output_file": "help/claude-code-1.txt",
+          "output_sha256": "23937937c79878eb95be2a6676d46730328adc03413f4a50f1b6d1852e7d52f3"
+        }
+      ],
+      "capabilities": {
+        "print_mode": {
+          "status": "in_help",
+          "evidence": "claude --help",
+          "source_ids": [
+            "E06"
+          ]
+        },
+        "output_format": {
+          "status": "in_help",
+          "evidence": "claude --help",
+          "source_ids": [
+            "E06"
+          ]
+        },
+        "json_schema": {
+          "status": "in_help",
+          "evidence": "claude --help",
+          "source_ids": [
+            "E06"
+          ]
+        },
+        "resume": {
+          "status": "in_help",
+          "evidence": "claude --help",
+          "source_ids": [
+            "E06"
+          ]
+        },
+        "bare_mode": {
+          "status": "in_help",
+          "evidence": "claude --help",
+          "source_ids": [
+            "F25"
+          ]
+        },
+        "permission_mode": {
+          "status": "in_help",
+          "evidence": "claude --help",
+          "source_ids": [
+            "E06"
+          ]
+        },
+        "permission_prompts": {
+          "status": "in_help",
+          "evidence": "claude --help",
+          "source_ids": [
+            "E06"
+          ]
+        },
+        "allowed_tools": {
+          "status": "in_help",
+          "evidence": "claude --help",
+          "source_ids": [
+            "E06"
+          ]
+        },
+        "acp": {
+          "status": "not_in_help",
+          "evidence": "claude --help",
+          "source_ids": []
+        }
+      },
+      "auth_mode": "unknown",
+      "funding_mode": "unknown",
+      "model_profile_id": null,
+      "quota_pool_id": null,
+      "policy_checked_on": null,
+      "health": "unknown",
+      "observability": "unknown",
+      "configured": false
+    },
+    {
+      "adapter_id": "codex",
+      "command": "codex",
+      "note": "Codex CLI. exec는 기본 read-only sandbox. Git 저장소 밖에서는 --skip-git-repo-check 필요.",
+      "installed": true,
+      "resolved_path": "~\\AppData\\Local\\Programs\\OpenAI\\Codex\\bin\\codex.EXE",
+      "runtime_version": "codex-cli 0.155.1",
+      "probes": [
+        {
+          "argv": [
+            "codex",
+            "--version"
+          ],
+          "exit_code": 0,
+          "timed_out": false,
+          "error": null,
+          "duration_ms": 46,
+          "output_file": "help/codex-0.txt",
+          "output_sha256": "556478dd38e6185a3ceef8e5237286acd48d89da460cdbbc054ce7230b0caced"
+        },
+        {
+          "argv": [
+            "codex",
+            "--help"
+          ],
+          "exit_code": 0,
+          "timed_out": false,
+          "error": null,
+          "duration_ms": 47,
+          "output_file": "help/codex-1.txt",
+          "output_sha256": "4abfbbaee583f6d8c3fa45fd751a138b2b8fdac68f651ac444aa36599629acb7"
+        },
+        {
+          "argv": [
+            "codex",
+            "exec",
+            "--help"
+          ],
+          "exit_code": 0,
+          "timed_out": false,
+          "error": null,
+          "duration_ms": 46,
+          "output_file": "help/codex-2.txt",
+          "output_sha256": "0e82cfde0122715250e93dc65866caa956b2ac5b9d0b20ec4ad4f9e81486509e"
+        }
+      ],
+      "capabilities": {
+        "exec_mode": {
+          "status": "in_help",
+          "evidence": "codex --help",
+          "source_ids": [
+            "E02"
+          ]
+        },
+        "login_command": {
+          "status": "in_help",
+          "evidence": "codex --help",
+          "source_ids": [
+            "E01"
+          ]
+        },
+        "app_server": {
+          "status": "in_help",
+          "evidence": "codex --help",
+          "source_ids": []
+        },
+        "json_events": {
+          "status": "in_help",
+          "evidence": "codex exec --help",
+          "source_ids": [
+            "E02"
+          ]
+        },
+        "output_schema": {
+          "status": "in_help",
+          "evidence": "codex exec --help",
+          "source_ids": [
+            "E02"
+          ]
+        },
+        "resume": {
+          "status": "in_help",
+          "evidence": "codex exec --help",
+          "source_ids": [
+            "E02"
+          ]
+        },
+        "sandbox": {
+          "status": "in_help",
+          "evidence": "codex exec --help",
+          "source_ids": [
+            "E02"
+          ]
+        },
+        "ephemeral": {
+          "status": "in_help",
+          "evidence": "codex exec --help",
+          "source_ids": [
+            "E02"
+          ]
+        },
+        "ignore_user_config": {
+          "status": "in_help",
+          "evidence": "codex exec --help",
+          "source_ids": [
+            "E02"
+          ]
+        },
+        "skip_git_repo_check": {
+          "status": "in_help",
+          "evidence": "codex exec --help",
+          "source_ids": [
+            "E02"
+          ]
+        },
+        "acp": {
+          "status": "not_in_help",
+          "evidence": "codex --help",
+          "source_ids": []
+        }
+      },
+      "auth_mode": "unknown",
+      "funding_mode": "unknown",
+      "model_profile_id": null,
+      "quota_pool_id": null,
+      "policy_checked_on": null,
+      "health": "unknown",
+      "observability": "unknown",
+      "configured": false
+    },
+    {
+      "adapter_id": "antigravity",
+      "command": "agy",
+      "note": "Antigravity CLI. headless 권한 거절은 exit 0 + stderr 경고(soft deny). --version은 문서에 없음.",
+      "installed": true,
+      "resolved_path": "~\\AppData\\Local\\agy\\bin\\agy.EXE",
+      "runtime_version": "1.2.8",
+      "probes": [
+        {
+          "argv": [
+            "agy",
+            "--version"
+          ],
+          "exit_code": 0,
+          "timed_out": false,
+          "error": null,
+          "duration_ms": 125,
+          "output_file": "help/antigravity-0.txt",
+          "output_sha256": "d2d31534641da01801512a3ec793bc8d57132d4cefa19a5fb503e8995f39eb8f"
+        },
+        {
+          "argv": [
+            "agy",
+            "--help"
+          ],
+          "exit_code": 0,
+          "timed_out": false,
+          "error": null,
+          "duration_ms": 125,
+          "output_file": "help/antigravity-1.txt",
+          "output_sha256": "56e9172e55244268b9a04e8731de7e1f4d91f6bdd53d0935b1cde08c35f4e617"
+        }
+      ],
+      "capabilities": {
+        "print_mode": {
+          "status": "in_help",
+          "evidence": "agy --help",
+          "source_ids": [
+            "E08"
+          ]
+        },
+        "output_format": {
+          "status": "in_help",
+          "evidence": "agy --help",
+          "source_ids": [
+            "E08"
+          ]
+        },
+        "json_schema": {
+          "status": "in_help",
+          "evidence": "agy --help",
+          "source_ids": [
+            "E08"
+          ]
+        },
+        "resume": {
+          "status": "in_help",
+          "evidence": "agy --help",
+          "source_ids": [
+            "E08"
+          ]
+        },
+        "sandbox": {
+          "status": "in_help",
+          "evidence": "agy --help",
+          "source_ids": [
+            "E08"
+          ]
+        },
+        "skip_permissions": {
+          "status": "in_help",
+          "evidence": "agy --help",
+          "source_ids": [
+            "E08"
+          ]
+        },
+        "effort": {
+          "status": "in_help",
+          "evidence": "agy --help",
+          "source_ids": [
+            "E08"
+          ]
+        },
+        "acp": {
+          "status": "not_in_help",
+          "evidence": "agy --help",
+          "source_ids": []
+        }
+      },
+      "auth_mode": "unknown",
+      "funding_mode": "unknown",
+      "model_profile_id": null,
+      "quota_pool_id": null,
+      "policy_checked_on": null,
+      "health": "unknown",
+      "observability": "unknown",
+      "configured": false
+    },
+    {
+      "adapter_id": "gemini-cli",
+      "command": "gemini",
+      "note": "agy와 다른 제품이다. 둘을 같은 quota pool로 가정하지 않기 위해 설치 여부만 구분한다.",
+      "installed": false,
+      "resolved_path": null,
+      "runtime_version": null,
+      "probes": [],
+      "capabilities": {
+        "acp": {
+          "status": "unknown",
+          "evidence": null,
+          "source_ids": []
+        }
+      },
+      "auth_mode": "unknown",
+      "funding_mode": "unknown",
+      "model_profile_id": null,
+      "quota_pool_id": null,
+      "policy_checked_on": null,
+      "health": "unknown",
+      "observability": "unknown",
+      "configured": false
+    }
+  ]
+}

@@ -25,15 +25,35 @@ REGISTRIES = (
      ("published", "revised", "revision")),
 )
 
-# 현재 안내 문서. 과거 검토 기록(FINAL_REVIEW, VALIDATION 1-4절)은 그 시점의
-# 숫자를 유지하는 것이 정확하므로 여기에 넣지 않는다.
-CURRENT_GUIDANCE = (
+# 계속 갱신되는 안내 문서. 여러 세션과 여러 AI가 번갈아 고치므로 숫자가 가장 쉽게
+# 어긋난다(75/74/71 검사, F01–F24 범위가 동시에 남아 있던 적이 있다).
+# 과거 검토 기록(FINAL_REVIEW, VALIDATION 1-4절, docs/reviews/, 보관한 인계)은
+# 그 시점의 숫자를 유지하는 것이 정확하므로 넣지 않는다. docs/COLLABORATION.md 참조.
+LIVING_DOCS = (
+    "README.md",
+    "AGENTS.md",
+    "NEXT-SESSION.md",
+    "docs/COLLABORATION.md",
     "docs/architecture/README.md",
     "docs/architecture/v0.4/README.md",
     "docs/architecture/v0.4/HANDOFF.md",
+    "docs/reviews/README.md",
+    "docs/handoff/README.md",
+    "design/README.md",
 )
 
 COMMIT_SHA = re.compile(r"\b[0-9a-f]{40}\b")
+
+# 안내 문서가 다시 적으면 안 되는 개수. 기준은 CI 로그 하나다.
+RESTATED_COUNT = re.compile(
+    r"\b\d+\s*tests?\b"
+    r"|(?:검사|테스트)[은는이가도를]?\s*\*{0,2}\d+\s*개"
+    r"|\*{0,2}\d+\s*개\*{0,2}\s*(?:의\s*)?(?:검사|테스트)"
+    r"|전체[은는]?\s*\*{0,2}\d+\s*개"
+    r"|원장[은는이가]?\s*\*{0,2}\d+\s*(?:건|개)"
+    r"|commit\s*\*{0,2}\d+\b",
+    re.IGNORECASE,
+)
 
 
 def evidence_ids(text):
@@ -94,23 +114,61 @@ class ResearchIntegrityTests(unittest.TestCase):
             with self.subTest(version=version):
                 self.assertEqual(actual, expected)
 
+    def living_lines(self):
+        """안내 문서의 줄. commit SHA 가 있는 줄은 그 시점의 이력이므로 건너뛴다."""
+        for relative in LIVING_DOCS:
+            for number, line in enumerate((ROOT / relative).read_text(encoding="utf-8").splitlines(), 1):
+                if not COMMIT_SHA.search(line):
+                    yield relative, number, line
+
     def test_current_guidance_states_the_actual_registry_range(self):
         """원장이 커지면 안내 문서의 범위 표기도 따라와야 한다. F22-F24 추가 때 놓쳤던 회귀."""
         for version, prefix, numbers, _, _, _, _ in REGISTRIES:
-            expected = f"{prefix}01–{prefix}{max(numbers):02}"
-            stale = re.compile(rf"{prefix}01–(?:{prefix})?\d{{2}}")
-            for relative in CURRENT_GUIDANCE:
-                for number, line in enumerate((ROOT / relative).read_text(encoding="utf-8").splitlines(), 1):
-                    # commit SHA 가 있는 줄은 그 시점의 이력이므로 당시 범위가 정확하다.
-                    if COMMIT_SHA.search(line):
-                        continue
-                    for found in stale.finditer(line):
-                        with self.subTest(doc=relative, line=number, found=found.group(0)):
-                            self.assertEqual(
-                                found.group(0), expected,
-                                f"{relative}:{number}: stale registry range; "
-                                f"registry holds {len(numbers)} entries",
-                            )
+            # en dash 와 hyphen 을 모두 잡는다. AGENTS.md 의 'F01-F24' 는 hyphen 이라 빠져 있었다.
+            stale = re.compile(rf"{prefix}01[–-](?:{prefix})?(\d{{2}})")
+            for relative, number, line in self.living_lines():
+                for found in stale.finditer(line):
+                    with self.subTest(doc=relative, line=number, found=found.group(0)):
+                        self.assertEqual(
+                            int(found.group(1)), max(numbers),
+                            f"{relative}:{number}: stale registry range; "
+                            f"registry holds {prefix}01–{prefix}{max(numbers):02}",
+                        )
+
+    def test_living_documents_do_not_restate_counts(self):
+        """검사 수·원장 건수·commit 수는 CI 로그와 원장이 기준이다. 안내 문서에 다시 적으면
+        다음 세션이 고치지 않는 한 틀린 채로 남는다. 그 시점의 숫자가 필요하면 commit SHA 와
+        같은 줄에 적는다 — 그 줄은 이력으로 취급한다."""
+        for relative, number, line in self.living_lines():
+            for found in RESTATED_COUNT.finditer(line):
+                with self.subTest(doc=relative, line=number, found=found.group(0)):
+                    self.fail(f"{relative}:{number}: '{found.group(0)}' — link the CI log instead")
+
+    def test_handoff_keeps_its_fixed_layout(self):
+        """여러 세션이 번갈아 쓰는 인계 문서는 같은 자리에서 같은 것을 찾을 수 있어야 한다.
+        '진행 중인 작업' 절이 없으면 main 의 인계가 열린 PR 을 모르는 일이 되풀이된다."""
+        lines = (ROOT / "NEXT-SESSION.md").read_text(encoding="utf-8").splitlines()
+        self.assertEqual(lines[0], "# 다음 세션 인계 — decision-model_lab")
+        self.assertTrue(
+            any(re.match(r"최종 갱신 \*\*\d{4}-\d{2}-\d{2}\*\* · 작성 세션: \S", line) for line in lines[:5]),
+            "second block must read '최종 갱신 **YYYY-MM-DD** · 작성 세션: <agent>'",
+        )
+        self.assertEqual(
+            [line for line in lines if line.startswith("## ")],
+            ["## 0. 먼저 확인할 것", "## 1. 지금 상태", "## 2. 사용자가 확정한 것",
+             "## 3. 진행 중인 작업", "## 4. 다음 작업", "## 5. 하지 말 것", "## 6. 검사"],
+        )
+
+    def test_restated_count_pattern_matches_past_drift(self):
+        """위 검사가 실제로 있었던 어긋남을 잡는지, 정상 문장을 잡지 않는지 고정한다."""
+        for text in ("(75 tests)", "Ran 74 tests", "현재 전체 **74개**다", "검사 75개",
+                     "테스트는 40개이며", "112개 테스트", "근거 원장 59건", "commit 63"):
+            with self.subTest(text=text):
+                self.assertRegex(text, RESTATED_COUNT)
+        for text in ("# v0.1 계약 25개", "F01–F29는 29개의 독립 실험이 아니다",
+                     "검토 기록은 시간순으로 다섯이다", "Python 3.12/3.13"):
+            with self.subTest(text=text):
+                self.assertNotRegex(text, RESTATED_COUNT)
 
     @unittest.skipUnless(HAS_JSONSCHEMA,
                          "jsonschema 미설치: python -m pip install -r requirements-design.txt")
@@ -132,12 +190,32 @@ class ResearchIntegrityTests(unittest.TestCase):
         self.assertTrue(paths, "검사 대상 파일을 하나도 찾지 못했다")
         self.assertEqual(problems(paths), [])
 
+    def test_encoding_check_rejects_control_characters(self):
+        """스크립트로 문서를 고치다 '\\b'가 백스페이스가 되어 경로 글자가 사라진 일이 있었다."""
+        import tempfile
+        from tools.check_encoding import problems
+
+        with tempfile.TemporaryDirectory() as tmp:
+            broken = Path(tmp, "broken.md")
+            broken.write_bytes("첫 줄\n경로 ~\\.local".encode("utf-8") + bytes([0x08]) + b"in\n")
+            found = problems([broken])
+            self.assertEqual(len(found), 1)
+            self.assertIn(":2:", found[0])
+            self.assertIn("0x08", found[0])
+            self.assertNotIn(chr(0x08), found[0])
+            fine = Path(tmp, "fine.md")
+            fine.write_bytes("탭\t과 CRLF\r\n정상\n".encode("utf-8"))
+            self.assertEqual(problems([fine]), [])
+
     def test_markdown_relative_link_targets_exist(self):
         # Inline Markdown file links only; external URLs and heading anchors are not checked.
         paths = list(ROOT.glob("*.md"))
         for folder in ("docs", "contracts"):
             paths.extend((ROOT / folder).rglob("*.md"))
         for path in paths:
+            # 보관한 인계 문서는 루트에서 쓴 원문을 바이트 그대로 둔다(docs/handoff/README.md).
+            if path.parent == ROOT / "docs/handoff" and path.name != "README.md":
+                continue
             content = re.sub(r"```.*?```", "", path.read_text(encoding="utf-8"), flags=re.S)
             for target in re.findall(r"\[[^\]\n]*\]\(([^)\s]+)\)", content):
                 parts = urlsplit(target)

@@ -113,6 +113,8 @@ cold start / 같은 모델 warm 재사용 / 모델 전환 / 만료 또는 prefix
 
 ### V04-01 — 런타임/구독 inventory (아직 미실시)
 
+**실행 절차:** [V04-01 절차서](../../experiments/v04-01-inventory/README.md). tier 1 기록 도구는 [`tools/runtime_inventory.py`](../../../tools/runtime_inventory.py)다. 아래 완료 조건은 그대로 유효하다.
+
 설치된 도구의 실제 version/help, native 로그인 방식, 사용할 수 있는 모델, 지원 permission/output/resume/cancel 기능을 비밀 값 없이 기록한다. agy와 Gemini CLI를 별도 adapter로 다룬다. API/extra-credit fallback, 부모 환경 변수의 funding 영향도 확인한다. 완료 조건은 timestamp가 있는 capability manifest와 실행 불가 이유의 명시다. 설치·설정 변경을 자동으로 함께 하지 않는다.
 
 **구독 인증 경로의 정책 리스크도 함께 기록한다.** 이 저장소 전체가 '구독 우선, API 선택'을 전제하는데, 그 전제는 공급자가 구독 기반 비대화형 접근을 계속 허용한다는 가정에 의존한다. 이미 F18은 Claude SDK 구독 정책의 변경이 **공지되었다가 보류된** 상태를 기록하고 있다. 즉 이 경로는 이미 한 번 흔들렸다. 따라서 adapter별로 다음을 manifest에 남긴다: 구독 기반 비대화형 사용에 대한 공식 지원 문구와 그 문서의 revision, 과거 정책 변경·유예 이력, 경로가 닫혔을 때의 대안(유료 API 전환 / 해당 provider 제외 / 기능 축소)과 그 선택의 비용.

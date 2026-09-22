@@ -7,7 +7,7 @@ Antigravity·ChatGPT·Claude의 **native 하네스와 공식 구독 CLI**를 연
 
 Jev류 판단 모델은 교체 가능한 선택 부품이며, 전체 시스템의 필수 지휘자가 아닙니다.
 
-> **현재: v0.4 상급 모델 협업 확장 (2026-09-22).** 실제 제품·공개 구현·논문과 반례를 F01–F24로 정리하고, 네 실행 모드·P0–P5 프로토콜·D10–D18 결정·비교 실험을 추가했습니다. 최종 검토에서 기존 계약·합성 기록·문서 참조 검사 71개를 통과했고, 이후 외부 검토에서 검사를 **74개**로 늘렸습니다([검토와 수정](docs/architecture/v0.4/REVIEW_FIXES.md)). **실제 세 모델 연결·사용자 환경의 권한/과금·품질 향상률을 검증한 상태는 아닙니다.** v0.3 기반과 v0.2 계약은 유지합니다. [최종 검토와 수정 내역](docs/architecture/v0.4/FINAL_REVIEW.md). 이후 남은 출처 27개와 최근 논문 4개를 확인한 [후속 근거 검토](docs/architecture/v0.4/EVIDENCE_FOLLOWUP.md)에서 PAL 설명을 수정하고 평가 기준을 보강했습니다.
+> **현재: v0.4 상급 모델 협업 확장 (2026-09-22).** 실제 제품·공개 구현·논문과 반례를 F01–F29로 정리하고, 네 실행 모드·P0–P5 프로토콜·D10–D18 결정·비교 실험을 추가했습니다. 이후 외부 검토와 추가 검토에서 CI·원장 계약·오프라인 경계 실험을 보강했습니다([검토 기록](docs/reviews/README.md)). 현재 검사 수와 결과는 [CI 실행 기록](https://github.com/inlight37-design/decision-model_lab/actions/workflows/checks.yml)이 기준입니다. **실제 세 모델 연결·사용자 환경의 권한/과금·품질 향상률을 검증한 상태는 아닙니다.** v0.3 기반과 v0.2 계약은 유지합니다. [최종 검토와 수정 내역](docs/architecture/v0.4/FINAL_REVIEW.md). 이후 남은 출처 27개와 최근 논문 4개를 확인한 [후속 근거 검토](docs/architecture/v0.4/EVIDENCE_FOLLOWUP.md)에서 PAL 설명을 수정하고 평가 기준을 보강했습니다.
 
 ## 이어서 작업한다면
 
@@ -29,7 +29,7 @@ Jev류 판단 모델은 교체 가능한 선택 부품이며, 전체 시스템�
 | [사례와 반례](docs/architecture/v0.4/01-cases-and-findings.md) | Perplexity/Microsoft, Karpathy/PAL, ReConcile/MoA, 상급 모델 분업, debate 실패와 judge 편향 |
 | [상급 모델 협업 아키텍처](docs/architecture/v0.4/02-frontier-architecture.md) | 단일 실행·독립 교차검증·제한 토론·구현/검토, 주장/근거·권한·예산·복구 |
 | [평가와 구현 순서](docs/architecture/v0.4/03-evaluation-and-roadmap.md) | 같은 예산의 강한 단독/ensemble 대조군, 오류 전이·합성 손실, 8개 적용 예시와 ticket |
-| [근거 원장](docs/architecture/v0.4/sources.json) | F01–F24의 원문·날짜/버전·검토 범위·한계·관련 결정 |
+| [근거 원장](docs/architecture/v0.4/sources.json) | F01–F29의 원문·날짜/버전·검토 범위·한계·관련 결정 |
 | [검증 범위](docs/architecture/v0.4/VALIDATION.md) | 실제 오프라인 검사, 코드 hash 대조, 미실시한 runtime 검증 |
 
 **다수결은 진실 판정이 아닙니다.** 초기 독립 답변을 보존하고, 근거로 해결되지 않은 소수 반례·의견 차이는 최종 결과에도 남깁니다. 상급 모델이 계획·검토·합성하는 것도 지원할 설계이며, 모든 역할을 저가 모델로 채우는 구조가 아닙니다. 추가 호출이 실제로 도움이 되는지는 작업군별로 평가합니다.
@@ -45,13 +45,13 @@ python -m unittest discover -s tests -p 'test_frontier_protocol.py' -v
 
 이 도구는 **합성 완료 기록의 일부 일관성을 검사**합니다. 정족수 부족, peer에 오염된 초기 입력, 호출/라운드 상한, 자기 평가, funding 정책, 근거 없는 검증 승격, 미합의 누락 등을 검사합니다. 실제 모델·API·shell 작업을 실행하지 않으며 OS sandbox, 인용의 의미, 실제 사용량, 진실을 검증하지 않습니다. 상세 제한은 [v0.4 안내](docs/architecture/v0.4/README.md)에 있습니다.
 
-v0.2 계약 검사, 근거 원장 구조 검사, 문서 참조 회귀 검사까지 실행하려면 다음을 사용합니다. 현재 전체 **74개**입니다: v0.2 계약 28개 + frontier/CLI 40개 + 문서·원장 정합성 6개.
+v0.2 계약 검사, 근거 원장 구조 검사, 문서 참조 회귀 검사까지 실행하려면 다음을 사용합니다. 전체 검사 수는 문서에 적지 않고 CI 로그를 기준으로 합니다. 여러 세션이 고치는 문서에 적은 숫자는 매번 어긋났습니다.
 
 ```bash
 python -m pip install -r requirements-design.txt
 python tools/validate_design.py     # v0.1 계약 25개
 python tools/validate_v02.py        # v0.2 plan/proof 결합
-python tools/validate_sources.py    # E01–E31 / F01–F24 원장 구조
+python tools/validate_sources.py    # E01–E31 / F01–F29 원장 구조
 python -m unittest discover -s tests -v
 ```
 
