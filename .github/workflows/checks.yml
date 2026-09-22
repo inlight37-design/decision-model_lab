@@ -1,0 +1,53 @@
+# 오프라인 검사만 실행한다. 모델·구독·네트워크·sandbox를 검증하지 않는다.
+name: offline-checks
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # 표준 라이브러리만으로 동작해야 하는 경로를 의존성 설치 전에 먼저 확인한다.
+      - name: stdlib-only frontier checker
+        run: |
+          python tools/check_frontier_protocol.py
+          python -m unittest discover -s tests -p 'test_frontier_protocol.py'
+
+      - name: install design dependencies
+        run: python -m pip install --disable-pip-version-check -r requirements-design.txt
+
+      - name: v0.1 contract checks
+        run: python tools/validate_design.py
+
+      - name: v0.2 pilot/proof checks
+        run: python tools/validate_v02.py
+
+      - name: evidence registry schema
+        run: python tools/validate_sources.py
+
+      - name: full test suite
+        run: python -m unittest discover -s tests -v
+
+      - name: compile
+        run: python -m compileall -q tools tests
+
+      # 문서에 hash를 고정하는 대신 실행마다 현재 값을 기록한다.
+      - name: record current code hashes
+        run: python tools/print_code_hashes.py
