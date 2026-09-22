@@ -55,7 +55,7 @@ python tools/check_frontier_protocol.py path/to/synthetic-record.json
 
 `frontier-record-experiment/0`은 **닫힌 합성 기록을 다루는 축소 실험 포맷**이다. 실제 provider record는 `synthetic=false`에서 거절한다. 현재 checker는 cross_check/deliberate, 서로 다른 provider로 선언한 상급 구성, 완료된 draft/review/synthesis와 claim disposition의 기본 일관성만 검사한다. build_review runner·MCP bridge·완전한 JSON Schema·artifact resolver가 아니다. 알 수 없는 추가 필드를 전부 금지하거나 모든 운영 의미를 검증하는 도구도 아니다.
 
-입력 JSON의 중복 키와 비유한 수를 거절하며, 각 claim의 `check_refs`는 그 claim을 대상으로 기록한 모든 check를 포함해야 한다. 실패·불명 검사를 참조에서 누락해 숨길 수 없다. 최종 검토의 frontier/CLI 테스트는 40개이며, 기존 v0.2 28개와 문서 참조 3개를 합친 전체는 71개다. [검토 기록](FINAL_REVIEW.md).
+입력 JSON의 중복 키와 비유한 수를 거절하며, 각 claim의 `check_refs`는 그 claim을 대상으로 기록한 모든 check를 포함해야 한다. 실패·불명 검사를 참조에서 누락해 숨길 수 없다. frontier/CLI 테스트는 40개이며, 기존 v0.2 28개와 문서·원장 정합성 6개를 합친 현재 전체는 **74개**다. [최종 검토 기록](FINAL_REVIEW.md), [이후 외부 검토와 수정](REVIEW_FIXES.md).
 
 내장 예시의 모델 이름은 A/B/C, provider 표시는 설명용이며 실제 model ID·credential·실행 명령이 없다. `synthetic://` 증거와 0으로 채운 digest는 실물이 아니다. 세 모델의 찬성표가 있어도 근거 없는 주장은 unresolved로 남는다. **검사 통과는 인용의 의미·OS 격리·모델 능력·실제 구독 과금의 증명이 아니다.**
 

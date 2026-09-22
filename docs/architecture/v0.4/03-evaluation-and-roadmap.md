@@ -111,6 +111,10 @@ cold start / 같은 모델 warm 재사용 / 모델 전환 / 만료 또는 prefix
 
 설치된 도구의 실제 version/help, native 로그인 방식, 사용할 수 있는 모델, 지원 permission/output/resume/cancel 기능을 비밀 값 없이 기록한다. agy와 Gemini CLI를 별도 adapter로 다룬다. API/extra-credit fallback, 부모 환경 변수의 funding 영향도 확인한다. 완료 조건은 timestamp가 있는 capability manifest와 실행 불가 이유의 명시다. 설치·설정 변경을 자동으로 함께 하지 않는다.
 
+**구독 인증 경로의 정책 리스크도 함께 기록한다.** 이 저장소 전체가 '구독 우선, API 선택'을 전제하는데, 그 전제는 공급자가 구독 기반 비대화형 접근을 계속 허용한다는 가정에 의존한다. 이미 F18은 Claude SDK 구독 정책의 변경이 **공지되었다가 보류된** 상태를 기록하고 있다. 즉 이 경로는 이미 한 번 흔들렸다. 따라서 adapter별로 다음을 manifest에 남긴다: 구독 기반 비대화형 사용에 대한 공식 지원 문구와 그 문서의 revision, 과거 정책 변경·유예 이력, 경로가 닫혔을 때의 대안(유료 API 전환 / 해당 provider 제외 / 기능 축소)과 그 선택의 비용.
+
+외부 조사 중 'Gemini CLI의 소비자 인증 경로가 2026-06-18자로 종료되어 Code Assist 또는 유료 API로만 이용 가능하다'는 서술을 검색 결과 수준에서 접했다. **원문을 확인하지 않았으므로 근거 원장에 등록하지 않았고 F/D 번호를 부여하지 않았다.** agy는 Gemini CLI와 다른 도구이므로 직접 적용되지도 않는다. 이것은 검증할 단서이지 확인된 사실이 아니며, V04-01에서 각 provider의 공식 문서로 직접 확인한다. 확인되면 그때 원장에 등록하고 필요하면 새 결정을 만든다.
+
 ### V04-02 — 오프라인 프로토콜 검사 (이번 뼈대 작업)
 
 합성 기록에서 중복 참여자, quorum 부족, 초기 peer 노출, 과도한 round/call, 무승인 funding, dangling artifact/check 참조, 근거 없는 합의의 검증 승격, unresolved 누락을 잡는 최소 검사를 만든다. 정상·거절 fixture를 시험한다. 이것은 실제 sandbox/auth나 진실 판정의 구현이 아니다. [검증 범위](VALIDATION.md)를 따른다.
