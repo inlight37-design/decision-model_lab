@@ -1,0 +1,14 @@
+{
+  "source_blob_sha": "c7ca934569ed612c120a111c53310402e518f64c",
+  "scope": "66 opaque normal-text token pairs, reconstructed from inspected palette values; not rendered CSS compliance",
+  "threshold": 4.5,
+  "pairs": 66,
+  "failing_pairs": 5,
+  "failures": [
+    {"theme":"light","foreground":"ink-200","background":"surface-200","ratio":4.0805,"passes_normal_text":false},
+    {"theme":"light","foreground":"unknown","background":"surface-000","ratio":3.5973,"passes_normal_text":false},
+    {"theme":"light","foreground":"unknown","background":"surface-100","ratio":3.7995,"passes_normal_text":false},
+    {"theme":"light","foreground":"unknown","background":"surface-200","ratio":3.2554,"passes_normal_text":false},
+    {"theme":"dark","foreground":"ink-200","background":"surface-200","ratio":4.3595,"passes_normal_text":false}
+  ]
+}
