@@ -73,7 +73,7 @@ jobs:
         run: python -m unittest discover -s tests -v
 
       - name: compile
-        run: python -m compileall -q tools tests
+        run: python -m compileall -q tools tests core app
 
       # 문서에 hash를 고정하는 대신 실행마다 현재 값을 기록한다.
       - name: record current code hashes
