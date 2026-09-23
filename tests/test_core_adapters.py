@@ -73,6 +73,20 @@ class ArgvTests(unittest.TestCase):
         self.assertIn("--ignore-user-config", argv)
         self.assertEqual(argv[-1], "Q")
 
+    def test_codex_windows_sandbox_is_the_only_config_override(self):
+        """openai/codex#42172: --ignore-user-config가 Windows 샌드박스 선택까지 버린다."""
+        argv = build_argv("codex", exe=EXE, prompt="Q", model="gpt-x", codex_windows_sandbox=True)
+        i = argv.index("-c")
+        self.assertEqual(argv[i + 1], adapters.CODEX_WINDOWS_SANDBOX)
+        self.assertLess(i, argv.index("--model"))
+        for bad in ('model="o3"', 'windows.sandbox="unelevated"', 'sandbox_mode="danger-full-access"'):
+            with self.subTest(bad=bad), self.assertRaises(AdapterError):
+                adapters._check("codex", [EXE, "exec", "-c", bad, "Q"], user_text=(4,))
+        for call in (dict(adapter_id="claude-code", codex_windows_sandbox=True),
+                     dict(adapter_id="codex", codex_windows_sandbox="yes")):
+            with self.subTest(call=call), self.assertRaises(AdapterError):
+                build_argv(call.pop("adapter_id"), exe=EXE, prompt="Q", model="m", **call)
+
     def test_agy_is_off_until_the_user_turns_it_on(self):
         with self.assertRaises(AdapterError):
             build_argv("antigravity", exe=EXE, prompt="Q", model="gemini-x")
@@ -152,6 +166,17 @@ class InterpretRecordedTests(unittest.TestCase):
     def test_truncated_output_is_not_parsed(self):
         out = interpret("codex", fake('{"type":"turn.completed"}', truncated=True), requested_model="m")
         self.assertEqual(out.status, "format_error")
+
+    def test_codex_commands_rejected_on_stderr_are_not_success(self):
+        """aux-pc 첫 Codex 관측: 명령이 모두 거절됐는데 exit 0에 답도 나왔다. JSONL에는 흔적이 없다."""
+        body = recorded("P1-codex").stdout
+        stderr = ('ERROR codex_core::tools::router: error=exec_command failed: CreateProcess { message: '
+                  '"Rejected(\\"`powershell.exe -Command Get-Content allowed.txt` rejected: blocked by policy\\")" }\n')
+        run = RunResult(("x",), EXITED, 0, body, stderr, False, False, 1, 0, True)
+        out = interpret("codex", run, requested_model="gpt-x")
+        self.assertFalse(out.ok)
+        self.assertEqual(out.status, "tools_rejected")
+        self.assertEqual(out.text, "OK")  # 답은 남기되 성공으로 치지 않는다
 
     def test_codex_failure_and_missing_completion(self):
         failed = '{"type":"turn.started"}\n{"type":"turn.failed","error":{"message":"usage limit reached"}}\n'
