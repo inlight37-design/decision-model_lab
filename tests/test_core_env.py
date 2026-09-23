@@ -46,6 +46,10 @@ class WindowsBinaryTests(unittest.TestCase):
             with self.assertRaises(env.EnvError):
                 env.resolve("codex.exe", {"PATH": tmp})
             self.assertEqual(env.resolve("codex", {"PATH": tmp}), str(Path(tmp) / "codex"))
+            # 이름은 Linux 것처럼 보여도 링크가 Windows 실행 파일을 가리키면 거절한다
+            (Path(tmp) / "linked").symlink_to(Path(tmp) / "codex.exe")
+            with self.assertRaises(env.EnvError):
+                env.resolve("linked", {"PATH": tmp})
 
 
 if __name__ == "__main__":
