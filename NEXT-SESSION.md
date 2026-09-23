@@ -11,7 +11,7 @@
 3. 이 세션이 무엇에 접근할 수 있는지(사용자 PC / 웹 컨테이너 / GitHub만) 정하고 PR에 적는다.
 4. **GitHub만 보는 세션**(ChatGPT 웹 등)이라면 main이 아직 이 파일의 최신판이 아닐 수 있다. 3절의 브랜치에서 이 파일을 다시 읽는다.
 5. **모델을 부르는 일은 사용자 승인 뒤에만 한다.** 사용량이 막히면 멈추고 알린다(사용자 요청 — Codex 사용량이 적게 남아 있었다).
-6. **검토 요청이 열려 있다:** [요청서](docs/reviews/2026-09-23-a1-handoff-request/README.md). 결과가 오면 4절 "참고"의 리뷰 처리 규칙대로 반영한다.
+6. **A1 검토 결과가 왔다:** [요청서](docs/reviews/2026-09-23-a1-handoff-request/README.md)에 대한 [리뷰](docs/reviews/2026-09-23-a1-handoff-review/README.md)(PR #7). 4절 "참고"의 리뷰 처리 규칙대로 반영한다.
 
 ## 1. 지금 상태
 
@@ -97,12 +97,12 @@
 
 ## 3. 진행 중인 작업
 
-**지금 병합되지 않은 브랜치: 없음.** 마지막 병합: 이 인계의 전면 재작성, 검토 요청서, 수동 답 검사의 과장 문구 정정(`claude/handoff-consolidate-20260923`). 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 이 줄을 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다. 2026-09-23의 병합 이력은 [지난 판](docs/handoff/2026-09-23-before-consolidation.md) 3절과 Git 로그에 있다.
+**지금 병합되지 않은 브랜치: 없음.** 마지막 병합: A1·인계 리뷰([PR #7](https://github.com/inlight37-design/decision-model_lab/pull/7), `chatgpt/review-a1-20260923`). ChatGPT가 GitHub와 별도 웹 컨테이너에서 검토했고 사용자 PC·WSL의 실제 모델은 실행하지 않았다. [리뷰](docs/reviews/2026-09-23-a1-handoff-review/README.md)와 [재개 검증·WM-07 정정](docs/reviews/2026-09-23-a1-handoff-review/VERIFICATION-20260923.md)을 함께 읽는다. 실제 호출 전에 봉인·수용·실행 소유권·마운트 관문을 먼저 보강하라는 판정이다. 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 이 줄을 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다. 2026-09-23의 앞선 병합 이력은 [지난 판](docs/handoff/2026-09-23-before-consolidation.md) 3절과 Git 로그에 있다.
 
 사용자의 판단을 기다리는 것:
-- **모델 호출 승인** — 4절 2단계(Claude 3회 안팎, Codex 2회 안팎)
+- **모델 호출 승인** — 4절 2단계(Claude 3회 안팎, Codex 2회 안팎). 승인 전에 위 리뷰의 선행 보강 권고를 검토한다.
 - 열린 결정 Q4·Q5·Q6, C2
-- [검토 요청](docs/reviews/2026-09-23-a1-handoff-request/README.md)의 결과
+- [검토 요청](docs/reviews/2026-09-23-a1-handoff-request/README.md)에 대한 [리뷰와 정정](docs/reviews/2026-09-23-a1-handoff-review/VERIFICATION-20260923.md)의 수용·반박 및 후속 반영
 - aux-pc 로컬 모의 데이터(`~/.decision-model-lab/mock`)의 첫 실행 하나가 ChatGPT 앱 수동 답을 기다린다 — 시연용이고 저장소와 무관하다
 
 ## 4. 다음 작업
