@@ -5,7 +5,8 @@
 | 모듈 | 하는 일 | 하지 않는 일 |
 |---|---|---|
 | [`runner.py`](runner.py) | CLI 한 번을 셸 없이 실행한다. stdin 닫기, stdout·stderr 분리와 상한, 제한 시간, 취소, 추적 단위가 비었는지 확인. 확인하지 못하면 `unknown`. 정리 단계에도 상한(`CLEANUP_LIMIT`)이 있다 | 인증·과금·권한이 옳은지 판단 |
-| [`adapters.py`](adapters.py) | Claude Code·Codex·agy의 읽기 전용 논의자 argv 조립, 위험 플래그 거절, 과금 변수 제거, 실제 출력 해석 | 권한 제한이 실제로 지켜지는지 증명 — V04-03 conformance가 한다 |
+| [`adapters.py`](adapters.py) | Claude Code·Codex·agy의 읽기 전용 논의자 실행 명세(`ExecutionSpec`) 조립 — argv에는 옵션만, 질문은 stdin(agy만 아직 명령줄), 기록에는 입력 digest와 크기만. 위험 플래그 거절, 실제 출력 해석 | 권한 제한이 실제로 지켜지는지 증명 — V04-03 conformance가 한다 |
+| [`env.py`](env.py) | 자식 환경(과금 변수 제거, 새 터미널 기준 정리), 실행 파일 찾기. WSL에서는 Windows 드라이브의 PATH 항목을 빼고 Windows 실행 파일을 거절한다. `tools/runtime_inventory.py`가 이 모듈의 변수 목록을 쓴다 | 인증 파일이나 환경변수 값 읽기·기록 |
 | [`membership.py`](membership.py) | 실행 중 참여자가 빠지거나 바뀔 때의 결정. 조용히 채우지 않고, 공개 전에는 구성이 바뀔 때마다 정족수를 다시 보고 미달이면 막는다 | 실행, 초안이 다 들어왔는지 판단 — controller의 단계 관문이 한다 |
 
 ## 지키는 규칙
@@ -19,4 +20,4 @@
 - **agy는 꺼져 있다.** 사용자가 켜야 쓴다(약관 판단, F31).
 - **과금 경로를 바꾸는 환경변수는 자식에게 넘기지 않는다.** 인증은 각 CLI의 로그인을 쓴다.
 
-검사: [`tests/test_core_runner.py`](../tests/test_core_runner.py), [`test_core_adapters.py`](../tests/test_core_adapters.py), [`test_core_membership.py`](../tests/test_core_membership.py). 파서 검사는 aux-pc V04-01에서 실제로 받은 출력을 쓴다. CI는 Linux라서 Windows job object 경로는 로컬 Windows에서 확인한다.
+검사: [`tests/test_core_runner.py`](../tests/test_core_runner.py), [`test_core_adapters.py`](../tests/test_core_adapters.py), [`test_core_membership.py`](../tests/test_core_membership.py), [`test_core_env.py`](../tests/test_core_env.py). 파서 검사는 aux-pc V04-01에서 실제로 받은 출력을 쓴다. CI는 Linux라서 Windows job object 경로는 로컬 Windows에서 확인한다.

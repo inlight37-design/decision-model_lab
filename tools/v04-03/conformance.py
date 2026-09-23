@@ -105,9 +105,9 @@ def main():
     if cmd == "claude":
         context, model = sys.argv[2], sys.argv[3]
         env, dropped, exe = env_and_exe("claude")
-        argv = adapters.build_argv("claude-code", exe=exe, prompt=PROMPT, model=model,
+        spec = adapters.build_spec("claude-code", exe=exe, prompt=PROMPT, model=model,
                                    read_dirs=[WORK], claude_context=context)
-        run = runner.run(argv, cwd=WORK, env=env, timeout=240)
+        run = runner.run(spec.argv, cwd=WORK, env=env, timeout=240, stdin_text=spec.stdin_text)
         outcome = adapters.interpret("claude-code", run, requested_model=model)
         raw = adapters._single_json(run.stdout) or {}
         denials = raw.get("permission_denials") or []
@@ -118,9 +118,9 @@ def main():
         model = sys.argv[2]
         elevated = sys.argv[3:4] == ["elevated"]  # openai/codex#42172 우회
         env, dropped, exe = env_and_exe("codex")
-        argv = adapters.build_argv("codex", exe=exe, prompt=PROMPT, model=model,
+        spec = adapters.build_spec("codex", exe=exe, prompt=PROMPT, model=model,
                                    codex_windows_sandbox=elevated)
-        run = runner.run(argv, cwd=WORK, env=env, timeout=300)
+        run = runner.run(spec.argv, cwd=WORK, env=env, timeout=300, stdin_text=spec.stdin_text)
         outcome = adapters.interpret("codex", run, requested_model=model)
         commands = []
         for line in run.stdout.splitlines():

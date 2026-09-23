@@ -9,20 +9,23 @@ argv는 허용된 조각으로만 만든다. 호출자가 임의 플래그를 �
 - agy는 `--output-format`의 없는 값을 조용히 무시하고 text로 답한다(P3). 값은 여기서 고정하고,
   JSON이 아니면 형식 실패다.
 - 요청한 모델과 보고된 모델이 다르면 표시한다. 조용한 강등(D18)을 넘기지 않는다.
-- 과금 경로를 바꾸는 환경변수는 자식에게 넘기지 않는다. 인증은 각 CLI가 가진 로그인을 쓴다.
+- 과금 경로를 바꾸는 환경변수는 자식에게 넘기지 않는다. 인증은 각 CLI가 가진 로그인을 쓴다
+  (core/env.py).
+- 질문 본문은 명령줄이 아니라 stdin으로 보낸다(ExecutionSpec, 경계 리뷰 R06). agy만 stdin 입력을
+  확인하지 못해 명령줄로 보낸다.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import hashlib
 import json
 import os
 import re
-import shutil
 import subprocess
 from typing import Any, Iterable, Mapping
 
+from core.env import BILLING_VARS, KEEP_VARS, child_env, resolve  # noqa: F401 — 호출자가 여기서 쓴다
 from core.runner import EXITED, RunResult
-from tools.runtime_inventory import ENV_VARS, fresh_environment
 
 DISCUSSANT = "discussant"
 ROLES = (DISCUSSANT,)
@@ -44,11 +47,6 @@ ADAPTERS: dict[str, AdapterSpec] = {
         "antigravity", "agy", False,
         "사용자가 켜야 쓴다. 약관상 제3자 소프트웨어 구동에 해당하는지 불명확(F31) — 위험은 계정 제재."),
 }
-
-# 자식 환경에서 뺀다: 구독 대신 API 과금이나 다른 endpoint로 바꿀 수 있는 변수. 남기는 것은
-# 설정 위치(CLAUDE_CONFIG_DIR, CODEX_HOME — 빼면 로그인을 못 찾는다)와 구독 토큰뿐이다.
-KEEP_VARS = frozenset({"CLAUDE_CONFIG_DIR", "CODEX_HOME", "CLAUDE_CODE_OAUTH_TOKEN"})
-BILLING_VARS = frozenset(name for name, _, _ in ENV_VARS) - KEEP_VARS
 
 # 조립 결과에 나타나면 안 되는 플래그와 값. 조립 코드가 넣지 않지만, 누가 고쳐도 걸리게 한 번 더 본다.
 FORBIDDEN: dict[str, frozenset[str]] = {
@@ -75,38 +73,35 @@ AGY_EFFORT = ("low", "medium", "high")
 CLAUDE_CONTEXT = ("restricted", "safe_mode")  # 어느 쪽이 blind 입력을 막는지는 V04-03에서 관측
 # Windows CreateProcess 명령줄 상한은 32,767자다. 여유를 둔다.
 MAX_COMMAND_LINE = 30_000
+# Claude Code 문서: 파이프로 받는 stdin은 10MB까지이고 넘으면 비영 종료한다(2026-09-23 확인).
+CLAUDE_MAX_STDIN = 10_000_000
+STDIN, ARGV = "stdin", "argv"
 
 
 class AdapterError(ValueError):
     """조립 전에 거절한 요청. 모델 호출은 일어나지 않았다."""
 
 
+@dataclass(frozen=True)
+class ExecutionSpec:
+    """한 번의 실행. 질문 본문은 argv에 넣지 않고 stdin으로 보낸다(경계 리뷰 R06).
+
+    명령줄에 넣으면 Linux는 인자 하나가 약 128KiB를 넘을 때 실행 자체가 실패하고, 같은 사용자의
+    다른 프로세스가 /proc/<pid>/cmdline에서 읽을 수 있으며, `-`로 시작하는 질문이 옵션으로 읽힐 수
+    있다. argv에는 옵션만 있으므로(agy 제외) 그대로 기록해도 되고, 입력은 digest와 크기만 기록한다.
+    cwd·환경·격리는 controller가 정한다.
+    """
+    adapter_id: str
+    argv: tuple[str, ...]
+    stdin_text: str | None
+    input_via: str        # STDIN | ARGV — agy는 stdin 입력을 확인하지 못해 ARGV다(B4)
+    input_sha256: str
+    input_bytes: int
+
+
 def _require(ok: bool, message: str) -> None:
     if not ok:
         raise AdapterError(message)
-
-
-def child_env(base: Mapping[str, str], *, machine: Mapping[str, str] | None = None,
-              user: Mapping[str, str] | None = None) -> tuple[dict[str, str], list[str]]:
-    """자식에게 줄 환경과, 뺀 과금 변수 이름을 돌려준다. 값은 기록하지 않는다.
-
-    machine/user(레지스트리 값)를 주면 AI 도구가 셸에 넣은 변수를 먼저 정리한다(새 터미널 기준).
-    """
-    env = dict(base)
-    if machine is not None or user is not None:
-        env, _ = fresh_environment(base, machine or {}, user or {})
-    dropped = sorted(name for name in env if name.upper() in BILLING_VARS)
-    for name in dropped:
-        del env[name]
-    env["NO_COLOR"] = "1"
-    return env, dropped
-
-
-def resolve(command: str, env: Mapping[str, str]) -> str:
-    """자식이 쓸 PATH로 실행 파일을 찾아 절대 경로로 돌려준다."""
-    path = shutil.which(command, path=env.get("PATH") or env.get("Path"))
-    _require(path is not None, f"{command} is not on the child PATH")
-    return os.path.abspath(path)
 
 
 def _check(adapter_id: str, argv: list[str], user_text: Iterable[int]) -> list[str]:
@@ -119,16 +114,15 @@ def _check(adapter_id: str, argv: list[str], user_text: Iterable[int]) -> list[s
             skip.add(index + 1)
             continue
         _require(token not in FORBIDDEN[adapter_id], f"{adapter_id}: forbidden argument {token!r}")
-    _require(len(subprocess.list2cmdline(argv)) <= MAX_COMMAND_LINE,
-             "command line too long; pass the material as a file instead")
+    _require(len(subprocess.list2cmdline(argv)) <= MAX_COMMAND_LINE, "command line too long")
     return argv
 
 
-def build_argv(adapter_id: str, *, exe: str, prompt: str, model: str, role: str = DISCUSSANT,
+def build_spec(adapter_id: str, *, exe: str, prompt: str, model: str, role: str = DISCUSSANT,
                enabled: bool | None = None, read_dirs: Iterable[str] = (),
                claude_context: str = "restricted", effort: str | None = None,
-               codex_windows_sandbox: bool = False) -> list[str]:
-    """읽기 전용 논의자 한 번의 argv. 허용된 조각 밖의 옵션은 받지 않는다.
+               codex_windows_sandbox: bool = False) -> ExecutionSpec:
+    """읽기 전용 논의자 한 번의 실행 명세. 허용된 조각 밖의 옵션은 받지 않는다.
 
     codex_windows_sandbox: Windows에서 Codex의 elevated 샌드박스를 명시한다(`codex doctor`가
     `sandbox backend elevated`, `provisioning complete`를 보일 때). 주의: Codex의 read-only
@@ -148,18 +142,25 @@ def build_argv(adapter_id: str, *, exe: str, prompt: str, model: str, role: str 
              "model must be named explicitly; there is no default and no fallback")
     dirs = [str(d) for d in read_dirs]
     _require(all(os.path.isabs(d) for d in dirs), "read_dirs must be absolute paths")
+    data = prompt.encode("utf-8")
+
+    def spec(argv: list[str], via: str) -> ExecutionSpec:
+        return ExecutionSpec(adapter_id, tuple(argv), prompt if via == STDIN else None, via,
+                             hashlib.sha256(data).hexdigest(), len(data))
 
     if adapter_id == "claude-code":
         _require(claude_context in CLAUDE_CONTEXT, f"claude_context must be one of {CLAUDE_CONTEXT}")
         _require(effort is None, "effort is not wired for claude-code yet")
-        argv = [exe, "-p", prompt, "--output-format", "json", "--model", model,
+        _require(len(data) <= CLAUDE_MAX_STDIN, "prompt exceeds the 10MB stdin limit of claude -p")
+        # 위치 인자 없이 -p만 주면 질문을 stdin에서 읽는다.
+        argv = [exe, "-p", "--output-format", "json", "--model", model,
                 "--permission-mode", "dontAsk", "--no-session-persistence",
                 "--strict-mcp-config", "--disable-slash-commands",
                 "--restricted" if claude_context == "restricted" else "--safe-mode"]
         for d in dirs:
             argv += ["--add-dir", d]
         argv += ["--tools", "Read" if dirs else ""]
-        return _check(adapter_id, argv, user_text=(2,))
+        return spec(_check(adapter_id, argv, user_text=()), STDIN)
     if adapter_id == "codex":
         _require(effort is None and not dirs, "codex discussant takes no effort or extra dirs yet")
         _require(type(codex_windows_sandbox) is bool, "codex_windows_sandbox must be a boolean")
@@ -167,8 +168,9 @@ def build_argv(adapter_id: str, *, exe: str, prompt: str, model: str, role: str 
                 "--ignore-rules", "--sandbox", "read-only"]
         if codex_windows_sandbox:
             argv += ["-c", CODEX_WINDOWS_SANDBOX]
-        argv += ["--model", model, prompt]
-        return _check(adapter_id, argv, user_text=(len(argv) - 1,))
+        # `-`: 지시문을 stdin에서 읽는다(codex exec --help, aux-pc 0.155.1 기록).
+        argv += ["--model", model, "-"]
+        return spec(_check(adapter_id, argv, user_text=()), STDIN)
     _require(effort is None or effort in AGY_EFFORT, f"effort must be one of {AGY_EFFORT}")
     argv = [exe, "-p", prompt, "--output-format", "json", "--model", model, "--sandbox",
             "--disable-slash-commands"]
@@ -176,7 +178,7 @@ def build_argv(adapter_id: str, *, exe: str, prompt: str, model: str, role: str 
         argv += ["--add-dir", d]
     if effort:
         argv += ["--effort", effort]
-    return _check(adapter_id, argv, user_text=(2,))
+    return spec(_check(adapter_id, argv, user_text=(2,)), ARGV)
 
 
 @dataclass(frozen=True)
