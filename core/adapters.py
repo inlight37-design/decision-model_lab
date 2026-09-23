@@ -70,6 +70,8 @@ FORBIDDEN: dict[str, frozenset[str]] = {
 CODEX_WINDOWS_SANDBOX = 'windows.sandbox="elevated"'
 CODEX_ALLOWED_CONFIG = frozenset({CODEX_WINDOWS_SANDBOX})
 CODEX_REJECTED = "rejected: blocked by policy"
+# 실행기가 runner에 넘겨 stderr 전체에서 세게 하는 표식(K02). Linux Codex의 거절 문자열은 아직 모른다(K30, B2).
+STDERR_MARKS: dict[str, tuple[str, ...]] = {"codex": (CODEX_REJECTED,)}
 MODEL = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:/-]{0,79}")
 AGY_EFFORT = ("low", "medium", "high")
 CLAUDE_CONTEXT = ("restricted", "safe_mode")  # 어느 쪽이 blind 입력을 막는지는 V04-03에서 관측
@@ -315,13 +317,14 @@ def _parse(adapter_id: str, run: RunResult, base: dict[str, str]) -> Outcome:
                 error = error.get("message") if isinstance(error, Mapping) else error
                 failure = str(error or event.get("message") or kind)
         # 명령이 거절되면 JSONL에는 흔적이 없고 stderr에만 남는다. 그래도 exit 0으로 답이 나오므로
-        # (openai/codex#42172) 읽지 못한 채 쓴 답을 성공으로 넘기지 않는다. stderr가 잘렸으면
-        # 거절이 없었다고 말할 수 없다(경계 리뷰 R04).
-        if run.stderr_truncated:
+        # (openai/codex#42172) 읽지 못한 채 쓴 답을 성공으로 넘기지 않는다. runner가 stderr 전체에서 센
+        # 값이 있으면 그것을 쓴다(K02). 없는데 stderr가 잘렸으면 거절이 없었다고 말할 수 없다(경계 리뷰 R04).
+        counted = (run.stderr_counts or {}).get(CODEX_REJECTED)
+        if counted is None and run.stderr_truncated:
             return Outcome(ok=False, status="format_error", text=text, reported_models=(), model_match=None,
                            usage=usage, tool_events=tools,
                            detail="stderr exceeded the runner limit; rejected commands may be hidden", **base)
-        rejected = run.stderr.count(CODEX_REJECTED)
+        rejected = counted if counted is not None else run.stderr.count(CODEX_REJECTED)
         ok = run.exit_code == 0 and completed and failure is None and isinstance(text, str) and not rejected
         if rejected:
             status, failure = "tools_rejected", f"{rejected} command(s) rejected by policy before running"

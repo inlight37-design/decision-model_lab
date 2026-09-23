@@ -8,7 +8,8 @@
 - stdin은 입력을 쓴 뒤 닫는다. 입력이 없으면 처음부터 닫는다. codex exec는 열린 stdin을
   추가 입력으로 기다린다(aux-pc P1). 입력은 CLI를 띄우기 전에 인코딩하고, 다 썼는지를
   input_delivery로 남긴다(WSL2 리뷰 WM-01).
-- stdout과 stderr를 따로 받고, 상한을 넘으면 자르고 표시한다.
+- stdout과 stderr를 따로 받고, 상한을 넘으면 자르고 표시한다. 호출자가 준 표식(Codex의 명령 거절 문자열
+  등)은 자른 뒤의 부분까지 stderr 전체에서 센다(K02).
 - 제한 시간이 지나면 프로세스 트리를 끝낸다. 답 텍스트가 있어도 timed_out이다(HF-06).
   Hermes의 codex 경로는 이 경우 텍스트를 완료로 받아들인다 — 옮기지 않는다.
 - 추적 단위가 비었는지 확인하지 못하면 unknown이다. 예산을 돌려받지 않는다(HF-07).
@@ -91,6 +92,9 @@ class RunResult:
     # stdin 입력의 전달 상태: INPUT_COMPLETE | INPUT_FAILED | INPUT_INCOMPLETE | None(입력 없음).
     # 프로세스 상태(state)와 따로 둔다. 전달이 완전하지 않으면 adapters.interpret()가 답을 받지 않는다.
     input_delivery: str | None = None
+    # 요청한 표식이 stderr 전체에 몇 번 나왔는가. 보관 상한(stderr_truncated)과 상관없이 끝까지 센 값이다.
+    # None이면 세지 않았거나, 파이프가 끝까지 읽히지 않아 셀 수 없었다(K02).
+    stderr_counts: Mapping[str, int] | None = None
 
     @property
     def tree_confirmed_empty(self) -> bool | None:
@@ -115,20 +119,40 @@ def validate_argv(argv: Sequence[str]) -> tuple[str, ...]:
     return tuple(argv)
 
 
+class _MarkCounter:
+    """스트림 전체에서 표식이 몇 번 나왔는지 센다. 보관 상한과 상관없이 모든 조각을 본다(K02).
+
+    표식마다 앞 조각의 끝 (길이-1)바이트를 이어 붙여 조각 경계에 걸친 것도 한 번만 센다 — 이어 붙인
+    부분만으로는 표식 하나를 채울 수 없으므로 앞에서 센 것을 다시 세지 않는다.
+    """
+
+    def __init__(self, marks: Sequence[str]) -> None:
+        self.marks = {mark: mark.encode("utf-8") for mark in marks if mark}
+        self.counts = {mark: 0 for mark in self.marks}
+        self.carry = {mark: b"" for mark in self.marks}
+
+    def feed(self, chunk: bytes) -> None:
+        for mark, raw in self.marks.items():
+            joined = self.carry[mark] + chunk
+            self.counts[mark] += joined.count(raw)
+            self.carry[mark] = joined[-(len(raw) - 1):] if len(raw) > 1 else b""
+
+
 class _Reader(threading.Thread):
     """한 스트림을 끝까지 읽되 상한까지만 보관한다. 넘친 뒤에도 파이프는 비운다.
 
     스트림은 이 스레드가 끝날 때 스스로 닫는다. 읽는 중인 buffered stream을 다른 스레드에서
     닫으면 읽기가 끝날 때까지 close()가 막힌다 — 파이프를 쥔 자손이 남으면 run()이 돌아오지
-    않았다(경계 리뷰 R02).
+    않았다(경계 리뷰 R02). 표식을 주면 보관하지 않는 부분까지 세어 둔다.
     """
 
-    def __init__(self, stream, limit: int) -> None:
+    def __init__(self, stream, limit: int, marks: Sequence[str] = ()) -> None:
         super().__init__(daemon=True)
         self.stream, self.limit = stream, limit
         self.chunks: list[bytes] = []
         self.size = 0
         self.truncated = False
+        self.counter = _MarkCounter(marks)
 
     def run(self) -> None:
         try:
@@ -136,6 +160,7 @@ class _Reader(threading.Thread):
                 chunk = self.stream.read1(_CHUNK) if hasattr(self.stream, "read1") else self.stream.read(_CHUNK)
                 if not chunk:
                     return
+                self.counter.feed(chunk)
                 room = self.limit - self.size
                 if room > 0:
                     self.chunks.append(chunk[:room])
@@ -289,19 +314,20 @@ def _check_pid_namespace(args: tuple[str, ...]) -> None:
 def run(argv: Sequence[str], *, cwd: str | os.PathLike, env: Mapping[str, str],
         timeout: float, stdin_text: str | None = None,
         max_output_bytes: int = DEFAULT_MAX_OUTPUT,
-        cancel: threading.Event | None = None) -> RunResult:
+        cancel: threading.Event | None = None, stderr_marks: Sequence[str] = ()) -> RunResult:
     """한 번 실행한다. 예외 대신 RunResult로 돌려준다(실행 전 검증 실패만 RunnerError).
 
     격리해서 실행하려면 core.isolation.run()을 쓴다. 자손 전체의 종료를 PID namespace로 확인하는 것은
-    그 경로뿐이다.
+    그 경로뿐이다. stderr_marks: stderr 전체에서 셀 표식(결과의 stderr_counts).
     """
     return _execute(validate_argv(argv), cwd=cwd, env=env, timeout=timeout, stdin_text=stdin_text,
-                    max_output_bytes=max_output_bytes, cancel=cancel, pid_namespace=False)
+                    max_output_bytes=max_output_bytes, cancel=cancel, pid_namespace=False,
+                    stderr_marks=stderr_marks)
 
 
 def _execute(args: tuple[str, ...], *, cwd: str | os.PathLike, env: Mapping[str, str], timeout: float,
              stdin_text: str | None, max_output_bytes: int, cancel: threading.Event | None,
-             pid_namespace: bool) -> RunResult:
+             pid_namespace: bool, stderr_marks: Sequence[str] = ()) -> RunResult:
     if pid_namespace:
         _check_pid_namespace(args)
     try:
@@ -332,7 +358,7 @@ def _execute(args: tuple[str, ...], *, cwd: str | os.PathLike, env: Mapping[str,
 
     tree = _Tree(proc, pid_namespace=pid_namespace)
     notes = [tree.note] if tree.note else []
-    out, err = _Reader(proc.stdout, max_output_bytes), _Reader(proc.stderr, max_output_bytes)
+    out, err = _Reader(proc.stdout, max_output_bytes), _Reader(proc.stderr, max_output_bytes, stderr_marks)
     out.start()
     err.start()
     writer = _Writer(proc.stdin, data) if data is not None else None
@@ -396,9 +422,11 @@ def _execute(args: tuple[str, ...], *, cwd: str | os.PathLike, env: Mapping[str,
         state = UNKNOWN
         if confirmed is None:
             notes.append("process tree could not be counted on this platform")
+    counts = dict(err.counter.counts) if stderr_marks and not err.is_alive() else None
     return RunResult(args, state, proc.poll(), out.text(), err.text(), out.truncated, err.truncated,
                      int((time.monotonic() - started) * 1000), leftover, confirmed,
-                     notes=tuple(notes), containment=tree.containment, input_delivery=delivery)
+                     notes=tuple(notes), containment=tree.containment, input_delivery=delivery,
+                     stderr_counts=counts)
 
 
 if IS_WINDOWS:  # pragma: no cover - Windows 전용, 로컬 Windows에서 시험한다

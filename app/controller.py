@@ -222,20 +222,33 @@ class Controller:
                 attempt = uuid.uuid4().hex[:8]
                 work = os.path.join(self.work_root, row["run_id"], spec.pid)
                 os.makedirs(work, exist_ok=True)
+                prompt = self._run(row["run_id"])["prompt"]
+                record = self._describe(spec, prompt)
                 with self.store.tx() as tx:
                     taken = tx.execute("UPDATE participants SET state = ?, attempt = ? "
                                        "WHERE run_id = ? AND pid = ? AND state = ?",
                                        RUNNING, attempt, row["run_id"], spec.pid, QUEUED)
                     if taken:
                         tx.event(row["run_id"], "attempt_started", pid=spec.pid, attempt=attempt,
-                                 executor=self.executor.name, behavior=spec.behavior)
+                                 executor=self.executor.name, behavior=spec.behavior,
+                                 **({"spec": record} if record is not None else {}))
                 if not taken:
                     continue
-                prompt = self._run(row["run_id"])["prompt"]
                 thread = threading.Thread(target=self._attempt, args=(row["run_id"], spec, attempt, prompt, work),
                                           daemon=True)
                 self.threads.append(thread)
                 thread.start()
+
+    def _describe(self, spec: ParticipantSpec, prompt: str) -> dict | None:
+        """실행기가 알려 주는 실행 명세(ExecutionSpec.record() — 질문 본문 없이 digest와 크기). 시작 사건에
+        시도 ID와 함께 남긴다(N1). describe가 없는 실행기(모의·합성)는 남기지 않는다."""
+        describe = getattr(self.executor, "describe", None)
+        if describe is None:
+            return None
+        try:
+            return describe(spec, prompt)
+        except Exception as exc:  # 기록을 못 만든다고 시도를 막지 않는다. 실행에서 같은 이유로 거절된다
+            return {"refused": type(exc).__name__}
 
     def resume(self) -> None:
         """다시 시작한 뒤 멈춰 둔 대기 시도를 사용자가 이어서 시작하라고 했다."""

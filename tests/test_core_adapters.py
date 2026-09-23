@@ -281,6 +281,15 @@ class BoundaryReviewRegressionTests(unittest.TestCase):
         self.assertEqual((out.ok, out.status), (False, "format_error"))
         self.assertEqual(out.text, "OK")  # 답은 남기되 성공으로 치지 않는다
 
+    def test_codex_rejections_counted_over_the_whole_stderr_decide_even_when_it_was_cut(self):
+        """K02. runner가 stderr 전체에서 센 값이 있으면 잘린 stderr여도 판정할 수 있다."""
+        body = recorded("P1-codex").stdout
+        for counts, status in (({adapters.CODEX_REJECTED: 0}, "ok"), ({adapters.CODEX_REJECTED: 2}, "tools_rejected")):
+            with self.subTest(counts=counts):
+                run = RunResult(("x",), EXITED, 0, body, "noise", False, True, 1, 0, True, stderr_counts=counts)
+                self.assertEqual(interpret("codex", run, requested_model="gpt-x").status, status)
+        self.assertEqual(adapters.STDERR_MARKS["codex"], (adapters.CODEX_REJECTED,))
+
 
 if __name__ == "__main__":
     unittest.main()
