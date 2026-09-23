@@ -56,6 +56,16 @@ jobs:
       - name: evidence registry schema
         run: python tools/validate_sources.py
 
+      # core.isolation 시험(W2)이 건너뛰지 않고 돌게 한다. Ubuntu 24.04 러너는 AppArmor가 권한 없는
+      # user namespace를 막으므로 그 제한을 푼다. 마지막 줄이 실패하면 격리 시험을 못 도는 것이다.
+      - name: bubblewrap for isolation tests
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends bubblewrap
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
+          bwrap --unshare-all --share-net --die-with-parent --ro-bind /usr /usr --symlink usr/bin /bin \
+            --symlink usr/lib /lib --symlink usr/lib64 /lib64 --proc /proc -- /usr/bin/true
+
       - name: full test suite
         run: python -m unittest discover -s tests -v
 
