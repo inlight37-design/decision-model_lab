@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ledger 모의 모드</title>
+<style>
+  :root {
+    --surface-000:#f4f5f3; --surface-100:#fbfbfa; --surface-200:#e9eae6; --rule-100:#dcdeda; --rule-200:#b9bdb7;
+    --ink-000:#16181a; --ink-100:#4c5157; --ink-200:#6b7178; --accent:#33518c; --accent-soft:#e4e9f2;
+    --supported:#1c6b4b; --qualified:#8a6116; --rejected:#59616e; --unresolved:#c22e4e; --unknown:#7b8188;
+    --sealed:#5e4b9a; --danger:#a32c1e;
+    --sans:"IBM Plex Sans","Malgun Gothic",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface-000:#141618; --surface-100:#1b1e21; --surface-200:#232629; --rule-100:#2c3034; --rule-200:#3c4147;
+      --ink-000:#e7e8e6; --ink-100:#a9aeb2; --ink-200:#848a90; --accent:#8ea6d8; --accent-soft:#1e2836;
+      --supported:#5cbf95; --qualified:#d6a65a; --rejected:#98a0aa; --unresolved:#f07b95; --unknown:#8e949a;
+      --sealed:#a996e0; --danger:#e8917f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--surface-000); color: var(--ink-000); font: 400 13.5px/21px var(--sans); }
+  header { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 12px 16px;
+           border-bottom: 1px solid var(--rule-200); background: var(--surface-100); }
+  header h1 { font-size: 15px; line-height: 24px; margin: 0; font-weight: 600; }
+  .label { font: 600 11px/16px var(--mono); letter-spacing: .09em; text-transform: uppercase; padding-bottom: 2px;
+           border-bottom: 2px solid currentColor; white-space: nowrap; }
+  .mock { color: var(--ink-100); border: 1px dashed var(--ink-200); border-bottom-width: 1px; padding: 1px 6px; border-radius: 2px; }
+  .meta { font: 400 12px/19px var(--mono); color: var(--ink-100); }
+  .spacer { flex: 1; }
+  main { display: grid; grid-template-columns: minmax(260px, 340px) 1fr; gap: 24px; padding: 16px; max-width: 1280px; margin: 0 auto; }
+  @media (max-width: 860px) { main { grid-template-columns: 1fr; } }
+  .panel { background: var(--surface-100); border: 1px solid var(--rule-200); border-radius: 3px; overflow: hidden; }
+  .panel + .panel { margin-top: 16px; }
+  .ph { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 16px;
+        border-bottom: 1px solid var(--rule-200); background: var(--surface-200); }
+  .ph .t { font-weight: 600; }
+  .pb { padding: 12px 16px; }
+  label.row { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+  textarea, select, input[type=number] { font: inherit; color: var(--ink-000); background: var(--surface-000);
+       border: 1px solid var(--rule-200); border-radius: 2px; padding: 6px 8px; }
+  textarea { width: 100%; resize: vertical; }
+  select { padding: 2px 4px; font-size: 12px; }
+  button { font: 500 12.5px/18px var(--sans); color: var(--accent); background: transparent; border: 1px solid var(--accent);
+           border-radius: 2px; padding: 5px 10px; cursor: pointer; }
+  button:hover { background: var(--accent-soft); }
+  button:focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  button.quiet { color: var(--ink-100); border-color: var(--rule-200); }
+  .caption { font-size: 12px; line-height: 18px; color: var(--ink-100); }
+  .runs button { display: block; width: 100%; text-align: left; border: 0; border-bottom: 1px solid var(--rule-100);
+                 border-radius: 0; color: var(--ink-000); padding: 8px 16px; }
+  .runs button[aria-current=true] { background: var(--accent-soft); }
+  .runs .q { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  h2 { font-size: 19px; line-height: 30px; font-weight: 600; letter-spacing: -.01em; margin: 0 0 4px; }
+  .p { display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--rule-100); }
+  .who { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .who .v { font: 400 11.5px/17px var(--mono); color: var(--ink-200); }
+  .flags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+  .flag { font: 400 11px/16px var(--mono); color: var(--qualified); border: 1px solid currentColor; border-radius: 2px; padding: 0 6px; }
+  .st-sealed, .st-accepted { color: var(--sealed); } .st-rejected { color: var(--danger); }
+  .st-queued, .st-running, .st-awaiting_user { color: var(--ink-100); }
+  .st-unknown { color: var(--unknown); border-bottom: 1px dashed currentColor; }
+  .revealed .st-accepted { color: var(--ink-000); }
+  .foot { padding: 12px 16px; border-top: 2px solid var(--unresolved); }
+  .foot .warn { color: var(--unresolved); font-weight: 600; font-size: 13px; }
+  .budget { display: flex; gap: 3px; margin: 8px 0 4px; }
+  .cell { width: 22px; height: 10px; border: 1px solid var(--rule-200); border-radius: 1px; }
+  .cell.ok { background: var(--rejected); border-color: var(--rejected); }
+  .cell.bad { background: var(--rejected); border-color: var(--danger); }
+  .cell.unk { border: 1px dashed var(--unknown); }
+  .cell.run { border-color: var(--ink-100); }
+  .metric { font: 500 21px/30px var(--mono); font-variant-numeric: tabular-nums; }
+  .manual { margin-top: 8px; display: grid; gap: 6px; }
+  .draft { white-space: pre-wrap; font-size: 13.5px; line-height: 21px; background: var(--surface-000);
+           border: 1px solid var(--rule-100); border-radius: 2px; padding: 8px 10px; margin-top: 6px; }
+  details summary { cursor: pointer; color: var(--accent); font-size: 12.5px; }
+  .kv { font: 400 12px/19px var(--mono); color: var(--ink-100); margin-top: 4px; overflow-wrap: anywhere; }
+  .err { color: var(--danger); font-size: 12.5px; }
+  .trail { font: 400 11.5px/18px var(--mono); color: var(--ink-200); overflow-wrap: anywhere; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Ledger</h1><span class="label mock">모의 모드 · 모델 호출 없음</span>
+  <span class="spacer"></span>
+  <span class="meta" id="status">연결 중…</span>
+</header>
+<main>
+  <section>
+    <div class="panel">
+      <div class="ph"><span class="t">새 실행</span></div>
+      <div class="pb">
+        <textarea id="question" rows="4" aria-label="질문">사내 문서 검색을 지금 벡터 DB로 바꿀까, 기존 키워드 검색을 개선할까?</textarea>
+        <div id="choices" style="margin-top:8px"></div>
+        <label class="row">최소 독립 인원 <input id="min" type="number" min="1" value="2" style="width:56px"></label>
+        <div style="display:flex; gap:8px; align-items:center; margin-top:6px">
+          <button id="start">시작</button><span class="err" id="formerr"></span>
+        </div>
+        <p class="caption">CLI 참여자는 모의 CLI로 돈다. 원본 앱 참여자는 질문을 그 앱에 옮기고 답을 여기 붙여 넣는다.</p>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ph"><span class="t">실행</span></div>
+      <div class="runs" id="runs"></div>
+    </div>
+  </section>
+  <section id="detail"><p class="caption">왼쪽에서 실행을 시작하거나 고른다.</p></section>
+</main>
+<script>
+"use strict";
+const TOKEN = (() => {
+  const m = location.hash.match(/token=([A-Za-z0-9_-]+)/);
+  try {
+    if (m) { sessionStorage.setItem("ledger-token", m[1]); history.replaceState(null, "", "/"); return m[1]; }
+    return sessionStorage.getItem("ledger-token");
+  } catch (e) { return m ? m[1] : null; }
+})();
+window.addEventListener("hashchange", () => location.reload());   // 열린 탭에 토큰 주소를 붙여 넣어도 동작한다
+let selected = null, state = null;
+const drafts = {};   // 수동 답 입력칸의 임시 내용(참여자별). 다시 그려도 지우지 않는다
+
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === "class") el.className = v; else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+    else if (v !== null && v !== undefined && v !== false) el.setAttribute(k, v === true ? "" : v);
+  }
+  for (const kid of kids.flat()) if (kid !== null && kid !== undefined && kid !== false)
+    el.append(kid instanceof Node ? kid : document.createTextNode(String(kid)));
+  return el;
+}
+async function api(path, body) {
+  const res = await fetch(path, { method: body ? "POST" : "GET",
+    headers: { "Authorization": "Bearer " + TOKEN, "Content-Type": "application/json" },
+    body: body ? JSON.stringify(body) : undefined });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || res.status);
+  return data;
+}
+const STATE_LABEL = { queued: "대기", running: "실행 중", awaiting_user: "사용자 전달 대기", accepted: "제출됨",
+                      rejected: "받지 않음", unknown: "UNKNOWN · 종료 미확인" };
+const PHASE_LABEL = { drafting: "독립 초안 · 봉인", revealed: "공개됨", preflight: "준비" };
+const BEHAVIOR_LABEL = { ok: "정상", slow: "느림", fail: "CLI 오류", partial_input: "입력 일부만 읽음(큰 질문에서만 드러남)", hang: "멈춤(시간 초과)" };
+
+async function loadOptions() {
+  const opt = await api("/api/options");
+  const box = document.getElementById("choices");
+  for (const p of opt.participants) {
+    const cb = h("input", { type: "checkbox", id: "p-" + p.pid, checked: ["claude", "codex", "chatgpt-app"].includes(p.pid) });
+    const sel = p.transport === "cli"
+      ? h("select", { id: "b-" + p.pid, "aria-label": p.label + " 모의 행동" },
+          opt.behaviors.map(b => h("option", { value: b }, BEHAVIOR_LABEL[b] || b))) : null;
+    box.append(h("label", { class: "row" }, cb, p.label,
+      h("span", { class: "meta" }, p.transport === "cli" ? "CLI 모의" : "원본 앱 · 수동"), sel));
+  }
+}
+document.getElementById("start").addEventListener("click", async () => {
+  const err = document.getElementById("formerr"); err.textContent = "";
+  const participants = [...document.querySelectorAll("#choices input:checked")].map(cb => {
+    const pid = cb.id.slice(2), sel = document.getElementById("b-" + pid);
+    return { pid, behavior: sel ? sel.value : "ok" };
+  });
+  try {
+    const r = await api("/api/runs", { question: document.getElementById("question").value, participants,
+                                       min_independent: +document.getElementById("min").value });
+    selected = r.run_id; await refresh();
+  } catch (e) { err.textContent = e.message; }
+});
+
+function budget(run) {
+  const b = run.budget, cells = [];
+  for (let i = 0; i < b.breakdown.succeeded; i++) cells.push(h("span", { class: "cell ok", title: "받음" }));
+  for (let i = 0; i < b.breakdown.failed; i++) cells.push(h("span", { class: "cell bad", title: "실패도 칸을 차지한다" }));
+  for (let i = 0; i < b.breakdown.unknown; i++) cells.push(h("span", { class: "cell unk", title: "종료 미확인 — 0이 아니다" }));
+  const running = b.used - b.breakdown.succeeded - b.breakdown.failed - b.breakdown.unknown;
+  for (let i = 0; i < running; i++) cells.push(h("span", { class: "cell run", title: "실행 중" }));
+  while (cells.length < b.cap) cells.push(h("span", { class: "cell" }));
+  return h("div", { class: "pb", style: "border-bottom:1px solid var(--rule-100)" },
+    h("div", { class: "caption" }, "외부 호출 예산 — 진척도가 아니라 소진량"),
+    h("span", { class: "metric" }, `${b.used} / ${b.cap}`),
+    h("div", { class: "budget" }, cells),
+    h("div", { class: "caption" }, `받음 ${b.breakdown.succeeded} · 실패 ${b.breakdown.failed} · 종료 미확인 ${b.breakdown.unknown}` +
+      (b.manual ? ` · 수동 ${b.manual}(우리 앱의 호출이 아님, 사용량 관측 안 됨)` : "")));
+}
+
+function participantRow(run, p) {
+  const revealed = run.phase === "revealed";
+  const label = p.state === "accepted" && !revealed ? "제출됨" : (STATE_LABEL[p.state] || p.state);
+  const who = h("div", { class: "who" }, h("span", {}, p.label),
+    h("span", { class: "v" }, `${p.provider} · ${p.transport === "cli" ? "CLI 모의" + (p.behavior && p.behavior !== "ok" ? " · " + (BEHAVIOR_LABEL[p.behavior] || p.behavior) : "") : "원본 앱 · 수동"}`),
+    h("div", { class: "flags" }, p.contamination.map(c => h("span", { class: "flag" }, c))));
+  if (p.state === "rejected" || p.state === "unknown") {
+    who.append(h("div", { class: "kv" }, [p.status, p.detail, ...(p.result && p.result.notes || [])].filter(Boolean).join(" · ")));
+  }
+  if (p.state === "unknown") {
+    who.append(h("div", { style: "margin-top:6px" }, h("button", { class: "quiet", onclick: () => act(`/api/runs/${run.run_id}/acknowledge/${p.pid}`) },
+      "종료를 직접 확인했음(예산은 돌려받지 않는다)")));
+  }
+  if (p.state === "awaiting_user" && run.phase === "drafting") {
+    const key = run.run_id + "/" + p.pid;
+    const ta = h("textarea", { rows: 4, placeholder: "원본 앱의 답을 붙여 넣는다", "aria-label": p.label + " 답",
+                               oninput: e => { drafts[key] = e.target.value; } });
+    ta.value = drafts[key] || "";
+    who.append(h("div", { class: "manual" },
+      h("div", { class: "caption" }, "1) 질문을 복사해 원본 앱에 붙여 넣는다  2) 받은 답을 아래에 붙여 넣는다"),
+      h("div", { style: "display:flex; gap:8px; flex-wrap:wrap" },
+        h("button", { onclick: async e => { await navigator.clipboard.writeText(run.prompt); e.target.textContent = "복사함"; } }, "질문 복사"),
+        h("button", { class: "quiet", onclick: () => act(`/api/runs/${run.run_id}/withdraw/${p.pid}`) }, "답을 받지 못함(빼기)")),
+      ta,
+      h("div", {}, h("button", { onclick: () => act(`/api/runs/${run.run_id}/manual/${p.pid}`,
+        { text: ta.value, input_sha256: run.input_sha256 }).then(ok => { if (ok) delete drafts[key]; }) }, "답 넣기"),
+        h("span", { class: "meta", style: "margin-left:8px" }, "입력 sha256 " + run.input_sha256.slice(0, 12)))));
+  }
+  if (revealed && p.draft != null) {
+    const r = p.result;
+    who.append(h("details", { open: true }, h("summary", {}, "초안 원문"),
+      h("div", { class: "draft" }, p.draft),
+      r ? h("div", { class: "kv" }, `상태 ${r.state} · 종료 ${r.containment} ${r.tree_confirmed_empty ? "확인" : "미확인"} · 입력 ${r.input_delivery} · ` +
+             `${r.duration_ms} ms · 사용량 ${r.usage && Object.keys(r.usage).length ? JSON.stringify(r.usage) : "관측 안 됨"}`)
+        : h("div", { class: "kv" }, "수동 제출 · 사용량·시간 관측 안 됨")));
+  }
+  return h("div", { class: "p" }, who, h("span", { class: `label st-${p.state}` }, label));
+}
+
+function render() {
+  if (!state) return;
+  document.getElementById("status").textContent =
+    `실행기 ${state.executor} · 실행 자리 ${state.slots.used}/${state.slots.cap} · 정리 안 된 시도 ${state.unsettled.count}/${state.unsettled.limit}`;
+  const list = document.getElementById("runs"); list.replaceChildren();
+  for (const run of state.runs) list.append(h("button", { "aria-current": run.run_id === selected, onclick: () => { selected = run.run_id; render(); } },
+    h("span", { class: "meta" }, `${run.run_id} · ${PHASE_LABEL[run.phase] || run.phase}`), h("span", { class: "q" }, run.question)));
+  const run = state.runs.find(r => r.run_id === selected) || state.runs[0];
+  const detail = document.getElementById("detail");
+  if (!run) return;
+  selected = run.run_id;
+  if (detail.contains(document.activeElement) && document.activeElement.tagName === "TEXTAREA") return; // 입력 중에는 다시 그리지 않는다
+  const revealed = run.phase === "revealed";
+  const done = run.participants.filter(p => p.state === "accepted").length;
+  const panel = h("div", { class: "panel" + (revealed ? " revealed" : "") },
+    h("div", { class: "ph" }, h("span", { class: "t" }, revealed ? "P1 · 독립 초안 · 공개됨" : "P1 · 독립 초안"),
+      h("span", { class: "label", style: `color:var(${revealed ? "--ink-100" : "--sealed"})` },
+        revealed ? `공개 ${done} / ${run.participants.length}` : `sealed ${done} / ${run.participants.length}`)),
+    budget(run),
+    run.participants.map(p => participantRow(run, p)),
+    run.note ? h("div", { class: "foot" }, h("div", { class: "warn" }, run.note),
+      run.participants.some(p => p.dropped) && !run.reduction_approved
+        ? h("div", { style: "margin-top:8px" }, h("button", { onclick: () => act(`/api/runs/${run.run_id}/approve-reduction`) }, "축소 승인")) : null) : null);
+  detail.replaceChildren(
+    h("h2", {}, run.question),
+    h("div", { class: "meta" }, `입력 sha256 ${run.input_sha256.slice(0, 16)}… · ${run.input_bytes} bytes · 최소 독립 ${run.min_independent}명 · ${PHASE_LABEL[run.phase] || run.phase}`),
+    h("p", { class: "caption" }, revealed
+      ? "controller가 공개했다. 공개 전 초안은 서로 보지 않은 상태에서 받았다(수동 참여자는 blind 미확인)."
+      : "공개 전에는 초안의 내용·길이·토큰 수를 화면에 넘기지 않는다. 공개는 controller가 정한다."),
+    panel,
+    h("p", { class: "trail" }, "사건: " + run.events.join(" → ")));
+}
+async function act(path, body) {
+  try { await api(path, body || {}); await refresh(); return true; }
+  catch (e) { alert(e.message); return false; }
+}
+async function refresh() {
+  try { state = await api("/api/state"); render(); }
+  catch (e) { document.getElementById("status").textContent = "연결 안 됨: " + e.message; }
+}
+if (!TOKEN) {
+  document.getElementById("detail").replaceChildren(h("p", { class: "err" }, "토큰이 없습니다. 서버가 출력한 주소(#token=…)로 여세요."));
+} else {
+  loadOptions().then(refresh);
+  setInterval(refresh, 1000);
+}
+</script>
+</body>
+</html>

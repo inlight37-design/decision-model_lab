@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-23** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout) · 브랜치 `claude/wsl2-review-fixes-20260923`
+최종 갱신 **2026-09-23** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout) · 브랜치 `claude/a1-controller-20260923`
 
 이 파일 하나에서 시작한다. 절 구성은 고정이고 CI가 확인한다. 규칙은 [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있다. 이 판은 2026-09-23 하루치 작업을 끝내며 남은 일을 다시 정리한 판에, 같은 날의 [경계 리뷰 반영](docs/reviews/2026-09-23-wsl2-boundary/RESPONSE.md)을 더한 것이다. **실행 기반을 WSL2로 옮기기로 했다**(2절 15·16). 통째로 다시 쓴 마지막 판은 [docs/handoff/](docs/handoff/README.md)에 보관했다.
 
@@ -23,6 +23,7 @@
 | [`check_frontier_protocol.py`](tools/check_frontier_protocol.py) | 합성 완료 기록의 일관성 검사. 기록된 disposition이 규칙에 맞는지 **검사할 뿐 계산하지 않는다** |
 | [`review_boundary.py`](tools/review_boundary.py) | PR #3의 순수 함수 경계 실험(이벤트 순서, UNKNOWN 예산, 봉인 화면, 한도 표시). 서버·프로세스 제어가 아니다 |
 | [`audit_design_contrast.py`](tools/audit_design_contrast.py) | 디자인 토큰 대비 계산. 일반 글자 5쌍이 4.5:1 미만인 것을 기록한다 |
+| [`app/`](app/README.md) | **A1 controller와 모의 화면**(모델 호출 없음). 입력 고정 → 시도 예약 → 실행 → 결과 수용 관문 → 초안 봉인 → controller가 공개. 참여자는 CLI(지금은 모의 CLI)와 원본 앱(수동) 두 종류다. `python -m app.server`로 띄우고 출력된 `#token=` 주소로 연다. 실제 CLI 실행기·합성·Q4 비교는 없다 |
 | [`tools/w2/cli_boundary.py`](tools/w2/cli_boundary.py) | 설치된 Claude·Codex를 bubblewrap 참여자 경계 안에서 `--version`·로그인 상태만 실행해 본다. 모델을 부르지 않는다 |
 | [`runtime_inventory.py`](tools/runtime_inventory.py) | V04-01 tier 1. 각 CLI의 `--version`/`--help`만 실행해 기록한다. `observed`와 `configured=true`를 쓸 수 없다 |
 
@@ -59,6 +60,7 @@
 | Q2 | 의존 범위 | **확정** — 여러 제품에서 패턴을 추출하고 최신 이론과 결합한다 |
 | Q3 | 언어/런타임 | Python 코어, TypeScript는 화면 경계만 |
 | Q4 | 첫 화면 | `unresolved`. 결정 우선과 대조표 우선을 같은 내용으로 비교하는 실험(Q8) 뒤에 판정한다 — 4절 A1의 모의 화면에서 비교할 수 있게 만든다 |
+| Q5 | 원본 앱을 자동으로 움직일지 | `unresolved`(2026-09-23 사용자 제안). 지금은 사람이 옮기는 수동 방식만 만들었다(2절 17). claude 세션의 권고: **소비자 앱의 화면을 프로그램으로 조작하지 않는다** — 깨지기 쉽고 약관상 계정 위험이 있다(agy의 F31과 같은 종류). 자동화가 필요하면 공식 프로그램 통로(Codex `app-server`, Claude CLI 양방향 `stream-json`)를 관측한 뒤 정한다 |
 
 ## 2. 사용자가 확정한 것
 
@@ -80,12 +82,13 @@
 14. **agy는 CLI adapter로 넣어 두고, 쓸지는 사용자가 고른다.** 기본은 꺼짐이다. 쓸 수 없거나 쓰지 않을 때는 수동 전달(Antigravity에서 직접 실행)로도 참여시키고, 그 과정도 같은 화면에서 보이게 한다. (2026-09-23)
 15. **실행 기반은 WSL2로 간다**(옛 C1의 (b)). Windows는 화면과 사용자 작업, WSL2는 Python controller·실행 원장·봉인 저장소를 맡는다. 참여자는 시도마다 격리된 곳에서 Linux-native CLI를 구독 로그인으로 실행한다. WSL2 설치는 격리·종료·정족수의 해결책이 아니라 기반일 뿐이다. aux-pc의 Windows 네이티브 경로는 두되 더 제품화하지 않고, Codex를 blind 참여자로 쓰는 것은 WSL2에서만 한다. (2026-09-23, [경계 리뷰](docs/reviews/2026-09-23-wsl2-boundary/RESPONSE.md))
 16. **격리 백엔드는 bubblewrap을 먼저 시험한다.** 참여자별 파일 허용 목록과 PID namespace로 파일 경계와 수명 경계를 함께 얻는다. W2 경계 시험에 실패하면 rootless podman으로 간다. 두 백엔드를 동시에 제품화하지 않는다. (사용자가 판단을 맡김, 2026-09-23)
+17. **각 AI의 원본 앱에서 돌린 결과도 참여시키고, 내용은 우리 화면에서 모두 본다.** agy 수동 경로(14)를 ChatGPT·Claude 앱 등으로 넓힌 것이다. 원본 앱의 기능(컴퓨터 사용, 메모리, 세션 기능)을 그대로 쓰는 대신 blind·사용량은 "관측 안 됨"으로 표시한다. 자동으로 움직이는 방식은 열린 결정 Q5. (사용자 제안, 2026-09-23)
 
 ## 3. 진행 중인 작업
 
 2026-09-23의 작업은 모두 main에 병합됐다 — V04-01 리뷰([PR #4](https://github.com/inlight37-design/decision-model_lab/pull/4))와 반영, Hermes 패턴 조사([PR #5](https://github.com/inlight37-design/decision-model_lab/pull/5))와 교차 확인, V04-03 실행 코어, 첫 conformance와 Codex 샌드박스 원인 확인, 인계 정리(`claude/handoff-cleanup-20260923`). 사용자는 **CI 녹색을 확인한 claude 세션이 main에 직접 병합하는 것**을 허락했다(2026-09-23).
 
-**지금 병합되지 않은 브랜치: 없음.** 병합된 것: WSL2 리뷰(PR #6) WM-01–WM-07 반영과 [반영 기록](docs/reviews/2026-09-23-wsl2-migration-review/RESPONSE.md)(`claude/wsl2-review-fixes-20260923`), WSL2 전환 검토([결과와 재현](docs/reviews/2026-09-23-wsl2-migration-review/README.md), `chatgpt/review-wsl2-20260923`, PR #6 — 리뷰어는 GitHub와 웹 Linux 컨테이너에서 검토했고 사용자 PC·실제 모델은 실행하지 않았다), 검토 요청서와 `env.resolve` 링크 우회 수정(`claude/review-request-20260923`), bubblewrap 격리와 W2 경계 시험(`claude/w2-isolation-20260923`), `aux-pc-wsl` 설치와 tier 1 기록(W1, `claude/wsl2-setup-20260923`), 경계 리뷰 보존과 반영(`claude/wsl2-boundary-review-20260923`, 4절 1단계)과 실행 명세·stdin(A4)·core 환경 모듈(A7, `claude/execution-spec-20260923`)은 병합됐다. 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 이 줄을 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다.
+**지금 병합되지 않은 브랜치: `claude/a1-controller-20260923`** — A1 controller와 모의 화면(`app/`). 병합된 것: WSL2 리뷰(PR #6) WM-01–WM-07 반영과 [반영 기록](docs/reviews/2026-09-23-wsl2-migration-review/RESPONSE.md)(`claude/wsl2-review-fixes-20260923`), WSL2 전환 검토([결과와 재현](docs/reviews/2026-09-23-wsl2-migration-review/README.md), `chatgpt/review-wsl2-20260923`, PR #6 — 리뷰어는 GitHub와 웹 Linux 컨테이너에서 검토했고 사용자 PC·실제 모델은 실행하지 않았다), 검토 요청서와 `env.resolve` 링크 우회 수정(`claude/review-request-20260923`), bubblewrap 격리와 W2 경계 시험(`claude/w2-isolation-20260923`), `aux-pc-wsl` 설치와 tier 1 기록(W1, `claude/wsl2-setup-20260923`), 경계 리뷰 보존과 반영(`claude/wsl2-boundary-review-20260923`, 4절 1단계)과 실행 명세·stdin(A4)·core 환경 모듈(A7, `claude/execution-spec-20260923`)은 병합됐다. 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 이 줄을 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다.
 
 ## 4. 다음 작업
 
@@ -96,15 +99,15 @@
 | 단계 | 할 일 | 모델 호출 | 선행 |
 |---|---|---|---|
 | 끝 | 경계 리뷰 R01–R04(`claude/wsl2-boundary-review-20260923`), A4 실행 명세·A7 core 환경(`claude/execution-spec-20260923`), W1 설치·tier 1·로그인(`claude/wsl2-setup-20260923`), W2 모델 없는 경계 시험(`claude/w2-isolation-20260923`), WSL2 리뷰 WM-01–WM-07(`claude/wsl2-review-fixes-20260923`) | 없음 | — |
-| 1 | **A1의 첫 세로 기능**(사용자에게 띄워 보여 준다): 고정 입력 manifest(A6) → 시도 예약 → 가짜 CLI 실행 → 결과 수용 관문 → 초안 봉인·공개 → 카드 | 없음 | 없음 |
-| 2 | 실제 호출 전 확인: `~/.claude`·`~/.codex` 연결을 필요한 파일로 좁힐 후보, controller 제어 API 인증, 설치·로그인·전달 관측의 유효성(A5) | 없음 | 1 |
+| 1 | A1의 첫 세로 기능: 고정 입력 → 시도 예약 → 모의 CLI 실행 → 결과 수용 관문 → 초안 봉인·공개 → 카드, 원본 앱(수동) 참여자 포함 | 없음 | **끝**(`claude/a1-controller-20260923`, [`app/`](app/README.md)) — 사용자에게 띄워 보였다 |
+| 2 | 실제 호출 전 확인: **실제 CLI 실행기**(`env.resolve` → `build_spec` → `isolation.run`, `cli_mounts`, `never`에 controller 데이터), `~/.claude`·`~/.codex` 연결을 필요한 파일로 좁힐 후보, 설치·로그인·전달 관측의 유효성(A5). controller 제어 API 인증은 A1에 들어갔다 | 없음 | 1 |
 | 3 | 승인된 소수 호출: `aux-pc-wsl` tier 2와 B1·B2를 **한 번씩 읽고** 다음을 정한다. 실패하면 그 provider를 멈추고 원인부터 본다 | Claude 3회 안팎, Codex 2회 안팎 | 2, 승인 |
 | 4 | **B3 V04-03 pilot과 사용량 비교** | 여러 번 | 3, 승인 |
 | — | B4 agy 관측 | 몇 회 | 사용자가 agy를 켤 때 |
 
 ### A. 바로 할 일 (모델 호출 없음)
 
-- **A1. controller와 모의 모드 화면.** 사용자 요청(2026-09-23): 앱이 동작하는 단계가 되면 눈앞에 띄워 보여 줄 것. 모의 모드는 WSL2 없이도 만든다.
+- **A1. controller와 모의 모드 화면 — 첫 세로 기능 끝.** [`app/`](app/README.md). 아래 규칙 중 단계 관문, 결과 수용 관문, 봉인 저장소(SQLite journal), 자리와 정리 안 된 시도의 상한, 토큰으로 막은 제어 API, 가짜 CLI, 원본 앱 수동 참여(A2), 다시 시작 시 `unknown` 처리가 들어갔다. **남은 것:** 합성과 주장 대조, 첫 화면 Q4 비교, 취소, 사건의 epoch·sequence(지금은 실행별 순번), 공통 자료 첨부, TypeScript 화면. 사용자 요청(2026-09-23): 앱이 동작하는 단계가 되면 눈앞에 띄워 보여 줄 것.
   - controller: 참여자 구성([`core/membership.py`](core/membership.py)) → 실행 명세 → runner → `interpret` 결과 → 카드. 이미 정해진 규칙을 처음부터 넣는다:
     - **단계 관문을 controller 한 곳에 둔다.** 명단 수용, 실행 허가, 초안 공개 허가, 결과 수용 허가를 따로 판정한다. membership의 판정만으로 진행하지 않고, 초안이 다 들어왔는지(같은 입력 digest, 수용된 초안, 공개 순서)는 관문이 본다.
     - **결과 수용 관문:** `interpret()`의 `ok`, `input_delivery == "complete"`, 자원 반환 전 `tree_confirmed_empty is True`를 모두 본다. 기록에는 `ExecutionSpec.record()`를 쓴다 — `RunResult.argv`는 agy에서 질문을 담는다.
@@ -115,7 +118,7 @@
     - 누적 호출·시도 상한과 동시 실행 자리를 나눈다. 자리는 runner의 `tree_confirmed_empty`가 True일 때만 푼다. 이미 쓴 호출 상한은 돌려주지 않는다. `UNKNOWN`은 자동으로 다시 부르지 않는다. 이벤트에는 run·attempt·epoch·sequence를 달고 중복·지연·역순을 처리한다. 규칙은 A7의 core 모듈에 두고, [`review_boundary.py`](tools/review_boundary.py)의 실험 형식을 이름만 바꿔 올리지 않는다(Hermes 조사 HP-03).
   - 모의 모드: 가짜 CLI(python 스크립트)로 Claude·Codex·agy·수동 카드의 흐름을 보여 준다. 사용량을 쓰지 않는다. 가짜 CLI는 aux-pc에서 받은 실제 출력 형식을 흉내 낸다.
   - 화면: [Ledger 디자인 시스템](design/README.md). 첫 화면 Q4(결정 우선 / 대조표 우선)를 같은 내용으로 바꿔 볼 수 있게 한다. 사용량은 두 층(아래 B3)의 자리를 둔다. 화면과 controller 사이 제어 API는 참여자가 닿지 못하게 한다(localhost TCP면 참여자에게 없는 토큰으로 막는다).
-- **A2. 수동 전달.** 참여자 카드가 "사용자 전달 대기"로 서고, 앱이 봉인된 질문을 복사해 준다. 답은 붙여넣기나 앱이 지켜보는 결과 폴더로 받아 같은 카드에 채운다. 질문과 답에 run·attempt·입력 digest를 연결해 늦게 온 이전 실행의 답과 중복 제출을 가린다. MCP는 필요 없다. 수동 참여자의 사용량·시간은 "관측 안 됨"으로 표시한다.
+- **A2. 수동 전달 — 붙여넣기 방식은 A1에 들어갔다**(원본 앱 참여자, 2절 17). 결과 폴더 감시는 아직이다. 참여자 카드가 "사용자 전달 대기"로 서고, 앱이 봉인된 질문을 복사해 준다. 답은 붙여넣기나 앱이 지켜보는 결과 폴더로 받아 같은 카드에 채운다. 질문과 답에 run·attempt·입력 digest를 연결해 늦게 온 이전 실행의 답과 중복 제출을 가린다. MCP는 필요 없다. 수동 참여자의 사용량·시간은 "관측 안 됨"으로 표시한다.
 - **A3. Codex 읽기 차단 설정(추가 방어층, 낮음).** 설정 문서에 권한 프로필 `permissions.<name>.filesystem`의 `"deny"`가 있다(2026-09-23 확인). 우리 adapter는 `--ignore-user-config`를 쓰고 `-c`·`--profile`을 금지하므로, 쓰려면 금지 목록 조정이 필요하다. 격리의 주 수단은 bubblewrap(`isolation.run()`)이다.
 - **A4. 실행 명세와 stdin — 코드는 끝.** `adapters.build_spec()`이 `ExecutionSpec`을 돌려준다. argv에는 옵션만 있고 질문은 stdin으로 간다(Claude는 `-p`에 위치 인자 없이, Codex는 `exec … -`). 기록에는 입력 digest와 바이트 수만 남긴다. Claude 문서의 stdin 상한 10MB를 조립 전에 막는다. agy는 stdin 입력을 확인하지 못해 명령줄로 보낸다(B4에서 확인). cwd·환경·격리는 controller가 정한다(A1, W2). **남은 것:** 설치 버전에서 EOF·큰 한글 입력·선행 대시·전송 실패를 관측한다(W1 뒤 B1·B2와 함께, 모델 호출). Codex 명령 거절 흔적을 보관 상한과 무관하게 스트림 전체에서 세는 일(경계 리뷰 R04의 남은 것) — 지금은 stderr가 잘리면 답을 받지 않는다.
 - **A5. manifest `runtime-inventory/2`.** controller가 adapter 상태를 읽게 될 때 `installed`·`auth_observed`·`transport_observed`·`context_conformance`·`permission_conformance`로 나누고, 실행 허가(`eligible_for_run`)는 실행 직전에 계산한다(PR #4 R02·R05).
