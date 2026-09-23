@@ -15,6 +15,7 @@
 | [`2026-09-23-a1-handoff-review/`](2026-09-23-a1-handoff-review/README.md) | [PR #7](https://github.com/inlight37-design/decision-model_lab/pull/7). A1 봉인·수용·복구·마운트, K 표·계획·수동 원본 앱 참여와 인계 비교. 중단 전 리뷰·재현 코드·관측을 보존했으며, [재개 검증·WM-07 정정](2026-09-23-a1-handoff-review/VERIFICATION-20260923.md)을 함께 읽는다. 제품 실행 코드는 이 리뷰에서 수정하지 않음. 반영 결과는 같은 폴더의 [`RESPONSE.md`](2026-09-23-a1-handoff-review/RESPONSE.md) |
 | [`2026-09-23-stage2-request/`](2026-09-23-stage2-request/README.md) | 2단계(승인된 모델 호출 다섯 번)의 판정, 관측 도구 수정, 그 과정의 실패·실수·시행착오(S01–S21)에 대한 검토 요청서. 결과는 `2026-09-23-stage2-review/`(또는 리뷰한 날짜)로 받는다 |
 | [`2026-09-24-review-request/`](2026-09-24-review-request/README.md) | 위 요청서를 이어받는 검토 요청서. 지금까지의 흐름(연표), 2단계 뒤의 PR #8–#12, K46 방어, 새 실패·시행착오(S22–S33)와 S01–S21의 현재 상태. PC에만 있던 관측 요약을 가려서 함께 옮겼다. 결과는 `<YYYY-MM-DD>-review/`로 받는다 |
+| [`2026-09-24-review/`](2026-09-24-review/README.md) | 위 요청과 17번 질문에 대한 ChatGPT 검토([PR #14](https://github.com/inlight37-design/decision-model_lab/pull/14)). K46·P3 판정식, 실행 허가의 합성 반례, 구성별 관측 판정, S01–S33·PR 충돌·다음 순서. 원본 판정과 제품 코드는 유지했고 재현 코드·결과·소스 해시를 함께 남겼다 |
 
 ## 읽는 순서
 
@@ -38,6 +39,13 @@
 16. [`2026-09-23-a1-handoff-review/RESPONSE.md`](2026-09-23-a1-handoff-review/RESPONSE.md) — 14·15의 발견별 반영, 심각도를 다르게 본 곳, 리뷰 밖에서 새로 찾은 것(같은 참여자 이중 실행, Windows의 같은 포트 이중 bind), 바뀐 계획
 17. [`2026-09-23-stage2-request/`](2026-09-23-stage2-request/README.md) — 16 이후 1단계(N1–N6)와 2단계 호출, 관측 도구 수정, 실패·시행착오에 대한 검토 요청
 18. [`2026-09-24-review-request/`](2026-09-24-review-request/README.md) — 17을 이어받아 main `a26e504`까지의 작업(PR #8–#12)과 전체 흐름, 실패·시행착오에 대한 검토 요청
+19. [`2026-09-24-review/`](2026-09-24-review/README.md) — 17·18에 대한 검토와 질문별 답. K46·실행 허가·관측 도구 반례, 근거 수준 비교, 인계 점검과 승인 전 보강 순서
+
+## 19번 기록에 대한 단서
+
+- 코드 기준은 `a26e504`, 공개 관측 기준은 `7329a31`이다. 사용자 PC·WSL·실제 provider CLI·모델을 실행하지 않았다.
+- 재현은 해시가 일치하는 `eligibility` 원본과 관측 판정식 발췌를 합성 데이터로 실행한 것이다. 저장소 전체 시험이나 실제 샌드박스 검증과 구분한다. `results.json`의 `repository_ast_verification`은 `false`다.
+- 문맥 상태와 완료 표현에 대한 이견은 검토 원문에만 남겼다. 반영 세션은 발견별로 재현·반박·보류를 별도 기록하고, 검토 원문을 수정하지 않는다. 최종 CI는 PR의 정확한 head를 기준으로 본다.
 
 ## 17번 기록에 대한 단서
 
