@@ -9,7 +9,7 @@
 | [`controller.py`](controller.py) | 상태를 가진 유일한 곳. 자리·예산, 결과 수용 관문, 봉인과 공개, 수동 참여자, 다시 시작, 화면용 투영 |
 | [`store.py`](store.py) | 작은 SQLite journal. 사건은 덧붙이기만 한다. 초안도 여기에 봉인한다 |
 | [`fake_cli.py`](fake_cli.py) | Claude·Codex 출력 형식을 흉내 내는 가짜 CLI. 행동: 정상, 느림, CLI 오류, 입력 일부만 읽음, 멈춤 |
-| [`cli_executor.py`](cli_executor.py) | 실제 CLI 실행기(Linux·WSL). `env.resolve` → `build_spec` → `isolation.run`(`cli_mounts`, `never`) → `interpret`. **모델을 부른다 — 승인 뒤에만.** 서버는 아직 쓰지 않는다 |
+| [`cli_executor.py`](cli_executor.py) | 실제 CLI 실행기(Linux·WSL). `env.resolve` → `build_spec` → `isolation.run`(`cli_mounts`, `never`) → `interpret`. **모델을 부른다 — 승인 뒤에만.** 서버는 아직 쓰지 않는다. 이 기기의 기록(`runtime-inventory/2`)을 받아 시도마다 실행 허가를 계산한다 — 기록 없이 부르는 것은 관측 도구와 시험(`unchecked`)뿐이다 |
 | [`server.py`](server.py) | 127.0.0.1 화면 서버. 모든 `/api` 요청에 토큰 |
 | [`static/index.html`](static/index.html) | 화면. [Ledger](../design/README.md)의 토큰과 규칙을 따른다 |
 

@@ -160,7 +160,7 @@ class CallTests(Base):
         install(self.home, "codex")
 
     def executor(self):
-        return CliExecutor(never=(str(self.state),), home=str(self.home),
+        return CliExecutor(never=(str(self.state),), unchecked=True, home=str(self.home),
                            base_env={"PATH": f"{self.home}/.local/bin:/usr/bin:/bin", "LANG": "C.UTF-8"})
 
     def call(self, probe, **kwargs):

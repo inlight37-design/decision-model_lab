@@ -4,6 +4,7 @@
 만들고, 실행기의 실제 경로(env.resolve → build_spec → isolation.run → interpret)와 controller의 수용 관문으로
 돌린다. 격리 경로는 bubblewrap을 쓸 수 있는 Linux에서만 돈다. 시작 전 거절은 어느 플랫폼에서나 본다.
 """
+from datetime import date
 import json
 import os
 from pathlib import Path
@@ -13,8 +14,9 @@ import sys
 import tempfile
 import time
 import unittest
+from unittest import mock
 
-from app import controller as c
+from app import cli_executor, controller as c
 from app.cli_executor import CliExecutor
 from app.store import Store, events
 from core import adapters, isolation, runner
@@ -28,6 +30,7 @@ def bwrap_usable():
              "--symlink", "usr/bin", "/bin", "--symlink", "usr/lib", "/lib", "--symlink", "usr/lib64", "/lib64",
              "--proc", "/proc", "--", "/usr/bin/true"]
     return subprocess.run(probe, capture_output=True, check=False).returncode == 0
+
 
 # 가짜 CLI. 받은 argv를 확인하고, stdin으로 받은 질문의 크기와 격리 안에서 보이는 설정 폴더를 답에 적는다.
 FAKE = r'''#!/usr/bin/python3
@@ -95,7 +98,7 @@ class Base(unittest.TestCase):
         self.addCleanup(self.store.close)
 
     def executor(self, **kwargs):
-        return CliExecutor(never=(str(self.root / "ledger"),), home=str(self.home),
+        return CliExecutor(never=(str(self.root / "ledger"),), unchecked=True, home=str(self.home),
                            base_env={"PATH": f"{self.home}/.local/bin:/usr/bin:/bin", "LANG": "C.UTF-8"}, **kwargs)
 
     def controller(self, executor, **kwargs):
@@ -112,7 +115,8 @@ class RefusedBeforeStartTests(Base):
     """어느 플랫폼에서나 돈다. 실행 파일이 없으면 프로세스를 만들지 않고 failed_to_start로 끝난다."""
 
     def test_nothing_starts_when_the_cli_cannot_be_planned(self):
-        ex = CliExecutor(never=(str(self.root / "ledger"),), home=str(self.home), base_env={"PATH": str(self.home)})
+        ex = CliExecutor(never=(str(self.root / "ledger"),), unchecked=True, home=str(self.home),
+                         base_env={"PATH": str(self.home)})
         self.assertIn("refused", ex.describe(claude(), "질문"))
         result, outcome = ex.execute(claude(), "질문", str(self.root), 5)
         self.assertEqual(result.state, runner.FAILED_TO_START)
@@ -176,6 +180,31 @@ class RealPathTests(Base):
                 self.assertTrue(ctl.wait_idle(60))
                 part = self.parts(ctl, run_id)["codex"]
                 self.assertEqual((part["state"], part["status"]), (state, status), part)
+
+    def test_a_record_gates_every_attempt(self):
+        """N4. 기록의 다섯 칸이 모두 관측됐고 설치 버전이 같을 때만 부른다. 아니면 프로세스를 만들기 전에 거절한다."""
+        install(self.home, "claude")
+        seen = {"status": "observed", "observed_at": "2026-09-23", "evidence": "synthetic"}
+        row = {"adapter_id": "claude-code", "installed": {**seen, "version": "9.9.9"},
+               "auth_observed": {**seen, "auth_mode": "subscription_oauth", "funding_mode": "subscription"},
+               "transport_observed": seen, "context_conformance": seen, "permission_conformance": seen}
+        path = self.root / "inventory.json"
+        path.write_text(json.dumps({"schema": "runtime-inventory/2", "host": {"label": "t"}, "adapters": [row]}))
+        ex = CliExecutor(never=(str(self.root / "ledger"),), inventory=path, home=str(self.home),
+                         base_env={"PATH": f"{self.home}/.local/bin:/usr/bin:/bin", "LANG": "C.UTF-8"})
+        with mock.patch.object(cli_executor, "date") as fake_date:
+            fake_date.today.return_value = date(2026, 9, 23)
+            ctl = self.controller(ex)
+            first = ctl.create_run("질문", [claude()], min_independent=1)
+            self.assertTrue(ctl.wait_idle(60))
+            self.assertEqual(self.parts(ctl, first)["claude"]["state"], c.ACCEPTED)
+            row["permission_conformance"] = {"status": "unknown"}
+            path.write_text(json.dumps({"schema": "runtime-inventory/2", "host": {"label": "t"}, "adapters": [row]}))
+            second = ctl.create_run("다음 질문", [claude()], min_independent=1)
+            self.assertTrue(ctl.wait_idle(60))
+        part = self.parts(ctl, second)["claude"]
+        self.assertEqual((part["state"], part["status"]), (c.REJECTED, "process_failed_to_start"))
+        self.assertIn("not eligible to run: permission_conformance is unknown", part["detail"])
 
     def test_a_late_result_after_a_restart_is_ignored_on_the_real_path(self):
         """늦은 결과는 실제 실행기에서도 반영하지 않는다(A1-03). 시도는 끝까지 돌고 종료가 확인된다."""
