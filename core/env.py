@@ -10,6 +10,8 @@ tools/runtime_inventory.py가 이 모듈의 ENV_VARS로 변수가 **있는지만
 - resolve: 자식 PATH로 실행 파일의 절대 경로를 찾는다. WSL에서는 Windows 실행 파일을 거절한다.
   WSL은 기본으로 Windows PATH를 이어 붙이므로 `codex`를 찾다가 `/mnt/c/.../codex.exe`가 잡힐 수
   있다. 그러면 Linux 격리 안의 Linux CLI를 쓰려고 WSL로 옮긴 목적이 조용히 사라진다(2절 15).
+  이 가드는 흔한 실수를 막는 것이지 interop 차단의 증명이 아니다. 격리 안에서는 /mnt·/init·
+  interop 소켓을 연결하지 않는 것(core.isolation)이 그 역할을 한다.
 """
 from __future__ import annotations
 
@@ -108,13 +110,30 @@ def child_env(base: Mapping[str, str], *, machine: Mapping[str, str] | None = No
     return env, dropped
 
 
+def _is_pe(path: str) -> bool:
+    """파일이 Windows 실행 파일(PE, 'MZ'로 시작)인가. 이름이나 위치와 상관없이 내용으로 본다."""
+    try:
+        with open(path, "rb") as f:
+            return f.read(2) == b"MZ"
+    except OSError:
+        return False
+
+
 def resolve(command: str, env: Mapping[str, str]) -> str:
-    """자식이 쓸 PATH로 실행 파일을 찾아 절대 경로로 돌려준다."""
-    path = shutil.which(command, path=env.get("PATH") or env.get("Path"))
+    """자식이 쓸 PATH로 실행 파일을 찾아 절대 경로로 돌려준다.
+
+    자식 환경에 PATH가 없으면 거절하고, 비어 있으면 찾지 못한 것으로 본다. 어느 쪽이든 이 프로세스의
+    PATH로 되돌아가지 않는다(WSL2 리뷰 WM-05 — shutil.which는 path=None이면 부모 PATH를 쓴다).
+    """
+    search = next((value for name, value in env.items() if name.upper() == "PATH"), None)
+    if search is None:
+        raise EnvError("the child environment has no PATH")
+    path = shutil.which(command, path=search) if search else None
     if path is None:
         raise EnvError(f"{command} is not on the child PATH")
     path = os.path.abspath(path)
-    # 링크도 따라가 본다: ~/.local/bin/codex가 /mnt/c/.../codex.exe를 가리킬 수 있다.
-    if not IS_WINDOWS and (is_windows_binary(path) or is_windows_binary(os.path.realpath(path))):
+    # 링크도 따라가 보고(~/.local/bin/codex → /mnt/c/.../codex.exe), 확장자 없는 PE도 내용으로 잡는다.
+    real = os.path.realpath(path)
+    if not IS_WINDOWS and (is_windows_binary(path) or is_windows_binary(real) or _is_pe(real)):
         raise EnvError(f"{command} resolved to a Windows executable ({path}); install the Linux CLI")
     return path

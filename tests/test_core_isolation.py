@@ -94,11 +94,15 @@ def marked_alive(marker):
     return False
 
 
+REQUIRED = os.environ.get("DML_REQUIRE_BWRAP") == "1"   # CI가 켠다. 못 쓰면 건너뛰지 않고 실패한다
+
+
 class RefusalTests(unittest.TestCase):
     """조립 전 거절. 어느 플랫폼에서나 돈다."""
 
-    def test_runner_accepts_pid_namespace_only_for_our_bwrap(self):
-        with self.assertRaises(runner.RunnerError):
+    def test_the_public_runner_cannot_claim_a_namespace(self):
+        """WSL2 리뷰 WM-03. 자손 전체 종료를 주는 것은 isolation.run()뿐이다."""
+        with self.assertRaises(TypeError):
             runner.run([sys.executable, "-c", "0"], cwd=tempfile.gettempdir(), env=dict(os.environ),
                        timeout=5, pid_namespace=True)
 
@@ -107,7 +111,78 @@ class RefusalTests(unittest.TestCase):
                     isolation.Sandbox(work_dir="/w", home="/h", read_only=("/",)),
                     isolation.Sandbox(work_dir="/w", home="/h", read_write=("/h",))):
             with self.subTest(box=box), self.assertRaises(isolation.IsolationError):
-                isolation.wrap(["/usr/bin/python3"], box)
+                isolation.plan(["/usr/bin/python3"], box)
+
+    def test_credentials_are_refused_not_passed(self):
+        """WSL2 리뷰 WM-02. 토큰은 격리 안으로 넘기지 않는다 — 명령 인자로는 물론 환경으로도."""
+        box = isolation.Sandbox(work_dir="/w", home="/h", env={"CLAUDE_CODE_OAUTH_TOKEN": "SYNTHETIC"})
+        with self.assertRaises(isolation.IsolationError):
+            isolation.plan(["/usr/bin/python3"], box)
+
+    def test_bubblewrap_is_usable_when_required(self):
+        if REQUIRED:
+            self.assertTrue(bwrap_usable(), "DML_REQUIRE_BWRAP=1 but bubblewrap cannot run here")
+
+
+@unittest.skipUnless(sys.platform == "linux", "Linux 경로 규칙")
+class PlanTests(unittest.TestCase):
+    """조립만 한다. 실제 bubblewrap은 부르지 않는다."""
+
+    def setUp(self):
+        self.root = Path(tempfile.mkdtemp(prefix="dml-plan-"))
+        self.addCleanup(shutil.rmtree, self.root, True)
+        for name in ("home/.codex/packages/v1", "home/.claude", "work", "input", "ledger"):
+            (self.root / name).mkdir(parents=True)
+        (self.root / "alias").symlink_to(self.root / "home")
+
+    def box(self, **kwargs):
+        base = dict(work_dir=str(self.root / "work"), home=str(self.root / "home"),
+                    read_only=(str(self.root / "input"),))
+        base.update(kwargs)
+        return isolation.Sandbox(**base)
+
+    def test_environment_values_never_reach_argv(self):
+        """WSL2 리뷰 WM-02. 값은 bwrap 프로세스의 환경으로만 간다."""
+        argv, env = isolation.plan([SYSTEM_PY], self.box(env={"LANG": "C.UTF-8", "TZ": "SYNTHETIC-ZONE"}))
+        self.assertNotIn("SYNTHETIC-ZONE", argv)
+        self.assertNotIn("--setenv", argv)
+        self.assertEqual(env["TZ"], "SYNTHETIC-ZONE")
+        self.assertEqual(env["HOME"], os.path.realpath(self.root / "home"))
+
+    def test_conflicting_mounts_are_refused(self):
+        """WSL2 리뷰 WM-04. 작업 폴더가 HOME·입력과 겹치거나, 연결이 HOME 위이거나, 봉인 경로와 겹치면 거절."""
+        r = self.root
+        for label, box in (
+                ("work is home", self.box(work_dir=str(r / "home"))),
+                ("work is home through a symlink", self.box(work_dir=str(r / "alias"))),
+                ("work is the read-only input", self.box(work_dir=str(r / "input"))),
+                ("work contains the input", self.box(work_dir=str(r), read_only=(str(r / "input"),))),
+                ("a mount above home", self.box(read_only=(str(r / "input"), str(r)))),
+                ("a mount inside the ledger", self.box(never=(str(r / "input"),))),
+                ("the ledger inside a mount", self.box(read_only=(str(r / "input"), str(r / "ledger")),
+                                                       never=(str(r / "ledger/run.db"),)))):
+            with self.subTest(label), self.assertRaises(isolation.IsolationError):
+                isolation.plan([SYSTEM_PY], box)
+
+    def test_a_read_only_release_inside_the_cli_folder_is_intended(self):
+        """Codex: 설정 폴더는 쓰기, 그 안의 실행 버전 폴더는 읽기 전용으로 덮는다."""
+        r = self.root
+        argv, _ = isolation.plan([SYSTEM_PY], self.box(read_only=(str(r / "home/.codex/packages/v1"),),
+                                                       read_write=(str(r / "home/.codex"),)))
+        self.assertLess(argv.index("--bind"), argv.index("--ro-bind", argv.index("--tmpfs")))
+
+    def test_only_a_root_owned_bubblewrap_is_trusted(self):
+        """WSL2 리뷰 WM-03. 이름만 bwrap인 사용자 파일로는 격리 실행을 하지 않는다."""
+        fake = self.root / "bwrap"
+        fake.write_text("#!/bin/sh\nexit 0\n")
+        fake.chmod(0o755)
+        original = isolation.BWRAP
+        isolation.BWRAP = str(fake)
+        try:
+            with self.assertRaises(isolation.IsolationError):
+                isolation.run([SYSTEM_PY, "-c", "0"], self.box(), timeout=5)
+        finally:
+            isolation.BWRAP = original
 
 
 @unittest.skipUnless(bwrap_usable(), "bubblewrap을 쓸 수 있는 Linux에서만")
@@ -136,8 +211,7 @@ class BoundaryTests(unittest.TestCase):
     def run_probe(self, mode, *extra, timeout=30):
         argv = [SYSTEM_PY, str(self.root / "input/probe.py"), mode, str(self.root), self.home,
                 str(self.server.getsockname()[1]), *extra]
-        return runner.run(isolation.wrap(argv, self.box), cwd=str(self.root / "work"), env=dict(os.environ),
-                          timeout=timeout, pid_namespace=True)
+        return isolation.run(argv, self.box, timeout=timeout)
 
     def test_only_what_was_granted_is_visible(self):
         result = self.run_probe("report")

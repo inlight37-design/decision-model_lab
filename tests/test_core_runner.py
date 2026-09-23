@@ -88,7 +88,20 @@ class RunnerContractTests(unittest.TestCase):
         self.assertEqual((result.stdout, result.stderr), ("answer\n", "denied"))
 
     def test_stdin_is_written_then_closed(self):
-        self.assertEqual(run("import sys; print(sys.stdin.read().upper())", stdin_text="hi").stdout, "HI\n")
+        result = run("import sys; print(sys.stdin.read().upper())", stdin_text="hi")
+        self.assertEqual(result.stdout, "HI\n")
+        self.assertEqual(result.input_delivery, runner.INPUT_COMPLETE)
+
+    def test_input_the_cli_stopped_reading_is_recorded(self):
+        """WSL2 리뷰 WM-01. CLI가 1바이트만 읽고 stdin을 닫아도 exit 0으로 끝난다. 그 사실을 남긴다."""
+        result = run("import os; os.read(0, 1); os.close(0); print('answer')", stdin_text="한글-입력\n" * 120_000)
+        self.assertEqual((result.state, result.exit_code, result.stdout), (runner.EXITED, 0, "answer\n"))
+        self.assertEqual(result.input_delivery, runner.INPUT_FAILED)
+        self.assertTrue(any(n.startswith("stdin failed: wrote") for n in result.notes), result.notes)
+
+    def test_input_that_cannot_be_encoded_is_refused_before_starting(self):
+        with self.assertRaises(runner.RunnerError):
+            run("print('started')", stdin_text="\ud800")
 
     def test_stdin_is_closed_when_there_is_no_input(self):
         """codex exec처럼 stdin을 기다리는 CLI가 멈추지 않는다."""
@@ -197,6 +210,13 @@ class BoundaryReviewRegressionTests(unittest.TestCase):
         else:
             self.assertEqual(result.state, runner.UNKNOWN)
             self.assertIn("an output pipe stayed open after termination", result.notes)
+            # WSL2 리뷰 WM-07. 돌아온 뒤에도 파이프를 쥔 손자가 있으면 읽는 스레드가 남고, 셀 수 있다
+            self.assertGreaterEqual(runner.lingering(), 1)
+            self.end_grandchild()
+            deadline = time.monotonic() + 5
+            while runner.lingering() and time.monotonic() < deadline:
+                time.sleep(0.05)
+            self.assertEqual(runner.lingering(), 0)
 
 
 if __name__ == "__main__":

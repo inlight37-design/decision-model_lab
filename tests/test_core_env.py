@@ -1,6 +1,7 @@
 """core.env 검사 — 실행 코어가 조사 도구에 기대지 않고(경계 리뷰 R05), WSL에서 Windows CLI를 다시
 부르지 않는다(인계 2절 15). CLI·모델은 부르지 않는다."""
 from pathlib import Path
+import sys
 import tempfile
 import unittest
 
@@ -20,6 +21,16 @@ class DependencyDirectionTests(unittest.TestCase):
     def test_the_inventory_records_the_same_variable_list(self):
         self.assertIs(runtime_inventory.ENV_VARS, env.ENV_VARS)
         self.assertIs(runtime_inventory.fresh_environment, env.fresh_environment)
+
+
+class PathTests(unittest.TestCase):
+    def test_an_empty_or_missing_child_path_does_not_fall_back_to_ours(self):
+        """WSL2 리뷰 WM-05. shutil.which는 path=None이면 이 프로세스의 PATH를 쓴다."""
+        command = Path(sys.executable).stem   # 이 프로세스의 PATH로는 찾을 수 있는 이름
+        with self.assertRaises(env.EnvError):
+            env.resolve(command, {"PATH": ""})
+        with self.assertRaises(env.EnvError):
+            env.resolve(command, {"HOME": "/h"})
 
 
 class WindowsBinaryTests(unittest.TestCase):
@@ -50,6 +61,12 @@ class WindowsBinaryTests(unittest.TestCase):
             (Path(tmp) / "linked").symlink_to(Path(tmp) / "codex.exe")
             with self.assertRaises(env.EnvError):
                 env.resolve("linked", {"PATH": tmp})
+            # 확장자 없는 PE도 내용('MZ')으로 거절한다
+            pe = Path(tmp) / "plain"
+            pe.write_bytes(b"MZ\x90\x00synthetic")
+            pe.chmod(0o755)
+            with self.assertRaises(env.EnvError):
+                env.resolve("plain", {"PATH": tmp})
 
 
 if __name__ == "__main__":

@@ -6,20 +6,24 @@
 - 실행 파일은 절대 경로다. 셸을 거치지 않고, .bat/.cmd는 거절한다(Windows는 그런 파일을
   cmd.exe로 돌려 인자를 다시 해석한다).
 - stdin은 입력을 쓴 뒤 닫는다. 입력이 없으면 처음부터 닫는다. codex exec는 열린 stdin을
-  추가 입력으로 기다린다(aux-pc P1).
+  추가 입력으로 기다린다(aux-pc P1). 입력은 CLI를 띄우기 전에 인코딩하고, 다 썼는지를
+  input_delivery로 남긴다(WSL2 리뷰 WM-01).
 - stdout과 stderr를 따로 받고, 상한을 넘으면 자르고 표시한다.
 - 제한 시간이 지나면 프로세스 트리를 끝낸다. 답 텍스트가 있어도 timed_out이다(HF-06).
   Hermes의 codex 경로는 이 경우 텍스트를 완료로 받아들인다 — 옮기지 않는다.
 - 추적 단위가 비었는지 확인하지 못하면 unknown이다. 예산을 돌려받지 않는다(HF-07).
 - exit 0은 프로세스가 끝났다는 뜻이지 작업이 성공했다는 뜻이 아니다.
-- 정리에도 상한이 있다. run()은 timeout + CLEANUP_LIMIT 안에 돌아온다(경계 리뷰 R02).
+- 프로세스를 만든 뒤의 명시적 정리 대기에는 상한(CLEANUP_LIMIT)이 있다(경계 리뷰 R02). 운영체제의
+  프로세스 생성 지연까지 포함한 벽시계 보장은 아니다. 돌아온 뒤에도 파이프를 쥔 프로세스가 남으면
+  입출력 스레드가 남는다 — lingering()이 센다(WSL2 리뷰 WM-07).
 
 추적 단위(containment): Windows는 job object(ctypes) — 자손이 떠날 수 없다. 그 밖은 새
 session의 프로세스 그룹 — setsid 등으로 새 세션을 만든 자손은 보이지 않는다. 그래서 결과는
 두 가지를 따로 말한다(경계 리뷰 R01). unit_confirmed_empty는 추적 단위가 비었는지,
 tree_confirmed_empty는 자손 전체가 끝났는지다. 프로세스 그룹만으로는 뒤쪽을 확인할 수 없어
 None이다. 자원 해제·예산 반환은 tree_confirmed_empty가 True일 때만 한다. Linux에서 이것을
-True로 만드는 수단은 격리 백엔드(bubblewrap의 PID namespace, WSL2)에서 붙인다.
+True로 만드는 것은 core.isolation.run()뿐이다 — 출처를 확인한 bubblewrap으로 실행해 PID namespace를
+추적 단위로 쓴다. 일반 run()에는 namespace 보장을 붙이지 않는다(WSL2 리뷰 WM-03).
 Windows에서 job 배정에 실패하면 트리 확인을 하지 않고 unknown 쪽으로 기운다.
 """
 from __future__ import annotations
@@ -83,7 +87,10 @@ class RunResult:
     unit_confirmed_empty: bool | None
     error: str | None = None
     notes: tuple[str, ...] = field(default_factory=tuple)
-    containment: str | None = None   # JOB_OBJECT | PROCESS_GROUP | None(추적하지 못했다)
+    containment: str | None = None   # JOB_OBJECT | PROCESS_GROUP | PID_NAMESPACE | None(추적하지 못했다)
+    # stdin 입력의 전달 상태: INPUT_COMPLETE | INPUT_FAILED | INPUT_INCOMPLETE | None(입력 없음).
+    # 프로세스 상태(state)와 따로 둔다. 전달이 완전하지 않으면 adapters.interpret()가 답을 받지 않는다.
+    input_delivery: str | None = None
 
     @property
     def tree_confirmed_empty(self) -> bool | None:
@@ -147,17 +154,51 @@ class _Reader(threading.Thread):
         return b"".join(self.chunks).decode("utf-8", errors="replace").replace("\r\n", "\n")
 
 
-def _write_stdin(stream, data: bytes) -> None:
-    try:
-        if data:
-            stream.write(data)
-    except (BrokenPipeError, OSError):
-        pass
-    finally:
+class _Writer(threading.Thread):
+    """stdin에 입력을 쓰고 닫는다. 몇 바이트를 썼는지, 왜 멈췄는지를 남긴다(WSL2 리뷰 WM-01).
+
+    CLI가 입력을 다 읽기 전에 stdin을 닫으면 쓰기가 실패한다. 그 사실을 버리면 질문의 일부만 받은
+    답이 정상 답처럼 보인다. 파이프에 다 썼다는 것이 CLI가 다 썼다는 증거는 아니다.
+    """
+
+    def __init__(self, stream, data: bytes) -> None:
+        super().__init__(daemon=True)
+        self.stream, self.data = stream, data
+        self.written = 0
+        self.error: str | None = None
+
+    def run(self) -> None:
         try:
-            stream.close()
-        except OSError:
-            pass
+            fd = self.stream.fileno()
+            view = memoryview(self.data)
+            while self.written < len(view):
+                self.written += os.write(fd, view[self.written:self.written + _CHUNK])
+        except OSError as exc:
+            self.error = type(exc).__name__
+        finally:
+            try:
+                self.stream.close()
+            except OSError as exc:
+                self.error = self.error or type(exc).__name__
+
+
+# 입력 전달 상태. None은 stdin 입력이 없었다는 뜻이다.
+INPUT_COMPLETE = "complete"      # 파이프에 다 쓰고 닫았다
+INPUT_FAILED = "failed"          # 다 쓰기 전에 쓰기가 실패했다(CLI가 stdin을 먼저 닫는 등)
+INPUT_INCOMPLETE = "incomplete"  # 돌아올 때까지 쓰기가 끝나지 않았다
+
+_LINGERING: set[threading.Thread] = set()
+
+
+def lingering() -> int:
+    """돌아온 뒤에도 끝나지 않은 입출력 스레드 수(WM-07). 각각 파이프 fd 하나를 쥔다.
+
+    추적 단위 밖에서 파이프를 쥔 프로세스가 끝나야 사라진다. controller는 이 수와 `unknown` 결과로
+    정리되지 않은 시도를 세고, 상한을 넘으면 새 시도를 멈춘다.
+    """
+    for thread in [t for t in _LINGERING if not t.is_alive()]:
+        _LINGERING.discard(thread)
+    return len(_LINGERING)
 
 
 class _Tree:
@@ -235,7 +276,8 @@ class _Tree:
 
 
 def _check_pid_namespace(args: tuple[str, ...]) -> None:
-    """pid_namespace=True는 core.isolation.wrap()이 만든 bwrap 명령에만 준다."""
+    """PID namespace 추적은 core.isolation.run()만 쓴다. 그 함수가 bwrap 실행 파일의 출처를 먼저 확인한다.
+    여기서는 명령 모양만 한 번 더 본다 — 이것만으로는 보장이 아니다(WSL2 리뷰 WM-03)."""
     if IS_WINDOWS:
         raise RunnerError("pid_namespace containment is POSIX-only")
     head = args[:args.index("--")] if "--" in args else args
@@ -247,15 +289,25 @@ def _check_pid_namespace(args: tuple[str, ...]) -> None:
 def run(argv: Sequence[str], *, cwd: str | os.PathLike, env: Mapping[str, str],
         timeout: float, stdin_text: str | None = None,
         max_output_bytes: int = DEFAULT_MAX_OUTPUT,
-        cancel: threading.Event | None = None, pid_namespace: bool = False) -> RunResult:
+        cancel: threading.Event | None = None) -> RunResult:
     """한 번 실행한다. 예외 대신 RunResult로 돌려준다(실행 전 검증 실패만 RunnerError).
 
-    pid_namespace: argv가 core.isolation.wrap()의 bwrap 명령이면 True. 그때 추적 단위가 PID namespace가
-    되어 자손 전체의 종료를 확인할 수 있다.
+    격리해서 실행하려면 core.isolation.run()을 쓴다. 자손 전체의 종료를 PID namespace로 확인하는 것은
+    그 경로뿐이다.
     """
-    args = validate_argv(argv)
+    return _execute(validate_argv(argv), cwd=cwd, env=env, timeout=timeout, stdin_text=stdin_text,
+                    max_output_bytes=max_output_bytes, cancel=cancel, pid_namespace=False)
+
+
+def _execute(args: tuple[str, ...], *, cwd: str | os.PathLike, env: Mapping[str, str], timeout: float,
+             stdin_text: str | None, max_output_bytes: int, cancel: threading.Event | None,
+             pid_namespace: bool) -> RunResult:
     if pid_namespace:
         _check_pid_namespace(args)
+    try:
+        data = stdin_text.encode("utf-8") if stdin_text is not None else None
+    except UnicodeEncodeError as exc:  # CLI를 띄우기 전에 거절한다
+        raise RunnerError(f"stdin_text cannot be encoded as UTF-8 ({exc.reason})") from None
     if not (isinstance(timeout, (int, float)) and timeout > 0):
         raise RunnerError("timeout must be a positive number of seconds")
     if not (isinstance(max_output_bytes, int) and max_output_bytes > 0):
@@ -271,7 +323,7 @@ def run(argv: Sequence[str], *, cwd: str | os.PathLike, env: Mapping[str, str],
     try:
         proc = subprocess.Popen(
             list(args), cwd=str(cwd), env=dict(env), shell=False,
-            stdin=subprocess.PIPE if stdin_text is not None else subprocess.DEVNULL,
+            stdin=subprocess.PIPE if data is not None else subprocess.DEVNULL,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, **kwargs)
     except OSError as exc:
         return RunResult(args, FAILED_TO_START, None, "", "", False, False,
@@ -283,9 +335,9 @@ def run(argv: Sequence[str], *, cwd: str | os.PathLike, env: Mapping[str, str],
     out, err = _Reader(proc.stdout, max_output_bytes), _Reader(proc.stderr, max_output_bytes)
     out.start()
     err.start()
-    if stdin_text is not None:
-        threading.Thread(target=_write_stdin, args=(proc.stdin, stdin_text.encode("utf-8")),
-                         daemon=True).start()
+    writer = _Writer(proc.stdin, data) if data is not None else None
+    if writer:
+        writer.start()
 
     deadline = started + timeout
     reason = None
@@ -325,6 +377,18 @@ def run(argv: Sequence[str], *, cwd: str | os.PathLike, env: Mapping[str, str],
             # 닫으면 그 프로세스가 끝날 때까지 여기서 막힌다. 읽는 스레드가 EOF에서 닫는다.
             notes.append("an output pipe stayed open after termination")
             confirmed = False
+            _LINGERING.add(reader)
+    delivery = None
+    if writer:
+        writer.join(timeout=max(0.0, joined_by - time.monotonic()))
+        if writer.is_alive():
+            delivery = INPUT_INCOMPLETE
+            _LINGERING.add(writer)
+        else:
+            delivery = INPUT_COMPLETE if writer.error is None and writer.written == len(data) else INPUT_FAILED
+        if delivery != INPUT_COMPLETE:
+            notes.append(f"stdin {delivery}: wrote {writer.written} of {len(data)} bytes"
+                         + (f" ({writer.error})" if writer.error else ""))
 
     if confirmed is True and proc.poll() is not None:
         state = reason or EXITED
@@ -334,7 +398,7 @@ def run(argv: Sequence[str], *, cwd: str | os.PathLike, env: Mapping[str, str],
             notes.append("process tree could not be counted on this platform")
     return RunResult(args, state, proc.poll(), out.text(), err.text(), out.truncated, err.truncated,
                      int((time.monotonic() - started) * 1000), leftover, confirmed,
-                     notes=tuple(notes), containment=tree.containment)
+                     notes=tuple(notes), containment=tree.containment, input_delivery=delivery)
 
 
 if IS_WINDOWS:  # pragma: no cover - Windows 전용, 로컬 Windows에서 시험한다

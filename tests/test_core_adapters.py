@@ -1,6 +1,7 @@
 """core.adapters 검사. 파서는 aux-pc V04-01에서 실제로 받은 출력(tier2/*.txt)을 그대로 쓴다.
 CLI·모델은 부르지 않는다."""
 import hashlib
+import json
 import os
 from pathlib import Path
 import sys
@@ -149,6 +150,16 @@ class ExecutionSpecTests(unittest.TestCase):
         self.assertEqual((spec.input_via, spec.stdin_text), (adapters.ARGV, None))
         self.assertEqual(spec.argv[1:3], ("-p", "Q"))
 
+    def test_the_record_form_never_carries_the_question(self):
+        """WSL2 리뷰 WM-02. 기록은 record()로만 한다. repr()에도 본문이 없다."""
+        secret = "SYNTHETIC_PRIVATE_QUESTION"
+        for adapter_id in adapters.ADAPTERS:
+            spec = build_spec(adapter_id, exe=EXE, prompt=secret, model="m", enabled=True)
+            with self.subTest(adapter=adapter_id):
+                self.assertNotIn(secret, repr(spec))
+                self.assertNotIn(secret, json.dumps(spec.record()))
+                self.assertEqual(spec.record()["input_bytes"], len(secret))
+
     def test_the_runner_delivers_the_question_byte_for_byte(self):
         """가짜 CLI가 stdin을 그대로 돌려준다. 한글과 선행 대시, 줄바꿈이 그대로 가는지 본다."""
         spec = build_spec("codex", exe=EXE, prompt="첫 줄\n-둘째 줄", model="m")
@@ -237,6 +248,31 @@ class BoundaryReviewRegressionTests(unittest.TestCase):
     def test_codex_error_given_as_text_is_kept(self):
         out = interpret("codex", fake('{"type":"turn.failed","error":"boom"}\n', code=1), requested_model="m")
         self.assertEqual((out.ok, out.status, out.detail), (False, "cli_error", "boom"))
+
+    def test_deep_or_empty_wrong_shapes_are_format_errors(self):
+        """WSL2 리뷰 WM-06. 아주 깊은 중첩(RecursionError)과 빈 배열·빈 객체로 온 잘못된 타입."""
+        deep = '{"type":"result","is_error":false,"result":"x","extra":' + "[" * 10000 + "0" + "]" * 10000 + "}"
+        wrong = '{"type":"result","is_error":false,"result":"x","modelUsage":[],"permission_denials":{}}'
+        for body in (deep, wrong):
+            with self.subTest(body=body[:60]):
+                out = interpret("claude-code", fake(body), requested_model="m")
+                self.assertEqual((out.ok, out.status), (False, "format_error"))
+        absent = '{"type":"result","is_error":false,"result":"x","modelUsage":null}'
+        self.assertTrue(interpret("claude-code", fake(absent), requested_model="m").ok)  # null은 없음이다
+
+    def test_an_answer_to_a_partly_delivered_question_is_not_accepted(self):
+        """WSL2 리뷰 WM-01. 입력 전달이 완전하지 않으면 답이 그럴듯해도 받지 않는다."""
+        good = recorded("P1-claude")
+        for delivery in (runner.INPUT_FAILED, runner.INPUT_INCOMPLETE):
+            with self.subTest(delivery=delivery):
+                run = RunResult(good.argv, EXITED, 0, good.stdout, "", False, False, 1, 0, True,
+                                input_delivery=delivery)
+                out = interpret("claude-code", run, requested_model="m")
+                self.assertEqual((out.ok, out.status), (False, "input_error"))
+        run = RunResult(good.argv, EXITED, 0, good.stdout, "", False, False, 1, 0, True,
+                        input_delivery=runner.INPUT_COMPLETE)
+        self.assertEqual(interpret("claude-code", run, requested_model="m").status,
+                         interpret("claude-code", good, requested_model="m").status)
 
     def test_codex_answer_is_not_accepted_when_stderr_was_cut(self):
         """명령 거절의 흔적은 stderr에만 있다. 잘린 stderr로는 거절이 없었다고 말할 수 없다."""

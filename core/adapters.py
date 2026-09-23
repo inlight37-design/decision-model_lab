@@ -25,7 +25,7 @@ import subprocess
 from typing import Any, Iterable, Mapping
 
 from core.env import BILLING_VARS, KEEP_VARS, child_env, resolve  # noqa: F401 — 호출자가 여기서 쓴다
-from core.runner import EXITED, RunResult
+from core.runner import EXITED, INPUT_COMPLETE, RunResult
 
 DISCUSSANT = "discussant"
 ROLES = (DISCUSSANT,)
@@ -97,6 +97,21 @@ class ExecutionSpec:
     input_via: str        # STDIN | ARGV — agy는 stdin 입력을 확인하지 못해 ARGV다(B4)
     input_sha256: str
     input_bytes: int
+
+    def record(self) -> dict[str, Any]:
+        """기록·표시용 사본. 질문 본문은 넣지 않고 digest와 크기만 둔다(WSL2 리뷰 WM-02).
+
+        repr()도 이것을 쓴다. dataclasses.asdict()에는 본문이 들어간다 — 기록에 쓰지 않는다. agy처럼
+        질문이 argv에 있으면 그 자리를 digest 표시로 바꾼다.
+        """
+        mask = f"<input sha256:{self.input_sha256}>"
+        argv = [mask if hashlib.sha256(a.encode("utf-8")).hexdigest() == self.input_sha256 else a
+                for a in self.argv]
+        return {"adapter_id": self.adapter_id, "argv": argv, "input_via": self.input_via,
+                "input_sha256": self.input_sha256, "input_bytes": self.input_bytes}
+
+    def __repr__(self) -> str:
+        return f"ExecutionSpec({self.record()!r})"
 
 
 def _require(ok: bool, message: str) -> None:
@@ -186,7 +201,7 @@ class Outcome:
     """한 호출의 의미 판정. ok는 '요청한 형식의 답을 오류 없이 받았다'까지만 뜻한다."""
     adapter_id: str
     ok: bool
-    status: str                       # ok | cli_error | format_error | tools_rejected | process_<runner state>
+    status: str                       # ok | cli_error | format_error | input_error | tools_rejected | process_<runner state>
     text: str | None
     requested_model: str
     reported_models: tuple[str, ...]  # 비어 있으면 CLI가 알리지 않았다
@@ -224,14 +239,34 @@ def interpret(adapter_id: str, run: RunResult, *, requested_model: str) -> Outco
     if run.state != EXITED:
         return Outcome(ok=False, status=f"process_{run.state}", text=run.stdout or None,
                        reported_models=(), model_match=None, detail=run.error, **base)
+    if run.input_delivery not in (None, INPUT_COMPLETE):
+        # 질문을 다 보내지 못했다. 답이 그럴듯해도 받지 않는다(WSL2 리뷰 WM-01). 다시 부르지도 않는다.
+        return Outcome(ok=False, status="input_error", text=run.stdout or None, reported_models=(),
+                       model_match=None, detail=f"stdin {run.input_delivery}", **base)
     if run.stdout_truncated:
         return Outcome(ok=False, status="format_error", text=None, reported_models=(), model_match=None,
                        detail="stdout exceeded the runner limit", **base)
     try:
         return _parse(adapter_id, run, base)
-    except (AttributeError, TypeError, KeyError) as exc:
+    except (AttributeError, TypeError, KeyError, RecursionError, _Shape) as exc:
+        # RecursionError: 문법은 맞지만 아주 깊게 중첩된 JSON(WSL2 리뷰 WM-06)
         return Outcome(ok=False, status="format_error", text=None, reported_models=(), model_match=None,
-                       detail=f"unexpected output shape ({type(exc).__name__})", **base)
+                       detail=f"unexpected output shape ({exc if isinstance(exc, _Shape) else type(exc).__name__})",
+                       **base)
+
+
+class _Shape(ValueError):
+    """출력의 중첩 값이 예상한 타입이 아니다."""
+
+
+def _typed(obj: Mapping[str, Any], key: str, kind: type, default: Any) -> Any:
+    """obj[key]가 없거나 null이면 default, 있으면 kind여야 한다. 빈 값과 잘못된 타입을 구분한다."""
+    value = obj.get(key)
+    if value is None:
+        return default
+    if not isinstance(value, kind):
+        raise _Shape(f"{key} is {type(value).__name__}")
+    return value
 
 
 def _parse(adapter_id: str, run: RunResult, base: dict[str, str]) -> Outcome:
@@ -241,7 +276,7 @@ def _parse(adapter_id: str, run: RunResult, base: dict[str, str]) -> Outcome:
         if obj is None or obj.get("type") != "result":
             return Outcome(ok=False, status="format_error", text=run.stdout or None, reported_models=(),
                            model_match=None, detail="expected one JSON result object", **base)
-        models = tuple(sorted((obj.get("modelUsage") or {}).keys()))
+        models = tuple(sorted(_typed(obj, "modelUsage", Mapping, {}).keys()))
         usage = _usage(obj.get("usage"), ("input_tokens", "output_tokens", "cache_creation_input_tokens",
                                           "cache_read_input_tokens"))
         if isinstance(obj.get("total_cost_usd"), (int, float)):
@@ -249,7 +284,7 @@ def _parse(adapter_id: str, run: RunResult, base: dict[str, str]) -> Outcome:
         ok = run.exit_code == 0 and obj.get("is_error") is False and isinstance(obj.get("result"), str)
         return Outcome(ok=ok, status="ok" if ok else "cli_error", text=obj.get("result"),
                        reported_models=models, model_match=_model_match(requested_model, models),
-                       usage=usage, permission_denials=len(obj.get("permission_denials") or []),
+                       usage=usage, permission_denials=len(_typed(obj, "permission_denials", list, [])),
                        detail=None if ok else str(obj.get("terminal_reason") or "is_error"), **base)
     if adapter_id == "codex":
         text, completed, failure, tools, usage, stray = None, False, None, 0, {}, 0
@@ -264,7 +299,7 @@ def _parse(adapter_id: str, run: RunResult, base: dict[str, str]) -> Outcome:
                 return Outcome(ok=False, status="format_error", text=None, reported_models=(),
                                model_match=None, detail="broken JSONL line", **base)
             kind = event.get("type")
-            item = event.get("item") or {}
+            item = _typed(event, "item", Mapping, {})
             if kind == "item.completed" and item.get("type") == "agent_message":
                 text = item.get("text")
             elif kind == "item.completed":
