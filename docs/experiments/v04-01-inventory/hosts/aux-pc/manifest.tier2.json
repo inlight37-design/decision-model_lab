@@ -500,14 +500,14 @@
         }
       },
       "auth_mode": "google_account_login",
-      "funding_mode": "unknown",
+      "funding_mode": "subscription",
       "model_profile_id": null,
       "quota_pool_id": null,
       "policy_checked_on": null,
       "health": "ok",
       "observability": "result JSON: tokens incl. thinking; no model name, no cost",
       "configured": false,
-      "configured_note": "Kept false: useG1Credits may fall back to paid credits (E09, default read as on, account value unchecked), the terms may not allow driving the CLI from this project (F31), and invalid option values are not rejected (RESULTS P3)."
+      "configured_note": "Kept false: the terms may not allow driving the CLI from this project (F31, user decision pending), and invalid option values are not rejected (RESULTS P3). useG1Credits is off on this account (user-checked), so there is no paid fallback."
     },
     {
       "adapter_id": "gemini-cli",

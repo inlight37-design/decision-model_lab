@@ -6,6 +6,7 @@
 |---|---|
 | [`2026-09-22-external-review.md`](2026-09-22-external-review.md) | 첫 외부 정밀 검토. 코드·문서·근거 원장 전체를 읽고 검사를 재실행한 기록 |
 | [`2026-09-23-mcp-ui-runtime/`](2026-09-23-mcp-ui-runtime/README.md) | MCP 구성·기존 앱 8사례·Ledger UI 검토, 오프라인 경계 실험(`tools/review_boundary.py`), 대비 감사. [PR #3](https://github.com/inlight37-design/decision-model_lab/pull/3) |
+| [`2026-09-23-review-request/`](2026-09-23-review-request/README.md) | **리뷰 요청서(대기 중).** 2026-09-23 정렬 작업과 V04-01(aux-pc)을 다른 AI에게 검토받기 위한 질문·읽는 순서·결과 형식. 리뷰 결과가 들어오면 이 표에 추가한다 |
 
 ## 읽는 순서
 

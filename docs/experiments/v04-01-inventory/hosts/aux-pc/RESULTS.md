@@ -95,25 +95,25 @@ P3b는 계획에 없던 관측이다. P3-agy가 잘못된 값을 조용히 무�
 | Claude 구독으로 Claude Code | [E04](https://support.claude.com/en/articles/11145838-use-claude-code-with-your-pro-or-max-plan) (2026-08-19 갱신) | Pro·Max는 Claude Code를 포함하고 **claude.ai와 한도를 공유**한다. 한도에 닿으면 상위 요금제, 선택적 API 크레딧, 초기화 대기 중에서 고른다. `ANTHROPIC_API_KEY`가 있으면 구독 대신 그 키로 과금된다 | 구독 경로 유효. 데스크톱 앱 사용과 CLI 호출이 **같은 한도**를 쓴다 |
 | `claude -p`·SDK 구독 차감과 보류 공지 | [E05·F18](https://support.claude.com/en/articles/15036540-use-the-claude-agent-sdk-with-your-claude-plan) (2026-06-16 갱신) | "변경을 보류한다. SDK, `claude -p`, 제3자 앱 사용은 여전히 구독 한도에서 차감된다." 별도 월 크레딧은 없다 | 지금은 유효. 공지가 바뀔 수 있어 adapter 구현 직전에 다시 본다 |
 | Codex ChatGPT 로그인과 API 과금 | [E01](https://learn.chatgpt.com/docs/auth) | ChatGPT 로그인은 workspace 권한을 따르고, API 키는 표준 API 요율로 청구된다. 한도 소진 시 동작과 동시 사용은 문서에 없다 | 구독 경로 유효. 한도 소진 동작 미확인 |
-| Antigravity 크레딧 자동 사용 | [E09](https://www.antigravity.google/docs/cli/credits/) (날짜 표시 없음) | `useG1Credits` 설정. **기본값이 켜짐(`true`)으로 읽힌다** — 구독 한도를 다 쓰면 유료 크레딧으로 넘어갈 수 있다. `/config`·`/settings`에서 끌 수 있다 | **D18(조용한 유료 전환 금지)과 충돌할 수 있다.** 끌지는 사용자 결정. 실제 이 계정의 값은 미확인 |
+| Antigravity 크레딧 자동 사용 | [E09](https://www.antigravity.google/docs/cli/credits/), [설정 문서](https://www.antigravity.google/docs/settings?tab=cli) (날짜 표시 없음) | `useG1Credits`, 메뉴 이름 "Use AI Credits". 설정 문서 원문: "When enabled (`on`), allows the CLI to use your personal AI credits ... if your plan's standard quota is exhausted." | **이 계정은 `off`**(사용자가 `/config`에서 확인). 한도를 다 써도 유료 크레딧으로 넘어가지 않는다 — D18과 맞다. **정정:** 처음에 "기본값이 켜짐으로 읽힌다"고 적었으나, 크레딧 페이지 요약을 잘못 읽은 것이다. 설정 문서는 켤 때의 동작만 설명한다 |
 | Gemini CLI 소비자 인증 종료설 | [F30](https://developers.google.com/gemini-code-assist/docs/deprecations/code-assist-individuals) (2026-09-02 갱신) | 2026-06-18부터 개인·Google AI Pro·Ultra 계정의 Gemini CLI 요청 중단. Standard·Enterprise는 유지. Antigravity로 이전 안내 | **확인됨.** 구독 경로가 실제로 닫힌 사례. agy에는 직접 적용되지 않는다 |
 | Antigravity 약관의 제3자 접근 | [F31](https://antigravity.google/terms) (날짜 표시 없음) | 6조: 제3자 소프트웨어로 서비스에 접근하는 것(예: Antigravity OAuth를 다른 도구에서 쓰기)은 위반. 5조: 상호작용 데이터 사용은 설정에서 바꿀 수 있다 | **우리 앱이 공식 `agy`를 하위 프로세스로 구동하는 것이 해당하는지 불명확.** 사용자 결정 필요 |
 | 요금제별 동시 기기·세션 제한 | 위 문서들 | 세 문서 모두 언급하지 않는다 | 미확인 — 가정하지 않는다 |
-| 구독 경로가 닫혔을 때의 대안 | — | — | 사용자 결정 대기: 유료 API 전환 / 해당 provider 제외 / 기능 축소 |
+| 구독 경로가 닫혔을 때의 대안 | — | — | **사용자 결정(2026-09-23): 유료 API로 전환하지 않는다. 경로가 닫히거나 한도를 다 쓰면 그 provider를 구성에서 뺀다.** 원하는 모델을 붙였다 뗐다 하는 구조가 원래 의도다 |
+| Antigravity 상호작용 데이터 사용 | [설정 문서](https://www.antigravity.google/docs/settings?tab=cli) | `enableTelemetry`, 메뉴 "Enable Telemetry"(Settings의 Account 구역). 원문: "When toggled on, Antigravity collects interactions for use in evaluating, developing, and improving Antigravity and models". 설정 파일은 기본값과 다른 값만 저장한다 | **끔.** 사용자 요청으로 이 세션이 `~/.gemini/antigravity-cli/settings.json`에 `"enableTelemetry": false`를 추가했다(원본 백업, 다른 항목 유지). agy를 다시 실행해도 값이 유지됐다. 서버 쪽 계정 설정에 반영됐는지는 `/config` 화면에서만 확인할 수 있다 |
 
-첫 실행 관측: agy 1.2.8은 첫 실행 때 **상호작용 데이터 수집 동의가 미리 체크된 화면**을 보여 줬고, 이번 로그인에서는 체크된 채로 완료됐다. 실행 폴더를 신뢰할지도 물었다(저장소 폴더를 신뢰로 선택). 데이터 사용 설정을 바꿀지는 사용자 결정이다.
+첫 실행 관측: agy 1.2.8은 첫 실행 때 **상호작용 데이터 수집 동의가 미리 체크된 화면**을 보여 줬고, 이번 로그인에서는 체크된 채로 완료됐다(위 표에서 끔). 실행 폴더를 신뢰할지도 물었다(저장소 폴더를 신뢰로 선택).
 
 ## 판정
 
 | 질문 | 결론 | 근거 |
 |---|---|---|
-| V04-03 진행 가능한가 | **Claude Code·Codex 두 경로로 진행 가능.** 절차서 기준 세 조건(두 도구 이상 P1 구독 성공, P3 실행 전 거절, 과금 변수 없음)을 충족한다. 두 도구 모두 깨끗한 문맥과 구독 인증을 함께 얻는 조합도 관측됐다(Codex P4, Claude P4b). **Antigravity는 조건부** — P3에서 잘못된 값을 조용히 무시했고(설계 입력 6), 약관상 구동 허용 여부(F31)와 크레딧 자동 사용(E09)이 사용자 결정으로 남아 있다 | P1, P3, P3b, P4, 정책 확인 |
-| Q1: ACP 우선인가 exec 우선인가 | **exec 우선을 제안한다.** 세 CLI 모두 help에 ACP가 없고, 세 CLI 모두 비대화형 실행(`claude -p`, `codex exec --json`, `agy -p --output-format json`)이 구독 인증으로 관측됐다. ACP는 필요할 때 adapter 계층의 선택지로 남긴다. 확정은 사용자와 함께 한다 | tier 1, P1 |
+| V04-03 진행 가능한가 | **Claude Code·Codex 두 경로로 진행 가능.** 절차서 기준 세 조건(두 도구 이상 P1 구독 성공, P3 실행 전 거절, 과금 변수 없음)을 충족한다. 두 도구 모두 깨끗한 문맥과 구독 인증을 함께 얻는 조합도 관측됐다(Codex P4, Claude P4b). **Antigravity는 조건부** — P3에서 잘못된 값을 조용히 무시했고(설계 입력 6), 약관상 구동 허용 여부(F31)가 사용자 결정으로 남아 있다. 크레딧 자동 사용은 이 계정에서 꺼져 있다(정책 표) | P1, P3, P3b, P4, 정책 확인 |
+| Q1: ACP 우선인가 exec 우선인가 | **exec 우선으로 확정**(사용자가 판단을 claude 세션에 맡김, 2026-09-23). 세 CLI 모두 help에 ACP가 없고, 세 CLI 모두 비대화형 실행(`claude -p`, `codex exec --json`, `agy -p --output-format json`)이 구독 인증으로 관측됐다. ACP는 필요할 때 adapter 계층의 선택지로 남긴다 | tier 1, P1 |
 
 ## 열린 문제
 
 - Antigravity의 다른 값 옵션(`--effort`, `--model` 등)도 없는 값을 조용히 무시하는지. 특히 없는 `--model` 값이 기본 Flash로 바뀌는지는 상급 모델 배정에 직결된다.
 - Codex와 Antigravity 결과에 모델 이름이 없다. 실제로 요청한 모델이 답했는지 확인할 방법.
-- `useG1Credits`의 이 계정 실제 값. 끌지는 사용자 결정.
-- Antigravity 약관 6조가 공식 CLI를 하위 프로세스로 구동하는 경우에 해당하는지(F31). 사용자 결정.
+- Antigravity 약관 6조가 공식 CLI를 하위 프로세스로 구동하는 경우에 해당하는지(F31). 사용자는 AionUi 같은 도구에서 agy가 잘 동작했다고 한다 — 기술적으로 되는 것과 약관상 허용되는 것은 별개라서 사용자 결정으로 남긴다.
 - Claude Code CLI는 데스크톱 앱과 자격증명과 한도를 공유한다(E04). 이 프로젝트의 호출이 사용자의 평소 Claude 사용 한도를 함께 줄인다는 뜻이다.
