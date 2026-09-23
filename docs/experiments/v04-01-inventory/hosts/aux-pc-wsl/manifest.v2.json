@@ -1,8 +1,8 @@
 {
  "schema": "runtime-inventory/2",
  "host": {"label": "aux-pc-wsl"},
- "updated_at": "2026-09-23",
- "meaning": "Each field is an observation record. Eligibility to run a participant is never stored here; core.eligibility computes it right before each run from these fields, the installed version and the date. observed means the condition was seen to hold; failed means it was seen not to hold; unknown means not observed yet.",
+ "updated_at": "2026-09-24",
+ "meaning": "Each field is an observation record. Eligibility to run a participant is never stored here; core.eligibility computes it right before each run from these fields, the installed version and the date. observed means the condition was seen to hold; failed means it was seen not to hold; unknown means not observed yet. spec_revision names the participant spec (core.adapters.SPEC_REVISION: argv and mounts) a transport, context or permission observation was made with; a record made with another revision does not allow a run (2026-09-24 review R04).",
  "derived_from": [
   "docs/experiments/v04-01-inventory/hosts/aux-pc-wsl/manifest.json (tier 1, collected 2026-09-23T08:53:41Z)",
   "docs/experiments/w2-isolation/aux-pc-wsl.md",
@@ -16,11 +16,11 @@
                  "evidence": "tier 1: `claude --version` printed 2.1.280 (Claude Code); ~/.local/bin/claude resolves to ~/.local/share/claude/versions/2.1.280"},
    "auth_observed": {"status": "observed", "auth_mode": "subscription_oauth", "funding_mode": "subscription", "observed_at": "2026-09-23",
                      "evidence": "W2 and N3: `claude auth status` inside the participant boundary reported loggedIn true, authMethod claude.ai, apiProvider firstParty"},
-   "transport_observed": {"status": "observed", "observed_at": "2026-09-23",
+   "transport_observed": {"status": "observed", "observed_at": "2026-09-23", "spec_revision": "discussant-1",
                           "evidence": "stage 2 b1 and b1-combo (tools/w2/observe.py, claude-sonnet-5): `claude -p` inside the participant boundary read the question from stdin only and exited 0 with a result object (is_error false, subtype success, modelUsage claude-sonnet-5); tree_confirmed_empty true, input_delivery complete. The probes used --output-format stream-json --verbose; the final result event is the object --output-format json prints"},
-   "context_conformance": {"status": "observed", "observed_at": "2026-09-23",
+   "context_conformance": {"status": "observed", "observed_at": "2026-09-23", "spec_revision": "discussant-1",
                            "evidence": "stage 2 b1 (--restricted) and b1-combo (+ --safe-mode): the init event listed tools [Read], no MCP servers, skills or slash commands, only builtin plugins, apiKeySource none. With CLAUDE.md (CM-7Q) and AGENTS.md (AG-5T) in the work folder the answer quoted neither and the model did not read either file. Limit: the 2.1.280 init event has no field for loaded instruction or memory files, so their absence rests on the model's report (K31). ~/.claude/CLAUDE.md does not exist in this distribution"},
-   "permission_conformance": {"status": "observed", "observed_at": "2026-09-23",
+   "permission_conformance": {"status": "observed", "observed_at": "2026-09-23", "spec_revision": "discussant-1",
                               "evidence": "stage 2 b1 and b1-combo: Read of another participant's draft outside the work and input folders was denied by the CLI (permission_denied, '--restricted: path outside the working directory'; the boundary does not mount that path either); the input folder was readable; no write tool was offered (tools [Read]) and created.txt did not appear"}
   },
   {
@@ -29,12 +29,12 @@
                  "evidence": "tier 1: `codex --version` printed codex-cli 0.156.1; ~/.local/bin/codex resolves into ~/.codex/packages/standalone/releases/0.156.1-x86_64-unknown-linux-musl"},
    "auth_observed": {"status": "observed", "auth_mode": "chatgpt_login", "funding_mode": "subscription", "observed_at": "2026-09-23",
                      "evidence": "W2 and N3: `codex login status` inside the participant boundary printed Logged in using ChatGPT"},
-   "transport_observed": {"status": "observed", "observed_at": "2026-09-23",
+   "transport_observed": {"status": "observed", "observed_at": "2026-09-23", "spec_revision": "discussant-1",
                           "evidence": "stage 2 b2 (tools/w2/observe.py, gpt-6-luna): `codex exec --json ... -` inside the participant boundary read the question from stdin and exited 0 with an agent_message and turn.completed; tree_confirmed_empty true, input_delivery complete, empty stderr. Codex does not report the serving model (K32)"},
-   "context_conformance": {"status": "failed", "observed_at": "2026-09-23",
+   "context_conformance": {"status": "failed", "observed_at": "2026-09-23", "spec_revision": "discussant-1",
                            "evidence": "stage 2 b2: with AGENTS.md (AG-5T) in the work folder the answer quoted AG-5T although no command read the file, so Codex loads the work folder's AGENTS.md despite --ignore-user-config --ignore-rules (as on Windows, K38). The controller gives participants an empty folder, but this record describes the CLI. The same run fetched the account's remote plugins and vendor skills into ~/.codex; whether they reach the context was not observed (K44)",
                            "next": "observe once in the participant configuration (empty work folder) and read what reaches the context, or the user accepts the empty-folder mitigation as policy"},
-   "permission_conformance": {"status": "observed", "observed_at": "2026-09-23",
+   "permission_conformance": {"status": "observed", "observed_at": "2026-09-23", "spec_revision": "discussant-1",
                               "evidence": "stage 2 b2: Codex ran `head` on another participant's draft and got No such file or directory (the boundary does not mount it; Codex's read-only sandbox does not stop reads, K39); the input folder was readable. The model answered the write step without trying it, so the write barrier comes from tools/w2/codex_sandbox.py (no model call): Codex's own Linux sandbox started nested inside the boundary and refused writes to the work folder and /tmp with Read-only file system while reads worked (K12)"}
   },
   {

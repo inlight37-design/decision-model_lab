@@ -1,33 +1,39 @@
 """K46: 참여자의 Codex 권한 profile(core.adapters.codex_permissions)을 모델 없이 본다.
 
-1. sandbox — `codex sandbox`에 그 profile을 exec와 같은 방식(`-c default_permissions=…`, `-P` 없이)으로 준다.
-   명령이 인증 파일을 열 수 있는지, 작업 폴더 쓰기가 막히는지, 공통 자료가 읽히는지. 비교로 profile 없는 기본값과
-   2026-09-24 진단의 `-P` 방식도 돈다.
-2. exec(네트워크 없음) — 참여자의 실제 exec argv(CliExecutor.prepare)를 **새 네트워크 namespace**의 격리에서 돌린다.
-   loopback만 있어 모델에 닿을 수 없다 — 사용량을 쓰지 않는다. 설정을 받아들이고 연결 단계까지 가는지, 없는 profile
-   이름을 주면 연결 전에 끝나는지(observe.py p3-codex의 근거), 사람용 출력의 머리글이 샌드박스를 무엇으로 보이는지.
+기본 — 합성 HOME. 사용자의 로그인 상태를 연결하지 않는다(2026-09-24 리뷰 질문 3·9).
+  가짜 `~/.codex/auth.json`을 둔 합성 HOME에서 `codex sandbox`로 observe.py `k46-codex`와 같은 helper를 돌린다. profile
+  없는 기본값(대조군: 인증 파일이 열려야 한다)과 exec 방식(`default_permissions`)·`-P` 방식의 profile을 비교한다. helper의
+  결과는 errno 이름이라 profile이 막을 때 무엇이 나오는지(EACCES·EPERM인지, ENOENT인지) 알 수 있다 — k46-codex의 합격
+  조건이 그것에 기댄다. 네트워크 없는 격리에서 돈다.
+
+--real-home — **사용자 허락 뒤에만.** 사용자의 실제 `~/.codex`(로그인 파일 포함)를 연결한다.
+  1. 같은 helper를 실제 HOME에서(기본값, `default_permissions`, `-P`).
+  2. 참여자의 실제 exec argv를 네트워크 없는 격리에서: 설정을 받아들이는지, 없는 profile을 연결 전에 거절하는지, 사람용
+     머리글이 무엇을 보이는지. 모델에 닿을 수 없지만 로컬 상태·캐시·로그는 바뀔 수 있다. 인증 파일은 크기·수정 시각만
+     전후로 비교한다 — 내용이 같다는 증명은 아니다(리뷰 R07).
 
 exec가 모델이 돌린 명령에 이 금지를 적용하는지는 여기서 볼 수 없다 — 승인된 호출(observe.py k46-codex)이 본다.
-인증 파일의 내용은 출력하지 않는다. 명령은 종료 코드만 찍고, 도구는 실행 전후의 크기·수정 시각이 같은지만 본다.
 
-  python3 tools/w2/codex_profile.py        # WSL·Linux에서, 저장소 루트에서, 로그인 셸(bash -l)로
+  python3 tools/w2/codex_profile.py [--real-home]   # WSL·Linux에서, 저장소 루트에서, 로그인 셸(bash -l)로
+결과: docs/experiments/w2-isolation/k46-profile-aux-pc-wsl.md(실제 HOME, 2026-09-24),
+      docs/experiments/w2-isolation/k46-synthetic-aux-pc-wsl.md(합성 HOME)
 """
-import json, os, shutil, sys, tempfile
+import argparse, json, os, shutil, sys, tempfile
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from app.cli_executor import CliExecutor  # noqa: E402
+from app.cli_executor import SANDBOX_ENV, CliExecutor  # noqa: E402
 from app.controller import CLI, ParticipantSpec  # noqa: E402
 from core import adapters, isolation, runner  # noqa: E402
-from tools.w2.observe import AUTH_CHECK, _scrub  # noqa: E402
+from tools.w2.observe import K46_FILE, K46_HELPER, K46_LINE, _scrub  # noqa: E402
 
 HOME = os.path.realpath(os.path.expanduser("~"))
-AUTH = os.path.join(HOME, adapters.CODEX_AUTH_FILE)
 MODEL = "gpt-6-luna"  # argv에만 쓴다. 네트워크가 없어 모델에 닿지 않는다
+FAKE_AUTH = '{"synthetic": "not a credential"}\n'
 
 
-def _auth_stat():
+def _auth_stat(home):
     try:
-        info = os.stat(AUTH)
+        info = os.stat(os.path.join(home, adapters.CODEX_AUTH_FILE))
     except OSError:
         return None
     return info.st_size, info.st_mtime_ns
@@ -38,36 +44,12 @@ def _folders(root):
     os.mkdir(work)
     os.mkdir(inputs)
     Path(inputs, "allowed.txt").write_text("AL-3K readable\n", encoding="utf-8")
+    Path(inputs, K46_FILE).write_text(K46_HELPER.format(nonce="diagnostic"), encoding="utf-8")
     return work, inputs
 
 
-def _lines(text, limit):
-    return [_scrub(line, HOME)[:240] for line in text.splitlines() if line.strip()][:limit]
-
-
-def sandbox_variants(exe, ro, rw):
-    define, select = adapters.codex_permissions(HOME)
-    variants = {"no profile (default)": [],
-                "profile via default_permissions (exec's way)": ["-c", define, "-c", select],
-                "profile via -P (2026-09-24 diagnostic)": ["-c", define, "-P", adapters.CODEX_PROFILE]}
-    out = {}
-    for name, extra in variants.items():
-        root = tempfile.mkdtemp(prefix="dml-k46-")
-        try:
-            work, inputs = _folders(root)
-            box = isolation.Sandbox(work_dir=work, home=HOME, read_only=ro + (inputs,), read_write=rw,
-                                    env={"LANG": "C.UTF-8", "NO_COLOR": "1"})
-            shell = AUTH_CHECK.format(allowed=os.path.join(inputs, "allowed.txt"))  # observe.py k46-codex와 같은 명령
-            result = isolation.run([exe, "sandbox", *extra, "--", "/bin/sh", "-c", shell], box, timeout=60)
-            values = dict(line.split("=", 1) for line in result.stdout.splitlines() if "_rc=" in line)
-            out[name] = {"state": result.state, "exit": result.exit_code,
-                         "tree_confirmed_empty": result.tree_confirmed_empty,
-                         "write_refused": values.get("write_rc") not in (None, "0")
-                         and not os.path.exists(os.path.join(work, "created.txt")),
-                         **values, "stderr": _lines(result.stderr, 6)}
-        finally:
-            shutil.rmtree(root, ignore_errors=True)
-    return out
+def _lines(text, limit, home=HOME):
+    return [_scrub(line, home)[:240] for line in text.splitlines() if line.strip()][:limit]
 
 
 def offline(argv, box, stdin_text, timeout):
@@ -79,6 +61,49 @@ def offline(argv, box, stdin_text, timeout):
     return runner._execute(runner.validate_argv(args), cwd=os.path.realpath(box.work_dir), env=env, timeout=timeout,
                            stdin_text=stdin_text, max_output_bytes=runner.DEFAULT_MAX_OUTPUT, cancel=None,
                            pid_namespace=True)
+
+
+def profile_variants(home):
+    define, select = adapters.codex_permissions(home)
+    return {"no profile (control)": [],
+            "profile via default_permissions (exec's way)": ["-c", define, "-c", select],
+            "profile via -P": ["-c", define, "-P", adapters.CODEX_PROFILE]}
+
+
+def helper_variants(exe, home, read_write):
+    """`codex sandbox -- python3 <helper>`를 변형마다 한 번. read_write는 격리 안에 쓰기로 연결할 설정 폴더다."""
+    out = {}
+    for name, extra in profile_variants(home).items():
+        root = tempfile.mkdtemp(prefix="dml-k46-")
+        try:
+            work, inputs = _folders(root)
+            ro = (os.path.dirname(os.path.dirname(os.path.realpath(exe))), inputs)
+            box = isolation.Sandbox(work_dir=work, home=home, read_only=ro, read_write=read_write, env=SANDBOX_ENV)
+            before = _auth_stat(home)
+            result = offline([exe, "sandbox", *extra, "--", "/usr/bin/python3", os.path.join(inputs, K46_FILE)],
+                             box, None, timeout=60)
+            lines = [m.groups() for line in result.stdout.splitlines() if (m := K46_LINE.match(line.strip()))]
+            out[name] = {"state": result.state, "exit": result.exit_code,
+                         "tree_confirmed_empty": result.tree_confirmed_empty,
+                         "result": dict(zip(("write", "input", "auth"), lines[0][1:])) if len(lines) == 1 else None,
+                         "created_txt_left": os.path.exists(os.path.join(work, "created.txt")),
+                         "auth_size_mtime_unchanged": _auth_stat(home) == before,
+                         "stderr": _lines(result.stderr, 6, home)}
+        finally:
+            shutil.rmtree(root, ignore_errors=True)
+    return out
+
+
+def synthetic(exe):
+    """합성 HOME: 가짜 인증 파일 하나만 있는 `~/.codex`. 사용자의 실제 `~/.codex`는 연결하지 않는다."""
+    root = tempfile.mkdtemp(prefix="dml-k46-home-")
+    try:
+        home = os.path.realpath(os.path.join(root, "home"))
+        os.makedirs(os.path.join(home, ".codex"))
+        Path(home, adapters.CODEX_AUTH_FILE).write_text(FAKE_AUTH, encoding="utf-8")
+        return {"home": "synthetic", "helper": helper_variants(exe, home, (os.path.join(home, ".codex"),))}
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
 
 
 def exec_variants(executor):
@@ -98,7 +123,7 @@ def exec_variants(executor):
                 argv.remove("--json")
             if name.startswith("undefined"):
                 argv[argv.index(select)] = 'default_permissions="notamode"'
-            before = _auth_stat()
+            before = _auth_stat(HOME)
             result = offline(argv, box, planned.stdin_text, timeout=90)
             events = []
             for line in result.stdout.splitlines():
@@ -112,18 +137,23 @@ def exec_variants(executor):
                          "exit": result.exit_code, "duration_ms": result.duration_ms,
                          "tree_confirmed_empty": result.tree_confirmed_empty, "jsonl_types": events[:20],
                          "stdout_text": [s for s in _lines(result.stdout, 40) if not s.startswith("{")][:20],
-                         "stderr": _lines(result.stderr, 30), "auth_file_unchanged": _auth_stat() == before}
+                         "stderr": _lines(result.stderr, 30), "auth_size_mtime_unchanged": _auth_stat(HOME) == before}
         finally:
             shutil.rmtree(root, ignore_errors=True)
     return out
 
 
-def main():
+def main(argv=None):
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("--real-home", action="store_true",
+                    help="also run against the user's real ~/.codex (only after the user agreed)")
+    args = ap.parse_args(argv)
     executor = CliExecutor(never=(), unchecked=True, home=HOME)
     exe = adapters.resolve("codex", executor.child_env)
-    ro, rw = isolation.cli_mounts("codex", exe, HOME)
-    report = {"codex": _scrub(os.path.realpath(exe), HOME), "sandbox": sandbox_variants(exe, ro, rw),
-              "exec_offline": exec_variants(executor)}
+    report = {"codex": _scrub(os.path.realpath(exe), HOME), "synthetic": synthetic(exe)}
+    if args.real_home:
+        _ro, rw = isolation.cli_mounts("codex", exe, HOME)
+        report["real_home"] = {"helper": helper_variants(exe, HOME, rw), "exec_offline": exec_variants(executor)}
     print(json.dumps(report, ensure_ascii=False, indent=1))
 
 

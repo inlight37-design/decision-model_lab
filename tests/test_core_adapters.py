@@ -131,6 +131,24 @@ class ArgvTests(unittest.TestCase):
             with self.subTest(call=call), self.assertRaises(AdapterError):
                 build_argv(call.pop("adapter_id"), exe=EXE, prompt="Q", model="m", **call)
 
+    def test_each_spec_revision_pins_its_argv(self):
+        """argv를 바꾸면 SPEC_REVISION도 올리고 여기에 새 판을 적는다. 기록의 관측은 옛 판에 묶여 있어 다시 관측해야
+        한다(2026-09-24 리뷰 R04). 이 시험이 실패하면 argv만 고치지 말고 판을 올린다."""
+        pinned = {
+            ("claude-code", "discussant-1"): (
+                ["-p", "--output-format", "json", "--model", "m", "--permission-mode", "dontAsk",
+                 "--no-session-persistence", "--strict-mcp-config", "--disable-slash-commands", "--restricted",
+                 "--tools", ""], {}),
+            ("codex", "discussant-2"): (
+                ["exec", "--json", "--skip-git-repo-check", "--ephemeral", "--ignore-user-config", "--ignore-rules",
+                 "-c", *adapters.codex_permissions("/home/u")[:1], "-c", adapters.codex_permissions("/home/u")[1],
+                 "--model", "m", "-"], {"codex_user_home": "/home/u"}),
+        }
+        for (adapter_id, revision), (expected, extra) in pinned.items():
+            with self.subTest(adapter=adapter_id):
+                self.assertEqual(adapters.SPEC_REVISION[adapter_id], revision)
+                self.assertEqual(build_argv(adapter_id, exe=EXE, prompt="Q", model="m", **extra)[1:], expected)
+
     def test_agy_is_off_until_the_user_turns_it_on(self):
         with self.assertRaises(AdapterError):
             build_argv("antigravity", exe=EXE, prompt="Q", model="gemini-x")

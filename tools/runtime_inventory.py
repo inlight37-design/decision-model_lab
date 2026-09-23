@@ -421,8 +421,9 @@ def validate_manifest(manifest: Any) -> list[str]:
 def validate_manifest_v2(manifest: Any) -> list[str]:
     """`runtime-inventory/2` 기록이 규칙을 지키는지 본다(인계 N4). 기록된 관측이 사실인지는 판정하지 않는다.
 
-    칸 다섯 개(core.eligibility.FIELDS)가 모두 있고, observed·failed에는 근거와 날짜가 있어야 한다. 실행 허가
-    (`eligible_for_run`)와 `configured`는 저장하지 않는다 — 실행 직전에 core.eligibility가 계산한다.
+    칸 다섯 개(core.eligibility.FIELDS)가 모두 있고, observed·failed에는 근거와 날짜가 있어야 한다. 참여자 argv로 본
+    세 칸에는 그때의 실행 명세 판(spec_revision)도 있어야 한다. 실행 허가(`eligible_for_run`)와 `configured`는 저장하지
+    않는다 — 실행 직전에 core.eligibility가 계산한다.
     """
     errors: list[str] = []
     if not isinstance(manifest, dict) or manifest.get("schema") != eligibility.SCHEMA:
@@ -448,21 +449,8 @@ def validate_manifest_v2(manifest: Any) -> list[str]:
         stored = sorted({"eligible_for_run", "configured"} & set(row))
         if stored:
             errors.append(f"{aid}: {stored} must not be stored; eligibility is computed right before a run")
-        for field in eligibility.FIELDS:
-            entry = row.get(field)
-            if not isinstance(entry, dict) or entry.get("status") not in eligibility.STATUSES:
-                errors.append(f"{aid}.{field}: status must be one of {', '.join(eligibility.STATUSES)}")
-                continue
-            if entry["status"] != "unknown":
-                evidence, moment = entry.get("evidence"), entry.get("observed_at")
-                if not (isinstance(evidence, str) and evidence.strip()
-                        and isinstance(moment, str) and OBSERVED_AT.fullmatch(moment)):
-                    errors.append(f"{aid}.{field}: {entry['status']} needs a non-empty evidence string "
-                                  "and observed_at as YYYY-MM-DD or YYYY-MM-DDTHH:MM:SSZ")
-        installed = row.get("installed") if isinstance(row.get("installed"), dict) else {}
-        if installed.get("status") == "observed" and not (
-                isinstance(installed.get("version"), str) and installed["version"].strip()):
-            errors.append(f"{aid}.installed: observed needs the version")
+        # 실행 허가(core.eligibility)와 같은 구조 검사를 쓴다(2026-09-24 리뷰 R02)
+        errors += [f"{aid}.{problem}" for problem in eligibility.row_problems(row)]
         auth = row.get("auth_observed") if isinstance(row.get("auth_observed"), dict) else {}
         if auth.get("status") == "observed" and (auth.get("auth_mode") not in AUTH_MODES
                                                  or auth.get("funding_mode") not in FUNDING_MODES):
