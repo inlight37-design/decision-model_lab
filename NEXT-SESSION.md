@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-23** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout) · 브랜치 `claude/wsl2-boundary-review-20260923`
+최종 갱신 **2026-09-23** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout) · 브랜치 `claude/execution-spec-20260923`
 
 이 파일 하나에서 시작한다. 절 구성은 고정이고 CI가 확인한다. 규칙은 [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있다. 이 판은 2026-09-23 하루치 작업을 끝내며 남은 일을 다시 정리한 판에, 같은 날의 [경계 리뷰 반영](docs/reviews/2026-09-23-wsl2-boundary/RESPONSE.md)을 더한 것이다. **실행 기반을 WSL2로 옮기기로 했다**(2절 15·16). 통째로 다시 쓴 마지막 판은 [docs/handoff/](docs/handoff/README.md)에 보관했다.
 
@@ -18,7 +18,7 @@
 
 | 도구 | 무엇이고 무엇이 아닌가 |
 |---|---|
-| [`core/`](core/README.md) | V04-03 실행 코어. `runner`는 CLI 한 번을 셸 없이 실행하고 추적 단위(Windows job object / POSIX 프로세스 그룹)가 비었는지 확인한다(못 하면 `unknown`). 자손 전체가 끝났는지는 `tree_confirmed_empty`가 따로 말하고, 프로세스 그룹에서는 `None`이다. `adapters`는 읽기 전용 논의자 argv 조립·위험 플래그 거절·출력 판정. `membership`은 참여자가 빠지거나 바뀔 때의 결정이고, 공개 전에는 구성이 바뀔 때마다 정족수를 다시 본다. mock 시험과 aux-pc [conformance](docs/experiments/v04-03-conformance/aux-pc.md)에서 실제 CLI를 돌렸다. **controller·화면은 없다** |
+| [`core/`](core/README.md) | V04-03 실행 코어. `runner`는 CLI 한 번을 셸 없이 실행하고 추적 단위(Windows job object / POSIX 프로세스 그룹)가 비었는지 확인한다(못 하면 `unknown`). 자손 전체가 끝났는지는 `tree_confirmed_empty`가 따로 말하고, 프로세스 그룹에서는 `None`이다. `adapters`는 읽기 전용 논의자 실행 명세 조립(질문은 stdin, agy만 명령줄)·위험 플래그 거절·출력 판정. `env`는 자식 환경과 실행 파일 찾기(WSL에서 Windows 실행 파일 거절). `membership`은 참여자가 빠지거나 바뀔 때의 결정이고, 공개 전에는 구성이 바뀔 때마다 정족수를 다시 본다. mock 시험과 aux-pc [conformance](docs/experiments/v04-03-conformance/aux-pc.md)에서 실제 CLI를 돌렸다. **controller·화면은 없다** |
 | [`tools/v04-03/conformance.py`](tools/v04-03/conformance.py) | 합성 파일로 논의자 설정을 관측하는 스크립트. 일부 명령은 모델을 부른다 |
 | [`check_frontier_protocol.py`](tools/check_frontier_protocol.py) | 합성 완료 기록의 일관성 검사. 기록된 disposition이 규칙에 맞는지 **검사할 뿐 계산하지 않는다** |
 | [`review_boundary.py`](tools/review_boundary.py) | PR #3의 순수 함수 경계 실험(이벤트 순서, UNKNOWN 예산, 봉인 화면, 한도 표시). 서버·프로세스 제어가 아니다 |
@@ -83,7 +83,7 @@
 
 2026-09-23의 작업은 모두 main에 병합됐다 — V04-01 리뷰([PR #4](https://github.com/inlight37-design/decision-model_lab/pull/4))와 반영, Hermes 패턴 조사([PR #5](https://github.com/inlight37-design/decision-model_lab/pull/5))와 교차 확인, V04-03 실행 코어, 첫 conformance와 Codex 샌드박스 원인 확인, 인계 정리(`claude/handoff-cleanup-20260923`). 사용자는 **CI 녹색을 확인한 claude 세션이 main에 직접 병합하는 것**을 허락했다(2026-09-23).
 
-**지금 병합되지 않은 브랜치: 없음.** 경계 리뷰 보존과 반영(`claude/wsl2-boundary-review-20260923`, 4절 1단계)은 병합됐다. 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 이 줄을 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다.
+**지금 병합되지 않은 브랜치: `claude/execution-spec-20260923`** — 실행 명세·stdin(A4), core 환경 모듈(A7). 경계 리뷰 보존과 반영(`claude/wsl2-boundary-review-20260923`, 4절 1단계)은 병합됐다. 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 이 줄을 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다.
 
 ## 4. 다음 작업
 
@@ -92,7 +92,7 @@
 | 단계 | 할 일 | 모델 호출 | 선행 |
 |---|---|---|---|
 | 1 | 경계 리뷰 R01–R04의 회귀 시험과 수정 | 없음 | **끝**(`claude/wsl2-boundary-review-20260923`) |
-| 2 | **A1 controller와 모의 모드 화면**(사용자에게 띄워 보여 준다), A4 실행 명세와 stdin, A7 core 환경 모듈, A2·A5·A6 | 없음 | 없음 |
+| 2 | A4 실행 명세와 stdin, A7 core 환경 모듈(**끝**, `claude/execution-spec-20260923`). **A1 controller와 모의 모드 화면**(사용자에게 띄워 보여 준다), A2·A5·A6 | 없음 | 없음 |
 | 3 | **W1 WSL2 설치와 Linux CLI 준비**, V04-01을 새 호스트 이름으로 다시 | tier 2 몇 회 | 사용자 설치·로그인, 승인 |
 | 4 | **W2 bubblewrap 경계 시험**과 runner의 `pid_namespace` 추적 단위 | 없음 | 3 |
 | 5 | B1·B2를 WSL2에서, 그 뒤 **B3 V04-03 pilot과 사용량 비교** | 여러 번 | 2, 4, 승인 |
@@ -111,10 +111,10 @@
   - 화면: [Ledger 디자인 시스템](design/README.md). 첫 화면 Q4(결정 우선 / 대조표 우선)를 같은 내용으로 바꿔 볼 수 있게 한다. 사용량은 두 층(아래 B3)의 자리를 둔다. 화면과 controller 사이 제어 API는 참여자가 닿지 못하게 한다(localhost TCP면 참여자에게 없는 토큰으로 막는다).
 - **A2. 수동 전달.** 참여자 카드가 "사용자 전달 대기"로 서고, 앱이 봉인된 질문을 복사해 준다. 답은 붙여넣기나 앱이 지켜보는 결과 폴더로 받아 같은 카드에 채운다. 질문과 답에 run·attempt·입력 digest를 연결해 늦게 온 이전 실행의 답과 중복 제출을 가린다. MCP는 필요 없다. 수동 참여자의 사용량·시간은 "관측 안 됨"으로 표시한다.
 - **A3. Codex 읽기 차단 설정(추가 방어층, 낮음).** 설정 문서에 권한 프로필 `permissions.<name>.filesystem`의 `"deny"`가 있다(2026-09-23 확인). 우리 adapter는 `--ignore-user-config`를 쓰고 `-c`·`--profile`을 금지하므로, 쓰려면 금지 목록 조정이 필요하다. 격리의 주 수단은 4단계 bubblewrap이다.
-- **A4. 실행 명세와 stdin.** 실행 옵션과 데이터를 나눈다(argv, stdin 바이트, cwd, 환경 프로필, 격리 프로필). 입력은 stdin으로 준다 — 지금 adapter는 프롬프트를 명령줄 인자로 넘기고 Windows 상한 30,000자를 플랫폼과 무관하게 적용한다. Linux는 인자 하나가 약 128KiB를 넘으면 실행이 실패하고, 같은 사용자의 프로세스가 `/proc`에서 명령줄을 볼 수 있다. 로그에는 프롬프트 대신 입력 digest와 바이트 수만 남긴다. Codex 명령 거절 흔적은 보관 상한과 무관하게 스트림 전체에서 센다(경계 리뷰 R04의 남은 것). 설치 버전에서 EOF·큰 한글 입력·선행 대시·전송 실패를 시험한다.
+- **A4. 실행 명세와 stdin — 코드는 끝.** `adapters.build_spec()`이 `ExecutionSpec`을 돌려준다. argv에는 옵션만 있고 질문은 stdin으로 간다(Claude는 `-p`에 위치 인자 없이, Codex는 `exec … -`). 기록에는 입력 digest와 바이트 수만 남긴다. Claude 문서의 stdin 상한 10MB를 조립 전에 막는다. agy는 stdin 입력을 확인하지 못해 명령줄로 보낸다(B4에서 확인). cwd·환경·격리는 controller가 정한다(A1, W2). **남은 것:** 설치 버전에서 EOF·큰 한글 입력·선행 대시·전송 실패를 관측한다(W1 뒤 B1·B2와 함께, 모델 호출). Codex 명령 거절 흔적을 보관 상한과 무관하게 스트림 전체에서 세는 일(경계 리뷰 R04의 남은 것) — 지금은 stderr가 잘리면 답을 받지 않는다.
 - **A5. manifest `runtime-inventory/2`.** controller가 adapter 상태를 읽게 될 때 `installed`·`auth_observed`·`transport_observed`·`context_conformance`·`permission_conformance`로 나누고, 실행 허가(`eligible_for_run`)는 실행 직전에 계산한다(PR #4 R02·R05).
 - **A6. 입력 manifest.** 참여자마다 같은 공통 자료를 받았는지 digest로 고정한다(Hermes 조사 HP-02).
-- **A7. core 환경 모듈.** `core/adapters.py`가 `tools.runtime_inventory`에서 가져오는 환경 규칙을 core의 작은 모듈로 옮기고, tools가 그 모듈을 쓰게 의존 방향을 뒤집는다(경계 리뷰 R05).
+- **A7. core 환경 모듈 — 끝.** 환경 규칙을 [`core/env.py`](core/env.py)로 옮기고 `tools/runtime_inventory.py`가 그것을 쓴다(경계 리뷰 R05). core가 tools를 가져오지 않는 것을 시험이 막는다. WSL에서는 자식 PATH의 Windows 드라이브 항목(`/mnt/c/…`)을 빼고, 실행 파일이 Windows 쪽으로 풀리면 거절한다 — WSL은 기본으로 Windows PATH를 이어 붙인다.
 
 ### W. WSL2로 옮기기
 

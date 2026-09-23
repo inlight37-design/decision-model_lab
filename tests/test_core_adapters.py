@@ -1,12 +1,13 @@
 """core.adapters 검사. 파서는 aux-pc V04-01에서 실제로 받은 출력(tier2/*.txt)을 그대로 쓴다.
 CLI·모델은 부르지 않는다."""
+import hashlib
 import os
 from pathlib import Path
 import sys
 import unittest
 
-from core import adapters
-from core.adapters import AdapterError, build_argv, child_env, interpret
+from core import adapters, runner
+from core.adapters import AdapterError, build_spec, child_env, interpret
 from core.runner import EXITED, TIMED_OUT, UNKNOWN, RunResult
 from tools.runtime_inventory import ENV_VARS
 
@@ -48,10 +49,14 @@ class EnvironmentTests(unittest.TestCase):
         self.assertEqual(env["PATH"], "sys;usr")
 
 
+def build_argv(adapter_id, **kwargs):
+    return list(build_spec(adapter_id, **kwargs).argv)
+
+
 class ArgvTests(unittest.TestCase):
     def test_claude_discussant_is_restricted_and_toolless(self):
         argv = build_argv("claude-code", exe=EXE, prompt="Q", model="claude-opus-5-5")
-        self.assertEqual(argv[:3], [EXE, "-p", "Q"])
+        self.assertEqual(argv[:3], [EXE, "-p", "--output-format"])  # 질문은 argv에 없다
         for flag in ("--restricted", "--strict-mcp-config", "--disable-slash-commands", "--no-session-persistence"):
             self.assertIn(flag, argv)
         self.assertEqual(argv[argv.index("--permission-mode") + 1], "dontAsk")
@@ -71,7 +76,7 @@ class ArgvTests(unittest.TestCase):
         self.assertEqual(argv[1:3], ["exec", "--json"])
         self.assertEqual(argv[argv.index("--sandbox") + 1], "read-only")
         self.assertIn("--ignore-user-config", argv)
-        self.assertEqual(argv[-1], "Q")
+        self.assertEqual(argv[-1], "-")  # 지시문은 stdin에서 읽는다
 
     def test_codex_windows_sandbox_is_the_only_config_override(self):
         """openai/codex#42172: --ignore-user-config가 Windows 샌드박스 선택까지 버린다."""
@@ -103,24 +108,53 @@ class ArgvTests(unittest.TestCase):
 
     def test_requests_refused_before_building(self):
         cases = (dict(adapter_id="nope"), dict(prompt=""), dict(exe="claude"), dict(role="writer"),
-                 dict(read_dirs=["relative"]), dict(claude_context="bare"), dict(prompt="x" * 40_000))
+                 dict(read_dirs=["relative"]), dict(claude_context="bare"),
+                 dict(prompt="x" * (adapters.CLAUDE_MAX_STDIN + 1)),
+                 dict(adapter_id="antigravity", enabled=True, prompt="x" * 40_000))  # agy는 아직 argv
         for case in cases:
             call = dict(adapter_id="claude-code", exe=EXE, prompt="Q", model="m")
             call.update(case)
-            with self.subTest(case=case), self.assertRaises(AdapterError):
+            with self.subTest(case=str(case)[:80]), self.assertRaises(AdapterError):
                 build_argv(call.pop("adapter_id"), **call)
 
     def test_forbidden_arguments_never_appear_outside_user_text(self):
         for adapter_id in adapters.ADAPTERS:
             argv = build_argv(adapter_id, exe=EXE, prompt="--yolo --bare", model="m", enabled=True)
-            prompt_index = argv.index("--yolo --bare")
-            others = [a for i, a in enumerate(argv) if i != prompt_index]
+            others = [a for a in argv if a != "--yolo --bare"]
             with self.subTest(adapter=adapter_id):
                 self.assertFalse(set(others) & adapters.FORBIDDEN[adapter_id])
         with self.assertRaises(AdapterError):
             adapters._check("codex", [EXE, "exec", "--dangerously-bypass-approvals-and-sandbox", "Q"], user_text=(3,))
         with self.assertRaises(AdapterError):
             adapters._check("claude-code", [EXE, "-p", "Q", "--fallback-model", "haiku"], user_text=(2,))
+
+
+class ExecutionSpecTests(unittest.TestCase):
+    """경계 리뷰 R06·인계 A4. 질문 본문은 stdin으로 가고 argv에 남지 않는다. 기록에는 digest와 크기만."""
+
+    def test_question_goes_to_stdin_and_only_its_digest_is_recorded(self):
+        question = "--yolo 선행 대시로 시작하는 한글 질문. " * 2000  # 명령줄이었다면 Windows 상한을 넘는다
+        data = question.encode("utf-8")
+        for adapter_id in ("claude-code", "codex"):
+            spec = build_spec(adapter_id, exe=EXE, prompt=question, model="m")
+            with self.subTest(adapter=adapter_id):
+                self.assertEqual(spec.input_via, adapters.STDIN)
+                self.assertEqual(spec.stdin_text, question)
+                self.assertFalse(any("선행 대시" in a for a in spec.argv))
+                self.assertEqual((spec.input_bytes, spec.input_sha256),
+                                 (len(data), hashlib.sha256(data).hexdigest()))
+
+    def test_agy_keeps_the_question_on_the_command_line_until_stdin_is_observed(self):
+        spec = build_spec("antigravity", exe=EXE, prompt="Q", model="g", enabled=True)
+        self.assertEqual((spec.input_via, spec.stdin_text), (adapters.ARGV, None))
+        self.assertEqual(spec.argv[1:3], ("-p", "Q"))
+
+    def test_the_runner_delivers_the_question_byte_for_byte(self):
+        """가짜 CLI가 stdin을 그대로 돌려준다. 한글과 선행 대시, 줄바꿈이 그대로 가는지 본다."""
+        spec = build_spec("codex", exe=EXE, prompt="첫 줄\n-둘째 줄", model="m")
+        echo = [sys.executable, "-c", "import sys; sys.stdout.buffer.write(sys.stdin.buffer.read())"]
+        result = runner.run(echo, cwd=ABS_DIR, env=dict(os.environ), timeout=20, stdin_text=spec.stdin_text)
+        self.assertEqual(result.stdout, "첫 줄\n-둘째 줄")
 
 
 class InterpretRecordedTests(unittest.TestCase):

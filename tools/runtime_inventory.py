@@ -34,6 +34,8 @@ import time
 from typing import Any, Callable, Iterator, Mapping
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))  # `python tools/runtime_inventory.py`로 실행해도 core를 찾는다
+from core.env import AI_TOOL_VARS, ENV_VARS, fresh_environment  # noqa: E402,F401 — 이 도구의 이름으로도 쓴다
 SCHEMA = "runtime-inventory/1"
 DEFAULT_OUT = ROOT / "docs/experiments/v04-01-inventory/hosts"
 
@@ -112,24 +114,8 @@ ADAPTERS: tuple[Adapter, ...] = (
     ), "agy와 다른 제품이다. 둘을 같은 quota pool로 가정하지 않기 위해 설치 여부만 구분한다."),
 )
 
-# 값은 절대 읽지 않는다. 존재 여부만 기록한다. 과금 경로나 설정 위치를 바꾸는 변수들이다.
-ENV_VARS: tuple[tuple[str, str, str], ...] = (
-    ("CLAUDE_CODE_USE_BEDROCK", "claude-code", "클라우드 provider 인증이 최우선"),
-    ("CLAUDE_CODE_USE_VERTEX", "claude-code", "클라우드 provider 인증이 최우선"),
-    ("CLAUDE_CODE_USE_FOUNDRY", "claude-code", "클라우드 provider 인증이 최우선"),
-    ("ANTHROPIC_AUTH_TOKEN", "claude-code", "구독 로그인보다 우선"),
-    ("ANTHROPIC_API_KEY", "claude-code", "-p에서는 묻지 않고 사용 — API 과금"),
-    ("CLAUDE_CODE_OAUTH_TOKEN", "claude-code", "장기 구독 토큰. --bare는 읽지 않음"),
-    ("ANTHROPIC_PROFILE", "claude-code", "명명된 profile이 /login보다 우선"),
-    ("ANTHROPIC_BASE_URL", "claude-code", "요청 대상 endpoint 변경"),
-    ("CLAUDE_CONFIG_DIR", "claude-code", "설정·자격증명 위치 변경"),
-    ("OPENAI_API_KEY", "codex", "API 키 로그인에 쓰일 수 있음"),
-    ("CODEX_API_KEY", "codex", "exec 자동화용 API 키"),
-    ("CODEX_HOME", "codex", "설정·자격증명 위치 변경"),
-    ("GEMINI_API_KEY", "antigravity", "modelProvider=gemini와 함께 API 키 모드"),
-    ("GOOGLE_API_KEY", "antigravity", "Google API 키 경로"),
-    ("GOOGLE_GENAI_USE_VERTEXAI", "antigravity", "Vertex 경로 전환"),
-)
+# 과금 경로나 설정 위치를 바꾸는 변수 목록(ENV_VARS)은 실행 코어와 함께 쓰므로 core/env.py에 있다.
+# 이 도구는 그 변수가 있는지만 기록한다. 값은 절대 읽지 않는다.
 
 # 열지 않는다. 있는지만 본다. 위 *_HOME/CONFIG_DIR 변수가 있으면 실제 위치는 다를 수 있다.
 CONFIG_PATHS: tuple[tuple[str, str], ...] = (
@@ -167,9 +153,6 @@ USER_PATH = re.compile(
 ANSI = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
 LABEL = re.compile(r"[a-z0-9][a-z0-9-]{1,39}")
 ENV_NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_()]*")
-# AI 도구는 자기 셸에 이런 변수를 넣는다(보조 PC의 Claude 데스크톱 앱 셸에서 26개 관측).
-# 그 셸에서 잰 환경은 사용자가 새 터미널을 열었을 때의 환경이 아니다.
-AI_TOOL_VARS = re.compile(r"(?i)(?:CLAUDE|ANTHROPIC|CODEX|OPENAI|GEMINI|GOOGLE_|MCP_)")
 IS_WINDOWS = os.name == "nt"
 
 Runner = Callable[[list[str], float], dict[str, Any]]
@@ -196,32 +179,6 @@ def decode(data: bytes | str | None) -> str:
         return ""
     text = data if isinstance(data, str) else data.decode("utf-8", errors="replace")
     return ANSI.sub("", text).replace("\r\n", "\n")
-
-
-def fresh_environment(base: Mapping[str, str], machine: Mapping[str, str],
-                      user: Mapping[str, str]) -> tuple[dict[str, str], list[str]]:
-    """AI 도구 변수와 PATH만 새 터미널 기준으로 맞춘 환경과, 지운 변수 이름을 돌려준다.
-    설정은 바꾸지 않는다.
-
-    AI 접두사 변수는 시스템·사용자 설정의 값으로 다시 만든다(같은 이름이면 사용자 설정이
-    이긴다). 그래서 설정에 없는 변수는 지워지고, 셸이 같은 이름에 다른 값을 넣었으면 설정
-    값으로 돌아가고, 셸이 뜬 뒤 설정에 새로 생긴 변수는 추가된다. PATH는 시스템 + 사용자
-    설정이다. 나머지 변수(proxy 등)는 base 그대로이므로 새 터미널과 같다고 쓰지 않는다.
-    """
-    persistent: dict[str, tuple[str, str]] = {}
-    for scope in (machine, user):
-        for name, value in scope.items():
-            if AI_TOOL_VARS.match(name):
-                persistent[name.upper()] = (name, value)
-    removed = sorted(name for name in base
-                     if AI_TOOL_VARS.match(name) and name.upper() not in persistent)
-    env = {name: value for name, value in base.items()
-           if not AI_TOOL_VARS.match(name) and name.upper() != "PATH"}
-    env.update(dict(persistent.values()))
-    upper = lambda values: {k.upper(): v for k, v in values.items()}  # noqa: E731
-    paths = [upper(scope).get("PATH", "") for scope in (machine, user)]
-    env["PATH"] = ";".join(p.strip(";") for p in paths if p)
-    return env, removed
 
 
 def registry_environment() -> tuple[dict[str, str], dict[str, str]]:  # pragma: no cover - Windows 전용
