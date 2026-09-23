@@ -64,7 +64,7 @@
 | 무엇 | 어디 |
 |---|---|
 | 검토 기록과 반영(읽는 순서 포함) | [docs/reviews/](docs/reviews/README.md) — 최근: [A1 리뷰 반영](docs/reviews/2026-09-23-a1-handoff-review/RESPONSE.md), [경계 리뷰](docs/reviews/2026-09-23-wsl2-boundary/RESPONSE.md), [WSL2 리뷰 PR #6](docs/reviews/2026-09-23-wsl2-migration-review/RESPONSE.md) |
-| 실험·관측 기록 | [docs/experiments/](docs/experiments/v04-01-inventory/README.md) — V04-01 절차서, V04-03 conformance, W2 격리 |
+| 실험·관측 기록 | `docs/experiments/` — [V04-01 절차서](docs/experiments/v04-01-inventory/README.md), [V04-03 conformance](docs/experiments/v04-03-conformance/aux-pc.md), [W2 격리](docs/experiments/w2-isolation/aux-pc-wsl.md) |
 | 조사 | [Hermes 패턴 조사](docs/research/hermes-2026-09-23/README.md)와 [교차 확인](docs/research/hermes-2026-09-23/CROSSCHECK.md). tmux 조사는 [PR #8](https://github.com/inlight37-design/decision-model_lab/pull/8)에 있고 아직 병합하지 않았다(3절) |
 | 작업 개념도 | [docs/concept/](docs/concept/README.md), [아티팩트](https://claude.ai/artifact/AZJfdnmMBjpEAtqsSHzjp8)(2026-09-22 스냅숏) |
 | 지난 인계 | [docs/handoff/](docs/handoff/README.md) — 1단계 N0–N6의 경위는 [바로 전 판](docs/handoff/2026-09-23-before-stage2.md) 4절 |
@@ -155,7 +155,7 @@ A1 리뷰가 먼저 하라고 한 관문 보강(N0, [반영 기록](docs/reviews
 
 1. `python3 tools/w2/observe.py plan` — 모델 호출 없음. probe마다 실제로 돌릴 argv, 연결 경로, 승인 상태를 본다. "not on the child PATH"면 로그인 셸이 아니다.
 2. `python3 tools/w2/observe.py approve --claude 3 --codex 2 --timeout 300 --note "<누가·언제·어디서 승인>"` — 사용자가 정한 값 그대로.
-3. `python3 tools/w2/observe.py call b1 <전체 모델 이름>` — 한 번 부르고 출력 JSON(`as_expected`, init 요약, `config_changes`, stderr 힌트, 토큰)을 읽는다. 종료 코드 3은 기대와 다르다는 뜻이다 — 그 provider는 멈춘다. 다음 probe는 읽은 뒤에 부른다. `p3-*`는 모델 응답 없이 거절돼야 하는 호출이지만 상한에는 센다.
+3. `python3 tools/w2/observe.py call b1 <전체 모델 이름>` — 한 번 부르고 출력 JSON(`as_expected`, init 요약, `config_changes`, stderr 힌트, 토큰)을 읽는다. 종료 코드 3은 기대와 다르다는 뜻이다 — 그 provider는 멈춘다. 종료 코드 2는 부르지 않았다는 뜻이다(승인 없음, 상한 소진, 멈춤 규칙, 시작 전 거절 — 사용량을 쓰지 않았다). 다음 probe는 읽은 뒤에 부른다. `p3-*`는 모델 응답 없이 거절돼야 하는 호출이지만 상한에는 센다.
 4. `python3 tools/w2/observe.py status`로 남은 상한을 본다.
 
 - 원 출력은 WSL 안 `~/.local/state/dml-observe/`(저장소 밖, 격리 안에 연결하지 않음)에 남는다. 저장소에는 요약만 옮기고, 계정 이메일·조직 ID·토큰은 옮기지 않는다.
@@ -163,7 +163,7 @@ A1 리뷰가 먼저 하라고 한 관문 보강(N0, [반영 기록](docs/reviews
 
 **끝나면 남길 것:**
 
-- 요약 기록: `docs/experiments/w2-isolation/`에 새 파일(예: `stage2-aux-pc-wsl.md`) — 날짜, 승인 내용, probe별 argv 변화·결과·기대 여부·토큰, `config_changes`. 기록 폴더 목록에도 올린다.
+- 요약 기록: `docs/experiments/w2-isolation/`에 새 파일(예: `stage2-aux-pc-wsl.md`) — 날짜, 승인 내용, probe별 argv 변화·결과·기대 여부·토큰, `config_changes`. 1절 "기기와 관측"의 `aux-pc-wsl` 기록 줄에 링크한다.
 - [`manifest.v2.json`](docs/experiments/v04-01-inventory/hosts/aux-pc-wsl/manifest.v2.json)의 `transport_observed`·`context_conformance`·`permission_conformance`를 `observed` 또는 `failed`로, 근거(`evidence`)와 날짜(`observed_at`)를 붙여 채운다. 검사: `python tools/runtime_inventory.py --validate <기록>`. 다섯 칸이 모두 `observed`여야 실제 실행기가 허가된다. 문서만 보고 채우지 않는다.
 - K 표에서 2단계가 닫는 곳인 K01·K02·K09·K12·K17·K29·K30·K31·K33·K36·K39·K43을 결과대로 닫거나 고친다.
 
