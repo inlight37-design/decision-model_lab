@@ -9,6 +9,7 @@
 | [`controller.py`](controller.py) | 상태를 가진 유일한 곳. 자리·예산, 결과 수용 관문, 봉인과 공개, 수동 참여자, 다시 시작, 화면용 투영 |
 | [`store.py`](store.py) | 작은 SQLite journal. 사건은 덧붙이기만 한다. 초안도 여기에 봉인한다 |
 | [`fake_cli.py`](fake_cli.py) | Claude·Codex 출력 형식을 흉내 내는 가짜 CLI. 행동: 정상, 느림, CLI 오류, 입력 일부만 읽음, 멈춤 |
+| [`cli_executor.py`](cli_executor.py) | 실제 CLI 실행기(Linux·WSL). `env.resolve` → `build_spec` → `isolation.run`(`cli_mounts`, `never`) → `interpret`. **모델을 부른다 — 승인 뒤에만.** 서버는 아직 쓰지 않는다 |
 | [`server.py`](server.py) | 127.0.0.1 화면 서버. 모든 `/api` 요청에 토큰 |
 | [`static/index.html`](static/index.html) | 화면. [Ledger](../design/README.md)의 토큰과 규칙을 따른다 |
 
@@ -22,7 +23,9 @@ python -m app.server --port 8765
 
 ## 참여자 두 종류
 
-- **CLI(자동).** 지금은 모의 CLI만 있다. 실제 CLI 실행기는 실제 호출 전 확인 단계에서 붙인다.
+- **CLI(자동).** 화면 서버는 모의 CLI만 돌린다. 실제 CLI 실행기(`cli_executor.py`)는 있지만 가짜 CLI로만 시험했고, 서버에서 고르는 설정(참여자별 전체 모델 이름)은 승인된 호출을 할 때 붙인다.
+  - 실행 명세(`ExecutionSpec.record()` — 질문 본문 없이 digest와 크기)는 시작 사건에 시도 ID와 함께 남는다.
+  - 프로세스를 만들기 전에 거절하면(실행 파일 없음, 모델 이름 없음, 경로 충돌) `failed_to_start`로 끝난다. 시작한 것이 없으므로 `unknown`이 아니다.
 - **원본 앱(수동).** ChatGPT·Claude·Antigravity 앱에서 사용자가 직접 돌린다.
   1. 화면이 질문을 복사해 준다.
   2. 사용자가 원본 앱에 붙여 넣고, 받은 답을 화면에 붙여 넣는다.
@@ -51,10 +54,10 @@ python -m app.server --port 8765
 
 ## 아직 없는 것
 
-- 실제 CLI 실행기(`env.resolve` → `build_spec` → `isolation.run`과 `cli_mounts`). 모델 호출 전 확인 단계에서 붙인다.
+- 화면 서버에서 실제 CLI를 고르는 설정. 승인된 호출을 할 때 붙인다.
 - 합성, 주장 대조, 첫 화면 Q4(결정 우선·대조표 우선) 비교. 초안 공개까지만 있다.
 - 취소 버튼과 취소 중 입력 전송 시험.
 - TypeScript 화면. node가 없어서 지금은 빌드 없는 HTML·JS다.
 - 입력 manifest의 공통 자료(파일) 첨부. 지금은 질문 한 개다.
 
-검사: [`tests/test_app_controller.py`](../tests/test_app_controller.py). 대부분은 프로세스 없는 합성 실행기로 보고, 한 묶음은 모의 CLI를 실제 실행 경로(Windows job object, Linux bubblewrap)로 돌린다.
+검사: [`tests/test_app_controller.py`](../tests/test_app_controller.py). 대부분은 프로세스 없는 합성 실행기로 보고, 한 묶음은 모의 CLI를 실제 실행 경로(Windows job object, Linux bubblewrap)로 돌린다. 실제 CLI 실행기는 [`tests/test_app_cli_executor.py`](../tests/test_app_cli_executor.py)가 설치된 모양 그대로 만든 가짜 `claude`·`codex`로 격리 경로를 돌려 본다(Linux).

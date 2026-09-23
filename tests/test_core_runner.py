@@ -138,6 +138,24 @@ class RunnerContractTests(unittest.TestCase):
         self.assertEqual(len(result.stdout), 1000)
         self.assertEqual(result.state, runner.EXITED)
 
+    def test_marks_are_counted_across_the_whole_stream_and_chunk_edges(self):
+        """K02. 보관 상한을 넘은 뒤의 표식과 조각 경계에 걸친 표식도 정확히 한 번씩 센다."""
+        mark = "rejected: blocked by policy"
+        stream = ("x" * 7 + mark + mark + "y" * 3 + mark + "z").encode()
+        for size in range(1, len(stream) + 1):
+            with self.subTest(chunk=size):
+                counter = runner._MarkCounter((mark, "x"))              # 한 글자 표식도(표식 안에 x는 없다)
+                for start in range(0, len(stream), size):
+                    counter.feed(stream[start:start + size])
+                self.assertEqual(counter.counts, {mark: 3, "x": 7})
+        code = ("import sys; w = sys.stderr.write; w('n' * 70000); w(%r * 2); w('n' * 70000); w(%r)"
+                % (mark, mark))
+        result = run(code, max_output_bytes=1000, stderr_marks=(mark,))
+        self.assertTrue(result.stderr_truncated)
+        self.assertNotIn(mark, result.stderr)                        # 보관한 앞부분에는 없다
+        self.assertEqual(result.stderr_counts, {mark: 3})
+        self.assertIsNone(run("print(1)").stderr_counts)              # 요청하지 않으면 세지 않는다
+
     def test_missing_executable_fails_to_start(self):
         result = runner.run([os.path.join(CWD, "no-such-cli.exe")], cwd=CWD, env=ENV, timeout=5)
         self.assertEqual(result.state, runner.FAILED_TO_START)
