@@ -7,6 +7,7 @@
 - 측정 환경: Claude 데스크톱 앱 안의 셸. 앱이 넣은 변수 26개를 뺀 새 터미널 근사 환경(`--fresh-env`)에서 실행
 - tier 1 manifest: [`manifest.json`](manifest.json) — `--validate` PASS
 - tier 2 manifest: [`manifest.tier2.json`](manifest.tier2.json) — 아래 tier 2 표에서 관측한 기능만 `observed`. `configured`는 Claude Code·Codex만 `true`, Antigravity는 판정의 조건 때문에 `false`. `--validate` PASS
+- **정정(2026-09-23, [PR #4](https://github.com/inlight37-design/decision-model_lab/pull/4) R02·R05·R07):** 아래 표시한 곳을 고쳤다. 처음 문장은 "처음에 … 라고 적었으나"로 남겼다. 요지: Claude `permission_mode`는 값 검증만 관측돼 manifest 규칙대로 `in_help`다. `configured=true`는 기본 구독 호출을 관측했다는 뜻이지 blind 문맥·권한 conformance 통과가 아니다. "깨끗한 문맥"은 사용자 설치분이 줄었다는 관측이다. agy 기본 모델은 P5로 확인되지 않았다. 검토와 답: [v04-01 리뷰](../../../../reviews/2026-09-23-v04-01-review/README.md), [반영 기록](../../../../reviews/2026-09-23-v04-01-review/RESPONSE.md)
 
 ## 설치와 로그인
 
@@ -65,24 +66,26 @@ P3b는 계획에 없던 관측이다. P3-agy가 잘못된 값을 조용히 무�
 | P3b | Antigravity `--sandbx` (오타) | 2 | 모델 호출 전 거절: `flags provided but not defined: -sandbx` (0.1초) | [P3b-agy](tier2/P3b-agy.txt) | 예 |
 | P1 | Antigravity | 0 | 응답 `OK`, JSON 필드 `conversation_id`·`duration_seconds`·`num_turns`·`response`·`status: SUCCESS`·`usage`(입력 11,724 · 출력 23 · 사고 22 · 캐시 읽기 0). **모델 이름과 비용 필드가 없다.** 신뢰하지 않은 빈 폴더에서도 비대화형 실행이 막히지 않았다 | [P1-agy](tier2/P1-agy.txt) | 예 |
 | P4 | Claude Code | 0 | 빈 폴더에서도 **사용자 전역 설정이 통째로 실린다**: 도구 35(그중 MCP 도구 8), MCP 서버 18(claude.ai 연결 서비스 4 포함, 연결됨 1·인증 대기 13·실패 4), 플러그인 5, 스킬 44, 에이전트 5, 슬래시 명령 79. 문맥 24,449 토큰(이번엔 전부 캐시 읽기, 추정 비용 0.005). `~/.claude/CLAUDE.md`는 없다. 원본 스트림은 설치 목록이 드러나 PC에만 두고 요약만 올렸다 | [P4-claude](tier2/P4-claude.txt) | 예 — 그리고 blind·권한 문제를 드러냄 |
-| P4b | Claude Code `--restricted --strict-mcp-config --disable-slash-commands --tools ""` | 0 | **구독 인증을 유지한 채 문맥이 깨끗해졌다**: `apiKeySource: none`, 도구 0, MCP 서버 0, 스킬 0, 슬래시 명령 0, 메모리 경로 없음. 남은 것은 Claude Code **내장** 플러그인 2개(`@builtin`)와 기본 에이전트 5개. 문맥 1,339 + 531 = 약 1,900 토큰(P4의 약 24,400에서 13분의 1). 첫 시도는 PowerShell 5.1이 빈 문자열 인자를 버려 `--tools` 값 누락으로 실행 전 거절됐고(exit 1, 한도 소모 없음), `'""'`로 넘겨 해결했다 | [P4b-claude](tier2/P4b-claude.txt) | **예 — 설계 입력 1의 해법** |
+| P4b | Claude Code `--restricted --strict-mcp-config --disable-slash-commands --tools ""` | 0 | **구독 인증을 유지한 채 사용자 설치분이 빠졌다**(정정: 처음에 "문맥이 깨끗해졌다"고 적었으나, init 목록이 비었다는 관측이지 지시문·메모리·peer 정보가 입력에 없다는 증명은 아니다 — PR #4 R02): `apiKeySource: none`, 도구 0, MCP 서버 0, 스킬 0, 슬래시 명령 0, 메모리 경로 없음(원 stream에서 수행자가 확인. 공개 요약에는 없다). 남은 것은 Claude Code **내장** 플러그인 2개(`@builtin`)와 기본 에이전트 5개. 문맥 1,339 + 531 = 약 1,900 토큰(P4의 약 24,400에서 13분의 1). 첫 시도는 PowerShell 5.1이 빈 문자열 인자를 버려 `--tools` 값 누락으로 실행 전 거절됐고(exit 1, 한도 소모 없음), `'""'`로 넘겨 해결했다 | [P4b-claude](tier2/P4b-claude.txt) | **예 — 설계 입력 1의 해법** |
 | P4 | Codex `--ignore-user-config --ignore-rules` | 0 | 사용자 설정을 무시해도 **ChatGPT 로그인으로 돈다.** 입력 13,740 토큰(설정 포함 때 15,268), 캐시 11,776 | [P4-codex](tier2/P4-codex.txt) | 예 |
 | P5 | Claude Code·Codex | — | 기본 모델: Claude `claude-opus-5-5`(P1). Codex는 이벤트에 모델 이름이 없다. 전체 목록은 대화형 `/model`이 필요해 미확인 | — | 부분 |
-| P5 | Antigravity `agy models` | 0 | 기본 모델은 **Gemini 3.8 Flash (High)**. Gemini 계열 최상위는 `gemini-3.1-pro-high`/`-low`. 그 밖에 `gemini-3.8/3.7/3.6-flash-*`, 그리고 **다른 회사 모델** `claude-opus-4-6-thinking`, `claude-sonnet-4-6`, `gpt-oss-120b-medium` | [P5-agy](tier2/P5-agy.txt) | 예 |
+| P5 | Antigravity `agy models` | 0 | 목록 첫 행은 **Gemini 3.8 Flash (High)**. 정정: 처음에 "기본 모델은 Gemini 3.8 Flash (High)"라고 적었으나, 출력은 기본값을 표시하지 않는다 — **기본 모델은 미확인**(PR #4 R07). Gemini 계열 최상위는 `gemini-3.1-pro-high`/`-low`. 그 밖에 `gemini-3.8/3.7/3.6-flash-*`, 그리고 **다른 회사 모델** `claude-opus-4-6-thinking`, `claude-sonnet-4-6`, `gpt-oss-120b-medium` | [P5-agy](tier2/P5-agy.txt) | 예 |
 | P6 | — | — | 미실시(선택, V04-03으로) | — | — |
 | P7 | Codex | — | `app-server`(experimental) help에 있음, 호출 미시험 | — | — |
 
 ### tier 2에서 나온 설계 입력
 
 1. **Claude Code의 기본 `-p`는 blind 초안에 깨끗하지 않지만, 해법이 관측됐다.** 기본 `-p`는 사용자의 플러그인·스킬·MCP 연결(외부 서비스 커넥터 포함)을 모두 싣고(P4), `--bare`는 구독을 쓰지 못한다(P2). **`--restricted --strict-mcp-config --disable-slash-commands --tools ""`는 구독 인증을 유지하면서 사용자 설치분을 모두 뺐다(P4b).** 남은 것은 내장 플러그인 2개와 기본 에이전트 목록이다. 이 조합은 도구가 하나도 없으므로 논의자가 파일을 읽어야 하면 `--tools Read`와 `--add-dir`로 범위를 좁혀 다시 시험한다. `--restricted`는 help에만 있는 이름으로 확인했고 공식 문서 locator는 아직 없다 — adapter 구현 전에 문서와 대조한다.
-2. **Codex는 깨끗한 문맥과 구독 인증을 함께 얻을 수 있다**(P4). 인증 파일과 설정 파일이 분리돼 있기 때문으로 보인다.
+   **갱신(2026-09-23, PR #4 질문 2, 문서 확인):** 공식 locator는 [CLI reference](https://code.claude.com/docs/en/cli-reference)의 CLI flags 표 `--restricted`다. 평가 harness용으로 안내하고, v2.1.248 이상이며, managed settings와 `--settings`만 읽는다고 적는다. **CLAUDE.md 제외는 말하지 않는다.** 같은 표의 `--safe-mode`는 CLAUDE.md·자동 메모리·플러그인까지 끄고 인증을 유지한다고 적는다 — 다음 관측 후보다. 어느 쪽도 blind 입력 통제를 증명하지 않는다. 합성 marker와 금지 파일 읽기 시도로 확인한다. 이 PC에는 `~/.claude/CLAUDE.md`가 없어서 P4b가 그 경로를 시험하지 못했다.
+2. **Codex는 사용자 설정 파일을 빼도 구독 인증으로 돈다**(P4). 인증 파일과 설정 파일이 분리돼 있기 때문으로 보인다. 정정: 처음에 "깨끗한 문맥과 구독 인증을 함께 얻을 수 있다"고 적었으나, help와 [문서](https://learn.chatgpt.com/docs/non-interactive-mode)상 `--ignore-user-config`는 `config.toml`만, `--ignore-rules`는 execpolicy `.rules`만 뺀다. AGENTS.md 같은 지시문 파일은 이 플래그들의 범위가 아니다. 입력 토큰 감소는 두 플래그를 함께 준 결과라 한쪽에 돌리지 않는다(PR #4 R02).
 3. **성공 판정은 한 필드로 하지 않는다.** Claude의 실패 결과가 `subtype: "success"`를 달고 나온다(P2). `is_error`와 exit code를 함께 본다.
 4. **adapter는 표준입력을 닫아야 한다.** Codex `exec`는 열린 stdin을 추가 입력으로 기다린다(P1).
 5. **비용 필드는 제각각이다.** Claude는 정가 기준 추정 비용과 캐시 생성·읽기를 나눠 주고, Codex는 토큰만 준다. 캐시 상태에 따라 같은 호출의 추정 비용이 18배 차이 났다(P1 0.0898 → P4 0.0050). 구독 한도 소모와는 다른 값이다.
 6. **옵션 이름은 세 CLI 모두 엄격하지만, 값 검증은 다르다.** 오타 옵션은 셋 다 실행 전에 거절했다(P3b). 그러나 Antigravity는 `--output-format`에 없는 값을 주면 **조용히 기본값(text)으로 바꿔 실행**했다(P3). F26과 같은 계열의 조용한 강등이다. adapter는 CLI에 넘기기 전에 **값을 스스로 허용 목록과 대조**하고, 실행 뒤에는 **요청한 형식으로 나왔는지 확인**해야 한다(JSON을 요청했는데 JSON이 아니면 실패). 다른 값 옵션(`--effort` 등)도 같은지는 미확인이다.
 7. **참여자의 회사는 CLI가 아니라 모델로 센다.** Antigravity로 Claude Opus 4.6과 GPT-OSS도 부를 수 있다(P5). `agy`를 Google 참여자로 세고 모델을 Claude로 고르면 Anthropic이 두 번 들어간다. provider 구별 규칙(`check_frontier_protocol`의 `distinct providers`)은 모델 ID에서 회사를 정해야 한다.
-8. **상급 모델은 명시해서 고른다.** Antigravity의 기본값은 Flash다(P5). Gemini 상급 자리에 쓰려면 `--model gemini-3.1-pro-high`처럼 지정하고, 실제로 그 모델로 돌았는지는 출력에 모델 필드가 없으므로(P1) 별도로 확인할 방법을 찾아야 한다.
-9. **세 CLI 중 모델 이름을 결과에 주는 것은 Claude뿐이다**(P1). Codex와 Antigravity는 결과만 보고 어느 모델이 답했는지 알 수 없다 — 조용한 모델 강등(D18)을 결과로는 잡을 수 없다는 뜻이다.
+8. **상급 모델은 명시해서 고른다.** Antigravity의 기본 모델은 미확인이다(정정: 처음에 "기본값은 Flash다(P5)"라고 적었다). Gemini 상급 자리에 쓰려면 `--model gemini-3.1-pro-high`처럼 지정하고, 실제로 그 모델로 돌았는지는 출력에 모델 필드가 없으므로(P1) 별도로 확인할 방법을 찾아야 한다.
+   갱신(PR #4 R07): [headless 문서](https://www.antigravity.google/docs/cli/headless/)는 headless에서 **없는 `--model` 이름이면 조용히 대체하지 않고 비영 종료·`ERROR`**라고 적고, `--model`을 지정하면 stream-json의 init에 `model`이 나온다고 적는다(2026-09-23 문서 확인, 1.2.8 미시험). 명시 지정과 init 대조가 확인 경로다. `--effort`의 없는 값 처리는 문서에 없다.
+9. **세 CLI 중 모델 이름을 결과에 주는 것은 Claude뿐이다**(P1). Codex와 Antigravity는 결과만 보고 어느 모델이 답했는지 알 수 없다 — 조용한 모델 강등(D18)을 결과로는 잡을 수 없다는 뜻이다. 단 Antigravity는 위 8의 init 경로가 문서에 있다. init의 모델 이름도 요청이 반영됐다는 표시이지 실제 backend의 증명은 아니다.
 
 캡처 한계: PowerShell 5.1로 출력을 받으면서 ASCII가 아닌 문자 일부가 깨졌다(P2의 `·`). 판정에 쓰인 필드는 ASCII다.
 
@@ -108,12 +111,12 @@ P3b는 계획에 없던 관측이다. P3-agy가 잘못된 값을 조용히 무�
 
 | 질문 | 결론 | 근거 |
 |---|---|---|
-| V04-03 진행 가능한가 | **Claude Code·Codex 두 경로로 진행 가능.** 절차서 기준 세 조건(두 도구 이상 P1 구독 성공, P3 실행 전 거절, 과금 변수 없음)을 충족한다. 두 도구 모두 깨끗한 문맥과 구독 인증을 함께 얻는 조합도 관측됐다(Codex P4, Claude P4b). **Antigravity는 조건부** — P3에서 잘못된 값을 조용히 무시했고(설계 입력 6), 약관상 구동 허용 여부(F31)가 사용자 결정으로 남아 있다. 크레딧 자동 사용은 이 계정에서 꺼져 있다(정책 표) | P1, P3, P3b, P4, 정책 확인 |
+| V04-03 진행 가능한가 | **Claude Code·Codex 두 경로로 진행 가능.** 절차서 기준 세 조건(두 도구 이상 P1 구독 성공, P3 실행 전 거절, 과금 변수 없음)을 충족한다. 두 도구 모두 깨끗한 문맥과 구독 인증을 함께 얻는 조합도 관측됐다(Codex P4, Claude P4b). **Antigravity는 조건부** — P3에서 잘못된 값을 조용히 무시했고(설계 입력 6), 약관상 구동 허용 여부(F31)가 사용자 결정으로 남아 있다. 크레딧 자동 사용은 이 계정에서 꺼져 있다(정책 표). **정정(PR #4 R02):** "진행 가능"은 adapter 배선과 conformance 시험을 시작할 수 있다는 뜻이다. 실제 독립 초안 수집은 문맥·권한 conformance를 통과한 경로에 한한다. "깨끗한 문맥"은 사용자 설치분이 줄었다는 관측이다(설계 입력 1·2) | P1, P3, P3b, P4, 정책 확인 |
 | Q1: ACP 우선인가 exec 우선인가 | **exec 우선으로 확정**(사용자가 판단을 claude 세션에 맡김, 2026-09-23). 세 CLI 모두 help에 ACP가 없고, 세 CLI 모두 비대화형 실행(`claude -p`, `codex exec --json`, `agy -p --output-format json`)이 구독 인증으로 관측됐다. ACP는 필요할 때 adapter 계층의 선택지로 남긴다 | tier 1, P1 |
 
 ## 열린 문제
 
-- Antigravity의 다른 값 옵션(`--effort`, `--model` 등)도 없는 값을 조용히 무시하는지. 특히 없는 `--model` 값이 기본 Flash로 바뀌는지는 상급 모델 배정에 직결된다.
+- Antigravity의 다른 값 옵션(`--effort`, `--model` 등)도 없는 값을 조용히 무시하는지. 특히 없는 `--model` 값이 기본 Flash로 바뀌는지는 상급 모델 배정에 직결된다. 갱신(PR #4 R07): `--model`은 문서상 오류 종료다 — 1.2.8에서 확인할 것. `--effort`는 문서에 없다.
 - Codex와 Antigravity 결과에 모델 이름이 없다. 실제로 요청한 모델이 답했는지 확인할 방법.
 - Antigravity 약관 6조가 공식 CLI를 하위 프로세스로 구동하는 경우에 해당하는지(F31). 사용자는 AionUi 같은 도구에서 agy가 잘 동작했다고 한다 — 기술적으로 되는 것과 약관상 허용되는 것은 별개라서 사용자 결정으로 남긴다.
 - Claude Code CLI는 데스크톱 앱과 자격증명과 한도를 공유한다(E04). 이 프로젝트의 호출이 사용자의 평소 Claude 사용 한도를 함께 줄인다는 뜻이다.

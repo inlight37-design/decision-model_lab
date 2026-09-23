@@ -235,12 +235,11 @@
           "observed_at": "2026-09-23"
         },
         "permission_mode": {
-          "status": "observed",
-          "evidence": "RESULTS P3: invalid value refused before any model call; P1 ran with dontAsk",
+          "status": "in_help",
+          "evidence": "claude --help. RESULTS P3 observed value validation only (an invalid value was refused before any model call); P1 needed no tool under dontAsk, so no denial was exercised. Corrected from observed, see corrections",
           "source_ids": [
             "E06"
-          ],
-          "observed_at": "2026-09-23"
+          ]
         },
         "permission_prompts": {
           "status": "in_help",
@@ -378,7 +377,7 @@
         },
         "ignore_user_config": {
           "status": "observed",
-          "evidence": "RESULTS P4: ran with user config ignored, still on the ChatGPT login, fewer input tokens",
+          "evidence": "RESULTS P4: with --ignore-user-config and --ignore-rules together the run stayed on the ChatGPT login, as the help says (auth still uses CODEX_HOME); input tokens fell, but the drop is not attributed to one flag. The flag skips config.toml only; instruction files such as AGENTS.md are outside its scope",
           "source_ids": [
             "E02"
           ],
@@ -413,7 +412,7 @@
       "command": "agy",
       "note": "Antigravity CLI. headless 권한 거절은 exit 0 + stderr 경고(soft deny). --version은 문서에 없음.",
       "installed": true,
-      "resolved_path": "~\\AppData\\Local\\agy\\bin\\agy.EXE",
+      "resolved_path": "~\\.local\\agy\\bin\\agy.EXE",
       "runtime_version": "1.2.8",
       "probes": [
         {
@@ -535,5 +534,18 @@
     }
   ],
   "derived_from": "manifest.json (tier 1) + RESULTS.md tier 2 table, same day",
-  "tier2_rule": "observed = the probe in RESULTS.md exercised the flag and the documented behaviour appeared. A flag that was only accepted, or only validated, stays in_help."
+  "tier2_rule": "observed = the probe in RESULTS.md exercised the flag and the documented behaviour appeared. A flag that was only accepted, or only validated, stays in_help.",
+  "configured_means": "configured=true means the basic subscription call was observed. It does not mean blind-context or permission conformance, and it is not permission to run independent drafts (PR #4 R02).",
+  "corrections": [
+    {
+      "date": "2026-09-23",
+      "ref": "PR #4 R02",
+      "what": "claude-code permission_mode observed -> in_help: P3 validated the value and P1 used no tool, so by tier2_rule the flag stays in_help. codex ignore_user_config evidence narrowed to what P4 showed."
+    },
+    {
+      "date": "2026-09-23",
+      "ref": "PR #4 R05",
+      "what": "antigravity resolved_path was the tier 1 path inside the Claude app's virtual AppData; tier 2 ran after the reinstall to ~\\.local\\agy\\bin (RESULTS; resolved there again on this PC with --fresh-env on 2026-09-23). The antigravity probes and help files stay the tier 1 baseline of the same 1.2.8 build. scope below still describes the tier 1 collection; the tier 2 probes are the RESULTS.md P numbers named in each capability's evidence, and anything not named there was not checked."
+    }
+  ]
 }

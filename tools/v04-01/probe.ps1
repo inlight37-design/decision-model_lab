@@ -10,6 +10,15 @@
 # addresses, UUIDs, token-like strings and the home path masked. Check the file before
 # committing. P4-claude lists the user's plugins and connected services: summarise it with
 # summarize_claude_init.py and keep the raw stream off the repository.
+#
+# Limits (PR #4 R06). This is a one-probe observation helper, not the adapter runner:
+# - no deadline: a CLI that hangs waits until you press Ctrl+C, and nothing checks for
+#   child processes left behind;
+# - stdout and stderr are merged into one text, so a denial printed only on stderr cannot
+#   be told apart from the answer afterwards; PowerShell 5.1 may also garble non-ASCII;
+# - the masking is a second line of defence: read the file before committing.
+# The V04-03 runner needs argv arrays, closed stdin, separate stdout/stderr, a deadline,
+# process-tree termination, an output cap, and UNKNOWN when termination is unconfirmed.
 param(
     [Parameter(Mandatory = $true, Position = 0)][string]$Id,
     [Parameter(Position = 1)][string]$HostLabel = 'aux-pc'
@@ -59,7 +68,11 @@ function Hide([string]$t) {
     $t = $t.Replace($homeDir, '~').Replace($homeDir.Replace('\', '\\'), '~').Replace($homeDir.Replace('\', '/'), '~')
     $t = $t -replace '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}', '<email>'
     $t = $t -replace '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}', '<uuid>'
-    $t = $t -replace '(?<![A-Za-z0-9])(sk-[A-Za-z0-9_-]{16,}|eyJ[A-Za-z0-9._-]{20,})', '<redacted>'
+    # Same token families as SECRET in tools/runtime_inventory.py (plus a looser eyJ).
+    $t = $t -replace '(?<![A-Za-z0-9])(sk-[A-Za-z0-9_-]{16,}|AIza[0-9A-Za-z_-]{30,}|gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,}|eyJ[A-Za-z0-9._-]{20,}|(?i:bearer)\s+[A-Za-z0-9._-]{20,})', '<redacted>'
+    # Other users' home folders, up to the next separator, quote or line end (names may hold spaces).
+    $t = $t -replace '(?i)([A-Z]:[\\/]+Users[\\/]+)(?!<user>(?:[\\/"''\r\n]|$))[^\\/\r\n"'']+', '${1}<user>'
+    $t = $t -replace '(?i)(/(?:home|Users)/)(?!<user>(?:[/"''\r\n]|$))[^/\r\n"'']+', '${1}<user>'
     return $t
 }
 

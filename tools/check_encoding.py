@@ -26,7 +26,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 # 본문이 한글을 담을 수 있는 텍스트 파일. 바이너리와 생성물은 대상이 아니다.
-SUFFIXES = (".md", ".json", ".py", ".yml", ".yaml", ".toml", ".txt", ".html", ".css", ".js", ".ps1")
+SUFFIXES = (".md", ".json", ".py", ".yml", ".yaml", ".toml", ".txt", ".html", ".css", ".js", ".ps1",
+            ".ts", ".tsx", ".sh")
 SKIP_PARTS = ("__pycache__", ".git", ".venv", "venv", "node_modules")
 
 BOM = b"\xef\xbb\xbf"
@@ -74,13 +75,16 @@ def problems(paths: list[Path]) -> list[str]:
 
 
 def main() -> int:
+    missing: list[str] = []
     if len(sys.argv) > 1:
         paths = [Path(argument).resolve() for argument in sys.argv[1:]]
+        # 지정한 파일이 없으면 조용히 건너뛰지 않는다. 공백에서 쪼개진 파일 이름이 그렇게 사라졌다.
+        missing = [f"{path}: 지정한 파일이 없음" for path in paths if not path.is_file()]
         paths = [path for path in paths if path.is_file() and path.suffix.lower() in SUFFIXES]
     else:
         paths = tracked_files()
 
-    found = problems(paths)
+    found = missing + problems(paths)
     if found:
         print("인코딩 문제:")
         for message in found:

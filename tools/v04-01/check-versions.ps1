@@ -6,8 +6,10 @@ foreach ($c in 'claude', 'codex', 'agy', 'gemini') {
     # Collect all output first: Select-Object -First would stop the pipe and report exit -1.
     $all = @(& $c --version 2>&1)
     $code = $LASTEXITCODE
-    $signer = ((Get-AuthenticodeSignature $cmd.Source).SignerCertificate.Subject -split ',')[0]
-    "{0}: {1} | exit={2} | {3} | {4}" -f $c, ($cmd.Source -replace [regex]::Escape($env:USERPROFILE), '~'), $code, $all[0], $signer
+    # The subject alone is not a check: record whether Windows reports the signature Valid.
+    $sig = Get-AuthenticodeSignature $cmd.Source
+    $signer = ($sig.SignerCertificate.Subject -split ',')[0]
+    "{0}: {1} | exit={2} | {3} | {4} | signature={5}" -f $c, ($cmd.Source -replace [regex]::Escape($env:USERPROFILE), '~'), $code, $all[0], $signer, $sig.Status
 }
 # Files an agent creates under AppData from inside the Claude desktop app (MSIX) can
 # land in the app's private store and be invisible to the user's own terminal.

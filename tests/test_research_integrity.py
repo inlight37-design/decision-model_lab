@@ -45,13 +45,17 @@ LIVING_DOCS = (
 COMMIT_SHA = re.compile(r"\b[0-9a-f]{40}\b")
 
 # 안내 문서가 다시 적으면 안 되는 개수. 기준은 CI 로그 하나다.
+# 이것은 표현을 잡는 lint 이지 의미 판정이 아니다. 실제로 있었던 표현과 알려진 오탐·누락을
+# 아래 fixture 로 고정한다(PR #4 R08). '전체 N개'는 뒤에 다른 명사가 오면('전체 3개 provider')
+# 검사 수가 아니므로 잡지 않는다.
 RESTATED_COUNT = re.compile(
     r"\b\d+\s*tests?\b"
-    r"|(?:검사|테스트)[은는이가도를]?\s*\*{0,2}\d+\s*개"
+    r"|\btests?\s*[:=]\s*\*{0,2}\d+"
+    r"|(?:검사|테스트)[은는이가도를]?\s*(?:총|모두|전부)?\s*\*{0,2}\d+\s*개"
     r"|\*{0,2}\d+\s*개\*{0,2}\s*(?:의\s*)?(?:검사|테스트)"
-    r"|전체[은는]?\s*\*{0,2}\d+\s*개"
+    r"|전체[은는]?\s*\*{0,2}\d+\s*개(?!\*{0,2}\s+\S)"
     r"|원장[은는이가]?\s*\*{0,2}\d+\s*(?:건|개)"
-    r"|commit\s*\*{0,2}\d+\b",
+    r"|\bcommits?\s*\*{0,2}\d+\b|\b\d+\s*commits?\b",
     re.IGNORECASE,
 )
 
@@ -115,7 +119,10 @@ class ResearchIntegrityTests(unittest.TestCase):
                 self.assertEqual(actual, expected)
 
     def living_lines(self):
-        """안내 문서의 줄. commit SHA 가 있는 줄은 그 시점의 이력이므로 건너뛴다."""
+        """안내 문서의 줄. commit SHA 가 있는 줄은 그 시점의 이력이므로 건너뛴다.
+
+        이 예외는 줄 단위다. 같은 줄의 SHA 가 그 숫자와 관계있는지는 보지 않는다 — 규칙
+        (docs/COLLABORATION.md)이 '숫자는 SHA 와 같은 줄에'라고 정한 만큼만 검사한다."""
         for relative in LIVING_DOCS:
             for number, line in enumerate((ROOT / relative).read_text(encoding="utf-8").splitlines(), 1):
                 if not COMMIT_SHA.search(line):
@@ -162,11 +169,15 @@ class ResearchIntegrityTests(unittest.TestCase):
     def test_restated_count_pattern_matches_past_drift(self):
         """위 검사가 실제로 있었던 어긋남을 잡는지, 정상 문장을 잡지 않는지 고정한다."""
         for text in ("(75 tests)", "Ran 74 tests", "현재 전체 **74개**다", "검사 75개",
-                     "테스트는 40개이며", "112개 테스트", "근거 원장 59건", "commit 63"):
+                     "테스트는 40개이며", "112개 테스트", "근거 원장 59건", "commit 63",
+                     # PR #4 R08 의 누락 사례
+                     "검사 총 120개", "tests: 120", "63 commits"):
             with self.subTest(text=text):
                 self.assertRegex(text, RESTATED_COUNT)
         for text in ("# v0.1 계약 25개", "F01–F29는 29개의 독립 실험이 아니다",
-                     "검토 기록은 시간순으로 다섯이다", "Python 3.12/3.13"):
+                     "검토 기록은 시간순으로 다섯이다", "Python 3.12/3.13",
+                     # PR #4 R08 의 오탐 사례
+                     "전체 3개 provider를 지원한다"):
             with self.subTest(text=text):
                 self.assertNotRegex(text, RESTATED_COUNT)
 
@@ -206,6 +217,18 @@ class ResearchIntegrityTests(unittest.TestCase):
             fine = Path(tmp, "fine.md")
             fine.write_bytes("탭\t과 CRLF\r\n정상\n".encode("utf-8"))
             self.assertEqual(problems([fine]), [])
+
+    def test_encoding_check_reports_missing_named_files(self):
+        """PR #4 R08: 지정한 경로가 없으면 조용히 빠졌다. hook 이 이름을 공백에서 쪼개면 그랬다."""
+        import contextlib
+        import io
+        from unittest import mock
+        from tools import check_encoding
+
+        with mock.patch("sys.argv", ["check_encoding.py", str(ROOT / "no such file.md")]), \
+                contextlib.redirect_stdout(io.StringIO()) as out:
+            self.assertEqual(check_encoding.main(), 1)
+        self.assertIn("no such file.md", out.getvalue())
 
     def test_powershell_scripts_are_ascii(self):
         """Windows PowerShell 5.1 은 BOM 없는 UTF-8 .ps1 을 ANSI(CP949)로 읽는다. 한글 주석 하나가
