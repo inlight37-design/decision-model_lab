@@ -1,0 +1,24 @@
+# Temporary, branch-only transport of tracked public source for offline review.
+# Remove before finalizing the A1 integrity PR. No environment/untracked data.
+name: a1-review-snapshot
+on:
+  push:
+    branches: ["chatgpt/a1-integrity-20260924"]
+    paths: [".github/workflows/a1-review-snapshot.yml"]
+permissions:
+  contents: read
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: archive tracked source only
+        run: git archive --format=tar HEAD > "$RUNNER_TEMP/a1-review-source.tar"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: a1-review-source
+          path: ${{ runner.temp }}/a1-review-source.tar
+          retention-days: 1
+          if-no-files-found: error
