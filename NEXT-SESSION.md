@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-23** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout) · 브랜치 `claude/a1-controller-20260923`
+최종 갱신 **2026-09-23** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout) · 브랜치 `claude/handoff-a1-status-20260923`
 
 이 파일 하나에서 시작한다. 절 구성은 고정이고 CI가 확인한다. 규칙은 [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있다. 이 판은 2026-09-23 하루치 작업을 끝내며 남은 일을 다시 정리한 판에, 같은 날의 [경계 리뷰 반영](docs/reviews/2026-09-23-wsl2-boundary/RESPONSE.md)을 더한 것이다. **실행 기반을 WSL2로 옮기기로 했다**(2절 15·16). 통째로 다시 쓴 마지막 판은 [docs/handoff/](docs/handoff/README.md)에 보관했다.
 
@@ -14,11 +14,11 @@
 
 ## 1. 지금 상태
 
-**연구·설계와 오프라인 검사 저장소에, 첫 실행 코어([`core/`](core/README.md))가 생긴 단계다. 앱(참여자를 돌리는 controller와 화면)은 아직 없다.** 근거 원장은 E01–E31 / F01–F31, 결정은 D01–D18이다. 검사 수와 결과는 [CI 실행 기록](https://github.com/inlight37-design/decision-model_lab/actions/workflows/checks.yml)이 기준이다.
+**연구·설계와 오프라인 검사 저장소에, 실행 코어([`core/`](core/README.md))와 모의 모드 앱([`app/`](app/README.md) — controller와 화면, 모델 호출 없음)이 생긴 단계다. 실제 CLI를 돌리는 실행기와 합성은 아직 없다.** 근거 원장은 E01–E31 / F01–F31, 결정은 D01–D18이다. 검사 수와 결과는 [CI 실행 기록](https://github.com/inlight37-design/decision-model_lab/actions/workflows/checks.yml)이 기준이다.
 
 | 도구 | 무엇이고 무엇이 아닌가 |
 |---|---|
-| [`core/`](core/README.md) | V04-03 실행 코어. `runner`는 CLI 한 번을 셸 없이 실행하고 추적 단위(Windows job object / POSIX 프로세스 그룹)가 비었는지 확인한다(못 하면 `unknown`). 자손 전체가 끝났는지는 `tree_confirmed_empty`가 따로 말하고, 프로세스 그룹에서는 `None`이다. `adapters`는 읽기 전용 논의자 실행 명세 조립(질문은 stdin, agy만 명령줄)·위험 플래그 거절·출력 판정. `env`는 자식 환경과 실행 파일 찾기(WSL에서 Windows 실행 파일 거절). `isolation`은 참여자 한 번을 bubblewrap으로 가둔다(허용 폴더만, PID namespace). 진입점 `isolation.run()`은 경로 충돌을 거절하고 root 소유 bwrap인지 확인한 뒤 실행하며, 그때만 Linux에서도 자손 전체의 종료를 확인한다. runner는 입력을 다 보냈는지(`input_delivery`)도 남긴다. `membership`은 참여자가 빠지거나 바뀔 때의 결정이고, 공개 전에는 구성이 바뀔 때마다 정족수를 다시 본다. mock 시험과 aux-pc [conformance](docs/experiments/v04-03-conformance/aux-pc.md)에서 실제 CLI를 돌렸다. **controller·화면은 없다** |
+| [`core/`](core/README.md) | V04-03 실행 코어. `runner`는 CLI 한 번을 셸 없이 실행하고 추적 단위(Windows job object / POSIX 프로세스 그룹)가 비었는지 확인한다(못 하면 `unknown`). 자손 전체가 끝났는지는 `tree_confirmed_empty`가 따로 말하고, 프로세스 그룹에서는 `None`이다. `adapters`는 읽기 전용 논의자 실행 명세 조립(질문은 stdin, agy만 명령줄)·위험 플래그 거절·출력 판정. `env`는 자식 환경과 실행 파일 찾기(WSL에서 Windows 실행 파일 거절). `isolation`은 참여자 한 번을 bubblewrap으로 가둔다(허용 폴더만, PID namespace). 진입점 `isolation.run()`은 경로 충돌을 거절하고 root 소유 bwrap인지 확인한 뒤 실행하며, 그때만 Linux에서도 자손 전체의 종료를 확인한다. runner는 입력을 다 보냈는지(`input_delivery`)도 남긴다. `membership`은 참여자가 빠지거나 바뀔 때의 결정이고, 공개 전에는 구성이 바뀔 때마다 정족수를 다시 본다. mock 시험과 aux-pc [conformance](docs/experiments/v04-03-conformance/aux-pc.md)에서 실제 CLI를 돌렸다. controller와 화면은 [`app/`](app/README.md)에 있다 |
 | [`tools/v04-03/conformance.py`](tools/v04-03/conformance.py) | 합성 파일로 논의자 설정을 관측하는 스크립트. 일부 명령은 모델을 부른다 |
 | [`check_frontier_protocol.py`](tools/check_frontier_protocol.py) | 합성 완료 기록의 일관성 검사. 기록된 disposition이 규칙에 맞는지 **검사할 뿐 계산하지 않는다** |
 | [`review_boundary.py`](tools/review_boundary.py) | PR #3의 순수 함수 경계 실험(이벤트 순서, UNKNOWN 예산, 봉인 화면, 한도 표시). 서버·프로세스 제어가 아니다 |
@@ -88,7 +88,7 @@
 
 2026-09-23의 작업은 모두 main에 병합됐다 — V04-01 리뷰([PR #4](https://github.com/inlight37-design/decision-model_lab/pull/4))와 반영, Hermes 패턴 조사([PR #5](https://github.com/inlight37-design/decision-model_lab/pull/5))와 교차 확인, V04-03 실행 코어, 첫 conformance와 Codex 샌드박스 원인 확인, 인계 정리(`claude/handoff-cleanup-20260923`). 사용자는 **CI 녹색을 확인한 claude 세션이 main에 직접 병합하는 것**을 허락했다(2026-09-23).
 
-**지금 병합되지 않은 브랜치: 없음.** 병합된 것: A1 controller와 모의 화면(`claude/a1-controller-20260923`), WSL2 리뷰(PR #6) WM-01–WM-07 반영과 [반영 기록](docs/reviews/2026-09-23-wsl2-migration-review/RESPONSE.md)(`claude/wsl2-review-fixes-20260923`), WSL2 전환 검토([결과와 재현](docs/reviews/2026-09-23-wsl2-migration-review/README.md), `chatgpt/review-wsl2-20260923`, PR #6 — 리뷰어는 GitHub와 웹 Linux 컨테이너에서 검토했고 사용자 PC·실제 모델은 실행하지 않았다), 검토 요청서와 `env.resolve` 링크 우회 수정(`claude/review-request-20260923`), bubblewrap 격리와 W2 경계 시험(`claude/w2-isolation-20260923`), `aux-pc-wsl` 설치와 tier 1 기록(W1, `claude/wsl2-setup-20260923`), 경계 리뷰 보존과 반영(`claude/wsl2-boundary-review-20260923`, 4절 1단계)과 실행 명세·stdin(A4)·core 환경 모듈(A7, `claude/execution-spec-20260923`)은 병합됐다. 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 이 줄을 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다.
+**지금 병합되지 않은 브랜치: `claude/handoff-a1-status-20260923`** — 1절의 낡은 "앱은 아직 없다" 문장 정정. 병합된 것: A1 controller와 모의 화면(`claude/a1-controller-20260923`), WSL2 리뷰(PR #6) WM-01–WM-07 반영과 [반영 기록](docs/reviews/2026-09-23-wsl2-migration-review/RESPONSE.md)(`claude/wsl2-review-fixes-20260923`), WSL2 전환 검토([결과와 재현](docs/reviews/2026-09-23-wsl2-migration-review/README.md), `chatgpt/review-wsl2-20260923`, PR #6 — 리뷰어는 GitHub와 웹 Linux 컨테이너에서 검토했고 사용자 PC·실제 모델은 실행하지 않았다), 검토 요청서와 `env.resolve` 링크 우회 수정(`claude/review-request-20260923`), bubblewrap 격리와 W2 경계 시험(`claude/w2-isolation-20260923`), `aux-pc-wsl` 설치와 tier 1 기록(W1, `claude/wsl2-setup-20260923`), 경계 리뷰 보존과 반영(`claude/wsl2-boundary-review-20260923`, 4절 1단계)과 실행 명세·stdin(A4)·core 환경 모듈(A7, `claude/execution-spec-20260923`)은 병합됐다. 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 이 줄을 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다.
 
 ## 4. 다음 작업
 
