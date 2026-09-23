@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-23** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout) · 브랜치 `claude/n2-observe-tool-20260923`
+최종 갱신 **2026-09-23** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout) · 브랜치 `claude/n3-auth-mounts-20260923`
 
 이 파일 하나에서 시작한다. 절 구성은 고정이고 CI가 확인한다. 규칙은 [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있다. 이 판은 2026-09-23 작업을 마치며 **통째로 다시 쓴 판**이다. 지난 관측과 결정의 경위는 링크한 기록 문서로 보내고, 여기에는 지금 상태, 한계와 못 고친 문제(4절의 K 표), 다음 일만 둔다. 바로 전 판은 [docs/handoff/](docs/handoff/README.md)에 보관했다.
 
@@ -100,7 +100,7 @@
 
 ## 3. 진행 중인 작업
 
-**지금 병합되지 않은 브랜치: 없음.** 마지막 병합: N2 WSL 관측 도구(가짜 CLI로만 시험, 모델 호출 없음, `claude/n2-observe-tool-20260923`). 그 앞: N1 실제 CLI 실행기(가짜 CLI로만 시험, 서버 미연결)와 K02(`claude/n1-cli-executor-20260923`). 그 앞: 사용자가 정한 Q5·Q6·C2와 모델 호출 승인 절차(2절 18·19, `claude/decisions-20260923`). 그 앞: A1 리뷰의 반영(`claude/a1-review-fixes-20260923`) — 봉인 투영의 허용 목록, 결과 수용 관문(입력 전달·빈 답·모델 불일치), 원장 잠금과 조건부 상태 전이, 재시작 재조정과 대기 시도의 명시적 재개, 축소 승인 조건, 경로 충돌 검사, journal 스키마 버전, 문구 정정과 [반영 기록](docs/reviews/2026-09-23-a1-handoff-review/RESPONSE.md). 보조 PC의 Windows와 `aux-pc-wsl`에서 시험했고 모델은 부르지 않았다. 그 앞은 A1 리뷰 자체([PR #7](https://github.com/inlight37-design/decision-model_lab/pull/7))다. 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 이 줄을 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다. 2026-09-23의 앞선 병합 이력은 [지난 판](docs/handoff/2026-09-23-before-consolidation.md) 3절과 Git 로그에 있다.
+**지금 병합되지 않은 브랜치: 없음.** 마지막 병합: N3 인증 연결 관측(모델 호출 없음)과 관측 도구의 설정 파일 변경 기록(`claude/n3-auth-mounts-20260923`). 그 앞: N2 WSL 관측 도구(가짜 CLI로만 시험, 모델 호출 없음, `claude/n2-observe-tool-20260923`). 그 앞: N1 실제 CLI 실행기(가짜 CLI로만 시험, 서버 미연결)와 K02(`claude/n1-cli-executor-20260923`). 그 앞: 사용자가 정한 Q5·Q6·C2와 모델 호출 승인 절차(2절 18·19, `claude/decisions-20260923`). 그 앞: A1 리뷰의 반영(`claude/a1-review-fixes-20260923`) — 봉인 투영의 허용 목록, 결과 수용 관문(입력 전달·빈 답·모델 불일치), 원장 잠금과 조건부 상태 전이, 재시작 재조정과 대기 시도의 명시적 재개, 축소 승인 조건, 경로 충돌 검사, journal 스키마 버전, 문구 정정과 [반영 기록](docs/reviews/2026-09-23-a1-handoff-review/RESPONSE.md). 보조 PC의 Windows와 `aux-pc-wsl`에서 시험했고 모델은 부르지 않았다. 그 앞은 A1 리뷰 자체([PR #7](https://github.com/inlight37-design/decision-model_lab/pull/7))다. 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 이 줄을 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다. 2026-09-23의 앞선 병합 이력은 [지난 판](docs/handoff/2026-09-23-before-consolidation.md) 3절과 Git 로그에 있다.
 
 사용자의 판단을 기다리는 것:
 - **모델 호출 승인** — 4절 2단계(Claude 3회 안팎, Codex 2회 안팎). 1단계 N1–N4를 마친 뒤에 받는다. 승인할 때 provider별 최대 시작 횟수·실패 포함 상한·timeout·멈추는 조건을 함께 정한다(2절 19).
@@ -122,7 +122,7 @@
 
 ### 1단계 — 실제 호출 전 확인 (모델 없음)
 
-**A1 리뷰가 먼저 하라고 한 관문 보강(리뷰의 N0)과 N1·N2는 끝났다** — [반영 기록](docs/reviews/2026-09-23-a1-handoff-review/RESPONSE.md). 아래 N3–N6이 남았다.
+**A1 리뷰가 먼저 하라고 한 관문 보강(리뷰의 N0)과 N1–N3은 끝났다** — [반영 기록](docs/reviews/2026-09-23-a1-handoff-review/RESPONSE.md). 아래 N4–N6이 남았다.
 
 - **N1. 실제 CLI 실행기 — 끝남.** [`app/cli_executor.py`](app/cli_executor.py)의 `CliExecutor`: `env.resolve` → `adapters.build_spec` → `isolation.run(cli_mounts(...), never=controller 데이터 폴더)` → `interpret`. Linux·WSL 전용이다(2절 15).
   - 결과 수용은 A1 관문 그대로다. 실행 명세(`ExecutionSpec.record()`)는 시작 사건에 시도 ID와 함께 남는다 — 질문 본문과 원문 argv는 없다.
@@ -132,9 +132,10 @@
   - 서버에는 아직 연결하지 않았다. 서버에서 실제 CLI를 고르는 설정(참여자별 전체 모델 이름)은 승인된 호출을 할 때 붙인다.
 - **N2. WSL용 관측 도구 — 끝남.** [`tools/w2/observe.py`](tools/w2/observe.py). `CliExecutor.prepare()`로 참여자와 같은 argv·격리 경계를 만들어 probe마다 한 번 부른다. 승인(`approve`: provider별 상한·timeout·메모)이 없거나, 상한을 다 썼거나, 앞 호출이 기대와 달랐으면 부르지 않는다. 실패도 한 번으로 센다. 가짜 CLI로 실제 격리 경로를 도는 시험이 있다([`tests/test_w2_observe.py`](tests/test_w2_observe.py)).
   - aux-pc-wsl에서 `plan`(실행 없음)으로 실제 설치(Claude Code 2.1.280, Codex 0.156.1)의 argv와 연결 경로가 성립하는 것을 확인했다. **로그인 셸(`bash -l`)에서 돌린다** — 비로그인 셸은 PATH에 `~/.local/bin`이 없어 CLI를 못 찾는다.
-- **N3. 인증 연결 좁히기 후보(K09).**
-  - 확인할 것: `~/.claude`·`~/.claude.json`·`~/.codex` 가운데 무엇이 있어야 로그인 상태 명령이 격리 안에서 되는지를 모델 없이 본다.
-  - 토큰 갱신에 필요한 쓰기는 2단계에서 확인한다.
+- **N3. 인증 연결 좁히기 후보(K09) — 관측 끝남.** [기록](docs/experiments/w2-isolation/auth-mounts-aux-pc-wsl.md), 도구 [`tools/w2/auth_mounts.py`](tools/w2/auth_mounts.py)(모델 호출 없음).
+  - 격리 안 로그인 상태에는 인증 파일 하나면 된다(Claude `~/.claude/.credentials.json`, Codex `~/.codex/auth.json`). 읽기 전용으로도 된다.
+  - **그래도 파일 하나만 연결하도록 바로 좁히지 않는다.** 토큰 갱신을 저장하지 못하면(읽기 전용, 또는 파일 하나를 연결했는데 CLI가 이름 바꾸기로 쓰는 경우) 사용자의 로그인이 풀릴 수 있다. 다음 후보는 폴더는 쓰기로 두고 필요 없는 하위 폴더를 빈 tmpfs로 덮는 것이다.
+  - 2단계 호출마다 `observe.py`가 설정 폴더의 파일 변경(이름·크기·수정 시각만)을 `config_changes`로 남긴다. 그것을 보고 무엇을 덮을지 정한다.
 - **N4. manifest `runtime-inventory/2`(옛 A5).**
   - `installed`·`auth_observed`·`transport_observed`·`context_conformance`·`permission_conformance`로 나눈다.
   - 실행 허가(`eligible_for_run`)는 실행 직전에 계산한다(PR #4 R02·R05).
@@ -195,7 +196,7 @@
 | K06 | 실행 코어 | Windows: job 배정 전에 생긴 자식은 추적하지 못한다. 끝낸 직후 프로세스 객체가 신호를 받기까지 짧은 틈이 있다 | 문서화, 시험이 기다린다 | Windows 경로는 동결(2절 15) |
 | K07 | 실행 코어 | agy는 질문을 명령줄로 보낸다(stdin 미확인). 그래서 `RunResult.argv`에 질문이 들어 있다 | 기록은 `ExecutionSpec.record()`로 | B4 |
 | K08 | 격리 | 네트워크를 공유한다. 참여자가 localhost 포트와 abstract unix 소켓에 닿고, 네트워크 서비스에 시켜 만든 작업은 종료 보장 밖이다 | 앱의 제어 API는 토큰으로 막았다 | 미정 |
-| K09 | 격리 | `~/.claude`·`~/.codex` 전체를 쓰기로 연결한다. 그 배포판에서 대화형으로 쓴 그 CLI의 세션 기록이 참여자에게 보인다 | 기록해 두었다 | N3, 2단계 |
+| K09 | 격리 | `~/.claude`·`~/.codex` 전체를 쓰기로 연결한다. 그 배포판에서 대화형으로 쓴 그 CLI의 세션 기록과 `settings.json`이 참여자에게 보인다 | 로그인 상태에는 인증 파일 하나면 됨을 봤다(N3). 토큰 갱신 저장 때문에 아직 좁히지 않았다 | 2단계(`config_changes`를 보고 하위 폴더 덮기) |
 | K10 | 격리 | 메모리·CPU 상한이 없다 | — | 미정 |
 | K11 | 격리 | `/etc` 전체와 `/usr`가 읽기 전용으로 보인다. 설정과 민감한 값이 있을 수 있는 호스트 경로다 | 신뢰 범위로 둔다. `never`는 이 자동 연결과도 비교해 겹치면 거절한다(A1 리뷰 A1-04) | — |
 | K12 | 격리 | Codex 자체 bubblewrap이 우리 bubblewrap 안에서 도는지 모른다. `--disable-userns`는 쓰지 않았다 | — | B2 |

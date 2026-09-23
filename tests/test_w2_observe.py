@@ -40,6 +40,9 @@ if FLAVOR == "claude" and opt("--permission-mode") == "notamode" and BEHAVIOR !=
 if FLAVOR == "codex" and opt("--sandbox") == "notamode":
     sys.stderr.write("error: invalid value 'notamode' for '--sandbox <SANDBOX_MODE>'\n")
     sys.exit(2)
+if FLAVOR == "claude":  # 실제 CLI처럼 자기 설정 폴더에 무언가 쓴다(관측 도구가 이름을 적는지 본다)
+    with open(os.path.join(os.environ["HOME"], ".claude", "fake-state.json"), "w") as f:
+        f.write("{{}}")
 def first_line(path):
     try:
         with open(path, encoding="utf-8") as f:
@@ -175,6 +178,7 @@ class CallTests(Base):
         self.assertTrue(answer["forbidden"].startswith("could not"))            # 다른 참여자 초안은 안 보인다
         self.assertTrue(answer["dash_line_seen"])                               # 선행 대시 줄이 stdin으로 갔다
         self.assertEqual((b1["input_delivery"], b1["tree_confirmed_empty"]), ("complete", True))
+        self.assertEqual(b1["config_changes"]["added"], ["~/.claude/fake-state.json"])  # CLI가 쓴 설정 파일 이름
         b2 = self.call("b2")
         self.assertTrue(b2["as_expected"], b2)
         self.assertEqual(b2["stderr_counts"], {adapters.CODEX_REJECTED: 0})
