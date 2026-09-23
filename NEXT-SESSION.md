@@ -97,7 +97,9 @@
 
 ## 3. 진행 중인 작업
 
-**지금 병합되지 않은 브랜치: 없음.** 마지막 병합: A1 리뷰의 반영(`claude/a1-review-fixes-20260923`) — 봉인 투영의 허용 목록, 결과 수용 관문(입력 전달·빈 답·모델 불일치), 원장 잠금과 조건부 상태 전이, 재시작 재조정과 대기 시도의 명시적 재개, 축소 승인 조건, 경로 충돌 검사, journal 스키마 버전, 문구 정정과 [반영 기록](docs/reviews/2026-09-23-a1-handoff-review/RESPONSE.md). 보조 PC의 Windows와 `aux-pc-wsl`에서 시험했고 모델은 부르지 않았다. 그 앞은 A1 리뷰 자체([PR #7](https://github.com/inlight37-design/decision-model_lab/pull/7))다. 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 이 줄을 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다. 2026-09-23의 앞선 병합 이력은 [지난 판](docs/handoff/2026-09-23-before-consolidation.md) 3절과 Git 로그에 있다.
+**병합 대기 조사: `chatgpt/tmux-patterns-20260923`.** 사용자의 tmux 위키 조사 요청에 따른 [요약·읽는 순서](docs/research/tmux-2026-09-23/README.md), [상세 분석](docs/research/tmux-2026-09-23/ANALYSIS.md), [적용·검증 계획](docs/research/tmux-2026-09-23/ADOPTION_PLAN.md), [출처와 한계](docs/research/tmux-2026-09-23/EVIDENCE.md)를 남겼다. ChatGPT가 GitHub·공식 문서와 고정 소스를 대조했으며 사용자 PC·WSL·tmux 실행·모델 호출은 하지 않았다. 제품 코드·의존성·디자인은 바꾸지 않았다. 권고는 tmux의 재접속·제어·상태 탐색 방식을 기존 구조에 선별 적용하되 N1–N4를 유지하는 것이다. tmux 자체는 전용 개발자 터미널의 선택 도구이며 참여자 실행 엔진으로 추가하지 않는다. 적용 계획의 시험은 제안이지 실행 결과가 아니다. PR의 최종 CI를 확인하고 사용자 또는 승인된 claude 세션이 병합한다. 병합 직전 이 진행 상태를 정리하되 조사 링크는 기록 절에 보존한다.
+
+마지막 병합: A1 리뷰의 반영(`claude/a1-review-fixes-20260923`) — 봉인 투영의 허용 목록, 결과 수용 관문(입력 전달·빈 답·모델 불일치), 원장 잠금과 조건부 상태 전이, 재시작 재조정과 대기 시도의 명시적 재개, 축소 승인 조건, 경로 충돌 검사, journal 스키마 버전, 문구 정정과 [반영 기록](docs/reviews/2026-09-23-a1-handoff-review/RESPONSE.md). 보조 PC의 Windows와 `aux-pc-wsl`에서 시험했고 모델은 부르지 않았다. 그 앞은 A1 리뷰 자체([PR #7](https://github.com/inlight37-design/decision-model_lab/pull/7))다. 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 이 줄을 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다. 2026-09-23의 앞선 병합 이력은 [지난 판](docs/handoff/2026-09-23-before-consolidation.md) 3절과 Git 로그에 있다.
 
 사용자의 판단을 기다리는 것:
 - **모델 호출 승인** — 4절 2단계(Claude 3회 안팎, Codex 2회 안팎). 리뷰가 요구한 모델 없는 관문 보강은 끝났다. 남은 선행 작업은 1단계 N1–N4다.
