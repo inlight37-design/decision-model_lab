@@ -171,10 +171,10 @@ def _trusted_bwrap() -> None:
 
 def run(argv: Sequence[str], box: Sandbox, *, timeout: float, stdin_text: str | None = None,
         max_output_bytes: int = runner.DEFAULT_MAX_OUTPUT,
-        cancel: threading.Event | None = None) -> runner.RunResult:
+        cancel: threading.Event | None = None, stderr_marks: Sequence[str] = ()) -> runner.RunResult:
     """argv를 box 안에서 한 번 실행한다. 결과의 containment는 runner.PID_NAMESPACE다."""
     args, child_env = plan(argv, box)
     _trusted_bwrap()
     return runner._execute(runner.validate_argv(args), cwd=os.path.realpath(box.work_dir), env=child_env,
                            timeout=timeout, stdin_text=stdin_text, max_output_bytes=max_output_bytes,
-                           cancel=cancel, pid_namespace=True)
+                           cancel=cancel, pid_namespace=True, stderr_marks=stderr_marks)
