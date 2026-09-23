@@ -1,0 +1,15 @@
+# probe: P3b-codex
+# command: codex exec --skip-git-repo-check --sandbx read-only "Reply with exactly: OK"
+# cwd: empty folder outside the repository
+# environment: fresh (AI-tool variables removed)
+# exit: 2
+# duration_ms: 36
+
+error: unexpected argument '--sandbx' found
+System.Management.Automation.RemoteException
+  tip: a similar argument exists: '--sandbox'
+System.Management.Automation.RemoteException
+Usage: codex exec [OPTIONS] [PROMPT]
+       codex exec [OPTIONS] <COMMAND> [ARGS]
+System.Management.Automation.RemoteException
+For more information, try '--help'.

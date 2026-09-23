@@ -7,7 +7,7 @@ Antigravity·ChatGPT·Claude의 **native 하네스와 공식 구독 CLI**를 연
 
 Jev류 판단 모델은 교체 가능한 선택 부품이며, 전체 시스템의 필수 지휘자가 아닙니다.
 
-> **현재: v0.4 상급 모델 협업 확장 (2026-09-22).** 실제 제품·공개 구현·논문과 반례를 F01–F29로 정리하고, 네 실행 모드·P0–P5 프로토콜·D10–D18 결정·비교 실험을 추가했습니다. 이후 외부 검토와 추가 검토에서 CI·원장 계약·오프라인 경계 실험을 보강했습니다([검토 기록](docs/reviews/README.md)). 현재 검사 수와 결과는 [CI 실행 기록](https://github.com/inlight37-design/decision-model_lab/actions/workflows/checks.yml)이 기준입니다. **실제 세 모델 연결·사용자 환경의 권한/과금·품질 향상률을 검증한 상태는 아닙니다.** v0.3 기반과 v0.2 계약은 유지합니다. [최종 검토와 수정 내역](docs/architecture/v0.4/FINAL_REVIEW.md). 이후 남은 출처 27개와 최근 논문 4개를 확인한 [후속 근거 검토](docs/architecture/v0.4/EVIDENCE_FOLLOWUP.md)에서 PAL 설명을 수정하고 평가 기준을 보강했습니다.
+> **현재: v0.4 상급 모델 협업 확장 (2026-09-22).** 실제 제품·공개 구현·논문과 반례를 F01–F31로 정리하고, 네 실행 모드·P0–P5 프로토콜·D10–D18 결정·비교 실험을 추가했습니다. 이후 외부 검토와 추가 검토에서 CI·원장 계약·오프라인 경계 실험을 보강했습니다([검토 기록](docs/reviews/README.md)). 현재 검사 수와 결과는 [CI 실행 기록](https://github.com/inlight37-design/decision-model_lab/actions/workflows/checks.yml)이 기준입니다. **실제 세 모델 연결·사용자 환경의 권한/과금·품질 향상률을 검증한 상태는 아닙니다.** v0.3 기반과 v0.2 계약은 유지합니다. [최종 검토와 수정 내역](docs/architecture/v0.4/FINAL_REVIEW.md). 이후 남은 출처 27개와 최근 논문 4개를 확인한 [후속 근거 검토](docs/architecture/v0.4/EVIDENCE_FOLLOWUP.md)에서 PAL 설명을 수정하고 평가 기준을 보강했습니다.
 
 ## 이어서 작업한다면
 
@@ -29,7 +29,7 @@ Jev류 판단 모델은 교체 가능한 선택 부품이며, 전체 시스템�
 | [사례와 반례](docs/architecture/v0.4/01-cases-and-findings.md) | Perplexity/Microsoft, Karpathy/PAL, ReConcile/MoA, 상급 모델 분업, debate 실패와 judge 편향 |
 | [상급 모델 협업 아키텍처](docs/architecture/v0.4/02-frontier-architecture.md) | 단일 실행·독립 교차검증·제한 토론·구현/검토, 주장/근거·권한·예산·복구 |
 | [평가와 구현 순서](docs/architecture/v0.4/03-evaluation-and-roadmap.md) | 같은 예산의 강한 단독/ensemble 대조군, 오류 전이·합성 손실, 8개 적용 예시와 ticket |
-| [근거 원장](docs/architecture/v0.4/sources.json) | F01–F29의 원문·날짜/버전·검토 범위·한계·관련 결정 |
+| [근거 원장](docs/architecture/v0.4/sources.json) | F01–F31의 원문·날짜/버전·검토 범위·한계·관련 결정 |
 | [검증 범위](docs/architecture/v0.4/VALIDATION.md) | 실제 오프라인 검사, 코드 hash 대조, 미실시한 runtime 검증 |
 
 **다수결은 진실 판정이 아닙니다.** 초기 독립 답변을 보존하고, 근거로 해결되지 않은 소수 반례·의견 차이는 최종 결과에도 남깁니다. 상급 모델이 계획·검토·합성하는 것도 지원할 설계이며, 모든 역할을 저가 모델로 채우는 구조가 아닙니다. 추가 호출이 실제로 도움이 되는지는 작업군별로 평가합니다.
@@ -51,7 +51,7 @@ v0.2 계약 검사, 근거 원장 구조 검사, 문서 참조 회귀 검사까�
 python -m pip install -r requirements-design.txt
 python tools/validate_design.py     # v0.1 계약 25개
 python tools/validate_v02.py        # v0.2 plan/proof 결합
-python tools/validate_sources.py    # E01–E31 / F01–F29 원장 구조
+python tools/validate_sources.py    # E01–E31 / F01–F31 원장 구조
 python -m unittest discover -s tests -v
 ```
 

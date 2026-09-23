@@ -16,7 +16,7 @@
 | 제품·공개 코드·논문·반례의 사례 정리 | [01-cases-and-findings](01-cases-and-findings.md) |
 | 네 모드, P0–P5, profile/claim/evidence/권한/예산/복구, D10–D18 | [02-frontier-architecture](02-frontier-architecture.md) |
 | Q0–Q6 대조군, 오류 전이·합성 손실·총비용, 8개 적용 recipe, V04-01–06 | [03-evaluation-and-roadmap](03-evaluation-and-roadmap.md) |
-| F01–F29 원문·날짜/버전·검토 범위·한계·결정 연결 | [sources.json](sources.json) |
+| F01–F31 원문·날짜/버전·검토 범위·한계·결정 연결 | [sources.json](sources.json) |
 | 합성 완료 기록 checker와 내장 demo | [tools/check_frontier_protocol.py](../../../tools/check_frontier_protocol.py) |
 | frontier/CLI 테스트 | [tests/test_frontier_protocol.py](../../../tests/test_frontier_protocol.py) |
 | 출처 양방향 연결·필수 필드·범위 표기·인코딩·상대 링크 검사 | [tests/test_research_integrity.py](../../../tests/test_research_integrity.py) |

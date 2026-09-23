@@ -1,0 +1,8 @@
+# probe: P3-agy
+# command: agy -p "Reply with exactly: OK" --output-format notaformat
+# cwd: empty folder outside the repository
+# environment: fresh (AI-tool variables removed)
+# exit: 0
+# duration_ms: 10405
+
+OK

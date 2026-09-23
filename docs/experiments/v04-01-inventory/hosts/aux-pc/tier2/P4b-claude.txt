@@ -1,0 +1,35 @@
+# probe: P4b-claude
+# command: claude -p "Reply with exactly: OK" --output-format stream-json --verbose --restricted --strict-mcp-config --disable-slash-commands --tools ""
+# cwd: empty folder outside the repository
+# environment: fresh (AI-tool variables removed)
+# exit: 0
+# duration_ms: 3795
+# stored: summary only (see note)
+
+{
+  "note": "Summary of the stream-json run. The raw stream stays on the PC because it lists the user's installed plugins, skills, commands and connected services.",
+  "claude_code_version": "2.1.280",
+  "model": "claude-opus-5-5",
+  "permissionMode": "default",
+  "apiKeySource": "none",
+  "loaded_into_context": {
+    "tools": 0,
+    "mcp_tools": 0,
+    "mcp_servers": 0,
+    "mcp_servers_by_status": {},
+    "mcp_servers_by_origin": {},
+    "plugins": 2,
+    "skills": 0,
+    "agents": 5,
+    "slash_commands": 0
+  },
+  "result": {
+    "is_error": false,
+    "result": "OK",
+    "input_tokens": 2,
+    "cache_creation_input_tokens": 1339,
+    "cache_read_input_tokens": 531,
+    "output_tokens": 4,
+    "total_cost_usd_client_estimate": 0.0109062
+  }
+}

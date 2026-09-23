@@ -1,0 +1,9 @@
+# probe: P3b-claude
+# command: claude -p "Reply with exactly: OK" --permision-mode plan
+# cwd: empty folder outside the repository
+# environment: fresh (AI-tool variables removed)
+# exit: 1
+# duration_ms: 153
+
+error: unknown option '--permision-mode'
+(Did you mean --permission-mode?)
