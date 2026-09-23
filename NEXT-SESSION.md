@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-24** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout과 그 WSL) · 브랜치 `claude/stage2-followup-20260924`
+최종 갱신 **2026-09-24** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout과 그 WSL) · 브랜치 `claude/k01-handoff-20260924`
 
 이 파일 하나에서 시작한다. 절 구성은 고정이고 CI가 확인한다. 규칙은 [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있다. 1단계(실제 호출 전 확인)를 마치고 통째로 다시 쓴 판에 **2단계(승인된 모델 호출)의 결과를 더한 판**이다. 1단계 각 항목(N0–N6)의 경위와 긴 병합 이력은 [1단계 직후 판](docs/handoff/2026-09-23-before-stage2.md)과 Git 로그에 있다. 여기에는 지금 상태, 한계와 못 고친 문제(4절의 K 표), 다음 일만 둔다.
 
@@ -11,7 +11,7 @@
 3. 이 세션이 무엇에 접근할 수 있는지(사용자 PC / 웹 컨테이너 / GitHub만) 정하고 PR에 적는다.
 4. **GitHub만 보는 세션**(ChatGPT 웹 등)이라면 main이 아직 이 파일의 최신판이 아닐 수 있다. 3절의 브랜치에서 이 파일을 다시 읽는다.
 5. **모델을 부르는 일은 사용자 승인 뒤에만 한다.** 사용량이 막히면 멈추고 알린다(사용자 요청 — Codex 사용량이 적게 남아 있었다). 2단계 승인(Claude 3·Codex 2)은 모두 썼다 — 더 부르려면 새로 승인받는다.
-6. **사용자에게 받을 것(3절):** Codex 문맥 판정(`failed`)을 푸는 방법, K01 호출(Claude 1회)의 명시적 승인, K46 방어를 adapter에 넣고 Codex 1회로 확인할지, PR #8(tmux 조사, 병합됨)의 TM 항목을 작업으로 받을지. 답을 받기 전에는 진행하지 않는다.
+6. **사용자에게 받을 것(3절):** Codex 문맥 판정(`failed`)을 푸는 방법, K46 방어를 adapter에 넣고 Codex 1회로 확인할지, PR #8(tmux 조사, 병합됨)의 TM 항목을 작업으로 받을지. 답을 받기 전에는 진행하지 않는다.
 
 ## 1. 지금 상태
 
@@ -44,7 +44,7 @@
   - GitHub CLI: `gh` 2.101.0을 공식 릴리스 zip(체크섬 확인)으로 `C:\ai\tools\gh\`에 풀었다(2026-09-24, 사용자 승인). 관리자 권한·PATH 변경 없이 전체 경로로 부른다. 로그인(`gh auth login`)은 사용자가 한다.
   - **Windows에만 해당하는 사실:** Codex의 `--ignore-user-config`가 샌드박스 선택까지 버린다(openai/codex#42172). Codex가 명령을 PowerShell 5.1로 실행한다. 작업 폴더 밖의 다른 참여자 초안도 읽는다. Claude 데스크톱 앱 셸에는 앱이 넣은 변수가 있어 새 터미널 기준 환경으로 실행한다. `%LOCALAPPDATA%` 설치가 앱의 가상 공간에 들어간 적이 있다(agy).
 - **`aux-pc-wsl`(WSL2):**
-  - 기록: [V04-01 tier 1](docs/experiments/v04-01-inventory/hosts/aux-pc-wsl/RESULTS.md), [W2 경계 시험](docs/experiments/w2-isolation/aux-pc-wsl.md), [인증 연결 관측(N3)](docs/experiments/w2-isolation/auth-mounts-aux-pc-wsl.md), [2단계 호출(tier 2, B1·B2, K12 진단)](docs/experiments/w2-isolation/stage2-aux-pc-wsl.md).
+  - 기록: [V04-01 tier 1](docs/experiments/v04-01-inventory/hosts/aux-pc-wsl/RESULTS.md), [W2 경계 시험](docs/experiments/w2-isolation/aux-pc-wsl.md), [인증 연결 관측(N3)](docs/experiments/w2-isolation/auth-mounts-aux-pc-wsl.md), [2단계 호출(tier 2, B1·B2, K12 진단)](docs/experiments/w2-isolation/stage2-aux-pc-wsl.md), [2단계 후속(K46, 모델 없음)](docs/experiments/w2-isolation/stage2-followup-aux-pc-wsl.md), [K01 큰 입력](docs/experiments/w2-isolation/k01-large-input-aux-pc-wsl.md).
   - 환경: WSL 2.7.14, Ubuntu 24.04.5, systemd 켜짐, bubblewrap 0.9.0, AppArmor 꺼짐. 저장소는 Windows checkout(`C:\ai\decision-model_lab`)을 `/mnt/c/ai/decision-model_lab`로 열어 쓴다.
   - 설치: Claude Code 2.1.280과 Codex 0.156.1을 `~/.local/bin`에 설치했다. 로그인도 했다(Claude `claude.ai`·`firstParty`, Codex ChatGPT).
   - **로그인 셸(`bash -l`)에서 돌린다.** 비로그인 셸(`wsl.exe -- bash`)은 PATH에 `~/.local/bin`이 없어 CLI를 못 찾는다. PATH에 Windows 쪽 CLI 폴더가 이어 붙어 있다. Codex는 Linux 샌드박스용 bubblewrap을 스스로 들고 온다.
@@ -112,12 +112,11 @@
 
 ## 3. 진행 중인 작업
 
-**지금 병합되지 않은 브랜치: 없음.** 마지막 병합: 2단계 후속(`claude/stage2-followup-20260924`) — Codex 명령이 자기 인증 파일을 읽을 수 있다는 모델 없는 진단(K46)과 권한 profile 시험, GitHub CLI 설치 기록. 이 줄은 병합 뒤에 맞도록 브랜치의 마지막 커밋에서 미리 "없음"으로 돌렸다. 그 앞: [PR #8](https://github.com/inlight37-design/decision-model_lab/pull/8) `chatgpt/tmux-patterns-20260923` — ChatGPT의 tmux 조사(문서만, head `4e3500e`에서 CI 녹색). 사용자 지시로 claude 세션이 병합했다(2026-09-24). PR이 고친 옛 3절은 버리고 main 쪽을 두었으며, 조사 링크와 claude 세션의 대조는 1절 기록 표의 조사 줄로 옮겼다. 그 앞: 2단계(`claude/stage2-observe-20260923`) — 승인된 호출 다섯 번의 결과 기록, `manifest.v2.json`의 세 칸, 관측 도구의 수정(ID 가림, 경계 위반 멈춤), K12 진단 도구, 다른 AI에게 줄 [2단계 리뷰 요청서](docs/reviews/2026-09-23-stage2-request/README.md)(실패·시행착오 S01–S21). 이 세션의 권한 확인이 처음에는 main 병합을 막았고, 사용자 지시 뒤에 병합했다. 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 이 줄을 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다. 그 앞의 병합 이력은 [1단계 직후 판](docs/handoff/2026-09-23-before-stage2.md) 3절과 Git 로그에 있다.
+**지금 병합되지 않은 브랜치: 없음.** 마지막 병합: K01 관측과 인계 정리(`claude/k01-handoff-20260924`, gh로 만든 PR) — 큰 stdin 질문의 Claude 호출 1회([기록](docs/experiments/w2-isolation/k01-large-input-aux-pc-wsl.md))와 다음 세션을 위한 이 파일의 정리. 이 줄은 병합 뒤에 맞도록 브랜치에서 미리 "없음"으로 적었다. 그 앞: [PR #9](https://github.com/inlight37-design/decision-model_lab/pull/9) 2단계 후속(`claude/stage2-followup-20260924`) — Codex 명령이 자기 인증 파일을 읽을 수 있다는 모델 없는 진단(K46)과 권한 profile 시험, GitHub CLI 설치 기록. claude 세션이 gh로 연 첫 PR이고, 사용자 지시로 병합했다. 그 앞: [PR #8](https://github.com/inlight37-design/decision-model_lab/pull/8) `chatgpt/tmux-patterns-20260923` — ChatGPT의 tmux 조사(문서만, head `4e3500e`에서 CI 녹색). 사용자 지시로 claude 세션이 병합했다(2026-09-24). PR이 고친 옛 3절은 버리고 main 쪽을 두었으며, 조사 링크와 claude 세션의 대조는 1절 기록 표의 조사 줄로 옮겼다. 그 앞: 2단계(`claude/stage2-observe-20260923`) — 승인된 호출 다섯 번의 결과 기록, `manifest.v2.json`의 세 칸, 관측 도구의 수정(ID 가림, 경계 위반 멈춤), K12 진단 도구, 다른 AI에게 줄 [2단계 리뷰 요청서](docs/reviews/2026-09-23-stage2-request/README.md)(실패·시행착오 S01–S21). 이 세션의 권한 확인이 처음에는 main 병합을 막았고, 사용자 지시 뒤에 병합했다. 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 이 줄을 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다. 그 앞의 병합 이력은 [1단계 직후 판](docs/handoff/2026-09-23-before-stage2.md) 3절과 Git 로그에 있다.
 
 사용자의 판단을 기다리는 것:
 - **PR #8의 TM 항목을 작업으로 받을지.** 병합은 조사 문서를 main에 둔 것이고 작업을 받은 것은 아니다. claude 세션의 권고는 적용 계획 A(화면 조회의 요청 겹침 막기, 늦게 온 응답 버리기, 연결 끊김과 마지막 확인 시각 표시)만 3단계 화면 작업에 넣는 것이다. tmux를 참여자 실행 엔진으로 쓰지 않는다는 판단은 조사와 claude 세션이 같다 — bubblewrap 안의 참여자가 밖의 tmux server에 일을 맡기면 격리와 자손 종료 확인이 깨진다.
 - **Codex 문맥 판정(`failed`)을 푸는 방법** — (a) 참여자 구성(빈 작업 폴더)에서 한 번 더 관측해 문맥에 무엇이 들어가는지 본다(Codex 1회 승인), 또는 (b) 빈 작업 폴더 완화를 정책으로 받아들이고 계정 플러그인(K44)은 한계로 둔다. 정하기 전에는 Codex를 실제 실행기로 부르지 않는다.
-- **K01 호출의 명시적 승인** — 사용자는 2단계 후속 호출을 claude 세션의 판단에 맡겼지만(2026-09-24 "3번은 알아서 해도 돼"), 이 세션의 자동 권한 확인이 그것을 모델 호출 승인으로 받지 않고 `observe.py approve` 기록을 거절했다. 우회하지 않았다. Claude `b1 --pad-kb 96` 1회를 명시적으로 승인하면 부른다.
 - **K46 방어를 넣을지** — Codex 참여자의 명령이 `~/.codex/auth.json`을 읽을 수 있다(모델 없는 진단). 인증 파일만 읽기 금지하는 권한 profile이 `codex sandbox`에서는 통했다. adapter에 넣으려면 허용 목록을 넓히고 Codex exec 1회로 확인해야 한다(승인 필요). K09의 하위 폴더 덮기보다 먼저 한다(4절 2단계 "남은 것").
 - 열린 결정 Q3·Q4 — 급하지 않다. Q5·Q6·C2는 정했다(2절 18·19).
 - aux-pc 로컬 모의 데이터(`~/.decision-model-lab/mock`)의 첫 실행 하나가 ChatGPT 앱 수동 답을 기다린다 — 시연용이고 저장소와 무관하다. 새 코드로 처음 열면 journal이 스키마 2로 올라가고, 그 실행은 예전처럼 원본 앱 답도 정족수에 센다(`include_unverified`).
@@ -134,6 +133,18 @@
 | 4 | **B3 V04-03 pilot과 사용량 비교** | 여러 번 | 3, 승인, Codex 문맥 판정(3절) |
 | — | B4 agy 관측 | 몇 회 | 사용자가 agy를 켤 때 |
 
+**다음 세션의 첫 일 — 둘 중 무엇을 먼저 할지 사용자에게 확인한다.**
+
+1. **K46 방어(Codex를 실제로 부르기 전에 필요).**
+   - 모델 없이 할 것:
+     - `core/adapters.py`의 Codex 명세가 Linux에서 `--sandbox read-only` 대신 권한 profile을 넘긴다: `-c permissions.<이름>={ extends = ":read-only", filesystem = { "<HOME>/.codex/auth.json" = "deny" } }`와 `-P <이름>`. HOME은 실행기가 안다.
+     - 금지 목록(`-c`)의 예외를 그 값 하나로 좁혀 둔다.
+     - `observe.py`의 `p3-codex`는 지금 `--sandbox` 값을 바꾸므로 함께 고친다.
+     - 가짜 CLI 시험을 붙인다. 원 출력을 읽을 때 토큰 모양(JWT·긴 base64)도 가리도록 `_scrub`을 넓힌다.
+   - 그다음 사용자 승인을 받아 Codex exec 1회로 본다: 로그인이 유지되는지, 모델이 돌린 명령이 `auth.json`을 못 읽는지(내용이 아니라 종료 코드만 찍게 한다), 쓰기가 막히는지.
+   - 열린 결정 C3의 (a)(참여자 구성에서 문맥 확인)를 같은 호출에 붙일 수 있는지도 함께 설계한다.
+2. **3단계 A1 이어서(모의, 모델 호출 없음)** — 아래 "3단계 이후"의 목록.
+
 ### 1단계 — 끝남
 
 A1 리뷰가 먼저 하라고 한 관문 보강(N0, [반영 기록](docs/reviews/2026-09-23-a1-handoff-review/RESPONSE.md))과 N1–N6을 마쳤다. 항목별 경위는 [1단계 직후 판](docs/handoff/2026-09-23-before-stage2.md) 4절에 있고, 남은 한계는 아래 K 표로 옮겼다. N1 실제 실행기는 아직 서버에 연결하지 않았다 — 서버에서 실제 CLI를 고르는 설정(참여자별 전체 모델 이름)은 3단계 이후에 붙인다(K17).
@@ -144,7 +155,7 @@ A1 리뷰가 먼저 하라고 한 관문 보강(N0, [반영 기록](docs/reviews
 
 **남은 것 — 하려면 새 승인이 필요하다:**
 
-- **K01 큰 입력.** 2단계에서 `--pad-kb`를 쓰지 않아 파이프 버퍼보다 큰 입력을 보내지 못했다(절차의 명령과 관측 목록을 맞춰 보지 않은 실수). `observe.py call b1 <모델> --pad-kb 96` 한 번이면 입력 전달과 보고 토큰의 차이를 함께 본다. 2026-09-24에 사용자가 후속 호출을 세션에 맡겼으나 이 세션의 권한 확인이 승인 기록을 막아 부르지 않았다(3절).
+- ~~K01 큰 입력~~ — **했다(2026-09-24, Claude 1회).** 2단계에서 `--pad-kb`를 빠뜨린 것을 메웠다. 약 95 KB의 stdin 질문이 끝까지 전달됐고 보고 토큰이 입력만큼 늘었다([기록](docs/experiments/w2-isolation/k01-large-input-aux-pc-wsl.md)). 처음 "3번은 알아서 해도 돼"로는 이 세션의 권한 확인이 승인 기록을 막았고, 세션이 명시적 승인을 요청한 뒤의 답("병합하고 할거하고 정리해")으로 1회를 적어 불렀다.
 - **Codex 문맥 판정(`failed`).** 참여자 구성(빈 작업 폴더)에서 무엇이 문맥에 들어가는지 볼 probe가 아직 없다. `plain-codex`는 빈 폴더지만 문맥 내용을 보이지 않는다. 후보는 `--ephemeral` 없이 한 번 돌려 Codex가 남기는 세션 기록에서 지시문·도구 목록을 읽는 것이다 — probe를 새로 만들고 승인받는다. 또는 사용자가 빈 폴더 완화를 정책으로 받아들인다(3절).
 - **K46 인증 파일 읽기 금지(K09보다 먼저).** 2026-09-24 모델 없는 진단([후속 기록](docs/experiments/w2-isolation/stage2-followup-aux-pc-wsl.md)): Codex 참여자의 명령은 `~/.codex/auth.json`을 읽을 수 있고, 명령의 네트워크는 막혀 있다. `:read-only`를 넓혀 `~/.codex/auth.json`만 금지하는 권한 profile은 `codex sandbox`에서 그 파일만 막고 나머지를 그대로 두었다. `~/.codex` 전체를 금지하면 샌드박스가 codex 실행 파일을 다시 실행하지 못해 돌지 않는다. 넣는 방법: adapter가 `--sandbox read-only` 대신 그 profile(`-c permissions.…`, `-P`)을 넘기도록 허용 목록을 넓히고, Codex exec 1회로 로그인·명령의 인증 파일 읽기 차단·쓰기 차단을 본다.
 - **K09 연결 좁히기(K46 뒤).** Claude는 `.credentials.json`·`~/.claude.json`·쓸 곳(`backups`·`cache`)만 쓰기로 두고 나머지를 빈 tmpfs로 덮는 구성이 후보다. Codex는 상태 DB·플러그인 캐시를 모든 실행이 공유한다. 하위 폴더 덮기는 인증 파일 노출을 줄이지 못하고, 토큰 갱신이 한 번도 없어 좁힌 구성에서 갱신이 저장되는지 볼 수 없었다 — 그래서 K46 뒤로 미뤘다. 바꾼 구성으로 한 번씩 다시 불러야 기록의 관측과 맞는다.
@@ -186,7 +197,7 @@ A1 리뷰가 먼저 하라고 한 관문 보강(N0, [반영 기록](docs/reviews
 
 | ID | 영역 | 한계·문제 | 지금의 대응 | 닫는 곳 |
 |---|---|---|---|---|
-| K01 | 실행 코어 | "CLI가 입력 일부만 읽고 닫음"은 입력이 파이프 버퍼보다 클 때만 쓰는 쪽에서 드러난다. 파이프에 다 썼다는 것이 CLI가 다 읽었다는 증거도 아니다 — 2단계 `p3-*`에서 CLI가 stdin을 읽지 않고 끝났는데 22바이트가 버퍼에 들어가 `complete`였다 | `input_delivery`를 남기고, 완전하지 않으면 `input_error`. A1은 전달 기록이 없는 결과(`None`)도 받지 않는다 | 큰 입력의 관측(`b1 --pad-kb 96`, 승인 필요). 2단계는 784바이트만 보냈고 보고 토큰은 시스템 프롬프트·캐시에 묻혀 대조할 수 없었다 |
+| K01 | 실행 코어 | "CLI가 입력 일부만 읽고 닫음"은 입력이 파이프 버퍼보다 클 때만 쓰는 쪽에서 드러난다. 파이프에 다 썼다는 것이 CLI가 다 읽었다는 증거도 아니다 — 2단계 `p3-*`에서 CLI가 stdin을 읽지 않고 끝났는데 22바이트가 버퍼에 들어가 `complete`였다 | `input_delivery`를 남기고, 완전하지 않으면 `input_error`. A1은 전달 기록이 없는 결과(`None`)도 받지 않는다. **Claude는 약 95 KB의 stdin 질문을 끝까지 읽었다** — 전달 완료와 함께 보고 토큰이 입력만큼 늘었다(2026-09-24, [기록](docs/experiments/w2-isolation/k01-large-input-aux-pc-wsl.md)) | Codex의 큰 입력(필요할 때). 러너가 CLI의 "다 읽음"을 증명하지 못한다는 한계 자체는 남는다 |
 | K02 | 실행 코어 | Codex 명령 거절은 stderr의 문자열로만 안다. Linux Codex에서는 그런 문자열을 보지 못했다(K30) | runner가 보관 상한과 상관없이 stderr 전체에서 표식을 센다(`stderr_counts`, 실제 실행기가 요청). 셀 수 없었는데 stderr가 잘렸으면 답을 받지 않는다 | K30과 함께 |
 | K03 | 실행 코어 | 격리 없는 POSIX 실행은 자손 전체의 종료를 확인하지 못한다 | `tree_confirmed_empty=None` → 앱은 `unknown`. Linux 참여자는 `isolation.run()`으로만 | — |
 | K04 | 실행 코어 | 돌아온 뒤에도 파이프를 쥔 자손이 있으면 입출력 스레드·fd가 남는다(격리 없는 POSIX) | `runner.lingering()`으로 세고 정리 안 된 시도의 상한에 넣는다 | 격리 경로에서는 namespace가 정리한다 |
