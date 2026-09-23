@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-23** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout) · 브랜치 `claude/decisions-and-review-request-20260923`
+최종 갱신 **2026-09-23** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout) · 브랜치 `claude/v04-01-review-fixes-20260923`
 
 이 파일 하나에서 시작한다. 절 구성은 고정이고 CI가 확인한다. 규칙은 [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있다.
 
@@ -39,7 +39,8 @@
 - 로그인: Claude Code는 claude.ai 구독(`firstParty`), Codex는 ChatGPT 로그인 — 둘 다 데스크톱 앱의 기존 자격증명으로 이미 로그인돼 있었다. agy는 사용자가 앱 밖 터미널에서 Google 계정으로 로그인했다. 첫 실행 때 상호작용 데이터 수집 동의가 미리 체크돼 있었다.
 - 과금 경로를 바꾸는 환경변수는 사용자·시스템 설정에 없다. Claude 데스크톱 앱의 셸에는 앱이 넣은 변수 26개(`CLAUDECODE`, `ANTHROPIC_BASE_URL` 등)가 있어서, AI 세션이 기록할 때는 `--fresh-env`를 쓴다.
 - tier 1: 문서의 플래그는 모두 help에 있다. **ACP는 세 CLI 모두 help에 없다.**
-- tier 2: 세 CLI 모두 구독 인증으로 비대화형 JSON 호출 성공, 오타 옵션은 셋 다 실행 전 거절. **agy는 `--output-format`의 없는 값을 조용히 무시하고 실행했다.** `--bare`는 구독 불가(F25 재현). Claude `-p`는 빈 폴더에서도 사용자 전역 플러그인·MCP 연결을 싣는다. Codex는 사용자 설정을 무시해도 구독으로 돈다. agy 기본 모델은 Flash이고, agy로 Claude·GPT-OSS 모델도 부를 수 있다. 결과에 모델 이름을 주는 것은 Claude뿐이다.
+- tier 2: 세 CLI 모두 구독 인증으로 비대화형 JSON 호출 성공, 오타 옵션은 셋 다 실행 전 거절. **agy는 `--output-format`의 없는 값을 조용히 무시하고 실행했다.** `--bare`는 구독 불가(F25 재현). Claude `-p`는 빈 폴더에서도 사용자 전역 플러그인·MCP 연결을 싣는다. Codex는 사용자 설정 파일을 빼도 구독으로 돈다. agy 모델 목록에는 Claude·GPT-OSS 모델도 있다(목록에 있다는 것이지 호출해 본 것은 아니다). **agy 기본 모델은 미확인이다** — 목록은 기본값을 표시하지 않는다(처음에 "Flash"라고 적은 것은 목록 첫 행을 읽은 것이었다. PR #4 R07). 결과에 모델 이름을 주는 것은 Claude뿐이다.
+- **리뷰 반영(PR #4, 2026-09-23):** tier 2 manifest의 `configured=true`는 기본 구독 호출을 관측했다는 뜻이다. **blind 문맥·권한 conformance 통과가 아니다.** Claude `permission_mode`는 값 검증만 관측돼 `in_help`로 정정했고, "깨끗한 문맥"은 사용자 설치분이 줄었다는 관측으로 고쳤다. 상세는 [반영 기록](docs/reviews/2026-09-23-v04-01-review/RESPONSE.md).
 - 정책: Gemini CLI 소비자 인증은 2026-06-18에 실제로 닫혔다(F30). Antigravity 약관은 제3자 소프트웨어를 통한 접근을 위반으로 규정한다(F31) — 우리 앱의 `agy` 구동이 해당하는지 불명확. agy의 `useG1Credits`(한도 소진 후 유료 크레딧)는 이 계정에서 **꺼져 있다**(사용자 확인. 처음에 "기본 켜짐"이라고 쓴 것은 오독이었다). agy의 상호작용 데이터 사용(`enableTelemetry`)은 사용자 요청으로 **껐다**(`~/.gemini/antigravity-cli/settings.json`).
 - 운용 PC는 아직 관측한 세션이 없다.
 
@@ -72,13 +73,9 @@
 
 ## 3. 진행 중인 작업
 
-리뷰 시작 전의 2026-09-23 작업(PR #3 포함)은 main에 병합됐다. 사용자는 **CI 녹색을 확인한 claude 세션이 main에 직접 병합하는 것**을 허락했다(2026-09-23).
+2026-09-23의 모든 작업은 main에 병합됐다 — PR #3, ChatGPT의 V04-01 리뷰([PR #4](https://github.com/inlight37-design/decision-model_lab/pull/4), `chatgpt/review-v04-01-20260923`)와 그 반영(`claude/v04-01-review-fixes-20260923`). 사용자는 **CI 녹색을 확인한 claude 세션이 main에 직접 병합하는 것**을 허락했다(2026-09-23).
 
-**지금 병합되지 않은 작업 브랜치: `chatgpt/review-v04-01-20260923`.** ChatGPT 웹 세션이 GitHub 기록으로 검토했다. [리뷰 전문과 재현 자료](docs/reviews/2026-09-23-v04-01-review/README.md)를 먼저 읽는다. 검토 기준은 `47934759c5d59cc5940aeb32687d00de25e57180`이며 사용자 PC의 설치·로그인을 재확인한 결과가 아니다.
-
-리뷰는 기본 연결 성공과 blind/권한 conformance 통과를 구분하고, manifest·환경·가림 가드의 반례와 공식 CLI 문서의 추가 정보를 남겼다. **원본 코드와 날짜 붙은 관측 기록은 아직 수정하지 않았다.** 다음 세션은 finding별로 원본 재현·반박 후 필요한 수정을 진행한다. 이 리뷰 세션은 병합하지 않는다.
-
-병합하는 세션은 열린 PR·CI·원격 브랜치를 다시 확인하고, 이 작업이 병합되면 이 절을 현재 상태로 갱신한다. `git fetch` 결과와 다르면 git이 맞다.
+**지금 병합되지 않은 브랜치: 없음.** 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 이 줄을 다시 "없음"으로 돌린다. `git fetch` 결과와 다르면 git이 맞다.
 
 ## 4. 다음 작업
 
@@ -88,16 +85,21 @@
 
 사용자 질문(2026-09-23): "AionUi 같은 걸 쓸 때는 agy가 잘 되던데 어느 부분이 문제인가." **기술 문제가 아니라 약관 해석 문제다.** 구동은 된다(P1 성공). Antigravity 약관 6조는 "제3자 소프트웨어로 서비스에 접근하는 것"을 위반으로 규정하고, 예시로 다른 도구가 Antigravity OAuth를 쓰는 경우를 든다(F31). 이 앱이 하려는 방식 — **공식 `agy`를 그대로 실행하고 로그인·토큰은 전혀 건드리지 않는 것** — 이 거기 해당하는지는 문구만으로 정해지지 않는다. 걸린다면 위험은 기술 실패가 아니라 계정 제재다. AionUi에서 문제가 없었다는 것은 제재를 받지 않았다는 관측이지 허용의 근거는 아니다. 선택지: 켜고 끌 수 있는 adapter로 넣되 화면에 위험을 표시 / 약관 해석이 정리될 때까지 제외.
 
+리뷰(PR #4)가 더한 것: 공식 [headless 문서](https://www.antigravity.google/docs/cli/headless/)는 프로그램·CI 통합을 직접 안내하므로 "모든 스크립트 구동이 금지"라고 볼 근거도 없다. 같은 질문(공식 인증을 그대로 쓰는 wrapper)이 공식 CLI 저장소 [#711](https://github.com/google-antigravity/antigravity-cli/issues/711)에 올라와 있으나 2026-09-23 현재 Google의 답이 없다. 리뷰의 운영 제안은 **adapter를 만들되 꺼 둔 채 보존하고, 서면 답변이나 명확한 예외가 나오면 켠다**이다. 결정은 여전히 사용자의 것이다.
+
 **② AI 세션 — V04-03 준비** (결정 뒤. 모델 호출은 사용자 승인 후)
 
-1. Claude 논의자의 실행 조합을 문서와 대조한다: `--restricted --strict-mcp-config --disable-slash-commands --tools ""`(P4b). 파일을 읽어야 하는 논의자는 `--tools Read`와 `--add-dir`로 범위를 좁혀 한 번 더 관측한다.
-2. agy를 쓰기로 했다면: 다른 값 옵션(`--model`, `--effort`)도 없는 값을 조용히 무시하는지 P3처럼 확인한다 — 특히 없는 `--model`이 기본 Flash로 바뀌면 상급 모델 배정이 조용히 무너진다.
-3. adapter 공통 규칙으로 옮길 것: stdin 닫기, 옵션 값 사전 검증, 요청한 출력 형식 사후 확인, `is_error`와 exit code 함께 보기, 참여자의 회사는 모델 ID로 세기(RESULTS 설계 입력 3·4·6·7).
-4. 그 다음 V04-03(두 native 경로의 읽기 전용 독립 답변) → 승인된 테스트만 실행하는 trusted runner → 필요한 만큼 MCP로 노출 → UI 연결.
+1. Claude 논의자의 실행 조합. 문서 대조는 끝났다: `--restricted`의 공식 locator는 [CLI reference](https://code.claude.com/docs/en/cli-reference)의 CLI flags 표다(v2.1.248 이상). **문서는 settings 파일 제외만 말하고 CLAUDE.md는 말하지 않는다.** 같은 표의 `--safe-mode`는 CLAUDE.md·자동 메모리까지 끄고 인증을 유지한다고 적는다 — P4b 조합과 나란히 관측한다. 파일을 읽어야 하는 논의자는 `--tools Read`와 `--add-dir`로 범위를 좁혀 한 번 더 관측한다.
+2. agy를 쓰기로 했다면: 없는 `--model`은 문서상 비영 종료·`ERROR`다 — 1.2.8에서 그런지 확인한다. `--effort`의 없는 값은 문서에 없으니 P3처럼 관측한다. `--model`을 주면 stream-json init에 `model`이 나온다고 문서에 있다 — 요청값과 대조한다.
+3. **독립 초안을 받기 전에 conformance를 관측한다**(PR #4 R02). 합성 파일로: 답에만 나올 marker와 양성 대조, 금지 파일·다른 참여자 초안 읽기 시도, 허용 파일 읽기, workspace 밖 쓰기·shell·MCP 실행 거절. marker가 답에 없다는 것만 보지 말고 거절 자체를 본다. adapter 기록은 `installed`·`auth_observed`·`transport_observed`·`context_conformance`·`permission_conformance`로 나누고 실행 허가(`eligible_for_run`)는 실행 직전에 계산한다 — adapter가 읽을 때 manifest를 `runtime-inventory/2`로 올린다.
+4. adapter 공통 규칙으로 옮길 것: stdin 닫기, 옵션 값 사전 검증(버전별 허용 목록), 요청한 출력 형식 사후 확인, `is_error`와 exit code 함께 보기, 참여자의 회사는 모델 ID로 세기(RESULTS 설계 입력 3·4·6·7), `requested_model`과 보고된 모델 분리.
+5. **runner 계약을 mock 실행 파일로 먼저 시험한다**(PR #4 R06, 모델 호출 없음). argv 배열, stdin 닫기, stdout·stderr 분리, 제한 시간, 프로세스 트리 종료 확인, 출력 상한. timeout은 성공이 아니고 종료를 확인하지 못하면 `UNKNOWN`. `tools/v04-01/probe.ps1`은 관측 도구이지 runner가 아니다.
+6. **참여자 구성 변화를 부정 fixture로 고정한다**(PR #4 R09). 시작 전 사용 불가, 초안 단계 한도 소진, peer 초안 공개 뒤 대체 참여자, 종료 불명 cancel, 합성자만 사용 불가, provider 회복 — [리뷰의 전이 표](docs/reviews/2026-09-23-v04-01-review/README.md)대로. 사용자 원칙(유료 API 전환 없음, 조용히 채우지 않음)은 그대로다.
+7. 그 다음 V04-03(두 native 경로의 읽기 전용 독립 답변) → 승인된 테스트만 실행하는 trusted runner → 필요한 만큼 MCP로 노출 → UI 연결.
 
 보조 스크립트와 함정 목록: [`tools/v04-01/`](tools/v04-01/README.md), 절차서의 "AI 세션이 Claude 데스크톱 앱 안에서 대신 실행할 때" 절. 운용 PC를 따로 기록할 때도 같은 절차서를 쓴다.
 
-**③ 다른 AI의 리뷰** — [리뷰 요청서](docs/reviews/2026-09-23-review-request/README.md)를 올려 두었다. 리뷰어는 `chatgpt/review-v04-01-<날짜>` 같은 브랜치로 PR을 연다. 리뷰 PR이 보이면: 발견마다 원 출력·코드로 확인해 **맞으면 원본에서 고치고, 틀리면 근거를 리뷰 문서 아래에 답으로 단다.** 판단이 갈리는 것은 사용자에게 묻는다. 그 뒤 CI 녹색이면 병합하고 [검토 목록](docs/reviews/README.md)을 갱신한다.
+**③ 다른 AI의 리뷰** — V04-01 리뷰([PR #4](https://github.com/inlight37-design/decision-model_lab/pull/4))는 반영을 마쳤다: [반영 기록](docs/reviews/2026-09-23-v04-01-review/RESPONSE.md). 다음 리뷰 PR이 보이면 같은 방식으로 한다 — 발견마다 원 출력·코드로 확인해 **맞으면 원본에서 고치고(정정 표시), 틀리면 근거를 리뷰 폴더의 반영 기록에 답으로 단다.** 리뷰 원문은 고치지 않는다. 판단이 갈리는 것은 사용자에게 묻는다. 그 뒤 CI 녹색이면 병합하고 [검토 목록](docs/reviews/README.md)을 갱신한다.
 
 급하지 않은 것:
 
