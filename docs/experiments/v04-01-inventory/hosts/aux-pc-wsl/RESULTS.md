@@ -42,3 +42,12 @@
 1. 사용자: `sudo apt-get install -y bubblewrap`, 그리고 배포판 터미널에서 `claude`(구독 로그인)와 `codex login`(ChatGPT 로그인).
 2. 모델 호출 없이 `claude auth status`와 `codex login status`로 로그인 방식을 기록한다.
 3. tier 2(구독 호출)는 사용자 승인 뒤 절차서대로 한다.
+
+## 갱신(2026-09-23) — 로그인과 bubblewrap
+
+위 1·2는 끝났다. tier 2는 아직이다(모델 호출, 사용자 승인 필요).
+
+- 사용자가 배포판 터미널에서 로그인했다. Claude Code는 첫 실행에서 홈 폴더를 신뢰할지 물었고, 사용자는 **신뢰하지 않고 나갔다** — 로그인은 그 전에 저장됐다. 우리 앱은 참여자마다 빈 작업 폴더에서 `-p`로 실행하므로 이 신뢰 설정을 쓰지 않는다.
+- `claude auth status`: `loggedIn: true`, `authMethod: claude.ai`, `apiProvider: firstParty`. `codex login status`: Logged in using ChatGPT. 두 CLI 모두 Windows 쪽 로그인과 별개로 새로 로그인했다.
+- 사용자가 `bubblewrap` 0.9.0을 apt로 설치했다(`/usr/bin/bwrap`).
+- 두 CLI를 bubblewrap 참여자 경계 안에서 실행한 결과: [W2 기록](../../../w2-isolation/aux-pc-wsl.md).

@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-23** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout) · 브랜치 `claude/wsl2-setup-20260923`
+최종 갱신 **2026-09-23** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout) · 브랜치 `claude/w2-isolation-20260923`
 
 이 파일 하나에서 시작한다. 절 구성은 고정이고 CI가 확인한다. 규칙은 [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있다. 이 판은 2026-09-23 하루치 작업을 끝내며 남은 일을 다시 정리한 판에, 같은 날의 [경계 리뷰 반영](docs/reviews/2026-09-23-wsl2-boundary/RESPONSE.md)을 더한 것이다. **실행 기반을 WSL2로 옮기기로 했다**(2절 15·16). 통째로 다시 쓴 마지막 판은 [docs/handoff/](docs/handoff/README.md)에 보관했다.
 
@@ -18,11 +18,12 @@
 
 | 도구 | 무엇이고 무엇이 아닌가 |
 |---|---|
-| [`core/`](core/README.md) | V04-03 실행 코어. `runner`는 CLI 한 번을 셸 없이 실행하고 추적 단위(Windows job object / POSIX 프로세스 그룹)가 비었는지 확인한다(못 하면 `unknown`). 자손 전체가 끝났는지는 `tree_confirmed_empty`가 따로 말하고, 프로세스 그룹에서는 `None`이다. `adapters`는 읽기 전용 논의자 실행 명세 조립(질문은 stdin, agy만 명령줄)·위험 플래그 거절·출력 판정. `env`는 자식 환경과 실행 파일 찾기(WSL에서 Windows 실행 파일 거절). `membership`은 참여자가 빠지거나 바뀔 때의 결정이고, 공개 전에는 구성이 바뀔 때마다 정족수를 다시 본다. mock 시험과 aux-pc [conformance](docs/experiments/v04-03-conformance/aux-pc.md)에서 실제 CLI를 돌렸다. **controller·화면은 없다** |
+| [`core/`](core/README.md) | V04-03 실행 코어. `runner`는 CLI 한 번을 셸 없이 실행하고 추적 단위(Windows job object / POSIX 프로세스 그룹)가 비었는지 확인한다(못 하면 `unknown`). 자손 전체가 끝났는지는 `tree_confirmed_empty`가 따로 말하고, 프로세스 그룹에서는 `None`이다. `adapters`는 읽기 전용 논의자 실행 명세 조립(질문은 stdin, agy만 명령줄)·위험 플래그 거절·출력 판정. `env`는 자식 환경과 실행 파일 찾기(WSL에서 Windows 실행 파일 거절). `isolation`은 참여자 한 번을 bubblewrap으로 가둔다(허용 폴더만, PID namespace) — 이것으로 실행하면 Linux에서도 자손 전체의 종료를 확인한다. `membership`은 참여자가 빠지거나 바뀔 때의 결정이고, 공개 전에는 구성이 바뀔 때마다 정족수를 다시 본다. mock 시험과 aux-pc [conformance](docs/experiments/v04-03-conformance/aux-pc.md)에서 실제 CLI를 돌렸다. **controller·화면은 없다** |
 | [`tools/v04-03/conformance.py`](tools/v04-03/conformance.py) | 합성 파일로 논의자 설정을 관측하는 스크립트. 일부 명령은 모델을 부른다 |
 | [`check_frontier_protocol.py`](tools/check_frontier_protocol.py) | 합성 완료 기록의 일관성 검사. 기록된 disposition이 규칙에 맞는지 **검사할 뿐 계산하지 않는다** |
 | [`review_boundary.py`](tools/review_boundary.py) | PR #3의 순수 함수 경계 실험(이벤트 순서, UNKNOWN 예산, 봉인 화면, 한도 표시). 서버·프로세스 제어가 아니다 |
 | [`audit_design_contrast.py`](tools/audit_design_contrast.py) | 디자인 토큰 대비 계산. 일반 글자 5쌍이 4.5:1 미만인 것을 기록한다 |
+| [`tools/w2/cli_boundary.py`](tools/w2/cli_boundary.py) | 설치된 Claude·Codex를 bubblewrap 참여자 경계 안에서 `--version`·로그인 상태만 실행해 본다. 모델을 부르지 않는다 |
 | [`runtime_inventory.py`](tools/runtime_inventory.py) | V04-01 tier 1. 각 CLI의 `--version`/`--help`만 실행해 기록한다. `observed`와 `configured=true`를 쓸 수 없다 |
 
 | 산출물 | 원본 | 발행본 |
@@ -48,7 +49,7 @@
 - 정책: Gemini CLI 소비자 인증은 2026-06-18에 닫혔다(F30). Antigravity 약관은 제3자 소프트웨어를 통한 접근을 위반으로 규정한다(F31) — 우리 앱의 `agy` 구동이 해당하는지 불명확, 공식 저장소 [#711](https://github.com/google-antigravity/antigravity-cli/issues/711)에 같은 질문이 있으나 Google의 답이 없다. agy의 `useG1Credits`(한도 소진 후 유료 크레딧)는 이 계정에서 **꺼져 있고**, 상호작용 데이터 사용(`enableTelemetry`)은 사용자 요청으로 **껐다**.
 - 운용 PC는 아직 관측한 세션이 없다.
 - 위 관측은 모두 Windows 네이티브 CLI의 것이다. Windows에만 해당하는 관측(openai/codex#42172 우회, PowerShell 5.1 재시도, `tools_rejected`의 거절 문자열)은 WSL에서 다시 본다.
-- **WSL2 — `aux-pc-wsl`**([기록](docs/experiments/v04-01-inventory/hosts/aux-pc-wsl/RESULTS.md)). 사용자가 2026-09-23 설치했다. WSL 2.7.14, Ubuntu 24.04.5, systemd 켜짐, 재부팅 불필요. 공식 설치 스크립트로 Claude Code 2.1.280, Codex 0.156.1을 `~/.local/bin`에 설치했다(tier 1 PASS). **로그인 전**이고 bubblewrap 패키지도 아직 없다. AppArmor가 꺼져 있고 user·PID namespace를 권한 없이 만들 수 있다. PATH에 Windows 폴더(Windows 쪽 CLI 설치 폴더 포함)가 이어 붙어 있다 — `core/env.py`가 막는다. Codex는 Linux 샌드박스용 bubblewrap을 스스로 들고 온다(W2의 중첩 확인 대상).
+- **WSL2 — `aux-pc-wsl`**([기록](docs/experiments/v04-01-inventory/hosts/aux-pc-wsl/RESULTS.md)). 사용자가 2026-09-23 설치했다. WSL 2.7.14, Ubuntu 24.04.5, systemd 켜짐, 재부팅 불필요. 공식 설치 스크립트로 Claude Code 2.1.280, Codex 0.156.1을 `~/.local/bin`에 설치했다(tier 1 PASS). 사용자가 **로그인했다**(Claude `claude.ai`·`firstParty`, Codex ChatGPT)고 bubblewrap 0.9.0을 설치했다. tier 2(구독 호출)는 아직이다. AppArmor가 꺼져 있고 user·PID namespace를 권한 없이 만들 수 있다. PATH에 Windows 폴더(Windows 쪽 CLI 설치 폴더 포함)가 이어 붙어 있다 — `core/env.py`가 막는다. Codex는 Linux 샌드박스용 bubblewrap을 스스로 들고 온다. **W2 경계 시험 통과**(모델 없음, [기록](docs/experiments/w2-isolation/aux-pc-wsl.md)): 허용한 것만 보이고, 떨어져 나간 손자도 PID namespace와 함께 끝나며, 두 CLI가 격리 안에서 자기 로그인만 보고 시작한다. localhost 포트에는 닿는다(네트워크 공유).
 
 ### 열린 결정
 
@@ -84,7 +85,7 @@
 
 2026-09-23의 작업은 모두 main에 병합됐다 — V04-01 리뷰([PR #4](https://github.com/inlight37-design/decision-model_lab/pull/4))와 반영, Hermes 패턴 조사([PR #5](https://github.com/inlight37-design/decision-model_lab/pull/5))와 교차 확인, V04-03 실행 코어, 첫 conformance와 Codex 샌드박스 원인 확인, 인계 정리(`claude/handoff-cleanup-20260923`). 사용자는 **CI 녹색을 확인한 claude 세션이 main에 직접 병합하는 것**을 허락했다(2026-09-23).
 
-**지금 병합되지 않은 브랜치: 없음.** `aux-pc-wsl` 설치와 tier 1 기록(W1, `claude/wsl2-setup-20260923`), 경계 리뷰 보존과 반영(`claude/wsl2-boundary-review-20260923`, 4절 1단계)과 실행 명세·stdin(A4)·core 환경 모듈(A7, `claude/execution-spec-20260923`)은 병합됐다. 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 이 줄을 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다.
+**지금 병합되지 않은 브랜치: 없음.** bubblewrap 격리와 W2 경계 시험(`claude/w2-isolation-20260923`), `aux-pc-wsl` 설치와 tier 1 기록(W1, `claude/wsl2-setup-20260923`), 경계 리뷰 보존과 반영(`claude/wsl2-boundary-review-20260923`, 4절 1단계)과 실행 명세·stdin(A4)·core 환경 모듈(A7, `claude/execution-spec-20260923`)은 병합됐다. 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 이 줄을 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다.
 
 ## 4. 다음 작업
 
@@ -94,8 +95,8 @@
 |---|---|---|---|
 | 1 | 경계 리뷰 R01–R04의 회귀 시험과 수정 | 없음 | **끝**(`claude/wsl2-boundary-review-20260923`) |
 | 2 | A4 실행 명세와 stdin, A7 core 환경 모듈(**끝**, `claude/execution-spec-20260923`). **A1 controller와 모의 모드 화면**(사용자에게 띄워 보여 준다), A2·A5·A6 | 없음 | 없음 |
-| 3 | **W1 WSL2 설치와 Linux CLI 준비**, V04-01을 새 호스트 이름으로 다시 — 설치·tier 1 끝, **로그인·bubblewrap 패키지·tier 2가 남았다** | tier 2 몇 회 | 사용자 로그인·sudo, 승인 |
-| 4 | **W2 bubblewrap 경계 시험**과 runner의 `pid_namespace` 추적 단위 | 없음 | 3 |
+| 3 | **W1 WSL2 설치와 Linux CLI 준비**, V04-01을 새 호스트 이름으로 다시 — 설치·tier 1·로그인·bubblewrap 끝, **tier 2가 남았다** | tier 2 몇 회 | 승인 |
+| 4 | W2 bubblewrap 경계 시험과 runner의 `pid_namespace` 추적 단위 | 없음 | **끝**(`claude/w2-isolation-20260923`) |
 | 5 | B1·B2를 WSL2에서, 그 뒤 **B3 V04-03 pilot과 사용량 비교** | 여러 번 | 2, 4, 승인 |
 | — | B4 agy 관측 | 몇 회 | 사용자가 agy를 켤 때 |
 
@@ -120,7 +121,7 @@
 ### W. WSL2로 옮기기
 
 - **W1. 설치와 준비.** Windows 기능을 켜는 설치(`wsl --install`)는 **사용자가 관리자 터미널에서 직접** 한다 — Claude 데스크톱 앱 안에서 대신 설치하면 앱의 가상 공간에 들어갈 수 있다(1절 agy 사례). 첫 실행의 Linux 사용자 만들기와 CLI 로그인도 사용자가 한다. 그 뒤 AI 세션이 배포판 안에 Linux-native Claude Code·Codex, `python3`, `bubblewrap`을 준비하고, V04-01 절차를 새 호스트 이름(예: `aux-pc-wsl`)으로 다시 기록한다. **Windows의 성공 기록을 복사해 성공 처리하지 않는다.** Windows HOME·자격증명 폴더를 연결하는 지름길은 쓰지 않는다. agy의 Linux 판은 미확인이다 — 없으면 Windows 수동 전달로 둔다.
-- **W2. bubblewrap 경계 시험(모델 없음).** 참여자·시도마다 허용한 폴더만 연결하고 `--unshare-pid --die-with-parent`로 실행한다. 허용 자료가 읽히는 양성 대조와 다른 참여자 초안·원장·지난 합성·HOME·`/mnt/c`·다른 CLI 인증·controller 포트가 안 닿는 음성 대조를 모두 기록한다. symlink, `/proc`, Windows 실행 파일 호출(interop)도 본다. Ubuntu 24.04 이상은 AppArmor가 bubblewrap의 user namespace를 막을 수 있다. bwrap 안에서 Codex 자체 sandbox가 도는지 본다. 통과하면 runner에 `pid_namespace` 추적 단위를 붙여 Linux에서도 `tree_confirmed_empty`를 True로 만든다. 실패하면 rootless podman으로 같은 시험을 한다.
+- **W2. bubblewrap 경계 시험 — 끝(모델 없음).** [`core/isolation.py`](core/isolation.py)가 참여자·시도마다 허용한 폴더만 연결하고, 모든 namespace를 나누되 네트워크만 공유하며, `--die-with-parent`로 실행한다. `runner.run(..., pid_namespace=True)`면 추적 단위가 PID namespace가 되어 Linux에서도 `tree_confirmed_empty`가 True다. 양성·음성 대조, symlink 우회, `/mnt`·`/run`·`/init`, 환경변수, 떨어져 나간 손자, 시간 초과를 회귀 시험([`tests/test_core_isolation.py`](tests/test_core_isolation.py))으로 두었고, CI도 bubblewrap을 설치해 돌린다. 설치된 두 CLI는 격리 안에서 자기 로그인만 보고 시작했다. [기록](docs/experiments/w2-isolation/aux-pc-wsl.md). **남은 것(모델 호출, B1·B2):** 실제 질문 한 번이 격리 안에서 끝까지 도는지(토큰 갱신, DNS·TLS, stdin), Codex 자체 bubblewrap의 중첩, Linux Codex의 거절 문자열, `~/.claude` 전체 대신 필요한 파일만 연결하기(지금은 이 배포판의 대화형 Claude 세션 기록도 Claude 참여자에게 보인다). **controller 제어 API는 참여자에게 닿는다**(localhost 공유) — 토큰으로 막는다(A1).
 
 ### B. 사용자 승인 뒤 할 관측 (모델 호출)
 
@@ -149,7 +150,7 @@
 | Codex·agy: 결과에 모델 이름이 없음 | 조용한 강등을 결과로는 못 잡는다. agy는 init 경로 확인(B4) |
 | agy: `--output-format`의 없는 값을 무시 | adapter가 값을 고정하고 JSON이 아니면 형식 실패 |
 | Claude: `CLAUDE.md` 미로딩은 자기보고 | B1 |
-| runner: POSIX 프로세스 그룹은 새 세션으로 나간 자손을 담지 못함 | `tree_confirmed_empty=None`으로 보고하고, 자원·예산은 True일 때만 푼다. Linux의 수단은 W2의 PID namespace. **정정(2026-09-23):** 이 칸은 "트리를 확인 못 하면 `unknown`"이라고 적었지만, 수정 전 runner는 그 경우 트리가 비었다고 보고했다([경계 리뷰 R01](docs/reviews/2026-09-23-wsl2-boundary/RESPONSE.md)) |
+| runner: POSIX 프로세스 그룹은 새 세션으로 나간 자손을 담지 못함 | `tree_confirmed_empty=None`으로 보고하고, 자원·예산은 True일 때만 푼다. Linux에서는 참여자를 `core.isolation`의 bubblewrap으로 실행한다(`pid_namespace=True` → True, W2). **정정(2026-09-23):** 이 칸은 "트리를 확인 못 하면 `unknown`"이라고 적었지만, 수정 전 runner는 그 경우 트리가 비었다고 보고했다([경계 리뷰 R01](docs/reviews/2026-09-23-wsl2-boundary/RESPONSE.md)) |
 | runner: Windows job 배정 직전에 생긴 자식은 추적 못 함 | 문서화한 한계. job 배정에 실패하면 `unknown` |
 
 ### E. 급하지 않은 것

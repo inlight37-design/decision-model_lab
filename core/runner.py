@@ -46,7 +46,10 @@ STATES = (EXITED, TIMED_OUT, CANCELLED, UNKNOWN, FAILED_TO_START)
 # 추적 단위. 자손 전체를 담는 단위만 WHOLE_TREE에 넣는다.
 JOB_OBJECT = "job_object"            # Windows. 브레이크어웨이를 허용하지 않으므로 자손이 떠날 수 없다
 PROCESS_GROUP = "process_group"      # POSIX. 새 세션을 만든 자손은 담지 못한다
-WHOLE_TREE = frozenset({JOB_OBJECT})
+# POSIX + core.isolation의 bwrap. 자손은 PID namespace를 떠날 수 없고, namespace의 첫 프로세스(bwrap
+# 프로세스 그룹 안)는 안이 빌 때까지 끝나지 않는다. 그래서 그룹이 비면 자손 전체가 끝난 것이다.
+PID_NAMESPACE = "pid_namespace"
+WHOLE_TREE = frozenset({JOB_OBJECT, PID_NAMESPACE})
 
 DEFAULT_MAX_OUTPUT = 8 * 1024 * 1024
 _CHUNK = 64 * 1024
@@ -160,11 +163,11 @@ def _write_stdin(stream, data: bytes) -> None:
 class _Tree:
     """자식 프로세스까지 포함한 트리. 플랫폼별로 끝내기와 비었는지 세기만 한다."""
 
-    def __init__(self, proc: subprocess.Popen) -> None:
+    def __init__(self, proc: subprocess.Popen, *, pid_namespace: bool = False) -> None:
         self.proc = proc
         self.job = None
         self.note: str | None = None
-        self.containment: str | None = None if IS_WINDOWS else PROCESS_GROUP
+        self.containment: str | None = None if IS_WINDOWS else (PID_NAMESPACE if pid_namespace else PROCESS_GROUP)
         if IS_WINDOWS:
             try:
                 self.job = _WindowsJob()
@@ -231,12 +234,28 @@ class _Tree:
             self.job = None
 
 
+def _check_pid_namespace(args: tuple[str, ...]) -> None:
+    """pid_namespace=True는 core.isolation.wrap()이 만든 bwrap 명령에만 준다."""
+    if IS_WINDOWS:
+        raise RunnerError("pid_namespace containment is POSIX-only")
+    head = args[:args.index("--")] if "--" in args else args
+    if (Path(args[0]).name != "bwrap" or "--die-with-parent" not in head
+            or not {"--unshare-all", "--unshare-pid"} & set(head)):
+        raise RunnerError("pid_namespace needs a bwrap command with a new pid namespace and --die-with-parent")
+
+
 def run(argv: Sequence[str], *, cwd: str | os.PathLike, env: Mapping[str, str],
         timeout: float, stdin_text: str | None = None,
         max_output_bytes: int = DEFAULT_MAX_OUTPUT,
-        cancel: threading.Event | None = None) -> RunResult:
-    """한 번 실행한다. 예외 대신 RunResult로 돌려준다(실행 전 검증 실패만 RunnerError)."""
+        cancel: threading.Event | None = None, pid_namespace: bool = False) -> RunResult:
+    """한 번 실행한다. 예외 대신 RunResult로 돌려준다(실행 전 검증 실패만 RunnerError).
+
+    pid_namespace: argv가 core.isolation.wrap()의 bwrap 명령이면 True. 그때 추적 단위가 PID namespace가
+    되어 자손 전체의 종료를 확인할 수 있다.
+    """
     args = validate_argv(argv)
+    if pid_namespace:
+        _check_pid_namespace(args)
     if not (isinstance(timeout, (int, float)) and timeout > 0):
         raise RunnerError("timeout must be a positive number of seconds")
     if not (isinstance(max_output_bytes, int) and max_output_bytes > 0):
@@ -259,7 +278,7 @@ def run(argv: Sequence[str], *, cwd: str | os.PathLike, env: Mapping[str, str],
                          int((time.monotonic() - started) * 1000), None, True,
                          error=type(exc).__name__)  # 아무것도 시작하지 않았으니 비어 있다
 
-    tree = _Tree(proc)
+    tree = _Tree(proc, pid_namespace=pid_namespace)
     notes = [tree.note] if tree.note else []
     out, err = _Reader(proc.stdout, max_output_bytes), _Reader(proc.stderr, max_output_bytes)
     out.start()
