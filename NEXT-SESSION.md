@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-23** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout, V04-03 실행 코어) · 브랜치 `claude/v04-03-runner-20260923`
+최종 갱신 **2026-09-23** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout, V04-03 실행 코어·conformance) · 브랜치 `claude/v04-03-conformance-20260923`
 
 아래 보조 PC 환경 관측은 V04-01을 수행한 claude 세션의 기록이다. Hermes 조사를 쓴 ChatGPT 웹 세션은 GitHub 소스·공식 문서만 검토했다. 이 판을 쓴 claude 세션은 같은 보조 PC에서 `check-versions.ps1`(버전만 실행)로 세 CLI의 버전·경로·서명 `Valid`를 다시 확인했고 모델은 부르지 않았다.
 
@@ -76,7 +76,7 @@
 
 ## 3. 진행 중인 작업
 
-2026-09-23의 모든 작업은 main에 병합됐다 — PR #3, V04-01 리뷰([PR #4](https://github.com/inlight37-design/decision-model_lab/pull/4))와 그 반영, ChatGPT의 Hermes 패턴 조사([PR #5](https://github.com/inlight37-design/decision-model_lab/pull/5), `chatgpt/hermes-patterns-20260923`)와 claude의 [교차 확인](docs/research/hermes-2026-09-23/CROSSCHECK.md)(`claude/hermes-crosscheck-20260923`), V04-03 실행 코어(`claude/v04-03-runner-20260923`). 사용자는 **CI 녹색을 확인한 claude 세션이 main에 직접 병합하는 것**을 허락했다(2026-09-23).
+2026-09-23의 모든 작업은 main에 병합됐다 — PR #3, V04-01 리뷰([PR #4](https://github.com/inlight37-design/decision-model_lab/pull/4))와 그 반영, ChatGPT의 Hermes 패턴 조사([PR #5](https://github.com/inlight37-design/decision-model_lab/pull/5), `chatgpt/hermes-patterns-20260923`)와 claude의 [교차 확인](docs/research/hermes-2026-09-23/CROSSCHECK.md)(`claude/hermes-crosscheck-20260923`), V04-03 실행 코어(`claude/v04-03-runner-20260923`)와 첫 conformance 관측(`claude/v04-03-conformance-20260923`). 사용자는 **CI 녹색을 확인한 claude 세션이 main에 직접 병합하는 것**을 허락했다(2026-09-23).
 
 **지금 병합되지 않은 브랜치: 없음.** 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 이 줄을 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다.
 
@@ -94,16 +94,18 @@ Hermes 조사에서 제안한 [HP-01/02/03](docs/research/hermes-2026-09-23/ADOP
 
 사용자 의견(2026-09-23): 성능은 아쉽지만 쓸 일이 있어 **agy를 구성에 넣어 두고 싶다.** 안 되면 Antigravity에 넘기는 식으로라도 쓴다. 이를 받는 설계안(제안, 미확정): **수동 전달을 기본으로** — 앱이 다른 참여자와 같은 봉인된 질문을 파일로 내주고, 사용자가 Antigravity나 본인 터미널에서 직접 실행해 답 파일을 가져온다(자동 재시도·취소·사용량 기록 없음, blind는 유지). **자동 실행 adapter는 꺼 둔 채 준비**하고 켤지는 위 약관 판단과 함께 사용자가 정한다. agy는 Gemini를 구독으로 쓰는 유일한 경로다(F30).
 
+사용자 결정(2026-09-23): **agy를 CLI adapter로 넣어 두고, 쓸지는 사용자가 고른다.** [`core/adapters.py`](core/adapters.py)에 기본 꺼짐(`enabled=True`를 줘야 조립됨)으로 들어갔다. 수동 전달도 **같은 화면에서** 보이게 만든다 — 참여자 카드가 "사용자 전달 대기"로 서고, 앱이 봉인된 질문을 복사해 주며, 답은 붙여넣기나 앱이 지켜보는 결과 폴더로 받아 같은 카드에 채운다. MCP는 필요 없다. 수동 참여자의 사용량·시간은 "관측 안 됨"으로 표시한다.
+
 **② AI 세션 — V04-03 준비** (결정 뒤. 모델 호출은 사용자 승인 후)
 
-1. Claude 논의자의 실행 조합. 문서 대조는 끝났다: `--restricted`의 공식 locator는 [CLI reference](https://code.claude.com/docs/en/cli-reference)의 CLI flags 표다(v2.1.248 이상). **문서는 settings 파일 제외만 말하고 CLAUDE.md는 말하지 않는다.** 같은 표의 `--safe-mode`는 CLAUDE.md·자동 메모리까지 끄고 인증을 유지한다고 적는다 — P4b 조합과 나란히 관측한다. 파일을 읽어야 하는 논의자는 `--tools Read`와 `--add-dir`로 범위를 좁혀 한 번 더 관측한다.
+1. Claude 논의자의 실행 조합. **관측했다(2026-09-23, [conformance 기록](docs/experiments/v04-03-conformance/aux-pc.md)): `--restricted`와 `--safe-mode` 모두 `--tools Read --add-dir`로 허용 파일은 읽고 작업 폴더 밖 파일은 CLI가 거절했으며 쓰기는 없었다.** 남은 보강: `CLAUDE.md`를 싣지 않는다는 것을 init 이벤트로 확인, 두 플래그를 함께 준 조합. 아래는 관측 전의 문서 대조다: `--restricted`의 공식 locator는 [CLI reference](https://code.claude.com/docs/en/cli-reference)의 CLI flags 표다(v2.1.248 이상). **문서는 settings 파일 제외만 말하고 CLAUDE.md는 말하지 않는다.** 같은 표의 `--safe-mode`는 CLAUDE.md·자동 메모리까지 끄고 인증을 유지한다고 적는다 — P4b 조합과 나란히 관측한다. 파일을 읽어야 하는 논의자는 `--tools Read`와 `--add-dir`로 범위를 좁혀 한 번 더 관측한다.
 2. agy를 쓰기로 했다면: 없는 `--model`은 문서상 비영 종료·`ERROR`다 — 1.2.8에서 그런지 확인한다. `--effort`의 없는 값은 문서에 없으니 P3처럼 관측한다. `--model`을 주면 stream-json init에 `model`이 나온다고 문서에 있다 — 요청값과 대조한다. 모델은 이름이 아니라 세대와 실제 비교로 고른다(1절의 사용자 보고).
-3. **독립 초안을 받기 전에 conformance를 관측한다**(PR #4 R02). 합성 파일로: 답에만 나올 marker와 양성 대조, 금지 파일·다른 참여자 초안 읽기 시도, 허용 파일 읽기, workspace 밖 쓰기·shell·MCP 실행 거절. marker가 답에 없다는 것만 보지 말고 거절 자체를 본다. adapter 기록은 `installed`·`auth_observed`·`transport_observed`·`context_conformance`·`permission_conformance`로 나누고 실행 허가(`eligible_for_run`)는 실행 직전에 계산한다 — adapter가 읽을 때 manifest를 `runtime-inventory/2`로 올린다.
+3. **독립 초안을 받기 전에 conformance를 관측한다**(PR #4 R02). **첫 관측을 했다([기록](docs/experiments/v04-03-conformance/aux-pc.md)).** Claude는 통과. **Codex(`gpt-6-luna`, 사용자가 시험 모델로 지정)는 금지 읽기·쓰기는 막혔지만 허용 파일도 못 읽었다** — 셋 다 stderr에 `blocked by policy`, JSONL에는 안 나온다. 그래서 Codex 논의자에게는 파일을 읽히지 않고 공통 자료를 프롬프트에 넣는다. Codex는 작업 폴더의 `AGENTS.md`를 싣는다 — 논의자 작업 폴더는 앱이 만든 빈 폴더로 한다. 원인(이 PC에 Codex Windows 샌드박스 미설정, 설정은 관리자 승인)은 확인하지 못했다 — 설정하거나 WSL2로 옮길지는 사용자 결정. 합성 파일로: 답에만 나올 marker와 양성 대조, 금지 파일·다른 참여자 초안 읽기 시도, 허용 파일 읽기, workspace 밖 쓰기·shell·MCP 실행 거절. marker가 답에 없다는 것만 보지 말고 거절 자체를 본다. adapter 기록은 `installed`·`auth_observed`·`transport_observed`·`context_conformance`·`permission_conformance`로 나누고 실행 허가(`eligible_for_run`)는 실행 직전에 계산한다 — adapter가 읽을 때 manifest를 `runtime-inventory/2`로 올린다.
 4. adapter 공통 규칙으로 옮길 것: stdin 닫기, 옵션 값 사전 검증(버전별 허용 목록), 요청한 출력 형식 사후 확인, `is_error`와 exit code 함께 보기, 참여자의 회사는 모델 ID로 세기(RESULTS 설계 입력 3·4·6·7), `requested_model`과 보고된 모델 분리.
 5. ~~runner 계약을 mock 실행 파일로 먼저 시험한다~~ **했다(2026-09-23, [`core/runner.py`](core/runner.py)).** argv 배열·절대 경로, stdin 닫기, stdout·stderr 분리와 상한, 제한 시간, 취소, 프로세스 트리 종료 확인(Windows job object / POSIX 프로세스 그룹). timeout은 답이 보여도 `timed_out`, 트리를 확인하지 못하면 `unknown`. Windows 경로는 aux-pc 로컬에서 시험했고, POSIX 경로는 CI(Linux)가 시험한다. **실제 CLI로는 아직 돌리지 않았다** — 다음 conformance가 첫 실사용이다. `tools/v04-01/probe.ps1`은 관측 도구이지 runner가 아니다.
 6. ~~참여자 구성 변화를 부정 fixture로 고정한다~~ **했다([`core/membership.py`](core/membership.py)).** [리뷰의 전이 표](docs/reviews/2026-09-23-v04-01-review/README.md) 여섯 경우를 결정 함수와 시험으로 고정했다. 실행 controller에는 아직 연결하지 않았다.
-7. 그 다음 V04-03(두 native 경로의 읽기 전용 독립 답변) → 승인된 테스트만 실행하는 trusted runner → 필요한 만큼 MCP로 노출 → UI 연결.
-8. **V04-03에서 사용량을 비교한다.** 사용자는 AionUi가 각 앱을 직접 쓸 때보다 사용량을 몇 배 빨리 소모해 쓰지 않는다(2026-09-23, 사용자 관측). 같은 질문을 (a) 각 앱에서 직접, (b) 우리 앱의 `single`, (c) `cross_check`로 돌려 호출 수·입력 토큰·구독 한도 변화를 나란히 기록한다. 호출마다 실리는 기본 문맥이 큰 몫이다 — aux-pc P4에서 Claude `-p`의 "OK" 한 번에 약 24,400토큰, P4b 조합으로 약 1,900토큰.
+7. 그 다음 V04-03(두 native 경로의 읽기 전용 독립 답변) → 승인된 테스트만 실행하는 trusted runner → 필요한 만큼 MCP로 노출 → UI 연결. **사용자 요청(2026-09-23): 동작하는 단계가 되면 앱을 눈앞에 띄워 보여 줄 것.** 다음 작업은 참여자를 돌리는 controller와 최소 화면이다 — 가짜 CLI로 도는 모의 모드로 화면 흐름을 먼저 보여 주고, 승인 뒤 실제 호출로 바꾼다.
+8. **V04-03에서 사용량을 비교한다.** 사용자는 AionUi가 각 앱을 직접 쓸 때보다 사용량을 몇 배 빨리 소모해 쓰지 않는다(2026-09-23, 사용자 관측). 같은 질문을 (a) 각 앱에서 직접, (b) 우리 앱의 `single`, (c) `cross_check`로 돌려 호출 수·입력 토큰·구독 한도 변화를 나란히 기록한다. **사용자 지적(2026-09-23): 구독 한도는 토큰에 비례해 줄지 않고 회사·시간대·부하에 따라 달라진다.** 그래서 두 층으로 잰다 — CLI가 보고한 토큰·호출 수·시간(안정적, 비교 기준), 그리고 각 회사가 보여 주는 한도 %를 묶음 전후로 읽은 값(실제 효과, 잡음 있음). 같은 시간대에 번갈아 여러 번 돌려 범위로 적고, 한 번의 % 변화로 결론 내지 않는다. 호출마다 실리는 기본 문맥이 큰 몫이다 — aux-pc P4에서 Claude `-p`의 "OK" 한 번에 약 24,400토큰, P4b 조합으로 약 1,900토큰.
 
 보조 스크립트와 함정 목록: [`tools/v04-01/`](tools/v04-01/README.md), 절차서의 "AI 세션이 Claude 데스크톱 앱 안에서 대신 실행할 때" 절. 운용 PC를 따로 기록할 때도 같은 절차서를 쓴다.
 
