@@ -99,7 +99,9 @@
 
 ## 3. 진행 중인 작업
 
-**지금 병합되지 않은 브랜치: 없음.** 마지막 병합: N1 실제 CLI 실행기(가짜 CLI로만 시험, 서버 미연결)와 K02(`claude/n1-cli-executor-20260923`). 그 앞: 사용자가 정한 Q5·Q6·C2와 모델 호출 승인 절차(2절 18·19, `claude/decisions-20260923`). 그 앞: A1 리뷰의 반영(`claude/a1-review-fixes-20260923`) — 봉인 투영의 허용 목록, 결과 수용 관문(입력 전달·빈 답·모델 불일치), 원장 잠금과 조건부 상태 전이, 재시작 재조정과 대기 시도의 명시적 재개, 축소 승인 조건, 경로 충돌 검사, journal 스키마 버전, 문구 정정과 [반영 기록](docs/reviews/2026-09-23-a1-handoff-review/RESPONSE.md). 보조 PC의 Windows와 `aux-pc-wsl`에서 시험했고 모델은 부르지 않았다. 그 앞은 A1 리뷰 자체([PR #7](https://github.com/inlight37-design/decision-model_lab/pull/7))다. 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 이 줄을 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다. 2026-09-23의 앞선 병합 이력은 [지난 판](docs/handoff/2026-09-23-before-consolidation.md) 3절과 Git 로그에 있다.
+**병합 대기 조사: `chatgpt/tmux-patterns-20260923` ([PR #8](https://github.com/inlight37-design/decision-model_lab/pull/8)).** [tmux 조사 요약](docs/research/tmux-2026-09-23/README.md), [상세 분석](docs/research/tmux-2026-09-23/ANALYSIS.md), [적용·검증 계획](docs/research/tmux-2026-09-23/ADOPTION_PLAN.md), [출처와 한계](docs/research/tmux-2026-09-23/EVIDENCE.md)를 남겼다. ChatGPT가 GitHub·공식 문서·고정 소스를 대조했고 사용자 PC·WSL·tmux 실행·모델 호출은 하지 않았다. 조사 중 병합된 N1과 사용자 확정 18·19는 그대로 보존했다. 권고는 기존 N1을 재사용해 N2–N4를 진행하면서 재접속·제어·상태 탐색 패턴을 선별 적용하는 것이다. tmux 운영 보조는 선택이며 참여자 실행 엔진 추가는 권하지 않는다. 초기 분석과 마감 시점의 차이는 조사 README의 첫 갱신 절을 읽는다. 계획의 시험은 미실행 제안이다. 제품 코드·의존성·디자인 변경은 없다. 최종 CI를 확인한 뒤 사용자 또는 승인된 claude 세션이 병합하고, 이 진행 문구를 정리하되 조사 링크는 기록 절에 남긴다.
+
+마지막 병합: N1 실제 CLI 실행기(가짜 CLI로만 시험, 서버 미연결)와 K02(`claude/n1-cli-executor-20260923`). 그 앞: 사용자가 정한 Q5·Q6·C2와 모델 호출 승인 절차(2절 18·19, `claude/decisions-20260923`). 그 앞: A1 리뷰의 반영(`claude/a1-review-fixes-20260923`) — 봉인 투영의 허용 목록, 결과 수용 관문(입력 전달·빈 답·모델 불일치), 원장 잠금과 조건부 상태 전이, 재시작 재조정과 대기 시도의 명시적 재개, 축소 승인 조건, 경로 충돌 검사, journal 스키마 버전, 문구 정정과 [반영 기록](docs/reviews/2026-09-23-a1-handoff-review/RESPONSE.md). 보조 PC의 Windows와 `aux-pc-wsl`에서 시험했고 모델은 부르지 않았다. 그 앞은 A1 리뷰 자체([PR #7](https://github.com/inlight37-design/decision-model_lab/pull/7))다. 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 이 줄을 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다. 2026-09-23의 앞선 병합 이력은 [지난 판](docs/handoff/2026-09-23-before-consolidation.md) 3절과 Git 로그에 있다.
 
 사용자의 판단을 기다리는 것:
 - **모델 호출 승인** — 4절 2단계(Claude 3회 안팎, Codex 2회 안팎). 1단계 N1–N4를 마친 뒤에 받는다. 승인할 때 provider별 최대 시작 횟수·실패 포함 상한·timeout·멈추는 조건을 함께 정한다(2절 19).
@@ -218,7 +220,7 @@
 | K32 | CLI | Codex·agy는 결과에 모델 이름이 없어서 조용한 강등을 결과로 잡지 못한다 | — | B4(agy init) |
 | K33 | 도구 | WSL용 관측 도구가 없다(기존 conformance 도구는 Windows 전용) | — | N2 |
 | K34 | CLI | Windows 전용 사실(Codex #42172, PowerShell 5.1 재시도, 작업 폴더 밖 읽기) | adapter의 `codex_windows_sandbox`. Codex blind 참여는 WSL에서만 | Windows 경로는 동결 |
-| K38 | CLI | Codex는 작업 폴더의 `AGENTS.md`를 싣는다 | 참여자 작업 폴더는 controller가 시도마다 만든 빈 폴더다(지시문 파일 없음). 실제 실행기도 그 폴더에서 돈다 | — |
+| K38 | CLI | Codex는 작업 폴더의 `AGENTS.md`를 싣는다 | 참여자 작업 폴더는 앱이 만든 빈 임시 폴더다(지시문 파일 없음). A1도 그렇게 만든다 | N1에서 그대로 |
 | K39 | CLI | Codex의 read-only 샌드박스는 쓰기만 막고 읽기는 막지 않는다 | 읽기 경계는 bubblewrap 허용 목록이 맡는다. 확인 전까지 Codex 초안의 blind는 "미확인" | B2 |
 | K40 | CLI | agy는 `--output-format`의 없는 값을 조용히 무시한다 | adapter가 값을 고정하고, JSON이 아니면 형식 실패 | — |
 | K35 | 과정 | 모든 관측은 PC 한 대와 그 안의 WSL 배포판 하나, 2026-09-23 하루치다. 운용 PC 관측이 없다 | — | 필요할 때 같은 절차서로 |
