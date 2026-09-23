@@ -56,12 +56,13 @@
   h2 { font-size: 19px; line-height: 30px; font-weight: 600; letter-spacing: -.01em; margin: 0 0 4px; }
   .p { display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--rule-100); }
   .who { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-  .who .v { font: 400 11.5px/17px var(--mono); color: var(--ink-200); }
+  .who .v { font: 400 12px/18px var(--mono); color: var(--ink-200); }  /* ink-200은 12px 이상에서만(토큰 규칙) */
   .flags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
   .flag { font: 400 11px/16px var(--mono); color: var(--qualified); border: 1px solid currentColor; border-radius: 2px; padding: 0 6px; }
   .st-sealed, .st-accepted { color: var(--sealed); } .st-rejected { color: var(--danger); }
   .st-queued, .st-running, .st-awaiting_user { color: var(--ink-100); }
-  .st-unknown { color: var(--unknown); border-bottom: 1px dashed currentColor; }
+  /* unknown 색은 일반 글자 대비가 모자란다(K24). 글자는 잉크로, 관측하지 못했다는 표시는 unknown 색 1px 파선으로 */
+  .st-unknown { color: var(--ink-100); border-bottom: 1px dashed var(--unknown); }
   .revealed .st-accepted { color: var(--ink-000); }
   .foot { padding: 12px 16px; border-top: 2px solid var(--unresolved); }
   .foot .warn { color: var(--unresolved); font-weight: 600; font-size: 13px; }
@@ -78,7 +79,7 @@
   details summary { cursor: pointer; color: var(--accent); font-size: 12.5px; }
   .kv { font: 400 12px/19px var(--mono); color: var(--ink-100); margin-top: 4px; overflow-wrap: anywhere; }
   .err { color: var(--danger); font-size: 12.5px; }
-  .trail { font: 400 11.5px/18px var(--mono); color: var(--ink-200); overflow-wrap: anywhere; }
+  .trail { font: 400 12px/18px var(--mono); color: var(--ink-200); overflow-wrap: anywhere; }
 </style>
 </head>
 <body>
