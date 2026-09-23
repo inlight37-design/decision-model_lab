@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-23** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout) · 브랜치 `claude/n1-cli-executor-20260923`
+최종 갱신 **2026-09-23** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout) · 브랜치 `claude/n2-observe-tool-20260923`
 
 이 파일 하나에서 시작한다. 절 구성은 고정이고 CI가 확인한다. 규칙은 [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있다. 이 판은 2026-09-23 작업을 마치며 **통째로 다시 쓴 판**이다. 지난 관측과 결정의 경위는 링크한 기록 문서로 보내고, 여기에는 지금 상태, 한계와 못 고친 문제(4절의 K 표), 다음 일만 둔다. 바로 전 판은 [docs/handoff/](docs/handoff/README.md)에 보관했다.
 
@@ -28,7 +28,8 @@
 | [`core/membership.py`](core/membership.py) | 참여자가 빠지거나 바뀔 때의 결정. 공개 전에는 구성이 바뀔 때마다 정족수를 다시 본다 | 초안이 다 들어왔는지 — controller 관문이 본다 |
 | [`app/`](app/README.md) | **A1 controller와 모의 화면.** 입력 고정 → 시도 예약 → 실행 → 결과 수용 관문 → 초안 봉인 → controller가 공개. 참여자는 CLI(지금은 모의 CLI)와 원본 앱(수동). SQLite journal(스키마 버전, 한 번에 한 controller만 연다), 토큰으로 막은 127.0.0.1 화면 서버 | 실제 CLI로 돌린 적 없음(K17), 합성(K18). 수동 답의 입력 일치(K21) |
 | [`tools/w2/cli_boundary.py`](tools/w2/cli_boundary.py) | 설치된 Claude·Codex를 격리 안에서 `--version`·로그인 상태만 실행해 본다 | 실제 질의 |
-| [`tools/v04-03/conformance.py`](tools/v04-03/conformance.py) | Windows에서 논의자 설정을 관측하는 스크립트. 일부 명령은 모델을 부른다 | WSL 판 없음(K33) |
+| [`tools/w2/observe.py`](tools/w2/observe.py) | 2단계 관측(tier 2, B1·B2)을 참여자와 같은 격리 경로로 한 번씩 부른다. 승인한 provider별 상한과 멈춤 규칙을 지킨다. **모델 호출** | 승인 없이 부르지 않는다. 아직 한 번도 부르지 않았다 |
+| [`tools/v04-03/conformance.py`](tools/v04-03/conformance.py) | Windows에서 논의자 설정을 관측하는 스크립트. 일부 명령은 모델을 부른다 | WSL에서는 쓰지 않는다 — `tools/w2/observe.py`가 맡는다 |
 | [`tools/runtime_inventory.py`](tools/runtime_inventory.py) | V04-01 tier 1. 각 CLI의 `--version`/`--help`만 실행해 기록한다 | `observed`·`configured=true`를 쓸 수 없다 |
 | [`check_frontier_protocol.py`](tools/check_frontier_protocol.py), [`review_boundary.py`](tools/review_boundary.py), [`audit_design_contrast.py`](tools/audit_design_contrast.py) | 합성 기록의 일관성 **검사**(계산 아님), PR #3의 순수 함수 경계 실험, 디자인 토큰 대비 계산 | controller의 상태 권위가 아니다 |
 | [`design/`](design/README.md) | 디자인 시스템 `Ledger`. [발행본 아티팩트](https://claude.ai/artifact/8tq8q5P8Pj7bpUtCF77FZA)와 맞춰 둔다 | 알려진 대비 미달 조합(K24) |
@@ -99,9 +100,9 @@
 
 ## 3. 진행 중인 작업
 
-**병합 대기 조사: `chatgpt/tmux-patterns-20260923` ([PR #8](https://github.com/inlight37-design/decision-model_lab/pull/8)).** [tmux 조사 요약](docs/research/tmux-2026-09-23/README.md), [상세 분석](docs/research/tmux-2026-09-23/ANALYSIS.md), [적용·검증 계획](docs/research/tmux-2026-09-23/ADOPTION_PLAN.md), [출처와 한계](docs/research/tmux-2026-09-23/EVIDENCE.md)를 남겼다. ChatGPT가 GitHub·공식 문서·고정 소스를 대조했고 사용자 PC·WSL·tmux 실행·모델 호출은 하지 않았다. 조사 중 병합된 N1과 사용자 확정 18·19는 그대로 보존했다. 권고는 기존 N1을 재사용해 N2–N4를 진행하면서 재접속·제어·상태 탐색 패턴을 선별 적용하는 것이다. tmux 운영 보조는 선택이며 참여자 실행 엔진 추가는 권하지 않는다. 초기 분석과 마감 시점의 차이는 조사 README의 첫 갱신 절을 읽는다. 계획의 시험은 미실행 제안이다. 제품 코드·의존성·디자인 변경은 없다. 최종 CI를 확인한 뒤 사용자 또는 승인된 claude 세션이 병합하고, 이 진행 문구를 정리하되 조사 링크는 기록 절에 남긴다.
+**병합 대기 조사: `chatgpt/tmux-patterns-20260923` ([PR #8](https://github.com/inlight37-design/decision-model_lab/pull/8)).** [조사 요약과 시점별 대조](docs/research/tmux-2026-09-23/README.md), [상세 분석](docs/research/tmux-2026-09-23/ANALYSIS.md), [적용·검증 계획](docs/research/tmux-2026-09-23/ADOPTION_PLAN.md), [출처와 한계](docs/research/tmux-2026-09-23/EVIDENCE.md)를 남겼다. ChatGPT가 공식 문서·소스를 조사했고 사용자 PC·WSL·tmux 실행·모델 호출은 하지 않았다. 동시 진행된 N1·N2와 사용자 확정 사항은 보존했다. 권고는 이미 있는 실행기와 관측 도구를 재사용하고, 최신 실행 준비 계획을 유지하면서 재접속·제어·상태 탐색 패턴을 선별 적용하는 것이다. tmux 운영 보조는 선택이며 참여자 실행 엔진 추가는 권하지 않는다. 계획의 시험은 미실행 제안이다. 제품 코드·의존성·디자인 변경은 없다. 최종 CI를 확인한 뒤 사용자 또는 승인된 claude 세션이 병합하고, 이 진행 문구를 정리하되 조사 링크는 기록 절에 남긴다.
 
-마지막 병합: N1 실제 CLI 실행기(가짜 CLI로만 시험, 서버 미연결)와 K02(`claude/n1-cli-executor-20260923`). 그 앞: 사용자가 정한 Q5·Q6·C2와 모델 호출 승인 절차(2절 18·19, `claude/decisions-20260923`). 그 앞: A1 리뷰의 반영(`claude/a1-review-fixes-20260923`) — 봉인 투영의 허용 목록, 결과 수용 관문(입력 전달·빈 답·모델 불일치), 원장 잠금과 조건부 상태 전이, 재시작 재조정과 대기 시도의 명시적 재개, 축소 승인 조건, 경로 충돌 검사, journal 스키마 버전, 문구 정정과 [반영 기록](docs/reviews/2026-09-23-a1-handoff-review/RESPONSE.md). 보조 PC의 Windows와 `aux-pc-wsl`에서 시험했고 모델은 부르지 않았다. 그 앞은 A1 리뷰 자체([PR #7](https://github.com/inlight37-design/decision-model_lab/pull/7))다. 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 이 줄을 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다. 2026-09-23의 앞선 병합 이력은 [지난 판](docs/handoff/2026-09-23-before-consolidation.md) 3절과 Git 로그에 있다.
+마지막 병합: N2 WSL 관측 도구(가짜 CLI로만 시험, 모델 호출 없음, `claude/n2-observe-tool-20260923`). 그 앞: N1 실제 CLI 실행기(가짜 CLI로만 시험, 서버 미연결)와 K02(`claude/n1-cli-executor-20260923`). 그 앞: 사용자가 정한 Q5·Q6·C2와 모델 호출 승인 절차(2절 18·19, `claude/decisions-20260923`). 그 앞: A1 리뷰의 반영(`claude/a1-review-fixes-20260923`) — 봉인 투영의 허용 목록, 결과 수용 관문(입력 전달·빈 답·모델 불일치), 원장 잠금과 조건부 상태 전이, 재시작 재조정과 대기 시도의 명시적 재개, 축소 승인 조건, 경로 충돌 검사, journal 스키마 버전, 문구 정정과 [반영 기록](docs/reviews/2026-09-23-a1-handoff-review/RESPONSE.md). 보조 PC의 Windows와 `aux-pc-wsl`에서 시험했고 모델은 부르지 않았다. 그 앞은 A1 리뷰 자체([PR #7](https://github.com/inlight37-design/decision-model_lab/pull/7))다. 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 이 줄을 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다. 2026-09-23의 앞선 병합 이력은 [지난 판](docs/handoff/2026-09-23-before-consolidation.md) 3절과 Git 로그에 있다.
 
 사용자의 판단을 기다리는 것:
 - **모델 호출 승인** — 4절 2단계(Claude 3회 안팎, Codex 2회 안팎). 1단계 N1–N4를 마친 뒤에 받는다. 승인할 때 provider별 최대 시작 횟수·실패 포함 상한·timeout·멈추는 조건을 함께 정한다(2절 19).
@@ -123,7 +124,7 @@
 
 ### 1단계 — 실제 호출 전 확인 (모델 없음)
 
-**A1 리뷰가 먼저 하라고 한 관문 보강(리뷰의 N0)과 N1은 끝났다** — [반영 기록](docs/reviews/2026-09-23-a1-handoff-review/RESPONSE.md). 아래 N2–N6이 남았다.
+**A1 리뷰가 먼저 하라고 한 관문 보강(리뷰의 N0)과 N1·N2는 끝났다** — [반영 기록](docs/reviews/2026-09-23-a1-handoff-review/RESPONSE.md). 아래 N3–N6이 남았다.
 
 - **N1. 실제 CLI 실행기 — 끝남.** [`app/cli_executor.py`](app/cli_executor.py)의 `CliExecutor`: `env.resolve` → `adapters.build_spec` → `isolation.run(cli_mounts(...), never=controller 데이터 폴더)` → `interpret`. Linux·WSL 전용이다(2절 15).
   - 결과 수용은 A1 관문 그대로다. 실행 명세(`ExecutionSpec.record()`)는 시작 사건에 시도 ID와 함께 남는다 — 질문 본문과 원문 argv는 없다.
@@ -131,7 +132,8 @@
   - Codex 거절 표식은 보관 상한과 상관없이 stderr 전체에서 센다(K02).
   - 시험: 설치된 모양 그대로 만든 가짜 `claude`·`codex`로 실제 격리 경로를 돈다 — stdin으로 질문 전체 전달, 자기 설정 폴더만 보임, 수용 관문, 늦은 결과 무시([`tests/test_app_cli_executor.py`](tests/test_app_cli_executor.py)). 실제 CLI와 모델은 부르지 않았다.
   - 서버에는 아직 연결하지 않았다. 서버에서 실제 CLI를 고르는 설정(참여자별 전체 모델 이름)은 승인된 호출을 할 때 붙인다.
-- **N2. WSL용 관측 도구.** B1·B2를 격리 안에서 돌릴 도구를 만든다. 기존 [`conformance.py`](tools/v04-03/conformance.py)는 `%TEMP%`·레지스트리를 쓰는 Windows 전용이다(K33). N1의 실행기를 재사용한다.
+- **N2. WSL용 관측 도구 — 끝남.** [`tools/w2/observe.py`](tools/w2/observe.py). `CliExecutor.prepare()`로 참여자와 같은 argv·격리 경계를 만들어 probe마다 한 번 부른다. 승인(`approve`: provider별 상한·timeout·메모)이 없거나, 상한을 다 썼거나, 앞 호출이 기대와 달랐으면 부르지 않는다. 실패도 한 번으로 센다. 가짜 CLI로 실제 격리 경로를 도는 시험이 있다([`tests/test_w2_observe.py`](tests/test_w2_observe.py)).
+  - aux-pc-wsl에서 `plan`(실행 없음)으로 실제 설치(Claude Code 2.1.280, Codex 0.156.1)의 argv와 연결 경로가 성립하는 것을 확인했다. **로그인 셸(`bash -l`)에서 돌린다** — 비로그인 셸은 PATH에 `~/.local/bin`이 없어 CLI를 못 찾는다.
 - **N3. 인증 연결 좁히기 후보(K09).**
   - 확인할 것: `~/.claude`·`~/.claude.json`·`~/.codex` 가운데 무엇이 있어야 로그인 상태 명령이 격리 안에서 되는지를 모델 없이 본다.
   - 토큰 갱신에 필요한 쓰기는 2단계에서 확인한다.
@@ -148,7 +150,8 @@
 
 한 번 부르고 결과를 읽은 뒤 다음으로 간다. 실패하면 그 provider를 멈추고 원인부터 본다. 실패를 우회 플래그나 다른 백엔드로 조용히 바꾸지 않는다. 승인을 받을 때 provider별 최대 시작 횟수, 실패를 포함한 상한, timeout, 멈추는 조건을 함께 정한다("3회 안팎"은 계획 추정치다, A1 리뷰 질문 7). tier 2와 B1·B2를 같은 호출로 확인할 수 있으면 겹쳐 부르지 않는다.
 
-- **tier 2(`aux-pc-wsl`):** [V04-01 절차서](docs/experiments/v04-01-inventory/README.md)의 구독 호출. Windows 기록을 복사하지 않는다.
+- **절차(aux-pc-wsl, 로그인 셸, 저장소 루트):** `observe.py plan`으로 실행할 argv를 확인 → 사용자 승인을 `observe.py approve --claude N --codex M --timeout 300 --note "…"`로 적는다 → `observe.py call <probe> <전체 모델 이름>`을 하나씩 부르고 결과를 읽은 뒤 다음으로 간다. 제안하는 probe와 상한: Claude `b1`·`p3-claude`(+ 선택 `b1-combo`) = 3, Codex `b2`·`p3-codex` = 2(사용량이 남으면 `plain-codex`). `p3`는 모델 응답 없이 거절돼야 하는 호출이지만 상한에는 센다. 요약은 `docs/experiments/`에 옮기고 원 출력은 저장소 밖에 둔다.
+- **tier 2(`aux-pc-wsl`):** [V04-01 절차서](docs/experiments/v04-01-inventory/README.md)의 구독 호출. Windows 기록을 복사하지 않는다. `b1`(구독 인증·구조화 출력·깨끗한 문맥, P1·P4), `p3-*`(잘못된 값, P3), `plain-codex`(P1·P4)가 겹친다.
 - **B1. Claude.** 격리 안에서 다음을 본다.
   - 위치 인자 없는 `-p`가 stdin을 질문으로 읽는지(K29)
   - `CLAUDE.md`를 싣지 않는지: 자기보고 대신 stream-json의 init 이벤트로 본다(K31)
@@ -218,9 +221,9 @@
 | K30 | CLI | Linux Codex의 명령 거절 문자열을 모른다. `tools_rejected`는 Windows 문자열을 찾는다 | — | B2 |
 | K31 | CLI | Claude가 `CLAUDE.md`를 싣지 않는다는 것은 모델의 자기보고뿐이다 | — | B1 |
 | K32 | CLI | Codex·agy는 결과에 모델 이름이 없어서 조용한 강등을 결과로 잡지 못한다 | — | B4(agy init) |
-| K33 | 도구 | WSL용 관측 도구가 없다(기존 conformance 도구는 Windows 전용) | — | N2 |
+| K33 | 도구 | WSL용 관측 도구([`observe.py`](tools/w2/observe.py))는 가짜 CLI로만 시험했다. 실제 호출은 한 번도 없다. Claude의 init 이벤트 필드는 aux-pc 기록과 V04-01 절차서에 기댄 것이다 | 요약은 필드를 골라 옮기고, 모르는 필드는 이름만 남긴다 | 2단계 |
 | K34 | CLI | Windows 전용 사실(Codex #42172, PowerShell 5.1 재시도, 작업 폴더 밖 읽기) | adapter의 `codex_windows_sandbox`. Codex blind 참여는 WSL에서만 | Windows 경로는 동결 |
-| K38 | CLI | Codex는 작업 폴더의 `AGENTS.md`를 싣는다 | 참여자 작업 폴더는 앱이 만든 빈 임시 폴더다(지시문 파일 없음). A1도 그렇게 만든다 | N1에서 그대로 |
+| K38 | CLI | Codex는 작업 폴더의 `AGENTS.md`를 싣는다 | 참여자 작업 폴더는 controller가 시도마다 만든 빈 폴더다(지시문 파일 없음). 실제 실행기도 그 폴더에서 돈다 | — |
 | K39 | CLI | Codex의 read-only 샌드박스는 쓰기만 막고 읽기는 막지 않는다 | 읽기 경계는 bubblewrap 허용 목록이 맡는다. 확인 전까지 Codex 초안의 blind는 "미확인" | B2 |
 | K40 | CLI | agy는 `--output-format`의 없는 값을 조용히 무시한다 | adapter가 값을 고정하고, JSON이 아니면 형식 실패 | — |
 | K35 | 과정 | 모든 관측은 PC 한 대와 그 안의 WSL 배포판 하나, 2026-09-23 하루치다. 운용 PC 관측이 없다 | — | 필요할 때 같은 절차서로 |
