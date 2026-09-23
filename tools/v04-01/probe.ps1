@@ -28,7 +28,17 @@ $probes = @{
     'P3-claude' = @('claude', '-p', $prompt, '--permission-mode', 'notamode')
     'P3-codex'  = @('codex', 'exec', '--skip-git-repo-check', '--sandbox', 'notamode', $prompt)
     'P3-agy'    = @('agy', '-p', $prompt, '--output-format', 'notaformat')
+    # P3b: a misspelled restriction flag. Added on aux-pc after agy silently ignored an invalid
+    # --output-format value; a typo in a sandbox or permission flag must not run unrestricted.
+    'P3b-claude' = @('claude', '-p', $prompt, '--permision-mode', 'plan')
+    'P3b-codex'  = @('codex', 'exec', '--skip-git-repo-check', '--sandbx', 'read-only', $prompt)
+    'P3b-agy'    = @('agy', '-p', $prompt, '--sandbx')
     'P4-claude' = @('claude', '-p', $prompt, '--output-format', 'stream-json', '--verbose')
+    # P4b: can Claude run with a clean context and still use the subscription? --bare cannot (P2).
+    # --restricted (2.1.280 help) ignores user/project/local settings; --strict-mcp-config with no
+    # --mcp-config drops MCP servers; --disable-slash-commands drops skills; --tools "" drops tools.
+    # Windows PowerShell 5.1 drops an empty-string argument, so '""' is passed to mean "".
+    'P4b-claude' = @('claude', '-p', $prompt, '--output-format', 'stream-json', '--verbose', '--restricted', '--strict-mcp-config', '--disable-slash-commands', '--tools', '""')
     'P4-codex'  = @('codex', 'exec', '--json', '--skip-git-repo-check', '--ephemeral', '--ignore-user-config', '--ignore-rules', $prompt)
     'P5-agy'    = @('agy', 'models')
 }

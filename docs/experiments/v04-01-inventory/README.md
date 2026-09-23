@@ -44,6 +44,7 @@ git switch -c human/v04-01-main-pc-20260924
 | **낡은 PATH.** 앱과 앱이 여는 터미널 탭은 앱이 시작할 때의 PATH를 물려받는다 | 설치 직후 탭에서 `agy`, `codex`를 못 찾는다 | 탭에서 `$env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User')`를 먼저 실행하거나, 시작 메뉴에서 새 PowerShell을 연다 |
 | **백슬래시가 사라진다.** Git Bash는 따옴표 없는 `tools\v04-01\x.ps1`의 `\`를 먹고, heredoc 안의 파이썬은 `\\`를 `\`로 받아 `\b`가 백스페이스가 된다 | 경로가 붙어 버리거나 문서에 제어 문자가 들어간다(인코딩 검사가 잡는다) | 명령의 경로는 슬래시(`tools/v04-01/x.ps1`)나 따옴표로 쓰고, 문서는 편집 도구로 고친다 |
 | **열린 표준입력.** `codex exec`는 stdin이 열려 있으면 추가 입력을 기다린다 | 호출이 끝나지 않는다 | stdin을 닫고 실행한다(`probe.ps1`이 그렇게 한다) |
+| **빈 문자열 인자가 사라진다.** Windows PowerShell 5.1은 외부 프로그램에 `''` 인자를 넘기지 않는다 | `claude ... --tools ""`가 "argument missing"으로 거절된다 | PowerShell 5.1에서는 `'""'`로 넘긴다(`probe.ps1`의 P4b) |
 
 설치 전에 설치 스크립트를 받아 **읽고** 나서 실행한다. aux-pc에서는 이렇게 했다(Antigravity 예):
 
@@ -148,6 +149,7 @@ claude --bare -p "Reply with exactly: OK" --output-format json
 | 도구 | 명령 | 기록 |
 |---|---|---|
 | Claude Code | `claude -p "Reply with exactly: OK" --output-format stream-json --verbose` | 첫 `system/init` 이벤트의 `tools`·`mcp_servers`·`plugins` 이름. `~/.claude/CLAUDE.md` 존재 여부 |
+| Claude Code (P4b) | 위 명령에 `--restricted --strict-mcp-config --disable-slash-commands --tools ""` | 같은 항목이 비고 `apiKeySource`가 `none`(구독)으로 남는가. aux-pc 2.1.280에서 그렇게 관측됐다 |
 | Codex | `codex exec --json --skip-git-repo-check --ephemeral --ignore-user-config --ignore-rules "Reply with exactly: OK"` | 사용자 설정을 무시해도 ChatGPT 로그인으로 도는가 |
 | Antigravity | 해당 플래그를 문서에서 찾지 못함 | "미확인"으로 기록 |
 

@@ -6,6 +6,7 @@
 - 수행자: claude 세션(Claude Opus 5.5, 이 PC의 로컬 checkout). 설치는 사용자 승인 후 이 세션이 실행
 - 측정 환경: Claude 데스크톱 앱 안의 셸. 앱이 넣은 변수 26개를 뺀 새 터미널 근사 환경(`--fresh-env`)에서 실행
 - tier 1 manifest: [`manifest.json`](manifest.json) — `--validate` PASS
+- tier 2 manifest: [`manifest.tier2.json`](manifest.tier2.json) — 아래 tier 2 표에서 관측한 기능만 `observed`. `configured`는 Claude Code·Codex만 `true`, Antigravity는 판정의 조건 때문에 `false`. `--validate` PASS
 
 ## 설치와 로그인
 
@@ -15,7 +16,7 @@
 |---|---|---|---|---|---|
 | Claude Code | 공식 PowerShell 설치 스크립트 | 2.1.280 | Anthropic, PBC — Valid | `claude auth status`: `loggedIn: true`, `authMethod: claude.ai`, `apiProvider: firstParty` | **설치 프로그램이 PATH를 등록하지 않았다.** 안내 문구에 따라 사용자 PATH에 `%USERPROFILE%\.local\bin`을 추가(사용자 승인 범위). 로그인은 새로 하지 않았다 — 데스크톱 앱과 같은 `~/.claude` 자격증명으로 보인다 |
 | Codex | 공식 PowerShell 설치 스크립트 | codex-cli 0.155.1 | OpenAI OpCo, LLC — Valid | `codex login status`: Logged in using ChatGPT | 설치 프로그램이 사용자 PATH를 등록했다. Windows 샌드박스: 미설정(elevated 설정은 관리자 승인 필요 — 사용자 판단) |
-| Antigravity | 공식 PowerShell 설치 스크립트, **`--dir ~\.local\agy\bin`으로 재설치** | 1.2.8 | Google LLC — Valid | **미확인** — 상태 확인 명령이 help에 없고 `~/.gemini/antigravity-cli/settings.json`도 없다 | 첫 설치는 기본 폴더 `%LOCALAPPDATA%\agy\bin`에 했는데, **Claude 데스크톱 앱(MSIX)의 전용 가상 공간으로 들어가** 사용자 터미널에서 "인식되지 않음"이 났다(아래). 가상 사본과 그 PATH 항목을 지우고 AppData 밖에 다시 설치했다. `--dir`로 설치해도 마지막 안내는 기본 경로를 출력한다(표시 문제). `--version`은 문서에 없지만 동작했다 |
+| Antigravity | 공식 PowerShell 설치 스크립트, **`--dir ~\.local\agy\bin`으로 재설치** | 1.2.8 | Google LLC — Valid | **Google 계정 로그인**(사용자가 앱 밖 터미널에서 `agy` 실행 → 브라우저. 시작 화면에 계정과 요금제가 표시됐다 — 기록하지 않음). 상태 확인 명령은 help에 없고, P1 성공으로 비대화형에서도 로그인이 쓰임을 확인 | 첫 설치는 기본 폴더 `%LOCALAPPDATA%\agy\bin`에 했는데, **Claude 데스크톱 앱(MSIX)의 전용 가상 공간으로 들어가** 사용자 터미널에서 "인식되지 않음"이 났다(아래). 가상 사본과 그 PATH 항목을 지우고 AppData 밖에 다시 설치했다. `--dir`로 설치해도 마지막 안내는 기본 경로를 출력한다(표시 문제). `--version`은 문서에 없지만 동작했다 |
 
 ### 설치 위치 문제 — Claude 데스크톱 앱의 가상화
 
@@ -47,7 +48,9 @@ help에 있다는 것은 관측이 아니다. 문서와 다른 점:
 
 ## tier 2 관측
 
-2026-09-23, 사용자 승인 후 이 세션이 한 줄씩 실행했다. 저장소 밖의 빈 임시 폴더, 새 터미널 근사 환경, 표준입력은 닫은 상태. 각 호출 뒤 폴더가 비어 있는지 확인했다(모두 비어 있음). 출력 파일은 이메일·UUID·홈 경로를 가렸다. 명령은 각 파일 첫머리에 그대로 있다. Antigravity는 로그인 후 진행한다.
+2026-09-23, 사용자 승인 후 이 세션이 한 줄씩 실행했다. 저장소 밖의 빈 임시 폴더, 새 터미널 근사 환경, 표준입력은 닫은 상태. 각 호출 뒤 폴더가 비어 있는지 확인했다(모두 비어 있음). 출력 파일은 이메일·UUID·홈 경로를 가렸다. 명령은 각 파일 첫머리에 그대로 있다. Antigravity는 사용자가 로그인한 뒤 같은 날 `tools/v04-01/probe.ps1`로 실행했다.
+
+P3b는 계획에 없던 관측이다. P3-agy가 잘못된 값을 조용히 무시하자, 권한 옵션을 **오타로** 쓰면 제한 없이 실행되는지 세 CLI에 같은 방식으로 확인했다.
 
 | 번호 | 도구 | exit | 관측한 것 | 출력 | 기대와 같은가 |
 |---|---|---|---|---|---|
@@ -56,35 +59,61 @@ help에 있다는 것은 관측이 아니다. 문서와 다른 점:
 | P2 | Claude Code `--bare` | 1 | `Not logged in · Please run /login`, 비용 0, API 시간 0. **`subtype`은 `"success"`인데 `is_error`가 `true`다** | [P2-claude](tier2/P2-claude.txt) | 예 (F25 재현) |
 | P3 | Claude Code | 1 | 모델 호출 전 거절: `--permission-mode` 허용값은 `acceptEdits, auto, bypassPermissions, manual, dontAsk, plan` (0.16초) | [P3-claude](tier2/P3-claude.txt) | 예 |
 | P3 | Codex | 2 | 모델 호출 전 거절: `--sandbox` 허용값 `read-only, workspace-write, danger-full-access` | [P3-codex](tier2/P3-codex.txt) | 예 |
+| P3 | Antigravity `--output-format notaformat` | **0** | **거절하지 않고 모델을 불러 `OK`를 text로 답했다**(10.4초). 경고도 stderr도 없다. help의 허용값은 `text, json, stream-json` | [P3-agy](tier2/P3-agy.txt) | **아니오** — 잘못된 값이 조용히 기본값으로 바뀐다 |
+| P3b | Claude Code `--permision-mode plan` (오타) | 1 | 모델 호출 전 거절: `unknown option`, `Did you mean --permission-mode?` | [P3b-claude](tier2/P3b-claude.txt) | 예 |
+| P3b | Codex `--sandbx read-only` (오타) | 2 | 모델 호출 전 거절: `unexpected argument '--sandbx'`, 비슷한 인자 `--sandbox` 안내 | [P3b-codex](tier2/P3b-codex.txt) | 예 |
+| P3b | Antigravity `--sandbx` (오타) | 2 | 모델 호출 전 거절: `flags provided but not defined: -sandbx` (0.1초) | [P3b-agy](tier2/P3b-agy.txt) | 예 |
+| P1 | Antigravity | 0 | 응답 `OK`, JSON 필드 `conversation_id`·`duration_seconds`·`num_turns`·`response`·`status: SUCCESS`·`usage`(입력 11,724 · 출력 23 · 사고 22 · 캐시 읽기 0). **모델 이름과 비용 필드가 없다.** 신뢰하지 않은 빈 폴더에서도 비대화형 실행이 막히지 않았다 | [P1-agy](tier2/P1-agy.txt) | 예 |
 | P4 | Claude Code | 0 | 빈 폴더에서도 **사용자 전역 설정이 통째로 실린다**: 도구 35(그중 MCP 도구 8), MCP 서버 18(claude.ai 연결 서비스 4 포함, 연결됨 1·인증 대기 13·실패 4), 플러그인 5, 스킬 44, 에이전트 5, 슬래시 명령 79. 문맥 24,449 토큰(이번엔 전부 캐시 읽기, 추정 비용 0.005). `~/.claude/CLAUDE.md`는 없다. 원본 스트림은 설치 목록이 드러나 PC에만 두고 요약만 올렸다 | [P4-claude](tier2/P4-claude.txt) | 예 — 그리고 blind·권한 문제를 드러냄 |
+| P4b | Claude Code `--restricted --strict-mcp-config --disable-slash-commands --tools ""` | 0 | **구독 인증을 유지한 채 문맥이 깨끗해졌다**: `apiKeySource: none`, 도구 0, MCP 서버 0, 스킬 0, 슬래시 명령 0, 메모리 경로 없음. 남은 것은 Claude Code **내장** 플러그인 2개(`@builtin`)와 기본 에이전트 5개. 문맥 1,339 + 531 = 약 1,900 토큰(P4의 약 24,400에서 13분의 1). 첫 시도는 PowerShell 5.1이 빈 문자열 인자를 버려 `--tools` 값 누락으로 실행 전 거절됐고(exit 1, 한도 소모 없음), `'""'`로 넘겨 해결했다 | [P4b-claude](tier2/P4b-claude.txt) | **예 — 설계 입력 1의 해법** |
 | P4 | Codex `--ignore-user-config --ignore-rules` | 0 | 사용자 설정을 무시해도 **ChatGPT 로그인으로 돈다.** 입력 13,740 토큰(설정 포함 때 15,268), 캐시 11,776 | [P4-codex](tier2/P4-codex.txt) | 예 |
 | P5 | Claude Code·Codex | — | 기본 모델: Claude `claude-opus-5-5`(P1). Codex는 이벤트에 모델 이름이 없다. 전체 목록은 대화형 `/model`이 필요해 미확인 | — | 부분 |
+| P5 | Antigravity `agy models` | 0 | 기본 모델은 **Gemini 3.8 Flash (High)**. Gemini 계열 최상위는 `gemini-3.1-pro-high`/`-low`. 그 밖에 `gemini-3.8/3.7/3.6-flash-*`, 그리고 **다른 회사 모델** `claude-opus-4-6-thinking`, `claude-sonnet-4-6`, `gpt-oss-120b-medium` | [P5-agy](tier2/P5-agy.txt) | 예 |
 | P6 | — | — | 미실시(선택, V04-03으로) | — | — |
 | P7 | Codex | — | `app-server`(experimental) help에 있음, 호출 미시험 | — | — |
 
 ### tier 2에서 나온 설계 입력
 
-1. **Claude Code의 blind 초안은 지금 방식으로는 깨끗하지 않다.** `--bare` 없이 `-p`를 쓰면 사용자의 플러그인·스킬·MCP 연결(외부 서비스 커넥터 포함)이 모두 문맥과 도구에 들어온다. `--bare`는 구독을 쓰지 못한다(P2). 읽기 전용 논의자가 사용자의 외부 서비스 도구를 가질 수 있다는 점은 권한 경계 문제이기도 하다. 후보(미시험): 별도 `CLAUDE_CONFIG_DIR`에서 구독으로 한 번 로그인해 빈 설정을 쓰는 방법, `--strict-mcp-config`와 빈 MCP 설정. V04-03 전에 시험한다.
+1. **Claude Code의 기본 `-p`는 blind 초안에 깨끗하지 않지만, 해법이 관측됐다.** 기본 `-p`는 사용자의 플러그인·스킬·MCP 연결(외부 서비스 커넥터 포함)을 모두 싣고(P4), `--bare`는 구독을 쓰지 못한다(P2). **`--restricted --strict-mcp-config --disable-slash-commands --tools ""`는 구독 인증을 유지하면서 사용자 설치분을 모두 뺐다(P4b).** 남은 것은 내장 플러그인 2개와 기본 에이전트 목록이다. 이 조합은 도구가 하나도 없으므로 논의자가 파일을 읽어야 하면 `--tools Read`와 `--add-dir`로 범위를 좁혀 다시 시험한다. `--restricted`는 help에만 있는 이름으로 확인했고 공식 문서 locator는 아직 없다 — adapter 구현 전에 문서와 대조한다.
 2. **Codex는 깨끗한 문맥과 구독 인증을 함께 얻을 수 있다**(P4). 인증 파일과 설정 파일이 분리돼 있기 때문으로 보인다.
 3. **성공 판정은 한 필드로 하지 않는다.** Claude의 실패 결과가 `subtype: "success"`를 달고 나온다(P2). `is_error`와 exit code를 함께 본다.
 4. **adapter는 표준입력을 닫아야 한다.** Codex `exec`는 열린 stdin을 추가 입력으로 기다린다(P1).
 5. **비용 필드는 제각각이다.** Claude는 정가 기준 추정 비용과 캐시 생성·읽기를 나눠 주고, Codex는 토큰만 준다. 캐시 상태에 따라 같은 호출의 추정 비용이 18배 차이 났다(P1 0.0898 → P4 0.0050). 구독 한도 소모와는 다른 값이다.
-6. 잘못된 제한 인자는 두 CLI 모두 실행 전에 거절했다(P3). 이 버전들에서는 F26 같은 조용한 강등을 관측하지 못했다 — 다른 인자 조합까지 안전하다는 뜻은 아니다.
+6. **옵션 이름은 세 CLI 모두 엄격하지만, 값 검증은 다르다.** 오타 옵션은 셋 다 실행 전에 거절했다(P3b). 그러나 Antigravity는 `--output-format`에 없는 값을 주면 **조용히 기본값(text)으로 바꿔 실행**했다(P3). F26과 같은 계열의 조용한 강등이다. adapter는 CLI에 넘기기 전에 **값을 스스로 허용 목록과 대조**하고, 실행 뒤에는 **요청한 형식으로 나왔는지 확인**해야 한다(JSON을 요청했는데 JSON이 아니면 실패). 다른 값 옵션(`--effort` 등)도 같은지는 미확인이다.
+7. **참여자의 회사는 CLI가 아니라 모델로 센다.** Antigravity로 Claude Opus 4.6과 GPT-OSS도 부를 수 있다(P5). `agy`를 Google 참여자로 세고 모델을 Claude로 고르면 Anthropic이 두 번 들어간다. provider 구별 규칙(`check_frontier_protocol`의 `distinct providers`)은 모델 ID에서 회사를 정해야 한다.
+8. **상급 모델은 명시해서 고른다.** Antigravity의 기본값은 Flash다(P5). Gemini 상급 자리에 쓰려면 `--model gemini-3.1-pro-high`처럼 지정하고, 실제로 그 모델로 돌았는지는 출력에 모델 필드가 없으므로(P1) 별도로 확인할 방법을 찾아야 한다.
+9. **세 CLI 중 모델 이름을 결과에 주는 것은 Claude뿐이다**(P1). Codex와 Antigravity는 결과만 보고 어느 모델이 답했는지 알 수 없다 — 조용한 모델 강등(D18)을 결과로는 잡을 수 없다는 뜻이다.
 
 캡처 한계: PowerShell 5.1로 출력을 받으면서 ASCII가 아닌 문자 일부가 깨졌다(P2의 `·`). 판정에 쓰인 필드는 ASCII다.
 
 ## 정책 확인
 
-아직 하지 않았다.
+2026-09-23 공식 문서를 읽었다. 문서를 읽은 것이며 계정에 적용해 본 것은 아니다.
+
+| 항목 | 문서 | 확인한 문구·내용 | 결론 |
+|---|---|---|---|
+| Claude 구독으로 Claude Code | [E04](https://support.claude.com/en/articles/11145838-use-claude-code-with-your-pro-or-max-plan) (2026-08-19 갱신) | Pro·Max는 Claude Code를 포함하고 **claude.ai와 한도를 공유**한다. 한도에 닿으면 상위 요금제, 선택적 API 크레딧, 초기화 대기 중에서 고른다. `ANTHROPIC_API_KEY`가 있으면 구독 대신 그 키로 과금된다 | 구독 경로 유효. 데스크톱 앱 사용과 CLI 호출이 **같은 한도**를 쓴다 |
+| `claude -p`·SDK 구독 차감과 보류 공지 | [E05·F18](https://support.claude.com/en/articles/15036540-use-the-claude-agent-sdk-with-your-claude-plan) (2026-06-16 갱신) | "변경을 보류한다. SDK, `claude -p`, 제3자 앱 사용은 여전히 구독 한도에서 차감된다." 별도 월 크레딧은 없다 | 지금은 유효. 공지가 바뀔 수 있어 adapter 구현 직전에 다시 본다 |
+| Codex ChatGPT 로그인과 API 과금 | [E01](https://learn.chatgpt.com/docs/auth) | ChatGPT 로그인은 workspace 권한을 따르고, API 키는 표준 API 요율로 청구된다. 한도 소진 시 동작과 동시 사용은 문서에 없다 | 구독 경로 유효. 한도 소진 동작 미확인 |
+| Antigravity 크레딧 자동 사용 | [E09](https://www.antigravity.google/docs/cli/credits/) (날짜 표시 없음) | `useG1Credits` 설정. **기본값이 켜짐(`true`)으로 읽힌다** — 구독 한도를 다 쓰면 유료 크레딧으로 넘어갈 수 있다. `/config`·`/settings`에서 끌 수 있다 | **D18(조용한 유료 전환 금지)과 충돌할 수 있다.** 끌지는 사용자 결정. 실제 이 계정의 값은 미확인 |
+| Gemini CLI 소비자 인증 종료설 | [F30](https://developers.google.com/gemini-code-assist/docs/deprecations/code-assist-individuals) (2026-09-02 갱신) | 2026-06-18부터 개인·Google AI Pro·Ultra 계정의 Gemini CLI 요청 중단. Standard·Enterprise는 유지. Antigravity로 이전 안내 | **확인됨.** 구독 경로가 실제로 닫힌 사례. agy에는 직접 적용되지 않는다 |
+| Antigravity 약관의 제3자 접근 | [F31](https://antigravity.google/terms) (날짜 표시 없음) | 6조: 제3자 소프트웨어로 서비스에 접근하는 것(예: Antigravity OAuth를 다른 도구에서 쓰기)은 위반. 5조: 상호작용 데이터 사용은 설정에서 바꿀 수 있다 | **우리 앱이 공식 `agy`를 하위 프로세스로 구동하는 것이 해당하는지 불명확.** 사용자 결정 필요 |
+| 요금제별 동시 기기·세션 제한 | 위 문서들 | 세 문서 모두 언급하지 않는다 | 미확인 — 가정하지 않는다 |
+| 구독 경로가 닫혔을 때의 대안 | — | — | 사용자 결정 대기: 유료 API 전환 / 해당 provider 제외 / 기능 축소 |
+
+첫 실행 관측: agy 1.2.8은 첫 실행 때 **상호작용 데이터 수집 동의가 미리 체크된 화면**을 보여 줬고, 이번 로그인에서는 체크된 채로 완료됐다. 실행 폴더를 신뢰할지도 물었다(저장소 폴더를 신뢰로 선택). 데이터 사용 설정을 바꿀지는 사용자 결정이다.
 
 ## 판정
 
 | 질문 | 결론 | 근거 |
 |---|---|---|
-| V04-03 진행 가능한가 | **Claude Code·Codex 두 경로는 조건 충족**(P1 구독 성공, P3 실행 전 거절, 과금 변수 없음). 단 Claude의 blind 문맥 문제(설계 입력 1)를 먼저 풀어야 한다. Antigravity는 로그인 후 판정 | P1, P3, P4 |
-| Q1: ACP 우선인가 exec 우선인가 | 보류. 세 CLI 모두 help에 ACP가 없고, 두 CLI는 비대화형 실행(`-p`, `exec --json`)이 관측으로 동작했다 — exec 우선 쪽 근거가 쌓이는 중 | tier 1, P1 |
+| V04-03 진행 가능한가 | **Claude Code·Codex 두 경로로 진행 가능.** 절차서 기준 세 조건(두 도구 이상 P1 구독 성공, P3 실행 전 거절, 과금 변수 없음)을 충족한다. 두 도구 모두 깨끗한 문맥과 구독 인증을 함께 얻는 조합도 관측됐다(Codex P4, Claude P4b). **Antigravity는 조건부** — P3에서 잘못된 값을 조용히 무시했고(설계 입력 6), 약관상 구동 허용 여부(F31)와 크레딧 자동 사용(E09)이 사용자 결정으로 남아 있다 | P1, P3, P3b, P4, 정책 확인 |
+| Q1: ACP 우선인가 exec 우선인가 | **exec 우선을 제안한다.** 세 CLI 모두 help에 ACP가 없고, 세 CLI 모두 비대화형 실행(`claude -p`, `codex exec --json`, `agy -p --output-format json`)이 구독 인증으로 관측됐다. ACP는 필요할 때 adapter 계층의 선택지로 남긴다. 확정은 사용자와 함께 한다 | tier 1, P1 |
 
 ## 열린 문제
 
-- Antigravity 로그인 상태를 비대화형으로 확인하는 방법이 없다. tier 2 P1의 성공 여부로 간접 확인한다.
-- Claude Code CLI가 데스크톱 앱과 자격증명을 공유하는 것으로 보인다. 앱과 CLI가 같은 구독 한도를 쓰는지는 미확인이다.
+- Antigravity의 다른 값 옵션(`--effort`, `--model` 등)도 없는 값을 조용히 무시하는지. 특히 없는 `--model` 값이 기본 Flash로 바뀌는지는 상급 모델 배정에 직결된다.
+- Codex와 Antigravity 결과에 모델 이름이 없다. 실제로 요청한 모델이 답했는지 확인할 방법.
+- `useG1Credits`의 이 계정 실제 값. 끌지는 사용자 결정.
+- Antigravity 약관 6조가 공식 CLI를 하위 프로세스로 구동하는 경우에 해당하는지(F31). 사용자 결정.
+- Claude Code CLI는 데스크톱 앱과 자격증명과 한도를 공유한다(E04). 이 프로젝트의 호출이 사용자의 평소 Claude 사용 한도를 함께 줄인다는 뜻이다.
