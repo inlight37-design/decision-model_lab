@@ -32,7 +32,8 @@ probe — 한 번 부를 때마다 그 provider의 호출 1회로 센다:
   세션 기록은 상태 폴더로 옮기고(참여자에게 보이는 ~/.codex에 남기지 않는다) 모양만 요약한다. **모양 요약은 탐색
   보조다.** 짧은 글은 세기만 하고, 잘린 수를 적는다. 요약에 없다고 문맥에 없었다는 뜻이 아니다(리뷰 R06)
   --pad-kb N: 질문 뒤에 N KB의 채움 글을 붙이고, 그 가운데와 끝에 시도마다 새로 만든 표식을 둔다. 답이 두 표식을 되말하면
-  CLI가 끝까지 읽었다는 증거가 된다 — 모든 바이트가 정확하다는 증명은 아니다(리뷰 R08)
+  CLI가 끝까지 읽었다는 증거가 된다 — 모든 바이트가 정확하다는 증명은 아니다(리뷰 R08). 하나라도 되말하지 않으면 기대대로가
+  아니다 — 그 provider를 멈춘다
 
 WSL에서는 로그인 셸(`bash -l`)에서 돌린다. CLI 설치 위치(~/.local/bin)는 로그인 셸의 PATH에만 있다 — 없으면
 plan이 "not on the child PATH"로 알려 준다(2026-09-23 aux-pc-wsl, `wsl.exe -- bash` 비로그인 셸에서 관측).
@@ -635,7 +636,9 @@ def call(state: Path, probe: str, model: str, *, pad_kb: int = 0, after_failure:
             summary["as_expected"] = _refused_as_expected(probe, run, outcome) and not violations
         else:  # controller와 같은 수용 관문(자손 종료, 입력 전달, 빈 답, 모델 불일치)을 먼저 통과해야 한다(리뷰 R03)
             gate_state, summary["gate"], _why = acceptance(run, outcome)
-            summary["as_expected"] = gate_state == ACCEPTED and not violations and (k46 is None or k46_passed(k46))
+            # 큰 입력은 두 표식을 모두 되말해야 기대대로다. 앞부분만 쓴 CLI를 전송 증거로 남기지 않는다(PR #15의 Codex 리뷰)
+            summary["as_expected"] = (gate_state == ACCEPTED and not violations and (k46 is None or k46_passed(k46))
+                                      and (markers is None or all(summary["pad_markers_seen"].values())))
         # 실제 호출에서 CLI가 자기 설정 폴더의 어떤 파일을 쓰는가(토큰 갱신이면 인증 파일이 바뀐다). 이름만
         summary["config_changes"] = _changes(before, after, lambda p: _scrub(p, executor.home))
         summary["config_changes"]["snapshot_limit_reached"] = max(len(before), len(after)) >= SNAPSHOT_LIMIT
