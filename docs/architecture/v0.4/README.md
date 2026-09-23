@@ -63,7 +63,7 @@ python tools/check_frontier_protocol.py path/to/synthetic-record.json
 
 ## 다음에 실제로 연결할 최소 단위
 
-첫 작업은 V04-01의 **실제 설치 버전·로그인 방식·지원 모델/권한 확인**이다. 이어서 두 native 경로의 read-only 독립 답변을 비교한다. 세 모델 토론·자동 수정·학습 router·Jev·장기 DB를 동시에 붙이지 않는다. 추가 지출 자동 전환은 계속 금지한다.
+첫 작업이던 V04-01(**실제 설치 버전·로그인 방식·지원 모델/권한 확인**)은 보조 PC에서 끝났다. 지금은 두 native 경로의 read-only 독립 답변(V04-03)을 준비한다 — 실행 코어와 첫 conformance가 있고, 현재 할 일은 [NEXT-SESSION.md](../../../NEXT-SESSION.md)가 기준이다. 세 모델 토론·자동 수정·학습 router·Jev·장기 DB를 동시에 붙이지 않는다. 추가 지출 자동 전환은 계속 금지한다.
 
 ## 이전 설계와 호환 범위
 

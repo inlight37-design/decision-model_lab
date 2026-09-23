@@ -43,6 +43,8 @@ root README·AGENTS·architecture 버전 지도와 기존 PR #1은 v0.4 기준�
 
 ## 4. 가장 먼저 수행할 다음 작업
 
+**갱신(2026-09-23):** V04-01은 보조 PC에서 끝났고([결과](../../experiments/v04-01-inventory/hosts/aux-pc/RESULTS.md)), V04-03의 첫 실행 코어([`core/`](../../../core/README.md))와 첫 conformance([기록](../../experiments/v04-03-conformance/aux-pc.md))가 있다. **지금 할 일은 [NEXT-SESSION.md](../../../NEXT-SESSION.md) 4절이 기준이다.** 아래는 v0.4를 쓸 당시의 순서이며, "아직 CLI adapter가 구현된 경로는 없다"는 그때의 사실이다.
+
 **V04-01: 실제 실행 환경과 adapter inventory.** 연결 가능한 사용자 실행 환경에서 OS, 실제 CLI 설치/버전, 해당 버전의 help, native 로그인 방식, 사용 가능한 상급 모델/effort, output/schema/session/권한/cancel 기능을 확인한다. API key·인증 token·전체 환경 변수를 문서나 Git에 출력하지 않는다. 현재 문서만 보고 configured=true로 만들지 않는다. 설치부터 판정까지의 순서는 [V04-01 절차서](../../experiments/v04-01-inventory/README.md)에 있다.
 
 아직 CLI adapter·MCP bridge가 구현된 경로는 없다. 첫 구현 파일 경로/언어 구조는 실제 저장소 상태와 환경 확인 후 정한다. 단순 문서의 함수 이름을 이미 동작하는 API로 호출하지 않는다. native 도구의 실제 입출력 fixture와 공통 capability/preflight/start/events/collect/cancel 계약을 작은 단위로 연결한다.
