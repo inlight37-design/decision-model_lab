@@ -69,8 +69,12 @@ print(json.dumps({
 '''
 
 
+# 탐침은 시스템 python으로 돌린다. 격리 안에는 /usr만 보이는데, CI의 python은 /opt 아래에 있다.
+SYSTEM_PY = "/usr/bin/python3"
+
+
 def bwrap_usable():
-    if sys.platform != "linux" or not os.path.exists(isolation.BWRAP):
+    if sys.platform != "linux" or not (os.path.exists(isolation.BWRAP) and os.path.exists(SYSTEM_PY)):
         return False
     probe = [isolation.BWRAP, "--unshare-all", "--share-net", "--die-with-parent", "--ro-bind", "/usr", "/usr",
              "--symlink", "usr/bin", "/bin", "--symlink", "usr/lib", "/lib", "--symlink", "usr/lib64", "/lib64",
@@ -130,7 +134,7 @@ class BoundaryTests(unittest.TestCase):
         self.addCleanup(self.server.close)
 
     def run_probe(self, mode, *extra, timeout=30):
-        argv = [sys.executable, str(self.root / "input/probe.py"), mode, str(self.root), self.home,
+        argv = [SYSTEM_PY, str(self.root / "input/probe.py"), mode, str(self.root), self.home,
                 str(self.server.getsockname()[1]), *extra]
         return runner.run(isolation.wrap(argv, self.box), cwd=str(self.root / "work"), env=dict(os.environ),
                           timeout=timeout, pid_namespace=True)

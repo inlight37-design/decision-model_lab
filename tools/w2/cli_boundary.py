@@ -49,7 +49,7 @@ def main():
 
         version = inside([exe, "--version"])
         status = inside([exe, *STATUS[adapter_id]])
-        seen = inside([sys.executable, "-c", PROBE, json.dumps(SEEN)])
+        seen = inside(["/usr/bin/python3", "-c", PROBE, json.dumps(SEEN)])  # 격리 안에는 /usr만 보인다
         report["cli"][adapter_id] = {
             "version": version.stdout.strip() or version.stderr.strip()[:200],
             "version_state": version.state, "tree_confirmed_empty": version.tree_confirmed_empty,
