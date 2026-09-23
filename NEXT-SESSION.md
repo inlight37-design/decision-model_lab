@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-23** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout, Hermes 조사 교차 확인·병합) · 브랜치 `claude/hermes-crosscheck-20260923`
+최종 갱신 **2026-09-23** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout, V04-03 실행 코어) · 브랜치 `claude/v04-03-runner-20260923`
 
 아래 보조 PC 환경 관측은 V04-01을 수행한 claude 세션의 기록이다. Hermes 조사를 쓴 ChatGPT 웹 세션은 GitHub 소스·공식 문서만 검토했다. 이 판을 쓴 claude 세션은 같은 보조 PC에서 `check-versions.ps1`(버전만 실행)로 세 CLI의 버전·경로·서명 `Valid`를 다시 확인했고 모델은 부르지 않았다.
 
@@ -23,6 +23,7 @@
 | [`review_boundary.py`](tools/review_boundary.py) | PR #3의 순수 함수 경계 실험(이벤트 순서, UNKNOWN 예산, 봉인 화면, 한도 표시). 서버·프로세스 제어가 아니다 |
 | [`audit_design_contrast.py`](tools/audit_design_contrast.py) | 디자인 토큰 대비 계산. 일반 글자 5쌍이 4.5:1 미만인 것을 기록한다 |
 | [`runtime_inventory.py`](tools/runtime_inventory.py) | V04-01 tier 1. 각 CLI의 `--version`/`--help`만 실행해 기록한다. `observed`와 `configured=true`를 쓸 수 없다 |
+| [`core/`](core/README.md) | V04-03 실행 코어: CLI 한 번을 셸 없이 실행하고 트리 종료를 확인하는 runner, 읽기 전용 논의자 argv·출력 해석 adapter, 참여자 구성 결정. **mock으로만 시험했다** — 실제 CLI conformance는 아직이다. 앱·화면·controller는 없다 |
 
 | 산출물 | 원본 | 발행본 |
 |---|---|---|
@@ -75,7 +76,7 @@
 
 ## 3. 진행 중인 작업
 
-2026-09-23의 모든 작업은 main에 병합됐다 — PR #3, V04-01 리뷰([PR #4](https://github.com/inlight37-design/decision-model_lab/pull/4))와 그 반영, ChatGPT의 Hermes 패턴 조사([PR #5](https://github.com/inlight37-design/decision-model_lab/pull/5), `chatgpt/hermes-patterns-20260923`)와 claude의 [교차 확인](docs/research/hermes-2026-09-23/CROSSCHECK.md)(`claude/hermes-crosscheck-20260923`). 사용자는 **CI 녹색을 확인한 claude 세션이 main에 직접 병합하는 것**을 허락했다(2026-09-23).
+2026-09-23의 모든 작업은 main에 병합됐다 — PR #3, V04-01 리뷰([PR #4](https://github.com/inlight37-design/decision-model_lab/pull/4))와 그 반영, ChatGPT의 Hermes 패턴 조사([PR #5](https://github.com/inlight37-design/decision-model_lab/pull/5), `chatgpt/hermes-patterns-20260923`)와 claude의 [교차 확인](docs/research/hermes-2026-09-23/CROSSCHECK.md)(`claude/hermes-crosscheck-20260923`), V04-03 실행 코어(`claude/v04-03-runner-20260923`). 사용자는 **CI 녹색을 확인한 claude 세션이 main에 직접 병합하는 것**을 허락했다(2026-09-23).
 
 **지금 병합되지 않은 브랜치: 없음.** 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 이 줄을 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다.
 
@@ -99,8 +100,8 @@ Hermes 조사에서 제안한 [HP-01/02/03](docs/research/hermes-2026-09-23/ADOP
 2. agy를 쓰기로 했다면: 없는 `--model`은 문서상 비영 종료·`ERROR`다 — 1.2.8에서 그런지 확인한다. `--effort`의 없는 값은 문서에 없으니 P3처럼 관측한다. `--model`을 주면 stream-json init에 `model`이 나온다고 문서에 있다 — 요청값과 대조한다. 모델은 이름이 아니라 세대와 실제 비교로 고른다(1절의 사용자 보고).
 3. **독립 초안을 받기 전에 conformance를 관측한다**(PR #4 R02). 합성 파일로: 답에만 나올 marker와 양성 대조, 금지 파일·다른 참여자 초안 읽기 시도, 허용 파일 읽기, workspace 밖 쓰기·shell·MCP 실행 거절. marker가 답에 없다는 것만 보지 말고 거절 자체를 본다. adapter 기록은 `installed`·`auth_observed`·`transport_observed`·`context_conformance`·`permission_conformance`로 나누고 실행 허가(`eligible_for_run`)는 실행 직전에 계산한다 — adapter가 읽을 때 manifest를 `runtime-inventory/2`로 올린다.
 4. adapter 공통 규칙으로 옮길 것: stdin 닫기, 옵션 값 사전 검증(버전별 허용 목록), 요청한 출력 형식 사후 확인, `is_error`와 exit code 함께 보기, 참여자의 회사는 모델 ID로 세기(RESULTS 설계 입력 3·4·6·7), `requested_model`과 보고된 모델 분리.
-5. **runner 계약을 mock 실행 파일로 먼저 시험한다**(PR #4 R06, 모델 호출 없음). argv 배열, stdin 닫기, stdout·stderr 분리, 제한 시간, 프로세스 트리 종료 확인, 출력 상한. timeout은 성공이 아니고 종료를 확인하지 못하면 `UNKNOWN`. `tools/v04-01/probe.ps1`은 관측 도구이지 runner가 아니다.
-6. **참여자 구성 변화를 부정 fixture로 고정한다**(PR #4 R09). 시작 전 사용 불가, 초안 단계 한도 소진, peer 초안 공개 뒤 대체 참여자, 종료 불명 cancel, 합성자만 사용 불가, provider 회복 — [리뷰의 전이 표](docs/reviews/2026-09-23-v04-01-review/README.md)대로. 사용자 원칙(유료 API 전환 없음, 조용히 채우지 않음)은 그대로다.
+5. ~~runner 계약을 mock 실행 파일로 먼저 시험한다~~ **했다(2026-09-23, [`core/runner.py`](core/runner.py)).** argv 배열·절대 경로, stdin 닫기, stdout·stderr 분리와 상한, 제한 시간, 취소, 프로세스 트리 종료 확인(Windows job object / POSIX 프로세스 그룹). timeout은 답이 보여도 `timed_out`, 트리를 확인하지 못하면 `unknown`. Windows 경로는 aux-pc 로컬에서 시험했고, POSIX 경로는 CI(Linux)가 시험한다. **실제 CLI로는 아직 돌리지 않았다** — 다음 conformance가 첫 실사용이다. `tools/v04-01/probe.ps1`은 관측 도구이지 runner가 아니다.
+6. ~~참여자 구성 변화를 부정 fixture로 고정한다~~ **했다([`core/membership.py`](core/membership.py)).** [리뷰의 전이 표](docs/reviews/2026-09-23-v04-01-review/README.md) 여섯 경우를 결정 함수와 시험으로 고정했다. 실행 controller에는 아직 연결하지 않았다.
 7. 그 다음 V04-03(두 native 경로의 읽기 전용 독립 답변) → 승인된 테스트만 실행하는 trusted runner → 필요한 만큼 MCP로 노출 → UI 연결.
 8. **V04-03에서 사용량을 비교한다.** 사용자는 AionUi가 각 앱을 직접 쓸 때보다 사용량을 몇 배 빨리 소모해 쓰지 않는다(2026-09-23, 사용자 관측). 같은 질문을 (a) 각 앱에서 직접, (b) 우리 앱의 `single`, (c) `cross_check`로 돌려 호출 수·입력 토큰·구독 한도 변화를 나란히 기록한다. 호출마다 실리는 기본 문맥이 큰 몫이다 — aux-pc P4에서 Claude `-p`의 "OK" 한 번에 약 24,400토큰, P4b 조합으로 약 1,900토큰.
 
