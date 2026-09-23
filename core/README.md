@@ -9,6 +9,7 @@
 | [`isolation.py`](isolation.py) | 참여자 한 번의 실행을 bubblewrap으로 가둔다(Linux·WSL2). 허용한 폴더만 연결하고, HOME·`/tmp`는 빈 tmpfs, 별도 PID namespace. `cli_mounts()`가 CLI별로 실행 파일과 자기 설정·인증 폴더만 고른다. 진입점은 `isolation.run()` 하나다 — 경로 충돌을 거절하고, root 소유 `/usr/bin/bwrap`인지 확인한 뒤 실행하며, 그때만 자손 전체의 종료를 확인한다. 환경변수 값은 명령 인자에 싣지 않고, 인증 토큰은 넘기지 않는다. [W2 기록](../docs/experiments/w2-isolation/aux-pc-wsl.md) | 네트워크 격리(모델 API 때문에 공유한다), 메모리·CPU 상한 |
 | [`env.py`](env.py) | 자식 환경(과금 변수 제거, 새 터미널 기준 정리), 실행 파일 찾기. WSL에서는 Windows 드라이브의 PATH 항목을 빼고 Windows 실행 파일(경로·링크·`MZ` 내용)을 거절한다. 자식 PATH가 없거나 비면 이 프로세스의 PATH로 되돌아가지 않는다. `tools/runtime_inventory.py`가 이 모듈의 변수 목록을 쓴다 | 인증 파일이나 환경변수 값 읽기·기록 |
 | [`membership.py`](membership.py) | 실행 중 참여자가 빠지거나 바뀔 때의 결정. 조용히 채우지 않고, 공개 전에는 구성이 바뀔 때마다 정족수를 다시 보고 미달이면 막는다 | 실행, 초안이 다 들어왔는지 판단 — controller의 단계 관문이 한다 |
+| [`eligibility.py`](eligibility.py) | 실행 허가(`eligible_for_run`)를 실행 직전에 계산한다(N4). 기록 `runtime-inventory/2`의 다섯 칸(설치·로그인·전송·문맥 준수·권한 준수)이 모두 관측됐고, 오래되지 않았고, 지금 설치된 버전이 기록과 같고, 구독 로그인일 때만 허가한다. 허가는 저장하지 않는다 | 기록된 관측이 사실인지 |
 
 ## 지키는 규칙
 

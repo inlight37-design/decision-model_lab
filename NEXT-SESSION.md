@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-23** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout) · 브랜치 `claude/n3-auth-mounts-20260923`
+최종 갱신 **2026-09-23** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout) · 브랜치 `claude/n4-inventory-v2-20260923`
 
 이 파일 하나에서 시작한다. 절 구성은 고정이고 CI가 확인한다. 규칙은 [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있다. 이 판은 2026-09-23 작업을 마치며 **통째로 다시 쓴 판**이다. 지난 관측과 결정의 경위는 링크한 기록 문서로 보내고, 여기에는 지금 상태, 한계와 못 고친 문제(4절의 K 표), 다음 일만 둔다. 바로 전 판은 [docs/handoff/](docs/handoff/README.md)에 보관했다.
 
@@ -26,6 +26,7 @@
 | [`core/env.py`](core/env.py) | 자식 환경(과금 변수 제거), 실행 파일 찾기. WSL에서 Windows 실행 파일 거절 | interop 차단의 증명(K16) |
 | [`core/isolation.py`](core/isolation.py) | 참여자 한 번을 bubblewrap으로 가둔다. 진입점 `isolation.run()` 하나. 허용한 폴더만, HOME·`/tmp`는 빈 tmpfs, PID namespace, 경로 충돌·비밀 변수 거절, root 소유 bwrap 확인 | 네트워크 격리(K08), 자원 상한(K10) |
 | [`core/membership.py`](core/membership.py) | 참여자가 빠지거나 바뀔 때의 결정. 공개 전에는 구성이 바뀔 때마다 정족수를 다시 본다 | 초안이 다 들어왔는지 — controller 관문이 본다 |
+| [`core/eligibility.py`](core/eligibility.py) | 실행 허가를 시도마다 계산한다: 기록의 다섯 칸이 모두 관측됐고, 30일 안이고, 설치 버전이 같고, 구독 로그인일 때만 | 기록된 관측이 사실인지 |
 | [`app/`](app/README.md) | **A1 controller와 모의 화면.** 입력 고정 → 시도 예약 → 실행 → 결과 수용 관문 → 초안 봉인 → controller가 공개. 참여자는 CLI(지금은 모의 CLI)와 원본 앱(수동). SQLite journal(스키마 버전, 한 번에 한 controller만 연다), 토큰으로 막은 127.0.0.1 화면 서버 | 실제 CLI로 돌린 적 없음(K17), 합성(K18). 수동 답의 입력 일치(K21) |
 | [`tools/w2/cli_boundary.py`](tools/w2/cli_boundary.py) | 설치된 Claude·Codex를 격리 안에서 `--version`·로그인 상태만 실행해 본다 | 실제 질의 |
 | [`tools/w2/observe.py`](tools/w2/observe.py) | 2단계 관측(tier 2, B1·B2)을 참여자와 같은 격리 경로로 한 번씩 부른다. 승인한 provider별 상한과 멈춤 규칙을 지킨다. **모델 호출** | 승인 없이 부르지 않는다. 아직 한 번도 부르지 않았다 |
@@ -100,7 +101,7 @@
 
 ## 3. 진행 중인 작업
 
-**지금 병합되지 않은 브랜치: 없음.** 마지막 병합: N3 인증 연결 관측(모델 호출 없음)과 관측 도구의 설정 파일 변경 기록(`claude/n3-auth-mounts-20260923`). 그 앞: N2 WSL 관측 도구(가짜 CLI로만 시험, 모델 호출 없음, `claude/n2-observe-tool-20260923`). 그 앞: N1 실제 CLI 실행기(가짜 CLI로만 시험, 서버 미연결)와 K02(`claude/n1-cli-executor-20260923`). 그 앞: 사용자가 정한 Q5·Q6·C2와 모델 호출 승인 절차(2절 18·19, `claude/decisions-20260923`). 그 앞: A1 리뷰의 반영(`claude/a1-review-fixes-20260923`) — 봉인 투영의 허용 목록, 결과 수용 관문(입력 전달·빈 답·모델 불일치), 원장 잠금과 조건부 상태 전이, 재시작 재조정과 대기 시도의 명시적 재개, 축소 승인 조건, 경로 충돌 검사, journal 스키마 버전, 문구 정정과 [반영 기록](docs/reviews/2026-09-23-a1-handoff-review/RESPONSE.md). 보조 PC의 Windows와 `aux-pc-wsl`에서 시험했고 모델은 부르지 않았다. 그 앞은 A1 리뷰 자체([PR #7](https://github.com/inlight37-design/decision-model_lab/pull/7))다. 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 이 줄을 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다. 2026-09-23의 앞선 병합 이력은 [지난 판](docs/handoff/2026-09-23-before-consolidation.md) 3절과 Git 로그에 있다.
+**지금 병합되지 않은 브랜치: `claude/n4-inventory-v2-20260923`** — N4 기록 `runtime-inventory/2`와 실행 직전 허가 계산. 마지막 병합: N3 인증 연결 관측(모델 호출 없음)과 관측 도구의 설정 파일 변경 기록(`claude/n3-auth-mounts-20260923`). 그 앞: N2 WSL 관측 도구(가짜 CLI로만 시험, 모델 호출 없음, `claude/n2-observe-tool-20260923`). 그 앞: N1 실제 CLI 실행기(가짜 CLI로만 시험, 서버 미연결)와 K02(`claude/n1-cli-executor-20260923`). 그 앞: 사용자가 정한 Q5·Q6·C2와 모델 호출 승인 절차(2절 18·19, `claude/decisions-20260923`). 그 앞: A1 리뷰의 반영(`claude/a1-review-fixes-20260923`) — 봉인 투영의 허용 목록, 결과 수용 관문(입력 전달·빈 답·모델 불일치), 원장 잠금과 조건부 상태 전이, 재시작 재조정과 대기 시도의 명시적 재개, 축소 승인 조건, 경로 충돌 검사, journal 스키마 버전, 문구 정정과 [반영 기록](docs/reviews/2026-09-23-a1-handoff-review/RESPONSE.md). 보조 PC의 Windows와 `aux-pc-wsl`에서 시험했고 모델은 부르지 않았다. 그 앞은 A1 리뷰 자체([PR #7](https://github.com/inlight37-design/decision-model_lab/pull/7))다. 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 이 줄을 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다. 2026-09-23의 앞선 병합 이력은 [지난 판](docs/handoff/2026-09-23-before-consolidation.md) 3절과 Git 로그에 있다.
 
 사용자의 판단을 기다리는 것:
 - **모델 호출 승인** — 4절 2단계(Claude 3회 안팎, Codex 2회 안팎). 1단계 N1–N4를 마친 뒤에 받는다. 승인할 때 provider별 최대 시작 횟수·실패 포함 상한·timeout·멈추는 조건을 함께 정한다(2절 19).
@@ -122,7 +123,7 @@
 
 ### 1단계 — 실제 호출 전 확인 (모델 없음)
 
-**A1 리뷰가 먼저 하라고 한 관문 보강(리뷰의 N0)과 N1–N3은 끝났다** — [반영 기록](docs/reviews/2026-09-23-a1-handoff-review/RESPONSE.md). 아래 N4–N6이 남았다.
+**A1 리뷰가 먼저 하라고 한 관문 보강(리뷰의 N0)과 N1–N4는 끝났다** — [반영 기록](docs/reviews/2026-09-23-a1-handoff-review/RESPONSE.md). 아래 N5·N6이 남았다.
 
 - **N1. 실제 CLI 실행기 — 끝남.** [`app/cli_executor.py`](app/cli_executor.py)의 `CliExecutor`: `env.resolve` → `adapters.build_spec` → `isolation.run(cli_mounts(...), never=controller 데이터 폴더)` → `interpret`. Linux·WSL 전용이다(2절 15).
   - 결과 수용은 A1 관문 그대로다. 실행 명세(`ExecutionSpec.record()`)는 시작 사건에 시도 ID와 함께 남는다 — 질문 본문과 원문 argv는 없다.
@@ -136,9 +137,9 @@
   - 격리 안 로그인 상태에는 인증 파일 하나면 된다(Claude `~/.claude/.credentials.json`, Codex `~/.codex/auth.json`). 읽기 전용으로도 된다.
   - **그래도 파일 하나만 연결하도록 바로 좁히지 않는다.** 토큰 갱신을 저장하지 못하면(읽기 전용, 또는 파일 하나를 연결했는데 CLI가 이름 바꾸기로 쓰는 경우) 사용자의 로그인이 풀릴 수 있다. 다음 후보는 폴더는 쓰기로 두고 필요 없는 하위 폴더를 빈 tmpfs로 덮는 것이다.
   - 2단계 호출마다 `observe.py`가 설정 폴더의 파일 변경(이름·크기·수정 시각만)을 `config_changes`로 남긴다. 그것을 보고 무엇을 덮을지 정한다.
-- **N4. manifest `runtime-inventory/2`(옛 A5).**
-  - `installed`·`auth_observed`·`transport_observed`·`context_conformance`·`permission_conformance`로 나눈다.
-  - 실행 허가(`eligible_for_run`)는 실행 직전에 계산한다(PR #4 R02·R05).
+- **N4. manifest `runtime-inventory/2`(옛 A5) — 끝남.** 기록은 `installed`·`auth_observed`·`transport_observed`·`context_conformance`·`permission_conformance` 다섯 칸이고, 각 칸은 `unknown`·`observed`·`failed`와 근거·날짜를 갖는다. 실행 허가는 저장하지 않고 [`core/eligibility.py`](core/eligibility.py)가 시도마다 계산한다(PR #4 R02·R05): 다섯 칸 모두 관측, 30일 안, 지금 설치된 버전이 기록과 같음, 구독 로그인.
+  - `CliExecutor`는 기록 없이 만들 수 없다. 기록 없이 부르는 것은 관측 도구와 시험(`unchecked`)뿐이다.
+  - [`aux-pc-wsl` 기록](docs/experiments/v04-01-inventory/hosts/aux-pc-wsl/manifest.v2.json): 설치와 로그인(W2·N3)만 관측됐다. **2단계 전이라 두 CLI 모두 허가되지 않는다** — 2단계 결과로 나머지 세 칸을 채운다. 검사: `python tools/runtime_inventory.py --validate <기록>`.
 - **N5. 수동 참여 보강(K21·K22).**
   - 복사하는 질문 첫 줄에 짧은 실행 표식(실행 ID와 입력 sha256 앞자리)을 넣고, 원본 앱이 답 첫 줄에 되말하게 한다. 표식이 다른 실행의 것이면 거절한다 — 다른 카드에 붙여 넣는 실수를 실제로 잡는다. 맞아도 검증이 아니라 약한 증거로만 표시한다.
   - 제출할 때 사용자 확인을 따로 저장한다. 사용자 확인만으로 blind 확인(verified)을 주지 않는다.
@@ -149,7 +150,7 @@
 
 한 번 부르고 결과를 읽은 뒤 다음으로 간다. 실패하면 그 provider를 멈추고 원인부터 본다. 실패를 우회 플래그나 다른 백엔드로 조용히 바꾸지 않는다. 승인을 받을 때 provider별 최대 시작 횟수, 실패를 포함한 상한, timeout, 멈추는 조건을 함께 정한다("3회 안팎"은 계획 추정치다, A1 리뷰 질문 7). tier 2와 B1·B2를 같은 호출로 확인할 수 있으면 겹쳐 부르지 않는다.
 
-- **절차(aux-pc-wsl, 로그인 셸, 저장소 루트):** `observe.py plan`으로 실행할 argv를 확인 → 사용자 승인을 `observe.py approve --claude N --codex M --timeout 300 --note "…"`로 적는다 → `observe.py call <probe> <전체 모델 이름>`을 하나씩 부르고 결과를 읽은 뒤 다음으로 간다. 제안하는 probe와 상한: Claude `b1`·`p3-claude`(+ 선택 `b1-combo`) = 3, Codex `b2`·`p3-codex` = 2(사용량이 남으면 `plain-codex`). `p3`는 모델 응답 없이 거절돼야 하는 호출이지만 상한에는 센다. 요약은 `docs/experiments/`에 옮기고 원 출력은 저장소 밖에 둔다.
+- **절차(aux-pc-wsl, 로그인 셸, 저장소 루트):** `observe.py plan`으로 실행할 argv를 확인 → 사용자 승인을 `observe.py approve --claude N --codex M --timeout 300 --note "…"`로 적는다 → `observe.py call <probe> <전체 모델 이름>`을 하나씩 부르고 결과를 읽은 뒤 다음으로 간다. 제안하는 probe와 상한: Claude `b1`·`p3-claude`(+ 선택 `b1-combo`) = 3, Codex `b2`·`p3-codex` = 2(사용량이 남으면 `plain-codex`). `p3`는 모델 응답 없이 거절돼야 하는 호출이지만 상한에는 센다. 요약은 `docs/experiments/`에 옮기고 원 출력은 저장소 밖에 둔다. 결과로 [`manifest.v2.json`](docs/experiments/v04-01-inventory/hosts/aux-pc-wsl/manifest.v2.json)의 전송·문맥 준수·권한 준수 칸을 근거와 함께 채운다 — 그래야 실제 실행기가 허가된다.
 - **tier 2(`aux-pc-wsl`):** [V04-01 절차서](docs/experiments/v04-01-inventory/README.md)의 구독 호출. Windows 기록을 복사하지 않는다. `b1`(구독 인증·구조화 출력·깨끗한 문맥, P1·P4), `p3-*`(잘못된 값, P3), `plain-codex`(P1·P4)가 겹친다.
 - **B1. Claude.** 격리 안에서 다음을 본다.
   - 위치 인자 없는 `-p`가 stdin을 질문으로 읽는지(K29)
@@ -204,7 +205,7 @@
 | K14 | 격리 | 경로 검사와 마운트 사이에 파일이 바뀌는 경쟁 | 문서화 | — |
 | K15 | 격리 | bwrap 신뢰는 root 소유 `/usr/bin/bwrap` 확인이다. 같은 Python 프로세스 안의 코드가 내부 함수를 부르는 것은 막지 못한다 | 문서화 | — |
 | K16 | CLI·환경 | WSL의 Windows 실행 파일 가드는 경로·링크·`MZ` 내용으로 판정하는 경험칙이다. 사용자가 바꾼 automount root는 PATH 필터가 모른다 | 격리가 `/mnt`·`/init`·`/run`을 연결하지 않는 것이 실제 차단이다 | — |
-| K17 | 앱 | 실제 CLI 실행기(`app/cli_executor.py`)는 가짜 CLI로만 시험했다. 서버는 아직 모의 실행기만 쓴다 | 실제 격리 경로·수용 관문·늦은 결과 시험(WSL, CI) | 2단계(승인된 호출) |
+| K17 | 앱 | 실제 CLI 실행기(`app/cli_executor.py`)는 가짜 CLI로만 시험했다. 서버는 아직 모의 실행기만 쓴다 | 실제 격리 경로·수용 관문·늦은 결과 시험(WSL, CI). 기록(`runtime-inventory/2`)이 허가하지 않으면 시작 전에 거절한다 | 2단계(승인된 호출) |
 | K18 | 앱 | 합성, 주장 대조, 결정 카드, Q4 비교가 없다. 초안 공개까지만 있다 | — | 3단계 |
 | K19 | 앱 | 취소가 없고, 취소 중 입력 전송 시험도 없다. 서버를 끄는 것이 지금 유일한 멈춤 수단이다 | 다시 시작한 뒤 대기 시도는 사용자가 "이어서 시작"을 눌러야 시작한다. 멈춘 상태는 메모리에만 있다 | 3단계 |
 | K20 | 앱 | 원장 잠금은 한 기기 안의 파일 잠금이다. 기기 여러 대가 한 원장을 나눠 쓰는 것은 지원하지 않는다. 사건 순서는 실행별 순번뿐이다 | 한 원장은 한 controller만 연다. 시작과 결과 반영은 기대한 상태·시도 ID가 맞을 때만 하고, 늦은 결과는 사건으로만 남긴다(A1 리뷰 A1-03) | — |
