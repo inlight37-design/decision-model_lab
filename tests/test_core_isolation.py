@@ -131,7 +131,7 @@ class PlanTests(unittest.TestCase):
     def setUp(self):
         self.root = Path(tempfile.mkdtemp(prefix="dml-plan-"))
         self.addCleanup(shutil.rmtree, self.root, True)
-        for name in ("home/.codex/packages/v1", "home/.claude", "work", "input", "ledger"):
+        for name in ("home/.codex/packages/v1", "home/.claude", "work", "input/work", "ledger"):
             (self.root / name).mkdir(parents=True)
         (self.root / "alias").symlink_to(self.root / "home")
 
@@ -160,7 +160,12 @@ class PlanTests(unittest.TestCase):
                 ("a mount above home", self.box(read_only=(str(r / "input"), str(r)))),
                 ("a mount inside the ledger", self.box(never=(str(r / "input"),))),
                 ("the ledger inside a mount", self.box(read_only=(str(r / "input"), str(r / "ledger")),
-                                                       never=(str(r / "ledger/run.db"),)))):
+                                                       never=(str(r / "ledger/run.db"),))),
+                # A1 리뷰 A1-04: 마지막 쓰기 연결이 입력의 그 부분을 쓰기로 열었다(실제 bubblewrap에서 호스트에 씀)
+                ("work inside the read-only input", self.box(work_dir=str(r / "input/work"))),
+                # A1-04: 자동 시스템 연결은 never와 비교하지 않아 선언한 봉인 경로가 보였다
+                ("the ledger under /etc", self.box(never=("/etc/dml-sealed-ledger",))),
+                ("the ledger under /usr", self.box(never=("/usr/share/dml-sealed-ledger",)))):
             with self.subTest(label), self.assertRaises(isolation.IsolationError):
                 isolation.plan([SYSTEM_PY], box)
 

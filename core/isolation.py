@@ -9,14 +9,17 @@ PID namespace 추적(자손 전체의 종료 확인)을 이름만 bwrap인 다�
   폴더만 쓰기다. 원장, 다른 참여자의 초안, 지난 합성, 다른 CLI의 인증, /mnt(Windows 드라이브), /run(WSL
   interop와 사용자 버스 소켓)은 연결하지 않는다. /etc 안의 링크가 밖을 가리키면(WSL의 resolv.conf →
   /mnt/wsl/resolv.conf) 그 파일 하나만 연결한다.
-- 경로 충돌: 연결할 경로를 실제 경로로 풀어 비교한다. 작업 폴더가 HOME이거나 읽기 전용 입력과 같거나 다른
-  연결을 품으면, 어떤 연결이 HOME 자체나 그 위 폴더면, 봉인할 경로(never)와 겹치면 거절한다(WM-04).
-  읽기·쓰기 폴더 안의 읽기 전용 연결(Codex의 실행 버전 폴더)은 의도한 겹침이다.
+- 경로 충돌: 연결할 경로를 실제 경로로 풀어 비교한다. 작업 폴더가 HOME이거나, 읽기 전용 입력과 같거나 그
+  안에 있거나(마지막 쓰기 연결이 입력의 그 부분을 쓰기로 연다, A1-04), 다른 연결을 품으면 거절한다. 어떤 연결이
+  HOME 자체나 그 위 폴더여도 거절한다. 봉인할 경로(never)는 명시한 연결뿐 아니라 자동 시스템 연결(/usr, /etc,
+  병합 링크 폴더, /etc 밖을 가리키는 네트워크 파일)과도 비교한다(WM-04, A1-04). 읽기·쓰기 폴더 안의 읽기 전용
+  연결(Codex의 실행 버전 폴더)은 의도한 겹침이다.
 - 수명: 별도 PID namespace(--unshare-all에 포함)와 --die-with-parent. namespace의 첫 프로세스(bwrap의
   reaper)가 끝나면 커널이 안의 모든 프로세스를 끝내고, 그 첫 프로세스는 안이 빌 때까지 끝나지 않는다.
   그래서 runner는 bwrap의 프로세스 그룹이 빈 것으로 자손 전체의 종료를 확인한다(runner.PID_NAMESPACE).
 - 환경: 허용한 변수만 bwrap 프로세스의 환경으로 넘긴다. 값은 명령 인자에 싣지 않는다 — /proc의 명령줄과
   실행 기록에 남기 때문이다(WM-02). 인증 토큰·과금 변수는 넘기지 않고 거절한다. 인증은 CLI의 로그인 파일을 쓴다.
+  자식의 환경은 이 목록과 똑같지 않다 — bwrap이 --chdir에 맞춰 PWD를 더한다(0.9.0 관측, A1 리뷰 질문 2).
 
 보장하지 않는 것
 - 네트워크. 모델 API가 필요해 공유한다(--share-net). 같은 네트워크 namespace의 localhost 포트와 abstract
@@ -92,20 +95,25 @@ def _within(path: str, parent: str) -> bool:
     return path == parent or path.startswith(parent.rstrip("/") + "/")
 
 
-def _system_mounts() -> list[str]:
+def _system_mounts() -> tuple[list[str], list[str]]:
+    """시스템 연결의 bwrap 인자와, 그 연결이 참여자에게 보이게 하는 호스트 경로(실제 경로)."""
     args: list[str] = []
+    bound: list[str] = []
     for path in SYSTEM_READ_ONLY:
         args += ["--ro-bind", path, path]
+        bound.append(os.path.realpath(path))
     for link in MERGED_USR_LINKS:
         if os.path.islink(link):
             args += ["--symlink", os.readlink(link), link]
         elif os.path.isdir(link):
             args += ["--ro-bind", link, link]
+            bound.append(os.path.realpath(link))
     for link in ETC_LINKS:
         target = os.path.realpath(link)
         if os.path.islink(link) and os.path.isfile(target) and not target.startswith(("/etc/", "/usr/")):
             args += ["--ro-bind", target, target]
-    return args
+            bound.append(target)
+    return args, bound
 
 
 def plan(argv: Sequence[str], box: Sandbox) -> tuple[list[str], dict[str, str]]:
@@ -126,15 +134,18 @@ def plan(argv: Sequence[str], box: Sandbox) -> tuple[list[str], dict[str, str]]:
     _require(not any(_within(home, p) for p in mounts),
              "HOME itself or a folder above it cannot be bound; bind the CLI's own folders instead")
     _require(work not in ro, "the work folder cannot also be a read-only input")
+    _require(not any(_within(work, p) for p in ro),
+             "the work folder cannot be inside a read-only input; its writable bind would open that part of the input")
     _require(not any(_within(p, work) for p in ro + rw if p != work),
              "the work folder cannot contain another mount; a later writable bind would cover it")
-    _require(not any(_within(p, n) or _within(n, p) for p in mounts for n in never),
+    system_args, system = _system_mounts()
+    _require(not any(_within(p, n) or _within(n, p) for p in mounts + system for n in never),
              "a mount overlaps a path that must stay out of the sandbox")
     exe = real(argv[0])
     _require(any(_within(exe, p) for p in (*ro, *SYSTEM_READ_ONLY)), "the executable must be inside a read-only mount")
 
     args = [BWRAP, "--unshare-all", "--share-net", "--die-with-parent", "--new-session"]
-    args += _system_mounts()
+    args += system_args
     args += ["--proc", "/proc", "--dev", "/dev", "--tmpfs", "/tmp", "--tmpfs", home]
     for path in rw:                                # 쓰기 먼저, 그 안의 읽기 전용이 위에 덮이도록
         args += ["--bind", path, path]
@@ -147,7 +158,8 @@ def plan(argv: Sequence[str], box: Sandbox) -> tuple[list[str], dict[str, str]]:
 
 
 def _trusted_bwrap() -> None:
-    """bwrap 실행 파일이 시스템 패키지의 것인가: 정해진 경로, 일반 파일, root 소유, 다른 사용자가 못 쓴다."""
+    """bwrap 실행 파일을 시스템이 설치한 것으로 볼 만한가: 정해진 경로, 일반 파일, root 소유, 그룹·다른 사용자가
+    못 쓴다. 패키지 서명이나 해시는 확인하지 않는다 — 이름만 bwrap인 사용자 파일을 거절하는 데까지다."""
     _require(sys.platform == "linux", "isolation runs on Linux and WSL2 only")
     try:
         info = os.stat(BWRAP)

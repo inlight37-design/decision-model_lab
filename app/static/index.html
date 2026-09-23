@@ -85,6 +85,7 @@
 <header>
   <h1>Ledger</h1><span class="label mock">모의 모드 · 모델 호출 없음</span>
   <span class="spacer"></span>
+  <span id="resume"></span>
   <span class="meta" id="status">연결 중…</span>
 </header>
 <main>
@@ -192,7 +193,8 @@ function participantRow(run, p) {
     h("span", { class: "v" }, `${p.provider} · ${p.transport === "cli" ? "CLI 모의" + (p.behavior && p.behavior !== "ok" ? " · " + (BEHAVIOR_LABEL[p.behavior] || p.behavior) : "") : "원본 앱 · 수동"}`),
     h("div", { class: "flags" }, p.contamination.map(c => h("span", { class: "flag" }, c))));
   if (p.state === "rejected" || p.state === "unknown") {
-    who.append(h("div", { class: "kv" }, [p.status, p.detail, ...(p.result && p.result.notes || [])].filter(Boolean).join(" · ")));
+    who.append(h("div", { class: "kv" }, [p.status, p.detail, ...(p.result && p.result.notes || []),
+      run.diagnostics_sealed ? "사유 원문은 모든 참여자가 끝난 뒤 보인다" : null].filter(Boolean).join(" · ")));
   }
   if (p.state === "unknown") {
     who.append(h("div", { style: "margin-top:6px" }, h("button", { class: "quiet", onclick: () => act(`/api/runs/${run.run_id}/acknowledge/${p.pid}`) },
@@ -218,6 +220,8 @@ function participantRow(run, p) {
     who.append(h("details", { open: true }, h("summary", {}, "초안 원문"),
       h("div", { class: "draft" }, p.draft),
       r ? h("div", { class: "kv" }, `상태 ${r.state} · 종료 ${r.containment} ${r.tree_confirmed_empty ? "확인" : "미확인"} · 입력 ${r.input_delivery} · ` +
+             `모델 ${r.requested_model || "?"} → ${r.reported_models && r.reported_models.length ? r.reported_models.join(", ") : "보고 없음"}` +
+             `${r.model_match === false ? " (불일치)" : ""} · ` +
              `${r.duration_ms} ms · 사용량 ${r.usage && Object.keys(r.usage).length ? JSON.stringify(r.usage) : "관측 안 됨"}`)
         : h("div", { class: "kv" }, "수동 제출 · 사용량·시간 관측 안 됨")));
   }
@@ -228,6 +232,10 @@ function render() {
   if (!state) return;
   document.getElementById("status").textContent =
     `실행기 ${state.executor} · 실행 자리 ${state.slots.used}/${state.slots.cap} · 정리 안 된 시도 ${state.unsettled.count}/${state.unsettled.limit}`;
+  // 다시 시작한 뒤에는 대기 중인 시도를 사용자가 누를 때까지 시작하지 않는다(취소가 없어서 서버를 끄는 것이 멈춤 수단이다)
+  document.getElementById("resume").replaceChildren(state.paused
+    ? h("button", { onclick: () => act("/api/resume"), title: "다시 시작하기 전에 시작하지 못한 시도를 이제 시작한다" }, "대기 중인 시도 이어서 시작")
+    : "");
   const list = document.getElementById("runs"); list.replaceChildren();
   for (const run of state.runs) list.append(h("button", { "aria-current": run.run_id === selected, onclick: () => { selected = run.run_id; render(); } },
     h("span", { class: "meta" }, `${run.run_id} · ${PHASE_LABEL[run.phase] || run.phase}`), h("span", { class: "q" }, run.question)));
