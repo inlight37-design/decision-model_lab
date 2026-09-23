@@ -71,15 +71,20 @@ class EligibilityTests(unittest.TestCase):
 
 
 class RecordTests(unittest.TestCase):
-    def test_the_committed_wsl_record_is_valid_and_not_yet_eligible(self):
+    def test_the_committed_wsl_record_allows_claude_and_refuses_codex_for_its_context(self):
+        # 2단계(2026-09-23) 관측 뒤의 기록: Claude는 다섯 칸이 모두 관측됐다. Codex는 작업 폴더의 AGENTS.md를 실어
+        # 문맥 준수가 failed다(K38·K44) — 그 한 칸 때문에만 부르지 않는다.
         manifest = json.loads(WSL_V2.read_text(encoding="utf-8"))
         self.assertEqual(runtime_inventory.validate_manifest_v2(manifest), [])
-        for adapter_id, version in (("claude-code", "2.1.280"), ("codex", "0.156.1")):
-            with self.subTest(adapter=adapter_id):
-                v = eligibility.eligibility(manifest, adapter_id, enabled=True, today=TODAY, current_version=version)
-                self.assertFalse(v.eligible)                                    # 2단계 관측 전에는 부르지 않는다
-                self.assertEqual({r.split(" is ")[0] for r in v.reasons},
-                                 {"transport_observed", "context_conformance", "permission_conformance"})
+        claude = eligibility.eligibility(manifest, "claude-code", enabled=True, today=TODAY, current_version="2.1.280")
+        self.assertTrue(claude.eligible, claude.reasons)
+        codex = eligibility.eligibility(manifest, "codex", enabled=True, today=TODAY, current_version="0.156.1")
+        self.assertEqual(codex.reasons, ("context_conformance is failed",))
+        later = eligibility.eligibility(manifest, "claude-code", enabled=True, today=date(2026, 10, 24),
+                                        current_version="2.1.280")
+        self.assertFalse(later.eligible)                                        # 30일이 지나면 다시 관측한다
+        other = eligibility.eligibility(manifest, "claude-code", enabled=True, today=TODAY, current_version="2.1.281")
+        self.assertFalse(other.eligible)                                        # 버전이 바뀌어도
 
     def test_the_validator_refuses_stored_eligibility_and_unbacked_observations(self):
         base = record()
