@@ -187,5 +187,30 @@ class InterpretRecordedTests(unittest.TestCase):
         self.assertEqual((out.ok, out.status), (False, "format_error"))
 
 
+class BoundaryReviewRegressionTests(unittest.TestCase):
+    """2026-09-23 경계 리뷰 R04(docs/reviews/2026-09-23-wsl2-boundary/). 출력은 외부 입력이다."""
+
+    def test_unexpected_shapes_are_format_errors_not_exceptions(self):
+        """문법이 맞는 JSON이어도 중첩 값의 타입이 다르면 예외 대신 형식 실패로 돌려준다."""
+        for adapter_id, body in (
+                ("claude-code", '{"type":"result","is_error":false,"result":"hi","modelUsage":["m"]}'),
+                ("claude-code", '{"type":"result","is_error":false,"result":"hi","permission_denials":3}'),
+                ("codex", '{"type":"item.completed","item":"oops"}\n{"type":"turn.completed"}\n')):
+            with self.subTest(adapter=adapter_id, body=body):
+                out = interpret(adapter_id, fake(body), requested_model="m")
+                self.assertEqual((out.ok, out.status), (False, "format_error"))
+
+    def test_codex_error_given_as_text_is_kept(self):
+        out = interpret("codex", fake('{"type":"turn.failed","error":"boom"}\n', code=1), requested_model="m")
+        self.assertEqual((out.ok, out.status, out.detail), (False, "cli_error", "boom"))
+
+    def test_codex_answer_is_not_accepted_when_stderr_was_cut(self):
+        """명령 거절의 흔적은 stderr에만 있다. 잘린 stderr로는 거절이 없었다고 말할 수 없다."""
+        run = RunResult(("x",), EXITED, 0, recorded("P1-codex").stdout, "noise", False, True, 1, 0, True)
+        out = interpret("codex", run, requested_model="gpt-x")
+        self.assertEqual((out.ok, out.status), (False, "format_error"))
+        self.assertEqual(out.text, "OK")  # 답은 남기되 성공으로 치지 않는다
+
+
 if __name__ == "__main__":
     unittest.main()

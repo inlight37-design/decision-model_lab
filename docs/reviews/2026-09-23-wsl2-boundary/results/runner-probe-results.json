@@ -1,0 +1,35 @@
+{
+  "platform": "linux",
+  "python": "3.13.5",
+  "runner_git_blob": "321ffa0359b78fa4216a74603bf3a9a0f40a43db",
+  "model_calls": 0,
+  "cases": [
+    {
+      "name": "normal_exit_control",
+      "state": "exited",
+      "tree_confirmed_empty": true
+    },
+    {
+      "name": "detached_child_closed_pipes",
+      "state": "exited",
+      "tree_confirmed_empty": true,
+      "child_still_live": true,
+      "duration_ms": 602
+    },
+    {
+      "name": "detached_child_inherited_pipes",
+      "timeout_s": 2,
+      "still_blocked_after_s": 8.0,
+      "runner_thread_still_alive": true,
+      "blocked_stack": [
+        "  File \"/usr/lib/python3.13/threading.py\", line 1014, in _bootstrap\n    self._bootstrap_inner()\n",
+        "  File \"/usr/lib/python3.13/threading.py\", line 1043, in _bootstrap_inner\n    self.run()\n",
+        "  File \"/usr/lib/python3.13/threading.py\", line 994, in run\n    self._target(*self._args, **self._kwargs)\n",
+        "  File \"/mnt/data/decision-model-lab-review-2026-09-23/runner_probe.py\", line 34, in run_probe\n    box['result']=runner.run([sys.executable,'-c',code],cwd=tmp,env=dict(os.environ),timeout=2)\n",
+        "  File \"/mnt/data/decision-model-lab-review-2026-09-23/snapshot/core/runner.py\", line 268, in run\n    stream.close()\n"
+      ],
+      "returned_after_external_child_cleanup": true,
+      "final_state": "unknown"
+    }
+  ]
+}

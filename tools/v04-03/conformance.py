@@ -68,7 +68,8 @@ def summarize(run, outcome, extra=None):
     text = outcome.text or ""
     summary = {
         "runner_state": run.state, "exit": run.exit_code, "duration_ms": run.duration_ms,
-        "leftover_processes": run.leftover_processes, "tree_confirmed_empty": run.tree_confirmed_empty,
+        "leftover_processes": run.leftover_processes, "containment": run.containment,
+        "unit_confirmed_empty": run.unit_confirmed_empty, "tree_confirmed_empty": run.tree_confirmed_empty,
         "status": outcome.status, "ok": outcome.ok, "reported_models": outcome.reported_models,
         "model_match": outcome.model_match, "usage": outcome.usage,
         "permission_denials": outcome.permission_denials, "tool_events": outcome.tool_events,

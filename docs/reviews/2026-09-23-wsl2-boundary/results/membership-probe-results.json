@@ -1,0 +1,39 @@
+{
+  "module_git_blob": "18f41b565a071bd8764132f7684bdbb2ffa224d9",
+  "model_calls": 0,
+  "sequence": [
+    {
+      "event": "unavailable",
+      "participant": "A",
+      "action": "blocked",
+      "active": [
+        "B",
+        "C"
+      ],
+      "counted": 2,
+      "min_independent": 3
+    },
+    {
+      "event": "unavailable",
+      "participant": "B",
+      "action": "blocked",
+      "active": [
+        "C"
+      ],
+      "counted": 1,
+      "min_independent": 3
+    },
+    {
+      "event": "substitute_requested",
+      "participant": "D",
+      "action": "proceed",
+      "active": [
+        "C",
+        "D"
+      ],
+      "counted": 2,
+      "min_independent": 3
+    }
+  ],
+  "phase_skip": "synthesis"
+}

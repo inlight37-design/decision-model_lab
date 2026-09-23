@@ -10,17 +10,12 @@
 - stdout과 stderr를 따로 받고, 상한을 넘으면 자르고 표시한다.
 - 제한 시간이 지나면 프로세스 트리를 끝낸다. 답 텍스트가 있어도 timed_out이다(HF-06).
   Hermes의 codex 경로는 이 경우 텍스트를 완료로 받아들인다 — 옮기지 않는다.
-- 추적 단위가 비었는지 확인하지 못하면 unknown이다. 예산을 돌려받지 않는다(HF-07).
+- 트리가 비었는지 확인하지 못하면 unknown이다. 예산을 돌려받지 않는다(HF-07).
 - exit 0은 프로세스가 끝났다는 뜻이지 작업이 성공했다는 뜻이 아니다.
-- 정리에도 상한이 있다. run()은 timeout + CLEANUP_LIMIT 안에 돌아온다(경계 리뷰 R02).
 
-추적 단위(containment): Windows는 job object(ctypes) — 자손이 떠날 수 없다. 그 밖은 새
-session의 프로세스 그룹 — setsid 등으로 새 세션을 만든 자손은 보이지 않는다. 그래서 결과는
-두 가지를 따로 말한다(경계 리뷰 R01). unit_confirmed_empty는 추적 단위가 비었는지,
-tree_confirmed_empty는 자손 전체가 끝났는지다. 프로세스 그룹만으로는 뒤쪽을 확인할 수 없어
-None이다. 자원 해제·예산 반환은 tree_confirmed_empty가 True일 때만 한다. Linux에서 이것을
-True로 만드는 수단은 격리 백엔드(bubblewrap의 PID namespace, WSL2)에서 붙인다.
-Windows에서 job 배정에 실패하면 트리 확인을 하지 않고 unknown 쪽으로 기운다.
+트리 추적: Windows는 job object(ctypes), 그 밖은 새 session의 프로세스 그룹. 자기 그룹을
+떠난 프로세스(setsid 등)는 POSIX에서 추적하지 못한다. Windows에서 job 배정에 실패하면
+트리 확인을 하지 않고 unknown 쪽으로 기운다.
 """
 from __future__ import annotations
 
@@ -36,28 +31,18 @@ from typing import Mapping, Sequence
 IS_WINDOWS = os.name == "nt"
 
 # 프로세스 상태. 의미상 성공 여부는 adapters.interpret()가 따로 정한다.
-EXITED = "exited"                    # 스스로 끝났고 추적 단위가 빈 것을 확인했다
-TIMED_OUT = "timed_out"              # 제한 시간에 끊었고 추적 단위가 빈 것을 확인했다
-CANCELLED = "cancelled"              # 취소 요청으로 끊었고 추적 단위가 빈 것을 확인했다
+EXITED = "exited"                    # 스스로 끝났고 트리가 빈 것을 확인했다
+TIMED_OUT = "timed_out"              # 제한 시간에 끊었고 트리가 빈 것을 확인했다
+CANCELLED = "cancelled"              # 취소 요청으로 끊었고 트리가 빈 것을 확인했다
 UNKNOWN = "unknown"                  # 끝났는지 확인하지 못했다. 예산 점유를 유지한다
 FAILED_TO_START = "failed_to_start"  # 프로세스를 만들지 못했다. 모델 호출은 없었다
 STATES = (EXITED, TIMED_OUT, CANCELLED, UNKNOWN, FAILED_TO_START)
-
-# 추적 단위. 자손 전체를 담는 단위만 WHOLE_TREE에 넣는다.
-JOB_OBJECT = "job_object"            # Windows. 브레이크어웨이를 허용하지 않으므로 자손이 떠날 수 없다
-PROCESS_GROUP = "process_group"      # POSIX. 새 세션을 만든 자손은 담지 못한다
-WHOLE_TREE = frozenset({JOB_OBJECT})
 
 DEFAULT_MAX_OUTPUT = 8 * 1024 * 1024
 _CHUNK = 64 * 1024
 _GRACE = 3.0          # 종료 요청 뒤 기다리는 시간(초)
 _DRAIN = 1.0          # 스스로 끝난 뒤 곁가지 프로세스가 따라 끝나기를 기다리는 시간(초)
-_KILL = 1.0           # SIGKILL 뒤 기다리는 시간(초)
-_CONFIRM = 2.0        # 끝낸 뒤 추적 단위가 비기를 기다리는 시간(초)
 _POLL = 0.05
-# timeout 뒤 정리 단계가 쓰는 시간의 상한(초): 곁가지 대기, 종료 요청과 강제 종료, 회수, 비었는지
-# 확인, 출력 스레드 합류를 모두 더한 값이다. 이보다 오래 걸리게 하는 대기는 두지 않는다.
-CLEANUP_LIMIT = _DRAIN + (_GRACE + _KILL) + _GRACE + _CONFIRM + _GRACE
 
 
 class RunnerError(ValueError):
@@ -76,20 +61,10 @@ class RunResult:
     duration_ms: int
     # 원래 프로세스가 끝난 뒤에도 남아 있던 자식 수. None이면 셀 수 없었다.
     leftover_processes: int | None
-    # 끝낼 때 추적 단위(containment)가 빈 것을 확인했는가. None이면 확인 수단이 없었다.
-    unit_confirmed_empty: bool | None
+    # 끝낼 때 트리가 빈 것을 확인했는가. None이면 확인 수단이 없었다.
+    tree_confirmed_empty: bool | None
     error: str | None = None
     notes: tuple[str, ...] = field(default_factory=tuple)
-    containment: str | None = None   # JOB_OBJECT | PROCESS_GROUP | None(추적하지 못했다)
-
-    @property
-    def tree_confirmed_empty(self) -> bool | None:
-        """자손 전체가 끝났음을 확인했는가. 추적 단위가 자손 전체를 담지 못하면 None이다."""
-        if self.state == FAILED_TO_START:
-            return True
-        if self.unit_confirmed_empty is not True:
-            return self.unit_confirmed_empty
-        return True if self.containment in WHOLE_TREE else None
 
 
 def validate_argv(argv: Sequence[str]) -> tuple[str, ...]:
@@ -106,12 +81,7 @@ def validate_argv(argv: Sequence[str]) -> tuple[str, ...]:
 
 
 class _Reader(threading.Thread):
-    """한 스트림을 끝까지 읽되 상한까지만 보관한다. 넘친 뒤에도 파이프는 비운다.
-
-    스트림은 이 스레드가 끝날 때 스스로 닫는다. 읽는 중인 buffered stream을 다른 스레드에서
-    닫으면 읽기가 끝날 때까지 close()가 막힌다 — 파이프를 쥔 자손이 남으면 run()이 돌아오지
-    않았다(경계 리뷰 R02).
-    """
+    """한 스트림을 끝까지 읽되 상한까지만 보관한다. 넘친 뒤에도 파이프는 비운다."""
 
     def __init__(self, stream, limit: int) -> None:
         super().__init__(daemon=True)
@@ -134,11 +104,6 @@ class _Reader(threading.Thread):
                     self.truncated = True
         except (OSError, ValueError):
             return
-        finally:
-            try:
-                self.stream.close()
-            except OSError:
-                pass
 
     def text(self) -> str:
         return b"".join(self.chunks).decode("utf-8", errors="replace").replace("\r\n", "\n")
@@ -164,7 +129,6 @@ class _Tree:
         self.proc = proc
         self.job = None
         self.note: str | None = None
-        self.containment: str | None = None if IS_WINDOWS else PROCESS_GROUP
         if IS_WINDOWS:
             try:
                 self.job = _WindowsJob()
@@ -172,8 +136,6 @@ class _Tree:
                     self.note = "job object assignment failed; tree is not tracked"
                     self.job.close()
                     self.job = None
-                else:
-                    self.containment = JOB_OBJECT
             except OSError as exc:
                 self.note = f"job object unavailable ({exc}); tree is not tracked"
                 self.job = None
@@ -195,25 +157,22 @@ class _Tree:
             if self.job:
                 self.job.terminate()
             else:
-                try:
-                    subprocess.run(["taskkill", "/T", "/F", "/PID", str(self.proc.pid)],
-                                   stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
-                                   stderr=subprocess.DEVNULL, check=False, timeout=_GRACE + _KILL)
-                except subprocess.TimeoutExpired:
-                    pass
+                subprocess.run(["taskkill", "/T", "/F", "/PID", str(self.proc.pid)],
+                               stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                               stderr=subprocess.DEVNULL, check=False)
             return
         for sig in (signal.SIGTERM, signal.SIGKILL):
             try:
                 os.killpg(self.proc.pid, sig)
             except ProcessLookupError:
                 return
-            deadline = time.monotonic() + (_GRACE if sig == signal.SIGTERM else _KILL)
+            deadline = time.monotonic() + (_GRACE if sig == signal.SIGTERM else 1.0)
             while time.monotonic() < deadline:
                 if self.proc.poll() is not None and self.active() == 0:
                     return
                 time.sleep(_POLL)
 
-    def confirm_empty(self, wait: float = _CONFIRM) -> bool | None:
+    def confirm_empty(self, wait: float = 2.0) -> bool | None:
         deadline = time.monotonic() + wait
         while True:
             count = self.active()
@@ -257,7 +216,7 @@ def run(argv: Sequence[str], *, cwd: str | os.PathLike, env: Mapping[str, str],
     except OSError as exc:
         return RunResult(args, FAILED_TO_START, None, "", "", False, False,
                          int((time.monotonic() - started) * 1000), None, True,
-                         error=type(exc).__name__)  # 아무것도 시작하지 않았으니 비어 있다
+                         error=type(exc).__name__)
 
     tree = _Tree(proc)
     notes = [tree.note] if tree.note else []
@@ -298,14 +257,17 @@ def run(argv: Sequence[str], *, cwd: str | os.PathLike, env: Mapping[str, str],
         pass
     confirmed = tree.confirm_empty() if proc.poll() is not None else False
     tree.close()
-    joined_by = time.monotonic() + _GRACE
     for reader in (out, err):
-        reader.join(timeout=max(0.0, joined_by - time.monotonic()))
+        reader.join(timeout=_GRACE)
         if reader.is_alive():
-            # 추적 단위 밖에서 파이프를 쥔 프로세스가 아직 있다는 뜻이다. 스트림은 닫지 않고 둔다 —
-            # 닫으면 그 프로세스가 끝날 때까지 여기서 막힌다. 읽는 스레드가 EOF에서 닫는다.
+            # 파이프를 쥔 프로세스가 아직 있다는 뜻이다.
             notes.append("an output pipe stayed open after termination")
             confirmed = False
+    for stream in (proc.stdout, proc.stderr):
+        try:
+            stream.close()
+        except OSError:
+            pass
 
     if confirmed is True and proc.poll() is not None:
         state = reason or EXITED
@@ -315,7 +277,7 @@ def run(argv: Sequence[str], *, cwd: str | os.PathLike, env: Mapping[str, str],
             notes.append("process tree could not be counted on this platform")
     return RunResult(args, state, proc.poll(), out.text(), err.text(), out.truncated, err.truncated,
                      int((time.monotonic() - started) * 1000), leftover, confirmed,
-                     notes=tuple(notes), containment=tree.containment)
+                     notes=tuple(notes))
 
 
 if IS_WINDOWS:  # pragma: no cover - Windows 전용, 로컬 Windows에서 시험한다
