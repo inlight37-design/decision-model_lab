@@ -7,7 +7,6 @@ import sqlite3
 import tempfile
 import threading
 import unittest
-from unittest.mock import patch
 
 from app import controller as c, server as s
 from app.store import Store
@@ -49,7 +48,7 @@ class StoreTransactionTests(unittest.TestCase):
         self.assertEqual(self.store.row("SELECT COUNT(*) FROM child")[0], 0)
 
 
-class HttpBoundaryTests(unittest.TestCase):
+class HttpServerCase(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
@@ -88,6 +87,8 @@ class HttpBoundaryTests(unittest.TestCase):
         response.read()
         return response.status
 
+
+class HttpBoundaryTests(HttpServerCase):
     def test_nonobject_json_is_a_400_not_a_disconnected_request(self):
         for value in (None, [], "question", 3, True):
             with self.subTest(value=value):

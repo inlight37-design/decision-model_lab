@@ -27,6 +27,7 @@ if __package__ in (None, ""):  # `python app/server.py`로 실행해도 저장�
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.controller import CLI, MANUAL, Controller, ControllerError, MockExecutor, ParticipantSpec
+from app.report import ReportError, build_report
 from app.store import LedgerBusy, Store
 
 STATIC = Path(__file__).with_name("static")
@@ -127,6 +128,7 @@ def make_handler(controller: Controller, token: str, port: int):
             if not self._guard():
                 return
             path = urlsplit(self.path).path
+            parts = path.strip("/").split("/")
             if path == "/":
                 self._send(200, (STATIC / "index.html").read_bytes(), "text/html; charset=utf-8")
             elif path == "/api/state":
@@ -134,6 +136,11 @@ def make_handler(controller: Controller, token: str, port: int):
             elif path == "/api/options":
                 self._json(200, {"participants": [dict(vars(p)) for p in PARTICIPANTS.values()],
                                  "behaviors": list(BEHAVIORS)})
+            elif len(parts) == 4 and parts[:2] == ["api", "runs"] and parts[3] == "report":
+                try:
+                    self._json(200, build_report(controller.view(), parts[2]))
+                except ReportError as exc:
+                    self._json(409, {"error": str(exc)})
             else:
                 self._json(404, {"error": "not found"})
 
@@ -189,7 +196,7 @@ def make_handler(controller: Controller, token: str, port: int):
 
 
 class _Server(ThreadingHTTPServer):
-    # Windows의 SO_REUSEADDR은 이미 듣고 있는 포트에도 bind를 허락해서 같은 포트에 서버가 둘 뜬다(A1 리뷰 반영
+    # Windows의 SO_REUSEADDR은 이미 듣고 있는 포트에도 bind를 허락해서 같은 포트에 서버가 둘 떴다(A1 리뷰 반영
     # 중 관측). Windows에서는 끈다. POSIX에서는 TIME_WAIT 포트를 다시 쓰게 할 뿐이므로 둔다.
     allow_reuse_address = os.name != "nt"
 

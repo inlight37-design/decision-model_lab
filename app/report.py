@@ -1,0 +1,69 @@
+"""A1의 공개된 초안을 합성 없이 내보낸다. 모델 호출·합의 판정·상태 전이는 없다.
+
+입력은 controller.view()의 사본만 받는다. 공개 권한은 controller가 정하며, 이 함수는 그 권한을 만들지 않는다.
+초안과 입력 원문이 들어가므로 내려받은 보고서는 민감한 사용자 자료다. 저장소에 자동으로 올리지 않는다.
+이 판은 실제 합성자의 실패 복구 구현이 아니라, 합성자가 아직 없는 A1의 명시적인 종료 산출물이다.
+"""
+from __future__ import annotations
+
+from copy import deepcopy
+import hashlib
+from typing import Any
+
+SCHEMA = "a1-draft-report/1"
+# 공개 투영에 나중에 필드가 늘어도 원장·토큰·자유 메타데이터를 통째로 내보내지 않는다.
+PARTICIPANT_FIELDS = ("pid", "label", "provider", "transport", "independence", "state", "status", "dropped",
+                      "contamination")
+OBSERVATION_FIELDS = ("state", "exit_code", "containment", "tree_confirmed_empty", "input_delivery", "duration_ms",
+                      "status", "ok", "requested_model", "reported_models", "model_match", "usage", "source",
+                      "marker_echo", "user_confirmed", "independence")
+QUORUM_FIELDS = ("policy", "min", "confirmed", "unverified", "counted", "met", "label")
+
+
+class ReportError(ValueError):
+    """아직 보고할 수 없거나 공개 자료가 불완전하다. 봉인 자료를 대신 읽지 않는다."""
+
+
+def build_report(view: dict[str, Any], run_id: str) -> dict[str, Any]:
+    """controller의 공개 투영에서 선택한 실행만 내보낸다. 질문/초안을 요약하거나 고쳐 쓰지 않는다."""
+    run = next((r for r in view["runs"] if r["run_id"] == run_id), None)
+    if run is None:
+        raise ReportError("no such run")
+    if run["phase"] != "revealed" or any(p["state"] not in ("accepted", "rejected") for p in run["participants"]):
+        raise ReportError("report requires controller-revealed, settled drafts")
+    data = run["prompt"].encode("utf-8")
+    if hashlib.sha256(data).hexdigest() != run["input_sha256"] or len(data) != run["input_bytes"]:
+        raise ReportError("fixed input does not match its recorded digest or size")
+    participants = []
+    for part in run["participants"]:
+        item = {key: deepcopy(part[key]) for key in PARTICIPANT_FIELDS}
+        if part["state"] == "accepted":
+            text = part.get("draft")
+            if not isinstance(text, str) or not text.strip():
+                raise ReportError("an accepted participant has no public draft")
+            item["draft"] = text
+            item["draft_sha256"] = hashlib.sha256(text.encode("utf-8")).hexdigest()
+        observation = part.get("result") or {}
+        item["observation"] = {key: deepcopy(observation[key]) for key in OBSERVATION_FIELDS if key in observation}
+        participants.append(item)
+    budget = run["budget"]
+    return {
+        "schema": SCHEMA,
+        "disposition": "report_without_synthesis",
+        "source": {"run_id": run_id, "created_at": run["created_at"], "phase": run["phase"],
+                   "executor": view["executor"]},
+        "input": {"question": run["question"], "prompt": run["prompt"], "sha256": run["input_sha256"],
+                  "bytes": run["input_bytes"]},
+        "quorum": {key: deepcopy(run["quorum"][key]) for key in QUORUM_FIELDS},
+        "reduction_approved": run["reduction_approved"],
+        "synthesis": {"status": "not_implemented", "additional_model_calls": 0},
+        "verification": {"status": "not_performed", "agreement_is_verification": False},
+        "accounting": {"scope": "this_run_cli_attempts_only", "account_remaining": "unknown",
+                       "client_estimates_are_invoices": False,
+                       "attempts": {key: deepcopy(budget[key]) for key in ("used", "cap", "breakdown", "manual")}},
+        "participants": participants,
+        "limitations": ["No synthesis, recommendation or factual verification was performed.",
+                        "Checksums detect content changes; they do not prove truth, authorship or independence.",
+                        "Manual-app context, independence and account-wide remaining usage are not observed.",
+                        "Mock/synthetic execution is not evidence of real model quality or entitlement."],
+    }
