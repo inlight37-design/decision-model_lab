@@ -42,6 +42,10 @@
 19. [`2026-09-24-review/`](2026-09-24-review/README.md) — 17·18에 대한 검토와 질문별 답. K46·실행 허가·관측 도구 반례, 근거 수준 비교, 인계 점검과 승인 전 보강 순서
 20. [`2026-09-24-review/RESPONSE.md`](2026-09-24-review/RESPONSE.md) — 19의 발견별 반영(R01–R03·R05–R08 수용, R04·R09 부분 수용), 합성 HOME 진단, 리뷰 밖에서 새로 찾은 것, 사용자에게 묻는 것
 
+## 20번 기록에 대한 단서
+
+- R08 행의 `pad_markers_seen`은 기록만 했고 판정에 들어가지 않았다. 표식을 놓친 큰 입력도 `as_expected`가 참이었다([PR #15](https://github.com/inlight37-design/decision-model_lab/pull/15)에 대한 Codex 리뷰, P2). 병합 뒤 claude 세션이 두 표식을 모두 되말해야 기대대로가 되게 고쳤다(`CallTests.test_a_padded_question_is_judged_by_its_end_marker`). 기록 원문은 고치지 않았다.
+
 ## 19번 기록에 대한 단서
 
 - 코드 기준은 `a26e504`, 공개 관측 기준은 `7329a31`이다. 사용자 PC·WSL·실제 provider CLI·모델을 실행하지 않았다.

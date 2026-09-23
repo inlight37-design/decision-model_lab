@@ -482,13 +482,19 @@ class CallTests(Base):
 
     def test_a_padded_question_is_judged_by_its_end_marker(self):
         """리뷰 R08: 끝까지 읽은 CLI는 가운데·끝 표식을 모두 되말한다. 앞부분만 읽으면 끝 표식을 모른다."""
-        observe.approve(self.state, {"claude": 2, "codex": 0}, 60, "시험 승인")
+        observe.approve(self.state, {"claude": 3, "codex": 0}, 60, "시험 승인")
         full = self.call("b1", pad_kb=64)
         self.assertEqual(full["pad_markers_seen"], {"mid": True, "end": True})
+        self.assertTrue(full["as_expected"], full)
         self.assertGreater(full["input_bytes"], 64 * 1024 // 3)
         install(self.home, "claude", "cut-input")
         cut = self.call("b1", pad_kb=64)
         self.assertEqual(cut["pad_markers_seen"], {"mid": False, "end": False})
+        # 입력은 다 전달됐고 답도 관문을 통과하지만, 표식을 놓쳤으면 기대대로가 아니다(PR #15의 Codex 리뷰)
+        self.assertEqual((cut["gate"], cut["boundary_violations"]), ("ok", []))
+        self.assertFalse(cut["as_expected"])
+        with self.assertRaisesRegex(observe.ObserveError, "did not go as expected"):
+            self.call("b1")                                                     # 그 provider는 멈춘다
 
     def test_keep_session_moves_this_calls_record_out_and_keeps_only_its_shape(self):
         observe.approve(self.state, {"claude": 1, "codex": 2}, 60, "시험 승인")
