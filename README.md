@@ -86,7 +86,7 @@ jsonschema를 설치하지 않으면 해당 검사는 실패가 아니라 skip�
 
 공식 사양·논문·정적 코드 검토, 제작자 자체 보고, 커뮤니티 경험, 우리 설계 제안을 구분합니다. 서로 다른 과제·장비·cache·분모의 성능 수치를 합치지 않습니다. 원문 접근 실패·부분 검토·실측하지 않은 품질과 비용은 명시합니다. API 키와 민감 raw trace는 Git에 자동 저장하지 않습니다.
 
-다음 단계는 실제 adapter inventory 후 두 native 경로의 읽기 전용 independent pilot입니다. 전체 팀·DB·학습 router를 한꺼번에 구현하지 않고, 단계별 산출물·실패 이유·다음 작업을 HANDOFF와 commit에 남깁니다. 모든 과거 문서를 매번 agent prompt에 넣지 않습니다.
+adapter inventory(V04-01)는 보조 PC에서 끝났고, 지금은 두 native 경로의 읽기 전용 independent pilot(V04-03)을 준비합니다. 첫 실행 코어는 [`core/`](core/README.md)에 있고, 현재 할 일은 [NEXT-SESSION.md](NEXT-SESSION.md)가 기준입니다. 전체 팀·DB·학습 router를 한꺼번에 구현하지 않고, 단계별 산출물·실패 이유·다음 작업을 HANDOFF와 commit에 남깁니다. 모든 과거 문서를 매번 agent prompt에 넣지 않습니다.
 
 ## 라이선스
 
