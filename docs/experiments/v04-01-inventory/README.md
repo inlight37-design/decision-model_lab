@@ -21,7 +21,7 @@
 ## 0. 시작 전
 
 - **기기 이름표**를 정한다. 예: `main-pc`. 실제 hostname은 쓰지 않는다. 결과는 `hosts/<이름표>/`에 쌓인다.
-- **일반 PowerShell 창**에서 실행한다. AI 도구 안의 터미널은 자기 환경변수를 넣는다 — 보조 PC의 Claude 데스크톱 앱 셸에는 `CLAUDECODE`, `ANTHROPIC_BASE_URL` 등 26개가 있었다. 그 창에서 잰 환경은 사용자의 실제 환경이 아니다. **AI 세션이 대신 실행한다면** tier 1에 `--fresh-env`를 붙인다(Windows) — 그 변수들을 빼고 PATH를 사용자·시스템 설정으로 다시 만든 환경에서 잰다.
+- **일반 PowerShell 창**에서 실행한다. AI 도구 안의 터미널은 자기 환경변수를 넣는다 — 보조 PC의 Claude 데스크톱 앱 셸에는 `CLAUDECODE`, `ANTHROPIC_BASE_URL` 등 26개가 있었다. 그 창에서 잰 환경은 사용자의 실제 환경이 아니다. **AI 세션이 대신 실행한다면** tier 1에 `--fresh-env`를 붙인다(Windows) — AI 도구 변수와 PATH를 사용자·시스템 설정 값으로 다시 만든 환경에서 잰다. 그 밖의 변수는 셸 그대로다.
 - 저장소를 최신으로 받고, 작업 브랜치를 만든다. 브랜치 이름 규칙은 [협업 규칙](../../COLLABORATION.md) 3절.
 
 ```powershell
@@ -155,9 +155,11 @@ claude --bare -p "Reply with exactly: OK" --output-format json
 
 둘 중 하나를 조용히 포기하지 않는다. 동시에 안 되면 그 도구의 blind 초안 한계를 적는다.
 
+**P4는 사용자 설치분이 줄었는지를 본다. blind 입력 통제의 통과가 아니다**([PR #4](https://github.com/inlight37-design/decision-model_lab/pull/4) R02). Claude `--restricted`는 문서상 settings 파일을 제외하고 CLAUDE.md는 말하지 않으며, Codex `--ignore-user-config`는 `config.toml`, `--ignore-rules`는 execpolicy `.rules`만 뺀다. 지시문·메모리·peer 정보가 들어가지 않는지는 V04-03 전에 합성 marker와 금지 파일 읽기 시도로 따로 확인한다.
+
 ### P5. 쓸 수 있는 상급 모델
 
-Claude Code와 Codex는 대화형 `/model` 목록, Antigravity는 `agy models`. **모델 이름만** 적는다. 목록 조회만으로는 한도를 쓰지 않는다.
+Claude Code와 Codex는 대화형 `/model` 목록, Antigravity는 `agy models`. **모델 이름만** 적는다. 목록 조회만으로는 한도를 쓰지 않는다. `agy models`는 기본값을 표시하지 않는다(aux-pc 1.2.8) — 첫 행을 기본 모델로 적지 않는다.
 
 ### P6. 취소 (선택 — V04-03으로 미뤄도 된다)
 
@@ -189,11 +191,11 @@ tier 1 도구가 `codex --help`에서 `app-server`의 존재를 기록한다. �
 
 ## 6. 결과 정리와 판정
 
-`hosts/<이름표>/RESULTS.md`를 채우고, AI 세션이 그 결과로 tier 2 manifest를 만든다 — 관측한 기능만 `observed`로, 증거 칸에 `RESULTS.md`의 P 번호를 적는다. 검사기가 증거 없는 `observed`와 관측 없는 `configured`를 거절한다.
+`hosts/<이름표>/RESULTS.md`를 채우고, AI 세션이 그 결과로 tier 2 manifest를 만든다 — 관측한 기능만 `observed`로, 증거 칸에 `RESULTS.md`의 P 번호를 적는다. 검사기가 증거 없는 `observed`와 관측 없는 `configured`를 거절한다. **값을 거절했다(P3)는 것은 값 검증의 관측이지 그 제한이 실행 중 지켜진다는 관측이 아니다.** 금지한 동작이 실제로 거절되는 것을 보기 전에는 권한 플래그를 `in_help`로 둔다.
 
 | 판정 | 조건 |
 |---|---|
-| **V04-03 진행 가능** | 두 도구 이상에서 P1이 구독 인증으로 성공 **그리고** P3에서 잘못된 제한이 실행 전 거절 **그리고** 과금 경로를 바꾸는 환경변수 없음 |
+| **V04-03 진행 가능** | 두 도구 이상에서 P1이 구독 인증으로 성공 **그리고** P3에서 잘못된 제한이 실행 전 거절 **그리고** 과금 경로를 바꾸는 환경변수 없음. 뜻: adapter 배선과 conformance 시험을 시작할 수 있다. **독립 초안 수집 허가가 아니다** — 그것은 문맥·권한 conformance를 통과한 경로에만 준다(PR #4 R02) |
 | **Q1 (ACP 우선 여부)** | ACP를 관측한 도구 수. 없으면 exec 우선으로 전환을 제안하고 ACP는 adapter 계층 후보로 남긴다 |
 | **보류** | 위 조건 중 하나라도 "미확인"이면 그 이유와 필요한 다음 확인을 적는다 |
 
