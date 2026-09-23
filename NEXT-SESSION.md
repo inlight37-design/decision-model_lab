@@ -1,13 +1,13 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-23** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout) · 브랜치 `claude/execution-spec-20260923`
+최종 갱신 **2026-09-23** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout) · 브랜치 `claude/wsl2-setup-20260923`
 
 이 파일 하나에서 시작한다. 절 구성은 고정이고 CI가 확인한다. 규칙은 [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있다. 이 판은 2026-09-23 하루치 작업을 끝내며 남은 일을 다시 정리한 판에, 같은 날의 [경계 리뷰 반영](docs/reviews/2026-09-23-wsl2-boundary/RESPONSE.md)을 더한 것이다. **실행 기반을 WSL2로 옮기기로 했다**(2절 15·16). 통째로 다시 쓴 마지막 판은 [docs/handoff/](docs/handoff/README.md)에 보관했다.
 
 ## 0. 먼저 확인할 것
 
 1. `git fetch --all --prune` 후 GitHub의 열린 PR과 원격 브랜치를 본다. **아래 3절에 없는 PR이 있으면 이 문서가 낡은 것이다.** 실제 상태를 기준으로 한다.
-2. 지금 어느 기기인지 확인한다. 이 저장소를 편집해 온 **보조 PC(`aux-pc`)**에는 세 CLI가 Windows에 설치돼 있다(아래 1절 관측). WSL2가 설치됐는지 `wsl -l -v`로 본다(2026-09-23에는 없었다).
+2. 지금 어느 기기인지 확인한다. 이 저장소를 편집해 온 **보조 PC(`aux-pc`)**에는 세 CLI가 Windows에 설치돼 있다(아래 1절 관측). aux-pc에는 2026-09-23부터 **WSL2 배포판 `Ubuntu-24.04`**가 있다(`wsl -l -v`). 그 안의 기록은 이름표 `aux-pc-wsl`이다.
 3. 이 세션이 무엇에 접근할 수 있는지(사용자 PC / 웹 컨테이너 / GitHub만) 정하고 PR에 적는다.
 4. **GitHub만 보는 세션**(ChatGPT 웹 등)이라면 main이 아직 이 파일의 최신판이 아닐 수 있다. 3절의 브랜치에서 이 파일을 다시 읽는다.
 5. **모델을 부르는 일은 사용자 승인 뒤에만 한다.** 사용량이 막히면 멈추고 사용자에게 알린다(사용자 요청, 2026-09-23 — Codex 사용량이 적게 남아 있었다).
@@ -47,7 +47,8 @@
 - **V04-03 conformance(합성 파일, 1회씩):** Claude(`claude-sonnet-5`)는 `--restricted`·`--safe-mode` 모두 허용 파일은 읽고 작업 폴더 밖 파일은 CLI가 거절, 쓰기 없음. **Codex(`gpt-6-luna`)는 Windows에서 `--ignore-user-config`를 주면 샌드박스 선택까지 버려져 모든 명령을 거절하고도 exit 0으로 답한다**([openai/codex#42172](https://github.com/openai/codex/issues/42172), 재현). `-c windows.sandbox="elevated"`를 더하면 읽기가 되고 쓰기는 막히지만 **작업 폴더 밖의 다른 참여자 초안도 읽는다.** Codex는 작업 폴더의 `AGENTS.md`를 싣고, Windows에서 명령을 PowerShell 5.1로 실행한다. `codex doctor`는 Windows 샌드박스가 설정돼 있다고 보고한다.
 - 정책: Gemini CLI 소비자 인증은 2026-06-18에 닫혔다(F30). Antigravity 약관은 제3자 소프트웨어를 통한 접근을 위반으로 규정한다(F31) — 우리 앱의 `agy` 구동이 해당하는지 불명확, 공식 저장소 [#711](https://github.com/google-antigravity/antigravity-cli/issues/711)에 같은 질문이 있으나 Google의 답이 없다. agy의 `useG1Credits`(한도 소진 후 유료 크레딧)는 이 계정에서 **꺼져 있고**, 상호작용 데이터 사용(`enableTelemetry`)은 사용자 요청으로 **껐다**.
 - 운용 PC는 아직 관측한 세션이 없다.
-- **WSL은 aux-pc에 설치돼 있지 않다**(2026-09-23, `wsl.exe -l -v`). 위 관측은 모두 Windows 네이티브 CLI의 것이다. WSL2로 옮기면 Windows에만 해당하는 관측(openai/codex#42172 우회, PowerShell 5.1 재시도, `tools_rejected`의 거절 문자열)은 새 호스트 이름으로 다시 본다.
+- 위 관측은 모두 Windows 네이티브 CLI의 것이다. Windows에만 해당하는 관측(openai/codex#42172 우회, PowerShell 5.1 재시도, `tools_rejected`의 거절 문자열)은 WSL에서 다시 본다.
+- **WSL2 — `aux-pc-wsl`**([기록](docs/experiments/v04-01-inventory/hosts/aux-pc-wsl/RESULTS.md)). 사용자가 2026-09-23 설치했다. WSL 2.7.14, Ubuntu 24.04.5, systemd 켜짐, 재부팅 불필요. 공식 설치 스크립트로 Claude Code 2.1.280, Codex 0.156.1을 `~/.local/bin`에 설치했다(tier 1 PASS). **로그인 전**이고 bubblewrap 패키지도 아직 없다. AppArmor가 꺼져 있고 user·PID namespace를 권한 없이 만들 수 있다. PATH에 Windows 폴더(Windows 쪽 CLI 설치 폴더 포함)가 이어 붙어 있다 — `core/env.py`가 막는다. Codex는 Linux 샌드박스용 bubblewrap을 스스로 들고 온다(W2의 중첩 확인 대상).
 
 ### 열린 결정
 
@@ -83,7 +84,7 @@
 
 2026-09-23의 작업은 모두 main에 병합됐다 — V04-01 리뷰([PR #4](https://github.com/inlight37-design/decision-model_lab/pull/4))와 반영, Hermes 패턴 조사([PR #5](https://github.com/inlight37-design/decision-model_lab/pull/5))와 교차 확인, V04-03 실행 코어, 첫 conformance와 Codex 샌드박스 원인 확인, 인계 정리(`claude/handoff-cleanup-20260923`). 사용자는 **CI 녹색을 확인한 claude 세션이 main에 직접 병합하는 것**을 허락했다(2026-09-23).
 
-**지금 병합되지 않은 브랜치: 없음.** 경계 리뷰 보존과 반영(`claude/wsl2-boundary-review-20260923`, 4절 1단계)과 실행 명세·stdin(A4)·core 환경 모듈(A7, `claude/execution-spec-20260923`)은 병합됐다. 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 이 줄을 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다.
+**지금 병합되지 않은 브랜치: `claude/wsl2-setup-20260923`** — `aux-pc-wsl` 설치와 tier 1 기록(W1). 경계 리뷰 보존과 반영(`claude/wsl2-boundary-review-20260923`, 4절 1단계)과 실행 명세·stdin(A4)·core 환경 모듈(A7, `claude/execution-spec-20260923`)은 병합됐다. 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 이 줄을 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다.
 
 ## 4. 다음 작업
 
@@ -93,7 +94,7 @@
 |---|---|---|---|
 | 1 | 경계 리뷰 R01–R04의 회귀 시험과 수정 | 없음 | **끝**(`claude/wsl2-boundary-review-20260923`) |
 | 2 | A4 실행 명세와 stdin, A7 core 환경 모듈(**끝**, `claude/execution-spec-20260923`). **A1 controller와 모의 모드 화면**(사용자에게 띄워 보여 준다), A2·A5·A6 | 없음 | 없음 |
-| 3 | **W1 WSL2 설치와 Linux CLI 준비**, V04-01을 새 호스트 이름으로 다시 | tier 2 몇 회 | 사용자 설치·로그인, 승인 |
+| 3 | **W1 WSL2 설치와 Linux CLI 준비**, V04-01을 새 호스트 이름으로 다시 — 설치·tier 1 끝, **로그인·bubblewrap 패키지·tier 2가 남았다** | tier 2 몇 회 | 사용자 로그인·sudo, 승인 |
 | 4 | **W2 bubblewrap 경계 시험**과 runner의 `pid_namespace` 추적 단위 | 없음 | 3 |
 | 5 | B1·B2를 WSL2에서, 그 뒤 **B3 V04-03 pilot과 사용량 비교** | 여러 번 | 2, 4, 승인 |
 | — | B4 agy 관측 | 몇 회 | 사용자가 agy를 켤 때 |
