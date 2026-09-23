@@ -1,0 +1,37 @@
+{
+  "execution_scope": "isolated Linux conversation container; manually transcribed pure-function source extracts, not full repository test execution",
+  "reviewed_commit": "47934759c5d59cc5940aeb32687d00de25e57180",
+  "observations": {
+    "manifest": {
+      "baseline": {"accepted": true, "errors": []},
+      "missing_auth_funding": {"accepted": true, "errors": []},
+      "null_auth_funding": {"accepted": true, "errors": []},
+      "empty_auth_funding": {"accepted": true, "errors": []},
+      "configured_but_not_installed": {"accepted": true, "errors": []},
+      "boolean_evidence_date": {"accepted": true, "errors": []},
+      "array_adapter_id": {"exception": "TypeError"},
+      "array_env_presence": {"exception": "AttributeError"},
+      "unexpected_secret_value_field": {"accepted": true, "errors": []}
+    },
+    "fresh_environment": {
+      "retained_process_override": true,
+      "added_new_registry_key": false,
+      "path": "system;user",
+      "removed": []
+    },
+    "redaction": {
+      "fine_grained_token_unchanged": true,
+      "google_token_redacted": true,
+      "other_user_with_space": "C:\\Users\\<user> Doe\\notes.txt",
+      "partial_user_path_flagged": false
+    },
+    "count_guard": {
+      "전체 3개 provider를 지원한다": true,
+      "검사 총 120개": false,
+      "tests: 120": false,
+      "63 commits": false,
+      "120 tests": true,
+      "unrelated_sha_line_skipped": true
+    }
+  }
+}
