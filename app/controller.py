@@ -162,8 +162,9 @@ def _marker_echo(text: str, run_id: str, pid: str, input_sha256: str) -> tuple[s
     return "matched", "\n".join(lines[first + 1:]).strip("\n")
 
 
-def _verdict(result: runner.RunResult | None, outcome: adapters.Outcome | None) -> tuple[str, str, str | None]:
-    """결과 수용 관문. (상태, 상태 코드, controller가 덧붙이는 이유)를 돌려준다.
+def acceptance(result: runner.RunResult | None, outcome: adapters.Outcome | None) -> tuple[str, str, str | None]:
+    """결과 수용 관문. (상태, 상태 코드, controller가 덧붙이는 이유)를 돌려준다. 관측 도구(tools/w2/observe.py)도
+    답을 받는 probe에 같은 관문을 쓴다(2026-09-24 리뷰 R03).
 
     interpret()는 stdin 없는 명령(--version 등)도 해석해야 해서 입력 전달 None을 허용한다. A1은 질문을 늘
     stdin으로 보내므로 끝까지 보낸 기록이 없으면 받지 않는다(A1-02). 질문을 명령줄로 보내는 CLI(agy, K07)를
@@ -344,7 +345,7 @@ class Controller:
                 "status": outcome.status, "ok": outcome.ok, "detail": outcome.detail, "usage": outcome.usage,
                 "requested_model": outcome.requested_model, "reported_models": list(outcome.reported_models),
                 "model_match": outcome.model_match}
-            state, status, why = _verdict(result, outcome)
+            state, status, why = acceptance(result, outcome)
             detail = detail or why or (outcome.detail if outcome else None)
             roster = _roster(self._run(run_id)["roster"])
             with self.store.tx() as tx:

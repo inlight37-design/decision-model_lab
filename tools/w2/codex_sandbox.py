@@ -18,6 +18,9 @@
 같다는 것은 `-c sandbox_mode="read-only"` 변형이 같은 결과를 내는 데까지만 본다. 권한 profile을 exec에 넘긴 관측은
 아직 없다.
 
+사용자의 실제 `~/.codex`(로그인 파일 포함)를 연결한다 — 사용자 허락 뒤에만 돌린다(2026-09-24 리뷰 질문 3). 로그인
+파일이 필요 없는 확인은 합성 HOME을 쓰는 tools/w2/codex_profile.py가 먼저다.
+
   python3 tools/w2/codex_sandbox.py           # WSL·Linux에서, 저장소 루트에서, 로그인 셸(bash -l)로
 결과: docs/experiments/w2-isolation/stage2-aux-pc-wsl.md(K12), stage2-followup-aux-pc-wsl.md(K09·권한 profile)
 """
@@ -36,6 +39,13 @@ NET = ("/usr/bin/python3 -c \"import socket\ntry:\n    socket.create_connection(
 
 def _value(lines: list[str], key: str) -> str | None:
     return next((line.split("=", 1)[1] for line in lines if line.startswith(key + "=")), None)
+
+
+def write_state(write_rc: str | None, file_left: bool) -> str:
+    """쓰기 검사의 결과. 결과 줄이 없으면(셸이 시작도 못 함) 거절이 아니라 검사 미실행이다(2026-09-24 리뷰 R09)."""
+    if file_left or write_rc == "0":
+        return "allowed"
+    return "not_run" if write_rc is None else "denied"
 
 
 def deny_profile(home: str, target: str) -> list[str]:
@@ -69,7 +79,7 @@ def main():
         lines = out.splitlines()
         report["variants"][name] = {
             "state": result.state, "exit": result.exit_code, "tree_confirmed_empty": result.tree_confirmed_empty,
-            "write_refused": "write_rc=0" not in out and not os.path.exists(os.path.join(work, "created.txt")),
+            "write": write_state(_value(lines, "write_rc"), os.path.exists(os.path.join(work, "created.txt"))),
             "read_ok": "AL-3K readable" in out,
             "auth_file_exists": _value(lines, "auth_exists_rc") == "0",
             "auth_file_readable": _value(lines, "auth_readable_rc") == "0",

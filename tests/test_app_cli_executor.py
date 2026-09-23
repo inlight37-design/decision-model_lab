@@ -193,9 +193,10 @@ class RealPathTests(Base):
         """N4. 기록의 다섯 칸이 모두 관측됐고 설치 버전이 같을 때만 부른다. 아니면 프로세스를 만들기 전에 거절한다."""
         install(self.home, "claude")
         seen = {"status": "observed", "observed_at": "2026-09-23", "evidence": "synthetic"}
+        spec = {**seen, "spec_revision": adapters.SPEC_REVISION["claude-code"]}   # 참여자 argv로 본 칸(리뷰 R04)
         row = {"adapter_id": "claude-code", "installed": {**seen, "version": "9.9.9"},
                "auth_observed": {**seen, "auth_mode": "subscription_oauth", "funding_mode": "subscription"},
-               "transport_observed": seen, "context_conformance": seen, "permission_conformance": seen}
+               "transport_observed": spec, "context_conformance": spec, "permission_conformance": spec}
         path = self.root / "inventory.json"
         path.write_text(json.dumps({"schema": "runtime-inventory/2", "host": {"label": "t"}, "adapters": [row]}))
         ex = CliExecutor(never=(str(self.root / "ledger"),), inventory=path, home=str(self.home),
