@@ -1,0 +1,53 @@
+# main에 모두 들어간 원격 브랜치를 지운다. 손으로 실행할 때만 돈다(Actions 탭 → prune-merged-branches → Run workflow).
+# 웹 컨테이너 세션은 자기 브랜치에만 push할 수 있어 브랜치를 지우지 못한다 — 병합한 뒤 이 작업을 돌린다
+# (docs/COLLABORATION.md 5절). 병합되지 않은 브랜치와 main은 건드리지 않는다. 진행 중인 세션이 막 만든,
+# 아직 커밋이 없는 브랜치(main과 같은 브랜치)도 지워진다 — 그 세션이 다시 push하면 되살아나고 잃는 커밋은 없다.
+name: prune-merged-branches
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "지울 목록만 보이고 지우지 않는다"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: prune-merged-branches
+
+jobs:
+  prune:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: delete branches fully merged into main
+        env:
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          git fetch --prune origin '+refs/heads/*:refs/remotes/origin/*'
+          merged=$(git branch -r --merged origin/main | sed 's/^ *//' | grep -v -e '^origin/main$' -e '^origin/HEAD' | sed 's#^origin/##' || true)
+          if [ -z "$merged" ]; then
+            echo "main에 모두 들어간 브랜치가 없다 — 지울 것이 없다"
+            exit 0
+          fi
+          echo "main에 모두 들어간 브랜치:"
+          echo "$merged" | sed 's/^/  /'
+          echo "남는 브랜치(병합되지 않음):"
+          git branch -r --no-merged origin/main | sed 's/^ */  /'
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "dry_run: 지우지 않았다"
+            exit 0
+          fi
+          # 목록을 가져온 뒤 누가 그 브랜치에 push했으면 지우지 않는다. 브랜치마다 가져온 커밋 값에 묶어 지운다(PR #17의
+          # Codex 리뷰). 그 사이 움직인 브랜치는 "stale info"로 거절되고 작업은 실패로 끝난다 — 다시 돌리면 새로 판정한다
+          leases=()
+          for b in $merged; do
+            leases+=("--force-with-lease=refs/heads/$b:$(git rev-parse "refs/remotes/origin/$b")")
+          done
+          git push "${leases[@]}" origin --delete $merged

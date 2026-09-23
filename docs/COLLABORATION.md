@@ -84,11 +84,11 @@
 3. PR 본문의 [템플릿](../.github/pull_request_template.md)을 채운다 — 작성 세션, 접근 범위, 검증한 것과 하지 않은 것.
 4. push 후 CI 결과를 확인한다. **녹색을 보기 전에는 "통과"라고 적지 않는다.**
 5. 병합은 사용자가 하거나, CI 녹색을 확인한 claude 세션이 한다(`NEXT-SESSION.md` 2절 8).
-6. **병합한 쪽이 그 브랜치를 원격에서 지운다**(`git push origin --delete <브랜치>`). 병합된 브랜치가 남으면 목록만 보고 진행 중인 일을 알 수 없다 — 2026-09-24에는 병합된 브랜치가 지워지지 않고 쌓여 있었다. 자기 브랜치에만 push할 수 있는 세션(웹 컨테이너 등)은 지우지 못하므로 PR과 인계 3절에 적는다. 그러면 사용자가 진행 중인 세션이 없을 때 아래 명령으로 한꺼번에 지운다(Git Bash나 WSL, 저장소 루트). main에 모두 들어간 브랜치만 지운다.
+6. **병합한 쪽이 그 브랜치를 원격에서 지운다**(`git push origin --delete <브랜치>`). 병합된 브랜치가 남으면 목록만 보고 진행 중인 일을 알 수 없다 — 2026-09-24에는 병합된 브랜치가 지워지지 않고 쌓여 있었다. 자기 브랜치에만 push할 수 있는 세션(웹 컨테이너 등)은 직접 지우지 못한다. 병합한 뒤 [`prune-merged-branches`](../.github/workflows/prune-merged-branches.yml) 작업을 실행한다(Actions, 손으로만 돈다) — 아래와 같은 명령을 GitHub의 토큰으로 돌린다. `dry_run`을 켜면 지울 목록만 보인다. 실행할 수단이 없으면 PR과 인계 3절에 적고, 사용자가 휴대폰이나 PC의 GitHub 웹에서 그 작업을 실행하거나(Actions 탭 → prune-merged-branches → Run workflow) PC에서 아래 명령을 돌린다(Git Bash나 WSL, 저장소 루트). 어느 쪽이든 main에 모두 들어간 브랜치만 지운다. 목록을 가져온 뒤 누가 push한 브랜치는 `--force-with-lease`가 거절한다(stale info) — 다시 돌리면 새로 판정한다. 진행 중인 세션이 막 만든, 아직 커밋이 없는 브랜치도 지워지지만 그 세션이 다시 push하면 되살아난다.
 
    ```bash
    git fetch --all --prune
-   git branch -r --merged origin/main | sed 's/^ *//' | grep -v -e '^origin/main$' -e '^origin/HEAD' | sed 's#^origin/##' | xargs -r git push origin --delete
+   git branch -r --merged origin/main | sed 's/^ *//' | grep -v -e '^origin/main$' -e '^origin/HEAD' | sed 's#^origin/##' | xargs -r git push --force-with-lease origin --delete
    ```
 
 ## 6. 이 규칙을 지키게 하는 장치
@@ -98,4 +98,5 @@
 | `.githooks/pre-commit` | BOM·깨진 UTF-8이 커밋에 들어가는 것 (`git config core.hooksPath .githooks`) |
 | CI `offline-checks` | 인코딩, 살아 있는 문서의 개수·원장 범위, 인계 문서 절 구성, 상대 링크, 원장 계약, 모든 테스트 |
 | PR 템플릿 | 접근 범위·미검증 범위·인계 갱신 누락 |
+| Actions `prune-merged-branches`(손으로 실행) | 병합된 브랜치가 원격에 쌓여 진행 중인 일이 가려지는 것 — main에 모두 들어간 브랜치만 지운다 |
 | [`CLAUDE.md`](../CLAUDE.md) | Claude Code가 `AGENTS.md`를 자동으로 읽게 한다. 규칙은 `AGENTS.md` 한 곳에만 쓴다 |
