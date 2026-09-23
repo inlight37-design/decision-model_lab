@@ -111,7 +111,7 @@
 
 ## 3. 진행 중인 작업
 
-**지금 병합되지 않은 브랜치: `claude/stage2-observe-20260923`** — 2단계 호출의 결과 기록, `manifest.v2.json`의 세 칸, 관측 도구 요약의 ID 가림, K12 진단 도구, 이 파일의 갱신. 병합하는 커밋에서 이 줄을 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다. 그 앞의 병합 이력은 [1단계 직후 판](docs/handoff/2026-09-23-before-stage2.md) 3절과 Git 로그에 있다.
+**지금 병합되지 않은 브랜치: `claude/stage2-observe-20260923`** — 2단계 호출의 결과 기록, `manifest.v2.json`의 세 칸, 관측 도구의 수정(ID 가림, 경계 위반 멈춤), K12 진단 도구, 이 파일의 갱신, 그리고 다른 AI에게 줄 [2단계 리뷰 요청서](docs/reviews/2026-09-23-stage2-request/README.md)(실패·시행착오 S01–S21). 이 세션의 권한 확인이 main 병합을 막아(2026-09-23) **사용자의 병합을 기다린다** — 병합 전에 브랜치 head의 CI를 확인한다. 병합하는 커밋에서 이 줄을 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다. 그 앞의 병합 이력은 [1단계 직후 판](docs/handoff/2026-09-23-before-stage2.md) 3절과 Git 로그에 있다.
 
 **열린 PR — 사용자가 살펴보는 중:** [PR #8](https://github.com/inlight37-design/decision-model_lab/pull/8) `chatgpt/tmux-patterns-20260923`. ChatGPT의 tmux 조사다(문서만, head `4e3500e`에서 CI 녹색). **사용자가 정하기 전에는 병합하지 않는다.**
 - 권고 요지: tmux를 참여자 실행 엔진이나 분할 창으로 쓰지 않는다. 개념(TM-01–TM-09 — 화면 연결과 실행 수명의 분리, 공통 제어 진입점, 상태 재동기화, 느린 화면 분리, 실패 기록 탐색 등)만 기존 controller에 옮긴다. tmux를 직접 쓰는 것은 신뢰한 운영자가 controller 터미널을 띄워 두는 용도에만 선택으로 둔다. claude 세션의 판단도 같다 — bubblewrap 안의 참여자가 밖의 tmux server에 일을 맡기면 격리와 자손 종료 확인이 깨진다.
