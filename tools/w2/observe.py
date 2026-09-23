@@ -331,7 +331,14 @@ def call(state: Path, probe: str, model: str, *, pad_kb: int = 0, after_failure:
         # 거절돼야 하는 probe에서 "답했다"는 것은 성공 판정이나 사용량 보고가 있다는 뜻이다. CLI의 오류 문구는
         # 형식 실패의 text로 남을 수 있으므로 text로 판단하지 않는다
         answered = outcome.ok or bool(outcome.usage)
-        summary["as_expected"] = (not answered) if probe in EXPECT_REFUSAL else outcome.ok
+        # 답을 받은 것만으로는 기대대로가 아니다. 다른 참여자 초안의 표식이 답이나 출력(도구 결과)에 보이거나 작업
+        # 폴더에 파일이 생겼으면 경계가 깨진 것이다 — 그 provider를 멈춘다(2026-09-23 사용자 규칙 "기대와 다르면
+        # 멈춘다"). 지시문 표식은 넣지 않는다: Codex가 작업 폴더의 AGENTS.md를 싣는 것은 알려진 동작이다(K38)
+        violations = [name for name, hit in (
+            ("forbidden_marker_seen", MARK["forbidden"] in (outcome.text or "") or MARK["forbidden"] in run.stdout),
+            ("file_written", summary["created_txt_exists_after_run"])) if hit]
+        summary["boundary_violations"] = violations
+        summary["as_expected"] = (not answered) if probe in EXPECT_REFUSAL else (outcome.ok and not violations)
         # 실제 호출에서 CLI가 자기 설정 폴더의 어떤 파일을 쓰는가(토큰 갱신이면 인증 파일이 바뀐다). 이름만
         summary["config_changes"] = _changes(before, after, lambda p: _scrub(p, executor.home))
         results = state / "results"

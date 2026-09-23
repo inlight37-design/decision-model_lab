@@ -159,7 +159,7 @@ A1 리뷰가 먼저 하라고 한 관문 보강(N0, [반영 기록](docs/reviews
 
 1. `python3 tools/w2/observe.py plan` — 모델 호출 없음. probe마다 실제로 돌릴 argv, 연결 경로, 승인 상태를 본다. "not on the child PATH"면 로그인 셸이 아니다.
 2. `python3 tools/w2/observe.py approve --claude <n> --codex <n> --timeout <초> --note "<누가·언제·어디서 승인>"` — **사용자가 새로 정한 값 그대로.** 모델 이름은 전체 이름으로 받는다(K43). 호출 전에 관측할 목록과 명령의 옵션(`--pad-kb` 등)을 맞춰 본다.
-3. `python3 tools/w2/observe.py call <probe> <전체 모델 이름>` — 한 번 부르고 출력 JSON(`as_expected`, `argv_run`, init 요약, `config_changes`, stderr 힌트, 토큰)을 읽는다. 도구의 `as_expected`는 답을 받았는지까지다 — 금지 파일 내용, 표식, 쓰기 결과는 답과 원 출력에서 직접 본다. 종료 코드 3은 기대와 다르다는 뜻이다 — 그 provider는 멈춘다. 종료 코드 2는 부르지 않았다는 뜻이다(사용량을 쓰지 않았다). `p3-*`는 모델 응답 없이 거절돼야 하는 호출이지만 상한에는 센다.
+3. `python3 tools/w2/observe.py call <probe> <전체 모델 이름>` — 한 번 부르고 출력 JSON(`as_expected`, `boundary_violations`, `argv_run`, init 요약, `config_changes`, stderr 힌트, 토큰)을 읽는다. 도구의 `as_expected`는 답을 받았는지와 경계 위반(금지 표식이 답·출력에 보임, 작업 폴더에 파일이 생김)까지 본다 — 지시문 표식, 도구 시도, 거절 방식은 답과 원 출력에서 직접 본다. 종료 코드 3은 기대와 다르다는 뜻이다 — 그 provider는 멈춘다. 종료 코드 2는 부르지 않았다는 뜻이다(사용량을 쓰지 않았다). `p3-*`는 모델 응답 없이 거절돼야 하는 호출이지만 상한에는 센다.
 4. `python3 tools/w2/observe.py status`로 남은 상한을 본다.
 
 - 원 출력은 WSL 안 `~/.local/state/dml-observe/`(저장소 밖, 격리 안에 연결하지 않음)에 남는다. 저장소에는 요약만 옮기고, 계정 이메일·조직 ID·토큰은 옮기지 않는다. **요약도 옮기기 전에 읽는다** — 2단계에서 CLI가 쓴 파일 이름에 조직 UUID가 들어 있었다(지금은 도구가 가린다).
