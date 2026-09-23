@@ -1,8 +1,8 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-23** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout) · 브랜치 `claude/handoff-stage2-20260923`
+최종 갱신 **2026-09-23** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout과 그 WSL) · 브랜치 `claude/stage2-observe-20260923`
 
-이 파일 하나에서 시작한다. 절 구성은 고정이고 CI가 확인한다. 규칙은 [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있다. 이 판은 1단계(실제 호출 전 확인)를 마치고 **새 세션이 2단계(승인된 모델 호출)부터 이어받도록 통째로 다시 쓴 판**이다. 1단계 각 항목(N0–N6)의 경위와 긴 병합 이력은 [바로 전 판](docs/handoff/2026-09-23-before-stage2.md)과 Git 로그로 보냈다. 여기에는 지금 상태, 한계와 못 고친 문제(4절의 K 표), 다음 일만 둔다.
+이 파일 하나에서 시작한다. 절 구성은 고정이고 CI가 확인한다. 규칙은 [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있다. 1단계(실제 호출 전 확인)를 마치고 통째로 다시 쓴 판에 **2단계(승인된 모델 호출)의 결과를 더한 판**이다. 1단계 각 항목(N0–N6)의 경위와 긴 병합 이력은 [1단계 직후 판](docs/handoff/2026-09-23-before-stage2.md)과 Git 로그에 있다. 여기에는 지금 상태, 한계와 못 고친 문제(4절의 K 표), 다음 일만 둔다.
 
 ## 0. 먼저 확인할 것
 
@@ -10,12 +10,12 @@
 2. 지금 어느 기기인지 확인한다. 이 저장소를 편집해 온 기기는 **보조 PC `aux-pc`(Windows)**와 그 안의 **WSL2 배포판 `Ubuntu-24.04`(이름표 `aux-pc-wsl`)**다. 운용 PC는 관측한 세션이 없다.
 3. 이 세션이 무엇에 접근할 수 있는지(사용자 PC / 웹 컨테이너 / GitHub만) 정하고 PR에 적는다.
 4. **GitHub만 보는 세션**(ChatGPT 웹 등)이라면 main이 아직 이 파일의 최신판이 아닐 수 있다. 3절의 브랜치에서 이 파일을 다시 읽는다.
-5. **모델을 부르는 일은 사용자 승인 뒤에만 한다.** 사용량이 막히면 멈추고 알린다(사용자 요청 — Codex 사용량이 적게 남아 있었다).
-6. **사용자에게 받을 것이 둘 있다(3절):** 2단계 모델 호출 승인, 그리고 PR #8(tmux 조사)을 어떻게 할지. 답을 받기 전에는 둘 다 진행하지 않는다.
+5. **모델을 부르는 일은 사용자 승인 뒤에만 한다.** 사용량이 막히면 멈추고 알린다(사용자 요청 — Codex 사용량이 적게 남아 있었다). 2단계 승인(Claude 3·Codex 2)은 모두 썼다 — 더 부르려면 새로 승인받는다.
+6. **사용자에게 받을 것(3절):** PR #8(tmux 조사)의 병합, Codex 문맥 판정(`failed`)을 푸는 방법, 2단계 후속 호출을 할지. 답을 받기 전에는 진행하지 않는다.
 
 ## 1. 지금 상태
 
-**1단계(실제 호출 전 확인)가 끝났다. 다음은 2단계 — 사용자가 승인한 몇 번의 모델 호출이다.** 실행 코어, bubblewrap 격리, 모의 모드 앱(controller와 화면), 실제 CLI 실행기, WSL 관측 도구, 실행 허가 계산이 있다. 실제 실행기와 관측 도구는 가짜 CLI로만 시험했고, 화면 서버는 아직 모의 실행기만 쓴다. **WSL에서는 모델을 한 번도 부르지 않았다. 합성은 없다.** 근거 원장은 E01–E31 / F01–F31, 결정은 D01–D18이다. 검사 수와 결과는 [CI 실행 기록](https://github.com/inlight37-design/decision-model_lab/actions/workflows/checks.yml)이 기준이다.
+**2단계(승인된 모델 호출)가 끝났다. 다음은 3단계 — A1 이어서(모의, 모델 호출 없음)다.** 실행 코어, bubblewrap 격리, 모의 모드 앱(controller와 화면), 실제 CLI 실행기, WSL 관측 도구, 실행 허가 계산이 있다. **WSL 격리 안에서 Claude 3회·Codex 2회를 실제로 불렀고 모두 도구의 기대대로였다**([2단계 기록](docs/experiments/w2-isolation/stage2-aux-pc-wsl.md)). 그 결과로 Claude는 실행 허가가 나오고, Codex는 문맥 판정이 `failed`라 허가가 없다. 화면 서버는 아직 모의 실행기만 쓴다. **합성은 없다.** 근거 원장은 E01–E31 / F01–F31, 결정은 D01–D18이다. 검사 수와 결과는 [CI 실행 기록](https://github.com/inlight37-design/decision-model_lab/actions/workflows/checks.yml)이 기준이다.
 
 ### 있는 것
 
@@ -28,9 +28,9 @@
 | [`core/membership.py`](core/membership.py) | 참여자가 빠지거나 바뀔 때의 결정. 공개 전에는 구성이 바뀔 때마다 정족수를 다시 본다 | 초안이 다 들어왔는지 — controller 관문이 본다 |
 | [`core/eligibility.py`](core/eligibility.py) | 실행 허가를 시도마다 계산한다: 기록의 다섯 칸이 모두 관측됐고, 30일 안이고, 설치 버전이 같고, 구독 로그인일 때만 | 기록된 관측이 사실인지 |
 | [`app/`](app/README.md) | **A1 controller와 모의 화면.** 입력 고정 → 시도 예약 → 실행 → 결과 수용 관문 → 초안 봉인 → controller가 공개. 참여자는 CLI(지금은 모의 CLI)와 원본 앱(수동). 수동 질문에는 실행 표식을 달아 다른 카드에 붙여 넣은 답을 거절한다. 정족수 정책은 실행마다 고정한다(기본은 CLI만 센다, Q6). SQLite journal(스키마 버전, 한 번에 한 controller만 연다), 토큰으로 막은 127.0.0.1 화면 서버 | 실제 CLI로 돌린 적 없음(K17), 합성(K18). 수동 답의 입력 일치(K21) |
-| [`app/cli_executor.py`](app/cli_executor.py) | 실제 CLI 실행기(Linux·WSL): `env.resolve` → `build_spec` → `isolation.run` → `interpret`. 이 기기의 기록(`runtime-inventory/2`)으로 시도마다 실행 허가를 계산하고, 허가가 없으면 프로세스를 만들기 전에 `failed_to_start`로 끝낸다 | 가짜 CLI로만 시험했다. 서버에 연결하지 않았다(K17) |
-| [`tools/w2/cli_boundary.py`](tools/w2/cli_boundary.py), [`auth_mounts.py`](tools/w2/auth_mounts.py) | 설치된 Claude·Codex를 격리 안에서 `--version`·로그인 상태만 실행해 본다. `auth_mounts`는 인증·설정 연결 조합을 바꿔 가며 본다(N3, K09) | 실제 질의. 토큰 갱신 쓰기 — 모델을 불러야 드러난다 |
-| [`tools/w2/observe.py`](tools/w2/observe.py) | **2단계는 이 도구로만 부른다.** 참여자와 같은 argv·격리 경계로 probe마다 한 번 부르고, 승인한 provider별 상한과 멈춤 규칙을 지킨다. **모델 호출** | 승인 없이 부르지 않는다. 아직 한 번도 부르지 않았다(K33) |
+| [`app/cli_executor.py`](app/cli_executor.py) | 실제 CLI 실행기(Linux·WSL): `env.resolve` → `build_spec` → `isolation.run` → `interpret`. 이 기기의 기록(`runtime-inventory/2`)으로 시도마다 실행 허가를 계산하고, 허가가 없으면 프로세스를 만들기 전에 `failed_to_start`로 끝낸다 | 실제 CLI는 관측 도구가 이 실행기의 `prepare()` 경로로 불렀다(2단계). `execute()` 자체와 서버 연결은 아직이다(K17) |
+| [`tools/w2/cli_boundary.py`](tools/w2/cli_boundary.py), [`auth_mounts.py`](tools/w2/auth_mounts.py), [`codex_sandbox.py`](tools/w2/codex_sandbox.py) | 설치된 Claude·Codex를 격리 안에서 `--version`·로그인 상태만 실행해 본다. `auth_mounts`는 인증·설정 연결 조합을 바꿔 가며 본다(N3, K09). `codex_sandbox`는 Codex 자체 샌드박스가 우리 경계 안에서 서는지 본다(K12). 모두 모델 호출 없음 | 실제 질의. 토큰 갱신 쓰기 — 모델을 불러야 드러난다 |
+| [`tools/w2/observe.py`](tools/w2/observe.py) | **관측 호출은 이 도구로만 한다.** 참여자와 같은 argv·격리 경계로 probe마다 한 번 부르고, 승인한 provider별 상한과 멈춤 규칙을 지킨다. 요약은 파일 이름·stderr 속 UUID와 긴 ID를 가린다. **모델 호출** | 승인 없이 부르지 않는다. 2단계에서 다섯 번 불렀다 |
 | [`tools/v04-03/conformance.py`](tools/v04-03/conformance.py) | Windows에서 논의자 설정을 관측하는 스크립트. 일부 명령은 모델을 부른다 | WSL에서는 쓰지 않는다 — `tools/w2/observe.py`가 맡는다 |
 | [`tools/runtime_inventory.py`](tools/runtime_inventory.py) | V04-01 tier 1. 각 CLI의 `--version`/`--help`만 실행해 기록한다. `--validate`는 기록의 스키마(`runtime-inventory/2` 포함)를 검사한다 | `observed`·`configured=true`를 쓸 수 없다 |
 | [`check_frontier_protocol.py`](tools/check_frontier_protocol.py), [`review_boundary.py`](tools/review_boundary.py), [`audit_design_contrast.py`](tools/audit_design_contrast.py) | 합성 기록의 일관성 **검사**(계산 아님), PR #3의 순수 함수 경계 실험, 디자인 토큰 대비 계산 | controller의 상태 권위가 아니다 |
@@ -43,13 +43,18 @@
   - 로그인: Claude는 claude.ai 구독(`firstParty`), Codex는 ChatGPT, agy는 Google 계정이다. Claude CLI는 데스크톱 앱과 한도를 공유한다(E04).
   - **Windows에만 해당하는 사실:** Codex의 `--ignore-user-config`가 샌드박스 선택까지 버린다(openai/codex#42172). Codex가 명령을 PowerShell 5.1로 실행한다. 작업 폴더 밖의 다른 참여자 초안도 읽는다. Claude 데스크톱 앱 셸에는 앱이 넣은 변수가 있어 새 터미널 기준 환경으로 실행한다. `%LOCALAPPDATA%` 설치가 앱의 가상 공간에 들어간 적이 있다(agy).
 - **`aux-pc-wsl`(WSL2):**
-  - 기록: [V04-01 tier 1](docs/experiments/v04-01-inventory/hosts/aux-pc-wsl/RESULTS.md), [W2 경계 시험](docs/experiments/w2-isolation/aux-pc-wsl.md), [인증 연결 관측(N3)](docs/experiments/w2-isolation/auth-mounts-aux-pc-wsl.md).
+  - 기록: [V04-01 tier 1](docs/experiments/v04-01-inventory/hosts/aux-pc-wsl/RESULTS.md), [W2 경계 시험](docs/experiments/w2-isolation/aux-pc-wsl.md), [인증 연결 관측(N3)](docs/experiments/w2-isolation/auth-mounts-aux-pc-wsl.md), [2단계 호출(tier 2, B1·B2, K12 진단)](docs/experiments/w2-isolation/stage2-aux-pc-wsl.md).
   - 환경: WSL 2.7.14, Ubuntu 24.04.5, systemd 켜짐, bubblewrap 0.9.0, AppArmor 꺼짐. 저장소는 Windows checkout(`C:\ai\decision-model_lab`)을 `/mnt/c/ai/decision-model_lab`로 열어 쓴다.
   - 설치: Claude Code 2.1.280과 Codex 0.156.1을 `~/.local/bin`에 설치했다. 로그인도 했다(Claude `claude.ai`·`firstParty`, Codex ChatGPT).
   - **로그인 셸(`bash -l`)에서 돌린다.** 비로그인 셸(`wsl.exe -- bash`)은 PATH에 `~/.local/bin`이 없어 CLI를 못 찾는다. PATH에 Windows 쪽 CLI 폴더가 이어 붙어 있다. Codex는 Linux 샌드박스용 bubblewrap을 스스로 들고 온다.
   - 격리 안 로그인 상태에는 인증 파일 하나면 된다(Claude `~/.claude/.credentials.json`, Codex `~/.codex/auth.json`) — 읽기 전용으로도 된다. 그래도 연결을 아직 좁히지 않았다(K09).
-  - [`runtime-inventory/2` 기록](docs/experiments/v04-01-inventory/hosts/aux-pc-wsl/manifest.v2.json): 설치와 로그인만 관측됐다. **그래서 두 CLI 모두 아직 실행 허가가 없다** — 2단계 결과로 나머지 세 칸(전송·문맥 준수·권한 준수)을 채운다.
-  - **tier 2와 B1·B2는 아직이다**(모델 호출).
+  - [`runtime-inventory/2` 기록](docs/experiments/v04-01-inventory/hosts/aux-pc-wsl/manifest.v2.json): 2단계로 나머지 세 칸(전송·문맥 준수·권한 준수)을 채웠다. **Claude는 다섯 칸이 모두 `observed`라 실행 허가가 나온다**(30일 안, 같은 버전일 때). **Codex는 문맥 준수가 `failed`라 허가가 없다** — 작업 폴더의 `AGENTS.md`를 싣는다(K38·K44).
+  - **2단계 결과(2026-09-23, Claude `claude-sonnet-5` 3회, Codex `gpt-6-luna` 2회):**
+    - 다섯 번 모두 자손 전체 종료가 확인됐고 입력은 끝까지 전달됐다.
+    - Claude `-p`는 stdin만으로 질문을 받는다. 금지 파일 읽기는 `--restricted`가 CLI 층에서 거절했다.
+    - Codex는 금지 파일에 명령을 실제로 돌렸고 우리 경계가 막았다(파일 없음). Codex 자체 샌드박스는 우리 bubblewrap 안에서도 서서 쓰기를 막는다(모델 없는 진단).
+    - Claude stream-json에는 계정 한도(`rate_limit_event`: 5시간·7일 창의 사용 비율)가 온다. 참여자 argv의 `json` 결과에는 없다.
+    - Codex는 `--ignore-user-config`로도 계정의 원격 플러그인과 공급자 스킬을 `~/.codex`에 받는다.
 - **세 CLI 공통 관측**(aux-pc tier 2):
   - 셋 다 구독으로 비대화형 JSON 호출이 된다. `--bare`는 구독 불가다(F25).
   - Claude `-p`는 기본으로 사용자 플러그인·MCP를 싣는다.
@@ -78,6 +83,7 @@
 | Q5 | 원본 앱을 자동으로 움직일지 | **지금은 하지 않는다**(2절 19). 사람이 옮기는 수동 방식만 있다(2절 17). 소비자 앱의 화면을 프로그램으로 조작하면 깨지기 쉽고 약관상 계정 위험이 있다. 자동화가 필요해지면 공식 통로를 관측한 뒤 다시 정한다 |
 | Q6 | blind를 확인할 수 없는 수동 참여자를 독립 정족수에 셀지 | **정했고 반영했다**(2절 18) — 정책을 실행마다 고정하고 기본은 독립성이 확인된 참여자(CLI)만 센다 |
 | C2 | agy 자동 실행을 켤지 | **꺼 둔다**(2절 19). 켤지는 언제든 사용자가 고른다(2절 14). 위험은 기술 실패가 아니라 계정 제재다(F31) |
+| C3 | Codex 문맥 판정(`failed`, K38·K44)을 어떻게 풀지 | 미정. (a) 참여자 구성(빈 작업 폴더)에서 문맥을 보이는 관측을 한 번 더 한다, (b) 빈 작업 폴더 완화를 정책으로 받아들인다. 정하기 전에는 Codex를 실제 실행기로 부르지 않는다(3절) |
 
 ## 2. 사용자가 확정한 것
 
@@ -105,15 +111,21 @@
 
 ## 3. 진행 중인 작업
 
-**지금 병합되지 않은 브랜치: 없음.** 마지막 병합: 인계 정리(`claude/handoff-stage2-20260923`, 문서만) — 1단계를 마치고 새 세션이 2단계부터 이어받도록 이 파일을 다시 썼다. 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 이 줄을 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다. 그 앞의 병합 이력은 [바로 전 판](docs/handoff/2026-09-23-before-stage2.md) 3절과 Git 로그에 있다.
+**지금 병합되지 않은 브랜치: `claude/stage2-observe-20260923`** — 2단계 호출의 결과 기록, `manifest.v2.json`의 세 칸, 관측 도구 요약의 ID 가림, K12 진단 도구, 이 파일의 갱신. 병합하는 커밋에서 이 줄을 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다. 그 앞의 병합 이력은 [1단계 직후 판](docs/handoff/2026-09-23-before-stage2.md) 3절과 Git 로그에 있다.
 
 **열린 PR — 사용자가 살펴보는 중:** [PR #8](https://github.com/inlight37-design/decision-model_lab/pull/8) `chatgpt/tmux-patterns-20260923`. ChatGPT의 tmux 조사다(문서만, head `4e3500e`에서 CI 녹색). **사용자가 정하기 전에는 병합하지 않는다.**
 - 권고 요지: tmux를 참여자 실행 엔진이나 분할 창으로 쓰지 않는다. 개념(TM-01–TM-09 — 화면 연결과 실행 수명의 분리, 공통 제어 진입점, 상태 재동기화, 느린 화면 분리, 실패 기록 탐색 등)만 기존 controller에 옮긴다. tmux를 직접 쓰는 것은 신뢰한 운영자가 controller 터미널을 띄워 두는 용도에만 선택으로 둔다. claude 세션의 판단도 같다 — bubblewrap 안의 참여자가 밖의 tmux server에 일을 맡기면 격리와 자손 종료 확인이 깨진다.
+- **claude 세션의 대조(2026-09-23, main `f044865`):** 조사의 코드 주장을 main과 맞춰 봤다.
+  - 화면이 1초마다 상태를 조회하면서 요청이 겹치는 것을 막지 않고 도착 순서대로 덮어쓴다(P05, TM-05) — **맞다**(`app/static/index.html`의 `setInterval(refresh, 1000)`). 오래된 응답이 새 상태를 덮을 수 있다. 실제로 관측한 것은 아니다.
+  - 새로고침·재접속은 조회(GET)만 한다. 실행 생성은 버튼의 POST뿐이다 — TM-01의 "재접속이 호출을 만들지 않는다"는 **이미 성립한다.** 연결이 끊긴 동안 마지막으로 그린 카드를 오래됐다고 표시하지는 않는다.
+  - "관측 도구가 실행기를 재사용한다"(TM-02) — **부분적으로 맞다.** `observe.py`는 실행기의 `prepare()`를 쓰지만 실행과 해석은 probe별 argv 변경 때문에 따로 부른다.
+  - 권고: 문서만이라 병합해도 된다. TM 항목 중에서는 적용 계획 A(요청 겹침 막기, 오래된 응답 버리기, 연결 끊김과 마지막 확인 시각 표시)가 작고 3단계 화면 작업과 겹친다.
 - 병합할 때: 이 PR은 옛 3절을 고쳤으므로 `NEXT-SESSION.md`가 충돌한다. main 쪽을 그대로 두고, PR의 3절 문단은 버리고, 조사 링크(`docs/research/tmux-2026-09-23/README.md`)를 1절 기록 표의 조사 줄에 더한다. TM 항목을 작업으로 받을지는 사용자가 정한다 — 받으면 4절 3단계에 넣는다.
 
 사용자의 판단을 기다리는 것:
-- **2단계 모델 호출 승인** — 무엇을 정해야 하는지와 claude 세션의 제안은 4절 2단계 "승인받을 것". **1단계가 끝나 지금 받을 수 있다.**
-- PR #8과 tmux 운영 보조 — 위.
+- PR #8의 병합과 TM 항목을 받을지 — 위.
+- **Codex 문맥 판정(`failed`)을 푸는 방법** — (a) 참여자 구성(빈 작업 폴더)에서 한 번 더 관측해 문맥에 무엇이 들어가는지 본다(Codex 1회 승인), 또는 (b) 빈 작업 폴더 완화를 정책으로 받아들이고 계정 플러그인(K44)은 한계로 둔다. 정하기 전에는 Codex를 실제 실행기로 부르지 않는다.
+- **2단계 후속 호출을 할지** — K01 큰 입력(Claude `b1 --pad-kb 96` 1회), K09 인증 연결을 좁힌 구성의 재관측(Claude 1·Codex 1). 4절 2단계 "남은 것".
 - 열린 결정 Q3·Q4 — 급하지 않다. Q5·Q6·C2는 정했다(2절 18·19).
 - aux-pc 로컬 모의 데이터(`~/.decision-model-lab/mock`)의 첫 실행 하나가 ChatGPT 앱 수동 답을 기다린다 — 시연용이고 저장소와 무관하다. 새 코드로 처음 열면 journal이 스키마 2로 올라가고, 그 실행은 예전처럼 원본 앱 답도 정족수에 센다(`include_unverified`).
 
@@ -124,76 +136,47 @@
 | 단계 | 할 일 | 모델 호출 | 선행 |
 |---|---|---|---|
 | 1 | 실제 호출 전 확인(N0–N6) — **끝남** | 없음 | 없음 |
-| 2 | **승인된 소수 호출:** `aux-pc-wsl` tier 2와 B1·B2를 격리 안에서 한 번씩 읽고, 기록의 나머지 세 칸을 채운다 | 승인한 상한만(제안: Claude 3회, Codex 2회) | 1, 승인 |
-| 3 | **A1 이어서:** 합성과 주장 대조, 결정 카드, Q4 비교, 사용량 두 층 표시, 취소 | 없음(모의) | 2의 결과 |
-| 4 | **B3 V04-03 pilot과 사용량 비교** | 여러 번 | 3, 승인 |
+| 2 | 승인된 소수 호출: `aux-pc-wsl` tier 2와 B1·B2 — **끝남**(Claude 3회·Codex 2회, 남은 것은 아래) | 승인한 상한만 | 1, 승인 |
+| 3 | **A1 이어서(다음 일):** 합성과 주장 대조, 결정 카드, Q4 비교, 사용량 두 층 표시, 취소 | 없음(모의) | 2의 결과 |
+| 4 | **B3 V04-03 pilot과 사용량 비교** | 여러 번 | 3, 승인, Codex 문맥 판정(3절) |
 | — | B4 agy 관측 | 몇 회 | 사용자가 agy를 켤 때 |
 
 ### 1단계 — 끝남
 
-A1 리뷰가 먼저 하라고 한 관문 보강(N0, [반영 기록](docs/reviews/2026-09-23-a1-handoff-review/RESPONSE.md))과 N1–N6을 마쳤다. 항목별 경위는 [바로 전 판](docs/handoff/2026-09-23-before-stage2.md) 4절에 있고, 남은 한계는 아래 K 표로 옮겼다. 2단계에 바로 쓰는 것만 적는다.
+A1 리뷰가 먼저 하라고 한 관문 보강(N0, [반영 기록](docs/reviews/2026-09-23-a1-handoff-review/RESPONSE.md))과 N1–N6을 마쳤다. 항목별 경위는 [1단계 직후 판](docs/handoff/2026-09-23-before-stage2.md) 4절에 있고, 남은 한계는 아래 K 표로 옮겼다. N1 실제 실행기는 아직 서버에 연결하지 않았다 — 서버에서 실제 CLI를 고르는 설정(참여자별 전체 모델 이름)은 3단계 이후에 붙인다(K17).
 
-- N1 실제 실행기([`app/cli_executor.py`](app/cli_executor.py))는 서버에 연결하지 않았다. 서버에서 실제 CLI를 고르는 설정(참여자별 전체 모델 이름)은 2단계 결과를 본 뒤 붙인다(K17).
-- N2 관측 도구([`tools/w2/observe.py`](tools/w2/observe.py)): `plan`으로 실제 설치의 argv와 연결 경로가 성립하는 것을 확인했다(실행 없음).
-- N3: 인증 연결을 좁히지 않은 이유는 토큰 갱신이다. 저장하지 못하면 사용자의 로그인이 풀릴 수 있다. 2단계 호출마다 설정 폴더의 파일 변경(이름·크기·수정 시각만)이 `config_changes`로 남으니, 그것을 보고 덮을 하위 폴더를 정한다(K09).
-- N4: `aux-pc-wsl` 기록은 설치·로그인만 관측이라 실행 허가가 없다. 2단계가 채운다.
+### 2단계 — 끝남
 
-### 2단계 — 승인된 소수 호출 (다음 일)
+2026-09-23 사용자 승인(Claude 최대 3·Codex 최대 2, 실패 포함, 호출당 300초, 기대와 다르면 그 provider 멈춤, 한도 메시지면 모두 멈춤)으로 `b1`·`b2`·`p3-claude`·`p3-codex`·`b1-combo`를 한 번씩 불렀다. 모델은 Claude `claude-sonnet-5`(세션이 고름), Codex `gpt-6-luna`(사용자가 정함). 다섯 번 모두 도구의 기대대로였고 한도 메시지는 없었다. 결과와 판정은 [2단계 기록](docs/experiments/w2-isolation/stage2-aux-pc-wsl.md)과 [`manifest.v2.json`](docs/experiments/v04-01-inventory/hosts/aux-pc-wsl/manifest.v2.json)에 있다. 이 승인은 다 썼다.
 
-한 번 부르고 결과를 읽은 뒤 다음으로 간다. 실패하면 그 provider를 멈추고 원인부터 본다. 실패를 우회 플래그나 다른 백엔드로 조용히 바꾸지 않는다. tier 2와 B1·B2를 같은 호출로 확인할 수 있으면 겹쳐 부르지 않는다.
+**남은 것 — 하려면 새 승인이 필요하다:**
 
-**승인받을 것** — 사용자에게 아래를 한꺼번에 묻고, 사용자가 정한 값만 쓴다(2절 19).
+- **K01 큰 입력.** 2단계에서 `--pad-kb`를 쓰지 않아 파이프 버퍼보다 큰 입력을 보내지 못했다(절차의 명령과 관측 목록을 맞춰 보지 않은 실수). `observe.py call b1 <모델> --pad-kb 96` 한 번이면 입력 전달과 보고 토큰의 차이를 함께 본다.
+- **Codex 문맥 판정(`failed`).** 참여자 구성(빈 작업 폴더)에서 무엇이 문맥에 들어가는지 볼 probe가 아직 없다. `plain-codex`는 빈 폴더지만 문맥 내용을 보이지 않는다. 후보는 `--ephemeral` 없이 한 번 돌려 Codex가 남기는 세션 기록에서 지시문·도구 목록을 읽는 것이다 — probe를 새로 만들고 승인받는다. 또는 사용자가 빈 폴더 완화를 정책으로 받아들인다(3절).
+- **K09 연결 좁히기.** Claude는 `.credentials.json`·`~/.claude.json`·쓸 곳(`backups`·`cache`)만 쓰기로 두고 나머지를 빈 tmpfs로 덮는 구성이 후보다. Codex는 상태 DB·플러그인 캐시를 모든 실행이 공유한다. 바꾼 구성으로 한 번씩 다시 불러야 기록의 관측과 맞는다.
 
-| 항목 | claude 세션의 제안 |
-|---|---|
-| provider별 최대 시작 횟수(실패 포함) | Claude 3 — `b1`, `p3-claude`, 선택 `b1-combo`. Codex 2 — `b2`, `p3-codex`(사용량이 남으면 `plain-codex`를 따로 승인) |
-| 호출당 timeout | 300초 |
-| 멈추는 조건 | 결과가 기대와 다르면 그 provider를 멈춘다(도구가 강제한다. 원인을 본 뒤 `--after-failure`로만 다시 부른다). 사용량 한도 메시지가 나오면 모두 멈추고 알린다 |
-| 전체 모델 이름 | 사용자가 정한다. 별칭(`opus` 등)으로 부르지 않는다(K43). 이 관측은 CLI 경로를 보는 것이라 사용량이 적은 모델이면 충분하다. Codex 모델 이름은 추측하지 않는다 — 모르면 WSL의 `~/.codex/config.toml`에 `model` 값이 있는지 보여 주고 확인받는다 |
-
-**절차** — `aux-pc-wsl`의 로그인 셸에서, 저장소 루트(`/mnt/c/ai/decision-model_lab`)에서:
+**다시 부를 때의 절차** — `aux-pc-wsl`의 로그인 셸에서, 저장소 루트(`/mnt/c/ai/decision-model_lab`)에서:
 
 1. `python3 tools/w2/observe.py plan` — 모델 호출 없음. probe마다 실제로 돌릴 argv, 연결 경로, 승인 상태를 본다. "not on the child PATH"면 로그인 셸이 아니다.
-2. `python3 tools/w2/observe.py approve --claude 3 --codex 2 --timeout 300 --note "<누가·언제·어디서 승인>"` — 사용자가 정한 값 그대로.
-3. `python3 tools/w2/observe.py call b1 <전체 모델 이름>` — 한 번 부르고 출력 JSON(`as_expected`, init 요약, `config_changes`, stderr 힌트, 토큰)을 읽는다. 종료 코드 3은 기대와 다르다는 뜻이다 — 그 provider는 멈춘다. 종료 코드 2는 부르지 않았다는 뜻이다(승인 없음, 상한 소진, 멈춤 규칙, 시작 전 거절 — 사용량을 쓰지 않았다). 다음 probe는 읽은 뒤에 부른다. `p3-*`는 모델 응답 없이 거절돼야 하는 호출이지만 상한에는 센다.
+2. `python3 tools/w2/observe.py approve --claude <n> --codex <n> --timeout <초> --note "<누가·언제·어디서 승인>"` — **사용자가 새로 정한 값 그대로.** 모델 이름은 전체 이름으로 받는다(K43). 호출 전에 관측할 목록과 명령의 옵션(`--pad-kb` 등)을 맞춰 본다.
+3. `python3 tools/w2/observe.py call <probe> <전체 모델 이름>` — 한 번 부르고 출력 JSON(`as_expected`, `argv_run`, init 요약, `config_changes`, stderr 힌트, 토큰)을 읽는다. 도구의 `as_expected`는 답을 받았는지까지다 — 금지 파일 내용, 표식, 쓰기 결과는 답과 원 출력에서 직접 본다. 종료 코드 3은 기대와 다르다는 뜻이다 — 그 provider는 멈춘다. 종료 코드 2는 부르지 않았다는 뜻이다(사용량을 쓰지 않았다). `p3-*`는 모델 응답 없이 거절돼야 하는 호출이지만 상한에는 센다.
 4. `python3 tools/w2/observe.py status`로 남은 상한을 본다.
 
-- 원 출력은 WSL 안 `~/.local/state/dml-observe/`(저장소 밖, 격리 안에 연결하지 않음)에 남는다. 저장소에는 요약만 옮기고, 계정 이메일·조직 ID·토큰은 옮기지 않는다.
-- Windows 쪽 세션이 부를 때는 명령을 스크립트 파일로 만들어 `wsl.exe -d Ubuntu-24.04 -- bash -l <스크립트의 /mnt/c 경로>`로 넘긴다(아래 참고의 인자 깨짐).
-
-**끝나면 남길 것:**
-
-- 요약 기록: `docs/experiments/w2-isolation/`에 새 파일(예: `stage2-aux-pc-wsl.md`) — 날짜, 승인 내용, probe별 argv 변화·결과·기대 여부·토큰, `config_changes`. 1절 "기기와 관측"의 `aux-pc-wsl` 기록 줄에 링크한다.
-- [`manifest.v2.json`](docs/experiments/v04-01-inventory/hosts/aux-pc-wsl/manifest.v2.json)의 `transport_observed`·`context_conformance`·`permission_conformance`를 `observed` 또는 `failed`로, 근거(`evidence`)와 날짜(`observed_at`)를 붙여 채운다. 검사: `python tools/runtime_inventory.py --validate <기록>`. 다섯 칸이 모두 `observed`여야 실제 실행기가 허가된다. 문서만 보고 채우지 않는다.
-- K 표에서 2단계가 닫는 곳인 K01·K02·K09·K12·K17·K29·K30·K31·K33·K36·K39·K43을 결과대로 닫거나 고친다.
-
-**관측할 것:**
-
-- **tier 2(`aux-pc-wsl`):** [V04-01 절차서](docs/experiments/v04-01-inventory/README.md)의 구독 호출. Windows 기록을 복사하지 않는다. `b1`(구독 인증·구조화 출력·깨끗한 문맥, P1·P4), `p3-*`(잘못된 값, P3), `plain-codex`(P1·P4)가 겹친다.
-- **B1. Claude.** 격리 안에서 다음을 본다.
-  - 위치 인자 없는 `-p`가 stdin을 질문으로 읽는지(K29)
-  - `CLAUDE.md`를 싣지 않는지: 자기보고 대신 stream-json의 init 이벤트로 본다(K31)
-  - `--restricted`와 `--safe-mode`를 함께 준 조합, 토큰 갱신 쓰기, 큰 한글·선행 대시 입력
-  - CLI가 보고한 입력 토큰과 입력 크기가 대략 맞는지(K01의 보강 후보)
-- **B2. Codex.** bubblewrap 안에서 다음을 본다.
-  - 허용 자료는 읽고 다른 참여자 초안은 못 읽는지
-  - 자체 bubblewrap의 중첩(K12)
-  - 명령 거절 문자열(K30)
-  - stdin만 받은 논의자가 도구를 시도하지 않는지와 입력 토큰. Windows 첫 관측은 도구 시도 때문에 27,000–41,000토큰이었다.
-
-승인이 미뤄지는 동안 모델 없이 할 수 있는 다음 일은 취소(K19)다. 실제 CLI를 서버로 돌리기 전에 필요하고 2단계 결과에 기대지 않는다. 순서는 사용자에게 확인하고 시작한다.
+- 원 출력은 WSL 안 `~/.local/state/dml-observe/`(저장소 밖, 격리 안에 연결하지 않음)에 남는다. 저장소에는 요약만 옮기고, 계정 이메일·조직 ID·토큰은 옮기지 않는다. **요약도 옮기기 전에 읽는다** — 2단계에서 CLI가 쓴 파일 이름에 조직 UUID가 들어 있었다(지금은 도구가 가린다).
+- Windows 쪽 세션이 부를 때는 명령을 스크립트 파일로 만들어 `wsl.exe -d Ubuntu-24.04 -- bash -l <스크립트의 /mnt/c 경로>`로 넘긴다(아래 참고의 인자 깨짐). 스크립트는 저장소의 무시 폴더(`raw-traces/`)나 AppData 밖에 둔다.
 
 ### 3단계 이후
 
-- **A1 이어서:**
+- **A1 이어서(다음 일, 모델 호출 없음).** 순서는 사용자에게 확인하고 시작한다.
   - 합성자와 합성 없는 보고(`report_without_synthesis`)
   - [결정 카드](design/project/components/DecisionCard/README.md)
   - 첫 화면 Q4 비교
-  - 사용량 두 층 표시(2절 4, K23)
+  - 사용량 두 층 표시(2절 4, K23). Claude는 호출하는 김에 stream-json의 `rate_limit_event`로 계정 한도 비율을 준다(2단계 관측, 추가 호출 없음). 참여자 argv를 `json`에서 stream-json으로 바꿀지 정해야 한다
   - 취소(K19)
   - 공통 자료 첨부(옛 A6)
   - 결과 폴더 감시(옛 A2)
-- **B3 pilot:** Claude와 Codex가 서로 모르게 읽기 전용 초안을 내고 합성한다.
+  - 사용자가 PR #8의 TM 항목을 받으면: 화면 조회의 요청 겹침 막기, 오래된 응답 버리기, 연결 끊김과 마지막 확인 시각 표시(적용 계획 A)
+- **B3 pilot:** Claude와 Codex가 서로 모르게 읽기 전용 초안을 내고 합성한다. Codex가 실행 허가를 받아야 한다(3절 Codex 문맥 판정).
   - 배경: 사용자는 AionUi를 쓰지 않는다. 각 앱을 직접 쓸 때보다 사용량을 몇 배 빨리 소모했기 때문이다. 우리 앱이 같은 문제를 만들지 않는지가 B3의 목적이다.
   - 같은 질문을 세 방식으로 돌려 비교한다: (a) 각 앱에서 직접, (b) 우리 앱의 `single`, (c) `cross_check`.
   - **구독 한도는 토큰에 비례해 줄지 않는다**(사용자 지적). 그래서 두 층으로 잰다: CLI가 보고한 토큰·호출 수·시간(비교 기준), 그리고 각 회사가 보여 주는 한도 %를 묶음 전후로 읽은 값(실제 효과, 잡음 있음).
@@ -209,49 +192,49 @@ A1 리뷰가 먼저 하라고 한 관문 보강(N0, [반영 기록](docs/reviews
 
 | ID | 영역 | 한계·문제 | 지금의 대응 | 닫는 곳 |
 |---|---|---|---|---|
-| K01 | 실행 코어 | "CLI가 입력 일부만 읽고 닫음"은 입력이 파이프 버퍼보다 클 때만 쓰는 쪽에서 드러난다. 파이프에 다 썼다는 것이 CLI가 다 읽었다는 증거도 아니다 | `input_delivery`를 남기고, 완전하지 않으면 `input_error`. A1은 전달 기록이 없는 결과(`None`)도 받지 않는다 | B1에서 보고된 입력 토큰과의 대조를 본다 |
-| K02 | 실행 코어 | Codex 명령 거절은 stderr의 문자열로만 안다. Linux Codex의 그 문자열은 아직 모른다(K30) | runner가 보관 상한과 상관없이 stderr 전체에서 표식을 센다(`stderr_counts`, 실제 실행기가 요청). 셀 수 없었는데 stderr가 잘렸으면 답을 받지 않는다 | B2(문자열) |
+| K01 | 실행 코어 | "CLI가 입력 일부만 읽고 닫음"은 입력이 파이프 버퍼보다 클 때만 쓰는 쪽에서 드러난다. 파이프에 다 썼다는 것이 CLI가 다 읽었다는 증거도 아니다 — 2단계 `p3-*`에서 CLI가 stdin을 읽지 않고 끝났는데 22바이트가 버퍼에 들어가 `complete`였다 | `input_delivery`를 남기고, 완전하지 않으면 `input_error`. A1은 전달 기록이 없는 결과(`None`)도 받지 않는다 | 큰 입력의 관측(`b1 --pad-kb 96`, 승인 필요). 2단계는 784바이트만 보냈고 보고 토큰은 시스템 프롬프트·캐시에 묻혀 대조할 수 없었다 |
+| K02 | 실행 코어 | Codex 명령 거절은 stderr의 문자열로만 안다. Linux Codex에서는 그런 문자열을 보지 못했다(K30) | runner가 보관 상한과 상관없이 stderr 전체에서 표식을 센다(`stderr_counts`, 실제 실행기가 요청). 셀 수 없었는데 stderr가 잘렸으면 답을 받지 않는다 | K30과 함께 |
 | K03 | 실행 코어 | 격리 없는 POSIX 실행은 자손 전체의 종료를 확인하지 못한다 | `tree_confirmed_empty=None` → 앱은 `unknown`. Linux 참여자는 `isolation.run()`으로만 | — |
 | K04 | 실행 코어 | 돌아온 뒤에도 파이프를 쥔 자손이 있으면 입출력 스레드·fd가 남는다(격리 없는 POSIX) | `runner.lingering()`으로 세고 정리 안 된 시도의 상한에 넣는다 | 격리 경로에서는 namespace가 정리한다 |
 | K05 | 실행 코어 | `CLEANUP_LIMIT`는 명시적 대기의 상한이지 벽시계 보장이 아니다 | 문구를 한정했다 | — |
 | K06 | 실행 코어 | Windows: job 배정 전에 생긴 자식은 추적하지 못한다. 끝낸 직후 프로세스 객체가 신호를 받기까지 짧은 틈이 있다 | 문서화, 시험이 기다린다 | Windows 경로는 동결(2절 15) |
 | K07 | 실행 코어 | agy는 질문을 명령줄로 보낸다(stdin 미확인). 그래서 `RunResult.argv`에 질문이 들어 있다 | 기록은 `ExecutionSpec.record()`로 | B4 |
 | K08 | 격리 | 네트워크를 공유한다. 참여자가 localhost 포트와 abstract unix 소켓에 닿고, 네트워크 서비스에 시켜 만든 작업은 종료 보장 밖이다 | 앱의 제어 API는 토큰으로 막았다 | 미정 |
-| K09 | 격리 | `~/.claude`·`~/.codex` 전체를 쓰기로 연결한다. 그 배포판에서 대화형으로 쓴 그 CLI의 세션 기록과 `settings.json`이 참여자에게 보인다 | 로그인 상태에는 인증 파일 하나면 됨을 봤다(N3). 토큰 갱신 저장 때문에 아직 좁히지 않았다 | 2단계(`config_changes`를 보고 하위 폴더 덮기) |
+| K09 | 격리 | `~/.claude`·`~/.codex` 전체를 쓰기로 연결한다. 그 배포판에서 대화형으로 쓴 그 CLI의 세션 기록과 `settings.json`, 그리고 앞선 참여자 실행이 남긴 상태(Codex의 상태 DB·계정 플러그인 캐시, Claude의 `.claude.json` 백업)가 참여자에게 보인다 | 로그인 상태에는 인증 파일 하나면 됨을 봤다(N3). 2단계에서 CLI가 실제로 쓰는 곳을 봤다 — Claude는 `~/.claude.json`·`backups`·`cache`, Codex는 상태 DB·캐시·플러그인·스킬. 토큰 갱신은 일어나지 않았다 | 좁힌 구성과 그 구성의 재관측(승인 필요, 4절 2단계 "남은 것") |
 | K10 | 격리 | 메모리·CPU 상한이 없다 | — | 미정 |
 | K11 | 격리 | `/etc` 전체와 `/usr`가 읽기 전용으로 보인다. 설정과 민감한 값이 있을 수 있는 호스트 경로다 | 신뢰 범위로 둔다. `never`는 이 자동 연결과도 비교해 겹치면 거절한다(A1 리뷰 A1-04) | — |
-| K12 | 격리 | Codex 자체 bubblewrap이 우리 bubblewrap 안에서 도는지 모른다. `--disable-userns`는 쓰지 않았다 | — | B2 |
 | K13 | 격리 | `aux-pc-wsl`은 AppArmor가 꺼져 있고, CI는 user namespace 제한을 sysctl로 푼다. 제한이 켜진 일반 Ubuntu에서의 운영은 보지 않았다 | — | 새 기기에서 확인 |
 | K14 | 격리 | 경로 검사와 마운트 사이에 파일이 바뀌는 경쟁 | 문서화 | — |
 | K15 | 격리 | bwrap 신뢰는 root 소유 `/usr/bin/bwrap` 확인이다. 같은 Python 프로세스 안의 코드가 내부 함수를 부르는 것은 막지 못한다 | 문서화 | — |
 | K16 | CLI·환경 | WSL의 Windows 실행 파일 가드는 경로·링크·`MZ` 내용으로 판정하는 경험칙이다. 사용자가 바꾼 automount root는 PATH 필터가 모른다 | 격리가 `/mnt`·`/init`·`/run`을 연결하지 않는 것이 실제 차단이다 | — |
-| K17 | 앱 | 실제 CLI 실행기(`app/cli_executor.py`)는 가짜 CLI로만 시험했다. 서버는 아직 모의 실행기만 쓴다 | 실제 격리 경로·수용 관문·늦은 결과 시험(WSL, CI). 기록(`runtime-inventory/2`)이 허가하지 않으면 시작 전에 거절한다 | 2단계(승인된 호출) |
+| K17 | 앱 | 서버는 아직 모의 실행기만 쓴다. 실제 CLI는 관측 도구가 실행기의 `prepare()` 경로로 부른 것뿐이고, `execute()`와 controller를 거친 실제 호출은 없다 | 실제 격리 경로·수용 관문·늦은 결과 시험(WSL, CI). 기록(`runtime-inventory/2`)이 허가하지 않으면 시작 전에 거절한다 — 지금 Codex는 거절된다 | 3단계 이후(서버의 실제 CLI 설정), B3 |
 | K18 | 앱 | 합성, 주장 대조, 결정 카드, Q4 비교가 없다. 초안 공개까지만 있다 | — | 3단계 |
 | K19 | 앱 | 취소가 없고, 취소 중 입력 전송 시험도 없다. 서버를 끄는 것이 지금 유일한 멈춤 수단이다 | 다시 시작한 뒤 대기 시도는 사용자가 "이어서 시작"을 눌러야 시작한다. 멈춘 상태는 메모리에만 있다 | 3단계 |
 | K20 | 앱 | 원장 잠금은 한 기기 안의 파일 잠금이다. 기기 여러 대가 한 원장을 나눠 쓰는 것은 지원하지 않는다. 사건 순서는 실행별 순번뿐이다 | 한 원장은 한 controller만 연다. 시작과 결과 반영은 기대한 상태·시도 ID가 맞을 때만 하고, 늦은 결과는 사건으로만 남긴다(A1 리뷰 A1-03) | — |
 | K21 | 앱 | 원본 앱에 정말 이 질문을 넣었는지는 확인하지 못한다. 실행 표식은 모델이 되말해야 드러나고, 되말하지 않은 답(`marker_echo: missing`)도 받는다 | 다른 실행·다른 참여자의 표식이 달린 답은 거절한다. 사용자 확인은 따로 기록한다(N5) | — |
 | K22 | 앱 | 원본 앱 참여자의 독립성은 확인할 수 없다 | 정족수 정책을 실행마다 고정한다. 기본(`independent_only`)은 세지 않고 보조 근거로 공개하고, `include_unverified`는 세되 "독립 정족수 충족"이라고 쓰지 않는다(Q6, N5) | — |
-| K23 | 앱 | 구독 사용량 두 층 표시(2절 4)가 없다. 예산은 실행별로 CLI 참여자당 한 번이고, 실행 간 누적 예산이 없다 | — | 3단계, B3 |
+| K23 | 앱 | 구독 사용량 두 층 표시(2절 4)가 없다. 예산은 실행별로 CLI 참여자당 한 번이고, 실행 간 누적 예산이 없다 | Claude의 계정 한도 비율은 stream-json의 `rate_limit_event`로 온다(2단계). 참여자 argv의 `json` 결과에는 없다 | 3단계, B3 |
 | K24 | 디자인 | 토큰 5쌍이 일반 글자 대비(4.5:1)에 못 미친다(`unknown`은 세 면 모두, `ink-200`은 `surface-200` 위) | 화면은 그 조합을 글자에 쓰지 않는다 — 시험이 지킨다(N6) | 급하지 않음(토큰 수정은 아티팩트와 함께) |
 | K25 | 앱 | 화면이 TypeScript가 아니라 빌드 없는 HTML·JS다(node 없음) | — | Q3 |
 | K26 | 앱 | 제어 API 토큰은 controller 데이터 폴더의 파일과 서버 출력에 있다. 격리 밖에서 같은 사용자로 도는 프로세스는 읽을 수 있다 — 신뢰 경계는 사용자 계정이다 | 격리 안에는 그 폴더를 연결하지 않는다(`never`). 토큰 파일은 처음부터 0600으로 만들어 통째로 바꾸고, 데이터 폴더는 0700이다(POSIX) | — |
 | K27 | 앱 | claude 세션은 A1 화면을 눈으로 확인하지 못했다(브라우저 패널이 가려짐). 페이지 글자, API, CSS 대비 계산으로만 확인했다. N5·N6에서 바뀐 화면(정족수 정책 선택, 질문 복사, 사용자 확인, `UNKNOWN` 라벨)도 마찬가지다 | — | 브라우저 패널을 쓸 수 있는 세션이 스크린샷으로 보거나, 사람이 보고 알려 주면 닫힌다 |
 | K28 | 앱 | journal 이전은 올리는 방향뿐이다. 되돌리는 절차는 없다 | 스키마 버전(`user_version`)을 두고, 예전 journal은 열 때 한 거래로 올린다. 새 버전 journal은 건드리지 않고 거절한다(A1 리뷰 반영) | — |
-| K29 | CLI | `claude -p`가 위치 인자 없이 stdin을 질문으로 읽는 것을 설치 버전에서 관측하지 않았다(문서 근거뿐) | — | B1 |
-| K30 | CLI | Linux Codex의 명령 거절 문자열을 모른다. `tools_rejected`는 Windows 문자열을 찾는다 | — | B2 |
-| K31 | CLI | Claude가 `CLAUDE.md`를 싣지 않는다는 것은 모델의 자기보고뿐이다 | — | B1 |
-| K32 | CLI | Codex·agy는 결과에 모델 이름이 없어서 조용한 강등을 결과로 잡지 못한다 | — | B4(agy init) |
-| K33 | 도구 | WSL용 관측 도구([`observe.py`](tools/w2/observe.py))는 가짜 CLI로만 시험했다. 실제 호출은 한 번도 없다. Claude의 init 이벤트 필드는 aux-pc 기록과 V04-01 절차서에 기댄 것이다 | 요약은 필드를 골라 옮기고, 모르는 필드는 이름만 남긴다 | 2단계 |
+| K30 | CLI | Linux Codex가 실행 전 거절 문자열을 내는지 모른다. `tools_rejected`는 Windows 문자열을 찾는다. 2단계 `b2`의 stderr는 비었고, 모델은 쓰기를 시도하지 않았다. 중첩 샌드박스는 쓰기를 명령 안의 `Read-only file system`으로 막는다(모델 없는 진단) | 거절 문자열이 없어도 쓰기는 막힌다. 답의 수용은 `interpret` 판정대로 | 모델이 쓰기를 시도하는 관측이 필요해지면 |
+| K31 | CLI | Claude가 `CLAUDE.md`를 싣지 않는다는 것은 모델의 보고뿐이다. 2.1.280의 stream-json init에는 불러온 지시문·메모리 파일 칸이 없어 init으로 확인할 수 없다(2단계) | 참여자 작업 폴더는 비어 있고 이 배포판에 `~/.claude/CLAUDE.md`가 없다. 두 조합 모두 모델 보고는 "없음" | 큰 표식 파일을 두고 보고 토큰의 차이를 보는 관측(승인 필요) |
+| K32 | CLI | Codex·agy는 결과에 모델 이름이 없어서 조용한 강등을 결과로 잡지 못한다 | Codex의 모델 목록 캐시에 요청한 이름(`gpt-6-luna`)이 있는 것까지 봤다(2단계) | B4(agy init) |
 | K34 | CLI | Windows 전용 사실(Codex #42172, PowerShell 5.1 재시도, 작업 폴더 밖 읽기) | adapter의 `codex_windows_sandbox`. Codex blind 참여는 WSL에서만 | Windows 경로는 동결 |
-| K38 | CLI | Codex는 작업 폴더의 `AGENTS.md`를 싣는다 | 참여자 작업 폴더는 controller가 시도마다 만든 빈 폴더다(지시문 파일 없음). 실제 실행기도 그 폴더에서 돈다 | — |
-| K39 | CLI | Codex의 read-only 샌드박스는 쓰기만 막고 읽기는 막지 않는다 | 읽기 경계는 bubblewrap 허용 목록이 맡는다. 확인 전까지 Codex 초안의 blind는 "미확인" | B2 |
+| K38 | CLI | Codex는 작업 폴더의 `AGENTS.md`를 싣는다 — `--ignore-user-config --ignore-rules`로도 막히지 않는다(WSL 2단계 `b2`에서도 같다). 그래서 기록의 Codex 문맥 판정이 `failed`다 | 참여자 작업 폴더는 controller가 시도마다 만든 빈 폴더다(지시문 파일 없음). 실제 실행기도 그 폴더에서 돈다 | 사용자 판단(3절) |
+| K39 | CLI | Codex의 read-only 샌드박스는 쓰기만 막고 읽기는 막지 않는다 — 2단계 `b2`에서 Codex가 다른 참여자 초안에 명령을 실제로 돌렸다 | 읽기 경계는 bubblewrap 허용 목록이 맡는다 — 그 초안은 연결되지 않아 `No such file`이었다(2단계). 격리 밖에서 Codex를 돌리면 이 경계가 없다 | — |
 | K40 | CLI | agy는 `--output-format`의 없는 값을 조용히 무시한다 | adapter가 값을 고정하고, JSON이 아니면 형식 실패 | — |
 | K35 | 과정 | 모든 관측은 PC 한 대와 그 안의 WSL 배포판 하나, 2026-09-23 하루치다. 운용 PC 관측이 없다 | — | 필요할 때 같은 절차서로 |
-| K36 | 과정 | WSL에서 모델 호출이 0회다. 격리 안에서 실제 질의가 끝까지 도는지 모른다 | 모의 CLI로 같은 경로를 탔다 | 2단계 |
 | K37 | 과정 | claude 세션은 CI 원문 로그를 읽지 못한다(익명 요청 403). 리뷰어는 읽을 수 있었다 | CI는 `DML_REQUIRE_BWRAP=1`로 격리 시험의 건너뛰기를 막는다. 결과(녹색·실패)는 익명 API로 본다(6절) | — |
 | K41 | 앱 | 공개 전에도 참여자 상태가 바뀌는 시각을 반복 조회로 대략 알 수 있다. 정확한 시간·토큰·길이는 넘기지 않는다 | 운영자용 거친 상태로 허용한다. 참여자에게는 제어 API 토큰이 없다(A1 리뷰 질문 4) | — |
 | K42 | 앱 | 제어 API의 방어는 Bearer 토큰, Host 검사, 요청 크기 상한뿐이다. Origin 허용 목록, 콘텐츠 타입 강제, 프레임 삽입 정책, 읽기 시간 제한, 브라우저 교차 출처 음성 시험이 없다 | 토큰을 머리글로만 받으므로 교차 출처 요청은 preflight에서 막힌다고 본다 — 브라우저로는 시험하지 않았다(A1 리뷰 질문 5) | 급하지 않음 |
-| K43 | 앱 | 보고된 모델이 요청과 다르면 받지 않고 구성 축소로 드러낸다. 받아들일지 사용자에게 묻는 보류 상태는 없다. 별칭으로 요청하면 보고된 전체 이름과 달라 보일 수 있다 | 요청은 전체 이름으로 한다(N1) | B1 |
+| K43 | 앱 | 보고된 모델이 요청과 다르면 받지 않고 구성 축소로 드러낸다. 받아들일지 사용자에게 묻는 보류 상태는 없다. 별칭으로 요청하면 보고된 전체 이름과 달라 보일 수 있다 | 요청은 전체 이름으로 한다(N1). 2단계에서 `claude-sonnet-5`로 요청해 init과 `modelUsage`가 같은 이름을 보고했다 | — |
+| K44 | CLI | Codex는 `--ignore-user-config`로도 계정의 원격 플러그인(사용자가 만든 것 포함)과 공급자 스킬을 `~/.codex`에 받는다. 그것이 참여자 문맥에 들어가는지는 모른다 | 기록의 Codex 문맥 판정을 `failed`로 두어 실제 실행기가 Codex를 부르지 않는다 | Codex 문맥 판정(3절) |
+| K45 | CLI | Claude `--safe-mode`를 더하면 init에 내장 플러그인 `agents-md`가 나타난다. 무엇을 하는지 모른다. 그때도 모델은 `AGENTS.md` 표식을 보고하지 않았다 | 참여자 argv는 `--restricted`만 쓴다 | `--safe-mode`를 쓰기로 할 때 |
+
+2단계에서 닫은 것: K12(Codex 샌드박스가 우리 경계 안에서 선다 — 모델 없는 진단), K29(`-p`는 stdin을 질문으로 읽는다), K33(관측 도구가 실제 호출을 했다), K36(격리 안에서 실제 질의가 끝까지 돈다). 근거는 [2단계 기록](docs/experiments/w2-isolation/stage2-aux-pc-wsl.md)에 있다.
 
 ### 급하지 않은 것
 
@@ -286,6 +269,7 @@ A1 리뷰가 먼저 하라고 한 관문 보강(N0, [반영 기록](docs/reviews
 - 문서만 보고 `configured = true`로 만들지 않는다. `runtime-inventory/2` 기록의 칸도 관측 없이 `observed`로 바꾸지 않는다.
 - **승인 없이 모델을 부르지 않는다.** 사용량이 막히면 멈추고 알린다.
 - **`observe.py approve`는 사용자가 새로 승인할 때만 쓴다.** 다시 쓰면 사용 횟수를 그 뒤부터 센다 — 상한을 늘리는 수단으로 쓰지 않는다. 노트에는 누가·언제 승인했는지 적는다.
+- **관측 요약을 읽지 않고 저장소로 옮기지 않는다.** CLI가 쓴 파일 이름에 조직 UUID가 들어 있었다(2단계). 도구가 모양으로 가리지만, 새 모양의 식별자는 못 가린다.
 - **exit 0이나 "답이 나왔다"를 성공으로 치지 않는다.** `interpret`의 판정, 입력 전달, 종료 확인을 모두 본다(app의 결과 수용 관문).
 - **runner의 `unit_confirmed_empty`나 membership의 판정만 보고 자원·예산을 풀거나 단계를 넘기지 않는다.**
 - **Linux에서 참여자를 `isolation.run()` 밖에서 실행하지 않는다.** WSL2 안에서 Windows 실행 파일(`*.exe`, `/mnt/c`의 CLI)을 참여자로 부르지 않고, Windows HOME·자격증명 폴더를 WSL에 연결하지 않는다.
@@ -319,6 +303,7 @@ WSL(`aux-pc-wsl`)의 로그인 셸에서 저장소 루트(`/mnt/c/ai/decision-mo
 ```bash
 DML_REQUIRE_BWRAP=1 python3 -m unittest discover -s tests
 python3 tools/w2/cli_boundary.py
+python3 tools/w2/codex_sandbox.py
 python3 tools/w2/observe.py plan
 ```
 
