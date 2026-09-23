@@ -1,6 +1,8 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-23** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout) · 브랜치 `claude/v04-01-review-fixes-20260923`
+최종 갱신 **2026-09-23** · 작성 세션: ChatGPT 웹 (Hermes 조사 인계·탐색 링크만) · 브랜치 `chatgpt/hermes-patterns-20260923`
+
+아래 보조 PC 환경 관측은 기존 claude 세션(Claude Opus 5.5, 보조 PC의 로컬 checkout, `claude/v04-01-review-fixes-20260923`)의 기록이다. 이번 ChatGPT 웹 세션은 GitHub 소스·공식 문서만 검토했으며 사용자 PC·설치·로그인·모델 호출·디자인 발행 상태를 재관측하지 않았다.
 
 이 파일 하나에서 시작한다. 절 구성은 고정이고 CI가 확인한다. 규칙은 [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있다.
 
@@ -25,11 +27,11 @@
 | 산출물 | 원본 | 발행본 |
 |---|---|---|
 | 작업 개념도 | [docs/concept/](docs/concept/README.md) | [아티팩트](https://claude.ai/artifact/AZJfdnmMBjpEAtqsSHzjp8) |
-| 디자인 시스템 `Ledger` | [design/](design/README.md) | [아티팩트](https://claude.ai/artifact/8tq8q5P8Pj7bpUtCF77FZA) — 2026-09-23 이 브랜치의 `design/`과 맞춤 |
+| 디자인 시스템 `Ledger` | [design/](design/README.md) | [아티팩트](https://claude.ai/artifact/8tq8q5P8Pj7bpUtCF77FZA) — 2026-09-23 기존 claude 세션이 기준판의 `design/`과 맞춤 |
 | 검토 기록 | [docs/reviews/](docs/reviews/README.md) | — |
 | 지난 인계 | [docs/handoff/](docs/handoff/README.md) | — |
 
-### 관측한 환경 — 보조 PC, 2026-09-23, 이 세션
+### 관측한 환경 — 보조 PC, 2026-09-23, 기존 claude 세션
 
 **aux-pc의 V04-01은 끝났다** — 설치, tier 1, tier 2(세 CLI), 정책 확인, 판정. 상세는 [aux-pc 결과](docs/experiments/v04-01-inventory/hosts/aux-pc/RESULTS.md)와 [tier 2 manifest](docs/experiments/v04-01-inventory/hosts/aux-pc/manifest.tier2.json).
 
@@ -73,13 +75,17 @@
 
 ## 3. 진행 중인 작업
 
-2026-09-23의 모든 작업은 main에 병합됐다 — PR #3, ChatGPT의 V04-01 리뷰([PR #4](https://github.com/inlight37-design/decision-model_lab/pull/4), `chatgpt/review-v04-01-20260923`)와 그 반영(`claude/v04-01-review-fixes-20260923`). 사용자는 **CI 녹색을 확인한 claude 세션이 main에 직접 병합하는 것**을 허락했다(2026-09-23).
+Hermes 조사 착수 전의 작업은 main에 병합됐다 — PR #3, ChatGPT의 V04-01 리뷰([PR #4](https://github.com/inlight37-design/decision-model_lab/pull/4), `chatgpt/review-v04-01-20260923`)와 그 반영(`claude/v04-01-review-fixes-20260923`). 사용자는 **CI 녹색을 확인한 claude 세션이 main에 직접 병합하는 것**을 허락했다(2026-09-23).
 
-**지금 병합되지 않은 브랜치: 없음.** 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 이 줄을 다시 "없음"으로 돌린다. `git fetch` 결과와 다르면 git이 맞다.
+**지금 병합되지 않은 작업:** [PR #5 — Hermes 패턴 선별 조사](https://github.com/inlight37-design/decision-model_lab/pull/5), 브랜치 `chatgpt/hermes-patterns-20260923`. [조사 시작 문서](docs/research/hermes-2026-09-23/README.md)에 요약·상세 분석·적용 시험·commit 고정 근거가 있다. 사용자 요청에 따른 날짜 고정 연구이며 런타임 구현, D/E/F 원장 추가, 사용자 PC 변경은 하지 않았다. CI 결과는 PR의 checks와 [작업 기록](docs/research/hermes-2026-09-23/WORKLOG.md)을 확인한다.
+
+병합하는 세션은 이 절에서 PR #5를 완료 기록으로 옮기고 진행 중 작업을 다시 확인한다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다.
 
 ## 4. 다음 작업
 
 **V04-01(aux-pc)은 끝났다.** 판정: V04-03은 **Claude Code·Codex 두 경로로 진행 가능**, Antigravity는 조건부. 근거는 [aux-pc RESULTS](docs/experiments/v04-01-inventory/hosts/aux-pc/RESULTS.md)의 판정 표.
+
+Hermes 조사에서 제안한 [HP-01/02/03](docs/research/hermes-2026-09-23/ADOPTION_PLAN.md)은 아래 mock runner·문맥/권한 conformance에 참고한다. **exec 우선과 V04-03 순서는 바꾸지 않는다.** 스킬·recall·MoA·DB·App Server 확장은 pilot 이후의 조건부 후보이며 전부 구현한 뒤 pilot을 시작하라는 뜻이 아니다.
 
 **① 남은 사용자 결정 — agy를 이 앱에서 구동할지** (V04-03은 Claude Code·Codex만으로 되므로 급하지 않다)
 
