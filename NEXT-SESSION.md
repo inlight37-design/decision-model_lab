@@ -52,7 +52,6 @@
 - **WSL2 — `aux-pc-wsl`**([기록](docs/experiments/v04-01-inventory/hosts/aux-pc-wsl/RESULTS.md)). 사용자가 2026-09-23 설치했다. WSL 2.7.14, Ubuntu 24.04.5, systemd 켜짐, 재부팅 불필요. 공식 설치 스크립트로 Claude Code 2.1.280, Codex 0.156.1을 `~/.local/bin`에 설치했다(tier 1 PASS). 사용자가 **로그인했다**(Claude `claude.ai`·`firstParty`, Codex ChatGPT)고 bubblewrap 0.9.0을 설치했다. tier 2(구독 호출)는 아직이다. AppArmor가 꺼져 있고 user·PID namespace를 권한 없이 만들 수 있다. PATH에 Windows 폴더(Windows 쪽 CLI 설치 폴더 포함)가 이어 붙어 있다 — `core/env.py`가 막는다. Codex는 Linux 샌드박스용 bubblewrap을 스스로 들고 온다. **W2 경계 시험 통과**(모델 없음, [기록](docs/experiments/w2-isolation/aux-pc-wsl.md)): 허용한 것만 보이고, 떨어져 나간 손자도 PID namespace와 함께 끝나며, 두 CLI가 격리 안에서 자기 로그인만 보고 시작한다. localhost 포트에는 닿는다(네트워크 공유).
 
 ### 열린 결정
-
 | ID | 질문 | 상태 |
 |---|---|---|
 | Q1 | 어댑터 전송 | **확정 — exec 우선**(2026-09-23). ACP는 adapter 계층의 선택지로 남긴다 |
@@ -85,7 +84,9 @@
 
 2026-09-23의 작업은 모두 main에 병합됐다 — V04-01 리뷰([PR #4](https://github.com/inlight37-design/decision-model_lab/pull/4))와 반영, Hermes 패턴 조사([PR #5](https://github.com/inlight37-design/decision-model_lab/pull/5))와 교차 확인, V04-03 실행 코어, 첫 conformance와 Codex 샌드박스 원인 확인, 인계 정리(`claude/handoff-cleanup-20260923`). 사용자는 **CI 녹색을 확인한 claude 세션이 main에 직접 병합하는 것**을 허락했다(2026-09-23).
 
-**지금 병합되지 않은 브랜치: 없음.** 검토 요청서와 `env.resolve` 링크 우회 수정(`claude/review-request-20260923`), bubblewrap 격리와 W2 경계 시험(`claude/w2-isolation-20260923`), `aux-pc-wsl` 설치와 tier 1 기록(W1, `claude/wsl2-setup-20260923`), 경계 리뷰 보존과 반영(`claude/wsl2-boundary-review-20260923`, 4절 1단계)과 실행 명세·stdin(A4)·core 환경 모듈(A7, `claude/execution-spec-20260923`)은 병합됐다. 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 이 줄을 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다.
+**지금 병합되지 않은 브랜치: `chatgpt/review-wsl2-20260923`.** WSL2 전환과 구조·코드 간결성 검토([결과와 재현](docs/reviews/2026-09-23-wsl2-migration-review/README.md)). ChatGPT 세션은 GitHub와 웹 Linux 컨테이너에서 검토했고 사용자 PC·실제 모델은 실행하지 않았다. 운영 코드 변경이나 병합은 하지 않았다. 다음 세션은 발견별 재현과 우선순위를 확인한 뒤 작은 수정과 회귀 시험으로 반영한다.
+
+검토 요청서와 `env.resolve` 링크 우회 수정(`claude/review-request-20260923`), bubblewrap 격리와 W2 경계 시험(`claude/w2-isolation-20260923`), `aux-pc-wsl` 설치와 tier 1 기록(W1, `claude/wsl2-setup-20260923`), 경계 리뷰 보존과 반영(`claude/wsl2-boundary-review-20260923`, 4절 1단계)과 실행 명세·stdin(A4)·core 환경 모듈(A7, `claude/execution-spec-20260923`)은 병합됐다. 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 이 줄을 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다.
 
 ## 4. 다음 작업
 
