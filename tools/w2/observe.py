@@ -276,7 +276,8 @@ def call(state: Path, probe: str, model: str, *, pad_kb: int = 0, after_failure:
     if sys.platform != "linux":
         raise ObserveError("observation runs on Linux and WSL2 only")
     approval, provider = check_allowed(state, probe, after_failure)
-    executor = executor or CliExecutor(never=(str(state),))
+    # 관측 도구는 실행 허가를 계산하지 않는다 — 허가의 근거가 될 관측을 만드는 쪽이다. 대신 승인 상한을 지킨다
+    executor = executor or CliExecutor(never=(str(state),), unchecked=True)
     spec = ParticipantSpec(probe, probe, provider, CLI, ADAPTER[provider], model)
     root = Path(tempfile.mkdtemp(prefix="dml-observe-"))
     try:
@@ -323,7 +324,7 @@ def call(state: Path, probe: str, model: str, *, pad_kb: int = 0, after_failure:
 
 def plan(state: Path, executor: CliExecutor | None = None, model: str = "model-placeholder") -> dict:
     """모델 호출 없음. probe마다 실행 명세(질문 본문 없이)와 격리 경계를 보인다."""
-    executor = executor or CliExecutor(never=(str(state),))
+    executor = executor or CliExecutor(never=(str(state),), unchecked=True)
     hide = lambda s: s.replace(executor.home, "~")  # noqa: E731
     report: dict = {"state": hide(str(state)), "approval": load_approval(state), "usage": usage_state(state),
                     "probes": {}}

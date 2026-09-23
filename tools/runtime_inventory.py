@@ -13,7 +13,7 @@
 실행:
     python tools/runtime_inventory.py --host-label main-pc --dry-run   # 실행할 명령만 출력
     python tools/runtime_inventory.py --host-label main-pc             # 기록
-    python tools/runtime_inventory.py --validate <manifest.json>       # 기존 기록 검사
+    python tools/runtime_inventory.py --validate <manifest.json>       # 기존 기록 검사(runtime-inventory/1·2)
     AI 도구 안의 터미널에서 실행한다면(Windows) --fresh-env를 붙인다.
 """
 from __future__ import annotations
@@ -36,6 +36,7 @@ from typing import Any, Callable, Iterator, Mapping
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))  # `python tools/runtime_inventory.py`로 실행해도 core를 찾는다
 from core.env import AI_TOOL_VARS, ENV_VARS, fresh_environment  # noqa: E402,F401 — 이 도구의 이름으로도 쓴다
+from core import eligibility  # noqa: E402 — runtime-inventory/2의 칸과 상태
 SCHEMA = "runtime-inventory/1"
 DEFAULT_OUT = ROOT / "docs/experiments/v04-01-inventory/hosts"
 
@@ -417,6 +418,66 @@ def validate_manifest(manifest: Any) -> list[str]:
     return errors
 
 
+def validate_manifest_v2(manifest: Any) -> list[str]:
+    """`runtime-inventory/2` 기록이 규칙을 지키는지 본다(인계 N4). 기록된 관측이 사실인지는 판정하지 않는다.
+
+    칸 다섯 개(core.eligibility.FIELDS)가 모두 있고, observed·failed에는 근거와 날짜가 있어야 한다. 실행 허가
+    (`eligible_for_run`)와 `configured`는 저장하지 않는다 — 실행 직전에 core.eligibility가 계산한다.
+    """
+    errors: list[str] = []
+    if not isinstance(manifest, dict) or manifest.get("schema") != eligibility.SCHEMA:
+        return [f"schema must be {eligibility.SCHEMA}"]
+    host = manifest.get("host")
+    if not (isinstance(host, dict) and isinstance(host.get("label"), str) and LABEL.fullmatch(host["label"])):
+        errors.append("host.label must be 2-40 chars of a-z, 0-9 and '-'")
+    adapters = manifest.get("adapters")
+    if not isinstance(adapters, list) or not adapters:
+        return errors + ["adapters must be a non-empty list"]
+    seen = set()
+    for index, row in enumerate(adapters):
+        if not isinstance(row, dict):
+            errors.append(f"adapters[{index}]: adapter row must be an object")
+            continue
+        aid = row.get("adapter_id")
+        if not (isinstance(aid, str) and aid.strip()):
+            errors.append(f"adapters[{index}]: adapter_id must be a non-empty string")
+            aid = f"adapters[{index}]"
+        elif aid in seen:
+            errors.append(f"duplicate adapter {aid}")
+        seen.add(aid)
+        stored = sorted({"eligible_for_run", "configured"} & set(row))
+        if stored:
+            errors.append(f"{aid}: {stored} must not be stored; eligibility is computed right before a run")
+        for field in eligibility.FIELDS:
+            entry = row.get(field)
+            if not isinstance(entry, dict) or entry.get("status") not in eligibility.STATUSES:
+                errors.append(f"{aid}.{field}: status must be one of {', '.join(eligibility.STATUSES)}")
+                continue
+            if entry["status"] != "unknown":
+                evidence, moment = entry.get("evidence"), entry.get("observed_at")
+                if not (isinstance(evidence, str) and evidence.strip()
+                        and isinstance(moment, str) and OBSERVED_AT.fullmatch(moment)):
+                    errors.append(f"{aid}.{field}: {entry['status']} needs a non-empty evidence string "
+                                  "and observed_at as YYYY-MM-DD or YYYY-MM-DDTHH:MM:SSZ")
+        installed = row.get("installed") if isinstance(row.get("installed"), dict) else {}
+        if installed.get("status") == "observed" and not (
+                isinstance(installed.get("version"), str) and installed["version"].strip()):
+            errors.append(f"{aid}.installed: observed needs the version")
+        auth = row.get("auth_observed") if isinstance(row.get("auth_observed"), dict) else {}
+        if auth.get("status") == "observed" and (auth.get("auth_mode") not in AUTH_MODES
+                                                 or auth.get("funding_mode") not in FUNDING_MODES):
+            errors.append(f"{aid}.auth_observed: observed needs a known auth_mode and funding_mode")
+    for text in strings(manifest):
+        if SECRET.search(text):
+            errors.append("manifest contains a secret-like string")
+            break
+    for text in strings(manifest):
+        if USER_PATH.search(text):
+            errors.append("manifest contains an unredacted user path")
+            break
+    return errors
+
+
 def write(out_dir: Path, manifest: dict[str, Any], outputs: dict[str, str], force: bool) -> Path:
     target = out_dir / "manifest.json"
     if target.exists() and not force:
@@ -460,7 +521,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.validate:
         try:
-            errors = validate_manifest(json.loads(args.validate.read_text(encoding="utf-8")))
+            loaded = json.loads(args.validate.read_text(encoding="utf-8"))
+            check = validate_manifest_v2 if isinstance(loaded, dict) and loaded.get("schema") == eligibility.SCHEMA                 else validate_manifest
+            errors = check(loaded)
         except (OSError, ValueError) as exc:
             errors = [f"cannot read manifest: {exc}"]
         for error in errors:

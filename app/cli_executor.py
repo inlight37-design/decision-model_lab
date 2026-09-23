@@ -12,15 +12,20 @@
 - 프로세스를 만들기 전에 거절하면(실행 파일 없음, 금지 옵션, 경로 충돌, 모델 이름 없음) failed_to_start로
   돌려준다. 아무것도 시작하지 않았으므로 unknown이 아니다.
 - Codex의 명령 거절 표식은 보관 상한과 상관없이 stderr 전체에서 센다(K02).
+- **실행 허가는 시도마다 계산한다(N4).** 기록(`runtime-inventory/2`)의 다섯 칸이 모두 관측됐고, 지금 설치된 버전이
+  기록과 같고, 구독 로그인일 때만 부른다(core.eligibility). 기록 없이 부르는 것은 관측 도구와 시험뿐이다(unchecked).
 
 서버(app.server)는 아직 이 실행기를 쓰지 않는다. 모의 실행기만 쓴다.
 """
 from __future__ import annotations
 
+from datetime import date
 import os
+from pathlib import Path
+import re
 from typing import Mapping, Sequence
 
-from core import adapters, env as core_env, isolation, runner
+from core import adapters, eligibility, env as core_env, isolation, runner
 
 SUPPORTED = ("claude-code", "codex")
 # 격리 안으로 넘기는 변수. 나머지는 isolation.PASS_ENV가 거른다(W2 시험과 같은 값).
@@ -28,22 +33,54 @@ SANDBOX_ENV = {"LANG": "C.UTF-8", "NO_COLOR": "1"}
 REFUSED_BEFORE_START = (adapters.AdapterError, core_env.EnvError, isolation.IsolationError, runner.RunnerError)
 
 
+def installed_version(adapter_id: str, exe: str) -> str | None:
+    """실행 파일의 실제 위치에서 버전을 읽는다. 프로세스를 띄우지 않는다. 공식 설치 모양을 따른다:
+    Claude는 …/claude/versions/<버전>, Codex는 …/releases/<버전>-<대상>/bin/codex. 모양이 다르면 None."""
+    real = os.path.realpath(exe)
+    if adapter_id == "claude-code":
+        name = os.path.basename(real)
+    elif adapter_id == "codex":
+        name = os.path.basename(os.path.dirname(os.path.dirname(real))).split("-", 1)[0]
+    else:
+        return None
+    return name if re.fullmatch(r"\d+(?:\.\d+)+", name) else None
+
+
 class CliExecutor:
     name = "cli"
 
-    def __init__(self, *, never: Sequence[str], home: str | None = None,
-                 base_env: Mapping[str, str] | None = None,
+    def __init__(self, *, never: Sequence[str], inventory: str | Path | None = None, unchecked: bool = False,
+                 home: str | None = None, base_env: Mapping[str, str] | None = None,
                  max_output_bytes: int = runner.DEFAULT_MAX_OUTPUT) -> None:
-        """never: 참여자에게 보이면 안 되는 경로(controller 데이터 폴더). base_env: 실행 파일을 찾을 환경."""
+        """never: 참여자에게 보이면 안 되는 경로(controller 데이터 폴더). inventory: 이 기기의 `runtime-inventory/2`
+        기록 — 시도마다 다시 읽어 실행 허가를 계산한다. unchecked: 허가를 계산하지 않는다(관측 도구·시험만).
+        base_env: 실행 파일을 찾을 환경."""
+        if inventory is None and not unchecked:
+            raise ValueError("the real CLI executor needs a runtime-inventory/2 record (inventory=...); "
+                             "only observation tools and tests run it unchecked")
         self.never = tuple(never)
+        self.inventory = None if inventory is None else Path(inventory)
         self.home = home or os.path.expanduser("~")
         self.child_env, _ = core_env.child_env(os.environ if base_env is None else base_env)
         self.max_output_bytes = max_output_bytes
+
+    def _check_eligible(self, adapter_id: str, exe: str) -> None:
+        if self.inventory is None:
+            return
+        try:
+            record = eligibility.load(self.inventory)
+        except (OSError, ValueError) as exc:
+            raise adapters.AdapterError(f"cannot read the inventory: {type(exc).__name__}") from None
+        verdict = eligibility.eligibility(record, adapter_id, enabled=True, today=date.today(),
+                                          current_version=installed_version(adapter_id, exe))
+        if not verdict.eligible:
+            raise adapters.AdapterError("not eligible to run: " + "; ".join(verdict.reasons))
 
     def _plan(self, spec, prompt: str, inputs: Sequence[str] = ()) -> adapters.ExecutionSpec:
         if spec.adapter_id not in SUPPORTED:
             raise adapters.AdapterError(f"{spec.adapter_id!r} is not run by the CLI executor")
         exe = core_env.resolve(adapters.ADAPTERS[spec.adapter_id].command, self.child_env)
+        self._check_eligible(spec.adapter_id, exe)
         # Claude는 읽을 폴더를 --add-dir로 알려 주고 Read 도구만 준다. Codex에는 그런 옵션을 주지 않는다 —
         # 격리 안에 읽기 전용으로 보이는 것만 읽을 수 있다.
         read_dirs = tuple(inputs) if spec.adapter_id == "claude-code" else ()
