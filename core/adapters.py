@@ -63,6 +63,13 @@ FORBIDDEN: dict[str, frozenset[str]] = {
                               "accept-edits"}),
 }
 
+# Codex에 허용하는 설정 덮어쓰기는 이것 하나다. Windows에서 --ignore-user-config는 데스크톱 앱이
+# 사용자 설정에 적은 `[windows] sandbox = "elevated"`까지 버려서, 샌드박스가 없는 exec가 모든 명령을
+# "blocked by policy"로 거절하고도 exit 0으로 답한다(openai/codex#42172, 0.152부터; aux-pc 0.155.1에서
+# 재현하고 이 덮어쓰기로 풀리는 것을 관측).
+CODEX_WINDOWS_SANDBOX = 'windows.sandbox="elevated"'
+CODEX_ALLOWED_CONFIG = frozenset({CODEX_WINDOWS_SANDBOX})
+CODEX_REJECTED = "rejected: blocked by policy"
 MODEL = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:/-]{0,79}")
 AGY_EFFORT = ("low", "medium", "high")
 CLAUDE_CONTEXT = ("restricted", "safe_mode")  # 어느 쪽이 blind 입력을 막는지는 V04-03에서 관측
@@ -107,6 +114,10 @@ def _check(adapter_id: str, argv: list[str], user_text: Iterable[int]) -> list[s
     for index, token in enumerate(argv):
         if index in skip:
             continue
+        if (adapter_id == "codex" and token == "-c" and index + 1 < len(argv)
+                and argv[index + 1] in CODEX_ALLOWED_CONFIG):
+            skip.add(index + 1)
+            continue
         _require(token not in FORBIDDEN[adapter_id], f"{adapter_id}: forbidden argument {token!r}")
     _require(len(subprocess.list2cmdline(argv)) <= MAX_COMMAND_LINE,
              "command line too long; pass the material as a file instead")
@@ -115,13 +126,22 @@ def _check(adapter_id: str, argv: list[str], user_text: Iterable[int]) -> list[s
 
 def build_argv(adapter_id: str, *, exe: str, prompt: str, model: str, role: str = DISCUSSANT,
                enabled: bool | None = None, read_dirs: Iterable[str] = (),
-               claude_context: str = "restricted", effort: str | None = None) -> list[str]:
-    """읽기 전용 논의자 한 번의 argv. 허용된 조각 밖의 옵션은 받지 않는다."""
+               claude_context: str = "restricted", effort: str | None = None,
+               codex_windows_sandbox: bool = False) -> list[str]:
+    """읽기 전용 논의자 한 번의 argv. 허용된 조각 밖의 옵션은 받지 않는다.
+
+    codex_windows_sandbox: Windows에서 Codex의 elevated 샌드박스를 명시한다(`codex doctor`가
+    `sandbox backend elevated`, `provisioning complete`를 보일 때). 주의: Codex의 read-only
+    샌드박스는 쓰기를 막을 뿐 **작업 폴더 밖 읽기를 막지 않는다**(aux-pc 관측) — blind 격리는
+    이것으로 성립하지 않는다.
+    """
     _require(adapter_id in ADAPTERS, f"unknown adapter {adapter_id!r}")
     spec = ADAPTERS[adapter_id]
     _require(spec.enabled_by_default if enabled is None else enabled is True,
              f"{adapter_id} is off; the user has to turn it on ({spec.note})")
     _require(role in ROLES, f"unsupported role {role!r}")
+    _require(adapter_id == "codex" or codex_windows_sandbox is False,
+             "codex_windows_sandbox applies to codex only")
     _require(isinstance(exe, str) and os.path.isabs(exe), "exe must be an absolute path")
     _require(isinstance(prompt, str) and prompt.strip() != "", "prompt must be non-empty text")
     _require(isinstance(model, str) and MODEL.fullmatch(model) is not None,
@@ -142,8 +162,12 @@ def build_argv(adapter_id: str, *, exe: str, prompt: str, model: str, role: str 
         return _check(adapter_id, argv, user_text=(2,))
     if adapter_id == "codex":
         _require(effort is None and not dirs, "codex discussant takes no effort or extra dirs yet")
+        _require(type(codex_windows_sandbox) is bool, "codex_windows_sandbox must be a boolean")
         argv = [exe, "exec", "--json", "--skip-git-repo-check", "--ephemeral", "--ignore-user-config",
-                "--ignore-rules", "--sandbox", "read-only", "--model", model, prompt]
+                "--ignore-rules", "--sandbox", "read-only"]
+        if codex_windows_sandbox:
+            argv += ["-c", CODEX_WINDOWS_SANDBOX]
+        argv += ["--model", model, prompt]
         return _check(adapter_id, argv, user_text=(len(argv) - 1,))
     _require(effort is None or effort in AGY_EFFORT, f"effort must be one of {AGY_EFFORT}")
     argv = [exe, "-p", prompt, "--output-format", "json", "--model", model, "--sandbox",
@@ -236,8 +260,13 @@ def interpret(adapter_id: str, run: RunResult, *, requested_model: str) -> Outco
                                                     "reasoning_output_tokens"))
             elif kind in ("turn.failed", "error"):
                 failure = str((event.get("error") or {}).get("message") or event.get("message") or kind)
-        ok = run.exit_code == 0 and completed and failure is None and isinstance(text, str)
-        if not ok and failure is None and not completed:
+        # 명령이 거절되면 JSONL에는 흔적이 없고 stderr에만 남는다. 그래도 exit 0으로 답이 나오므로
+        # (openai/codex#42172) 읽지 못한 채 쓴 답을 성공으로 넘기지 않는다.
+        rejected = run.stderr.count(CODEX_REJECTED)
+        ok = run.exit_code == 0 and completed and failure is None and isinstance(text, str) and not rejected
+        if rejected:
+            status, failure = "tools_rejected", f"{rejected} command(s) rejected by policy before running"
+        elif not ok and failure is None and not completed:
             status = "format_error" if run.exit_code == 0 else "cli_error"
         else:
             status = "ok" if ok else "cli_error"

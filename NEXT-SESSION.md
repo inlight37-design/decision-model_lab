@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-23** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout, V04-03 실행 코어·conformance) · 브랜치 `claude/v04-03-conformance-20260923`
+최종 갱신 **2026-09-23** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout, V04-03 실행 코어·conformance) · 브랜치 `claude/codex-sandbox-fix-20260923`
 
 아래 보조 PC 환경 관측은 V04-01을 수행한 claude 세션의 기록이다. Hermes 조사를 쓴 ChatGPT 웹 세션은 GitHub 소스·공식 문서만 검토했다. 이 판을 쓴 claude 세션은 같은 보조 PC에서 `check-versions.ps1`(버전만 실행)로 세 CLI의 버전·경로·서명 `Valid`를 다시 확인했고 모델은 부르지 않았다.
 
@@ -23,7 +23,7 @@
 | [`review_boundary.py`](tools/review_boundary.py) | PR #3의 순수 함수 경계 실험(이벤트 순서, UNKNOWN 예산, 봉인 화면, 한도 표시). 서버·프로세스 제어가 아니다 |
 | [`audit_design_contrast.py`](tools/audit_design_contrast.py) | 디자인 토큰 대비 계산. 일반 글자 5쌍이 4.5:1 미만인 것을 기록한다 |
 | [`runtime_inventory.py`](tools/runtime_inventory.py) | V04-01 tier 1. 각 CLI의 `--version`/`--help`만 실행해 기록한다. `observed`와 `configured=true`를 쓸 수 없다 |
-| [`core/`](core/README.md) | V04-03 실행 코어: CLI 한 번을 셸 없이 실행하고 트리 종료를 확인하는 runner, 읽기 전용 논의자 argv·출력 해석 adapter, 참여자 구성 결정. **mock으로만 시험했다** — 실제 CLI conformance는 아직이다. 앱·화면·controller는 없다 |
+| [`core/`](core/README.md) | V04-03 실행 코어: CLI 한 번을 셸 없이 실행하고 트리 종료를 확인하는 runner, 읽기 전용 논의자 argv·출력 해석 adapter, 참여자 구성 결정. mock 시험과 aux-pc의 첫 [conformance 관측](docs/experiments/v04-03-conformance/aux-pc.md)에서 실제 CLI를 돌렸다. 앱·화면·controller는 없다 |
 
 | 산출물 | 원본 | 발행본 |
 |---|---|---|
@@ -76,7 +76,7 @@
 
 ## 3. 진행 중인 작업
 
-2026-09-23의 모든 작업은 main에 병합됐다 — PR #3, V04-01 리뷰([PR #4](https://github.com/inlight37-design/decision-model_lab/pull/4))와 그 반영, ChatGPT의 Hermes 패턴 조사([PR #5](https://github.com/inlight37-design/decision-model_lab/pull/5), `chatgpt/hermes-patterns-20260923`)와 claude의 [교차 확인](docs/research/hermes-2026-09-23/CROSSCHECK.md)(`claude/hermes-crosscheck-20260923`), V04-03 실행 코어(`claude/v04-03-runner-20260923`)와 첫 conformance 관측(`claude/v04-03-conformance-20260923`). 사용자는 **CI 녹색을 확인한 claude 세션이 main에 직접 병합하는 것**을 허락했다(2026-09-23).
+2026-09-23의 모든 작업은 main에 병합됐다 — PR #3, V04-01 리뷰([PR #4](https://github.com/inlight37-design/decision-model_lab/pull/4))와 그 반영, ChatGPT의 Hermes 패턴 조사([PR #5](https://github.com/inlight37-design/decision-model_lab/pull/5), `chatgpt/hermes-patterns-20260923`)와 claude의 [교차 확인](docs/research/hermes-2026-09-23/CROSSCHECK.md)(`claude/hermes-crosscheck-20260923`), V04-03 실행 코어(`claude/v04-03-runner-20260923`)와 첫 conformance 관측(`claude/v04-03-conformance-20260923`), Codex 샌드박스 원인 확인과 판정 보강(`claude/codex-sandbox-fix-20260923`). 사용자는 **CI 녹색을 확인한 claude 세션이 main에 직접 병합하는 것**을 허락했다(2026-09-23).
 
 **지금 병합되지 않은 브랜치: 없음.** 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 이 줄을 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다.
 
@@ -100,7 +100,7 @@ Hermes 조사에서 제안한 [HP-01/02/03](docs/research/hermes-2026-09-23/ADOP
 
 1. Claude 논의자의 실행 조합. **관측했다(2026-09-23, [conformance 기록](docs/experiments/v04-03-conformance/aux-pc.md)): `--restricted`와 `--safe-mode` 모두 `--tools Read --add-dir`로 허용 파일은 읽고 작업 폴더 밖 파일은 CLI가 거절했으며 쓰기는 없었다.** 남은 보강: `CLAUDE.md`를 싣지 않는다는 것을 init 이벤트로 확인, 두 플래그를 함께 준 조합. 아래는 관측 전의 문서 대조다: `--restricted`의 공식 locator는 [CLI reference](https://code.claude.com/docs/en/cli-reference)의 CLI flags 표다(v2.1.248 이상). **문서는 settings 파일 제외만 말하고 CLAUDE.md는 말하지 않는다.** 같은 표의 `--safe-mode`는 CLAUDE.md·자동 메모리까지 끄고 인증을 유지한다고 적는다 — P4b 조합과 나란히 관측한다. 파일을 읽어야 하는 논의자는 `--tools Read`와 `--add-dir`로 범위를 좁혀 한 번 더 관측한다.
 2. agy를 쓰기로 했다면: 없는 `--model`은 문서상 비영 종료·`ERROR`다 — 1.2.8에서 그런지 확인한다. `--effort`의 없는 값은 문서에 없으니 P3처럼 관측한다. `--model`을 주면 stream-json init에 `model`이 나온다고 문서에 있다 — 요청값과 대조한다. 모델은 이름이 아니라 세대와 실제 비교로 고른다(1절의 사용자 보고).
-3. **독립 초안을 받기 전에 conformance를 관측한다**(PR #4 R02). **첫 관측을 했다([기록](docs/experiments/v04-03-conformance/aux-pc.md)).** Claude는 통과. **Codex(`gpt-6-luna`, 사용자가 시험 모델로 지정)는 금지 읽기·쓰기는 막혔지만 허용 파일도 못 읽었다** — 셋 다 stderr에 `blocked by policy`, JSONL에는 안 나온다. 그래서 Codex 논의자에게는 파일을 읽히지 않고 공통 자료를 프롬프트에 넣는다. Codex는 작업 폴더의 `AGENTS.md`를 싣는다 — 논의자 작업 폴더는 앱이 만든 빈 폴더로 한다. 원인(이 PC에 Codex Windows 샌드박스 미설정, 설정은 관리자 승인)은 확인하지 못했다 — 설정하거나 WSL2로 옮길지는 사용자 결정. 합성 파일로: 답에만 나올 marker와 양성 대조, 금지 파일·다른 참여자 초안 읽기 시도, 허용 파일 읽기, workspace 밖 쓰기·shell·MCP 실행 거절. marker가 답에 없다는 것만 보지 말고 거절 자체를 본다. adapter 기록은 `installed`·`auth_observed`·`transport_observed`·`context_conformance`·`permission_conformance`로 나누고 실행 허가(`eligible_for_run`)는 실행 직전에 계산한다 — adapter가 읽을 때 manifest를 `runtime-inventory/2`로 올린다.
+3. **독립 초안을 받기 전에 conformance를 관측한다**(PR #4 R02). **첫 관측을 했다([기록](docs/experiments/v04-03-conformance/aux-pc.md)).** Claude는 통과. **Codex(`gpt-6-luna`, 사용자가 시험 모델로 지정)는 처음엔 허용 파일까지 아무것도 못 읽었다** — Windows에서 `--ignore-user-config`가 샌드박스 선택까지 버리는 Codex 버그([openai/codex#42172](https://github.com/openai/codex/issues/42172), 재현함)이고 exit 0으로 답까지 낸다. 정정: 처음 적은 원인 "샌드박스 미설정"은 틀렸다(`codex doctor`: 설정돼 있음). `-c windows.sandbox="elevated"`를 더하면 읽기가 되고 쓰기는 막히지만, **작업 폴더 밖의 다른 참여자 초안도 읽힌다** — Codex read-only 샌드박스는 읽기를 막지 않는다. **Codex를 blind 참여자로 쓰기 전에 초안을 Codex가 읽을 수 없게 하는 방법이 필요하다**(denied-read 규칙 확인, 또는 WSL2·컨테이너 격리 — 사용자 결정 포함). 그때까지 Codex 논의자에게는 자료를 프롬프트로만 주고, 다른 참여자 초안은 Codex 실행 중 디스크에 두지 않는다. adapter는 stderr의 거절을 `tools_rejected`로 판정한다. Codex는 작업 폴더의 `AGENTS.md`를 싣는다 — 논의자 작업 폴더는 앱이 만든 빈 폴더로 한다. 합성 파일로: 답에만 나올 marker와 양성 대조, 금지 파일·다른 참여자 초안 읽기 시도, 허용 파일 읽기, workspace 밖 쓰기·shell·MCP 실행 거절. marker가 답에 없다는 것만 보지 말고 거절 자체를 본다. adapter 기록은 `installed`·`auth_observed`·`transport_observed`·`context_conformance`·`permission_conformance`로 나누고 실행 허가(`eligible_for_run`)는 실행 직전에 계산한다 — adapter가 읽을 때 manifest를 `runtime-inventory/2`로 올린다.
 4. adapter 공통 규칙으로 옮길 것: stdin 닫기, 옵션 값 사전 검증(버전별 허용 목록), 요청한 출력 형식 사후 확인, `is_error`와 exit code 함께 보기, 참여자의 회사는 모델 ID로 세기(RESULTS 설계 입력 3·4·6·7), `requested_model`과 보고된 모델 분리.
 5. ~~runner 계약을 mock 실행 파일로 먼저 시험한다~~ **했다(2026-09-23, [`core/runner.py`](core/runner.py)).** argv 배열·절대 경로, stdin 닫기, stdout·stderr 분리와 상한, 제한 시간, 취소, 프로세스 트리 종료 확인(Windows job object / POSIX 프로세스 그룹). timeout은 답이 보여도 `timed_out`, 트리를 확인하지 못하면 `unknown`. Windows 경로는 aux-pc 로컬에서 시험했고, POSIX 경로는 CI(Linux)가 시험한다. **실제 CLI로는 아직 돌리지 않았다** — 다음 conformance가 첫 실사용이다. `tools/v04-01/probe.ps1`은 관측 도구이지 runner가 아니다.
 6. ~~참여자 구성 변화를 부정 fixture로 고정한다~~ **했다([`core/membership.py`](core/membership.py)).** [리뷰의 전이 표](docs/reviews/2026-09-23-v04-01-review/README.md) 여섯 경우를 결정 함수와 시험으로 고정했다. 실행 controller에는 아직 연결하지 않았다.

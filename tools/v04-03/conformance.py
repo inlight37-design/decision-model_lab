@@ -5,7 +5,7 @@
   python tools/v04-03/conformance.py setup                    # 작업 공간 만들기(모델 호출 없음)
   python tools/v04-03/conformance.py codex-prompt-input       # 모델 호출 없음
   python tools/v04-03/conformance.py claude restricted|safe_mode <model>   # 모델 호출 1회
-  python tools/v04-03/conformance.py codex <model>            # 모델 호출 1회
+  python tools/v04-03/conformance.py codex <model> [elevated] # 모델 호출 1회. elevated: Windows 샌드박스 명시
 
 결과 JSON(원 출력 포함)은 %TEMP%\\v0403-conf\\results\\ 에 둔다. 저장소에는 요약만 옮긴다.
 결과: docs/experiments/v04-03-conformance/aux-pc.md
@@ -115,8 +115,10 @@ def main():
                                            "denied_inputs": [json.dumps(d.get("tool_input"))[:160] for d in denials]})
     elif cmd == "codex":
         model = sys.argv[2]
+        elevated = sys.argv[3:4] == ["elevated"]  # openai/codex#42172 우회
         env, dropped, exe = env_and_exe("codex")
-        argv = adapters.build_argv("codex", exe=exe, prompt=PROMPT, model=model)
+        argv = adapters.build_argv("codex", exe=exe, prompt=PROMPT, model=model,
+                                   codex_windows_sandbox=elevated)
         run = runner.run(argv, cwd=WORK, env=env, timeout=300)
         outcome = adapters.interpret("codex", run, requested_model=model)
         commands = []
@@ -131,7 +133,8 @@ def main():
                                            "stderr_tail": run.stderr[-600:]})
     else:
         raise SystemExit("unknown command")
-    path = save(cmd + ("-" + sys.argv[2] if cmd == "claude" else ""), {"summary": summary, "answer": outcome.text,
+    suffix = "-" + sys.argv[2] if cmd == "claude" else ("-elevated" if sys.argv[3:4] == ["elevated"] else "")
+    path = save(cmd + suffix, {"summary": summary, "answer": outcome.text,
                                                                         "stdout": run.stdout, "stderr": run.stderr})
     print(json.dumps(summary, ensure_ascii=False, indent=1))
     print("answer:", (outcome.text or "")[:1200])

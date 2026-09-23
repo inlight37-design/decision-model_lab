@@ -16,7 +16,7 @@
 | 도구 | 설치 방법 | 버전 | 코드 서명 (`Get-AuthenticodeSignature`) | 로그인 방식 | 비고 |
 |---|---|---|---|---|---|
 | Claude Code | 공식 PowerShell 설치 스크립트 | 2.1.280 | Anthropic, PBC — Valid | `claude auth status`: `loggedIn: true`, `authMethod: claude.ai`, `apiProvider: firstParty` | **설치 프로그램이 PATH를 등록하지 않았다.** 안내 문구에 따라 사용자 PATH에 `%USERPROFILE%\.local\bin`을 추가(사용자 승인 범위). 로그인은 새로 하지 않았다 — 데스크톱 앱과 같은 `~/.claude` 자격증명으로 보인다 |
-| Codex | 공식 PowerShell 설치 스크립트 | codex-cli 0.155.1 | OpenAI OpCo, LLC — Valid | `codex login status`: Logged in using ChatGPT | 설치 프로그램이 사용자 PATH를 등록했다. Windows 샌드박스: 미설정(elevated 설정은 관리자 승인 필요 — 사용자 판단) |
+| Codex | 공식 PowerShell 설치 스크립트 | codex-cli 0.155.1 | OpenAI OpCo, LLC — Valid | `codex login status`: Logged in using ChatGPT | 설치 프로그램이 사용자 PATH를 등록했다. Windows 샌드박스: 미설정(elevated 설정은 관리자 승인 필요 — 사용자 판단). **갱신(2026-09-23 V04-03):** 같은 날 `codex doctor`는 `sandbox backend elevated`, `provisioning complete`를 보고했다. 이 기록 뒤에 설정됐는지, 처음 판단이 틀렸는지는 확인할 수 없다. [V04-03 conformance](../../../v04-03-conformance/aux-pc.md) |
 | Antigravity | 공식 PowerShell 설치 스크립트, **`--dir ~\.local\agy\bin`으로 재설치** | 1.2.8 | Google LLC — Valid | **Google 계정 로그인**(사용자가 앱 밖 터미널에서 `agy` 실행 → 브라우저. 시작 화면에 계정과 요금제가 표시됐다 — 기록하지 않음). 상태 확인 명령은 help에 없고, P1 성공으로 비대화형에서도 로그인이 쓰임을 확인 | 첫 설치는 기본 폴더 `%LOCALAPPDATA%\agy\bin`에 했는데, **Claude 데스크톱 앱(MSIX)의 전용 가상 공간으로 들어가** 사용자 터미널에서 "인식되지 않음"이 났다(아래). 가상 사본과 그 PATH 항목을 지우고 AppData 밖에 다시 설치했다. `--dir`로 설치해도 마지막 안내는 기본 경로를 출력한다(표시 문제). `--version`은 문서에 없지만 동작했다 |
 
 ### 설치 위치 문제 — Claude 데스크톱 앱의 가상화
