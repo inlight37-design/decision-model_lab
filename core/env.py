@@ -114,6 +114,7 @@ def resolve(command: str, env: Mapping[str, str]) -> str:
     if path is None:
         raise EnvError(f"{command} is not on the child PATH")
     path = os.path.abspath(path)
-    if not IS_WINDOWS and is_windows_binary(path):
+    # 링크도 따라가 본다: ~/.local/bin/codex가 /mnt/c/.../codex.exe를 가리킬 수 있다.
+    if not IS_WINDOWS and (is_windows_binary(path) or is_windows_binary(os.path.realpath(path))):
         raise EnvError(f"{command} resolved to a Windows executable ({path}); install the Linux CLI")
     return path
