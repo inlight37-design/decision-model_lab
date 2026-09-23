@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-24** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout과 그 WSL) · 브랜치 `claude/k46-codex-auth-deny-20260924`
+최종 갱신 **2026-09-24** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout과 그 WSL) · 브랜치 `claude/review-request-20260924`
 
 이 파일 하나에서 시작한다. 절 구성은 고정이고 CI가 확인한다. 규칙은 [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있다. 1단계(실제 호출 전 확인)를 마치고 통째로 다시 쓴 판에 **2단계(승인된 모델 호출)의 결과를 더한 판**이다. 1단계 각 항목(N0–N6)의 경위와 긴 병합 이력은 [1단계 직후 판](docs/handoff/2026-09-23-before-stage2.md)과 Git 로그에 있다. 여기에는 지금 상태, 한계와 못 고친 문제(4절의 K 표), 다음 일만 둔다.
 
@@ -75,7 +75,7 @@
 
 | 무엇 | 어디 |
 |---|---|
-| 검토 기록과 반영(읽는 순서 포함) | [docs/reviews/](docs/reviews/README.md) — 최근: [A1 리뷰 반영](docs/reviews/2026-09-23-a1-handoff-review/RESPONSE.md), [경계 리뷰](docs/reviews/2026-09-23-wsl2-boundary/RESPONSE.md), [WSL2 리뷰 PR #6](docs/reviews/2026-09-23-wsl2-migration-review/RESPONSE.md) |
+| 검토 기록과 반영(읽는 순서 포함) | [docs/reviews/](docs/reviews/README.md) — **리뷰를 기다리는 요청서: [2026-09-24 요청서](docs/reviews/2026-09-24-review-request/README.md)**(2단계 요청서를 이어받음, 실패 S01–S33, 가린 관측 요약 포함). 최근 반영: [A1 리뷰 반영](docs/reviews/2026-09-23-a1-handoff-review/RESPONSE.md), [경계 리뷰](docs/reviews/2026-09-23-wsl2-boundary/RESPONSE.md), [WSL2 리뷰 PR #6](docs/reviews/2026-09-23-wsl2-migration-review/RESPONSE.md) |
 | 실험·관측 기록 | `docs/experiments/` — [V04-01 절차서](docs/experiments/v04-01-inventory/README.md), [V04-03 conformance](docs/experiments/v04-03-conformance/aux-pc.md), [W2 격리](docs/experiments/w2-isolation/aux-pc-wsl.md) |
 | 조사 | [Hermes 패턴 조사](docs/research/hermes-2026-09-23/README.md)와 [교차 확인](docs/research/hermes-2026-09-23/CROSSCHECK.md). [tmux 조사](docs/research/tmux-2026-09-23/README.md)(ChatGPT, [PR #8](https://github.com/inlight37-design/decision-model_lab/pull/8)) — tmux를 참여자 실행 엔진으로 쓰지 않고 개념(TM-01–TM-09)만 옮기라는 권고다. claude 세션이 코드 주장을 main `f044865`와 대조했다: 화면이 1초마다 조회하며 늦게 온 응답이 새 상태를 덮을 수 있다(P05) — 맞다. 새로고침·재접속은 조회만 하고 호출을 만들지 않는다(TM-01) — 이미 성립. 관측 도구가 실행기를 재사용한다(TM-02) — `prepare()`만 재사용해 부분적으로 맞다 |
 | 작업 개념도 | [docs/concept/](docs/concept/README.md), [아티팩트](https://claude.ai/artifact/AZJfdnmMBjpEAtqsSHzjp8)(2026-09-22 스냅숏) |
@@ -121,12 +121,13 @@
 
 **지금 병합되지 않은 브랜치: 없음.** 이 줄은 병합 뒤에 맞도록 브랜치에서 미리 "없음"으로 적었다. 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다.
 
-- **마지막 병합:** K46 방어(`claude/k46-codex-auth-deny-20260924`, 모델 호출 없음).
+- **마지막 병합:** 리뷰 요청서(`claude/review-request-20260924`, 문서만) — [2026-09-24 요청서](docs/reviews/2026-09-24-review-request/README.md). 지금까지의 흐름, PR #8–#12, 실패·시행착오 S22–S33과 S01–S21의 현재 상태를 정리했다. WSL 상태 폴더의 관측 요약 여섯 개와 K46 진단 출력 두 개를 가려서 옮겼다. 리뷰가 오면 4절 "참고"의 절차대로 반영한다.
+- **그 앞:** [PR #12](https://github.com/inlight37-design/decision-model_lab/pull/12) K46 방어(`claude/k46-codex-auth-deny-20260924`, 모델 호출 없음).
   - adapter가 Linux Codex에 로그인 파일만 읽기 금지한 권한 profile을 준다.
   - 네트워크 없는 exec 진단 도구 `tools/w2/codex_profile.py`와 그 [기록](docs/experiments/w2-isolation/k46-profile-aux-pc-wsl.md)을 더했다.
   - 관측 도구에 `k46-codex`, `--keep-session`, 토큰 가림을 더하고 `p3-codex`를 고쳤다.
   - 인계가 적었던 "exec에 `-P`를 넘긴다"는 exec에 없는 옵션이라 틀렸다. `default_permissions`로 바로잡았다.
-- **그 앞(최근 순):**
+- **그보다 앞(최근 순):**
   - [PR #11](https://github.com/inlight37-design/decision-model_lab/pull/11) 편의·오케스트레이션 후보 기록(2절 20).
   - [PR #10](https://github.com/inlight37-design/decision-model_lab/pull/10) K01 관측(Claude 1회)과 인계 정리.
   - [PR #9](https://github.com/inlight37-design/decision-model_lab/pull/9) 2단계 후속: K46 진단, 권한 profile 시험, gh 설치.
@@ -135,6 +136,7 @@
 - 각 병합의 경위는 PR 본문과 Git 로그에 있다. 그 앞은 [1단계 직후 판](docs/handoff/2026-09-23-before-stage2.md) 3절에 있다.
 
 사용자의 판단을 기다리는 것:
+- **리뷰 요청서를 어느 AI에게 보낼지.** 붙여 넣을 요청문은 [2026-09-24 요청서](docs/reviews/2026-09-24-review-request/README.md) 머리에 있다. 리뷰가 K46 설계나 승인 방식에 반대하면 K46 확인 호출 전에 반영한다.
 - **PR #8의 TM 항목을 작업으로 받을지.** 병합은 조사 문서를 main에 둔 것이고 작업을 받은 것은 아니다. claude 세션의 권고는 적용 계획 A(화면 조회의 요청 겹침 막기, 늦게 온 응답 버리기, 연결 끊김과 마지막 확인 시각 표시)만 3단계 화면 작업에 넣는 것이다. tmux를 참여자 실행 엔진으로 쓰지 않는다는 판단은 조사와 claude 세션이 같다 — bubblewrap 안의 참여자가 밖의 tmux server에 일을 맡기면 격리와 자손 종료 확인이 깨진다.
 - **K46 확인 호출의 승인** — adapter에 권한 profile을 넣었다(모델 없음). 남은 것은 Codex exec 1회(`observe.py call k46-codex <전체 모델 이름>`)다. 모델이 돌린 명령이 `auth.json`을 못 여는지, 로그인이 유지되는지, 쓰기가 막히는지 본다. 승인받을 값은 Codex 최대 횟수(실패 포함), 호출당 timeout, 모델 이름(2단계는 `gpt-6-luna`), `--keep-session`을 붙일지다.
 - **Codex 문맥 판정(`failed`)을 푸는 방법** — (a) 참여자 구성(빈 작업 폴더)에서 문맥에 무엇이 들어가는지 본다, 또는 (b) 빈 작업 폴더 완화를 정책으로 받아들이고 계정 플러그인·MCP(K44)는 한계로 둔다. (a)는 K46 확인 호출에 `--keep-session`을 붙이면 같은 1회로 재료를 얻는다: Codex가 남긴 세션 기록을 상태 폴더로 옮겨 모양(줄 종류, 긴 글의 길이·표식·머리글)만 요약하고, 모델의 자기 보고(`context`)도 받는다(약한 증거). 정하기 전에는 Codex를 실제 실행기로 부르지 않는다.

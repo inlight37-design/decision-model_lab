@@ -1,0 +1,208 @@
+{
+ "codex": "~/.codex/packages/standalone/releases/0.156.1-x86_64-unknown-linux-musl/bin/codex",
+ "sandbox": {
+  "no profile (default)": {
+   "state": "exited",
+   "exit": 0,
+   "tree_confirmed_empty": true,
+   "write_refused": true,
+   "write_rc": "2",
+   "input_read_rc": "0",
+   "auth_exists_rc": "0",
+   "auth_open_rc": "0",
+   "stderr": [
+    "/bin/sh: 1: cannot create created.txt: Read-only file system"
+   ]
+  },
+  "profile via default_permissions (exec's way)": {
+   "state": "exited",
+   "exit": 0,
+   "tree_confirmed_empty": true,
+   "write_refused": true,
+   "write_rc": "2",
+   "input_read_rc": "0",
+   "auth_exists_rc": "0",
+   "auth_open_rc": "1",
+   "stderr": [
+    "/bin/sh: 1: cannot create created.txt: Read-only file system"
+   ]
+  },
+  "profile via -P (2026-09-24 diagnostic)": {
+   "state": "exited",
+   "exit": 0,
+   "tree_confirmed_empty": true,
+   "write_refused": true,
+   "write_rc": "2",
+   "input_read_rc": "0",
+   "auth_exists_rc": "0",
+   "auth_open_rc": "1",
+   "stderr": [
+    "/bin/sh: 1: cannot create created.txt: Read-only file system"
+   ]
+  }
+ },
+ "exec_offline": {
+  "participant --json": {
+   "argv_tail": [
+    "--json",
+    "--skip-git-repo-check",
+    "--ephemeral",
+    "--ignore-user-config",
+    "--ignore-rules",
+    "-c",
+    "permissions.dml-discussant={ extends = \":read-only\", filesystem = { \"~/.codex/auth.json\" = \"deny\" } }",
+    "-c",
+    "default_permissions=\"dml-discussant\"",
+    "--model",
+    "gpt-6-luna",
+    "-"
+   ],
+   "state": "timed_out",
+   "exit": -15,
+   "duration_ms": 90050,
+   "tree_confirmed_empty": true,
+   "jsonl_types": [
+    "thread.started",
+    "turn.started",
+    "error",
+    "error",
+    "error",
+    "error"
+   ],
+   "stdout_text": [],
+   "stderr": [
+    "2026-09-23T16:02:15.504686Z ERROR codex_models_manager::manager: failed to refresh available models: request timed out",
+    "2026-09-23T16:02:15.525903Z ERROR codex_models_manager::manager: failed to refresh available models: request timed out",
+    "2026-09-23T16:02:20.722255Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest(\"http/request failed: error sending request for url (https://chatgpt.com/backend-api/ps/mcp)\"))",
+    "2026-09-23T16:02:25.979823Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest(\"http/request failed: error sending request for url (https://chatgpt.com/backend-api/ps/mcp)\"))",
+    "2026-09-23T16:02:31.987382Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest(\"http/request failed: error sending request for url (https://chatgpt.com/backend-api/ps/mcp)\"))",
+    "2026-09-23T16:02:36.993654Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest(\"http/request failed: error sending request for url (https://chatgpt.com/backend-api/ps/mcp)\"))",
+    "2026-09-23T16:02:42.258512Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest(\"http/request failed: error sending request for url (https://chatgpt.com/backend-api/ps/mcp)\"))",
+    "2026-09-23T16:02:48.267788Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest(\"http/request failed: error sending request for url (https://chatgpt.com/backend-api/ps/mcp)\"))"
+   ],
+   "auth_file_unchanged": true
+  },
+  "participant, human output": {
+   "argv_tail": [
+    "--skip-git-repo-check",
+    "--ephemeral",
+    "--ignore-user-config",
+    "--ignore-rules",
+    "-c",
+    "permissions.dml-discussant={ extends = \":read-only\", filesystem = { \"~/.codex/auth.json\" = \"deny\" } }",
+    "-c",
+    "default_permissions=\"dml-discussant\"",
+    "--model",
+    "gpt-6-luna",
+    "-"
+   ],
+   "state": "timed_out",
+   "exit": -15,
+   "duration_ms": 90095,
+   "tree_confirmed_empty": true,
+   "jsonl_types": [],
+   "stdout_text": [],
+   "stderr": [
+    "2026-09-23T16:03:45.541661Z ERROR codex_models_manager::manager: failed to refresh available models: request timed out",
+    "2026-09-23T16:03:45.563038Z ERROR codex_models_manager::manager: failed to refresh available models: request timed out",
+    "OpenAI Codex v0.156.1",
+    "--------",
+    "workdir: /tmp/dml-k46-exec-hy23_wod/work",
+    "model: gpt-6-luna",
+    "provider: openai",
+    "approval: never",
+    "sandbox: read-only",
+    "reasoning effort: none",
+    "reasoning summaries: none",
+    "session id: <uuid>",
+    "--------",
+    "user",
+    "Reply with exactly: OK",
+    "2026-09-23T16:03:50.768787Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest(\"http/request failed: error sending request for url (https://chatgpt.com/backend-api/ps/mcp)\"))",
+    "2026-09-23T16:03:56.028520Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest(\"http/request failed: error sending request for url (https://chatgpt.com/backend-api/ps/mcp)\"))",
+    "2026-09-23T16:04:02.033704Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest(\"http/request failed: error sending request for url (https://chatgpt.com/backend-api/ps/mcp)\"))",
+    "2026-09-23T16:04:07.037989Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest(\"http/request failed: error sending request for url (https://chatgpt.com/backend-api/ps/mcp)\"))",
+    "2026-09-23T16:04:12.294083Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest(\"http/request failed: error sending request for url (https://chatgpt.com/backend-api/ps/mcp)\"))",
+    "2026-09-23T16:04:18.306695Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest(\"http/request failed: error sending request for url (https://chatgpt.com/backend-api/ps/mcp)\"))",
+    "ERROR: Reconnecting... 2/5",
+    "ERROR: Reconnecting... 3/5",
+    "ERROR: Reconnecting... 4/5",
+    "ERROR: Reconnecting... 5/5"
+   ],
+   "auth_file_unchanged": true
+  },
+  "undefined profile --json": {
+   "argv_tail": [
+    "--json",
+    "--skip-git-repo-check",
+    "--ephemeral",
+    "--ignore-user-config",
+    "--ignore-rules",
+    "-c",
+    "permissions.dml-discussant={ extends = \":read-only\", filesystem = { \"~/.codex/auth.json\" = \"deny\" } }",
+    "-c",
+    "default_permissions=\"notamode\"",
+    "--model",
+    "gpt-6-luna",
+    "-"
+   ],
+   "state": "exited",
+   "exit": 1,
+   "duration_ms": 54,
+   "tree_confirmed_empty": true,
+   "jsonl_types": [],
+   "stdout_text": [],
+   "stderr": [
+    "Error: default_permissions refers to undefined profile `notamode`"
+   ],
+   "auth_file_unchanged": true
+  },
+  "legacy --sandbox read-only, human output": {
+   "argv_tail": [
+    "--skip-git-repo-check",
+    "--ephemeral",
+    "--ignore-user-config",
+    "--ignore-rules",
+    "--sandbox",
+    "read-only",
+    "--model",
+    "gpt-6-luna",
+    "-"
+   ],
+   "state": "timed_out",
+   "exit": -15,
+   "duration_ms": 90083,
+   "tree_confirmed_empty": true,
+   "jsonl_types": [],
+   "stdout_text": [],
+   "stderr": [
+    "2026-09-23T16:05:15.671232Z ERROR codex_models_manager::manager: failed to refresh available models: request timed out",
+    "2026-09-23T16:05:15.689563Z ERROR codex_models_manager::manager: failed to refresh available models: request timed out",
+    "OpenAI Codex v0.156.1",
+    "--------",
+    "workdir: /tmp/dml-k46-exec-bzul_38e/work",
+    "model: gpt-6-luna",
+    "provider: openai",
+    "approval: never",
+    "sandbox: read-only",
+    "reasoning effort: none",
+    "reasoning summaries: none",
+    "session id: <uuid>",
+    "--------",
+    "user",
+    "Reply with exactly: OK",
+    "2026-09-23T16:05:20.742042Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest(\"http/request failed: error sending request for url (https://chatgpt.com/backend-api/ps/mcp)\"))",
+    "2026-09-23T16:05:26.008211Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest(\"http/request failed: error sending request for url (https://chatgpt.com/backend-api/ps/mcp)\"))",
+    "2026-09-23T16:05:32.018906Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest(\"http/request failed: error sending request for url (https://chatgpt.com/backend-api/ps/mcp)\"))",
+    "2026-09-23T16:05:37.023741Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest(\"http/request failed: error sending request for url (https://chatgpt.com/backend-api/ps/mcp)\"))",
+    "2026-09-23T16:05:42.278993Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest(\"http/request failed: error sending request for url (https://chatgpt.com/backend-api/ps/mcp)\"))",
+    "2026-09-23T16:05:48.284504Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest(\"http/request failed: error sending request for url (https://chatgpt.com/backend-api/ps/mcp)\"))",
+    "ERROR: Reconnecting... 2/5",
+    "ERROR: Reconnecting... 3/5",
+    "ERROR: Reconnecting... 4/5",
+    "ERROR: Reconnecting... 5/5"
+   ],
+   "auth_file_unchanged": true
+  }
+ }
+}
