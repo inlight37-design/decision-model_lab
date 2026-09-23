@@ -41,11 +41,25 @@ BEHAVIORS = ("ok", "slow", "fail", "partial_input", "hang")
 MAX_BODY = 2 * 1024 * 1024
 
 
+class RequestError(ValueError):
+    def __init__(self, status: int, message: str) -> None:
+        super().__init__(message)
+        self.status = status
+
+
+def _text(body: dict, key: str, default: str = "") -> str:
+    value = body.get(key, default)
+    if not isinstance(value, str):
+        raise ControllerError(f"{key} must be a string")
+    return value
+
+
 def make_handler(controller: Controller, token: str, port: int):
     allowed_hosts = {f"127.0.0.1:{port}", f"localhost:{port}"}
 
     class Handler(BaseHTTPRequestHandler):
         server_version = "ledger-mock"
+        timeout = 5.0  # 헤더·본문의 소켓 유휴 제한. 전체 요청의 벽시계/동시 연결 상한은 아니다.
 
         def log_message(self, fmt, *args):  # 요청 줄에 토큰이 없으므로 그대로 두되, 조용히
             pass
@@ -57,6 +71,10 @@ def make_handler(controller: Controller, token: str, port: int):
             self.send_header("Cache-Control", "no-store")
             self.send_header("X-Content-Type-Options", "nosniff")
             self.send_header("Referrer-Policy", "no-referrer")
+            self.send_header("X-Frame-Options", "DENY")
+            self.send_header("Content-Security-Policy", "frame-ancestors 'none'")
+            self.send_header("Connection", "close")
+            self.close_connection = True  # 거절한 본문을 다음 요청으로 해석하지 않는다.
             self.end_headers()
             self.wfile.write(body)
 
@@ -64,15 +82,46 @@ def make_handler(controller: Controller, token: str, port: int):
             self._send(code, json.dumps(data, ensure_ascii=False).encode("utf-8"))
 
         def _guard(self) -> bool:
-            if self.headers.get("Host") not in allowed_hosts:
+            if len(self.headers.get_all("Host", [])) != 1 or self.headers.get("Host") not in allowed_hosts:
                 self._json(403, {"error": "unexpected Host header"})
+                return False
+            origins = self.headers.get_all("Origin", [])
+            if origins and origins != [f"http://{self.headers['Host']}"]:
+                self._json(403, {"error": "unexpected Origin header"})
                 return False
             if urlsplit(self.path).path.startswith("/api/"):
                 given = self.headers.get("Authorization", "")
-                if not hmac.compare_digest(given.encode(), f"Bearer {token}".encode()):
+                if (len(self.headers.get_all("Authorization", [])) != 1
+                        or not hmac.compare_digest(given.encode(), f"Bearer {token}".encode())):
                     self._json(401, {"error": "missing or wrong token"})
                     return False
             return True
+
+        def _read_json(self) -> dict:
+            lengths = self.headers.get_all("Content-Length", [])
+            if self.headers.get_all("Transfer-Encoding", []) or len(lengths) > 1:
+                raise RequestError(400, "ambiguous or unsupported body framing")
+            if not lengths:
+                raise RequestError(411, "Content-Length required")
+            value = lengths[0]
+            if not value.isascii() or not value.isdecimal():
+                raise RequestError(400, "invalid Content-Length")
+            if len(value) > 10 or int(value) > MAX_BODY:
+                raise RequestError(413, "body too large")
+            types = self.headers.get_all("Content-Type", [])
+            if len(types) != 1 or self.headers.get_content_type() != "application/json":
+                raise RequestError(415, "application/json required")
+            size = int(value)
+            try:
+                raw = self.rfile.read(size)
+            except TimeoutError:
+                raise RequestError(408, "request body timed out") from None
+            if len(raw) != size:
+                raise RequestError(400, "incomplete request body")
+            body = json.loads(raw.decode("utf-8"))
+            if not isinstance(body, dict):
+                raise RequestError(400, "JSON body must be an object")
+            return body
 
         def do_GET(self):
             if not self._guard():
@@ -91,28 +140,30 @@ def make_handler(controller: Controller, token: str, port: int):
         def do_POST(self):
             if not self._guard():
                 return
-            size = int(self.headers.get("Content-Length") or 0)
-            if size > MAX_BODY:
-                self._json(413, {"error": "body too large"})
-                return
             try:
-                body = json.loads(self.rfile.read(size) or b"{}")
+                body = self._read_json()
                 parts = urlsplit(self.path).path.strip("/").split("/")
                 if parts == ["api", "runs"]:
                     chosen = []
-                    for item in body.get("participants", []):
+                    items = body.get("participants", [])
+                    if not isinstance(items, list) or any(not isinstance(item, dict) for item in items):
+                        raise ControllerError("participants must be an array of objects")
+                    for item in items:
                         spec = PARTICIPANTS[item["pid"]]
                         behavior = item.get("behavior", "ok")
                         if behavior not in BEHAVIORS:
                             raise ControllerError(f"unknown behavior {behavior!r}")
                         chosen.append(ParticipantSpec(**{**vars(spec), "behavior": behavior}))
-                    run_id = controller.create_run(str(body.get("question", "")), chosen,
-                                                   min_independent=int(body.get("min_independent", 2)),
-                                                   quorum_policy=str(body.get("quorum_policy", "independent_only")))
+                    minimum = body.get("min_independent", 2)
+                    if type(minimum) is not int:
+                        raise ControllerError("min_independent must be an integer")
+                    run_id = controller.create_run(_text(body, "question"), chosen,
+                                                   min_independent=minimum,
+                                                   quorum_policy=_text(body, "quorum_policy", "independent_only"))
                     self._json(200, {"run_id": run_id})
                 elif len(parts) == 5 and parts[:2] == ["api", "runs"] and parts[3] == "manual":
-                    controller.submit_manual(parts[2], parts[4], str(body.get("text", "")),
-                                             str(body.get("input_sha256", "")),
+                    controller.submit_manual(parts[2], parts[4], _text(body, "text"),
+                                             _text(body, "input_sha256"),
                                              user_confirmed=body.get("user_confirmed") is True)
                     self._json(200, {"ok": True})
                 elif len(parts) == 5 and parts[:2] == ["api", "runs"] and parts[3] == "withdraw":
@@ -129,7 +180,9 @@ def make_handler(controller: Controller, token: str, port: int):
                     self._json(200, {"ok": True})
                 else:
                     self._json(404, {"error": "not found"})
-            except (ControllerError, KeyError, ValueError, TypeError) as exc:
+            except RequestError as exc:
+                self._json(exc.status, {"error": str(exc)})
+            except (ControllerError, KeyError, ValueError, TypeError, RecursionError) as exc:
                 self._json(400, {"error": str(exc) or type(exc).__name__})
 
     return Handler
