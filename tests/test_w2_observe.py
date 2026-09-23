@@ -43,6 +43,16 @@ if FLAVOR == "codex" and opt("--sandbox") == "notamode":
 if FLAVOR == "claude":  # 실제 CLI처럼 자기 설정 폴더에 무언가 쓴다(관측 도구가 이름을 적는지 본다)
     with open(os.path.join(os.environ["HOME"], ".claude", "fake-state.json"), "w") as f:
         f.write("{{}}")
+    # 실제 Claude 2.1.280은 조직 UUID가 든 이름으로 모델 목록 캐시를 쓴다(2026-09-23 b1)
+    catalog = os.path.join(os.environ["HOME"], ".claude", "cache", "model-catalog")
+    os.makedirs(catalog, exist_ok=True)
+    with open(os.path.join(catalog, "0f1e2d3c-4b5a-4968-8776-a5b4c3d2e1f0-70ac5e83b734-cc.json"), "w") as f:
+        f.write("{{}}")
+if FLAVOR == "codex":  # 실제 Codex 0.156.1은 계정 플러그인 ID로 캐시 폴더를 만든다(2026-09-23 b2)
+    plugin = os.path.join(os.environ["HOME"], ".codex", "plugins", "cache", "created-by-me-remote",
+                          "dev-6aaab2b95eec8191b36e08ebd75fb485")
+    os.makedirs(plugin, exist_ok=True)
+    open(os.path.join(plugin, "plugin.json"), "w").close()
 def first_line(path):
     try:
         with open(path, encoding="utf-8") as f:
@@ -148,6 +158,32 @@ class ApprovalTests(Base):
         self.assertEqual(observe.load_approval(self.state)["caps"], {"claude": 3, "codex": 2})
 
 
+class SummaryTests(unittest.TestCase):
+    """어느 플랫폼에서나 돈다. 저장소로 옮기는 요약에 계정·조직·플러그인 ID를 남기지 않고, 잘린 목록 대신 수를 남긴다."""
+
+    def test_config_changes_hide_ids_and_count_what_the_list_leaves_out(self):
+        home = "/home/u"
+        before = {f"{home}/.claude.json": (1, 1)}
+        after = {f"{home}/.claude.json": (2, 2),
+                 f"{home}/.claude/cache/model-catalog/0f1e2d3c-4b5a-4968-8776-a5b4c3d2e1f0-70ac5e83b734-cc.json": (1, 1)}
+        after.update({f"{home}/.codex/plugins/cache/x/dev-6aaab2b95eec8191b36e08ebd75fb485/f{i}.json": (1, 1)
+                      for i in range(60)})
+        out = observe._changes(before, after, lambda p: observe._scrub(p, home))
+        self.assertEqual(out["counts"], {"added": 61, "removed": 0, "changed": 1})
+        self.assertEqual(len(out["added"]), 50)                                 # 목록은 잘려도
+        self.assertEqual(out["by_folder"], {"~/.claude.json": 1, "~/.claude/cache": 1, "~/.codex/plugins": 60})
+        self.assertEqual(out["changed"], ["~/.claude.json"])
+        text = json.dumps(out)
+        self.assertNotIn("0f1e2d3c", text)
+        self.assertNotIn("6aaab2b95eec", text)
+        self.assertIn("model-catalog/<uuid>-70ac5e83b734-cc.json", text)        # 짧은 16진수 조각은 남는다
+
+    def test_scrub_masks_home_uuids_and_long_hex_only(self):
+        self.assertEqual(observe._scrub("/home/u/a 0f1e2d3c-4b5a-4968-8776-a5b4c3d2e1f0 "
+                                        "0123456789abcdef0123456789abcdef deadbeef", "/home/u"),
+                         "~/a <uuid> <hex> deadbeef")
+
+
 @unittest.skipUnless(bwrap_usable(), "bubblewrap을 쓸 수 있는 Linux에서만")
 class CallTests(Base):
     """실제 격리 경로와 가짜 CLI. 모델은 부르지 않는다."""
@@ -172,19 +208,32 @@ class CallTests(Base):
         b1 = self.call("b1")
         self.assertTrue(b1["as_expected"], b1)
         self.assertEqual(b1["argv_changes"], ["--output-format stream-json --verbose"])
+        spec_argv = b1["spec"]["argv"]                                          # 참여자의 실행 명세는 그대로 두고
+        self.assertEqual(spec_argv[spec_argv.index("--output-format") + 1], "json")
+        self.assertEqual(b1["argv_run"][b1["argv_run"].index("--output-format") + 1], "stream-json")  # 돌린 것은 따로
         self.assertEqual((b1["init"]["apiKeySource"], b1["init"]["tools"]), ("none", ["Read"]))
         answer = json.loads(json.loads((self.state / "results/001-b1.json").read_text(encoding="utf-8"))["answer"])
         self.assertTrue(answer["allowed"].startswith(observe.MARK["allowed"]))    # 공통 자료는 읽기 전용으로 보이고
         self.assertTrue(answer["forbidden"].startswith("could not"))            # 다른 참여자 초안은 안 보인다
         self.assertTrue(answer["dash_line_seen"])                               # 선행 대시 줄이 stdin으로 갔다
         self.assertEqual((b1["input_delivery"], b1["tree_confirmed_empty"]), ("complete", True))
-        self.assertEqual(b1["config_changes"]["added"], ["~/.claude/fake-state.json"])  # CLI가 쓴 설정 파일 이름
+        changes = b1["config_changes"]                                          # CLI가 쓴 설정 파일 이름. ID는 가린다
+        self.assertEqual(changes["added"], ["~/.claude/cache/model-catalog/<uuid>-70ac5e83b734-cc.json",
+                                            "~/.claude/fake-state.json"])
+        self.assertEqual(changes["counts"], {"added": 2, "removed": 0, "changed": 0})
+        self.assertEqual(changes["by_folder"], {"~/.claude/cache": 1, "~/.claude/fake-state.json": 1})
         b2 = self.call("b2")
         self.assertTrue(b2["as_expected"], b2)
         self.assertEqual(b2["stderr_counts"], {adapters.CODEX_REJECTED: 0})
         self.assertEqual(b2["codex_items"][0]["type"], "command_execution")
         self.assertTrue(any("landlock" in line for line in b2["stderr_hints"]))
-        self.assertNotIn(str(self.home), json.dumps([b1, b2], ensure_ascii=False))  # 요약에 HOME 경로를 쓰지 않는다
+        self.assertEqual(b2["config_changes"]["added"],
+                         ["~/.codex/plugins/cache/created-by-me-remote/dev-<hex>/plugin.json"])
+        self.assertEqual(b2["config_changes"]["by_folder"], {"~/.codex/plugins": 1})
+        dumped = json.dumps([b1, b2], ensure_ascii=False)
+        self.assertNotIn(str(self.home), dumped)                                # 요약에 HOME 경로를 쓰지 않는다
+        self.assertNotIn("0f1e2d3c", dumped)                                    # 조직 UUID 모양
+        self.assertNotIn("6aaab2b95eec", dumped)                                # 플러그인 ID 모양
         with self.assertRaisesRegex(observe.ObserveError, "cap of 1"):
             self.call("plain-claude")
         kinds = [c["event"] for c in observe.calls(self.state)]
@@ -193,7 +242,10 @@ class CallTests(Base):
     def test_invalid_values_must_be_refused_and_an_answer_stops_the_provider(self):
         observe.approve(self.state, {"claude": 3, "codex": 1}, 60, "시험 승인")
         self.assertTrue(self.call("p3-codex")["as_expected"])
-        self.assertTrue(self.call("p3-claude")["as_expected"])
+        p3 = self.call("p3-claude")
+        self.assertTrue(p3["as_expected"])
+        self.assertIn("notamode", p3["argv_run"])                               # 실제로 돌린 잘못된 값
+        self.assertNotIn("notamode", p3["spec"]["argv"])                        # 명세에는 참여자의 값
         install(self.home, "claude", "ignore-invalid")                          # 잘못된 값을 무시하고 답한다
         self.assertFalse(self.call("p3-claude")["as_expected"])
         with self.assertRaisesRegex(observe.ObserveError, "did not go as expected"):

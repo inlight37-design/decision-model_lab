@@ -24,8 +24,10 @@ WSL에서는 로그인 셸(`bash -l`)에서 돌린다. CLI 설치 위치(~/.loca
 plan이 "not on the child PATH"로 알려 준다(2026-09-23 aux-pc-wsl, `wsl.exe -- bash` 비로그인 셸에서 관측).
 
 실행 명세는 app.cli_executor.CliExecutor.prepare()로 만든다 — controller가 참여자를 부르는 것과 같은 argv·경계다.
-probe가 바꾸는 argv는 결과의 argv_changes에 적는다. 원 출력은 저장소 밖 상태 폴더(기본 ~/.local/state/dml-observe,
-격리 안에는 연결하지 않음)에 남는다. 저장소에는 요약만 옮기고, 계정 이메일·조직 ID·토큰은 옮기지 않는다.
+probe가 바꾼 argv는 결과의 argv_changes에, 실제로 돌린 argv는 argv_run에 적는다(spec은 참여자의 실행 명세 그대로다).
+원 출력은 저장소 밖 상태 폴더(기본 ~/.local/state/dml-observe, 격리 안에는 연결하지 않음)에 남는다. 저장소에는 요약만
+옮기고, 계정 이메일·조직 ID·토큰은 옮기지 않는다. 요약은 파일 이름·stderr·명령 속 UUID와 긴 16진수 ID를 가리지만,
+옮기기 전에 한 번 더 읽는다.
 """
 from __future__ import annotations
 
@@ -55,10 +57,19 @@ BOUNDARY = ("b1", "b1-combo", "b2")
 PLAIN = "Reply with exactly: OK"
 # stderr에서 거절·샌드박스의 흔적으로 볼 줄(K12·K30). 요약에는 줄의 앞부분만 옮긴다.
 STDERR_HINT = re.compile(r"(?i)reject|denied|blocked|sandbox|bwrap|permission|policy|landlock|seccomp")
+# CLI가 쓴 파일 이름·오류 문구 속 식별자. 2026-09-23 b1에서 Claude의 모델 목록 캐시 파일 이름에 조직 UUID가
+# 들어 있었고, Codex는 계정의 플러그인 ID로 폴더를 만들었다. 요약은 저장소로 옮기는 것이므로 가린다.
+UUID = re.compile(r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
+LONG_HEX = re.compile(r"(?<![0-9a-fA-F])[0-9a-fA-F]{24,}(?![0-9a-fA-F])")
 
 
 class ObserveError(RuntimeError):
     """호출하지 않았다. 사용량을 쓰지 않았다."""
+
+
+def _scrub(text: str, home: str) -> str:
+    """CLI 쪽 문자열(파일 이름, stderr, 명령)을 요약에 옮기기 전에 HOME을 ~로, UUID와 긴 16진수 ID를 표시로 바꾼다."""
+    return LONG_HEX.sub("<hex>", UUID.sub("<uuid>", text.replace(home, "~")))
 
 
 def boundary_prompt(allowed: str, forbidden: str, pad_kb: int = 0) -> str:
@@ -202,10 +213,20 @@ def _snapshot(folders, limit: int = 2000) -> dict[str, tuple[int, int]]:
     return found
 
 
-def _changes(before: dict, after: dict, hide) -> dict:
-    return {"added": sorted(hide(p) for p in after.keys() - before.keys())[:50],
-            "removed": sorted(hide(p) for p in before.keys() - after.keys())[:50],
-            "changed": sorted(hide(p) for p in after.keys() & before.keys() if after[p] != before[p])[:50]}
+def _changes(before: dict, after: dict, scrub) -> dict:
+    """이름 목록은 50개까지만 옮긴다. 수는 모두 세고, HOME 아래 두 단계 폴더별로도 센다 — 목록이 잘려도 CLI가
+    어디에 썼는지 보이게 한다(2026-09-23 b2: Codex가 50개를 넘게 써서 상태 DB들이 목록에서 빠졌다)."""
+    groups = {"added": after.keys() - before.keys(), "removed": before.keys() - after.keys(),
+              "changed": {p for p in after.keys() & before.keys() if after[p] != before[p]}}
+    out: dict = {kind: sorted({scrub(p) for p in paths})[:50] for kind, paths in groups.items()}
+    out["counts"] = {kind: len(paths) for kind, paths in groups.items()}
+    folders: dict[str, int] = {}
+    for paths in groups.values():
+        for p in paths:
+            top = "/".join(scrub(p).split("/")[:3])
+            folders[top] = folders.get(top, 0) + 1
+    out["by_folder"] = dict(sorted(folders.items()))
+    return out
 
 
 def _stream_json(stdout: str) -> tuple[dict | None, dict | None]:
@@ -228,12 +249,15 @@ def _names(value) -> list:
     return []
 
 
-def summarize(probe: str, run: runner.RunResult, outcome: adapters.Outcome, *, record: dict, changes: list[str],
-              work: Path, home: str, init: dict | None) -> dict:
+def summarize(probe: str, run: runner.RunResult, outcome: adapters.Outcome, *, record: dict, argv: list[str],
+              changes: list[str], work: Path, home: str, init: dict | None) -> dict:
+    """spec은 controller가 참여자에게 쓸 실행 명세이고, argv_run은 이 probe가 실제로 돌린 argv다(argv_changes만큼 다르다)."""
     text = outcome.text or ""
     hide = lambda s: s.replace(home, "~")  # noqa: E731
+    scrub = lambda s: _scrub(s, home)  # noqa: E731
     summary = {
-        "probe": probe, "spec": {**record, "argv": [hide(a) for a in record["argv"]]}, "argv_changes": changes,
+        "probe": probe, "spec": {**record, "argv": [hide(a) for a in record["argv"]]},
+        "argv_run": [hide(a) for a in argv], "argv_changes": changes,
         "runner_state": run.state, "exit": run.exit_code, "duration_ms": run.duration_ms,
         "containment": run.containment, "tree_confirmed_empty": run.tree_confirmed_empty,
         "input_delivery": run.input_delivery, "stderr_counts": run.stderr_counts,
@@ -242,8 +266,8 @@ def summarize(probe: str, run: runner.RunResult, outcome: adapters.Outcome, *, r
         "permission_denials": outcome.permission_denials, "tool_events": outcome.tool_events,
         "answer_mentions": {k: (v in text) for k, v in MARK.items()},
         "created_txt_exists_after_run": (work / "created.txt").exists(),
-        "detail": hide(outcome.detail) if outcome.detail else None,
-        "stderr_hints": [hide(line)[:200] for line in run.stderr.splitlines() if STDERR_HINT.search(line)][:20],
+        "detail": scrub(outcome.detail) if outcome.detail else None,
+        "stderr_hints": [scrub(line)[:200] for line in run.stderr.splitlines() if STDERR_HINT.search(line)][:20],
     }
     if init is not None:
         blob = json.dumps(init, ensure_ascii=False)
@@ -264,7 +288,7 @@ def summarize(probe: str, run: runner.RunResult, outcome: adapters.Outcome, *, r
                 continue
             item = event.get("item") if isinstance(event, dict) else None
             if isinstance(item, dict) and event.get("type") == "item.completed" and item.get("type") != "agent_message":
-                items.append({k: (hide(str(v))[:200] if k != "exit_code" else v) for k, v in item.items()
+                items.append({k: (scrub(str(v))[:200] if k != "exit_code" else v) for k, v in item.items()
                               if k in ("type", "command", "exit_code", "status", "aggregated_output")})
         summary["codex_items"] = items
     return summary
@@ -302,14 +326,14 @@ def call(state: Path, probe: str, model: str, *, pad_kb: int = 0, after_failure:
         init, result = _stream_json(run.stdout) if probe in ("b1", "b1-combo") else (None, None)
         judged = dataclasses.replace(run, stdout=json.dumps(result)) if result is not None else run
         outcome = adapters.interpret(ADAPTER[provider], judged, requested_model=model)
-        summary = summarize(probe, run, outcome, record=planned.record(), changes=changes, work=work,
+        summary = summarize(probe, run, outcome, record=planned.record(), argv=argv, changes=changes, work=work,
                             home=executor.home, init=init)
         # 거절돼야 하는 probe에서 "답했다"는 것은 성공 판정이나 사용량 보고가 있다는 뜻이다. CLI의 오류 문구는
         # 형식 실패의 text로 남을 수 있으므로 text로 판단하지 않는다
         answered = outcome.ok or bool(outcome.usage)
         summary["as_expected"] = (not answered) if probe in EXPECT_REFUSAL else outcome.ok
         # 실제 호출에서 CLI가 자기 설정 폴더의 어떤 파일을 쓰는가(토큰 갱신이면 인증 파일이 바뀐다). 이름만
-        summary["config_changes"] = _changes(before, after, lambda p: p.replace(executor.home, "~"))
+        summary["config_changes"] = _changes(before, after, lambda p: _scrub(p, executor.home))
         results = state / "results"
         results.mkdir(parents=True, exist_ok=True)
         path = results / f"{n:03d}-{probe}.json"
