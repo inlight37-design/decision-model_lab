@@ -44,3 +44,7 @@ python 탐침을 격리 안에서 실행했다. 원장·초안·인증 대신 �
 - Codex의 자체 bubblewrap(`codex-resources/bwrap`)이 우리 bubblewrap 안에서 명령 샌드박스를 만들 수 있는지(중첩 user namespace). 논의자에게 파일을 읽히지 않으면 명령 자체가 드물다.
 - Linux Codex가 명령을 거절할 때 stderr에 남는 문자열(`tools_rejected` 판정).
 - 연결한 CLI 폴더를 더 좁힐 수 있는지. 지금은 `~/.claude` 전체라서, 사용자가 이 배포판에서 대화형으로 쓴 Claude 세션 기록도 Claude 참여자에게 보인다. 필요한 파일만 남기는 것을 B1에서 본다.
+
+## 갱신(2026-09-23) — WSL2 리뷰 반영 뒤
+
+[WSL2 리뷰](../../reviews/2026-09-23-wsl2-migration-review/README.md)(PR #6)를 반영하면서 격리의 진입점이 `isolation.run()` 하나로 바뀌었다. 이 진입점은 root 소유 `/usr/bin/bwrap`인지 확인하고, 경로 충돌을 거절하며, 환경변수 값을 명령 인자에 싣지 않는다. 위 1의 합성 시험과 2의 CLI 도구를 새 진입점으로 다시 돌렸고 결과는 같았다. 2의 두 CLI 모두 `--version`과 로그인 상태가 exit 0이었다. 위 표의 "runner가 `containment=pid_namespace`를 돌려준다"는 이제 `isolation.run()`으로 실행했을 때의 일이다. 반영 내역은 [반영 기록](../../reviews/2026-09-23-wsl2-migration-review/RESPONSE.md)에 있다.
