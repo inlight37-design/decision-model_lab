@@ -40,11 +40,24 @@ class CliExecutor:
         self.child_env, _ = core_env.child_env(os.environ if base_env is None else base_env)
         self.max_output_bytes = max_output_bytes
 
-    def _plan(self, spec, prompt: str) -> adapters.ExecutionSpec:
+    def _plan(self, spec, prompt: str, inputs: Sequence[str] = ()) -> adapters.ExecutionSpec:
         if spec.adapter_id not in SUPPORTED:
             raise adapters.AdapterError(f"{spec.adapter_id!r} is not run by the CLI executor")
         exe = core_env.resolve(adapters.ADAPTERS[spec.adapter_id].command, self.child_env)
-        return adapters.build_spec(spec.adapter_id, exe=exe, prompt=prompt, model=spec.model or "")
+        # Claude는 읽을 폴더를 --add-dir로 알려 주고 Read 도구만 준다. Codex에는 그런 옵션을 주지 않는다 —
+        # 격리 안에 읽기 전용으로 보이는 것만 읽을 수 있다.
+        read_dirs = tuple(inputs) if spec.adapter_id == "claude-code" else ()
+        return adapters.build_spec(spec.adapter_id, exe=exe, prompt=prompt, model=spec.model or "", read_dirs=read_dirs)
+
+    def prepare(self, spec, prompt: str, work_dir: str, *,
+                inputs: Sequence[str] = ()) -> tuple[adapters.ExecutionSpec, isolation.Sandbox]:
+        """실행 명세와 격리 경계. inputs: 참여자에게 읽기 전용으로 보일 공통 자료 폴더(절대 경로).
+        관측 도구(tools/w2/observe.py)도 이것을 써서 참여자와 같은 경로로 부른다."""
+        planned = self._plan(spec, prompt, inputs)
+        ro, rw = isolation.cli_mounts(spec.adapter_id, planned.argv[0], self.home)
+        box = isolation.Sandbox(work_dir=work_dir, home=self.home, read_only=ro + tuple(inputs), read_write=rw,
+                                env=SANDBOX_ENV, never=self.never)
+        return planned, box
 
     def describe(self, spec, prompt: str) -> dict:
         """journal에 남길 실행 명세. 질문 본문 없이 digest와 크기만 있다. 거절되면 그 이유를 남긴다."""
@@ -55,10 +68,7 @@ class CliExecutor:
 
     def execute(self, spec, prompt: str, work_dir: str, timeout: float):
         try:
-            planned = self._plan(spec, prompt)
-            ro, rw = isolation.cli_mounts(spec.adapter_id, planned.argv[0], self.home)
-            box = isolation.Sandbox(work_dir=work_dir, home=self.home, read_only=ro, read_write=rw,
-                                    env=SANDBOX_ENV, never=self.never)
+            planned, box = self.prepare(spec, prompt, work_dir)
             result = isolation.run(list(planned.argv), box, timeout=timeout, stdin_text=planned.stdin_text,
                                    max_output_bytes=self.max_output_bytes,
                                    stderr_marks=adapters.STDERR_MARKS.get(spec.adapter_id, ()))
