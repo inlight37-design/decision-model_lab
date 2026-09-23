@@ -44,4 +44,10 @@ jobs:
             echo "dry_run: 지우지 않았다"
             exit 0
           fi
-          echo "$merged" | xargs git push origin --delete
+          # 목록을 가져온 뒤 누가 그 브랜치에 push했으면 지우지 않는다. 브랜치마다 가져온 커밋 값에 묶어 지운다(PR #17의
+          # Codex 리뷰). 그 사이 움직인 브랜치는 "stale info"로 거절되고 작업은 실패로 끝난다 — 다시 돌리면 새로 판정한다
+          leases=()
+          for b in $merged; do
+            leases+=("--force-with-lease=refs/heads/$b:$(git rev-parse "refs/remotes/origin/$b")")
+          done
+          git push "${leases[@]}" origin --delete $merged
