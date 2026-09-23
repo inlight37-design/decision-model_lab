@@ -185,6 +185,29 @@ def _argv_for(probe: str, argv: list[str]) -> tuple[list[str], list[str]]:
     return argv, changes
 
 
+def _snapshot(folders, limit: int = 2000) -> dict[str, tuple[int, int]]:
+    """쓰기로 연결한 설정 폴더의 파일 이름과 크기·수정 시각. 내용은 읽지 않는다(K09: 무엇을 쓰는지 보려고)."""
+    found: dict[str, tuple[int, int]] = {}
+    for folder in folders:
+        paths = [folder] if os.path.isfile(folder) else (
+            os.path.join(top, name) for top, _dirs, files in os.walk(folder) for name in files)
+        for path in paths:
+            if len(found) >= limit:
+                return found
+            try:
+                info = os.stat(path)
+            except OSError:
+                continue
+            found[path] = (info.st_size, info.st_mtime_ns)
+    return found
+
+
+def _changes(before: dict, after: dict, hide) -> dict:
+    return {"added": sorted(hide(p) for p in after.keys() - before.keys())[:50],
+            "removed": sorted(hide(p) for p in before.keys() - after.keys())[:50],
+            "changed": sorted(hide(p) for p in after.keys() & before.keys() if after[p] != before[p])[:50]}
+
+
 def _stream_json(stdout: str) -> tuple[dict | None, dict | None]:
     init = result = None
     for line in stdout.splitlines():
@@ -271,8 +294,10 @@ def call(state: Path, probe: str, model: str, *, pad_kb: int = 0, after_failure:
         n = max([c["n"] for c in calls(state)], default=0) + 1
         _append(state, {"event": "started", "n": n, "provider": provider, "probe": probe, "model": model,
                         "at": time.strftime("%Y-%m-%dT%H:%M:%S%z")})
+        before = _snapshot(box.read_write)
         run = isolation.run(argv, box, timeout=approval["timeout"], stdin_text=planned.stdin_text,
                             stderr_marks=adapters.STDERR_MARKS.get(ADAPTER[provider], ()))
+        after = _snapshot(box.read_write)
         init, result = _stream_json(run.stdout) if probe in ("b1", "b1-combo") else (None, None)
         judged = dataclasses.replace(run, stdout=json.dumps(result)) if result is not None else run
         outcome = adapters.interpret(ADAPTER[provider], judged, requested_model=model)
@@ -282,6 +307,8 @@ def call(state: Path, probe: str, model: str, *, pad_kb: int = 0, after_failure:
         # 형식 실패의 text로 남을 수 있으므로 text로 판단하지 않는다
         answered = outcome.ok or bool(outcome.usage)
         summary["as_expected"] = (not answered) if probe in EXPECT_REFUSAL else outcome.ok
+        # 실제 호출에서 CLI가 자기 설정 폴더의 어떤 파일을 쓰는가(토큰 갱신이면 인증 파일이 바뀐다). 이름만
+        summary["config_changes"] = _changes(before, after, lambda p: p.replace(executor.home, "~"))
         results = state / "results"
         results.mkdir(parents=True, exist_ok=True)
         path = results / f"{n:03d}-{probe}.json"
