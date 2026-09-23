@@ -30,7 +30,7 @@
 ## 2. 세션을 시작할 때
 
 1. `git fetch --all --prune` 후 현재 브랜치와 `git status`를 확인한다.
-2. **열린 PR과 원격 브랜치를 확인한다** (`git branch -r`, GitHub의 PR 목록). [`NEXT-SESSION.md`](../NEXT-SESSION.md)의 "진행 중인 작업" 절과 다르면 인계 문서가 낡은 것이다. 실제 상태를 기준으로 한다.
+2. **열린 PR과 병합되지 않은 원격 브랜치를 확인한다** (`git branch -r --no-merged origin/main`, GitHub의 PR 목록). [`NEXT-SESSION.md`](../NEXT-SESSION.md)의 "진행 중인 작업" 절과 다르면 인계 문서가 낡은 것이다. 실제 상태를 기준으로 한다.
 3. `NEXT-SESSION.md` → [`AGENTS.md`](../AGENTS.md) 순서로 읽는다. 과거 문서 전체를 prompt에 넣지 않는다.
 4. **이 세션의 접근 범위를 적어 둔다.** 사용자 PC인가(어느 기기인가), 웹 컨테이너인가, CLI가 설치·로그인돼 있는가, GitHub만 보는가. PR 본문에 옮긴다.
 5. 다른 세션의 열린 PR과 같은 파일을 고칠 예정이면 **그 브랜치를 base로 시작하거나 병합을 기다린다.** 남의 브랜치에 직접 push하지 않는다.
@@ -84,6 +84,12 @@
 3. PR 본문의 [템플릿](../.github/pull_request_template.md)을 채운다 — 작성 세션, 접근 범위, 검증한 것과 하지 않은 것.
 4. push 후 CI 결과를 확인한다. **녹색을 보기 전에는 "통과"라고 적지 않는다.**
 5. 병합은 사용자가 하거나, CI 녹색을 확인한 claude 세션이 한다(`NEXT-SESSION.md` 2절 8).
+6. **병합한 쪽이 그 브랜치를 원격에서 지운다**(`git push origin --delete <브랜치>`). 병합된 브랜치가 남으면 목록만 보고 진행 중인 일을 알 수 없다 — 2026-09-24에는 병합된 브랜치가 지워지지 않고 쌓여 있었다. 자기 브랜치에만 push할 수 있는 세션(웹 컨테이너 등)은 지우지 못하므로 PR과 인계 3절에 적는다. 그러면 사용자가 진행 중인 세션이 없을 때 아래 명령으로 한꺼번에 지운다(Git Bash나 WSL, 저장소 루트). main에 모두 들어간 브랜치만 지운다.
+
+   ```bash
+   git fetch --all --prune
+   git branch -r --merged origin/main | sed 's/^ *//' | grep -v -e '^origin/main$' -e '^origin/HEAD' | sed 's#^origin/##' | xargs -r git push origin --delete
+   ```
 
 ## 6. 이 규칙을 지키게 하는 장치
 

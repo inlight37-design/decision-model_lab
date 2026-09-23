@@ -1,17 +1,17 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-24** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout과 그 WSL) · 브랜치 `claude/review-response-20260924`
+최종 갱신 **2026-09-24** · 작성 세션: claude (Claude Code 웹 컨테이너 — 사용자 PC 없음, GitHub과 이 저장소의 clone만) · 브랜치 `claude/cleanup-merge-branches-il1srl`
 
 이 파일 하나에서 시작한다. 절 구성은 고정이고 CI가 확인한다. 규칙은 [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있다. 1단계(실제 호출 전 확인)를 마치고 통째로 다시 쓴 판에 **2단계(승인된 모델 호출)의 결과를 더한 판**이다. 1단계 각 항목(N0–N6)의 경위와 긴 병합 이력은 [1단계 직후 판](docs/handoff/2026-09-23-before-stage2.md)과 Git 로그에 있다. 여기에는 지금 상태, 한계와 못 고친 문제(4절의 K 표), 다음 일만 둔다.
 
 ## 0. 먼저 확인할 것
 
-1. `git fetch --all --prune` 후 GitHub의 열린 PR과 원격 브랜치를 본다. **아래 3절에 없는 PR이 있으면 이 문서가 낡은 것이다.** 실제 상태를 기준으로 한다. 이 PC의 GitHub CLI는 `C:\ai\tools\gh\bin\gh.exe`다(PATH에 없다, 6절). 로그인은 사용자가 한다 — `gh auth status`가 로그인 안 됨이면 열린 PR과 CI 결과를 익명 GitHub API로 본다(6절).
+1. `git fetch --all --prune` 후 GitHub의 열린 PR과 병합되지 않은 원격 브랜치(`git branch -r --no-merged origin/main`)를 본다. **아래 3절에 없는 PR이 있으면 이 문서가 낡은 것이다.** 실제 상태를 기준으로 한다. 이 PC의 GitHub CLI는 `C:\ai\tools\gh\bin\gh.exe`다(PATH에 없다, 6절). 로그인은 사용자가 한다 — `gh auth status`가 로그인 안 됨이면 열린 PR과 CI 결과를 익명 GitHub API로 본다(6절).
 2. 지금 어느 기기인지 확인한다. 이 저장소를 편집해 온 기기는 **보조 PC `aux-pc`(Windows)**와 그 안의 **WSL2 배포판 `Ubuntu-24.04`(이름표 `aux-pc-wsl`)**다. 운용 PC는 관측한 세션이 없다.
 3. 이 세션이 무엇에 접근할 수 있는지(사용자 PC / 웹 컨테이너 / GitHub만) 정하고 PR에 적는다.
 4. **GitHub만 보는 세션**(ChatGPT 웹 등)이라면 main이 아직 이 파일의 최신판이 아닐 수 있다. 3절의 브랜치에서 이 파일을 다시 읽는다.
 5. **모델을 부르는 일은 사용자 승인 뒤에만 한다.** 사용량이 막히면 멈추고 알린다(사용자 요청 — Codex 사용량이 적게 남아 있었다). 2단계 승인(Claude 3·Codex 2)은 모두 썼다 — 더 부르려면 새로 승인받는다.
-6. **사용자에게 받을 것(3절):** 리뷰 PR #14와 반영 PR의 병합, Claude 문맥 칸을 `unknown`으로 바꿀지(리뷰 R04), K46 확인 호출(Codex 1회)의 승인 카드, 두 CLI의 문맥 판정을 푸는 방법(C3), PR #8(tmux 조사, 병합됨)의 TM 항목을 작업으로 받을지. 답을 받기 전에는 진행하지 않는다.
+6. **사용자에게 받을 것(3절):** 병합된 원격 브랜치 삭제(사용자 PC에서), Claude 문맥 칸을 `unknown`으로 바꿀지(리뷰 R04), K46 확인 호출(Codex 1회)의 승인 카드, 두 CLI의 문맥 판정을 푸는 방법(C3), PR #8(tmux 조사, 병합됨)의 TM 항목을 작업으로 받을지. 답을 받기 전에는 진행하지 않는다.
 
 ## 1. 지금 상태
 
@@ -120,9 +120,13 @@
 
 ## 3. 진행 중인 작업
 
-**지금 병합되지 않은 브랜치: 없음.** 이 줄은 병합 뒤에 맞도록 브랜치에서 미리 "없음"으로 적었다. 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다 — 2026-09-24 반영 세션의 권한 확인이 리뷰 PR 병합을 막았으므로, 반영 브랜치가 아직 열려 있으면 사용자가 병합할 차례다.
+**지금 병합되지 않은 브랜치: 없음.** 이 줄은 병합 뒤에 맞도록 브랜치에서 미리 "없음"으로 적었다. 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다. 원격에 보이는 브랜치가 모두 진행 중인 것은 아니다 — 병합된 브랜치는 누가 지울 때까지 남는다. 진행 중인 것은 `git branch -r --no-merged origin/main`으로 본다.
 
-- **마지막 병합:** 리뷰 반영(`claude/review-response-20260924`, 모델 호출 없음) — [반영 기록](docs/reviews/2026-09-24-review/RESPONSE.md). 리뷰 브랜치 위에 쌓아서 리뷰 PR #14도 함께 들어간다.
+- **마지막 병합:** 브랜치 정리와 PR #15 후속(`claude/cleanup-merge-branches-il1srl`, 모델 호출 없음). 사용자 지시("여기 브랜치가 왜이렇게 많은거지 확인하고 좀 정리해서 병합좀해줘")로 claude 웹 세션이 했다.
+  - 리뷰 PR #14와 반영 PR #15를 차례로 병합했다. 둘 다 CI 녹색이었다.
+  - PR #15에 대한 Codex 리뷰(P2): `--pad-kb`로 부른 probe가 가운데·끝 표식을 놓쳐도 `as_expected`가 참이었다. 앞부분만 읽은 CLI가 전송 증거로 남고 멈춤 규칙도 서지 않는다. 이제 두 표식을 모두 되말해야 기대대로다. 앞부분만 읽는 가짜 CLI로 회귀 시험이 이것과 멈춤을 고정한다.
+  - 원격 브랜치가 많았던 까닭: 세션마다 주제별 브랜치를 만들었고, 병합한 뒤 지우는 규칙이 없었다. 남은 브랜치는 모두 main에 들어가 있었다(이 세션이 하나씩 확인했다). [협업 규칙](docs/COLLABORATION.md) 5절에 "병합한 쪽이 지운다"와 한꺼번에 지우는 명령을 더했다. 이 세션은 자기 브랜치 밖으로 push할 수 없어(403) 지우지 못했다.
+- **그 앞:** 리뷰 반영([PR #15](https://github.com/inlight37-design/decision-model_lab/pull/15), `claude/review-response-20260924`, 모델 호출 없음) — [반영 기록](docs/reviews/2026-09-24-review/RESPONSE.md). 리뷰 브랜치 위에 쌓았다.
   - R01: `k46-codex`가 nonce를 넣은 고정 helper의 errno로 판정한다. 인증 파일 열기는 지울 수 없는 위반이다.
   - R02: 실행 허가와 기록 검사기가 같은 구조 검사를 쓴다. 미래·없는 날짜, 근거 없음, 버전 없음, 중복 행을 거절한다.
   - R03: 관측 도구가 controller의 수용 관문(`acceptance`)을 쓰고, P3는 확인된 오류로 끝나야 한다.
@@ -130,13 +134,9 @@
   - R05–R09: 예약 잠금, 세션 요약의 수, 마지막 가림, 큰 입력의 끝 표식, 쓰기 검사의 세 상태.
   - 합성 HOME 진단([기록](docs/experiments/w2-isolation/k46-synthetic-aux-pc-wsl.md)).
 - **그 앞:** ChatGPT의 [리뷰](docs/reviews/2026-09-24-review/README.md)([PR #14](https://github.com/inlight37-design/decision-model_lab/pull/14), `chatgpt/review-20260924`). GitHub와 웹 컨테이너만 썼고 코드는 `a26e504`에 고정했다. 제품 코드와 원래 판정은 바꾸지 않았다.
-- **그 앞:** 리뷰 요청서(`claude/review-request-20260924`, [PR #13](https://github.com/inlight37-design/decision-model_lab/pull/13), 문서만) — [2026-09-24 요청서](docs/reviews/2026-09-24-review-request/README.md). 지금까지의 흐름, PR #8–#12, 실패·시행착오 S22–S33을 정리하고 관측 요약을 가려서 옮겼다.
-- **그 앞:** [PR #12](https://github.com/inlight37-design/decision-model_lab/pull/12) K46 방어(`claude/k46-codex-auth-deny-20260924`, 모델 호출 없음).
-  - adapter가 Linux Codex에 로그인 파일만 읽기 금지한 권한 profile을 준다.
-  - 네트워크 없는 exec 진단 도구 `tools/w2/codex_profile.py`와 그 [기록](docs/experiments/w2-isolation/k46-profile-aux-pc-wsl.md)을 더했다.
-  - 관측 도구에 `k46-codex`, `--keep-session`, 토큰 가림을 더하고 `p3-codex`를 고쳤다.
-  - 인계가 적었던 "exec에 `-P`를 넘긴다"는 exec에 없는 옵션이라 틀렸다. `default_permissions`로 바로잡았다.
 - **그보다 앞(최근 순):**
+  - [PR #13](https://github.com/inlight37-design/decision-model_lab/pull/13) 리뷰 요청서(문서만) — [2026-09-24 요청서](docs/reviews/2026-09-24-review-request/README.md). 지금까지의 흐름, PR #8–#12, 실패·시행착오 S22–S33, 가려서 옮긴 관측 요약.
+  - [PR #12](https://github.com/inlight37-design/decision-model_lab/pull/12) K46 방어(모델 호출 없음): adapter의 권한 profile, 네트워크 없는 exec 진단 `tools/w2/codex_profile.py`와 그 [기록](docs/experiments/w2-isolation/k46-profile-aux-pc-wsl.md), 관측 도구의 `k46-codex`·`--keep-session`·토큰 가림. 인계가 적었던 "exec에 `-P`를 넘긴다"를 `default_permissions`로 바로잡았다.
   - [PR #11](https://github.com/inlight37-design/decision-model_lab/pull/11) 편의·오케스트레이션 후보 기록(2절 20).
   - [PR #10](https://github.com/inlight37-design/decision-model_lab/pull/10) K01 관측(Claude 1회)과 인계 정리.
   - [PR #9](https://github.com/inlight37-design/decision-model_lab/pull/9) 2단계 후속: K46 진단, 권한 profile 시험, gh 설치.
@@ -145,7 +145,7 @@
 - 각 병합의 경위는 PR 본문과 Git 로그에 있다. 그 앞은 [1단계 직후 판](docs/handoff/2026-09-23-before-stage2.md) 3절에 있다.
 
 사용자의 판단을 기다리는 것:
-- **병합.** 리뷰 PR #14와 반영 PR — 이 세션의 권한 확인이 리뷰 PR 병합을 막았다. 반영 PR을 병합하면 리뷰도 함께 들어간다.
+- **병합된 원격 브랜치 삭제(사용자 PC에서).** 웹 컨테이너 세션은 지우지 못했다. main에 모두 들어간 브랜치만 지우는 명령이 [협업 규칙](docs/COLLABORATION.md) 5절에 있다 — 진행 중인 세션이 없을 때 Git Bash나 WSL의 저장소 루트에서 돌린다. 이 정리 브랜치도 병합된 뒤라면 함께 지워진다. GitHub 저장소 설정(General → Pull Requests)의 "Automatically delete head branches"를 켜면 GitHub에서 병합한 PR의 브랜치는 저절로 지워진다 — 로컬에서 병합해 main에 push한 경우에도 지워지는지는 확인하지 않았다.
 - **Claude 문맥 칸(리뷰 R04 (a)).** 근거가 모델의 자기 보고뿐이라 리뷰는 `unknown`을 권하고 claude 세션도 동의한다. 바꾸면 Claude도 실제 실행 허가를 잃는다 — K31을 모델 보고가 아닌 방법으로 닫거나(모델 1회) 정책 칸을 설계할 때까지. 권고: 바꾸고 K31 확인을 B3 전 승인 목록에 넣는다([반영 기록](docs/reviews/2026-09-24-review/RESPONSE.md) "사용자에게 묻는 것" 1).
 - **PR #8의 TM 항목을 작업으로 받을지.** 병합은 조사 문서를 main에 둔 것이고 작업을 받은 것은 아니다. claude 세션의 권고는 적용 계획 A(화면 조회의 요청 겹침 막기, 늦게 온 응답 버리기, 연결 끊김과 마지막 확인 시각 표시)만 3단계 화면 작업에 넣는 것이다. tmux를 참여자 실행 엔진으로 쓰지 않는다는 판단은 조사와 claude 세션이 같다 — bubblewrap 안의 참여자가 밖의 tmux server에 일을 맡기면 격리와 자손 종료 확인이 깨진다.
 - **K46 확인 호출의 승인 카드** — 리뷰가 권한 판정식 보강과 합성 HOME 진단을 마쳤다(모델 없음). 남은 것은 Codex exec 1회(`observe.py call k46-codex gpt-6-luna`)다. 권하는 카드: Codex 최대 1회(Claude 0), 실패·거부·시간 초과 포함, 호출당 300초, 모델 `gpt-6-luna`, `--keep-session` 끔. 인증 파일이 없거나, helper가 아닌 명령이 돌거나, 종료가 확인되지 않거나, 인증 파일이 열리거나 토큰 모양이 보이면 멈춘다. 사용량 한도 메시지면 모두 멈추고 원문을 게시하지 않는다.
@@ -194,7 +194,7 @@ A1 리뷰가 먼저 하라고 한 관문 보강(N0, [반영 기록](docs/reviews
 
 1. `python3 tools/w2/observe.py plan` — 모델 호출 없음. probe마다 실제로 돌릴 argv, 연결 경로, 승인 상태를 본다. "not on the child PATH"면 로그인 셸이 아니다.
 2. `python3 tools/w2/observe.py approve --claude <n> --codex <n> --timeout <초> --note "<누가·언제·어디서 승인>"` — **사용자가 새로 정한 값 그대로.** 모델 이름은 전체 이름으로 받는다(K43). 호출 전에 관측할 목록과 명령의 옵션(`--pad-kb` 등)을 맞춰 본다.
-3. `python3 tools/w2/observe.py call <probe> <전체 모델 이름> [--keep-session]` — 한 번 부르고 출력 JSON(`as_expected`, `boundary_violations`, `argv_run`, init 요약, `config_changes`, stderr 힌트, 토큰)을 읽는다. 도구의 `as_expected`는 답을 받았는지와 경계 위반(금지 표식이 답·출력에 보임, 작업 폴더에 파일이 생김)까지 본다 — 지시문 표식, 도구 시도, 거절 방식은 답과 원 출력에서 직접 본다. 종료 코드 3은 기대와 다르다는 뜻이다 — 그 provider는 멈춘다. 종료 코드 2는 부르지 않았다는 뜻이다(사용량을 쓰지 않았다). `p3-*`는 모델 응답 없이 거절돼야 하는 호출이지만 상한에는 센다. `k46-codex`는 `k46`(helper의 실제 출력에서 읽은 판정)을, 답을 받는 probe는 `gate`(controller와 같은 수용 관문)를 함께 본다. `--pad-kb`를 쓰면 `pad_markers_seen`을 본다.
+3. `python3 tools/w2/observe.py call <probe> <전체 모델 이름> [--keep-session]` — 한 번 부르고 출력 JSON(`as_expected`, `boundary_violations`, `argv_run`, init 요약, `config_changes`, stderr 힌트, 토큰)을 읽는다. 도구의 `as_expected`는 답을 받았는지와 경계 위반(금지 표식이 답·출력에 보임, 작업 폴더에 파일이 생김)까지 본다 — 지시문 표식, 도구 시도, 거절 방식은 답과 원 출력에서 직접 본다. 종료 코드 3은 기대와 다르다는 뜻이다 — 그 provider는 멈춘다. 종료 코드 2는 부르지 않았다는 뜻이다(사용량을 쓰지 않았다). `p3-*`는 모델 응답 없이 거절돼야 하는 호출이지만 상한에는 센다. `k46-codex`는 `k46`(helper의 실제 출력에서 읽은 판정)을, 답을 받는 probe는 `gate`(controller와 같은 수용 관문)를 함께 본다. `--pad-kb`를 쓰면 두 표식을 모두 되말해야 기대대로다(`pad_markers_seen`).
 4. `python3 tools/w2/observe.py status`로 남은 상한을 본다.
 
 - 원 출력은 WSL 안 `~/.local/state/dml-observe/`(저장소 밖, 격리 안에 연결하지 않음)에 남는다. 저장소에는 요약만 옮기고, 계정 이메일·조직 ID·토큰은 옮기지 않는다. **요약도 옮기기 전에 읽는다** — 2단계에서 CLI가 쓴 파일 이름에 조직 UUID가 들어 있었다(지금은 도구가 가린다).
@@ -231,7 +231,7 @@ A1 리뷰가 먼저 하라고 한 관문 보강(N0, [반영 기록](docs/reviews
 
 | ID | 영역 | 한계·문제 | 지금의 대응 | 닫는 곳 |
 |---|---|---|---|---|
-| K01 | 실행 코어 | "CLI가 입력 일부만 읽고 닫음"은 입력이 파이프 버퍼보다 클 때만 쓰는 쪽에서 드러난다. 파이프에 다 썼다는 것이 CLI가 다 읽었다는 증거도 아니다 — 2단계 `p3-*`에서 CLI가 stdin을 읽지 않고 끝났는데 22바이트가 버퍼에 들어가 `complete`였다 | `input_delivery`를 남기고, 완전하지 않으면 `input_error`. A1은 전달 기록이 없는 결과(`None`)도 받지 않는다. Claude에 약 95 KB의 stdin 질문을 끝까지 전송했고, 정상 응답과 입력만큼의 토큰 증가를 관측했다(2026-09-24, [기록](docs/experiments/w2-isolation/k01-large-input-aux-pc-wsl.md)). 마지막 바이트의 소비를 직접 보인 것은 아니다(리뷰 R08). 관측 도구의 `--pad-kb`는 이제 가운데·끝 표식을 둔다 | Codex의 큰 입력(필요할 때). 러너가 CLI의 "다 읽음"을 증명하지 못한다는 한계 자체는 남는다 |
+| K01 | 실행 코어 | "CLI가 입력 일부만 읽고 닫음"은 입력이 파이프 버퍼보다 클 때만 쓰는 쪽에서 드러난다. 파이프에 다 썼다는 것이 CLI가 다 읽었다는 증거도 아니다 — 2단계 `p3-*`에서 CLI가 stdin을 읽지 않고 끝났는데 22바이트가 버퍼에 들어가 `complete`였다 | `input_delivery`를 남기고, 완전하지 않으면 `input_error`. A1은 전달 기록이 없는 결과(`None`)도 받지 않는다. Claude에 약 95 KB의 stdin 질문을 끝까지 전송했고, 정상 응답과 입력만큼의 토큰 증가를 관측했다(2026-09-24, [기록](docs/experiments/w2-isolation/k01-large-input-aux-pc-wsl.md)). 마지막 바이트의 소비를 직접 보인 것은 아니다(리뷰 R08). 관측 도구의 `--pad-kb`는 이제 가운데·끝 표식을 두고, 하나라도 되말하지 않으면 기대대로가 아니다 | Codex의 큰 입력(필요할 때). 러너가 CLI의 "다 읽음"을 증명하지 못한다는 한계 자체는 남는다 |
 | K02 | 실행 코어 | Codex 명령 거절은 stderr의 문자열로만 안다. Linux Codex에서는 그런 문자열을 보지 못했다(K30) | runner가 보관 상한과 상관없이 stderr 전체에서 표식을 센다(`stderr_counts`, 실제 실행기가 요청). 셀 수 없었는데 stderr가 잘렸으면 답을 받지 않는다 | K30과 함께 |
 | K03 | 실행 코어 | 격리 없는 POSIX 실행은 자손 전체의 종료를 확인하지 못한다 | `tree_confirmed_empty=None` → 앱은 `unknown`. Linux 참여자는 `isolation.run()`으로만 | — |
 | K04 | 실행 코어 | 돌아온 뒤에도 파이프를 쥔 자손이 있으면 입출력 스레드·fd가 남는다(격리 없는 POSIX) | `runner.lingering()`으로 세고 정리 안 된 시도의 상한에 넣는다 | 격리 경로에서는 namespace가 정리한다 |
