@@ -107,11 +107,13 @@ def make_handler(controller: Controller, token: str, port: int):
                             raise ControllerError(f"unknown behavior {behavior!r}")
                         chosen.append(ParticipantSpec(**{**vars(spec), "behavior": behavior}))
                     run_id = controller.create_run(str(body.get("question", "")), chosen,
-                                                   min_independent=int(body.get("min_independent", 2)))
+                                                   min_independent=int(body.get("min_independent", 2)),
+                                                   quorum_policy=str(body.get("quorum_policy", "independent_only")))
                     self._json(200, {"run_id": run_id})
                 elif len(parts) == 5 and parts[:2] == ["api", "runs"] and parts[3] == "manual":
                     controller.submit_manual(parts[2], parts[4], str(body.get("text", "")),
-                                             str(body.get("input_sha256", "")))
+                                             str(body.get("input_sha256", "")),
+                                             user_confirmed=body.get("user_confirmed") is True)
                     self._json(200, {"ok": True})
                 elif len(parts) == 5 and parts[:2] == ["api", "runs"] and parts[3] == "withdraw":
                     controller.withdraw_manual(parts[2], parts[4])

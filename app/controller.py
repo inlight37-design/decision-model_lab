@@ -14,10 +14,14 @@
   진행하지 않고 사용자의 축소 승인을 기다린다(Ledger BlindBarrier). 승인은 그것을 기다릴 때만 받는다.
 - 봉인: 공개 전 화면에는 고정된 필드만 넘긴다(허용 목록). 초안의 내용·길이·digest, 토큰 수, 걸린 시간은
   공개 뒤에, CLI가 쓴 오류 설명과 runner 메모는 모든 참여자가 끝난 뒤에 넘긴다.
-- 수동 참여자(원본 앱): 사용자가 질문을 원본 앱에 옮기고 답을 붙여 넣는다. 화면이 그 카드가 속한 실행의
-  입력 digest를 자동으로 넣어 보내므로 화면에서는 digest 검사가 사실상 늘 통과한다. 막는 것은 화면을 거치지
-  않은 요청의 digest 불일치, 공개 뒤·중복 제출, 빈 답이다. 다른 실행의 답을 붙여 넣는 것도, 원본 앱에 이
-  질문을 넣었는지도 확인하지 못하고 사용자의 확인에 기댄다(K21). blind·사용량은 "관측 안 됨"이다.
+- 수동 참여자(원본 앱): 사용자가 질문을 원본 앱에 옮기고 답을 붙여 넣는다. 복사하는 질문 첫 줄에 실행 표식
+  `[Ledger <실행 ID> · <입력 sha256 앞 8자>]`을 넣고 답 첫 줄에 되말해 달라고 적는다. 답의 표식이 다른 실행의
+  것이면 받지 않는다 — 다른 카드에 붙여 넣는 실수를 잡는다(N5). 표식이 맞아도, 없어도 약한 증거일 뿐이다.
+  원본 앱에 이 질문을 넣었는지는 사용자의 확인(user_confirmed)으로 따로 남기고, 그것으로 독립성을 확인했다고
+  올리지 않는다(K21). 화면 밖 요청의 digest 불일치, 공개 뒤·중복 제출, 빈 답도 받지 않는다.
+- 정족수(Q6, 2절 18): 실행마다 정책을 고정한다. independent_only(기본)는 독립성이 확인된 참여자 — controller가
+  고정 입력만 주고 실행한 CLI — 만 센다. 원본 앱 답은 보조 근거로 함께 공개한다. include_unverified는 원본 앱
+  답도 세지만, 그 결과를 "독립 정족수 충족"으로 표시하지 않는다.
 - 정리되지 않은 시도(unknown + runner.lingering())가 상한에 닿으면 새 시도를 시작하지 않는다.
 - 다시 시작: running이던 시도는 unknown으로 둔다. 초안 작성 중인 실행은 공개 관문을 다시 본다. 대기 중인
   시도는 사용자가 이어서 시작하라고 할 때까지(resume) 시작하지 않는다 — 취소가 없어서(K19) 서버를 끄는 것이
@@ -30,6 +34,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import sys
 import tempfile
 import threading
@@ -57,6 +62,15 @@ DIAGNOSTIC_KEYS = frozenset({"detail", "notes"})
 CONTAMINATION = {
     MANUAL: ("원본 앱의 메모리·다른 대화·프로젝트 지시문을 통제하지 못함", "사용량·시간 관측 안 됨"),
 }
+
+# 정족수 정책(Q6). 실행을 만들 때 고르고 바꾸지 않는다.
+INDEPENDENT_ONLY, INCLUDE_UNVERIFIED = "independent_only", "include_unverified"
+QUORUM_POLICIES = (INDEPENDENT_ONLY, INCLUDE_UNVERIFIED)
+# 원본 앱에 옮기는 질문의 첫 줄과, 답에서 그것을 찾는 형식(N5)
+MARKER = "[Ledger {run_id}/{pid} · {sha8}]"
+MARKER_LINE = re.compile(r"^\s*\[Ledger ([^\s/]+)/(\S+) · ([0-9a-f]{8})\]\s*$")
+PACKET = ("{marker}\n답의 첫 줄에 위 대괄호 줄을 그대로 옮겨 적어 주세요. 어느 실행의 답인지 확인하는 데만 씁니다.\n\n"
+          "{prompt}")
 
 
 @dataclass(frozen=True)
@@ -125,6 +139,29 @@ def _roster(text: str) -> m.Roster:
                     tuple(d["alternates"]), tuple(tuple(x) for x in d["dropped"]), frozenset(d["unknown"]))
 
 
+def packet(run_id: str, pid: str, input_sha256: str, prompt: str) -> str:
+    """원본 앱에 옮길 질문. 첫 줄의 실행 표식을 답 첫 줄에 되말해 달라고 적는다(N5)."""
+    return PACKET.format(marker=MARKER.format(run_id=run_id, pid=pid, sha8=input_sha256[:8]), prompt=prompt)
+
+
+def _marker_echo(text: str, run_id: str, pid: str, input_sha256: str) -> tuple[str, str]:
+    """답 첫 줄의 실행 표식을 본다. (matched | missing | other_run | other_participant, 표식 줄을 뺀 답).
+
+    표식이 맞다는 것도, 없다는 것도 약한 증거일 뿐이다 — 모델이 되말했는지만 알려 준다. 다른 실행이나 다른
+    참여자의 표식이면 다른 카드에 붙여 넣은 것이므로 받지 않는다.
+    """
+    lines = text.splitlines()
+    first = next((i for i, line in enumerate(lines) if line.strip()), None)
+    found = MARKER_LINE.match(lines[first]) if first is not None else None
+    if found is None:
+        return "missing", text
+    if (found.group(1), found.group(3)) != (run_id, input_sha256[:8]):
+        return "other_run", text
+    if found.group(2) != pid:
+        return "other_participant", text
+    return "matched", "\n".join(lines[first + 1:]).strip("\n")
+
+
 def _verdict(result: runner.RunResult | None, outcome: adapters.Outcome | None) -> tuple[str, str, str | None]:
     """결과 수용 관문. (상태, 상태 코드, controller가 덧붙이는 이유)를 돌려준다.
 
@@ -149,6 +186,27 @@ def _verdict(result: runner.RunResult | None, outcome: adapters.Outcome | None) 
     return ACCEPTED, outcome.status, None
 
 
+def _quorum(run, roster: m.Roster, rows) -> dict[str, Any]:
+    """정족수 계산(Q6, 2절 18). 독립성이 확인된 참여자는 controller가 고정 입력만 주고 실행한 CLI다. 원본 앱 답은
+    독립성을 확인할 수 없다 — 사용자 확인이 있어도 같다. 셀 대상은 실행을 만들 때 고른 정책이 정한다."""
+    transport = {r["pid"]: json.loads(r["spec"])["transport"] for r in rows}
+    live = roster.active - roster.unknown
+    confirmed = sum(1 for p in live if transport.get(p) == CLI)
+    unverified = sum(1 for p in live if transport.get(p) == MANUAL)
+    counted = confirmed if run["quorum_policy"] == INDEPENDENT_ONLY else confirmed + unverified
+    return {"policy": run["quorum_policy"], "min": roster.min_independent, "confirmed": confirmed,
+            "unverified": unverified, "counted": counted, "met": counted >= roster.min_independent}
+
+
+def _quorum_label(quorum: dict[str, Any]) -> str:
+    """공개된 실행의 정족수 표시. 원본 앱 답을 센 실행은 "독립 정족수 충족"이라고 쓰지 않는다."""
+    if quorum["policy"] == INDEPENDENT_ONLY:
+        extra = f" · 원본 앱 답 {quorum['unverified']}개는 보조 근거" if quorum["unverified"] else ""
+        return f"독립 정족수 충족 — 독립성이 확인된 참여자 {quorum['confirmed']}명(최소 {quorum['min']}명){extra}"
+    return (f"미확인 참여 포함 정족수 — 답 {quorum['counted']}명 중 독립성 확인 {quorum['confirmed']}명"
+            f"(최소 {quorum['min']}명)")
+
+
 class ControllerError(ValueError):
     """요청을 받지 않았다. 상태는 바뀌지 않았다."""
 
@@ -166,7 +224,8 @@ class Controller:
         self.paused = self.store.row("SELECT COUNT(*) AS n FROM participants WHERE state = ?", QUEUED)["n"] > 0
 
     # ---- 만들기와 예약 -------------------------------------------------------------------------
-    def create_run(self, question: str, participants: list[ParticipantSpec], *, min_independent: int) -> str:
+    def create_run(self, question: str, participants: list[ParticipantSpec], *, min_independent: int,
+                   quorum_policy: str = INDEPENDENT_ONLY) -> str:
         question = question.strip()
         if not question:
             raise ControllerError("question is empty")
@@ -175,6 +234,12 @@ class Controller:
         for p in participants:
             if p.transport not in (CLI, MANUAL) or (p.transport == CLI and p.adapter_id not in MockExecutor.FLAVOR):
                 raise ControllerError(f"unsupported participant {p.pid!r}")
+        if quorum_policy not in QUORUM_POLICIES:
+            raise ControllerError(f"quorum_policy must be one of {', '.join(QUORUM_POLICIES)}")
+        confirmable = sum(1 for p in participants if p.transport == CLI)
+        if quorum_policy == INDEPENDENT_ONLY and min_independent > confirmable:
+            raise ControllerError(f"only {confirmable} participant(s) can be confirmed independent (CLI); lower "
+                                  "min_independent or choose include_unverified to count original-app answers")
         prompt = PROMPT.format(question=question)
         data = prompt.encode("utf-8")
         try:
@@ -184,13 +249,16 @@ class Controller:
             raise ControllerError(str(exc)) from None
         run_id = f"r{time.strftime('%m%d-%H%M%S')}-{uuid.uuid4().hex[:4]}"
         with self.lock, self.store.tx() as tx:
-            tx.execute("INSERT INTO runs VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, NULL)", run_id, time.time(), question,
-                       prompt, hashlib.sha256(data).hexdigest(), len(data), min_independent, _roster_json(roster))
+            tx.execute("INSERT INTO runs (run_id, created_at, question, prompt, input_sha256, input_bytes, "
+                       "min_independent, roster, quorum_policy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                       run_id, time.time(), question, prompt, hashlib.sha256(data).hexdigest(), len(data),
+                       min_independent, _roster_json(roster), quorum_policy)
             for p in participants:
                 tx.execute("INSERT INTO participants (run_id, pid, spec, state) VALUES (?, ?, ?, ?)", run_id, p.pid,
                            json.dumps(asdict(p), ensure_ascii=False), QUEUED if p.transport == CLI else AWAITING_USER)
             tx.event(run_id, "run_created", input_sha256=hashlib.sha256(data).hexdigest(), input_bytes=len(data),
-                     participants=[p.pid for p in participants], min_independent=min_independent)
+                     participants=[p.pid for p in participants], min_independent=min_independent,
+                     quorum_policy=quorum_policy)
             tx.event(run_id, "drafting_started")
         self.pump()
         return run_id
@@ -310,15 +378,20 @@ class Controller:
         """
         run = self._run(run_id)
         roster = _roster(run["roster"])
-        states = [r["state"] for r in self.store.rows("SELECT state FROM participants WHERE run_id = ?", run_id)]
+        rows = self.store.rows("SELECT pid, state, spec FROM participants WHERE run_id = ?", run_id)
+        states = [r["state"] for r in rows]
         if roster.phase != m.DRAFTING or any(s not in DONE for s in states):
             return
+        quorum = _quorum(run, roster, rows)
         note = None
         if roster.dropped and not run["reduction_approved"]:
             note = f"요청한 {len(roster.requested)}인 구성이 완료되지 않았습니다. 남은 참여자로 진행하려면 축소 승인이 필요합니다."
-        elif not m.quorum_met(roster):
-            note = (f"독립 참여자 {len(roster.active - roster.unknown)}명 — 최소 {roster.min_independent}명이 필요합니다. "
-                    "유료로 채우지 않습니다.")
+        elif not quorum["met"] and quorum["policy"] == INDEPENDENT_ONLY:
+            note = (f"독립성이 확인된 참여자 {quorum['confirmed']}명 — 최소 {quorum['min']}명이 필요합니다. "
+                    f"원본 앱 답 {quorum['unverified']}개는 정족수에 세지 않습니다. 유료로 채우지 않습니다.")
+        elif not quorum["met"]:
+            note = (f"답을 낸 참여자 {quorum['counted']}명(독립성 미확인 {quorum['unverified']}명 포함) — "
+                    f"최소 {quorum['min']}명이 필요합니다. 유료로 채우지 않습니다.")
         if note:
             if note != run["note"]:
                 tx.execute("UPDATE runs SET note = ? WHERE run_id = ?", note, run_id)
@@ -326,13 +399,17 @@ class Controller:
         else:
             tx.execute("UPDATE runs SET roster = ?, note = NULL WHERE run_id = ?",
                        _roster_json(m.advance(roster, m.REVEALED)), run_id)
-            tx.event(run_id, "revealed", drafts=len([s for s in states if s == ACCEPTED]))
+            tx.event(run_id, "revealed", drafts=len([s for s in states if s == ACCEPTED]), quorum=quorum)
 
     # ---- 사용자 행동 ---------------------------------------------------------------------------
-    def submit_manual(self, run_id: str, pid: str, text: str, input_sha256: str) -> None:
+    def submit_manual(self, run_id: str, pid: str, text: str, input_sha256: str, *,
+                      user_confirmed: bool = False) -> None:
+        """원본 앱의 답을 받는다. user_confirmed: 사용자가 "이 질문을 원본 앱에 넣어 받은 답"이라고 확인했다 —
+        따로 남길 뿐 독립성 확인으로 올리지 않는다(K21, 2절 18)."""
         with self.lock:
             run, part = self._run(run_id), self._part(run_id, pid)
             spec = ParticipantSpec(**json.loads(part["spec"]))
+            echo, body = _marker_echo(text, run_id, pid, run["input_sha256"])
             reason = None
             if spec.transport != MANUAL:
                 reason = "not a manual participant"
@@ -342,18 +419,25 @@ class Controller:
                 reason = "duplicate: this participant already has a result"
             elif input_sha256 != run["input_sha256"]:
                 reason = "different input: the answer was made for another question"
-            elif not text.strip():
+            elif echo == "other_run":
+                reason = "different run: the answer carries the marker of another run"
+            elif echo == "other_participant":
+                reason = "different participant: the answer carries the marker of another participant"
+            elif not body.strip():
                 reason = "empty answer"
             if reason:
                 with self.store.tx() as tx:
                     tx.event(run_id, "manual_refused", pid=pid, reason=reason)
                 raise ControllerError(reason)
+            result = {"source": MANUAL, "marker_echo": echo, "user_confirmed": bool(user_confirmed),
+                      "independence": "unverified"}
             with self.store.tx() as tx:
-                tx.execute("INSERT OR REPLACE INTO drafts VALUES (?, ?, ?, ?, ?, ?)", run_id, pid, text,
-                           hashlib.sha256(text.encode("utf-8")).hexdigest(), MANUAL, time.time())
-                tx.execute("UPDATE participants SET state = ?, status = ? WHERE run_id = ? AND pid = ?",
-                           ACCEPTED, "manual", run_id, pid)
-                tx.event(run_id, "draft_sealed", pid=pid, source=MANUAL)
+                tx.execute("INSERT OR REPLACE INTO drafts VALUES (?, ?, ?, ?, ?, ?)", run_id, pid, body,
+                           hashlib.sha256(body.encode("utf-8")).hexdigest(), MANUAL, time.time())
+                tx.execute("UPDATE participants SET state = ?, status = ?, result = ? WHERE run_id = ? AND pid = ?",
+                           ACCEPTED, "manual", json.dumps(result), run_id, pid)
+                tx.event(run_id, "draft_sealed", pid=pid, source=MANUAL, marker_echo=echo,
+                         user_confirmed=bool(user_confirmed))
                 self._maybe_reveal(run_id, tx)
 
     def withdraw_manual(self, run_id: str, pid: str) -> None:
@@ -450,17 +534,23 @@ class Controller:
                             "transport": spec.transport, "behavior": spec.behavior if spec.transport == CLI else None,
                             "state": p["state"], "status": p["status"], "detail": p["detail"] if settled else None,
                             "contamination": list(CONTAMINATION.get(spec.transport, ("모의 CLI — 모델 호출 없음",))),
+                            "independence": "confirmed" if spec.transport == CLI else "unverified",
                             "result": result, "dropped": any(d[0] == spec.pid for d in roster.dropped)}
+                    if spec.transport == MANUAL and p["state"] == AWAITING_USER:
+                        item["packet"] = packet(run["run_id"], spec.pid, run["input_sha256"], run["prompt"])
                     if revealed and p["state"] == ACCEPTED:
                         draft = self.store.row("SELECT text, source FROM drafts WHERE run_id = ? AND pid = ?",
                                                run["run_id"], spec.pid)
                         item["draft"] = draft["text"] if draft else None
                     parts.append(item)
                 cli_total = sum(1 for p in parts if p["transport"] == CLI)
+                quorum = _quorum(run, roster, rows)
+                quorum["label"] = _quorum_label(quorum) if revealed else None
                 runs.append({"run_id": run["run_id"], "created_at": run["created_at"], "question": run["question"],
                              "prompt": run["prompt"], "input_sha256": run["input_sha256"],
                              "input_bytes": run["input_bytes"], "phase": roster.phase,
                              "min_independent": roster.min_independent, "note": run["note"],
+                             "quorum": quorum,
                              "reduction_approved": bool(run["reduction_approved"]),
                              "diagnostics_sealed": not settled,
                              "budget": {"used": sum(calls.values()) + sum(1 for p in parts if p["state"] == RUNNING),

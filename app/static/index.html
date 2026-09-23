@@ -96,10 +96,15 @@
         <textarea id="question" rows="4" aria-label="질문">사내 문서 검색을 지금 벡터 DB로 바꿀까, 기존 키워드 검색을 개선할까?</textarea>
         <div id="choices" style="margin-top:8px"></div>
         <label class="row">최소 독립 인원 <input id="min" type="number" min="1" value="2" style="width:56px"></label>
+        <label class="row">정족수에 셀 참여자
+          <select id="policy" aria-label="정족수 정책">
+            <option value="independent_only">독립성이 확인된 참여자만(CLI)</option>
+            <option value="include_unverified">원본 앱 답도 포함(미확인으로 표시)</option>
+          </select></label>
         <div style="display:flex; gap:8px; align-items:center; margin-top:6px">
           <button id="start">시작</button><span class="err" id="formerr"></span>
         </div>
-        <p class="caption">CLI 참여자는 모의 CLI로 돈다. 원본 앱 참여자는 질문을 그 앱에 옮기고 답을 여기 붙여 넣는다.</p>
+        <p class="caption">CLI 참여자는 모의 CLI로 돈다. 원본 앱 참여자는 질문을 그 앱에 옮기고 답을 여기 붙여 넣는다. 원본 앱 답은 독립성을 확인할 수 없다 — 엄격한 정책에서는 정족수에 세지 않고 보조 근거로 함께 공개한다.</p>
       </div>
     </div>
     <div class="panel">
@@ -121,6 +126,7 @@ const TOKEN = (() => {
 window.addEventListener("hashchange", () => location.reload());   // 열린 탭에 토큰 주소를 붙여 넣어도 동작한다
 let selected = null, state = null;
 const drafts = {};   // 수동 답 입력칸의 임시 내용(참여자별). 다시 그려도 지우지 않는다
+const confirms = {}; // 수동 답의 "원본 앱에 이 질문을 넣었다" 확인(참여자별). 다시 그려도 지우지 않는다
 
 function h(tag, attrs, ...kids) {
   const el = document.createElement(tag);
@@ -165,7 +171,8 @@ document.getElementById("start").addEventListener("click", async () => {
   });
   try {
     const r = await api("/api/runs", { question: document.getElementById("question").value, participants,
-                                       min_independent: +document.getElementById("min").value });
+                                       min_independent: +document.getElementById("min").value,
+                                       quorum_policy: document.getElementById("policy").value });
     selected = r.run_id; await refresh();
   } catch (e) { err.textContent = e.message; }
 });
@@ -205,25 +212,39 @@ function participantRow(run, p) {
     const ta = h("textarea", { rows: 4, placeholder: "원본 앱의 답을 붙여 넣는다", "aria-label": p.label + " 답",
                                oninput: e => { drafts[key] = e.target.value; } });
     ta.value = drafts[key] || "";
+    const confirm = h("input", { type: "checkbox", "aria-label": p.label + " 입력 확인",
+                                 onchange: e => { confirms[key] = e.target.checked; } });
+    confirm.checked = !!confirms[key];
+    const packetText = p.packet || run.prompt;
     who.append(h("div", { class: "manual" },
-      h("div", { class: "caption" }, "1) 질문을 복사해 원본 앱에 붙여 넣는다  2) 받은 답을 아래에 붙여 넣는다"),
+      h("div", { class: "caption" }, "1) 질문을 복사해 원본 앱에 붙여 넣는다  2) 받은 답을 아래에 붙여 넣는다. " +
+        "복사한 질문 첫 줄의 표식(" + packetText.split("\n")[0] + ")을 답 첫 줄에 되말해 달라고 적혀 있다 — " +
+        "다른 카드의 답을 붙여 넣으면 받지 않는다"),
       h("div", { style: "display:flex; gap:8px; flex-wrap:wrap" },
-        h("button", { onclick: async e => { await navigator.clipboard.writeText(run.prompt); e.target.textContent = "복사함"; } }, "질문 복사"),
+        h("button", { onclick: async e => { await navigator.clipboard.writeText(packetText); e.target.textContent = "복사함"; } }, "질문 복사"),
         h("button", { class: "quiet", onclick: () => act(`/api/runs/${run.run_id}/withdraw/${p.pid}`) }, "답을 받지 못함(빼기)")),
       ta,
+      h("label", { class: "row" }, confirm, "원본 앱에 이 질문을 넣어 받은 답이다(기록만 한다 — 독립성 확인이 아니다)"),
       h("div", {}, h("button", { onclick: () => act(`/api/runs/${run.run_id}/manual/${p.pid}`,
-        { text: ta.value, input_sha256: run.input_sha256 }).then(ok => { if (ok) delete drafts[key]; }) }, "답 넣기"),
+        { text: ta.value, input_sha256: run.input_sha256, user_confirmed: confirm.checked })
+        .then(ok => { if (ok) { delete drafts[key]; delete confirms[key]; } }) }, "답 넣기"),
         h("span", { class: "meta", style: "margin-left:8px" }, "입력 sha256 " + run.input_sha256.slice(0, 12)))));
   }
   if (revealed && p.draft != null) {
     const r = p.result;
+    const manual = !r || r.source === "manual";
+    const echo = { matched: "되말함", missing: "없음" };
     who.append(h("details", { open: true }, h("summary", {}, "초안 원문"),
       h("div", { class: "draft" }, p.draft),
-      r ? h("div", { class: "kv" }, `상태 ${r.state} · 종료 ${r.containment} ${r.tree_confirmed_empty ? "확인" : "미확인"} · 입력 ${r.input_delivery} · ` +
+      manual
+        ? h("div", { class: "kv" }, "수동 제출 · 독립성 미확인 · " +
+            (r ? `실행 표식 ${echo[r.marker_echo] || r.marker_echo} · 사용자 확인 ${r.user_confirmed ? "예" : "아니오"} · ` : "") +
+            "사용량·시간 관측 안 됨")
+        : h("div", { class: "kv" }, `독립성 확인(controller가 고정 입력만 주고 실행) · ` +
+             `상태 ${r.state} · 종료 ${r.containment} ${r.tree_confirmed_empty ? "확인" : "미확인"} · 입력 ${r.input_delivery} · ` +
              `모델 ${r.requested_model || "?"} → ${r.reported_models && r.reported_models.length ? r.reported_models.join(", ") : "보고 없음"}` +
              `${r.model_match === false ? " (불일치)" : ""} · ` +
-             `${r.duration_ms} ms · 사용량 ${r.usage && Object.keys(r.usage).length ? JSON.stringify(r.usage) : "관측 안 됨"}`)
-        : h("div", { class: "kv" }, "수동 제출 · 사용량·시간 관측 안 됨")));
+             `${r.duration_ms} ms · 사용량 ${r.usage && Object.keys(r.usage).length ? JSON.stringify(r.usage) : "관측 안 됨"}`)));
   }
   return h("div", { class: "p" }, who, h("span", { class: `label st-${p.state}` }, label));
 }
@@ -261,6 +282,7 @@ function render() {
     h("p", { class: "caption" }, revealed
       ? "controller가 공개했다. 공개 전 초안은 서로 보지 않은 상태에서 받았다(수동 참여자는 blind 미확인)."
       : "공개 전에는 초안의 내용·길이·토큰 수를 화면에 넘기지 않는다. 공개는 controller가 정한다."),
+    revealed && run.quorum && run.quorum.label ? h("p", { class: "caption" }, run.quorum.label) : "",  // replaceChildren은 null을 "null" 글자로 쓴다
     panel,
     h("p", { class: "trail" }, "사건: " + run.events.join(" → ")));
 }
