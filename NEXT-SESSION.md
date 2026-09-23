@@ -97,12 +97,12 @@
 
 ## 3. 진행 중인 작업
 
-**지금 병합되지 않은 브랜치: 없음.** 마지막 병합: 이 인계의 전면 재작성, 검토 요청서, 수동 답 검사의 과장 문구 정정(`claude/handoff-consolidate-20260923`). 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 이 줄을 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다. 2026-09-23의 병합 이력은 [지난 판](docs/handoff/2026-09-23-before-consolidation.md) 3절과 Git 로그에 있다.
+**병합 대기 리뷰: `chatgpt/review-a1-20260923`.** ChatGPT가 중단된 동일 리뷰의 기존 커밋을 보존하여 재개했다. [A1·인계 리뷰](docs/reviews/2026-09-23-a1-handoff-review/README.md)와 [재개 검증·WM-07 정정](docs/reviews/2026-09-23-a1-handoff-review/VERIFICATION-20260923.md)을 함께 읽는다. 접근 범위는 GitHub와 별도 웹 컨테이너이며, 이전 GitHub Actions 재현의 원문 로그를 재확인했다. 사용자 PC·WSL의 실제 모델은 실행하지 않았다. 제품 실행 코드는 고치지 않았고, 아래 K 표와 계획의 수정 제안은 리뷰에 남겼다. 실제 호출 전에 봉인·수용·실행 소유권·마운트 관문을 먼저 보강하라는 판정이다. PR의 최종 CI를 확인한 뒤 사용자 또는 승인된 claude 세션이 병합한다. 병합 직전 이 진행 상태를 정리한다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다. 2026-09-23의 앞선 병합 이력은 [지난 판](docs/handoff/2026-09-23-before-consolidation.md) 3절과 Git 로그에 있다.
 
 사용자의 판단을 기다리는 것:
-- **모델 호출 승인** — 4절 2단계(Claude 3회 안팎, Codex 2회 안팎)
+- **모델 호출 승인** — 4절 2단계(Claude 3회 안팎, Codex 2회 안팎). 승인 전에 위 리뷰의 선행 보강 권고를 검토한다.
 - 열린 결정 Q4·Q5·Q6, C2
-- [검토 요청](docs/reviews/2026-09-23-a1-handoff-request/README.md)의 결과
+- [검토 요청](docs/reviews/2026-09-23-a1-handoff-request/README.md)에 대한 [리뷰와 정정](docs/reviews/2026-09-23-a1-handoff-review/VERIFICATION-20260923.md)의 수용·반박 및 후속 반영
 - aux-pc 로컬 모의 데이터(`~/.decision-model-lab/mock`)의 첫 실행 하나가 ChatGPT 앱 수동 답을 기다린다 — 시연용이고 저장소와 무관하다
 
 ## 4. 다음 작업
