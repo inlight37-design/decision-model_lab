@@ -4,15 +4,17 @@
 
 | 모듈 | 하는 일 | 하지 않는 일 |
 |---|---|---|
-| [`runner.py`](runner.py) | CLI 한 번을 셸 없이 실행한다. stdin 닫기, stdout·stderr 분리와 상한, 제한 시간, 취소, 프로세스 트리 종료 확인. 확인하지 못하면 `unknown` | 인증·과금·권한이 옳은지 판단 |
+| [`runner.py`](runner.py) | CLI 한 번을 셸 없이 실행한다. stdin 닫기, stdout·stderr 분리와 상한, 제한 시간, 취소, 추적 단위가 비었는지 확인. 확인하지 못하면 `unknown`. 정리 단계에도 상한(`CLEANUP_LIMIT`)이 있다 | 인증·과금·권한이 옳은지 판단 |
 | [`adapters.py`](adapters.py) | Claude Code·Codex·agy의 읽기 전용 논의자 argv 조립, 위험 플래그 거절, 과금 변수 제거, 실제 출력 해석 | 권한 제한이 실제로 지켜지는지 증명 — V04-03 conformance가 한다 |
-| [`membership.py`](membership.py) | 실행 중 참여자가 빠지거나 바뀔 때의 결정. 조용히 채우지 않고, 최소 인원 미달이면 막는다 | 실행 |
+| [`membership.py`](membership.py) | 실행 중 참여자가 빠지거나 바뀔 때의 결정. 조용히 채우지 않고, 공개 전에는 구성이 바뀔 때마다 정족수를 다시 보고 미달이면 막는다 | 실행, 초안이 다 들어왔는지 판단 — controller의 단계 관문이 한다 |
 
 ## 지키는 규칙
 
 - **시간 초과는 성공이 아니다.** 답 텍스트가 있어도 `timed_out`이다.
-- **끝났는지 확인하지 못하면 `unknown`이다.** 예산을 돌려받지 않는다. Windows는 job object로, 그 밖은 프로세스 그룹으로 트리를 센다. 자기 그룹을 떠난 프로세스는 POSIX에서 추적하지 못한다.
-- **exit 0은 성공이 아니다.** 성공은 `adapters.interpret()`가 CLI별 규칙으로 정한다. Claude는 `is_error`, Codex는 `turn.completed`, agy는 JSON 형식까지 본다.
+- **끝났는지 확인하지 못하면 `unknown`이다.** 예산을 돌려받지 않는다.
+- **추적 단위가 빈 것과 자손 전체가 끝난 것은 다르다.** Windows는 job object(`containment="job_object"`)라 자손이 떠날 수 없고, 그 밖은 프로세스 그룹(`"process_group"`)이라 새 세션을 만든 자손이 보이지 않는다. 그래서 `unit_confirmed_empty`(추적 단위)와 `tree_confirmed_empty`(자손 전체)를 따로 돌려준다. 프로세스 그룹에서 뒤쪽은 `None`이다. **자원·예산 반환은 `tree_confirmed_empty`가 True일 때만 한다.** Linux에서 이것을 True로 만드는 것은 격리 백엔드(bubblewrap의 PID namespace)의 몫이다([경계 리뷰 반영](../docs/reviews/2026-09-23-wsl2-boundary/RESPONSE.md)).
+- **exit 0은 성공이 아니다.** 성공은 `adapters.interpret()`가 CLI별 규칙으로 정한다. Claude는 `is_error`, Codex는 `turn.completed`와 stderr의 명령 거절(stderr가 잘렸으면 받지 않는다), agy는 JSON 형식까지 본다. 출력 모양이 예상과 다르면 예외가 아니라 `format_error`다.
+- **명단에 받는 것과 진행 허가는 다르다.** membership은 바뀐 명단(`roster`)과, 그 뒤 같은 정족수 규칙으로 다시 정한 판정(`action`)을 따로 준다. 대체자가 들어와도 인원이 모자라면 `blocked`다. 단계는 한 칸씩 가고, 초안 단계 진입과 공개에는 정족수(`quorum_met`)가 있어야 한다. 초안이 다 들어왔는지는 controller의 단계 관문이 본다.
 - **모델은 반드시 이름으로 지정한다.** 기본값도 fallback도 없다. 보고된 모델이 다르면 표시한다.
 - **agy는 꺼져 있다.** 사용자가 켜야 쓴다(약관 판단, F31).
 - **과금 경로를 바꾸는 환경변수는 자식에게 넘기지 않는다.** 인증은 각 CLI의 로그인을 쓴다.

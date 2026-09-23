@@ -184,7 +184,7 @@ class Outcome:
     """한 호출의 의미 판정. ok는 '요청한 형식의 답을 오류 없이 받았다'까지만 뜻한다."""
     adapter_id: str
     ok: bool
-    status: str                       # ok | cli_error | format_error | process_<runner state>
+    status: str                       # ok | cli_error | format_error | tools_rejected | process_<runner state>
     text: str | None
     requested_model: str
     reported_models: tuple[str, ...]  # 비어 있으면 CLI가 알리지 않았다
@@ -212,7 +212,11 @@ def _single_json(stdout: str) -> dict | None:
 
 
 def interpret(adapter_id: str, run: RunResult, *, requested_model: str) -> Outcome:
-    """실행 결과를 의미로 바꾼다. 프로세스가 끝났다고 확인되지 않으면 답이 보여도 성공이 아니다."""
+    """실행 결과를 의미로 바꾼다. 프로세스가 끝났다고 확인되지 않으면 답이 보여도 성공이 아니다.
+
+    CLI 출력은 외부 입력이다. 문법이 맞는 JSON이어도 중첩 값의 타입이 다르면 예외 대신
+    형식 실패로 돌려준다(경계 리뷰 R04).
+    """
     _require(adapter_id in ADAPTERS, f"unknown adapter {adapter_id!r}")
     base = dict(adapter_id=adapter_id, requested_model=requested_model)
     if run.state != EXITED:
@@ -221,6 +225,15 @@ def interpret(adapter_id: str, run: RunResult, *, requested_model: str) -> Outco
     if run.stdout_truncated:
         return Outcome(ok=False, status="format_error", text=None, reported_models=(), model_match=None,
                        detail="stdout exceeded the runner limit", **base)
+    try:
+        return _parse(adapter_id, run, base)
+    except (AttributeError, TypeError, KeyError) as exc:
+        return Outcome(ok=False, status="format_error", text=None, reported_models=(), model_match=None,
+                       detail=f"unexpected output shape ({type(exc).__name__})", **base)
+
+
+def _parse(adapter_id: str, run: RunResult, base: dict[str, str]) -> Outcome:
+    requested_model = base["requested_model"]
     if adapter_id == "claude-code":
         obj = _single_json(run.stdout)
         if obj is None or obj.get("type") != "result":
@@ -259,9 +272,16 @@ def interpret(adapter_id: str, run: RunResult, *, requested_model: str) -> Outco
                 usage = _usage(event.get("usage"), ("input_tokens", "cached_input_tokens", "output_tokens",
                                                     "reasoning_output_tokens"))
             elif kind in ("turn.failed", "error"):
-                failure = str((event.get("error") or {}).get("message") or event.get("message") or kind)
+                error = event.get("error")
+                error = error.get("message") if isinstance(error, Mapping) else error
+                failure = str(error or event.get("message") or kind)
         # 명령이 거절되면 JSONL에는 흔적이 없고 stderr에만 남는다. 그래도 exit 0으로 답이 나오므로
-        # (openai/codex#42172) 읽지 못한 채 쓴 답을 성공으로 넘기지 않는다.
+        # (openai/codex#42172) 읽지 못한 채 쓴 답을 성공으로 넘기지 않는다. stderr가 잘렸으면
+        # 거절이 없었다고 말할 수 없다(경계 리뷰 R04).
+        if run.stderr_truncated:
+            return Outcome(ok=False, status="format_error", text=text, reported_models=(), model_match=None,
+                           usage=usage, tool_events=tools,
+                           detail="stderr exceeded the runner limit; rejected commands may be hidden", **base)
         rejected = run.stderr.count(CODEX_REJECTED)
         ok = run.exit_code == 0 and completed and failure is None and isinstance(text, str) and not rejected
         if rejected:

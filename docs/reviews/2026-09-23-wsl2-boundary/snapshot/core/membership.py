@@ -3,14 +3,9 @@
 - 빠진 자리를 조용히 채우지 않는다. 사전에 허용한 대체(alternates)만, 동료 초안이 공개되기
   전에만 들인다. 공개 뒤에 들어온 참여자는 같은 blind 라운드의 독립 참여자가 아니다.
 - 사전에 정한 최소 독립 인원(min_independent)을 못 채우면 막는다(BLOCKED). 유료 API로 넘기지 않는다.
-  공개 전에는 구성이 바뀔 때마다(이탈·종료 불명·대체) 같은 규칙을 다시 본다. 대체자를 명단에
-  받는 것(roster)과 진행 허가(action)는 다르다 — 대체자가 들어와도 인원이 모자라면 BLOCKED다
-  (경계 리뷰 R03).
 - 종료가 확인되지 않은 호출은 UNKNOWN으로 남기고 예산 점유를 유지한다. 뺐다고 취소된 것이 아니다.
 - 회복한 provider는 진행 중인 run에 다시 넣지 않는다. 다음 run의 preflight에서 넣는다.
 - 합성자만 쓸 수 없으면 모은 초안과 반례를 그대로 보고한다. 합성 성공으로 표시하지 않는다.
-- 단계는 한 칸씩만 간다. 정족수가 없으면 초안 단계에 들어가거나 초안을 공개하지 않는다. 초안이
-  실제로 다 들어왔는지는 이 모듈이 모른다 — controller의 단계 관문이 본다.
 
 모든 결정은 화면에 그대로 보여 줄 수 있게 note를 단다. 이 모듈은 결정만 하고 실행하지 않는다.
 """
@@ -65,32 +60,14 @@ def start(requested: tuple[str, ...], *, min_independent: int, alternates: tuple
 
 
 def advance(roster: Roster, phase: str) -> Roster:
-    """단계는 한 칸씩 앞으로만 간다. 초안을 공개(REVEALED)한 뒤에는 되돌릴 수 없다.
-    초안 단계에 들어갈 때와 공개할 때는 정족수가 있어야 한다."""
-    if phase not in PHASES or PHASES.index(phase) != PHASES.index(roster.phase) + 1:
+    """단계는 앞으로만 간다. 초안을 공개(REVEALED)한 뒤에는 되돌릴 수 없다."""
+    if phase not in PHASES or PHASES.index(phase) <= PHASES.index(roster.phase):
         raise MembershipError(f"cannot move from {roster.phase} to {phase}")
-    if phase in (DRAFTING, REVEALED) and not quorum_met(roster):
-        raise MembershipError(f"cannot move to {phase}: {_counted(roster)} independent participant(s) "
-                              f"counted, {roster.min_independent} required")
     return replace(roster, phase=phase)
 
 
 def _counted(roster: Roster) -> int:
     return len(roster.active - roster.unknown)
-
-
-def quorum_met(roster: Roster) -> bool:
-    """종료 불명(UNKNOWN)을 빼고 센 독립 참여자가 최소 인원 이상인가."""
-    return _counted(roster) >= roster.min_independent
-
-
-def _settle(changed: Roster, action: str, note: str) -> Decision:
-    """공개 전에는 어떤 구성 변경 뒤에도 같은 정족수 규칙으로 진행 허가를 다시 정한다."""
-    if changed.phase in (PREFLIGHT, DRAFTING) and not quorum_met(changed):
-        return Decision(BLOCKED, changed,
-                        f"{note}; {_counted(changed)} independent participant(s) counted, "
-                        f"{changed.min_independent} required. No paid fallback")
-    return Decision(action, changed, note)
 
 
 def _drop(roster: Roster, participant: str, reason: str) -> Decision:
@@ -102,10 +79,13 @@ def _drop(roster: Roster, participant: str, reason: str) -> Decision:
         return Decision(PROCEED_REDUCED, changed,
                         f"{participant}: {reason} after drafts were revealed; its draft stays, "
                         "the review round is reduced")
-    note = f"{participant}: {reason}"
-    if quorum_met(changed):
-        note += f"; continuing with {_counted(changed)} of {len(changed.requested)} requested"
-    return _settle(changed, PROCEED_REDUCED, note)
+    if _counted(changed) < changed.min_independent:
+        return Decision(BLOCKED, changed,
+                        f"{participant}: {reason}; {_counted(changed)} independent participant(s) left, "
+                        f"{changed.min_independent} required. No paid fallback")
+    return Decision(PROCEED_REDUCED, changed,
+                    f"{participant}: {reason}; continuing with {_counted(changed)} of "
+                    f"{len(changed.requested)} requested")
 
 
 def decide(roster: Roster, event: str, participant: str | None = None) -> Decision:
@@ -125,9 +105,9 @@ def decide(roster: Roster, event: str, participant: str | None = None) -> Decisi
         if participant not in roster.active:
             raise MembershipError(f"{participant} is not an active participant")
         changed = replace(roster, unknown=roster.unknown | {participant})
-        return _settle(changed, KEEP_UNKNOWN,
-                       f"{participant}: termination not confirmed; the call stays UNKNOWN and keeps its "
-                       "budget slot")
+        return Decision(KEEP_UNKNOWN, changed,
+                        f"{participant}: termination not confirmed; the call stays UNKNOWN and keeps its "
+                        "budget slot")
     if event == "recovered":
         return Decision(DEFER, roster, f"{participant} recovered; membership of this run does not change")
     # substitute_requested
@@ -140,5 +120,5 @@ def decide(roster: Roster, event: str, participant: str | None = None) -> Decisi
         raise MembershipError(f"{participant} is already active")
     changed = replace(roster, active=roster.active | {participant},
                       alternates=tuple(a for a in roster.alternates if a != participant))
-    return _settle(changed, PROCEED, f"{participant} joins as a pre-approved alternate before any draft "
-                                     "was revealed (shown as a substitution)")
+    return Decision(PROCEED, changed, f"{participant} joins as a pre-approved alternate before any draft "
+                                      "was revealed (shown as a substitution)")
