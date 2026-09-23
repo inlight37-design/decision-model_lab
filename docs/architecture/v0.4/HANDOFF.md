@@ -78,7 +78,7 @@ F17/F18/F19는 기존 E02/E05/E08 재확인이다. Claude SDK 정책의 상단 �
 
 컨테이너 GitHub clone/raw 다운로드는 DNS 실패였다. 로컬 snapshot은 Git checkout이 아니며 원격 저장은 GitHub connector로 수행했다. 사용자 PC의 도구·설정을 변경하지 않았다. 기존 v0.2 전체 테스트, CI, 실제 모델 연결·과금·권한·취소/복구·품질 향상은 미검증이다.
 
-시작 head 대비 `407eb9e...`까지 compare 결과는 12 commits/11 changed files이며 기존 v0.2 계약·기존 상세 문서/검사 파일 변경은 없었다. 그 후 VALIDATION과 이 HANDOFF를 저장한다. PR 조회 시 open/merged=false, mergeable=false였으나 원인은 조사하지 않았다. merge 충돌을 단정하거나 임의로 해결/재배치하지 않는다.
+시작 head 대비 `407eb9e029404430c56de4c465b58a574a179dfe`까지 compare 결과는 12 commits/11 changed files이며 기존 v0.2 계약·기존 상세 문서/검사 파일 변경은 없었다. 그 후 VALIDATION과 이 HANDOFF를 저장한다. PR 조회 시 open/merged=false, mergeable=false였으나 원인은 조사하지 않았다. merge 충돌을 단정하거나 임의로 해결/재배치하지 않는다.
 
 ## 8. 중간 checkpoint 기록
 

@@ -85,6 +85,29 @@ class SafetyTests(unittest.TestCase):
         self.assertNotIn("sk-proj-ABCDEFGHIJKLMNOPQRST", text)
         self.assertIn("<redacted>", text)
 
+    def test_fine_grained_github_token_is_redacted(self):
+        """PR #4 R04: github_pat_ 형식이 SECRET 에 없어 그대로 남았다. 합성 문자열이다."""
+        token = "github_" + "pat_" + "A" * 82
+        self.assertEqual(inv.make_redactor(HOME)(f"token {token}"), "token <redacted>")
+
+    def test_user_names_with_spaces_are_redacted_whole(self):
+        """PR #4 R04: 'C:\\Users\\Jane Doe' 가 '<user> Doe' 로 반만 가려졌고 재검사도 놓쳤다."""
+        redact = inv.make_redactor(HOME)
+        for text, expected in ((r"C:\Users\Jane Doe\notes.txt", r"C:\Users\<user>\notes.txt"),
+                               (r'"C:\\Users\\Jane Doe\\x"', r'"C:\\Users\\<user>\\x"'),
+                               ("C:/Users/Jane Doe/x", "C:/Users/<user>/x"),
+                               (r"'C:\Users\Jane Doe'", r"'C:\Users\<user>'"),
+                               ("/home/jane doe/x and", "/home/<user>/x and"),
+                               ("path C:\\Users\\bob\nnext", "path C:\\Users\\<user>\nnext"),
+                               (r"see C:\Users\bob now", r"see C:\Users\<user>")):
+            with self.subTest(text=text):
+                self.assertEqual(redact(text), expected)
+                self.assertEqual(redact(expected), expected)
+                self.assertIsNone(inv.USER_PATH.search(expected))
+        for partial in (r"C:\Users\<user> Doe\notes.txt", "/home/<user> doe/x"):
+            with self.subTest(partial=partial):
+                self.assertIsNotNone(inv.USER_PATH.search(partial))
+
 
 class DetectionTests(unittest.TestCase):
     def test_flags_in_help_are_in_help_not_observed(self):
@@ -164,15 +187,63 @@ class ManifestRuleTests(unittest.TestCase):
         self.manifest["tier"] = 2
         self.assertTrue(validate_manifest(self.manifest))  # 관측도, 인증 방식도 없다
 
-    def test_tier2_configured_needs_observation_and_known_modes(self):
+    def configured_tier2(self):
         self.manifest["tier"] = 2
         row = self.manifest["adapters"][0]
-        row.update(configured=True, auth_mode="subscription_oauth", funding_mode="subscription_only")
+        row.update(configured=True, auth_mode="subscription_oauth", funding_mode="subscription")
         self.cap().update(status="observed", observed_at="2026-09-23T00:00:00Z",
                           evidence="probe P2 in RESULTS.md")
+        return row
+
+    def test_tier2_configured_needs_observation_and_known_modes(self):
+        self.configured_tier2()
         self.assertEqual(validate_manifest(self.manifest), [])
         self.cap().update(evidence="")
         self.assertTrue(validate_manifest(self.manifest))
+
+    def test_malformed_rows_fail_closed(self):
+        """PR #4 R01: 누락·null·빈 값이 '알려진 인증·과금'으로 통과했고, 잘못된 타입은
+        검사기를 예외로 멈췄다. 모두 오류 줄로 거절돼야 한다."""
+        cases = {
+            "auth/funding missing": lambda row, m: (row.pop("auth_mode"), row.pop("funding_mode")),
+            "auth/funding null": lambda row, m: row.update(auth_mode=None, funding_mode=None),
+            "auth/funding empty": lambda row, m: row.update(auth_mode="", funding_mode=""),
+            "auth unknown": lambda row, m: row.update(auth_mode="unknown"),
+            "funding not in the list": lambda row, m: row.update(funding_mode="free"),
+            "configured but not installed": lambda row, m: row.update(installed=False),
+            "installed not a boolean": lambda row, m: row.update(installed="yes"),
+            "evidence not a string": lambda row, m: self.cap().update(evidence=True),
+            "observed_at not a date": lambda row, m: self.cap().update(observed_at=True),
+            "observed_at free text": lambda row, m: self.cap().update(observed_at="today"),
+            "adapter_id a list": lambda row, m: row.update(adapter_id=[]),
+            "adapter_id missing": lambda row, m: row.pop("adapter_id"),
+            "tier a boolean": lambda row, m: m.update(tier=True),
+            "env_presence a list": lambda row, m: m.update(env_presence=["bad"]),
+            "env_presence missing": lambda row, m: m.pop("env_presence"),
+            "value field in env_presence": lambda row, m: m["env_presence"]["ANTHROPIC_API_KEY"].update(
+                value="FAKE_NON_TOKEN_SECRET"),
+            "config file marked opened": lambda row, m: m["config_presence"][
+                "~/.claude/settings.json"].update(opened=True),
+        }
+        for name, mutate in cases.items():
+            with self.subTest(case=name):
+                self.manifest, _ = claude_manifest()
+                mutate(self.configured_tier2(), self.manifest)
+                errors = validate_manifest(self.manifest)
+                self.assertTrue(errors)
+                self.assertTrue(all(isinstance(e, str) for e in errors))
+
+    def test_unconfigured_rows_may_stay_unknown(self):
+        self.manifest["tier"] = 2
+        self.assertEqual(self.manifest["adapters"][0]["auth_mode"], "unknown")
+        self.assertEqual(validate_manifest(self.manifest), [])
+
+    def test_recorded_aux_pc_manifests_still_pass(self):
+        folder = Path(__file__).resolve().parents[1] / "docs/experiments/v04-01-inventory/hosts/aux-pc"
+        for name in ("manifest.json", "manifest.tier2.json"):
+            with self.subTest(manifest=name):
+                manifest = json.loads((folder / name).read_text(encoding="utf-8"))
+                self.assertEqual(validate_manifest(manifest), [])
 
     def test_unknown_status_rejected(self):
         self.cap()["status"] = "works"
@@ -204,6 +275,33 @@ class FreshEnvironmentTests(unittest.TestCase):
         self.assertIn("SYSTEMROOT", env)
         self.assertEqual(env["PATH"], r"C:\Windows;C:\Users\a\bin")
 
+    def test_persistent_values_win_and_new_persistent_variables_appear(self):
+        """PR #4 R03: 설정에도 있는 이름이면 셸이 넣은 값이 남았고, 셸이 뜬 뒤 설정에 생긴
+        변수는 빠졌다. 새 터미널은 설정 값을 받는다. 모두 합성 값이다."""
+        base = {"ANTHROPIC_BASE_URL": "https://injected.invalid", "Path": "old", "HTTPS_PROXY": "p"}
+        env, removed = inv.fresh_environment(
+            base, {"Path": "system", "GEMINI_API_KEY": "machine"},
+            {"anthropic_base_url": "https://expected.invalid", "CODEX_API_KEY": "FAKE",
+             "GEMINI_API_KEY": "user", "Path": "user"})
+        self.assertEqual(removed, [])
+        upper = {k.upper(): v for k, v in env.items()}
+        self.assertEqual(upper["ANTHROPIC_BASE_URL"], "https://expected.invalid")
+        self.assertEqual(len([k for k in env if k.upper() == "ANTHROPIC_BASE_URL"]), 1)
+        self.assertEqual(upper["CODEX_API_KEY"], "FAKE")
+        self.assertEqual(upper["GEMINI_API_KEY"], "user")   # 사용자 설정이 시스템 설정을 이긴다
+        self.assertEqual(env["PATH"], "system;user")
+        self.assertNotIn("Path", env)
+        self.assertEqual(env["HTTPS_PROXY"], "p")           # 접두사 밖은 손대지 않는다
+
+    def test_billing_variable_set_after_the_shell_started_is_reported(self):
+        """셸이 뜬 뒤 사용자가 API 키를 설정했다면 새 터미널의 CLI는 그 키를 본다."""
+        env, _ = inv.fresh_environment({"Path": "old"}, {"Path": "system"},
+                                       {"ANTHROPIC_API_KEY": "FAKE", "Codex_Api_Key": "FAKE"})
+        manifest, _ = claude_manifest(environ=env, removed_vars=[])
+        self.assertTrue(manifest["env_presence"]["ANTHROPIC_API_KEY"]["present"])
+        self.assertTrue(manifest["env_presence"]["CODEX_API_KEY"]["present"])  # 이름 대소문자 무시
+        self.assertNotIn("FAKE", json.dumps(manifest))
+
     def test_manifest_records_mode_and_names_only(self):
         env, removed = inv.fresh_environment(self.BASE, {"Path": ""}, {})
         manifest, _ = claude_manifest(environ=env, removed_vars=removed)
@@ -228,6 +326,41 @@ class FreshEnvironmentTests(unittest.TestCase):
         machine, user = inv.registry_environment()
         self.assertIn("PATH", {name.upper() for name in machine})
         self.assertIsInstance(user, dict)
+
+
+def load_summarizer():
+    import importlib.util
+    path = Path(__file__).resolve().parents[1] / "tools/v04-01/summarize_claude_init.py"
+    spec = importlib.util.spec_from_file_location("summarize_claude_init", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+class SummarizeClaudeInitTests(unittest.TestCase):
+    """P4 요약기. 합성 stream 만 쓴다. PR #4 R05: 없는 필드가 0 으로 기록됐다."""
+    INIT = {"type": "system", "subtype": "init", "model": "m", "apiKeySource": "none",
+            "tools": [], "mcp_servers": [], "plugins": [{"name": "a@builtin"}, {"name": "mine@shop"}],
+            "agents": ["x"], "cwd": r"C:\Users\carol\work"}
+    RESULT = {"type": "result", "subtype": "success", "is_error": False, "result": "OK", "usage": {}}
+
+    def test_missing_list_is_null_not_zero(self):
+        s = load_summarizer()
+        summary = s.summarize(self.INIT, self.RESULT, "0" * 64, "0" * 40)
+        counts = summary["init_counts"]
+        self.assertEqual(counts["tools"], 0)            # 있고 비었다
+        self.assertIsNone(counts["skills"])             # 필드가 없었다
+        self.assertIsNone(counts["slash_commands"])
+        self.assertEqual(summary["missing_fields"], ["skills", "slash_commands"])
+        self.assertEqual(counts["plugins_by_origin"], {"builtin": 1, "other": 1})
+        self.assertIn("cwd", summary["init_fields"])
+        self.assertNotIn("carol", json.dumps(summary))  # 필드 이름만, 값은 싣지 않는다
+        self.assertNotIn("mine", json.dumps(summary))
+
+    def test_stream_without_init_is_refused(self):
+        s = load_summarizer()
+        with self.assertRaises(ValueError):
+            s.parse(json.dumps(self.RESULT))
 
 
 class CliTests(unittest.TestCase):

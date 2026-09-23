@@ -9,7 +9,7 @@
 
 set -e
 
-staged=$(git diff --cached --name-only --diff-filter=ACM)
+staged=$(git diff --cached --name-only --diff-filter=ACMR)
 [ -z "$staged" ] && exit 0
 
 # 후보를 찾기만 하지 않고 실제로 실행해 본다. Windows 의 `python3` 는 Microsoft Store
@@ -27,5 +27,5 @@ if [ -z "$python_bin" ]; then
   exit 0
 fi
 
-# shellcheck disable=SC2086
-"$python_bin" tools/check_encoding.py $staged
+# -z: 공백이 든 이름도 한 인자로, 한글 이름도 escape 없이 넘긴다. 검사기는 없는 파일을 오류로 본다.
+git diff --cached --name-only --diff-filter=ACMR -z | xargs -0 "$python_bin" tools/check_encoding.py

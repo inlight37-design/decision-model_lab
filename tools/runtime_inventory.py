@@ -41,6 +41,14 @@ DEFAULT_OUT = ROOT / "docs/experiments/v04-01-inventory/hosts"
 # 플래그가 있음/없음 · observed: 실제 실행으로 확인(tier 2) · unsupported: 실행으로 거절 확인
 STATUSES = ("unknown", "documented", "in_help", "not_in_help", "observed", "unsupported")
 TIER1_STATUSES = ("unknown", "in_help", "not_in_help")
+# tier 2에서 관측해 적는 값. 'unknown'은 모른다는 뜻이고, 키가 없거나 null·빈 문자열인
+# 것과 같지 않다 — 그런 값은 검사기가 거절한다. 새 경로를 관측하면 여기에 먼저 추가한다.
+AUTH_MODES = ("subscription_oauth", "chatgpt_login", "google_account_login", "api_key", "cloud_provider")
+FUNDING_MODES = ("subscription", "api_billing", "credits")
+# presence 기록에 허용하는 키. 값 필드가 끼어들 자리를 두지 않는다.
+PRESENCE_KEYS = {"env_presence": {"present", "adapter", "why"},
+                 "config_presence": {"present", "adapter", "opened"}}
+OBSERVED_AT = re.compile(r"\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2}Z)?")
 
 
 @dataclass(frozen=True)
@@ -144,10 +152,18 @@ SECRET = re.compile(
     r"sk-(?:ant-|proj-)?[A-Za-z0-9_-]{16,}"
     r"|AIza[0-9A-Za-z_-]{30,}"
     r"|gh[pousr]_[A-Za-z0-9]{30,}"
+    r"|github_pat_[A-Za-z0-9_]{30,}"
     r"|eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}"
     r"|(?i:bearer)\s+[A-Za-z0-9._-]{20,})"
 )
-USER_PATH = re.compile(r"(?i)([A-Z]:[\\/]+Users[\\/]+)(?!<user>)[^\\/\s\"']+|(/(?:home|Users)/)(?!<user>)[^/\s\"']+")
+# 다른 사용자의 홈 경로에서 사용자 이름 부분. 이름에는 공백이 있을 수 있으므로
+# ('C:\Users\Jane Doe\...') 다음 경로 구분자·따옴표·줄 끝까지를 이름으로 본다. 구분자가
+# 없으면 줄 끝까지 가린다 — 덜 가리는 것보다 더 가리는 쪽이 안전하다. 이미 가린 '<user>'는
+# 건너뛰되, '<user> Doe\'처럼 반쯤 가린 것은 다시 잡는다.
+_USER_NAME = r"(?!<user>(?:[{sep}\"'\r\n]|$))[^{sep}\r\n\"']+"
+USER_PATH = re.compile(
+    r"(?i)([A-Z]:[\\/]+Users[\\/]+)" + _USER_NAME.format(sep=r"\\/")
+    + r"|(/(?:home|Users)/)" + _USER_NAME.format(sep="/"))
 ANSI = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
 LABEL = re.compile(r"[a-z0-9][a-z0-9-]{1,39}")
 ENV_NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_()]*")
@@ -184,19 +200,26 @@ def decode(data: bytes | str | None) -> str:
 
 def fresh_environment(base: Mapping[str, str], machine: Mapping[str, str],
                       user: Mapping[str, str]) -> tuple[dict[str, str], list[str]]:
-    """새 터미널에 가까운 환경과 지운 변수 이름을 돌려준다. 설정은 바꾸지 않는다.
+    """AI 도구 변수와 PATH만 새 터미널 기준으로 맞춘 환경과, 지운 변수 이름을 돌려준다.
+    설정은 바꾸지 않는다.
 
-    base에만 있고 시스템·사용자 설정에는 없는 AI 도구 변수를 지우고, PATH를 시스템 +
-    사용자 설정으로 다시 만든다. 사용자가 직접 설정한 변수는 AI 접두사여도 남긴다.
+    AI 접두사 변수는 시스템·사용자 설정의 값으로 다시 만든다(같은 이름이면 사용자 설정이
+    이긴다). 그래서 설정에 없는 변수는 지워지고, 셸이 같은 이름에 다른 값을 넣었으면 설정
+    값으로 돌아가고, 셸이 뜬 뒤 설정에 새로 생긴 변수는 추가된다. PATH는 시스템 + 사용자
+    설정이다. 나머지 변수(proxy 등)는 base 그대로이므로 새 터미널과 같다고 쓰지 않는다.
     """
-    persistent = {name.upper() for name in (*machine, *user)}
+    persistent: dict[str, tuple[str, str]] = {}
+    for scope in (machine, user):
+        for name, value in scope.items():
+            if AI_TOOL_VARS.match(name):
+                persistent[name.upper()] = (name, value)
     removed = sorted(name for name in base
                      if AI_TOOL_VARS.match(name) and name.upper() not in persistent)
-    env = {name: value for name, value in base.items() if name not in removed}
+    env = {name: value for name, value in base.items()
+           if not AI_TOOL_VARS.match(name) and name.upper() != "PATH"}
+    env.update(dict(persistent.values()))
     upper = lambda values: {k.upper(): v for k, v in values.items()}  # noqa: E731
     paths = [upper(scope).get("PATH", "") for scope in (machine, user)]
-    for name in [n for n in env if n.upper() == "PATH"]:
-        del env[name]
     env["PATH"] = ";".join(p.strip(";") for p in paths if p)
     return env, removed
 
@@ -309,6 +332,9 @@ def collect(label: str, *, adapters: tuple[Adapter, ...] = ADAPTERS,
         rows.append(row)
 
     moment = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
+    # Windows 변수 이름은 대소문자를 가리지 않는다. fresh_environment()가 돌려주는 dict는
+    # 가리므로, 설정에 'Anthropic_Api_Key'로 적혀 있어도 있다고 기록되게 대문자로 비교한다.
+    env_names = {name.upper() for name in environ}
     manifest = {
         "schema": SCHEMA,
         "tier": 1,
@@ -322,7 +348,7 @@ def collect(label: str, *, adapters: tuple[Adapter, ...] = ADAPTERS,
                   "not_checked": list(NOT_CHECKED)},
         "environment": {"mode": "process" if removed_vars is None else "fresh",
                         "removed": list(removed_vars or [])},
-        "env_presence": {name: {"present": name in environ, "adapter": adapter_id, "why": why}
+        "env_presence": {name: {"present": name.upper() in env_names, "adapter": adapter_id, "why": why}
                          for name, adapter_id, why in ENV_VARS},
         "config_presence": {path: {"present": bool(exists(os.path.expanduser(path.replace("~", home, 1)))),
                                    "adapter": adapter_id, "opened": False}
@@ -345,25 +371,39 @@ def strings(value: Any) -> Iterator[str]:
 
 
 def validate_manifest(manifest: Any) -> list[str]:
-    """기록이 규칙을 지키는지 본다. 기록된 내용이 사실인지는 판정하지 않는다."""
+    """기록이 규칙을 지키는지 본다. 기록된 내용이 사실인지는 판정하지 않는다.
+
+    모르는 형태는 통과시키지 않는다. 키가 없거나 타입이 다르면 예외가 아니라 오류 줄이 된다.
+    `configured=true`는 '기본 연결을 관측했다'는 뜻일 뿐이다. blind 문맥·권한 제한이 실제로
+    지켜지는지(conformance)는 이 검사도, 이 필드도 말하지 않는다.
+    """
     errors: list[str] = []
     if not isinstance(manifest, dict) or manifest.get("schema") != SCHEMA:
         return [f"schema must be {SCHEMA}"]
     tier = manifest.get("tier")
-    if tier not in (1, 2):
+    if type(tier) is not int or tier not in (1, 2):
         errors.append("tier must be 1 or 2")
     adapters = manifest.get("adapters")
     if not isinstance(adapters, list) or not adapters:
         return errors + ["adapters must be a non-empty list"]
     seen = set()
-    for row in adapters:
+    for index, row in enumerate(adapters):
         if not isinstance(row, dict):
-            errors.append("adapter row must be an object")
+            errors.append(f"adapters[{index}]: adapter row must be an object")
             continue
         aid = row.get("adapter_id")
-        if aid in seen:
+        if not (isinstance(aid, str) and aid.strip()):
+            errors.append(f"adapters[{index}]: adapter_id must be a non-empty string")
+            aid = f"adapters[{index}]"
+        elif aid in seen:
             errors.append(f"duplicate adapter {aid}")
         seen.add(aid)
+        if type(row.get("installed")) is not bool:
+            errors.append(f"{aid}: installed must be a boolean")
+        for field, allowed in (("auth_mode", AUTH_MODES), ("funding_mode", FUNDING_MODES)):
+            if row.get(field) not in ("unknown", *allowed):
+                errors.append(f"{aid}: {field} must be 'unknown' or one of {', '.join(allowed)}; "
+                              f"got {row.get(field)!r}")
         caps = row.get("capabilities")
         if not isinstance(caps, dict):
             errors.append(f"{aid}: capabilities must be an object")
@@ -378,18 +418,32 @@ def validate_manifest(manifest: Any) -> list[str]:
                 errors.append(f"{aid}.{name}: tier 1 cannot record {status!r}")
             if status == "observed":
                 observed += 1
-                if not (cap.get("evidence") and cap.get("observed_at")):
-                    errors.append(f"{aid}.{name}: observed needs evidence and observed_at")
+                evidence, moment = cap.get("evidence"), cap.get("observed_at")
+                if not (isinstance(evidence, str) and evidence.strip()
+                        and isinstance(moment, str) and OBSERVED_AT.fullmatch(moment)):
+                    errors.append(f"{aid}.{name}: observed needs a non-empty evidence string "
+                                  "and observed_at as YYYY-MM-DD or YYYY-MM-DDTHH:MM:SSZ")
         configured = row.get("configured")
         if type(configured) is not bool:
             errors.append(f"{aid}: configured must be a boolean")
-        elif configured and (tier != 2 or observed == 0 or "unknown" in
-                             (row.get("auth_mode"), row.get("funding_mode"))):
-            errors.append(f"{aid}: configured=true needs tier 2, a known auth and funding mode "
-                          "and at least one observed capability")
-    for name, entry in (manifest.get("env_presence") or {}).items():
-        if not isinstance(entry, dict) or type(entry.get("present")) is not bool:
-            errors.append(f"env_presence.{name}: record presence as a boolean only")
+        elif configured and (tier != 2 or row.get("installed") is not True or observed == 0
+                             or row.get("auth_mode") not in AUTH_MODES
+                             or row.get("funding_mode") not in FUNDING_MODES):
+            errors.append(f"{aid}: configured=true needs tier 2, installed=true, a known auth and "
+                          "funding mode and at least one observed capability")
+    for section, keys in PRESENCE_KEYS.items():
+        entries = manifest.get(section)
+        if not isinstance(entries, dict):
+            errors.append(f"{section} must be an object")
+            continue
+        for name, entry in entries.items():
+            if not isinstance(entry, dict) or type(entry.get("present")) is not bool:
+                errors.append(f"{section}.{name}: record presence as a boolean only")
+            elif set(entry) - keys:
+                errors.append(f"{section}.{name}: unexpected fields {sorted(set(entry) - keys)}; "
+                              "presence records never carry values")
+            elif section == "config_presence" and entry.get("opened") is not False:
+                errors.append(f"{section}.{name}: config files are never opened")
     environment = manifest.get("environment")
     if not (isinstance(environment, dict) and environment.get("mode") in ("process", "fresh")
             and isinstance(environment.get("removed"), list)
@@ -443,8 +497,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--force", action="store_true", help="기존 manifest를 덮어쓴다")
     parser.add_argument("--validate", type=Path, metavar="MANIFEST", help="기존 manifest만 검사한다")
     parser.add_argument("--fresh-env", action="store_true",
-                        help="Windows 전용. AI 도구 셸에만 있는 변수를 빼고 PATH를 시스템·사용자 설정으로 "
-                             "다시 만든 환경에서 잰다. AI 도구 안에서 실행할 때 쓴다")
+                        help="Windows 전용. AI 도구 변수와 PATH를 시스템·사용자 설정 값으로 다시 만든 "
+                             "환경에서 잰다. AI 도구 안에서 실행할 때 쓴다")
     args = parser.parse_args(argv)
 
     if args.validate:
