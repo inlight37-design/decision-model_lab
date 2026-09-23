@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-24** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout과 그 WSL) · 브랜치 `claude/orchestration-candidates-20260924`
+최종 갱신 **2026-09-24** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout과 그 WSL) · 브랜치 `claude/k46-codex-auth-deny-20260924`
 
 이 파일 하나에서 시작한다. 절 구성은 고정이고 CI가 확인한다. 규칙은 [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있다. 1단계(실제 호출 전 확인)를 마치고 통째로 다시 쓴 판에 **2단계(승인된 모델 호출)의 결과를 더한 판**이다. 1단계 각 항목(N0–N6)의 경위와 긴 병합 이력은 [1단계 직후 판](docs/handoff/2026-09-23-before-stage2.md)과 Git 로그에 있다. 여기에는 지금 상태, 한계와 못 고친 문제(4절의 K 표), 다음 일만 둔다.
 
@@ -11,26 +11,26 @@
 3. 이 세션이 무엇에 접근할 수 있는지(사용자 PC / 웹 컨테이너 / GitHub만) 정하고 PR에 적는다.
 4. **GitHub만 보는 세션**(ChatGPT 웹 등)이라면 main이 아직 이 파일의 최신판이 아닐 수 있다. 3절의 브랜치에서 이 파일을 다시 읽는다.
 5. **모델을 부르는 일은 사용자 승인 뒤에만 한다.** 사용량이 막히면 멈추고 알린다(사용자 요청 — Codex 사용량이 적게 남아 있었다). 2단계 승인(Claude 3·Codex 2)은 모두 썼다 — 더 부르려면 새로 승인받는다.
-6. **사용자에게 받을 것(3절):** Codex 문맥 판정(`failed`)을 푸는 방법, K46 방어를 adapter에 넣고 Codex 1회로 확인할지, PR #8(tmux 조사, 병합됨)의 TM 항목을 작업으로 받을지. 답을 받기 전에는 진행하지 않는다.
+6. **사용자에게 받을 것(3절):** K46 확인 호출(Codex 1회)의 승인과 거기에 C3 (a)를 붙일지(`--keep-session`), Codex 문맥 판정(`failed`)을 푸는 방법, PR #8(tmux 조사, 병합됨)의 TM 항목을 작업으로 받을지. 답을 받기 전에는 진행하지 않는다.
 
 ## 1. 지금 상태
 
-**2단계(승인된 모델 호출)가 끝났다. 다음은 3단계 — A1 이어서(모의, 모델 호출 없음)다.** 실행 코어, bubblewrap 격리, 모의 모드 앱(controller와 화면), 실제 CLI 실행기, WSL 관측 도구, 실행 허가 계산이 있다. **WSL 격리 안에서 Claude 3회·Codex 2회를 실제로 불렀고 모두 도구의 기대대로였다**([2단계 기록](docs/experiments/w2-isolation/stage2-aux-pc-wsl.md)). 그 결과로 Claude는 실행 허가가 나오고, Codex는 문맥 판정이 `failed`라 허가가 없다. 화면 서버는 아직 모의 실행기만 쓴다. **합성은 없다.** 근거 원장은 E01–E31 / F01–F31, 결정은 D01–D18이다. 검사 수와 결과는 [CI 실행 기록](https://github.com/inlight37-design/decision-model_lab/actions/workflows/checks.yml)이 기준이다.
+**2단계(승인된 모델 호출)가 끝났다. 다음은 3단계 — A1 이어서(모의, 모델 호출 없음)다.** 실행 코어, bubblewrap 격리, 모의 모드 앱(controller와 화면), 실제 CLI 실행기, WSL 관측 도구, 실행 허가 계산이 있다. **WSL 격리 안에서 Claude 3회·Codex 2회를 실제로 불렀고 모두 도구의 기대대로였다**([2단계 기록](docs/experiments/w2-isolation/stage2-aux-pc-wsl.md)). 그 결과로 Claude는 실행 허가가 나오고, Codex는 문맥 판정이 `failed`라 허가가 없다. Codex adapter는 명령이 Codex 로그인 파일을 읽지 못하게 하는 권한 profile을 준다(K46) — exec에서 모델의 명령에 지켜지는지는 아직 관측하지 않았다. 화면 서버는 아직 모의 실행기만 쓴다. **합성은 없다.** 근거 원장은 E01–E31 / F01–F31, 결정은 D01–D18이다. 검사 수와 결과는 [CI 실행 기록](https://github.com/inlight37-design/decision-model_lab/actions/workflows/checks.yml)이 기준이다.
 
 ### 있는 것
 
 | 부품 | 하는 일 | 보장하지 않는 것 |
 |---|---|---|
 | [`core/runner.py`](core/runner.py) | CLI 한 번을 셸 없이 실행한다. 입력을 다 보냈는지(`input_delivery`), 추적 단위가 비었는지(`unit_confirmed_empty`), 자손 전체가 끝났는지(`tree_confirmed_empty`)를 따로 남긴다. 정리 대기에 상한이 있다. 지정한 표식은 보관 상한과 상관없이 stderr 전체에서 센다(`stderr_counts`) | 격리 없는 POSIX에서 자손 전체의 종료(K03). 벽시계 보장(K05) |
-| [`core/adapters.py`](core/adapters.py) | 읽기 전용 논의자의 실행 명세(`build_spec`, 질문은 stdin), 위험 플래그 거절, 출력 판정(`interpret`). 기록은 `ExecutionSpec.record()`만 | 권한 제한이 실제로 지켜지는지 — 관측(B)이 한다 |
+| [`core/adapters.py`](core/adapters.py) | 읽기 전용 논의자의 실행 명세(`build_spec`, 질문은 stdin), 위험 플래그 거절, 출력 판정(`interpret`). 기록은 `ExecutionSpec.record()`만. Linux Codex에는 옛 `--sandbox read-only` 대신 `~/.codex/auth.json`만 읽기 금지한 권한 profile을 `-c permissions.dml-discussant=…`·`-c default_permissions=…`로 준다(K46). Codex `-c`는 그 실행의 값만 통과한다 | 권한 제한이 실제로 지켜지는지 — 관측(B)이 한다. profile은 exec에서 모델의 명령으로 아직 보지 않았다 |
 | [`core/env.py`](core/env.py) | 자식 환경(과금 변수 제거), 실행 파일 찾기. WSL에서 Windows 실행 파일 거절 | interop 차단의 증명(K16) |
 | [`core/isolation.py`](core/isolation.py) | 참여자 한 번을 bubblewrap으로 가둔다. 진입점 `isolation.run()` 하나. 허용한 폴더만, HOME·`/tmp`는 빈 tmpfs, PID namespace, 경로 충돌·비밀 변수 거절, root 소유 bwrap 확인 | 네트워크 격리(K08), 자원 상한(K10) |
 | [`core/membership.py`](core/membership.py) | 참여자가 빠지거나 바뀔 때의 결정. 공개 전에는 구성이 바뀔 때마다 정족수를 다시 본다 | 초안이 다 들어왔는지 — controller 관문이 본다 |
 | [`core/eligibility.py`](core/eligibility.py) | 실행 허가를 시도마다 계산한다: 기록의 다섯 칸이 모두 관측됐고, 30일 안이고, 설치 버전이 같고, 구독 로그인일 때만 | 기록된 관측이 사실인지 |
 | [`app/`](app/README.md) | **A1 controller와 모의 화면.** 입력 고정 → 시도 예약 → 실행 → 결과 수용 관문 → 초안 봉인 → controller가 공개. 참여자는 CLI(지금은 모의 CLI)와 원본 앱(수동). 수동 질문에는 실행 표식을 달아 다른 카드에 붙여 넣은 답을 거절한다. 정족수 정책은 실행마다 고정한다(기본은 CLI만 센다, Q6). SQLite journal(스키마 버전, 한 번에 한 controller만 연다), 토큰으로 막은 127.0.0.1 화면 서버 | 실제 CLI로 돌린 적 없음(K17), 합성(K18). 수동 답의 입력 일치(K21) |
 | [`app/cli_executor.py`](app/cli_executor.py) | 실제 CLI 실행기(Linux·WSL): `env.resolve` → `build_spec` → `isolation.run` → `interpret`. 이 기기의 기록(`runtime-inventory/2`)으로 시도마다 실행 허가를 계산하고, 허가가 없으면 프로세스를 만들기 전에 `failed_to_start`로 끝낸다 | 실제 CLI는 관측 도구가 이 실행기의 `prepare()` 경로로 불렀다(2단계). `execute()` 자체와 서버 연결은 아직이다(K17) |
-| [`tools/w2/cli_boundary.py`](tools/w2/cli_boundary.py), [`auth_mounts.py`](tools/w2/auth_mounts.py), [`codex_sandbox.py`](tools/w2/codex_sandbox.py) | 설치된 Claude·Codex를 격리 안에서 `--version`·로그인 상태만 실행해 본다. `auth_mounts`는 인증·설정 연결 조합을 바꿔 가며 본다(N3, K09). `codex_sandbox`는 Codex 자체 샌드박스가 우리 경계 안에서 서는지 본다(K12). 모두 모델 호출 없음 | 실제 질의. 토큰 갱신 쓰기 — 모델을 불러야 드러난다 |
-| [`tools/w2/observe.py`](tools/w2/observe.py) | **관측 호출은 이 도구로만 한다.** 참여자와 같은 argv·격리 경계로 probe마다 한 번 부르고, 승인한 provider별 상한과 멈춤 규칙을 지킨다. 요약은 파일 이름·stderr 속 UUID와 긴 ID를 가린다. **모델 호출** | 승인 없이 부르지 않는다. 2단계에서 다섯 번 불렀다 |
+| [`tools/w2/cli_boundary.py`](tools/w2/cli_boundary.py), [`auth_mounts.py`](tools/w2/auth_mounts.py), [`codex_sandbox.py`](tools/w2/codex_sandbox.py), [`codex_profile.py`](tools/w2/codex_profile.py) | 설치된 Claude·Codex를 격리 안에서 `--version`·로그인 상태만 실행해 본다. `auth_mounts`는 인증·설정 연결 조합을 바꿔 가며 본다(N3, K09). `codex_sandbox`는 Codex 자체 샌드박스가 우리 경계 안에서 서는지 본다(K12). `codex_profile`은 adapter의 권한 profile을 `codex sandbox`와 **네트워크 없는** exec로 본다(K46). 모두 모델 호출 없음 | 실제 질의. 토큰 갱신 쓰기 — 모델을 불러야 드러난다 |
+| [`tools/w2/observe.py`](tools/w2/observe.py) | **관측 호출은 이 도구로만 한다.** 참여자와 같은 argv·격리 경계로 probe마다 한 번 부르고, 승인한 provider별 상한과 멈춤 규칙을 지킨다. 요약은 파일 이름·stderr 속 UUID, 긴 ID, 토큰 모양을 가린다. `k46-codex`는 모델이 돌린 명령이 로그인 파일을 여는지 종료 코드로 보고, `--keep-session`은 Codex 세션 기록의 모양을 요약한다(C3 (a)). **모델 호출** | 승인 없이 부르지 않는다. 2단계에서 다섯 번, K01로 한 번 불렀다 |
 | [`tools/v04-03/conformance.py`](tools/v04-03/conformance.py) | Windows에서 논의자 설정을 관측하는 스크립트. 일부 명령은 모델을 부른다 | WSL에서는 쓰지 않는다 — `tools/w2/observe.py`가 맡는다 |
 | [`tools/runtime_inventory.py`](tools/runtime_inventory.py) | V04-01 tier 1. 각 CLI의 `--version`/`--help`만 실행해 기록한다. `--validate`는 기록의 스키마(`runtime-inventory/2` 포함)를 검사한다 | `observed`·`configured=true`를 쓸 수 없다 |
 | [`check_frontier_protocol.py`](tools/check_frontier_protocol.py), [`review_boundary.py`](tools/review_boundary.py), [`audit_design_contrast.py`](tools/audit_design_contrast.py) | 합성 기록의 일관성 **검사**(계산 아님), PR #3의 순수 함수 경계 실험, 디자인 토큰 대비 계산 | controller의 상태 권위가 아니다 |
@@ -44,7 +44,7 @@
   - GitHub CLI: `gh` 2.101.0을 공식 릴리스 zip(체크섬 확인)으로 `C:\ai\tools\gh\`에 풀었다(2026-09-24, 사용자 승인). 관리자 권한·PATH 변경 없이 전체 경로로 부른다. 로그인(`gh auth login`)은 사용자가 한다.
   - **Windows에만 해당하는 사실:** Codex의 `--ignore-user-config`가 샌드박스 선택까지 버린다(openai/codex#42172). Codex가 명령을 PowerShell 5.1로 실행한다. 작업 폴더 밖의 다른 참여자 초안도 읽는다. Claude 데스크톱 앱 셸에는 앱이 넣은 변수가 있어 새 터미널 기준 환경으로 실행한다. `%LOCALAPPDATA%` 설치가 앱의 가상 공간에 들어간 적이 있다(agy).
 - **`aux-pc-wsl`(WSL2):**
-  - 기록: [V04-01 tier 1](docs/experiments/v04-01-inventory/hosts/aux-pc-wsl/RESULTS.md), [W2 경계 시험](docs/experiments/w2-isolation/aux-pc-wsl.md), [인증 연결 관측(N3)](docs/experiments/w2-isolation/auth-mounts-aux-pc-wsl.md), [2단계 호출(tier 2, B1·B2, K12 진단)](docs/experiments/w2-isolation/stage2-aux-pc-wsl.md), [2단계 후속(K46, 모델 없음)](docs/experiments/w2-isolation/stage2-followup-aux-pc-wsl.md), [K01 큰 입력](docs/experiments/w2-isolation/k01-large-input-aux-pc-wsl.md).
+  - 기록: [V04-01 tier 1](docs/experiments/v04-01-inventory/hosts/aux-pc-wsl/RESULTS.md), [W2 경계 시험](docs/experiments/w2-isolation/aux-pc-wsl.md), [인증 연결 관측(N3)](docs/experiments/w2-isolation/auth-mounts-aux-pc-wsl.md), [2단계 호출(tier 2, B1·B2, K12 진단)](docs/experiments/w2-isolation/stage2-aux-pc-wsl.md), [2단계 후속(K46, 모델 없음)](docs/experiments/w2-isolation/stage2-followup-aux-pc-wsl.md), [K01 큰 입력](docs/experiments/w2-isolation/k01-large-input-aux-pc-wsl.md), [K46 profile(모델 없음)](docs/experiments/w2-isolation/k46-profile-aux-pc-wsl.md). 후속 기록의 "exec에 `-P`를 넘긴다"는 틀렸다 — K46 profile 기록이 바로잡는다.
   - 환경: WSL 2.7.14, Ubuntu 24.04.5, systemd 켜짐, bubblewrap 0.9.0, AppArmor 꺼짐. 저장소는 Windows checkout(`C:\ai\decision-model_lab`)을 `/mnt/c/ai/decision-model_lab`로 열어 쓴다.
   - 설치: Claude Code 2.1.280과 Codex 0.156.1을 `~/.local/bin`에 설치했다. 로그인도 했다(Claude `claude.ai`·`firstParty`, Codex ChatGPT).
   - **로그인 셸(`bash -l`)에서 돌린다.** 비로그인 셸(`wsl.exe -- bash`)은 PATH에 `~/.local/bin`이 없어 CLI를 못 찾는다. PATH에 Windows 쪽 CLI 폴더가 이어 붙어 있다. Codex는 Linux 샌드박스용 bubblewrap을 스스로 들고 온다.
@@ -56,6 +56,12 @@
     - Codex는 금지 파일에 명령을 실제로 돌렸고 우리 경계가 막았다(파일 없음). Codex 자체 샌드박스는 우리 bubblewrap 안에서도 서서 쓰기를 막는다(모델 없는 진단).
     - Claude stream-json에는 계정 한도(`rate_limit_event`: 5시간·7일 창의 사용 비율)가 온다. 참여자 argv의 `json` 결과에는 없다.
     - Codex는 `--ignore-user-config`로도 계정의 원격 플러그인과 공급자 스킬을 `~/.codex`에 받는다.
+  - **K46 profile(2026-09-24, 모델 없음):**
+    - `codex exec`에는 `-P`가 없다(인자 오류). 권한 profile은 `-c default_permissions="<이름>"`으로 고른다.
+    - 그렇게 고른 profile은 `codex sandbox`에서 명령이 `~/.codex/auth.json`을 열지 못하게 한다. 쓰기 차단과 공통 자료 읽기는 그대로다.
+    - 네트워크를 끊은 exec는 참여자 argv를 설정 오류 없이 받아 연결 단계까지 간다. 없는 profile 이름은 연결 전에 거절한다.
+    - 사람용 머리글은 profile을 줘도 `sandbox: read-only`라서 구분하지 못한다.
+    - exec는 `--ignore-user-config`에도 `chatgpt.com/backend-api/ps/mcp`(계정 쪽 MCP)에 연결하려 한다(K44).
 - **세 CLI 공통 관측**(aux-pc tier 2):
   - 셋 다 구독으로 비대화형 JSON 호출이 된다. `--bare`는 구독 불가다(F25).
   - Claude `-p`는 기본으로 사용자 플러그인·MCP를 싣는다.
@@ -84,7 +90,7 @@
 | Q5 | 원본 앱을 자동으로 움직일지 | **지금은 하지 않는다**(2절 19). 사람이 옮기는 수동 방식만 있다(2절 17). 소비자 앱의 화면을 프로그램으로 조작하면 깨지기 쉽고 약관상 계정 위험이 있다. 자동화가 필요해지면 공식 통로를 관측한 뒤 다시 정한다 |
 | Q6 | blind를 확인할 수 없는 수동 참여자를 독립 정족수에 셀지 | **정했고 반영했다**(2절 18) — 정책을 실행마다 고정하고 기본은 독립성이 확인된 참여자(CLI)만 센다 |
 | C2 | agy 자동 실행을 켤지 | **꺼 둔다**(2절 19). 켤지는 언제든 사용자가 고른다(2절 14). 위험은 기술 실패가 아니라 계정 제재다(F31) |
-| C3 | Codex 문맥 판정(`failed`, K38·K44)을 어떻게 풀지 | 미정. (a) 참여자 구성(빈 작업 폴더)에서 문맥을 보이는 관측을 한 번 더 한다, (b) 빈 작업 폴더 완화를 정책으로 받아들인다. 정하기 전에는 Codex를 실제 실행기로 부르지 않는다(3절). 어느 쪽이든 Codex를 실제로 부르기 전에 K46(인증 파일 읽힘)의 방어가 먼저다 |
+| C3 | Codex 문맥 판정(`failed`, K38·K44)을 어떻게 풀지 | 미정. (a) 참여자 구성(빈 작업 폴더)에서 문맥을 보이는 관측을 한 번 더 한다, (b) 빈 작업 폴더 완화를 정책으로 받아들인다. 정하기 전에는 Codex를 실제 실행기로 부르지 않는다(3절). K46 방어는 adapter에 넣었다(2026-09-24). (a)는 K46 확인 호출에 `--keep-session`을 붙여 같은 1회로 볼 수 있다 |
 
 ## 2. 사용자가 확정한 것
 
@@ -113,12 +119,25 @@
 
 ## 3. 진행 중인 작업
 
-**지금 병합되지 않은 브랜치: 없음.** 마지막 병합: 편의·오케스트레이션 후보 기록(`claude/orchestration-candidates-20260924`) — 사용자 방침(2절 20)과 4절 3단계의 후보 목록(새 실행으로 넘기기, 공개 뒤 교차검토 한 라운드, 슈퍼바이저 제안). 이 줄은 병합 뒤에 맞도록 브랜치에서 미리 "없음"으로 적었다. 그 앞: K01 관측과 인계 정리(`claude/k01-handoff-20260924`, gh로 만든 PR) — 큰 stdin 질문의 Claude 호출 1회([기록](docs/experiments/w2-isolation/k01-large-input-aux-pc-wsl.md))와 다음 세션을 위한 이 파일의 정리. 이 줄은 병합 뒤에 맞도록 브랜치에서 미리 "없음"으로 적었다. 그 앞: [PR #9](https://github.com/inlight37-design/decision-model_lab/pull/9) 2단계 후속(`claude/stage2-followup-20260924`) — Codex 명령이 자기 인증 파일을 읽을 수 있다는 모델 없는 진단(K46)과 권한 profile 시험, GitHub CLI 설치 기록. claude 세션이 gh로 연 첫 PR이고, 사용자 지시로 병합했다. 그 앞: [PR #8](https://github.com/inlight37-design/decision-model_lab/pull/8) `chatgpt/tmux-patterns-20260923` — ChatGPT의 tmux 조사(문서만, head `4e3500e`에서 CI 녹색). 사용자 지시로 claude 세션이 병합했다(2026-09-24). PR이 고친 옛 3절은 버리고 main 쪽을 두었으며, 조사 링크와 claude 세션의 대조는 1절 기록 표의 조사 줄로 옮겼다. 그 앞: 2단계(`claude/stage2-observe-20260923`) — 승인된 호출 다섯 번의 결과 기록, `manifest.v2.json`의 세 칸, 관측 도구의 수정(ID 가림, 경계 위반 멈춤), K12 진단 도구, 다른 AI에게 줄 [2단계 리뷰 요청서](docs/reviews/2026-09-23-stage2-request/README.md)(실패·시행착오 S01–S21). 이 세션의 권한 확인이 처음에는 main 병합을 막았고, 사용자 지시 뒤에 병합했다. 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 이 줄을 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다. 그 앞의 병합 이력은 [1단계 직후 판](docs/handoff/2026-09-23-before-stage2.md) 3절과 Git 로그에 있다.
+**지금 병합되지 않은 브랜치: 없음.** 이 줄은 병합 뒤에 맞도록 브랜치에서 미리 "없음"으로 적었다. 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다.
+
+- **마지막 병합:** K46 방어(`claude/k46-codex-auth-deny-20260924`, 모델 호출 없음).
+  - adapter가 Linux Codex에 로그인 파일만 읽기 금지한 권한 profile을 준다.
+  - 네트워크 없는 exec 진단 도구 `tools/w2/codex_profile.py`와 그 [기록](docs/experiments/w2-isolation/k46-profile-aux-pc-wsl.md)을 더했다.
+  - 관측 도구에 `k46-codex`, `--keep-session`, 토큰 가림을 더하고 `p3-codex`를 고쳤다.
+  - 인계가 적었던 "exec에 `-P`를 넘긴다"는 exec에 없는 옵션이라 틀렸다. `default_permissions`로 바로잡았다.
+- **그 앞(최근 순):**
+  - [PR #11](https://github.com/inlight37-design/decision-model_lab/pull/11) 편의·오케스트레이션 후보 기록(2절 20).
+  - [PR #10](https://github.com/inlight37-design/decision-model_lab/pull/10) K01 관측(Claude 1회)과 인계 정리.
+  - [PR #9](https://github.com/inlight37-design/decision-model_lab/pull/9) 2단계 후속: K46 진단, 권한 profile 시험, gh 설치.
+  - [PR #8](https://github.com/inlight37-design/decision-model_lab/pull/8) ChatGPT의 tmux 조사(문서만). 사용자 지시로 claude 세션이 병합했고, PR이 고친 옛 3절은 버리고 main 쪽을 두었다.
+  - 2단계(`claude/stage2-observe-20260923`): 승인된 호출 다섯 번, [2단계 리뷰 요청서](docs/reviews/2026-09-23-stage2-request/README.md).
+- 각 병합의 경위는 PR 본문과 Git 로그에 있다. 그 앞은 [1단계 직후 판](docs/handoff/2026-09-23-before-stage2.md) 3절에 있다.
 
 사용자의 판단을 기다리는 것:
 - **PR #8의 TM 항목을 작업으로 받을지.** 병합은 조사 문서를 main에 둔 것이고 작업을 받은 것은 아니다. claude 세션의 권고는 적용 계획 A(화면 조회의 요청 겹침 막기, 늦게 온 응답 버리기, 연결 끊김과 마지막 확인 시각 표시)만 3단계 화면 작업에 넣는 것이다. tmux를 참여자 실행 엔진으로 쓰지 않는다는 판단은 조사와 claude 세션이 같다 — bubblewrap 안의 참여자가 밖의 tmux server에 일을 맡기면 격리와 자손 종료 확인이 깨진다.
-- **Codex 문맥 판정(`failed`)을 푸는 방법** — (a) 참여자 구성(빈 작업 폴더)에서 한 번 더 관측해 문맥에 무엇이 들어가는지 본다(Codex 1회 승인), 또는 (b) 빈 작업 폴더 완화를 정책으로 받아들이고 계정 플러그인(K44)은 한계로 둔다. 정하기 전에는 Codex를 실제 실행기로 부르지 않는다.
-- **K46 방어를 넣을지** — Codex 참여자의 명령이 `~/.codex/auth.json`을 읽을 수 있다(모델 없는 진단). 인증 파일만 읽기 금지하는 권한 profile이 `codex sandbox`에서는 통했다. adapter에 넣으려면 허용 목록을 넓히고 Codex exec 1회로 확인해야 한다(승인 필요). K09의 하위 폴더 덮기보다 먼저 한다(4절 2단계 "남은 것").
+- **K46 확인 호출의 승인** — adapter에 권한 profile을 넣었다(모델 없음). 남은 것은 Codex exec 1회(`observe.py call k46-codex <전체 모델 이름>`)다. 모델이 돌린 명령이 `auth.json`을 못 여는지, 로그인이 유지되는지, 쓰기가 막히는지 본다. 승인받을 값은 Codex 최대 횟수(실패 포함), 호출당 timeout, 모델 이름(2단계는 `gpt-6-luna`), `--keep-session`을 붙일지다.
+- **Codex 문맥 판정(`failed`)을 푸는 방법** — (a) 참여자 구성(빈 작업 폴더)에서 문맥에 무엇이 들어가는지 본다, 또는 (b) 빈 작업 폴더 완화를 정책으로 받아들이고 계정 플러그인·MCP(K44)는 한계로 둔다. (a)는 K46 확인 호출에 `--keep-session`을 붙이면 같은 1회로 재료를 얻는다: Codex가 남긴 세션 기록을 상태 폴더로 옮겨 모양(줄 종류, 긴 글의 길이·표식·머리글)만 요약하고, 모델의 자기 보고(`context`)도 받는다(약한 증거). 정하기 전에는 Codex를 실제 실행기로 부르지 않는다.
 - 열린 결정 Q3·Q4 — 급하지 않다. Q5·Q6·C2는 정했다(2절 18·19).
 - aux-pc 로컬 모의 데이터(`~/.decision-model-lab/mock`)의 첫 실행 하나가 ChatGPT 앱 수동 답을 기다린다 — 시연용이고 저장소와 무관하다. 새 코드로 처음 열면 journal이 스키마 2로 올라가고, 그 실행은 예전처럼 원본 앱 답도 정족수에 센다(`include_unverified`).
 
@@ -136,14 +155,12 @@
 
 **다음 세션의 첫 일 — 둘 중 무엇을 먼저 할지 사용자에게 확인한다.**
 
-1. **K46 방어(Codex를 실제로 부르기 전에 필요).**
-   - 모델 없이 할 것:
-     - `core/adapters.py`의 Codex 명세가 Linux에서 `--sandbox read-only` 대신 권한 profile을 넘긴다: `-c permissions.<이름>={ extends = ":read-only", filesystem = { "<HOME>/.codex/auth.json" = "deny" } }`와 `-P <이름>`. HOME은 실행기가 안다.
-     - 금지 목록(`-c`)의 예외를 그 값 하나로 좁혀 둔다.
-     - `observe.py`의 `p3-codex`는 지금 `--sandbox` 값을 바꾸므로 함께 고친다.
-     - 가짜 CLI 시험을 붙인다. 원 출력을 읽을 때 토큰 모양(JWT·긴 base64)도 가리도록 `_scrub`을 넓힌다.
-   - 그다음 사용자 승인을 받아 Codex exec 1회로 본다: 로그인이 유지되는지, 모델이 돌린 명령이 `auth.json`을 못 읽는지(내용이 아니라 종료 코드만 찍게 한다), 쓰기가 막히는지.
-   - 열린 결정 C3의 (a)(참여자 구성에서 문맥 확인)를 같은 호출에 붙일 수 있는지도 함께 설계한다.
+1. **K46 확인 호출(승인 필요, Codex를 실제 실행기로 부르기 전에 필요).**
+   - 모델 없는 부분은 끝났다(2026-09-24): adapter의 권한 profile, 네트워크 없는 exec 진단, 관측 도구의 `k46-codex`.
+   - 승인받은 값으로 `observe.py approve --claude 0 --codex <n> …` 뒤 `observe.py call k46-codex <전체 모델 이름>`을 한 번 부른다(아래 "다시 부를 때의 절차"). C3 (a)도 같이 보려면 `--keep-session`을 붙인다.
+   - 기대: 답이 온다(로그인 유지). `auth_check`에서 `auth_open_rc`가 0이 아니고 `input_read_rc`가 0이다. `boundary_violations`가 비었다. 도구의 `as_expected`가 이것을 한꺼번에 본다.
+   - 기대와 다르면(인증 파일이 열림, 토큰 모양이 보임) Codex를 멈추고 K46을 닫지 않는다. 모델이 명령을 거부해 `auth_check`가 비어도 기대와 다른 것으로 친다 — 다시 부를지는 사용자에게 묻는다.
+   - 기대대로면 결과를 기록으로 남기고 K46을 닫는다. `--keep-session`의 요약으로 C3를 사용자와 정한다.
 2. **3단계 A1 이어서(모의, 모델 호출 없음)** — 아래 "3단계 이후"의 목록.
 
 ### 1단계 — 끝남
@@ -157,15 +174,15 @@ A1 리뷰가 먼저 하라고 한 관문 보강(N0, [반영 기록](docs/reviews
 **남은 것 — 하려면 새 승인이 필요하다:**
 
 - ~~K01 큰 입력~~ — **했다(2026-09-24, Claude 1회).** 2단계에서 `--pad-kb`를 빠뜨린 것을 메웠다. 약 95 KB의 stdin 질문이 끝까지 전달됐고 보고 토큰이 입력만큼 늘었다([기록](docs/experiments/w2-isolation/k01-large-input-aux-pc-wsl.md)). 처음 "3번은 알아서 해도 돼"로는 이 세션의 권한 확인이 승인 기록을 막았고, 세션이 명시적 승인을 요청한 뒤의 답("병합하고 할거하고 정리해")으로 1회를 적어 불렀다.
-- **Codex 문맥 판정(`failed`).** 참여자 구성(빈 작업 폴더)에서 무엇이 문맥에 들어가는지 볼 probe가 아직 없다. `plain-codex`는 빈 폴더지만 문맥 내용을 보이지 않는다. 후보는 `--ephemeral` 없이 한 번 돌려 Codex가 남기는 세션 기록에서 지시문·도구 목록을 읽는 것이다 — probe를 새로 만들고 승인받는다. 또는 사용자가 빈 폴더 완화를 정책으로 받아들인다(3절).
-- **K46 인증 파일 읽기 금지(K09보다 먼저).** 2026-09-24 모델 없는 진단([후속 기록](docs/experiments/w2-isolation/stage2-followup-aux-pc-wsl.md)): Codex 참여자의 명령은 `~/.codex/auth.json`을 읽을 수 있고, 명령의 네트워크는 막혀 있다. `:read-only`를 넓혀 `~/.codex/auth.json`만 금지하는 권한 profile은 `codex sandbox`에서 그 파일만 막고 나머지를 그대로 두었다. `~/.codex` 전체를 금지하면 샌드박스가 codex 실행 파일을 다시 실행하지 못해 돌지 않는다. 넣는 방법: adapter가 `--sandbox read-only` 대신 그 profile(`-c permissions.…`, `-P`)을 넘기도록 허용 목록을 넓히고, Codex exec 1회로 로그인·명령의 인증 파일 읽기 차단·쓰기 차단을 본다.
+- **Codex 문맥 판정(`failed`).** 참여자 구성(빈 작업 폴더)에서 무엇이 문맥에 들어가는지 볼 수단으로 `observe.py call … --keep-session`을 만들었다(2026-09-24, 가짜 CLI로만 시험). `--ephemeral`을 빼고 부른 뒤 Codex가 남긴 세션 기록을 상태 폴더로 옮기고 모양만 요약한다. 세션 기록의 형식은 문서화되지 않았다 — 실제 기록에서 요약이 쓸모 있는지는 처음 부를 때 본다. 또는 사용자가 빈 폴더 완화를 정책으로 받아들인다(3절).
+- **K46 인증 파일 읽기 금지(K09보다 먼저).** Codex 참여자의 명령은 `~/.codex/auth.json`을 읽을 수 있었다([후속 기록](docs/experiments/w2-isolation/stage2-followup-aux-pc-wsl.md)). 2026-09-24에 adapter가 `--sandbox read-only` 대신 그 파일만 읽기 금지한 권한 profile을 `-c permissions.…`와 `-c default_permissions=…`로 넘기게 했다. exec에는 `-P`가 없다([K46 profile 기록](docs/experiments/w2-isolation/k46-profile-aux-pc-wsl.md)). `codex sandbox`에서는 명령이 그 파일을 못 열었고, 네트워크 없는 exec는 설정을 받아들였다. **남은 것은 Codex exec 1회(`k46-codex`)로 모델이 돌린 명령에 금지가 적용되는지 보는 것이다.**
 - **K09 연결 좁히기(K46 뒤).** Claude는 `.credentials.json`·`~/.claude.json`·쓸 곳(`backups`·`cache`)만 쓰기로 두고 나머지를 빈 tmpfs로 덮는 구성이 후보다. Codex는 상태 DB·플러그인 캐시를 모든 실행이 공유한다. 하위 폴더 덮기는 인증 파일 노출을 줄이지 못하고, 토큰 갱신이 한 번도 없어 좁힌 구성에서 갱신이 저장되는지 볼 수 없었다 — 그래서 K46 뒤로 미뤘다. 바꾼 구성으로 한 번씩 다시 불러야 기록의 관측과 맞는다.
 
 **다시 부를 때의 절차** — `aux-pc-wsl`의 로그인 셸에서, 저장소 루트(`/mnt/c/ai/decision-model_lab`)에서:
 
 1. `python3 tools/w2/observe.py plan` — 모델 호출 없음. probe마다 실제로 돌릴 argv, 연결 경로, 승인 상태를 본다. "not on the child PATH"면 로그인 셸이 아니다.
 2. `python3 tools/w2/observe.py approve --claude <n> --codex <n> --timeout <초> --note "<누가·언제·어디서 승인>"` — **사용자가 새로 정한 값 그대로.** 모델 이름은 전체 이름으로 받는다(K43). 호출 전에 관측할 목록과 명령의 옵션(`--pad-kb` 등)을 맞춰 본다.
-3. `python3 tools/w2/observe.py call <probe> <전체 모델 이름>` — 한 번 부르고 출력 JSON(`as_expected`, `boundary_violations`, `argv_run`, init 요약, `config_changes`, stderr 힌트, 토큰)을 읽는다. 도구의 `as_expected`는 답을 받았는지와 경계 위반(금지 표식이 답·출력에 보임, 작업 폴더에 파일이 생김)까지 본다 — 지시문 표식, 도구 시도, 거절 방식은 답과 원 출력에서 직접 본다. 종료 코드 3은 기대와 다르다는 뜻이다 — 그 provider는 멈춘다. 종료 코드 2는 부르지 않았다는 뜻이다(사용량을 쓰지 않았다). `p3-*`는 모델 응답 없이 거절돼야 하는 호출이지만 상한에는 센다.
+3. `python3 tools/w2/observe.py call <probe> <전체 모델 이름> [--keep-session]` — 한 번 부르고 출력 JSON(`as_expected`, `boundary_violations`, `argv_run`, init 요약, `config_changes`, stderr 힌트, 토큰)을 읽는다. 도구의 `as_expected`는 답을 받았는지와 경계 위반(금지 표식이 답·출력에 보임, 작업 폴더에 파일이 생김)까지 본다 — 지시문 표식, 도구 시도, 거절 방식은 답과 원 출력에서 직접 본다. 종료 코드 3은 기대와 다르다는 뜻이다 — 그 provider는 멈춘다. 종료 코드 2는 부르지 않았다는 뜻이다(사용량을 쓰지 않았다). `p3-*`는 모델 응답 없이 거절돼야 하는 호출이지만 상한에는 센다. `k46-codex`는 `auth_check`(모델이 돌린 명령의 실제 출력에서 읽은 종료 코드)를 함께 본다.
 4. `python3 tools/w2/observe.py status`로 남은 상한을 본다.
 
 - 원 출력은 WSL 안 `~/.local/state/dml-observe/`(저장소 밖, 격리 안에 연결하지 않음)에 남는다. 저장소에는 요약만 옮기고, 계정 이메일·조직 ID·토큰은 옮기지 않는다. **요약도 옮기기 전에 읽는다** — 2단계에서 CLI가 쓴 파일 이름에 조직 UUID가 들어 있었다(지금은 도구가 가린다).
@@ -240,9 +257,9 @@ A1 리뷰가 먼저 하라고 한 관문 보강(N0, [반영 기록](docs/reviews
 | K41 | 앱 | 공개 전에도 참여자 상태가 바뀌는 시각을 반복 조회로 대략 알 수 있다. 정확한 시간·토큰·길이는 넘기지 않는다 | 운영자용 거친 상태로 허용한다. 참여자에게는 제어 API 토큰이 없다(A1 리뷰 질문 4) | — |
 | K42 | 앱 | 제어 API의 방어는 Bearer 토큰, Host 검사, 요청 크기 상한뿐이다. Origin 허용 목록, 콘텐츠 타입 강제, 프레임 삽입 정책, 읽기 시간 제한, 브라우저 교차 출처 음성 시험이 없다 | 토큰을 머리글로만 받으므로 교차 출처 요청은 preflight에서 막힌다고 본다 — 브라우저로는 시험하지 않았다(A1 리뷰 질문 5) | 급하지 않음 |
 | K43 | 앱 | 보고된 모델이 요청과 다르면 받지 않고 구성 축소로 드러낸다. 받아들일지 사용자에게 묻는 보류 상태는 없다. 별칭으로 요청하면 보고된 전체 이름과 달라 보일 수 있다 | 요청은 전체 이름으로 한다(N1). 2단계에서 `claude-sonnet-5`로 요청해 init과 `modelUsage`가 같은 이름을 보고했다 | — |
-| K44 | CLI | Codex는 `--ignore-user-config`로도 계정의 원격 플러그인(사용자가 만든 것 포함)과 공급자 스킬을 `~/.codex`에 받는다. 그것이 참여자 문맥에 들어가는지는 모른다 | 기록의 Codex 문맥 판정을 `failed`로 두어 실제 실행기가 Codex를 부르지 않는다 | Codex 문맥 판정(3절) |
+| K44 | CLI | Codex는 `--ignore-user-config`로도 계정의 원격 플러그인(사용자가 만든 것 포함)과 공급자 스킬을 `~/.codex`에 받는다. exec는 계정 쪽 MCP(`chatgpt.com/backend-api/ps/mcp`)에도 연결하려 한다(2026-09-24, 네트워크 없는 진단의 stderr). 그것들이 참여자 문맥에 들어가는지는 모른다 | 기록의 Codex 문맥 판정을 `failed`로 두어 실제 실행기가 Codex를 부르지 않는다 | Codex 문맥 판정(3절). `--keep-session` 요약이 재료다 |
 | K45 | CLI | Claude `--safe-mode`를 더하면 init에 내장 플러그인 `agents-md`가 나타난다. 무엇을 하는지 모른다. 그때도 모델은 `AGENTS.md` 표식을 보고하지 않았다 | 참여자 argv는 `--restricted`만 쓴다 | `--safe-mode`를 쓰기로 할 때 |
-| K46 | 격리 | Codex 참여자의 명령은 Codex의 로그인 파일 `~/.codex/auth.json`을 읽을 수 있다(2026-09-24, `codex sandbox` 진단 — 종료 코드만 봄). 모델이 그것을 답에 넣으면 ChatGPT 로그인 토큰이 원장과 공개 화면에 남는다. 공통 자료의 지시로 유도될 수 있다. 명령의 네트워크는 Codex 샌드박스가 막는다(`PermissionError`). Claude는 Read가 `--restricted`로 작업·입력 폴더에 갇히고 셸 도구가 없다 | 기록의 Codex 문맥 판정이 `failed`라 실제 실행기가 Codex를 부르지 않는다. `~/.codex/auth.json`만 읽기 금지하는 권한 profile이 `codex sandbox`에서 통했다(`~/.codex` 전체 금지는 샌드박스를 깨뜨린다) | adapter에 profile을 넣고 Codex exec 1회로 확인(승인 필요) — Codex를 실제로 부르기 전 |
+| K46 | 격리 | Codex 참여자의 명령은 Codex의 로그인 파일 `~/.codex/auth.json`을 읽을 수 있다(2026-09-24, `codex sandbox` 진단 — 종료 코드만 봄). 모델이 그것을 답에 넣으면 ChatGPT 로그인 토큰이 원장과 공개 화면에 남는다. 공통 자료의 지시로 유도될 수 있다. 명령의 네트워크는 Codex 샌드박스가 막는다(`PermissionError`). Claude는 Read가 `--restricted`로 작업·입력 폴더에 갇히고 셸 도구가 없다 | adapter가 `--sandbox read-only` 대신 `~/.codex/auth.json`만 읽기 금지하는 권한 profile을 준다(2026-09-24). `default_permissions`로 고른 profile이 `codex sandbox`에서 그 파일을 막았고, 네트워크 없는 exec가 설정을 받아들였다([기록](docs/experiments/w2-isolation/k46-profile-aux-pc-wsl.md)). `~/.codex` 전체 금지는 샌드박스를 깨뜨린다. 관측 도구는 답·출력의 JWT를 경계 위반으로 멈추고 요약에서 가린다. 기록의 Codex 문맥 판정이 `failed`라 실제 실행기는 아직 Codex를 부르지 않는다 | Codex exec 1회(`k46-codex`, 승인 필요)로 모델의 명령에 금지가 적용되는지 본다 — Codex를 실제로 부르기 전 |
 
 2단계에서 닫은 것: K12(Codex 샌드박스가 우리 경계 안에서 선다 — 모델 없는 진단), K29(`-p`는 stdin을 질문으로 읽는다), K33(관측 도구가 실제 호출을 했다), K36(격리 안에서 실제 질의가 끝까지 돈다). 근거는 [2단계 기록](docs/experiments/w2-isolation/stage2-aux-pc-wsl.md)에 있다. 2026-09-24에 닫은 것: K37(사용자가 `gh`에 로그인한 뒤로 claude 세션이 `gh run view <번호> --log`로 CI 원문 로그를 읽는다 — PR #9의 실행에서 확인). 로그인이 풀리면 다시 익명 API로 결과만 본다.
 
@@ -250,7 +267,6 @@ A1 리뷰가 먼저 하라고 한 관문 보강(N0, [반영 기록](docs/reviews
 
 - 대비 미달 5쌍의 토큰 수정(K24). 화면은 이미 그 조합을 글자에 쓰지 않는다. 고칠 때는 `design/`과 아티팩트를 함께 고친다.
 - `review_boundary.quota_projection`의 가정(`resetsAt` 단위, 한도 ID 형식)을 실제 한도 응답(B3)으로 확인한다.
-- Codex 읽기 금지 설정(권한 프로필의 `"deny"`)은 추가 방어층이다. 쓰려면 adapter 금지 목록(`-c`·`--profile`)을 조정해야 한다.
 - Hermes 후속 후보(HP-04–HP-10)는 pilot 뒤에 하나씩.
 - v0.4 원장의 `recheck` 미기입, 외부 리뷰의 저우선 지적 L1–L4, 개수 lint의 SHA 예외 범위, Actions의 Node 20 경고, GitHub 저장소 설명·토픽.
 
@@ -289,6 +305,7 @@ A1 리뷰가 먼저 하라고 한 관문 보강(N0, [반영 기록](docs/reviews
 - **수동 답의 sha256 일치나 실행 표식 되말함을 "입력 검증"·"독립성 확인"이라고 부르지 않는다**(K21·K22).
 - **Claude 데스크톱 앱 안에서 `%LOCALAPPDATA%`에 새로 설치하지 않는다.** 앱 전용 가상 공간에 들어간다.
 - **Windows에서 Codex에 `--ignore-user-config`를 줄 때 샌드박스 덮어쓰기를 빼지 않는다.**
+- **Linux Codex에 옛 `--sandbox`와 권한 profile을 함께 주지 않는다. exec에 `-P`를 넘기지 않는다** — exec에 없는 옵션이다. profile은 `default_permissions`로 고른다(K46).
 - **실측 전에 설계 문서나 원장 항목을 더 늘리지 않는다.**
 
 ## 6. 검사
@@ -314,6 +331,7 @@ WSL(`aux-pc-wsl`)의 로그인 셸에서 저장소 루트(`/mnt/c/ai/decision-mo
 DML_REQUIRE_BWRAP=1 python3 -m unittest discover -s tests
 python3 tools/w2/cli_boundary.py
 python3 tools/w2/codex_sandbox.py
+python3 tools/w2/codex_profile.py   # exec는 네트워크 없는 격리에서만 돈다
 python3 tools/w2/observe.py plan
 ```
 

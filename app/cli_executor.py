@@ -12,6 +12,8 @@
 - 프로세스를 만들기 전에 거절하면(실행 파일 없음, 금지 옵션, 경로 충돌, 모델 이름 없음) failed_to_start로
   돌려준다. 아무것도 시작하지 않았으므로 unknown이 아니다.
 - Codex의 명령 거절 표식은 보관 상한과 상관없이 stderr 전체에서 센다(K02).
+- Codex에는 `--sandbox read-only` 대신 로그인 파일(`~/.codex/auth.json`)만 읽기 금지한 권한 profile을 준다(K46).
+  exec에서 그 금지가 지켜지는지는 아직 관측하지 않았다.
 - **실행 허가는 시도마다 계산한다(N4).** 기록(`runtime-inventory/2`)의 다섯 칸이 모두 관측됐고, 지금 설치된 버전이
   기록과 같고, 구독 로그인일 때만 부른다(core.eligibility). 기록 없이 부르는 것은 관측 도구와 시험뿐이다(unchecked).
 
@@ -82,9 +84,13 @@ class CliExecutor:
         exe = core_env.resolve(adapters.ADAPTERS[spec.adapter_id].command, self.child_env)
         self._check_eligible(spec.adapter_id, exe)
         # Claude는 읽을 폴더를 --add-dir로 알려 주고 Read 도구만 준다. Codex에는 그런 옵션을 주지 않는다 —
-        # 격리 안에 읽기 전용으로 보이는 것만 읽을 수 있다.
-        read_dirs = tuple(inputs) if spec.adapter_id == "claude-code" else ()
-        return adapters.build_spec(spec.adapter_id, exe=exe, prompt=prompt, model=spec.model or "", read_dirs=read_dirs)
+        # 격리 안에 읽기 전용으로 보이는 것만 읽을 수 있다. 대신 Codex의 명령이 자기 로그인 파일을 읽지 못하게
+        # 권한 profile을 준다(K46). 격리 안의 HOME은 실제 경로다(isolation.plan).
+        if spec.adapter_id == "claude-code":
+            return adapters.build_spec(spec.adapter_id, exe=exe, prompt=prompt, model=spec.model or "",
+                                       read_dirs=tuple(inputs))
+        return adapters.build_spec(spec.adapter_id, exe=exe, prompt=prompt, model=spec.model or "",
+                                   codex_user_home=os.path.realpath(self.home))
 
     def prepare(self, spec, prompt: str, work_dir: str, *,
                 inputs: Sequence[str] = ()) -> tuple[adapters.ExecutionSpec, isolation.Sandbox]:

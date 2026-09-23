@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import sys
+import tomllib
 import unittest
 
 from core import adapters, runner
@@ -73,6 +74,7 @@ class ArgvTests(unittest.TestCase):
         self.assertEqual(argv[-2:], ["--tools", "Read"])
 
     def test_codex_discussant_is_read_only(self):
+        """HOME을 주지 않으면 옛 read-only 샌드박스다(동결한 Windows 경로). Linux 실행기는 늘 HOME을 준다."""
         argv = build_argv("codex", exe=EXE, prompt="Q", model="gpt-x")
         self.assertEqual(argv[1:3], ["exec", "--json"])
         self.assertEqual(argv[argv.index("--sandbox") + 1], "read-only")
@@ -90,6 +92,42 @@ class ArgvTests(unittest.TestCase):
                 adapters._check("codex", [EXE, "exec", "-c", bad, "Q"], user_text=(4,))
         for call in (dict(adapter_id="claude-code", codex_windows_sandbox=True),
                      dict(adapter_id="codex", codex_windows_sandbox="yes")):
+            with self.subTest(call=call), self.assertRaises(AdapterError):
+                build_argv(call.pop("adapter_id"), exe=EXE, prompt="Q", model="m", **call)
+
+    def test_codex_on_linux_denies_its_login_file_instead_of_the_old_sandbox(self):
+        """K46. 옛 --sandbox와 섞지 않고(권한 문서), exec에 없는 -P 대신 default_permissions로 고른다(0.156.1)."""
+        argv = build_argv("codex", exe=EXE, prompt="Q", model="gpt-x", codex_user_home="/home/u/")
+        define, select = adapters.codex_permissions("/home/u")
+        self.assertNotIn("--sandbox", argv)
+        self.assertNotIn("-P", argv)
+        self.assertEqual([argv[i + 1] for i, a in enumerate(argv) if a == "-c"], [define, select])
+        self.assertEqual(select, 'default_permissions="dml-discussant"')
+        key, value = define.split("=", 1)
+        self.assertEqual(key, "permissions.dml-discussant")
+        self.assertEqual(tomllib.loads(f"profile = {value}")["profile"],
+                         {"extends": ":read-only", "filesystem": {"/home/u/.codex/auth.json": "deny"}})
+        self.assertLess(argv.index("-c"), argv.index("--model"))
+        self.assertEqual(argv[-1], "-")
+
+    def test_codex_config_exception_is_only_the_values_of_this_run(self):
+        define, select = adapters.codex_permissions("/home/u")
+        allowed = (define, select)
+        adapters._check("codex", [EXE, "exec", "-c", define, "-c", select, "-"], user_text=(), config=allowed)
+        for bad in (adapters.codex_permissions("/home/v")[0], define.replace(":read-only", ":workspace"),
+                    'default_permissions=":workspace"', adapters.CODEX_WINDOWS_SANDBOX, 'sandbox_mode="read-only"'):
+            with self.subTest(bad=bad), self.assertRaises(AdapterError):
+                adapters._check("codex", [EXE, "exec", "-c", bad, "-"], user_text=(), config=allowed)
+        for flag in ("-P", "--permission-profile"):
+            with self.subTest(flag=flag), self.assertRaises(AdapterError):
+                adapters._check("codex", [EXE, "exec", flag, "dml-discussant", "-"], user_text=(), config=allowed)
+
+    def test_codex_user_home_must_be_a_plain_posix_path(self):
+        for home in ("relative", "", "/", "C:\\Users\\u", '/home/u"x', "/home/u\nx", "/home/u\\x", 3):
+            with self.subTest(home=home), self.assertRaises(AdapterError):
+                build_argv("codex", exe=EXE, prompt="Q", model="m", codex_user_home=home)
+        for call in (dict(adapter_id="claude-code", codex_user_home="/home/u"),
+                     dict(adapter_id="codex", codex_user_home="/home/u", codex_windows_sandbox=True)):
             with self.subTest(call=call), self.assertRaises(AdapterError):
                 build_argv(call.pop("adapter_id"), exe=EXE, prompt="Q", model="m", **call)
 

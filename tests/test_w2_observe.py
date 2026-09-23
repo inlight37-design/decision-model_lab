@@ -37,9 +37,9 @@ def opt(name):
 if FLAVOR == "claude" and opt("--permission-mode") == "notamode" and BEHAVIOR != "ignore-invalid":
     sys.stderr.write("error: option '--permission-mode <mode>' argument 'notamode' is invalid.\n")
     sys.exit(1)
-if FLAVOR == "codex" and opt("--sandbox") == "notamode":
-    sys.stderr.write("error: invalid value 'notamode' for '--sandbox <SANDBOX_MODE>'\n")
-    sys.exit(2)
+if FLAVOR == "codex" and 'default_permissions="notamode"' in argv:  # 실제 0.156.1의 문구(연결 전에 끝난다)
+    sys.stderr.write("Error: default_permissions refers to undefined profile `notamode`\n")
+    sys.exit(1)
 if FLAVOR == "claude":  # 실제 CLI처럼 자기 설정 폴더에 무언가 쓴다(관측 도구가 이름을 적는지 본다)
     with open(os.path.join(os.environ["HOME"], ".claude", "fake-state.json"), "w") as f:
         f.write("{{}}")
@@ -53,13 +53,35 @@ if FLAVOR == "codex":  # 실제 Codex 0.156.1은 계정 플러그인 ID로 캐�
                           "dev-6aaab2b95eec8191b36e08ebd75fb485")
     os.makedirs(plugin, exist_ok=True)
     open(os.path.join(plugin, "plugin.json"), "w").close()
+day = os.path.join(os.environ["HOME"], ".codex", "sessions", "2026", "09", "24")
+if FLAVOR == "codex" and BEHAVIOR == "other-session":  # 같은 때 사용자가 다른 Codex 세션을 쓴다고 흉내 낸다
+    os.makedirs(day, exist_ok=True)
+    open(os.path.join(day, "rollout-2026-09-24-someone-else.jsonl"), "w").close()
+if FLAVOR == "codex" and "--ephemeral" not in argv:  # 세션 기록을 남긴다(--keep-session). 형식은 흉내일 뿐이다
+    os.makedirs(day, exist_ok=True)
+    with open(os.path.join(day, "rollout-2026-09-24-t-9f8e.jsonl"), "w") as f:
+        f.write(json.dumps({{"type": "session_meta", "payload": {{"id": "s", "instructions": "# Base\n" + "z" * 300}}}}) + "\n")
+        f.write(json.dumps({{"type": "response_item", "payload": {{"type": "message", "role": "developer", "content": [
+            {{"type": "input_text", "text": "<skills_instructions>\n## Skills\n- created-by-me: a user plugin\n" + "y" * 300}}]}}}}) + "\n")
 def first_line(path):
     try:
         with open(path, encoding="utf-8") as f:
             return f.readline().strip()
     except OSError as e:
         return "could not: " + type(e).__name__
-if "Reply with exactly" in question:
+command_output = None
+if "auth_open_rc" in question:  # k46-codex: 명령의 종료 코드를 흉내 낸다. 실제 금지는 Codex 샌드박스가 한다
+    auth = os.path.join(os.environ["HOME"], ".codex", "auth.json")
+    denied = (BEHAVIOR != "auth-open" and 'default_permissions="dml-discussant"' in argv
+              and any('"' + auth + '" = "deny"' in a for a in argv))
+    allowed = re.search(r'head -n1 "([^"]+)"', question).group(1)
+    command_output = "write_rc=2\ninput_read_rc=%d\nauth_exists_rc=%d\nauth_open_rc=%d\n" % (
+        0 if os.path.exists(allowed) else 1, 0 if os.path.exists(auth) else 1, 1 if denied else 0)
+    if BEHAVIOR == "leak-token":  # 명령이 인증 파일을 출력했고 모델이 답에 옮겼다고 흉내 낸다
+        with open(auth) as f:
+            command_output += f.read()
+    text = json.dumps({{"output": command_output, "context": "none"}})
+elif "Reply with exactly" in question:
     text = "OK"
 else:
     allowed = re.search(r"Read the file (\S+) and quote", question).group(1)
@@ -84,11 +106,17 @@ if FLAVOR == "claude":
     print(json.dumps(result))
 else:
     sys.stderr.write("codex sandbox: landlock unavailable, falling back\n")
-    print(json.dumps({{"type": "item.completed", "item": {{"type": "command_execution", "command": "cat allowed.txt",
-                                                           "exit_code": 0, "status": "completed"}}}}))
+    print(json.dumps({{"type": "thread.started", "thread_id": "t-9f8e"}}))
+    item = {{"type": "command_execution", "command": "cat allowed.txt", "exit_code": 0, "status": "completed"}}
+    if command_output is not None:
+        item.update(command="/bin/sh -c 'echo x > created.txt; ...'", aggregated_output=command_output)
+    print(json.dumps({{"type": "item.completed", "item": item}}))
     print(json.dumps({{"type": "item.completed", "item": {{"type": "agent_message", "text": text}}}}))
     print(json.dumps({{"type": "turn.completed", "usage": usage}}))
 '''
+
+
+FAKE_JWT = "eyJhbGciOiJub25lIn0.eyJzdWIiOiJmYWtlLXVzZXIifQ.c2lnbmF0dXJl"  # 합성 값. 서명 없는 가짜
 
 
 def install(home: Path, flavor: str, behavior: str = "ok") -> None:
@@ -98,6 +126,8 @@ def install(home: Path, flavor: str, behavior: str = "ok") -> None:
     else:
         target, own = home / ".local/share/codex/releases/9.9.9/bin/codex", ".codex"
     (home / own).mkdir(parents=True, exist_ok=True)
+    if flavor == "codex":
+        (home / own / "auth.json").write_text('{"tokens": {"id_token": "%s"}}' % FAKE_JWT, encoding="utf-8")
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(FAKE.format(flavor=flavor, behavior=behavior), encoding="utf-8")
     target.chmod(0o755)
@@ -188,6 +218,13 @@ class SummaryTests(unittest.TestCase):
                                         "0123456789abcdef0123456789abcdef deadbeef", "/home/u"),
                          "~/a <uuid> <hex> deadbeef")
 
+    def test_scrub_masks_token_shapes_but_keeps_ordinary_names(self):
+        """K46: 로그인 파일이 명령 출력에 실리면 요약에도 들어간다. JWT와 대소문자·숫자가 섞인 긴 조각을 가린다."""
+        opaque = "rt_" + "Kq7Zx" * 9                                            # 16진수가 아닌 글자가 섞였다
+        kept = "x86_64-unknown-linux-musl created-by-me-remote dev-<hex> " + "q" * 45
+        self.assertEqual(observe._scrub(f"id {FAKE_JWT} refresh {opaque} {kept}", "/home/u"),
+                         f"id <jwt> refresh <token> {kept}")
+
 
 @unittest.skipUnless(bwrap_usable(), "bubblewrap을 쓸 수 있는 Linux에서만")
 class CallTests(Base):
@@ -247,7 +284,10 @@ class CallTests(Base):
 
     def test_invalid_values_must_be_refused_and_an_answer_stops_the_provider(self):
         observe.approve(self.state, {"claude": 3, "codex": 1}, 60, "시험 승인")
-        self.assertTrue(self.call("p3-codex")["as_expected"])
+        p3_codex = self.call("p3-codex")
+        self.assertTrue(p3_codex["as_expected"])
+        self.assertIn('default_permissions="notamode"', p3_codex["argv_run"])   # 없는 권한 profile 이름
+        self.assertNotIn("--sandbox", p3_codex["argv_run"])                     # 옛 샌드박스 값은 없다(K46)
         p3 = self.call("p3-claude")
         self.assertTrue(p3["as_expected"])
         self.assertIn("notamode", p3["argv_run"])                               # 실제로 돌린 잘못된 값
@@ -271,12 +311,57 @@ class CallTests(Base):
         self.assertEqual(wrote["boundary_violations"], ["file_written"])
         self.assertFalse(wrote["as_expected"])
 
+    def test_k46_reads_the_login_file_check_from_the_command_output(self):
+        """권한 profile이 exec에서 지켜지면 명령이 인증 파일을 열지 못한다. 열리거나 토큰이 보이면 그 provider를 멈춘다."""
+        observe.approve(self.state, {"claude": 0, "codex": 3}, 60, "시험 승인")
+        k46 = self.call("k46-codex")
+        self.assertTrue(k46["as_expected"], k46)
+        self.assertEqual(k46["auth_check"], {"write_rc": "2", "input_read_rc": "0", "auth_exists_rc": "0",
+                                             "auth_open_rc": "1"})
+        self.assertIn('default_permissions="dml-discussant"', k46["argv_run"])
+        self.assertEqual((k46["argv_changes"], k46["session_records"]), ([], []))
+        install(self.home, "codex", "auth-open")                                # exec가 profile을 지키지 않았다
+        opened = self.call("k46-codex")
+        self.assertEqual(opened["boundary_violations"], ["auth_file_readable"])
+        self.assertFalse(opened["as_expected"])
+        install(self.home, "codex", "leak-token")                               # 명령과 답에 토큰이 실렸다
+        leaked = self.call("k46-codex", after_failure=True)
+        self.assertEqual(leaked["boundary_violations"], ["credential_shape_seen"])
+        self.assertFalse(leaked["as_expected"])
+        self.assertIn("<jwt>", json.dumps(leaked["codex_items"]))
+        self.assertNotIn(FAKE_JWT.split(".")[0], json.dumps(leaked))           # 요약에는 토큰이 없다
+
+    def test_keep_session_moves_this_calls_record_out_and_keeps_only_its_shape(self):
+        observe.approve(self.state, {"claude": 1, "codex": 2}, 60, "시험 승인")
+        with self.assertRaisesRegex(observe.ObserveError, "Codex probes only"):
+            self.call("plain-claude", keep_session=True)
+        install(self.home, "codex", "other-session")
+        out = self.call("k46-codex", keep_session=True)
+        self.assertTrue(out["as_expected"], out)
+        self.assertEqual(out["argv_changes"], ["- --ephemeral (keep the session record)"])
+        self.assertNotIn("--ephemeral", out["argv_run"])
+        left = [p.name for p in (self.home / ".codex/sessions").rglob("*.jsonl")]
+        self.assertEqual(left, ["rollout-2026-09-24-someone-else.jsonl"])     # 이번 호출의 것만 옮기고 남의 것은 둔다
+        [record] = out["session_records"]
+        self.assertTrue(record["moved_to"].endswith("001-k46-codex-session/rollout-2026-09-24-t-9f8e.jsonl"))
+        self.assertTrue(Path(self.state, "results/001-k46-codex-session/rollout-2026-09-24-t-9f8e.jsonl").exists())
+        self.assertEqual(record["kinds"], {"session_meta": 1, "response_item/message/developer": 1})
+        developer = next(t for t in record["long_texts"] if t["in"] == "response_item/message/developer")
+        self.assertEqual((developer["marks"], developer["headings"]),
+                         (["skill", "plugin"], ["<skills_instructions>", "## Skills"]))
+        self.assertNotIn("yyyy", json.dumps(out))                              # 본문은 옮기지 않는다
+        self.assertEqual([c["event"] for c in observe.calls(self.state)], ["started", "finished"])
+        plain = self.call("plain-codex")                                        # --keep-session이 없으면 옮기지 않는다
+        self.assertEqual(plain["session_records"], [])
+        self.assertNotIn("session_record_missing", plain)
+
     def test_plan_shows_specs_and_mounts_without_calling(self):
         report = observe.plan(self.state, executor=self.executor(), model="m-9")
         self.assertEqual(set(report["probes"]), set(observe.PROVIDER))
         b1, plain = report["probes"]["b1"], report["probes"]["plain-claude"]
         self.assertIn("stream-json", b1["argv"])
         self.assertTrue(any(p.endswith("/input") for p in b1["read_only"]))    # 공통 자료
+        self.assertTrue(any(p.endswith("/input") for p in report["probes"]["k46-codex"]["read_only"]))
         self.assertFalse(any(p.endswith("/input") for p in plain["read_only"]))
         self.assertEqual(b1["never"], [str(self.state)])                        # 상태 폴더는 격리 밖
         self.assertNotIn("sandbox conformance", json.dumps(report))            # 질문 본문은 없다

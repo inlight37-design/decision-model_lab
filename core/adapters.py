@@ -57,18 +57,25 @@ FORBIDDEN: dict[str, frozenset[str]] = {
                               "--settings", "--mcp-config", "--setting-sources"}),
     "codex": frozenset({"--dangerously-bypass-approvals-and-sandbox", "--dangerously-bypass-hook-trust",
                         "--approve-for-me", "--full-auto", "--yolo", "--oss", "--local-provider",
-                        "-p", "--profile", "-c", "--config", "--enable", "--disable",
+                        "-p", "--profile", "-P", "--permission-profile", "-c", "--config", "--enable", "--disable",
                         "workspace-write", "danger-full-access"}),
     "antigravity": frozenset({"--dangerously-skip-permissions", "--mode", "--remote-control",
                               "accept-edits"}),
 }
 
-# Codex에 허용하는 설정 덮어쓰기는 이것 하나다. Windows에서 --ignore-user-config는 데스크톱 앱이
-# 사용자 설정에 적은 `[windows] sandbox = "elevated"`까지 버려서, 샌드박스가 없는 exec가 모든 명령을
-# "blocked by policy"로 거절하고도 exit 0으로 답한다(openai/codex#42172, 0.152부터; aux-pc 0.155.1에서
-# 재현하고 이 덮어쓰기로 풀리는 것을 관측).
+# Codex에 허용하는 설정 덮어쓰기는 두 경우뿐이고, 실행마다 그 값만 통과시킨다(_check의 config).
+# Windows: --ignore-user-config는 데스크톱 앱이 사용자 설정에 적은 `[windows] sandbox = "elevated"`까지 버려서,
+# 샌드박스가 없는 exec가 모든 명령을 "blocked by policy"로 거절하고도 exit 0으로 답한다(openai/codex#42172,
+# 0.152부터; aux-pc 0.155.1에서 재현하고 이 덮어쓰기로 풀리는 것을 관측).
 CODEX_WINDOWS_SANDBOX = 'windows.sandbox="elevated"'
-CODEX_ALLOWED_CONFIG = frozenset({CODEX_WINDOWS_SANDBOX})
+# Linux(K46): read-only 샌드박스 안의 명령이 Codex 로그인 파일을 읽을 수 있었다(2026-09-24 `codex sandbox` 진단).
+# 옛 `--sandbox read-only` 대신, 읽기 전용 기본 profile에 그 파일 하나의 읽기 금지를 더한 이름 있는 권한
+# profile을 준다(베타, https://learn.chatgpt.com/docs/permissions — 옛 sandbox 설정과 섞지 말라고 한다).
+# exec에는 `-P`가 없어서(0.156.1이 인자 오류로 거절) `default_permissions`로 고른다. `~/.codex` 전체를 막으면
+# Codex의 샌드박스 보조 프로그램이 그 아래의 codex를 다시 실행하지 못한다(같은 진단).
+CODEX_PROFILE = "dml-discussant"
+CODEX_AUTH_FILE = ".codex/auth.json"
+POSIX_HOME = re.compile(r"/[^\x00-\x1f\x7f\"\\]*")
 CODEX_REJECTED = "rejected: blocked by policy"
 # 실행기가 runner에 넘겨 stderr 전체에서 세게 하는 표식(K02). Linux Codex의 거절 문자열은 아직 모른다(K30, B2).
 STDERR_MARKS: dict[str, tuple[str, ...]] = {"codex": (CODEX_REJECTED,)}
@@ -123,13 +130,26 @@ def _require(ok: bool, message: str) -> None:
         raise AdapterError(message)
 
 
-def _check(adapter_id: str, argv: list[str], user_text: Iterable[int]) -> list[str]:
-    skip = set(user_text)
+def codex_permissions(home: str) -> tuple[str, str]:
+    """Linux Codex 참여자에게 `-c`로 넘길 두 값: 권한 profile 정의와 그것을 기본으로 고르는 키(K46).
+
+    home은 격리 안의 HOME(실제 경로)이다. 값이 TOML 문자열 안에 들어가므로 따옴표·백슬래시·제어 문자는 받지 않는다.
+    """
+    _require(isinstance(home, str) and POSIX_HOME.fullmatch(home) is not None and home.rstrip("/") != "",
+             "codex_user_home must be an absolute POSIX path without quotes, backslashes or control characters")
+    path = f'{home.rstrip("/")}/{CODEX_AUTH_FILE}'
+    return (f'permissions.{CODEX_PROFILE}={{ extends = ":read-only", filesystem = {{ "{path}" = "deny" }} }}',
+            f'default_permissions="{CODEX_PROFILE}"')
+
+
+def _check(adapter_id: str, argv: list[str], user_text: Iterable[int], config: Iterable[str] = ()) -> list[str]:
+    """config: 이 실행에 허용한 Codex `-c` 값. 그 밖의 `-c`는 금지 목록에 걸린다."""
+    skip, config = set(user_text), frozenset(config)
     for index, token in enumerate(argv):
         if index in skip:
             continue
         if (adapter_id == "codex" and token == "-c" and index + 1 < len(argv)
-                and argv[index + 1] in CODEX_ALLOWED_CONFIG):
+                and argv[index + 1] in config):
             skip.add(index + 1)
             continue
         _require(token not in FORBIDDEN[adapter_id], f"{adapter_id}: forbidden argument {token!r}")
@@ -140,21 +160,24 @@ def _check(adapter_id: str, argv: list[str], user_text: Iterable[int]) -> list[s
 def build_spec(adapter_id: str, *, exe: str, prompt: str, model: str, role: str = DISCUSSANT,
                enabled: bool | None = None, read_dirs: Iterable[str] = (),
                claude_context: str = "restricted", effort: str | None = None,
-               codex_windows_sandbox: bool = False) -> ExecutionSpec:
+               codex_windows_sandbox: bool = False, codex_user_home: str | None = None) -> ExecutionSpec:
     """읽기 전용 논의자 한 번의 실행 명세. 허용된 조각 밖의 옵션은 받지 않는다.
 
     codex_windows_sandbox: Windows에서 Codex의 elevated 샌드박스를 명시한다(`codex doctor`가
     `sandbox backend elevated`, `provisioning complete`를 보일 때). 주의: Codex의 read-only
     샌드박스는 쓰기를 막을 뿐 **작업 폴더 밖 읽기를 막지 않는다**(aux-pc 관측) — blind 격리는
     이것으로 성립하지 않는다.
+    codex_user_home: Linux에서 격리 안의 HOME. 주면 `--sandbox read-only` 대신 그 HOME의 `.codex/auth.json`만
+    읽기 금지하는 권한 profile을 준다(K46). 실제 실행기(app.cli_executor)는 늘 준다. 없으면 옛 read-only 샌드박스다
+    (동결한 Windows 경로).
     """
     _require(adapter_id in ADAPTERS, f"unknown adapter {adapter_id!r}")
     spec = ADAPTERS[adapter_id]
     _require(spec.enabled_by_default if enabled is None else enabled is True,
              f"{adapter_id} is off; the user has to turn it on ({spec.note})")
     _require(role in ROLES, f"unsupported role {role!r}")
-    _require(adapter_id == "codex" or codex_windows_sandbox is False,
-             "codex_windows_sandbox applies to codex only")
+    _require(adapter_id == "codex" or (codex_windows_sandbox is False and codex_user_home is None),
+             "codex_windows_sandbox and codex_user_home apply to codex only")
     _require(isinstance(exe, str) and os.path.isabs(exe), "exe must be an absolute path")
     _require(isinstance(prompt, str) and prompt.strip() != "", "prompt must be non-empty text")
     _require(isinstance(model, str) and MODEL.fullmatch(model) is not None,
@@ -183,13 +206,20 @@ def build_spec(adapter_id: str, *, exe: str, prompt: str, model: str, role: str 
     if adapter_id == "codex":
         _require(effort is None and not dirs, "codex discussant takes no effort or extra dirs yet")
         _require(type(codex_windows_sandbox) is bool, "codex_windows_sandbox must be a boolean")
+        _require(not (codex_windows_sandbox and codex_user_home is not None),
+                 "the Windows sandbox and the Linux permission profile do not go together")
         argv = [exe, "exec", "--json", "--skip-git-repo-check", "--ephemeral", "--ignore-user-config",
-                "--ignore-rules", "--sandbox", "read-only"]
-        if codex_windows_sandbox:
-            argv += ["-c", CODEX_WINDOWS_SANDBOX]
+                "--ignore-rules"]
+        if codex_user_home is None:
+            config: tuple[str, ...] = (CODEX_WINDOWS_SANDBOX,) if codex_windows_sandbox else ()
+            argv += ["--sandbox", "read-only"]
+        else:
+            config = codex_permissions(codex_user_home)
+        for value in config:
+            argv += ["-c", value]
         # `-`: 지시문을 stdin에서 읽는다(codex exec --help, aux-pc 0.155.1 기록).
         argv += ["--model", model, "-"]
-        return spec(_check(adapter_id, argv, user_text=()), STDIN)
+        return spec(_check(adapter_id, argv, user_text=(), config=config), STDIN)
     _require(effort is None or effort in AGY_EFFORT, f"effort must be one of {AGY_EFFORT}")
     argv = [exe, "-p", prompt, "--output-format", "json", "--model", model, "--sandbox",
             "--disable-slash-commands"]

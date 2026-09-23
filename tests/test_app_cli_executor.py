@@ -43,6 +43,11 @@ if FLAVOR == "claude" and not ("-p" in argv and argv[argv.index("--output-format
 if FLAVOR == "codex" and not (argv[0] == "exec" and "--json" in argv and argv[-1] == "-"):
     sys.exit(3)
 home = os.environ["HOME"]
+# K46: 격리 안의 HOME 기준으로 로그인 파일만 읽기 금지하는 권한 profile. 옛 --sandbox와 섞지 않는다
+deny = '"' + os.path.join(home, ".codex", "auth.json") + '" = "deny"'
+if FLAVOR == "codex" and ("--sandbox" in argv or 'default_permissions="dml-discussant"' not in argv
+                          or not any(deny in a for a in argv)):
+    sys.exit(4)
 with open(os.path.join(home, OWN, "fake-was-here"), "w") as f:
     f.write("1")
 if BEHAVIOR == "slow":
@@ -168,6 +173,9 @@ class RealPathTests(Base):
         for record in records:
             self.assertEqual((record["input_via"], record["input_sha256"]), (adapters.STDIN, view["input_sha256"]))
             self.assertNotIn(question, json.dumps(record, ensure_ascii=False))  # 기록에 질문 본문이 없다
+        codex_argv = next(r["argv"] for r in records if r["adapter_id"] == "codex")
+        self.assertEqual([codex_argv[i + 1] for i, a in enumerate(codex_argv) if a == "-c"],
+                         list(adapters.codex_permissions(os.path.realpath(self.home))))  # K46 profile이 기록에도 남는다
 
     def test_codex_rejections_are_counted_past_the_output_cap(self):
         """K02. 보관 상한을 넘긴 stderr 뒤쪽의 거절 표식도 센다. 표식이 없으면 잘렸어도 받는다."""
