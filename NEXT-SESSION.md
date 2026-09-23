@@ -1,8 +1,8 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-23** · 작성 세션: ChatGPT 웹 (Hermes 조사 인계·탐색 링크만) · 브랜치 `chatgpt/hermes-patterns-20260923`
+최종 갱신 **2026-09-23** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout, Hermes 조사 교차 확인·병합) · 브랜치 `claude/hermes-crosscheck-20260923`
 
-아래 보조 PC 환경 관측은 기존 claude 세션(Claude Opus 5.5, 보조 PC의 로컬 checkout, `claude/v04-01-review-fixes-20260923`)의 기록이다. 이번 ChatGPT 웹 세션은 GitHub 소스·공식 문서만 검토했으며 사용자 PC·설치·로그인·모델 호출·디자인 발행 상태를 재관측하지 않았다.
+아래 보조 PC 환경 관측은 V04-01을 수행한 claude 세션의 기록이다. Hermes 조사를 쓴 ChatGPT 웹 세션은 GitHub 소스·공식 문서만 검토했다. 이 판을 쓴 claude 세션은 같은 보조 PC에서 `check-versions.ps1`(버전만 실행)로 세 CLI의 버전·경로·서명 `Valid`를 다시 확인했고 모델은 부르지 않았다.
 
 이 파일 하나에서 시작한다. 절 구성은 고정이고 CI가 확인한다. 규칙은 [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있다.
 
@@ -41,7 +41,7 @@
 - 로그인: Claude Code는 claude.ai 구독(`firstParty`), Codex는 ChatGPT 로그인 — 둘 다 데스크톱 앱의 기존 자격증명으로 이미 로그인돼 있었다. agy는 사용자가 앱 밖 터미널에서 Google 계정으로 로그인했다. 첫 실행 때 상호작용 데이터 수집 동의가 미리 체크돼 있었다.
 - 과금 경로를 바꾸는 환경변수는 사용자·시스템 설정에 없다. Claude 데스크톱 앱의 셸에는 앱이 넣은 변수 26개(`CLAUDECODE`, `ANTHROPIC_BASE_URL` 등)가 있어서, AI 세션이 기록할 때는 `--fresh-env`를 쓴다.
 - tier 1: 문서의 플래그는 모두 help에 있다. **ACP는 세 CLI 모두 help에 없다.**
-- tier 2: 세 CLI 모두 구독 인증으로 비대화형 JSON 호출 성공, 오타 옵션은 셋 다 실행 전 거절. **agy는 `--output-format`의 없는 값을 조용히 무시하고 실행했다.** `--bare`는 구독 불가(F25 재현). Claude `-p`는 빈 폴더에서도 사용자 전역 플러그인·MCP 연결을 싣는다. Codex는 사용자 설정 파일을 빼도 구독으로 돈다. agy 모델 목록에는 Claude·GPT-OSS 모델도 있다(목록에 있다는 것이지 호출해 본 것은 아니다). **agy 기본 모델은 미확인이다** — 목록은 기본값을 표시하지 않는다(처음에 "Flash"라고 적은 것은 목록 첫 행을 읽은 것이었다. PR #4 R07). 결과에 모델 이름을 주는 것은 Claude뿐이다.
+- tier 2: 세 CLI 모두 구독 인증으로 비대화형 JSON 호출 성공, 오타 옵션은 셋 다 실행 전 거절. **agy는 `--output-format`의 없는 값을 조용히 무시하고 실행했다.** `--bare`는 구독 불가(F25 재현). Claude `-p`는 빈 폴더에서도 사용자 전역 플러그인·MCP 연결을 싣는다. Codex는 사용자 설정 파일을 빼도 구독으로 돈다. agy 모델 목록에는 Claude·GPT-OSS 모델도 있다(목록에 있다는 것이지 호출해 본 것은 아니다). **agy 기본 모델은 미확인이다** — 목록은 기본값을 표시하지 않는다(처음에 "Flash"라고 적은 것은 목록 첫 행을 읽은 것이었다. PR #4 R07). **모델 이름의 Pro/Flash로 품질을 정하지 않는다** — 사용자 보고(2026-09-23): `gemini-3.1-pro`는 옛 세대라 3.8 Flash보다 지시를 못 알아듣는다. 결과에 모델 이름을 주는 것은 Claude뿐이다.
 - **리뷰 반영(PR #4, 2026-09-23):** tier 2 manifest의 `configured=true`는 기본 구독 호출을 관측했다는 뜻이다. **blind 문맥·권한 conformance 통과가 아니다.** Claude `permission_mode`는 값 검증만 관측돼 `in_help`로 정정했고, "깨끗한 문맥"은 사용자 설치분이 줄었다는 관측으로 고쳤다. 상세는 [반영 기록](docs/reviews/2026-09-23-v04-01-review/RESPONSE.md).
 - 정책: Gemini CLI 소비자 인증은 2026-06-18에 실제로 닫혔다(F30). Antigravity 약관은 제3자 소프트웨어를 통한 접근을 위반으로 규정한다(F31) — 우리 앱의 `agy` 구동이 해당하는지 불명확. agy의 `useG1Credits`(한도 소진 후 유료 크레딧)는 이 계정에서 **꺼져 있다**(사용자 확인. 처음에 "기본 켜짐"이라고 쓴 것은 오독이었다). agy의 상호작용 데이터 사용(`enableTelemetry`)은 사용자 요청으로 **껐다**(`~/.gemini/antigravity-cli/settings.json`).
 - 운용 PC는 아직 관측한 세션이 없다.
@@ -75,17 +75,15 @@
 
 ## 3. 진행 중인 작업
 
-Hermes 조사 착수 전의 작업은 main에 병합됐다 — PR #3, ChatGPT의 V04-01 리뷰([PR #4](https://github.com/inlight37-design/decision-model_lab/pull/4), `chatgpt/review-v04-01-20260923`)와 그 반영(`claude/v04-01-review-fixes-20260923`). 사용자는 **CI 녹색을 확인한 claude 세션이 main에 직접 병합하는 것**을 허락했다(2026-09-23).
+2026-09-23의 모든 작업은 main에 병합됐다 — PR #3, V04-01 리뷰([PR #4](https://github.com/inlight37-design/decision-model_lab/pull/4))와 그 반영, ChatGPT의 Hermes 패턴 조사([PR #5](https://github.com/inlight37-design/decision-model_lab/pull/5), `chatgpt/hermes-patterns-20260923`)와 claude의 [교차 확인](docs/research/hermes-2026-09-23/CROSSCHECK.md)(`claude/hermes-crosscheck-20260923`). 사용자는 **CI 녹색을 확인한 claude 세션이 main에 직접 병합하는 것**을 허락했다(2026-09-23).
 
-**지금 병합되지 않은 작업:** [PR #5 — Hermes 패턴 선별 조사](https://github.com/inlight37-design/decision-model_lab/pull/5), 브랜치 `chatgpt/hermes-patterns-20260923`. [조사 시작 문서](docs/research/hermes-2026-09-23/README.md)에 요약·상세 분석·적용 시험·commit 고정 근거가 있다. 사용자 요청에 따른 날짜 고정 연구이며 런타임 구현, D/E/F 원장 추가, 사용자 PC 변경은 하지 않았다. CI 결과는 PR의 checks와 [작업 기록](docs/research/hermes-2026-09-23/WORKLOG.md)을 확인한다.
-
-병합하는 세션은 이 절에서 PR #5를 완료 기록으로 옮기고 진행 중 작업을 다시 확인한다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다.
+**지금 병합되지 않은 브랜치: 없음.** 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 이 줄을 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다.
 
 ## 4. 다음 작업
 
 **V04-01(aux-pc)은 끝났다.** 판정: V04-03은 **Claude Code·Codex 두 경로로 진행 가능**, Antigravity는 조건부. 근거는 [aux-pc RESULTS](docs/experiments/v04-01-inventory/hosts/aux-pc/RESULTS.md)의 판정 표.
 
-Hermes 조사에서 제안한 [HP-01/02/03](docs/research/hermes-2026-09-23/ADOPTION_PLAN.md)은 아래 mock runner·문맥/권한 conformance에 참고한다. **exec 우선과 V04-03 순서는 바꾸지 않는다.** 스킬·recall·MoA·DB·App Server 확장은 pilot 이후의 조건부 후보이며 전부 구현한 뒤 pilot을 시작하라는 뜻이 아니다.
+Hermes 조사에서 제안한 [HP-01/02/03](docs/research/hermes-2026-09-23/ADOPTION_PLAN.md)은 아래 mock runner·문맥/권한 conformance에 참고한다. **exec 우선과 V04-03 순서는 바꾸지 않는다.** 스킬·recall·MoA·DB·App Server 확장은 pilot 이후의 조건부 후보이며 전부 구현한 뒤 pilot을 시작하라는 뜻이 아니다. Hermes 코드에서 **옮기면 안 되는 동작**(마감 뒤 답 텍스트를 완료로 수용, 다른 CLI 로그인 빌려 쓰기 기본값, 매 턴 추가 호출, `--fallback-model`)은 [교차 확인](docs/research/hermes-2026-09-23/CROSSCHECK.md)에 코드 위치와 함께 있다.
 
 **① 남은 사용자 결정 — agy를 이 앱에서 구동할지** (V04-03은 Claude Code·Codex만으로 되므로 급하지 않다)
 
@@ -93,15 +91,18 @@ Hermes 조사에서 제안한 [HP-01/02/03](docs/research/hermes-2026-09-23/ADOP
 
 리뷰(PR #4)가 더한 것: 공식 [headless 문서](https://www.antigravity.google/docs/cli/headless/)는 프로그램·CI 통합을 직접 안내하므로 "모든 스크립트 구동이 금지"라고 볼 근거도 없다. 같은 질문(공식 인증을 그대로 쓰는 wrapper)이 공식 CLI 저장소 [#711](https://github.com/google-antigravity/antigravity-cli/issues/711)에 올라와 있으나 2026-09-23 현재 Google의 답이 없다. 리뷰의 운영 제안은 **adapter를 만들되 꺼 둔 채 보존하고, 서면 답변이나 명확한 예외가 나오면 켠다**이다. 결정은 여전히 사용자의 것이다.
 
+사용자 의견(2026-09-23): 성능은 아쉽지만 쓸 일이 있어 **agy를 구성에 넣어 두고 싶다.** 안 되면 Antigravity에 넘기는 식으로라도 쓴다. 이를 받는 설계안(제안, 미확정): **수동 전달을 기본으로** — 앱이 다른 참여자와 같은 봉인된 질문을 파일로 내주고, 사용자가 Antigravity나 본인 터미널에서 직접 실행해 답 파일을 가져온다(자동 재시도·취소·사용량 기록 없음, blind는 유지). **자동 실행 adapter는 꺼 둔 채 준비**하고 켤지는 위 약관 판단과 함께 사용자가 정한다. agy는 Gemini를 구독으로 쓰는 유일한 경로다(F30).
+
 **② AI 세션 — V04-03 준비** (결정 뒤. 모델 호출은 사용자 승인 후)
 
 1. Claude 논의자의 실행 조합. 문서 대조는 끝났다: `--restricted`의 공식 locator는 [CLI reference](https://code.claude.com/docs/en/cli-reference)의 CLI flags 표다(v2.1.248 이상). **문서는 settings 파일 제외만 말하고 CLAUDE.md는 말하지 않는다.** 같은 표의 `--safe-mode`는 CLAUDE.md·자동 메모리까지 끄고 인증을 유지한다고 적는다 — P4b 조합과 나란히 관측한다. 파일을 읽어야 하는 논의자는 `--tools Read`와 `--add-dir`로 범위를 좁혀 한 번 더 관측한다.
-2. agy를 쓰기로 했다면: 없는 `--model`은 문서상 비영 종료·`ERROR`다 — 1.2.8에서 그런지 확인한다. `--effort`의 없는 값은 문서에 없으니 P3처럼 관측한다. `--model`을 주면 stream-json init에 `model`이 나온다고 문서에 있다 — 요청값과 대조한다.
+2. agy를 쓰기로 했다면: 없는 `--model`은 문서상 비영 종료·`ERROR`다 — 1.2.8에서 그런지 확인한다. `--effort`의 없는 값은 문서에 없으니 P3처럼 관측한다. `--model`을 주면 stream-json init에 `model`이 나온다고 문서에 있다 — 요청값과 대조한다. 모델은 이름이 아니라 세대와 실제 비교로 고른다(1절의 사용자 보고).
 3. **독립 초안을 받기 전에 conformance를 관측한다**(PR #4 R02). 합성 파일로: 답에만 나올 marker와 양성 대조, 금지 파일·다른 참여자 초안 읽기 시도, 허용 파일 읽기, workspace 밖 쓰기·shell·MCP 실행 거절. marker가 답에 없다는 것만 보지 말고 거절 자체를 본다. adapter 기록은 `installed`·`auth_observed`·`transport_observed`·`context_conformance`·`permission_conformance`로 나누고 실행 허가(`eligible_for_run`)는 실행 직전에 계산한다 — adapter가 읽을 때 manifest를 `runtime-inventory/2`로 올린다.
 4. adapter 공통 규칙으로 옮길 것: stdin 닫기, 옵션 값 사전 검증(버전별 허용 목록), 요청한 출력 형식 사후 확인, `is_error`와 exit code 함께 보기, 참여자의 회사는 모델 ID로 세기(RESULTS 설계 입력 3·4·6·7), `requested_model`과 보고된 모델 분리.
 5. **runner 계약을 mock 실행 파일로 먼저 시험한다**(PR #4 R06, 모델 호출 없음). argv 배열, stdin 닫기, stdout·stderr 분리, 제한 시간, 프로세스 트리 종료 확인, 출력 상한. timeout은 성공이 아니고 종료를 확인하지 못하면 `UNKNOWN`. `tools/v04-01/probe.ps1`은 관측 도구이지 runner가 아니다.
 6. **참여자 구성 변화를 부정 fixture로 고정한다**(PR #4 R09). 시작 전 사용 불가, 초안 단계 한도 소진, peer 초안 공개 뒤 대체 참여자, 종료 불명 cancel, 합성자만 사용 불가, provider 회복 — [리뷰의 전이 표](docs/reviews/2026-09-23-v04-01-review/README.md)대로. 사용자 원칙(유료 API 전환 없음, 조용히 채우지 않음)은 그대로다.
 7. 그 다음 V04-03(두 native 경로의 읽기 전용 독립 답변) → 승인된 테스트만 실행하는 trusted runner → 필요한 만큼 MCP로 노출 → UI 연결.
+8. **V04-03에서 사용량을 비교한다.** 사용자는 AionUi가 각 앱을 직접 쓸 때보다 사용량을 몇 배 빨리 소모해 쓰지 않는다(2026-09-23, 사용자 관측). 같은 질문을 (a) 각 앱에서 직접, (b) 우리 앱의 `single`, (c) `cross_check`로 돌려 호출 수·입력 토큰·구독 한도 변화를 나란히 기록한다. 호출마다 실리는 기본 문맥이 큰 몫이다 — aux-pc P4에서 Claude `-p`의 "OK" 한 번에 약 24,400토큰, P4b 조합으로 약 1,900토큰.
 
 보조 스크립트와 함정 목록: [`tools/v04-01/`](tools/v04-01/README.md), 절차서의 "AI 세션이 Claude 데스크톱 앱 안에서 대신 실행할 때" 절. 운용 PC를 따로 기록할 때도 같은 절차서를 쓴다.
 
