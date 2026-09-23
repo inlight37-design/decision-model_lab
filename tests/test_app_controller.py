@@ -15,7 +15,7 @@ import tempfile
 import threading
 import unittest
 
-from app import controller as c, server
+from app import controller as c, server, store as store_module
 from app.store import LedgerBusy, Store, StoreError, events
 from core import adapters, runner
 
@@ -173,7 +173,8 @@ class GateAndRevealTests(Base):
 class ManualTests(Base):
     def test_manual_answers_are_checked_against_the_input_and_the_phase(self):
         ctl = self.controller(SyntheticExecutor())
-        run_id = ctl.create_run("질문", [cli("a"), manual("gpt")], min_independent=2)
+        run_id = ctl.create_run("질문", [cli("a"), manual("gpt")], min_independent=2,
+                                quorum_policy=c.INCLUDE_UNVERIFIED)                  # 원본 앱 답도 센다(Q6)
         self.assertTrue(ctl.wait_idle())
         view = self.run_view(ctl, run_id)
         self.assertEqual(self.part(ctl, run_id, "gpt")["state"], c.AWAITING_USER)
@@ -423,7 +424,8 @@ class ReviewA1RestartTests(Base):
     def test_a_run_stopped_between_its_last_draft_and_reveal_is_revealed_on_restart(self):
         """A1-05. 수정 전 원장은 마지막 초안 저장과 공개가 다른 거래였다. 다시 시작하면 공개 관문을 다시 본다."""
         ctl = self.controller(SyntheticExecutor())
-        run_id = ctl.create_run("질문", [manual("a"), manual("b")], min_independent=2)
+        run_id = ctl.create_run("질문", [manual("a"), manual("b")], min_independent=2,
+                                quorum_policy=c.INCLUDE_UNVERIFIED)
         digest = self.run_view(ctl, run_id)["input_sha256"]
         ctl.submit_manual(run_id, "a", "A", digest)
         with self.store.tx() as tx:                                  # 공개 없이 마지막 초안만 저장된 상태
@@ -456,7 +458,8 @@ class ReviewA1ApprovalTests(Base):
     def test_a_reduction_is_approved_only_while_the_controller_waits_for_it(self):
         """A1-06. 이탈 전에 한 승인이 나중 구성에 쓰이지 않는다. 없는 실행에는 사건도 남기지 않는다."""
         ctl = self.controller(SyntheticExecutor())
-        run_id = ctl.create_run("질문", [manual("a"), manual("b")], min_independent=1)
+        run_id = ctl.create_run("질문", [manual("a"), manual("b")], min_independent=1,
+                                quorum_policy=c.INCLUDE_UNVERIFIED)
         with self.assertRaisesRegex(c.ControllerError, "no reduction"):
             ctl.approve_reduction(run_id)
         with self.assertRaises(c.ControllerError):
@@ -470,6 +473,75 @@ class ReviewA1ApprovalTests(Base):
         self.assertEqual(self.run_view(ctl, run_id)["phase"], "revealed")
         with self.assertRaisesRegex(c.ControllerError, "no reduction"):
             ctl.approve_reduction(run_id)
+
+
+class ManualParticipationTests(Base):
+    """N5(K21). 복사하는 질문의 실행 표식으로 다른 카드에 붙여 넣은 답을 거절한다. 확인은 기록만 한다."""
+
+    def test_the_copied_question_carries_a_marker_and_a_wrong_card_is_refused(self):
+        ctl = self.controller(SyntheticExecutor())
+        run_id = ctl.create_run("질문", [cli("a"), manual("gpt"), manual("app")], min_independent=1)
+        other = ctl.create_run("다른 질문", [cli("x"), manual("gpt")], min_independent=1)
+        self.assertTrue(ctl.wait_idle())
+        view, elsewhere = self.run_view(ctl, run_id), self.run_view(ctl, other)
+        digest = view["input_sha256"]
+        packet = self.part(ctl, run_id, "gpt")["packet"]
+        marker = packet.splitlines()[0]
+        self.assertEqual(marker, f"[Ledger {run_id}/gpt · {digest[:8]}]")
+        self.assertIn(view["prompt"], packet)
+        foreign = self.part(ctl, other, "gpt")["packet"].splitlines()[0]
+        with self.assertRaisesRegex(c.ControllerError, "different run"):
+            ctl.submit_manual(run_id, "gpt", foreign + "\n다른 질문에 대한 답", digest)
+        app_marker = self.part(ctl, run_id, "app")["packet"].splitlines()[0]
+        with self.assertRaisesRegex(c.ControllerError, "different participant"):
+            ctl.submit_manual(run_id, "gpt", app_marker + "\n다른 앱의 답", digest)
+        with self.assertRaisesRegex(c.ControllerError, "empty"):
+            ctl.submit_manual(run_id, "gpt", marker + "\n  \n", digest)            # 표식만 있는 답
+        ctl.submit_manual(run_id, "gpt", "  " + marker + "\n\nGPT의 답", digest, user_confirmed=True)
+        ctl.submit_manual(run_id, "app", "표식을 되말하지 않은 답", digest)
+        opened = self.run_view(ctl, run_id)
+        self.assertEqual(opened["phase"], "revealed")
+        gpt, app, a = (self.part(ctl, run_id, pid) for pid in ("gpt", "app", "a"))
+        self.assertEqual(gpt["draft"], "GPT의 답")                                  # 표식 줄은 초안에서 뺀다
+        self.assertEqual((gpt["result"]["marker_echo"], gpt["result"]["user_confirmed"]), ("matched", True))
+        self.assertEqual((app["result"]["marker_echo"], app["result"]["user_confirmed"]), ("missing", False))
+        self.assertEqual({gpt["independence"], app["independence"], a["independence"]}, {"unverified", "confirmed"})
+        self.assertEqual(gpt["independence"], "unverified")                        # 확인해도 독립성 확인이 아니다
+        self.assertIn("원본 앱 답 2개는 보조 근거", opened["quorum"]["label"])
+        refused = [e["reason"] for e in events(self.store, run_id) if e["kind"] == "manual_refused"]
+        self.assertEqual(len(refused), 3)
+        self.assertNotIn("packet", gpt)                                             # 제출한 뒤에는 복사할 것이 없다
+
+
+class QuorumPolicyTests(Base):
+    """Q6(2절 18). 정족수 정책은 실행마다 고정하고, 원본 앱 답을 센 실행은 "독립 정족수 충족"이라고 쓰지 않는다."""
+
+    def test_a_strict_run_needs_enough_cli_participants_up_front(self):
+        ctl = self.controller(SyntheticExecutor())
+        with self.assertRaisesRegex(c.ControllerError, "only 1 participant"):
+            ctl.create_run("질문", [cli("a"), manual("b")], min_independent=2)
+        with self.assertRaisesRegex(c.ControllerError, "quorum_policy"):
+            ctl.create_run("질문", [cli("a")], min_independent=1, quorum_policy="anything")
+        ctl.create_run("질문", [cli("a"), manual("b")], min_independent=2, quorum_policy=c.INCLUDE_UNVERIFIED)
+        self.assertTrue(ctl.wait_idle())                                            # 원장을 닫기 전에 시도가 끝나게
+
+    def test_original_app_answers_do_not_fill_a_strict_quorum_but_can_under_the_other_policy(self):
+        for policy, phase in ((c.INDEPENDENT_ONLY, "drafting"), (c.INCLUDE_UNVERIFIED, "revealed")):
+            with self.subTest(policy=policy):
+                ctl = self.controller(SyntheticExecutor({"a": "fail"}))
+                run_id = ctl.create_run("질문", [cli("a"), cli("b"), manual("gpt")], min_independent=2,
+                                        quorum_policy=policy)
+                self.assertTrue(ctl.wait_idle())
+                ctl.submit_manual(run_id, "gpt", "원본 앱의 답", self.run_view(ctl, run_id)["input_sha256"])
+                ctl.approve_reduction(run_id)                                       # a가 빠졌다
+                view = self.run_view(ctl, run_id)
+                self.assertEqual(view["phase"], phase)
+                if policy == c.INDEPENDENT_ONLY:
+                    self.assertIn("독립성이 확인된 참여자 1명 — 최소 2명", view["note"])
+                    self.assertIn("원본 앱 답 1개는 정족수에 세지 않습니다", view["note"])
+                else:
+                    self.assertTrue(view["quorum"]["label"].startswith("미확인 참여 포함 정족수"))
+                    self.assertNotIn("독립 정족수 충족", view["quorum"]["label"])
 
 
 class JournalSchemaTests(unittest.TestCase):
@@ -487,9 +559,26 @@ class JournalSchemaTests(unittest.TestCase):
         db.close()
         store = Store(self.path)
         self.addCleanup(store.close)
-        self.assertEqual(store.row("PRAGMA user_version")[0], 1)
+        self.assertEqual(store.row("PRAGMA user_version")[0], store_module.SCHEMA_VERSION)
+        self.assertIn("quorum_policy", [r[1] for r in store.rows("PRAGMA table_info(runs)")])
         self.assertIn("attempt", [r[1] for r in store.rows("PRAGMA table_info(participants)")])
         self.assertEqual(store.row("SELECT state FROM participants WHERE pid = 'a'")["state"], "awaiting_user")
+
+    def test_runs_from_before_the_quorum_policy_keep_counting_original_app_answers(self):
+        """스키마 1의 실행은 원본 앱 답을 정족수에 셌다. 올릴 때 그 뜻을 바꾸지 않는다(Q6 이전)."""
+        db = sqlite3.connect(self.path)
+        db.executescript(
+            "CREATE TABLE runs (run_id TEXT PRIMARY KEY, created_at REAL NOT NULL, question TEXT NOT NULL, "
+            "prompt TEXT NOT NULL, input_sha256 TEXT NOT NULL, input_bytes INTEGER NOT NULL, "
+            "min_independent INTEGER NOT NULL, roster TEXT NOT NULL, reduction_approved INTEGER NOT NULL DEFAULT 0, "
+            "note TEXT);"
+            "INSERT INTO runs VALUES ('r1', 0, 'q', 'p', 'x', 1, 1, '{}', 0, NULL);"
+            "PRAGMA user_version = 1;")
+        db.close()
+        store = Store(self.path)
+        self.addCleanup(store.close)
+        self.assertEqual(store.row("SELECT quorum_policy FROM runs WHERE run_id = 'r1'")[0], c.INCLUDE_UNVERIFIED)
+        self.assertEqual(store.row("PRAGMA user_version")[0], store_module.SCHEMA_VERSION)
 
     def test_a_newer_journal_is_left_untouched(self):
         db = sqlite3.connect(self.path)

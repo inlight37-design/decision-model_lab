@@ -20,12 +20,14 @@ import time
 from pathlib import Path
 from typing import Any, Iterator
 
-SCHEMA_VERSION = 1   # 1: participants.attempt(진행 중인 시도의 ID)
+# 1: participants.attempt(진행 중인 시도의 ID). 2: runs.quorum_policy(Q6 — 실행마다 고정하는 정족수 정책)
+SCHEMA_VERSION = 2
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS runs (
   run_id TEXT PRIMARY KEY, created_at REAL NOT NULL, question TEXT NOT NULL, prompt TEXT NOT NULL,
   input_sha256 TEXT NOT NULL, input_bytes INTEGER NOT NULL, min_independent INTEGER NOT NULL,
-  roster TEXT NOT NULL, reduction_approved INTEGER NOT NULL DEFAULT 0, note TEXT
+  roster TEXT NOT NULL, reduction_approved INTEGER NOT NULL DEFAULT 0, note TEXT,
+  quorum_policy TEXT NOT NULL DEFAULT 'include_unverified'
 );
 CREATE TABLE IF NOT EXISTS participants (
   run_id TEXT NOT NULL, pid TEXT NOT NULL, spec TEXT NOT NULL, state TEXT NOT NULL,
@@ -106,6 +108,12 @@ class Store:
                     columns = {row[1] for row in self._db.execute("PRAGMA table_info(participants)")}
                     if "attempt" not in columns:
                         self._db.execute("ALTER TABLE participants ADD COLUMN attempt TEXT")
+                if version < 2:
+                    # 2 이전의 실행은 원본 앱 답도 정족수에 셌다 — 그 뜻을 바꾸지 않도록 그 정책으로 적는다
+                    columns = {row[1] for row in self._db.execute("PRAGMA table_info(runs)")}
+                    if "quorum_policy" not in columns:
+                        self._db.execute("ALTER TABLE runs ADD COLUMN quorum_policy TEXT NOT NULL "
+                                         "DEFAULT 'include_unverified'")
                 if version != SCHEMA_VERSION:
                     self._db.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
                 self._db.execute("COMMIT")
