@@ -1,0 +1,120 @@
+{
+  "reviewed_commit": "4bbd034b33649f0ae570b37eecc17d3176669420",
+  "source_git_blob_shas": {
+    "app/controller.py": "9df69c530d3a8307f1221515f08f191c6ae48c26",
+    "app/store.py": "325778b1bd623d47b74029a1d2f5342ffc7ea235",
+    "app/server.py": "a786685fc8ba1c6e0e2e0ca0d48f6c5855dfc1ff",
+    "app/static/index.html": "999863b0bf94aed10190a80340b6219ecb11cd4b",
+    "core/runner.py": "b7438b33c2e8dcba139e77aa67a33e63a43cf78e",
+    "core/adapters.py": "6d0a4bfd2cc99fc5e66cfdee1203bb5d34b45549",
+    "core/isolation.py": "80c76efb1ac7688b9a619467da47dd835bdf2562",
+    "core/env.py": "cee3d6da49358ee34251d7f5e301dcc9b50364de",
+    "core/membership.py": "a8a3d29683f7c9ca14523f850a0fec75180a85b6"
+  },
+  "execution": {
+    "python": "3.13.15",
+    "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "github_run_id": "35852320390",
+    "github_sha": "b4900e7307248ab92482c20d20aa2b5a0a1ed408",
+    "synthetic_containment_is_not_os_evidence": true
+  },
+  "observations": {
+    "sealed_error_detail": {
+      "claude-code": {
+        "phase": "drafting",
+        "participant_state": "rejected",
+        "sentinel_in_view": true,
+        "sentinel_in_participant_detail": true,
+        "sentinel_in_result_detail": true
+      },
+      "codex": {
+        "phase": "drafting",
+        "participant_state": "rejected",
+        "sentinel_in_view": true,
+        "sentinel_in_participant_detail": true,
+        "sentinel_in_result_detail": true
+      }
+    },
+    "acceptance_edges_synthetic": {
+      "no_delivery_evidence": {
+        "phase": "revealed",
+        "state": "accepted",
+        "input_delivery": null,
+        "model_match": true,
+        "draft_characters": 16
+      },
+      "empty_answer": {
+        "phase": "revealed",
+        "state": "accepted",
+        "input_delivery": "complete",
+        "model_match": true,
+        "draft_characters": 0
+      },
+      "whitespace_answer": {
+        "phase": "revealed",
+        "state": "accepted",
+        "input_delivery": "complete",
+        "model_match": true,
+        "draft_characters": 3
+      },
+      "model_mismatch": {
+        "phase": "revealed",
+        "state": "accepted",
+        "input_delivery": "complete",
+        "model_match": false,
+        "draft_characters": 16
+      }
+    },
+    "restart_after_final_draft_commit": {
+      "phase": "drafting",
+      "states": ["accepted", "accepted"],
+      "note": null
+    },
+    "restart_queued_not_pumped": {
+      "state": "queued",
+      "new_attempts": []
+    },
+    "approval_before_membership_loss": {
+      "phase": "revealed",
+      "approved": true,
+      "dropped": ["b"]
+    },
+    "failed_second_server_start": {
+      "bind_error": "OSError",
+      "live_state_after_failed_start": "unknown",
+      "token_file_changed": true,
+      "state_after_old_executor_returns": "accepted",
+      "phase_after_old_executor_returns": "drafting"
+    },
+    "origin_probe_not_a_browser_csrf_exploit": {
+      "without_token": {"status": 401, "cors_allow_origin": null},
+      "with_token": {"status": 200, "cors_allow_origin": null}
+    },
+    "real_bwrap": {
+      "version": "bubblewrap 0.9.0",
+      "environment": {
+        "planned_keys": ["HOME", "PATH", "TMPDIR", "TZ"],
+        "actual_keys": ["HOME", "PATH", "PWD", "TMPDIR", "TZ"],
+        "extra_keys": ["PWD"]
+      },
+      "work_inside_read_only_input": {
+        "plan_accepted": true,
+        "exit_code": 0,
+        "host_marker_written": true,
+        "tree_confirmed_empty": true
+      },
+      "never_in_automatic_system_mount": {
+        "plan_accepted": true,
+        "forbidden_path": "/etc/hostname",
+        "readable": true,
+        "exit_code": 0
+      },
+      "missing_stdin_accepted": {
+        "phase": "revealed",
+        "state": "accepted",
+        "input_delivery": null,
+        "tree_confirmed_empty": true
+      }
+    }
+  }
+}
