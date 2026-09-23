@@ -221,7 +221,6 @@ A1 리뷰가 먼저 하라고 한 관문 보강(N0, [반영 기록](docs/reviews
 | K39 | CLI | Codex의 read-only 샌드박스는 쓰기만 막고 읽기는 막지 않는다 — 2단계 `b2`에서 Codex가 다른 참여자 초안에 명령을 실제로 돌렸다 | 읽기 경계는 bubblewrap 허용 목록이 맡는다 — 그 초안은 연결되지 않아 `No such file`이었다(2단계). 격리 밖에서 Codex를 돌리면 이 경계가 없다 | — |
 | K40 | CLI | agy는 `--output-format`의 없는 값을 조용히 무시한다 | adapter가 값을 고정하고, JSON이 아니면 형식 실패 | — |
 | K35 | 과정 | 모든 관측은 PC 한 대와 그 안의 WSL 배포판 하나, 2026-09-23 하루치다. 운용 PC 관측이 없다 | — | 필요할 때 같은 절차서로 |
-| K37 | 과정 | claude 세션은 CI 원문 로그를 읽지 못한다(익명 요청 403). 리뷰어는 읽을 수 있었다 | CI는 `DML_REQUIRE_BWRAP=1`로 격리 시험의 건너뛰기를 막는다. 결과(녹색·실패)는 익명 API로 본다(6절) | 사용자가 `gh`에 로그인하면 `gh run view --log`로 읽을 수 있을 것이다 — 아직 확인하지 않았다 |
 | K41 | 앱 | 공개 전에도 참여자 상태가 바뀌는 시각을 반복 조회로 대략 알 수 있다. 정확한 시간·토큰·길이는 넘기지 않는다 | 운영자용 거친 상태로 허용한다. 참여자에게는 제어 API 토큰이 없다(A1 리뷰 질문 4) | — |
 | K42 | 앱 | 제어 API의 방어는 Bearer 토큰, Host 검사, 요청 크기 상한뿐이다. Origin 허용 목록, 콘텐츠 타입 강제, 프레임 삽입 정책, 읽기 시간 제한, 브라우저 교차 출처 음성 시험이 없다 | 토큰을 머리글로만 받으므로 교차 출처 요청은 preflight에서 막힌다고 본다 — 브라우저로는 시험하지 않았다(A1 리뷰 질문 5) | 급하지 않음 |
 | K43 | 앱 | 보고된 모델이 요청과 다르면 받지 않고 구성 축소로 드러낸다. 받아들일지 사용자에게 묻는 보류 상태는 없다. 별칭으로 요청하면 보고된 전체 이름과 달라 보일 수 있다 | 요청은 전체 이름으로 한다(N1). 2단계에서 `claude-sonnet-5`로 요청해 init과 `modelUsage`가 같은 이름을 보고했다 | — |
@@ -229,7 +228,7 @@ A1 리뷰가 먼저 하라고 한 관문 보강(N0, [반영 기록](docs/reviews
 | K45 | CLI | Claude `--safe-mode`를 더하면 init에 내장 플러그인 `agents-md`가 나타난다. 무엇을 하는지 모른다. 그때도 모델은 `AGENTS.md` 표식을 보고하지 않았다 | 참여자 argv는 `--restricted`만 쓴다 | `--safe-mode`를 쓰기로 할 때 |
 | K46 | 격리 | Codex 참여자의 명령은 Codex의 로그인 파일 `~/.codex/auth.json`을 읽을 수 있다(2026-09-24, `codex sandbox` 진단 — 종료 코드만 봄). 모델이 그것을 답에 넣으면 ChatGPT 로그인 토큰이 원장과 공개 화면에 남는다. 공통 자료의 지시로 유도될 수 있다. 명령의 네트워크는 Codex 샌드박스가 막는다(`PermissionError`). Claude는 Read가 `--restricted`로 작업·입력 폴더에 갇히고 셸 도구가 없다 | 기록의 Codex 문맥 판정이 `failed`라 실제 실행기가 Codex를 부르지 않는다. `~/.codex/auth.json`만 읽기 금지하는 권한 profile이 `codex sandbox`에서 통했다(`~/.codex` 전체 금지는 샌드박스를 깨뜨린다) | adapter에 profile을 넣고 Codex exec 1회로 확인(승인 필요) — Codex를 실제로 부르기 전 |
 
-2단계에서 닫은 것: K12(Codex 샌드박스가 우리 경계 안에서 선다 — 모델 없는 진단), K29(`-p`는 stdin을 질문으로 읽는다), K33(관측 도구가 실제 호출을 했다), K36(격리 안에서 실제 질의가 끝까지 돈다). 근거는 [2단계 기록](docs/experiments/w2-isolation/stage2-aux-pc-wsl.md)에 있다.
+2단계에서 닫은 것: K12(Codex 샌드박스가 우리 경계 안에서 선다 — 모델 없는 진단), K29(`-p`는 stdin을 질문으로 읽는다), K33(관측 도구가 실제 호출을 했다), K36(격리 안에서 실제 질의가 끝까지 돈다). 근거는 [2단계 기록](docs/experiments/w2-isolation/stage2-aux-pc-wsl.md)에 있다. 2026-09-24에 닫은 것: K37(사용자가 `gh`에 로그인한 뒤로 claude 세션이 `gh run view <번호> --log`로 CI 원문 로그를 읽는다 — PR #9의 실행에서 확인). 로그인이 풀리면 다시 익명 API로 결과만 본다.
 
 ### 급하지 않은 것
 
@@ -310,6 +309,7 @@ PR과 CI — GitHub CLI는 `C:\ai\tools\gh\bin\gh.exe`(Git Bash에서는 `/c/ai/
 /c/ai/tools/gh/bin/gh.exe auth status
 /c/ai/tools/gh/bin/gh.exe pr create --base main --head <브랜치> --title "<제목>" --body-file <본문 파일>
 /c/ai/tools/gh/bin/gh.exe pr checks <번호>
+/c/ai/tools/gh/bin/gh.exe run view <실행 번호> --log
 ```
 
 `gh`에 로그인하지 않았으면 CI 결과는 익명 GitHub API로 본다:
