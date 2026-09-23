@@ -66,7 +66,10 @@ jobs:
           bwrap --unshare-all --share-net --die-with-parent --ro-bind /usr /usr --symlink usr/bin /bin \
             --symlink usr/lib /lib --symlink usr/lib64 /lib64 --proc /proc -- /usr/bin/true
 
+      # DML_REQUIRE_BWRAP=1: 격리 시험을 건너뛰어 녹색이 되지 않게 한다(WSL2 리뷰 Q7).
       - name: full test suite
+        env:
+          DML_REQUIRE_BWRAP: "1"
         run: python -m unittest discover -s tests -v
 
       - name: compile

@@ -45,15 +45,17 @@ def main():
                                 env={"LANG": "C.UTF-8", "NO_COLOR": "1"})
 
         def inside(argv, timeout=60):
-            return runner.run(isolation.wrap(argv, box), cwd=work, env=child, timeout=timeout, pid_namespace=True)
+            return isolation.run(argv, box, timeout=timeout)
 
         version = inside([exe, "--version"])
         status = inside([exe, *STATUS[adapter_id]])
         seen = inside(["/usr/bin/python3", "-c", PROBE, json.dumps(SEEN)])  # 격리 안에는 /usr만 보인다
         report["cli"][adapter_id] = {
             "version": version.stdout.strip() or version.stderr.strip()[:200],
-            "version_state": version.state, "tree_confirmed_empty": version.tree_confirmed_empty,
+            "version_state": version.state, "version_exit": version.exit_code,
+            "tree_confirmed_empty": version.tree_confirmed_empty,
             "status": status_summary(adapter_id, status), "status_state": status.state,
+            "status_exit": status.exit_code,
             "visible": json.loads(seen.stdout) if seen.state == runner.EXITED else seen.stderr[:300],
             "read_only": [p.replace(HOME, "~") for p in ro], "read_write": [p.replace(HOME, "~") for p in rw],
         }
