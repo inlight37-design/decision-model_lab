@@ -119,7 +119,10 @@
 
 ## 3. 진행 중인 작업
 
-**지금 병합되지 않은 브랜치: 없음.** 이 줄은 병합 뒤에 맞도록 브랜치에서 미리 "없음"으로 적었다. 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다.
+**지금 병합되지 않은 브랜치: `chatgpt/review-20260924` ([PR #14](https://github.com/inlight37-design/decision-model_lab/pull/14)).** 2026-09-24 ChatGPT(GPT-6 Astra Pro)가 요청서와 17번 요청을 검토했다. [검토 전문](docs/reviews/2026-09-24-review/README.md), [중간 근거 대조](docs/reviews/2026-09-24-review/EVIDENCE-ASSESSMENT.md), [재현 코드](docs/reviews/2026-09-24-review/reproduce.py)와 [결과](docs/reviews/2026-09-24-review/results.json)를 남겼다. GitHub와 웹 컨테이너만 사용했고 사용자 PC·WSL·실제 provider CLI·모델은 실행하지 않았다. 검토 코드는 `a26e504`, 공개 관측은 `7329a31`에 고정했다. 제품 코드·원래 관측 판정·2절의 사용자 확정 사항은 바꾸지 않았다.
+
+- **반영 대기:** 검토 R01–R03은 K46 합격 조건, 실행 허가의 누락 검증, P3 거절 판정의 반례다. 새 K46 호출 전에 원본 코드로 확인하고 회귀 시험으로 보강하는 것을 권한다. 문맥 상태와 K01 완료 표현에 대한 이견(R04·R08)은 검토에만 적었다.
+- **다음 세션:** 검토 폴더의 재현과 4절 "다른 AI의 리뷰가 오면" 절차를 따른다. 실제 호출은 새 승인 없이 하지 않는다. 병합은 사용자 또는 허락된 claude 세션이 정확한 PR head의 CI를 확인한 뒤 하고, 병합 시 이 진행 문구를 정리한다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다.
 
 - **마지막 병합:** 리뷰 요청서(`claude/review-request-20260924`, 문서만) — [2026-09-24 요청서](docs/reviews/2026-09-24-review-request/README.md). 지금까지의 흐름, PR #8–#12, 실패·시행착오 S22–S33과 S01–S21의 현재 상태를 정리했다. WSL 상태 폴더의 관측 요약 여섯 개와 K46 진단 출력 두 개를 가려서 옮겼다. 리뷰가 오면 4절 "참고"의 절차대로 반영한다.
 - **그 앞:** [PR #12](https://github.com/inlight37-design/decision-model_lab/pull/12) K46 방어(`claude/k46-codex-auth-deny-20260924`, 모델 호출 없음).
@@ -136,7 +139,7 @@
 - 각 병합의 경위는 PR 본문과 Git 로그에 있다. 그 앞은 [1단계 직후 판](docs/handoff/2026-09-23-before-stage2.md) 3절에 있다.
 
 사용자의 판단을 기다리는 것:
-- **리뷰 요청서를 어느 AI에게 보낼지.** 붙여 넣을 요청문은 [2026-09-24 요청서](docs/reviews/2026-09-24-review-request/README.md) 머리에 있다. 리뷰가 K46 설계나 승인 방식에 반대하면 K46 확인 호출 전에 반영한다.
+- **검토의 반영과 PR #14 병합.** [검토 전문](docs/reviews/2026-09-24-review/README.md)을 남겼다. K46 판정식과 승인·실행 허가 관문에 대한 지적을 새 K46 확인 호출 전에 확인한다. 판단이 갈리는 것은 검토 원문을 보존하고 반영 기록에 답한다.
 - **PR #8의 TM 항목을 작업으로 받을지.** 병합은 조사 문서를 main에 둔 것이고 작업을 받은 것은 아니다. claude 세션의 권고는 적용 계획 A(화면 조회의 요청 겹침 막기, 늦게 온 응답 버리기, 연결 끊김과 마지막 확인 시각 표시)만 3단계 화면 작업에 넣는 것이다. tmux를 참여자 실행 엔진으로 쓰지 않는다는 판단은 조사와 claude 세션이 같다 — bubblewrap 안의 참여자가 밖의 tmux server에 일을 맡기면 격리와 자손 종료 확인이 깨진다.
 - **K46 확인 호출의 승인** — adapter에 권한 profile을 넣었다(모델 없음). 남은 것은 Codex exec 1회(`observe.py call k46-codex <전체 모델 이름>`)다. 모델이 돌린 명령이 `auth.json`을 못 여는지, 로그인이 유지되는지, 쓰기가 막히는지 본다. 승인받을 값은 Codex 최대 횟수(실패 포함), 호출당 timeout, 모델 이름(2단계는 `gpt-6-luna`), `--keep-session`을 붙일지다.
 - **Codex 문맥 판정(`failed`)을 푸는 방법** — (a) 참여자 구성(빈 작업 폴더)에서 문맥에 무엇이 들어가는지 본다, 또는 (b) 빈 작업 폴더 완화를 정책으로 받아들이고 계정 플러그인·MCP(K44)는 한계로 둔다. (a)는 K46 확인 호출에 `--keep-session`을 붙이면 같은 1회로 재료를 얻는다: Codex가 남긴 세션 기록을 상태 폴더로 옮겨 모양(줄 종류, 긴 글의 길이·표식·머리글)만 요약하고, 모델의 자기 보고(`context`)도 받는다(약한 증거). 정하기 전에는 Codex를 실제 실행기로 부르지 않는다.
@@ -178,7 +181,7 @@ A1 리뷰가 먼저 하라고 한 관문 보강(N0, [반영 기록](docs/reviews
 - ~~K01 큰 입력~~ — **했다(2026-09-24, Claude 1회).** 2단계에서 `--pad-kb`를 빠뜨린 것을 메웠다. 약 95 KB의 stdin 질문이 끝까지 전달됐고 보고 토큰이 입력만큼 늘었다([기록](docs/experiments/w2-isolation/k01-large-input-aux-pc-wsl.md)). 처음 "3번은 알아서 해도 돼"로는 이 세션의 권한 확인이 승인 기록을 막았고, 세션이 명시적 승인을 요청한 뒤의 답("병합하고 할거하고 정리해")으로 1회를 적어 불렀다.
 - **Codex 문맥 판정(`failed`).** 참여자 구성(빈 작업 폴더)에서 무엇이 문맥에 들어가는지 볼 수단으로 `observe.py call … --keep-session`을 만들었다(2026-09-24, 가짜 CLI로만 시험). `--ephemeral`을 빼고 부른 뒤 Codex가 남긴 세션 기록을 상태 폴더로 옮기고 모양만 요약한다. 세션 기록의 형식은 문서화되지 않았다 — 실제 기록에서 요약이 쓸모 있는지는 처음 부를 때 본다. 또는 사용자가 빈 폴더 완화를 정책으로 받아들인다(3절).
 - **K46 인증 파일 읽기 금지(K09보다 먼저).** Codex 참여자의 명령은 `~/.codex/auth.json`을 읽을 수 있었다([후속 기록](docs/experiments/w2-isolation/stage2-followup-aux-pc-wsl.md)). 2026-09-24에 adapter가 `--sandbox read-only` 대신 그 파일만 읽기 금지한 권한 profile을 `-c permissions.…`와 `-c default_permissions=…`로 넘기게 했다. exec에는 `-P`가 없다([K46 profile 기록](docs/experiments/w2-isolation/k46-profile-aux-pc-wsl.md)). `codex sandbox`에서는 명령이 그 파일을 못 열었고, 네트워크 없는 exec는 설정을 받아들였다. **남은 것은 Codex exec 1회(`k46-codex`)로 모델이 돌린 명령에 금지가 적용되는지 보는 것이다.**
-- **K09 연결 좁히기(K46 뒤).** Claude는 `.credentials.json`·`~/.claude.json`·쓸 곳(`backups`·`cache`)만 쓰기로 두고 나머지를 빈 tmpfs로 덮는 구성이 후보다. Codex는 상태 DB·플러그인 캐시를 모든 실행이 공유한다. 하위 폴더 덮기는 인증 파일 노출을 줄이지 못하고, 토큰 갱신이 한 번도 없어 좁힌 구성에서 갱신이 저장되는지 볼 수 없었다 — 그래서 K46 뒤로 미뤘다. 바꾼 구성으로 한 번씩 다시 불러야 기록의 관측과 맞는다.
+- **K09 연결 좁히기(K46 뒤).** Claude는 `.credentials.json`·`~/.claude.json`·쓸 곳(`backups`·`cache`)만 쓰기로 두고 나머지를 빈 tmpfs로 덮는 구성이 후보다. Codex는 상태 DB·플러그인 캐시를 모든 실행이 공유한다. 하위 폴더 덮기는 인증 파일 노출을 줄이지 못하고, 토큰 갱신이 한 번도 없어 좁힌 구성에서 갱신이 저장되는지는 볼 수 없었다 — 그래서 K46 뒤로 미뤘다. 바꾼 구성으로 한 번씩 다시 불러야 기록의 관측과 맞는다.
 
 **다시 부를 때의 절차** — `aux-pc-wsl`의 로그인 셸에서, 저장소 루트(`/mnt/c/ai/decision-model_lab`)에서:
 
