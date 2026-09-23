@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-23** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout과 그 WSL) · 브랜치 `claude/stage2-observe-20260923`
+최종 갱신 **2026-09-24** · 작성 세션: claude (Claude Opus 5.5, 보조 PC의 로컬 checkout과 그 WSL) · main의 PR #8 병합 커밋
 
 이 파일 하나에서 시작한다. 절 구성은 고정이고 CI가 확인한다. 규칙은 [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있다. 1단계(실제 호출 전 확인)를 마치고 통째로 다시 쓴 판에 **2단계(승인된 모델 호출)의 결과를 더한 판**이다. 1단계 각 항목(N0–N6)의 경위와 긴 병합 이력은 [1단계 직후 판](docs/handoff/2026-09-23-before-stage2.md)과 Git 로그에 있다. 여기에는 지금 상태, 한계와 못 고친 문제(4절의 K 표), 다음 일만 둔다.
 
@@ -11,7 +11,7 @@
 3. 이 세션이 무엇에 접근할 수 있는지(사용자 PC / 웹 컨테이너 / GitHub만) 정하고 PR에 적는다.
 4. **GitHub만 보는 세션**(ChatGPT 웹 등)이라면 main이 아직 이 파일의 최신판이 아닐 수 있다. 3절의 브랜치에서 이 파일을 다시 읽는다.
 5. **모델을 부르는 일은 사용자 승인 뒤에만 한다.** 사용량이 막히면 멈추고 알린다(사용자 요청 — Codex 사용량이 적게 남아 있었다). 2단계 승인(Claude 3·Codex 2)은 모두 썼다 — 더 부르려면 새로 승인받는다.
-6. **사용자에게 받을 것(3절):** PR #8(tmux 조사)의 병합, Codex 문맥 판정(`failed`)을 푸는 방법, 2단계 후속 호출을 할지. 답을 받기 전에는 진행하지 않는다.
+6. **사용자에게 받을 것(3절):** Codex 문맥 판정(`failed`)을 푸는 방법, 2단계 후속 호출을 할지, PR #8(tmux 조사, 병합됨)의 TM 항목을 작업으로 받을지. 답을 받기 전에는 진행하지 않는다.
 
 ## 1. 지금 상태
 
@@ -70,7 +70,7 @@
 |---|---|
 | 검토 기록과 반영(읽는 순서 포함) | [docs/reviews/](docs/reviews/README.md) — 최근: [A1 리뷰 반영](docs/reviews/2026-09-23-a1-handoff-review/RESPONSE.md), [경계 리뷰](docs/reviews/2026-09-23-wsl2-boundary/RESPONSE.md), [WSL2 리뷰 PR #6](docs/reviews/2026-09-23-wsl2-migration-review/RESPONSE.md) |
 | 실험·관측 기록 | `docs/experiments/` — [V04-01 절차서](docs/experiments/v04-01-inventory/README.md), [V04-03 conformance](docs/experiments/v04-03-conformance/aux-pc.md), [W2 격리](docs/experiments/w2-isolation/aux-pc-wsl.md) |
-| 조사 | [Hermes 패턴 조사](docs/research/hermes-2026-09-23/README.md)와 [교차 확인](docs/research/hermes-2026-09-23/CROSSCHECK.md). tmux 조사는 [PR #8](https://github.com/inlight37-design/decision-model_lab/pull/8)에 있고 아직 병합하지 않았다(3절) |
+| 조사 | [Hermes 패턴 조사](docs/research/hermes-2026-09-23/README.md)와 [교차 확인](docs/research/hermes-2026-09-23/CROSSCHECK.md). [tmux 조사](docs/research/tmux-2026-09-23/README.md)(ChatGPT, [PR #8](https://github.com/inlight37-design/decision-model_lab/pull/8)) — tmux를 참여자 실행 엔진으로 쓰지 않고 개념(TM-01–TM-09)만 옮기라는 권고다. claude 세션이 코드 주장을 main `f044865`와 대조했다: 화면이 1초마다 조회하며 늦게 온 응답이 새 상태를 덮을 수 있다(P05) — 맞다. 새로고침·재접속은 조회만 하고 호출을 만들지 않는다(TM-01) — 이미 성립. 관측 도구가 실행기를 재사용한다(TM-02) — `prepare()`만 재사용해 부분적으로 맞다 |
 | 작업 개념도 | [docs/concept/](docs/concept/README.md), [아티팩트](https://claude.ai/artifact/AZJfdnmMBjpEAtqsSHzjp8)(2026-09-22 스냅숏) |
 | 지난 인계 | [docs/handoff/](docs/handoff/README.md) — 1단계 N0–N6의 경위는 [바로 전 판](docs/handoff/2026-09-23-before-stage2.md) 4절 |
 
@@ -111,19 +111,10 @@
 
 ## 3. 진행 중인 작업
 
-**지금 병합되지 않은 브랜치: 없음.** 마지막 병합: 2단계(`claude/stage2-observe-20260923`) — 승인된 호출 다섯 번의 결과 기록, `manifest.v2.json`의 세 칸, 관측 도구의 수정(ID 가림, 경계 위반 멈춤), K12 진단 도구, 그리고 다른 AI에게 줄 [2단계 리뷰 요청서](docs/reviews/2026-09-23-stage2-request/README.md)(실패·시행착오 S01–S21). 이 세션의 권한 확인이 main 병합을 막아 병합은 사용자에게 넘겼다 — 사용자가 GitHub에서 병합해도 맞도록 이 줄은 브랜치에서 미리 "없음"으로 돌렸다. 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 이 줄을 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다. 그 앞의 병합 이력은 [1단계 직후 판](docs/handoff/2026-09-23-before-stage2.md) 3절과 Git 로그에 있다.
-
-**열린 PR — 사용자가 살펴보는 중:** [PR #8](https://github.com/inlight37-design/decision-model_lab/pull/8) `chatgpt/tmux-patterns-20260923`. ChatGPT의 tmux 조사다(문서만, head `4e3500e`에서 CI 녹색). **사용자가 정하기 전에는 병합하지 않는다.**
-- 권고 요지: tmux를 참여자 실행 엔진이나 분할 창으로 쓰지 않는다. 개념(TM-01–TM-09 — 화면 연결과 실행 수명의 분리, 공통 제어 진입점, 상태 재동기화, 느린 화면 분리, 실패 기록 탐색 등)만 기존 controller에 옮긴다. tmux를 직접 쓰는 것은 신뢰한 운영자가 controller 터미널을 띄워 두는 용도에만 선택으로 둔다. claude 세션의 판단도 같다 — bubblewrap 안의 참여자가 밖의 tmux server에 일을 맡기면 격리와 자손 종료 확인이 깨진다.
-- **claude 세션의 대조(2026-09-23, main `f044865`):** 조사의 코드 주장을 main과 맞춰 봤다.
-  - 화면이 1초마다 상태를 조회하면서 요청이 겹치는 것을 막지 않고 도착 순서대로 덮어쓴다(P05, TM-05) — **맞다**(`app/static/index.html`의 `setInterval(refresh, 1000)`). 오래된 응답이 새 상태를 덮을 수 있다. 실제로 관측한 것은 아니다.
-  - 새로고침·재접속은 조회(GET)만 한다. 실행 생성은 버튼의 POST뿐이다 — TM-01의 "재접속이 호출을 만들지 않는다"는 **이미 성립한다.** 연결이 끊긴 동안 마지막으로 그린 카드를 오래됐다고 표시하지는 않는다.
-  - "관측 도구가 실행기를 재사용한다"(TM-02) — **부분적으로 맞다.** `observe.py`는 실행기의 `prepare()`를 쓰지만 실행과 해석은 probe별 argv 변경 때문에 따로 부른다.
-  - 권고: 문서만이라 병합해도 된다. TM 항목 중에서는 적용 계획 A(요청 겹침 막기, 오래된 응답 버리기, 연결 끊김과 마지막 확인 시각 표시)가 작고 3단계 화면 작업과 겹친다.
-- 병합할 때: 이 PR은 옛 3절을 고쳤으므로 `NEXT-SESSION.md`가 충돌한다. main 쪽을 그대로 두고, PR의 3절 문단은 버리고, 조사 링크(`docs/research/tmux-2026-09-23/README.md`)를 1절 기록 표의 조사 줄에 더한다. TM 항목을 작업으로 받을지는 사용자가 정한다 — 받으면 4절 3단계에 넣는다.
+**지금 병합되지 않은 브랜치: 없음.** 마지막 병합: [PR #8](https://github.com/inlight37-design/decision-model_lab/pull/8) `chatgpt/tmux-patterns-20260923` — ChatGPT의 tmux 조사(문서만, head `4e3500e`에서 CI 녹색). 사용자 지시로 claude 세션이 병합했다(2026-09-24). PR이 고친 옛 3절은 버리고 main 쪽을 두었으며, 조사 링크와 claude 세션의 대조는 1절 기록 표의 조사 줄로 옮겼다. 그 앞: 2단계(`claude/stage2-observe-20260923`) — 승인된 호출 다섯 번의 결과 기록, `manifest.v2.json`의 세 칸, 관측 도구의 수정(ID 가림, 경계 위반 멈춤), K12 진단 도구, 다른 AI에게 줄 [2단계 리뷰 요청서](docs/reviews/2026-09-23-stage2-request/README.md)(실패·시행착오 S01–S21). 이 세션의 권한 확인이 처음에는 main 병합을 막았고, 사용자 지시 뒤에 병합했다. 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 이 줄을 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다. 그 앞의 병합 이력은 [1단계 직후 판](docs/handoff/2026-09-23-before-stage2.md) 3절과 Git 로그에 있다.
 
 사용자의 판단을 기다리는 것:
-- PR #8의 병합과 TM 항목을 받을지 — 위.
+- **PR #8의 TM 항목을 작업으로 받을지.** 병합은 조사 문서를 main에 둔 것이고 작업을 받은 것은 아니다. claude 세션의 권고는 적용 계획 A(화면 조회의 요청 겹침 막기, 늦게 온 응답 버리기, 연결 끊김과 마지막 확인 시각 표시)만 3단계 화면 작업에 넣는 것이다. tmux를 참여자 실행 엔진으로 쓰지 않는다는 판단은 조사와 claude 세션이 같다 — bubblewrap 안의 참여자가 밖의 tmux server에 일을 맡기면 격리와 자손 종료 확인이 깨진다.
 - **Codex 문맥 판정(`failed`)을 푸는 방법** — (a) 참여자 구성(빈 작업 폴더)에서 한 번 더 관측해 문맥에 무엇이 들어가는지 본다(Codex 1회 승인), 또는 (b) 빈 작업 폴더 완화를 정책으로 받아들이고 계정 플러그인(K44)은 한계로 둔다. 정하기 전에는 Codex를 실제 실행기로 부르지 않는다.
 - **2단계 후속 호출을 할지** — K01 큰 입력(Claude `b1 --pad-kb 96` 1회), K09 인증 연결을 좁힌 구성의 재관측(Claude 1·Codex 1). 4절 2단계 "남은 것".
 - 열린 결정 Q3·Q4 — 급하지 않다. Q5·Q6·C2는 정했다(2절 18·19).
