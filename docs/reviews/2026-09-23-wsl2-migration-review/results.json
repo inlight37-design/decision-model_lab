@@ -1,0 +1,118 @@
+{
+  "review_base": "a662e59b0541ea747c50be4b388af9a61dd02b84",
+  "source_blob_shas": {
+    "core/runner.py": "7e80d0698f797c5c82eeeeac19e3a39b45c58a56",
+    "core/adapters.py": "c4ea0474e2d388b542099b35ff59d65773e7704c",
+    "core/env.py": "9a6dab78bfe1b98b7ed5c8d2c50614b65399cf14",
+    "core/isolation.py": "a2e5a6c6351205400bb07d952f29eb18580e0f91"
+  },
+  "environment": {
+    "python": "3.13.5",
+    "system": "Linux",
+    "kernel": "6.18.44",
+    "real_bwrap_available": false,
+    "user_pc_access": false,
+    "model_calls": false,
+    "real_bwrap_executed": false
+  },
+  "probes": {
+    "oauth_in_argv": {
+      "dummy_value_in_argv": true,
+      "setenv_option_present": true
+    },
+    "overlap_plan": [
+      {
+        "case": "work_equals_home",
+        "accepted": true,
+        "work_bind_is_after_ro_or_tmpfs": true,
+        "last_work_operation": [
+          "--bind",
+          "<TEMP>/home",
+          "<TEMP>/home"
+        ]
+      },
+      {
+        "case": "work_equals_read_only",
+        "accepted": true,
+        "work_bind_is_after_ro_or_tmpfs": true,
+        "last_work_operation": [
+          "--bind",
+          "<TEMP>/input",
+          "<TEMP>/input"
+        ]
+      }
+    ],
+    "empty_path_fallback": {
+      "child_path": "",
+      "parent_only_executable_found": true
+    },
+    "stdin_early_close": {
+      "state": "exited",
+      "exit_code": 0,
+      "containment": "process_group",
+      "tree_confirmed_empty": null,
+      "unit_confirmed_empty": true,
+      "notes": [],
+      "intended_bytes": 1680000,
+      "child_report": {
+        "read_bytes": 1,
+        "pipe_capacity": 65536
+      },
+      "outcome_ok": true,
+      "outcome_status": "ok"
+    },
+    "pid_namespace_provenance": {
+      "state": "exited",
+      "exit_code": 0,
+      "containment": "pid_namespace",
+      "tree_confirmed_empty": true,
+      "unit_confirmed_empty": true,
+      "notes": [],
+      "detached_child_alive": true,
+      "real_bwrap_used": false,
+      "child_cleaned_up": true
+    },
+    "deep_json": {
+      "exception": "RecursionError",
+      "bytes": 20057
+    },
+    "falsy_wrong_shapes": {
+      "outcome_ok": true,
+      "status": "ok"
+    },
+    "spec_log_projection": {
+      "prompt_in_repr": true,
+      "prompt_in_asdict": true
+    },
+    "retained_output_readers": {
+      "runs": [
+        {
+          "state": "unknown",
+          "exit_code": 0,
+          "containment": "process_group",
+          "tree_confirmed_empty": false,
+          "unit_confirmed_empty": false,
+          "notes": [
+            "an output pipe stayed open after termination",
+            "an output pipe stayed open after termination"
+          ]
+        },
+        {
+          "state": "unknown",
+          "exit_code": 0,
+          "containment": "process_group",
+          "tree_confirmed_empty": false,
+          "unit_confirmed_empty": false,
+          "notes": [
+            "an output pipe stayed open after termination",
+            "an output pipe stayed open after termination"
+          ]
+        }
+      ],
+      "extra_live_threads_before_external_cleanup": 4,
+      "extra_open_fds_before_external_cleanup": 4,
+      "extra_live_threads_after_cleanup": 0,
+      "extra_open_fds_after_cleanup": 0
+    }
+  }
+}

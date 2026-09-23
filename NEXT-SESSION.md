@@ -85,7 +85,7 @@
 
 2026-09-23의 작업은 모두 main에 병합됐다 — V04-01 리뷰([PR #4](https://github.com/inlight37-design/decision-model_lab/pull/4))와 반영, Hermes 패턴 조사([PR #5](https://github.com/inlight37-design/decision-model_lab/pull/5))와 교차 확인, V04-03 실행 코어, 첫 conformance와 Codex 샌드박스 원인 확인, 인계 정리(`claude/handoff-cleanup-20260923`). 사용자는 **CI 녹색을 확인한 claude 세션이 main에 직접 병합하는 것**을 허락했다(2026-09-23).
 
-**지금 병합되지 않은 브랜치: 없음.** 검토 요청서와 `env.resolve` 링크 우회 수정(`claude/review-request-20260923`), bubblewrap 격리와 W2 경계 시험(`claude/w2-isolation-20260923`), `aux-pc-wsl` 설치와 tier 1 기록(W1, `claude/wsl2-setup-20260923`), 경계 리뷰 보존과 반영(`claude/wsl2-boundary-review-20260923`, 4절 1단계)과 실행 명세·stdin(A4)·core 환경 모듈(A7, `claude/execution-spec-20260923`)은 병합됐다. 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 이 줄을 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다.
+**지금 병합되지 않은 브랜치: 없음.** WSL2 전환 검토([결과와 재현](docs/reviews/2026-09-23-wsl2-migration-review/README.md), `chatgpt/review-wsl2-20260923`, PR #6 — 리뷰어는 GitHub와 웹 Linux 컨테이너에서 검토했고 사용자 PC·실제 모델은 실행하지 않았다), 검토 요청서와 `env.resolve` 링크 우회 수정(`claude/review-request-20260923`), bubblewrap 격리와 W2 경계 시험(`claude/w2-isolation-20260923`), `aux-pc-wsl` 설치와 tier 1 기록(W1, `claude/wsl2-setup-20260923`), 경계 리뷰 보존과 반영(`claude/wsl2-boundary-review-20260923`, 4절 1단계)과 실행 명세·stdin(A4)·core 환경 모듈(A7, `claude/execution-spec-20260923`)은 병합됐다. 새 작업을 시작하면 여기에 브랜치를 적고, 병합하는 커밋에서 이 줄을 다시 "없음"으로 돌린다. `git fetch`/열린 PR 결과와 다르면 GitHub가 맞다.
 
 ## 4. 다음 작업
 
