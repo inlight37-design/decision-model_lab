@@ -3,16 +3,25 @@
 한 줄 흐름: 고정 입력 manifest → 시도 예약 → 실행 → 결과 수용 관문 → 초안 봉인 → controller가 공개.
 
 지키는 규칙
-- 결과 수용: interpret()의 ok, 입력 전달 complete, 자손 전체 종료 확인(tree_confirmed_empty is True)을 모두
-  본다. 종료를 확인하지 못한 시도는 unknown이고 초안을 받지 않으며 실행 자리를 풀지 않는다. 다시 부르지
-  않는다. 예산은 돌려주지 않는다.
-- 공개: 화면에 공개 버튼이 없다. 남은 참여자가 모두 끝났고 정족수가 있을 때 controller가 연다. 누가 빠졌으면
-  남은 사람으로 자동 진행하지 않고 사용자의 축소 승인을 기다린다(Ledger BlindBarrier).
-- 봉인: 공개 전에는 초안의 내용·길이·digest를 화면 쪽으로 넘기지 않는다. 제출됐다는 사실만 넘긴다.
-- 수동 참여자(원본 앱): 사용자가 질문을 원본 앱에 옮기고 답을 붙여 넣는다. 입력 digest가 이 실행의 것과
-  같아야 받는다 — 다른 실행에 잘못 넣는 것을 막을 뿐, 원본 앱에 그 질문을 넣었는지는 사용자의 확인에 기댄다.
-  늦게 온 답과 중복 제출은 받지 않고 기록한다. blind·사용량은 "관측 안 됨"이다.
+- 결과 수용: 모두 맞아야 받는다 — 자손 전체 종료 확인(tree_confirmed_empty is True), interpret()의 ok, 질문을
+  stdin으로 끝까지 보낸 기록(input_delivery == complete), 비어 있지 않은 답, 보고된 모델이 요청과 다르지 않음
+  (model_match가 False가 아님. 보고가 없으면 None이고 받는다 — K32). 종료를 확인하지 못한 시도는 unknown이고
+  초안을 받지 않으며 실행 자리를 풀지 않는다. 다시 부르지 않는다. 예산은 돌려주지 않는다.
+- 소유: 원장 하나를 여는 controller는 하나다(Store의 잠금). 시작(queued → running)과 결과 반영(running → …)은
+  기대한 상태와 시도 ID가 맞을 때만 한다. 그 뒤에 온 결과는 사건으로만 남긴다(A1 리뷰 A1-03).
+- 공개: 화면에 공개 버튼이 없다. 남은 참여자가 모두 끝났고 정족수가 있을 때 controller가 연다. 상태를 바꾼
+  거래 안에서 판정하므로 마지막 초안의 저장과 공개 사이에서 멈추지 않는다. 누가 빠졌으면 남은 사람으로 자동
+  진행하지 않고 사용자의 축소 승인을 기다린다(Ledger BlindBarrier). 승인은 그것을 기다릴 때만 받는다.
+- 봉인: 공개 전 화면에는 고정된 필드만 넘긴다(허용 목록). 초안의 내용·길이·digest, 토큰 수, 걸린 시간은
+  공개 뒤에, CLI가 쓴 오류 설명과 runner 메모는 모든 참여자가 끝난 뒤에 넘긴다.
+- 수동 참여자(원본 앱): 사용자가 질문을 원본 앱에 옮기고 답을 붙여 넣는다. 화면이 그 카드가 속한 실행의
+  입력 digest를 자동으로 넣어 보내므로 화면에서는 digest 검사가 사실상 늘 통과한다. 막는 것은 화면을 거치지
+  않은 요청의 digest 불일치, 공개 뒤·중복 제출, 빈 답이다. 다른 실행의 답을 붙여 넣는 것도, 원본 앱에 이
+  질문을 넣었는지도 확인하지 못하고 사용자의 확인에 기댄다(K21). blind·사용량은 "관측 안 됨"이다.
 - 정리되지 않은 시도(unknown + runner.lingering())가 상한에 닿으면 새 시도를 시작하지 않는다.
+- 다시 시작: running이던 시도는 unknown으로 둔다. 초안 작성 중인 실행은 공개 관문을 다시 본다. 대기 중인
+  시도는 사용자가 이어서 시작하라고 할 때까지(resume) 시작하지 않는다 — 취소가 없어서(K19) 서버를 끄는 것이
+  지금 유일한 멈춤 수단이다.
 """
 from __future__ import annotations
 
@@ -39,7 +48,11 @@ DONE = (ACCEPTED, REJECTED)
 PROMPT = ("다음 질문에, 다른 참여자의 답을 보지 않은 상태로 독립적으로 답하라. "
           "결론, 근거, 그리고 결론을 뒤집을 조건을 쓴다.\n\n질문:\n{question}\n")
 
-SEALED_RESULT_KEYS = frozenset({"usage", "duration_ms", "reported_models"})
+# 공개 전 화면에 넘기는 결과 필드. 값이 정해진 것만 둔다 — 막을 것을 고르지 않고 넘길 것을 고른다(A1-01).
+SEALED_VIEW_KEYS = frozenset({"state", "exit_code", "containment", "tree_confirmed_empty", "input_delivery",
+                              "status", "ok", "model_match"})
+# CLI가 쓴 자유 텍스트(오류 설명)와 runner 메모. 모든 참여자가 끝난 뒤에 넘긴다.
+DIAGNOSTIC_KEYS = frozenset({"detail", "notes"})
 
 CONTAMINATION = {
     MANUAL: ("원본 앱의 메모리·다른 대화·프로젝트 지시문을 통제하지 못함", "사용량·시간 관측 안 됨"),
@@ -112,6 +125,30 @@ def _roster(text: str) -> m.Roster:
                     tuple(d["alternates"]), tuple(tuple(x) for x in d["dropped"]), frozenset(d["unknown"]))
 
 
+def _verdict(result: runner.RunResult | None, outcome: adapters.Outcome | None) -> tuple[str, str, str | None]:
+    """결과 수용 관문. (상태, 상태 코드, controller가 덧붙이는 이유)를 돌려준다.
+
+    interpret()는 stdin 없는 명령(--version 등)도 해석해야 해서 입력 전달 None을 허용한다. A1은 질문을 늘
+    stdin으로 보내므로 끝까지 보낸 기록이 없으면 받지 않는다(A1-02). 질문을 명령줄로 보내는 CLI(agy, K07)를
+    붙일 때는 None을 성공으로 넘기지 말고 그 전송 방식의 증거를 따로 정한다.
+    """
+    if result is None:
+        return UNKNOWN, "executor_error", None
+    if result.tree_confirmed_empty is not True:
+        return UNKNOWN, "unknown", None
+    if not outcome.ok:
+        return REJECTED, outcome.status, None
+    if result.input_delivery != runner.INPUT_COMPLETE:
+        return REJECTED, "input_error", "no complete stdin delivery was recorded for this attempt"
+    if not (outcome.text or "").strip():
+        return REJECTED, "empty_answer", "the CLI returned an empty answer"
+    if outcome.model_match is False:
+        # 조용한 강등(D18)을 받지 않는다. 별칭으로 요청하면 보고된 전체 이름과 달라 보이므로 요청은 전체 이름으로 한다
+        return REJECTED, "model_mismatch", (f"requested {outcome.requested_model}, "
+                                            f"reported {', '.join(outcome.reported_models)}")
+    return ACCEPTED, outcome.status, None
+
+
 class ControllerError(ValueError):
     """요청을 받지 않았다. 상태는 바뀌지 않았다."""
 
@@ -125,6 +162,8 @@ class Controller:
         self.lock = threading.RLock()
         self.threads: list[threading.Thread] = []
         self._recover()
+        # 이전 controller가 시작하지 못한 시도가 남아 있으면 사용자가 이어서 시작하라고 할 때까지 기다린다
+        self.paused = self.store.row("SELECT COUNT(*) AS n FROM participants WHERE state = ?", QUEUED)["n"] > 0
 
     # ---- 만들기와 예약 -------------------------------------------------------------------------
     def create_run(self, question: str, participants: list[ParticipantSpec], *, min_independent: int) -> str:
@@ -148,7 +187,7 @@ class Controller:
             tx.execute("INSERT INTO runs VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, NULL)", run_id, time.time(), question,
                        prompt, hashlib.sha256(data).hexdigest(), len(data), min_independent, _roster_json(roster))
             for p in participants:
-                tx.execute("INSERT INTO participants VALUES (?, ?, ?, ?, NULL, NULL, NULL)", run_id, p.pid,
+                tx.execute("INSERT INTO participants (run_id, pid, spec, state) VALUES (?, ?, ?, ?)", run_id, p.pid,
                            json.dumps(asdict(p), ensure_ascii=False), QUEUED if p.transport == CLI else AWAITING_USER)
             tx.event(run_id, "run_created", input_sha256=hashlib.sha256(data).hexdigest(), input_bytes=len(data),
                      participants=[p.pid for p in participants], min_independent=min_independent)
@@ -164,9 +203,13 @@ class Controller:
         return unknown + runner.lingering()
 
     def pump(self) -> None:
-        """자리와 상한이 허락하는 만큼 대기 중인 시도를 시작한다. 한 참여자에 한 번만 — 다시 부르지 않는다."""
+        """자리와 상한이 허락하는 만큼 대기 중인 시도를 시작한다. 한 참여자에 한 번만 — 다시 부르지 않는다.
+
+        queued → running은 조건부로 바꾼다. 다른 controller가 먼저 가져갔으면 건너뛴다(같은 journal을 연
+        controller 둘이 같은 참여자를 두 번 부르던 문제, A1 리뷰 반영).
+        """
         with self.lock:
-            if self.unsettled() >= self.unsettled_limit:
+            if self.paused or self.unsettled() >= self.unsettled_limit:
                 return
             queued = self.store.rows("SELECT p.run_id, p.pid, p.spec FROM participants p JOIN runs r USING (run_id) "
                                      "WHERE p.state = ? ORDER BY r.created_at, p.rowid", QUEUED)
@@ -180,15 +223,25 @@ class Controller:
                 work = os.path.join(self.work_root, row["run_id"], spec.pid)
                 os.makedirs(work, exist_ok=True)
                 with self.store.tx() as tx:
-                    tx.execute("UPDATE participants SET state = ?, detail = ? WHERE run_id = ? AND pid = ?",
-                               RUNNING, f"attempt {attempt}", row["run_id"], spec.pid)
-                    tx.event(row["run_id"], "attempt_started", pid=spec.pid, attempt=attempt,
-                             executor=self.executor.name, behavior=spec.behavior)
+                    taken = tx.execute("UPDATE participants SET state = ?, attempt = ? "
+                                       "WHERE run_id = ? AND pid = ? AND state = ?",
+                                       RUNNING, attempt, row["run_id"], spec.pid, QUEUED)
+                    if taken:
+                        tx.event(row["run_id"], "attempt_started", pid=spec.pid, attempt=attempt,
+                                 executor=self.executor.name, behavior=spec.behavior)
+                if not taken:
+                    continue
                 prompt = self._run(row["run_id"])["prompt"]
                 thread = threading.Thread(target=self._attempt, args=(row["run_id"], spec, attempt, prompt, work),
                                           daemon=True)
                 self.threads.append(thread)
                 thread.start()
+
+    def resume(self) -> None:
+        """다시 시작한 뒤 멈춰 둔 대기 시도를 사용자가 이어서 시작하라고 했다."""
+        with self.lock:
+            self.paused = False
+        self.pump()
 
     def _attempt(self, run_id: str, spec: ParticipantSpec, attempt: str, prompt: str, work: str) -> None:
         try:
@@ -208,34 +261,40 @@ class Controller:
                 "tree_confirmed_empty": result.tree_confirmed_empty, "input_delivery": result.input_delivery,
                 "duration_ms": result.duration_ms, "notes": list(result.notes),
                 "status": outcome.status, "ok": outcome.ok, "detail": outcome.detail, "usage": outcome.usage,
-                "reported_models": list(outcome.reported_models), "model_match": outcome.model_match}
+                "requested_model": outcome.requested_model, "reported_models": list(outcome.reported_models),
+                "model_match": outcome.model_match}
+            state, status, why = _verdict(result, outcome)
+            detail = detail or why or (outcome.detail if outcome else None)
             roster = _roster(self._run(run_id)["roster"])
             with self.store.tx() as tx:
-                if result is None or result.tree_confirmed_empty is not True:
-                    state, status = UNKNOWN, "unknown"
+                # 이 시도가 아직 이 참여자의 진행 중인 시도일 때만 반영한다. 다시 시작한 controller가 unknown으로
+                # 돌렸거나 사용자가 종료를 확인한 뒤에 온 결과는 사건으로만 남긴다 — 초안·명단은 그대로다.
+                if not tx.execute("UPDATE participants SET state = ?, status = ?, detail = ?, result = ? "
+                                  "WHERE run_id = ? AND pid = ? AND state = ? AND attempt = ?",
+                                  state, status, detail, json.dumps(summary, ensure_ascii=False),
+                                  run_id, pid, RUNNING, attempt):
+                    tx.event(run_id, "attempt_result_ignored", pid=pid, attempt=attempt, result=summary)
+                    return
+                if state == UNKNOWN:
                     if pid in roster.active:
                         roster = m.decide(roster, "cancel_unconfirmed", pid).roster
                     tx.event(run_id, "attempt_unknown", pid=pid, attempt=attempt, result=summary, detail=detail)
-                elif outcome.ok and result.input_delivery in (None, runner.INPUT_COMPLETE):
-                    state, status = ACCEPTED, outcome.status
-                    text = outcome.text or ""
-                    tx.execute("INSERT OR REPLACE INTO drafts VALUES (?, ?, ?, ?, ?, ?)", run_id, pid, text,
-                               hashlib.sha256(text.encode("utf-8")).hexdigest(), CLI, time.time())
+                elif state == ACCEPTED:
+                    tx.execute("INSERT OR REPLACE INTO drafts VALUES (?, ?, ?, ?, ?, ?)", run_id, pid, outcome.text,
+                               hashlib.sha256(outcome.text.encode("utf-8")).hexdigest(), CLI, time.time())
                     tx.event(run_id, "draft_sealed", pid=pid, attempt=attempt, result=summary)
                 else:
-                    state, status = REJECTED, outcome.status
                     roster = m.decide(roster, "unavailable", pid).roster
-                    tx.event(run_id, "attempt_rejected", pid=pid, attempt=attempt, result=summary)
-                tx.execute("UPDATE participants SET state = ?, status = ?, detail = ?, result = ? "
-                           "WHERE run_id = ? AND pid = ?", state, status,
-                           detail or (outcome.detail if outcome else None),
-                           json.dumps(summary, ensure_ascii=False), run_id, pid)
+                    tx.event(run_id, "attempt_rejected", pid=pid, attempt=attempt, status=status, result=summary)
                 tx.execute("UPDATE runs SET roster = ? WHERE run_id = ?", _roster_json(roster), run_id)
-            self._maybe_reveal(run_id)
+                self._maybe_reveal(run_id, tx)
         self.pump()
 
-    def _maybe_reveal(self, run_id: str) -> None:
-        """남은 참여자가 모두 끝났고 정족수가 있으면 연다. 빠진 사람이 있으면 축소 승인이 먼저다."""
+    def _maybe_reveal(self, run_id: str, tx) -> None:
+        """남은 참여자가 모두 끝났고 정족수가 있으면 연다. 빠진 사람이 있으면 축소 승인이 먼저다.
+
+        상태를 바꾼 거래 안에서 부른다. 거래 안의 읽기는 그 거래가 쓴 것까지 본다.
+        """
         run = self._run(run_id)
         roster = _roster(run["roster"])
         states = [r["state"] for r in self.store.rows("SELECT state FROM participants WHERE run_id = ?", run_id)]
@@ -247,14 +306,14 @@ class Controller:
         elif not m.quorum_met(roster):
             note = (f"독립 참여자 {len(roster.active - roster.unknown)}명 — 최소 {roster.min_independent}명이 필요합니다. "
                     "유료로 채우지 않습니다.")
-        with self.store.tx() as tx:
-            if note:
+        if note:
+            if note != run["note"]:
                 tx.execute("UPDATE runs SET note = ? WHERE run_id = ?", note, run_id)
                 tx.event(run_id, "reveal_held", note=note)
-            else:
-                tx.execute("UPDATE runs SET roster = ?, note = NULL WHERE run_id = ?",
-                           _roster_json(m.advance(roster, m.REVEALED)), run_id)
-                tx.event(run_id, "revealed", drafts=len([s for s in states if s == ACCEPTED]))
+        else:
+            tx.execute("UPDATE runs SET roster = ?, note = NULL WHERE run_id = ?",
+                       _roster_json(m.advance(roster, m.REVEALED)), run_id)
+            tx.event(run_id, "revealed", drafts=len([s for s in states if s == ACCEPTED]))
 
     # ---- 사용자 행동 ---------------------------------------------------------------------------
     def submit_manual(self, run_id: str, pid: str, text: str, input_sha256: str) -> None:
@@ -282,7 +341,7 @@ class Controller:
                 tx.execute("UPDATE participants SET state = ?, status = ? WHERE run_id = ? AND pid = ?",
                            ACCEPTED, "manual", run_id, pid)
                 tx.event(run_id, "draft_sealed", pid=pid, source=MANUAL)
-            self._maybe_reveal(run_id)
+                self._maybe_reveal(run_id, tx)
 
     def withdraw_manual(self, run_id: str, pid: str) -> None:
         """사용자가 원본 앱에서 답을 받지 못했다. 그 참여자를 빼고, 빈자리는 채우지 않는다."""
@@ -296,14 +355,23 @@ class Controller:
                            REJECTED, "withdrawn", run_id, pid)
                 tx.execute("UPDATE runs SET roster = ? WHERE run_id = ?", _roster_json(roster), run_id)
                 tx.event(run_id, "manual_withdrawn", pid=pid)
-            self._maybe_reveal(run_id)
+                self._maybe_reveal(run_id, tx)
 
     def approve_reduction(self, run_id: str) -> None:
+        """축소 승인은 controller가 그것을 기다릴 때만 받는다: 초안 작성 중이고, 모두 끝났고, 빠진 사람이 있고,
+        아직 승인하지 않았다. 그 뒤로는 구성이 바뀌지 않으므로 승인은 지금 구성에 대한 것이다(A1-06)."""
         with self.lock:
+            run = self._run(run_id)
+            roster = _roster(run["roster"])
+            states = [r["state"] for r in self.store.rows("SELECT state FROM participants WHERE run_id = ?", run_id)]
+            if (roster.phase != m.DRAFTING or not roster.dropped or run["reduction_approved"]
+                    or any(s not in DONE for s in states)):
+                raise ControllerError("no reduction is waiting for approval")
             with self.store.tx() as tx:
                 tx.execute("UPDATE runs SET reduction_approved = 1 WHERE run_id = ?", run_id)
-                tx.event(run_id, "reduction_approved")
-            self._maybe_reveal(run_id)
+                tx.event(run_id, "reduction_approved", requested=list(roster.requested),
+                         dropped=[d[0] for d in roster.dropped])
+                self._maybe_reveal(run_id, tx)
 
     def acknowledge_unknown(self, run_id: str, pid: str) -> None:
         """사용자가 그 시도의 종료를 직접 확인했다고 알린다. 자리는 풀지만 예산은 돌려주지 않고, 초안도 받지 않는다."""
@@ -318,43 +386,56 @@ class Controller:
                            REJECTED, "unknown_acknowledged", run_id, pid)
                 tx.execute("UPDATE runs SET roster = ? WHERE run_id = ?", _roster_json(roster), run_id)
                 tx.event(run_id, "unknown_acknowledged", pid=pid)
-            self._maybe_reveal(run_id)
+                self._maybe_reveal(run_id, tx)
         self.pump()
 
     # ---- 다시 시작 ------------------------------------------------------------------------------
     def _recover(self) -> None:
-        """이전 controller가 돌리던 시도는 종료를 확인할 수 없다. unknown으로 두고 다시 부르지 않는다."""
+        """이 원장을 연 controller는 이것 하나다(Store의 잠금). running으로 남은 시도는 멈춘 controller의 것이고
+        종료를 확인할 수 없으므로 unknown으로 두고 다시 부르지 않는다. 그다음 초안 작성 중인 실행마다 공개 관문을
+        다시 본다 — 이 수정 전의 원장은 마지막 초안 저장과 공개 사이에서 멈췄을 수 있다(A1-05). 외부 호출은 없다."""
         for row in self.store.rows("SELECT run_id, pid FROM participants WHERE state = ?", RUNNING):
             roster = _roster(self._run(row["run_id"])["roster"])
             if row["pid"] in roster.active:
                 roster = m.decide(roster, "cancel_unconfirmed", row["pid"]).roster
             with self.store.tx() as tx:
                 tx.execute("UPDATE participants SET state = ?, status = ?, detail = ? WHERE run_id = ? AND pid = ?",
-                           UNKNOWN, "unknown", "controller restarted; termination not confirmed",
+                           UNKNOWN, "controller_restarted", "controller restarted; termination not confirmed",
                            row["run_id"], row["pid"])
                 tx.execute("UPDATE runs SET roster = ? WHERE run_id = ?", _roster_json(roster), row["run_id"])
                 tx.event(row["run_id"], "attempt_unknown", pid=row["pid"], detail="controller restarted")
+        for run in self.store.rows("SELECT run_id, roster FROM runs"):
+            if _roster(run["roster"]).phase == m.DRAFTING:
+                with self.store.tx() as tx:
+                    self._maybe_reveal(run["run_id"], tx)
 
     # ---- 화면용 투영 ---------------------------------------------------------------------------
     def view(self) -> dict[str, Any]:
-        """화면에 넘기는 것. 공개 전에는 초안의 내용·길이·digest를 넣지 않는다."""
+        """화면에 넘기는 것. 공개 전에는 제출 여부와 실행 상태의 고정된 필드만 넘긴다(BlindBarrier 계약).
+
+        초안의 내용·길이·digest, 토큰 수, 걸린 시간은 공개 뒤에 넘긴다. CLI가 쓴 오류 설명과 runner 메모는 모든
+        참여자가 끝난 뒤에 넘긴다 — 그 전에는 그것을 본 사람이 아직 답하는 참여자(원본 앱에 질문을 옮기는
+        사용자 포함)에게 영향을 줄 수 있다(A1 리뷰 A1-01).
+        """
         with self.lock:
             runs = []
             for run in self.store.rows("SELECT * FROM runs ORDER BY created_at DESC"):
                 roster = _roster(run["roster"])
                 revealed = roster.phase in (m.REVEALED, m.SYNTHESIS)
+                rows = self.store.rows("SELECT * FROM participants WHERE run_id = ? ORDER BY rowid", run["run_id"])
+                settled = revealed or all(p["state"] in DONE for p in rows)
+                keep = SEALED_VIEW_KEYS | (DIAGNOSTIC_KEYS if settled else frozenset())
                 parts, calls = [], {"succeeded": 0, "failed": 0, "unknown": 0}
-                for p in self.store.rows("SELECT * FROM participants WHERE run_id = ? ORDER BY rowid", run["run_id"]):
+                for p in rows:
                     spec = ParticipantSpec(**json.loads(p["spec"]))
                     result = json.loads(p["result"]) if p["result"] else None
                     if result and not revealed:
-                        # 토큰 수와 걸린 시간은 답의 길이를 짐작하게 한다. 공개 전에는 넘기지 않는다
-                        result = {k: v for k, v in result.items() if k not in SEALED_RESULT_KEYS}
+                        result = {k: v for k, v in result.items() if k in keep}
                     if spec.transport == CLI and p["state"] in (ACCEPTED, REJECTED, UNKNOWN):
                         calls[{"accepted": "succeeded", "rejected": "failed", "unknown": "unknown"}[p["state"]]] += 1
                     item = {"pid": spec.pid, "label": spec.label, "provider": spec.provider,
                             "transport": spec.transport, "behavior": spec.behavior if spec.transport == CLI else None,
-                            "state": p["state"], "status": p["status"], "detail": p["detail"],
+                            "state": p["state"], "status": p["status"], "detail": p["detail"] if settled else None,
                             "contamination": list(CONTAMINATION.get(spec.transport, ("모의 CLI — 모델 호출 없음",))),
                             "result": result, "dropped": any(d[0] == spec.pid for d in roster.dropped)}
                     if revealed and p["state"] == ACCEPTED:
@@ -368,13 +449,15 @@ class Controller:
                              "input_bytes": run["input_bytes"], "phase": roster.phase,
                              "min_independent": roster.min_independent, "note": run["note"],
                              "reduction_approved": bool(run["reduction_approved"]),
+                             "diagnostics_sealed": not settled,
                              "budget": {"used": sum(calls.values()) + sum(1 for p in parts if p["state"] == RUNNING),
                                         "cap": cli_total, "breakdown": calls,
                                         "manual": sum(1 for p in parts if p["transport"] == MANUAL)},
                              "participants": parts,
                              "events": [e["kind"] for e in events(self.store, run["run_id"])][-12:]})
             return {"executor": self.executor.name, "slots": {"used": self._slots_used(), "cap": self.max_parallel},
-                    "unsettled": {"count": self.unsettled(), "limit": self.unsettled_limit}, "runs": runs}
+                    "unsettled": {"count": self.unsettled(), "limit": self.unsettled_limit},
+                    "paused": self.paused, "runs": runs}
 
     # ---- 내부 ---------------------------------------------------------------------------------
     def _run(self, run_id: str):

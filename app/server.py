@@ -5,6 +5,10 @@
 받아 가는 것만으로는 토큰을 얻지 못한다. 토큰 파일은 controller 데이터 폴더에 둔다(참여자에게 연결하지 않음).
 Host 머리글이 우리 주소가 아니면 거절한다(DNS rebinding).
 
+시작 순서(A1 리뷰 A1-03): 원장 잠금 → 포트 → 복구 → 토큰. 같은 데이터 폴더로 서버를 하나 더 띄우면 원장
+잠금에서 멈추므로 돌던 서버의 원장과 토큰 파일을 건드리지 않는다. 포트를 먼저 잡는 것에 기대지 않는다 —
+다른 포트로 띄우면 막지 못하고, Windows에서는 SO_REUSEADDR 때문에 같은 포트에도 서버가 둘 떴다.
+
   python -m app.server [--port 8765] [--data-dir ~/.decision-model-lab/mock]
 """
 from __future__ import annotations
@@ -23,7 +27,7 @@ if __package__ in (None, ""):  # `python app/server.py`로 실행해도 저장�
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.controller import CLI, MANUAL, Controller, ControllerError, MockExecutor, ParticipantSpec
-from app.store import Store
+from app.store import LedgerBusy, Store
 
 STATIC = Path(__file__).with_name("static")
 PARTICIPANTS = {
@@ -118,6 +122,9 @@ def make_handler(controller: Controller, token: str, port: int):
                 elif len(parts) == 4 and parts[:2] == ["api", "runs"] and parts[3] == "approve-reduction":
                     controller.approve_reduction(parts[2])
                     self._json(200, {"ok": True})
+                elif parts == ["api", "resume"]:
+                    controller.resume()
+                    self._json(200, {"ok": True})
                 else:
                     self._json(404, {"error": "not found"})
             except (ControllerError, KeyError, ValueError, TypeError) as exc:
@@ -126,16 +133,44 @@ def make_handler(controller: Controller, token: str, port: int):
     return Handler
 
 
+class _Server(ThreadingHTTPServer):
+    # Windows의 SO_REUSEADDR은 이미 듣고 있는 포트에도 bind를 허락해서 같은 포트에 서버가 둘 뜬다(A1 리뷰 반영
+    # 중 관측). Windows에서는 끈다. POSIX에서는 TIME_WAIT 포트를 다시 쓰게 할 뿐이므로 둔다.
+    allow_reuse_address = os.name != "nt"
+
+
+def _write_token(path: Path, token: str) -> None:
+    """처음부터 0600으로 만들고 통째로 바꾼다. 쓰는 중이거나 넓은 권한인 토큰 파일이 보이는 틈을 두지 않는다."""
+    staging = path.with_name(path.name + ".new")
+    try:
+        staging.unlink()
+    except FileNotFoundError:
+        pass
+    fd = os.open(staging, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        f.write(token)
+    os.replace(staging, path)
+
+
 def serve(data_dir: Path, port: int, *, timeout: float = 20.0) -> tuple[ThreadingHTTPServer, str, Controller]:
-    data_dir.mkdir(parents=True, exist_ok=True)
-    store = Store(data_dir / "journal.db")
-    controller = Controller(store, MockExecutor(never=(str(data_dir.resolve()),)), timeout=timeout)
-    token = secrets.token_urlsafe(32)
-    token_file = data_dir / "control-token"
-    token_file.write_text(token, encoding="utf-8")
+    data_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
     if os.name != "nt":
-        token_file.chmod(0o600)
-    server = ThreadingHTTPServer(("127.0.0.1", port), make_handler(controller, token, port))
+        data_dir.chmod(0o700)
+    store = Store(data_dir / "journal.db")          # 다른 controller가 열고 있으면 LedgerBusy — 아무것도 바꾸지 않았다
+    try:
+        server = _Server(("127.0.0.1", port), BaseHTTPRequestHandler)
+    except OSError:
+        store.close()
+        raise
+    try:
+        controller = Controller(store, MockExecutor(never=(str(data_dir.resolve()),)), timeout=timeout)
+        token = secrets.token_urlsafe(32)
+        _write_token(data_dir / "control-token", token)
+    except BaseException:
+        server.server_close()
+        store.close()
+        raise
+    server.RequestHandlerClass = make_handler(controller, token, server.server_address[1])
     return server, token, controller
 
 
@@ -147,9 +182,16 @@ def main() -> int:
     args = ap.parse_args()
     if hasattr(sys.stdout, "reconfigure"):  # Windows 콘솔의 cp949에서도 한글·기호가 깨지지 않게
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    server, token, controller = serve(args.data_dir, args.port, timeout=args.timeout)
+    try:
+        server, token, controller = serve(args.data_dir, args.port, timeout=args.timeout)
+    except LedgerBusy:
+        print(f"이미 다른 서버가 이 데이터 폴더를 쓰고 있다: {args.data_dir}. 그 서버를 쓰거나 끈 뒤 다시 띄운다.",
+              file=sys.stderr, flush=True)
+        return 1
     print(f"Ledger 모의 모드 — 실행기 {controller.executor.name}, 데이터 {args.data_dir}", flush=True)
-    print(f"열기: http://127.0.0.1:{args.port}/#token={token}", flush=True)
+    if controller.paused:
+        print("다시 시작하기 전에 시작하지 못한 시도가 있다. 화면에서 '이어서 시작'을 눌러야 시작한다.", flush=True)
+    print(f"열기: http://127.0.0.1:{server.server_address[1]}/#token={token}", flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
