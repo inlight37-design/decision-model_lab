@@ -21,14 +21,17 @@
 | [`2026-09-24-structure-audit/`](2026-09-24-structure-audit/README.md) | claude의 구조 전수검사(main `99d9bb4`): 덧대기인가 구조적 해결인가. core·app·tools·이력의 판정, 직접 재현한 틈 G1–G9, 적은 코드 순서의 해법. 위 간결성 검토와 독립으로 썼고(blind), 둘의 비교는 [`COMPARISON.md`](2026-09-24-structure-audit/COMPARISON.md)([PR #21](https://github.com/inlight37-design/decision-model_lab/pull/21)) |
 | [`2026-09-24-offline-progression/`](2026-09-24-offline-progression/README.md) | codex의 새 main 검토와 순서 1–4 구현([PR #22](https://github.com/inlight37-design/decision-model_lab/pull/22)–[#25](https://github.com/inlight37-design/decision-model_lab/pull/25)). 주인 모듈별 반영, 검토 중 고친 결함, 검증 범위와 브라우저 미검증 |
 | [`2026-09-24-merge-22-25/`](2026-09-24-merge-22-25/README.md) | claude의 PR #22–#25 병합 검증([PR #26](https://github.com/inlight37-design/decision-model_lab/pull/26)). 정확한 head의 CI, 쌓인 브랜치의 인계 충돌과 통합 병합, 병합 트리 동일성, 코드 검토와 낮은 우선순위 발견 |
+| [`2026-09-24-post-merge-verification/`](2026-09-24-post-merge-verification/README.md) | codex의 병합 후 재검토([PR #28](https://github.com/inlight37-design/decision-model_lab/pull/28)). 실제 브라우저·K46 관측, 진단 출력 수정과 실행 계약 제안. GitHub 원문 대조는 같은 폴더의 [`GITHUB.md`](2026-09-24-post-merge-verification/GITHUB.md) |
+| [`2026-09-24-execution-contract/`](2026-09-24-execution-contract/README.md) | claude의 순서 5 실행 계약(G4·G6) 구현([PR #30](https://github.com/inlight37-design/decision-model_lab/pull/30)). 계획 한 번, 계획에서 계산한 판, 옛 판의 정확한 대응, 시도에 저장한 실행 종류 |
+| [`2026-09-24-cli-readiness/`](2026-09-24-cli-readiness/README.md) | codex의 순서 5 재검토·회귀 수정, main 보호 적용, 서버 연결 전 조회, Claude 재관측 준비 및 Codex C3 무모델 진단([PR #31](https://github.com/inlight37-design/decision-model_lab/pull/31)). 실행 허가를 임의로 승격하지 않았다. 앞 기록의 “main 보호 없음”은 이 작업으로 해소됐다. 작성 중 검증 상태는 보존하고 [완료 검증](2026-09-24-cli-readiness/FINAL-VALIDATION.md)으로 대체한다 |
+| [`2026-09-24-pr31-safety-review/`](2026-09-24-pr31-safety-review/README.md) | 위 PR #31에 대한 ChatGPT의 독립 재검토([PR #32](https://github.com/inlight37-design/decision-model_lab/pull/32)). 계획 뒤 허가 변경·전송 증거 누락의 회귀 시험과 양성 대조, 문맥 독립성의 다음 확인. 제품 코드는 바꾸지 않았다 |
+| [`2026-09-24-merge-31-32/`](2026-09-24-merge-31-32/README.md) | claude의 PR #31·#32 병합 검증. 정확한 head의 CI와 job 로그, 판 직접 계산, 로컬 전체 검사, 변이 시험, 병합을 막지 않는 발견 |
 
-최신 추가: [`2026-09-24-execution-contract/`](2026-09-24-execution-contract/README.md) — claude의 순서 5 실행 계약(G4·G6) 구현([PR #30](https://github.com/inlight37-design/decision-model_lab/pull/30)). 계획 한 번, 계획에서 계산한 판, 옛 판의 정확한 대응, 시도에 저장한 실행 종류. 그 앞 [`2026-09-24-post-merge-verification/`](2026-09-24-post-merge-verification/README.md) — 병합 후 재검토, 실제 브라우저·K46 관측, 진단 출력 수정과 실행 계약 제안. GitHub 원문 대조는 같은 폴더의 [`GITHUB.md`](2026-09-24-post-merge-verification/GITHUB.md)에 있다.
-
-최신 추가: [`2026-09-24-cli-readiness/`](2026-09-24-cli-readiness/README.md) — 순서 5 재검토·회귀 수정, main 보호 적용, 서버 연결 전 조회, Claude 재관측 준비 및 Codex C3 무모델 진단([PR #31](https://github.com/inlight37-design/decision-model_lab/pull/31)). 실행 허가를 임의로 승격하지 않았다. 앞 기록의 “main 보호 없음”은 이 후속 작업으로 해소됐다. 작성 중 검증 상태는 보존하고 [완료 검증](2026-09-24-cli-readiness/FINAL-VALIDATION.md)으로 대체한다.
+최신 추가: [`2026-09-24-merge-31-32/`](2026-09-24-merge-31-32/README.md) — 위 두 PR을 확인하고 병합한 기록. 구현은 [`2026-09-24-cli-readiness/`](2026-09-24-cli-readiness/README.md), 독립 재검토는 [`2026-09-24-pr31-safety-review/`](2026-09-24-pr31-safety-review/README.md)에 있다.
 
 ## 읽는 순서
 
-최신 구현은 [순서 5 실행 계약](2026-09-24-execution-contract/README.md)이다. 아래 재검토의 제안대로 G4·G6을 닫았고, 옛 판은 실제로 돈 계획에만 대응시켜 기록된 Claude 관측으로는 허가가 나오지 않는다. 그 앞 검토는 [병합 후 재검토·실제 관측](2026-09-24-post-merge-verification/README.md)이다. GitHub head checkout·CI·병합 이력, 실제 브라우저의 모의 흐름/Q4/교차 출처 차단, 승인된 K46 확인, Windows 진단 인코딩 수정과 실행 계약 제안을 담았다. C3는 남는다. Q4는 화면 확인을 마쳤고 사용자 선택은 미정이다. 취소 확인창·실제 파일 다운로드 끝단은 순서 5 구현 때 claude 세션이 설치된 Edge로 확인했다. 이전 검토 당시의 도구 제약과 현재 상태를 구분한다.
+최신 구현은 [PR #31의 순서 5 재검토·회귀 수정](2026-09-24-cli-readiness/README.md)이다. 실행 직전 허가 재검사, 자료 연결 개수와 stdin 옵션을 지우지 않는 판, 무모델 조회·진단을 더했고, [독립 재검토](2026-09-24-pr31-safety-review/README.md)와 [병합 검증](2026-09-24-merge-31-32/README.md)을 거쳐 main에 들어왔다. 허가가 나오는 CLI는 여전히 없다. 그 앞 구현은 [순서 5 실행 계약](2026-09-24-execution-contract/README.md)이다. 아래 재검토의 제안대로 G4·G6을 닫았고, 옛 판은 실제로 돈 계획에만 대응시켜 기록된 Claude 관측으로는 허가가 나오지 않는다. 그 앞 검토는 [병합 후 재검토·실제 관측](2026-09-24-post-merge-verification/README.md)이다. GitHub head checkout·CI·병합 이력, 실제 브라우저의 모의 흐름/Q4/교차 출처 차단, 승인된 K46 확인, Windows 진단 인코딩 수정과 실행 계약 제안을 담았다. C3는 남는다. Q4는 화면 확인을 마쳤고 사용자 선택은 미정이다. 취소 확인창·실제 파일 다운로드 끝단은 순서 5 구현 때 claude 세션이 설치된 Edge로 확인했다. 이전 검토 당시의 도구 제약과 현재 상태를 구분한다.
 
 그 앞 구현은 [새 main 후속](2026-09-24-offline-progression/README.md)의 PR #22–#25이며 [병합 검증](2026-09-24-merge-22-25/README.md)을 거쳐 main에 들어왔다. 아래 날짜 기록의 당시 표현은 유지한다.
 
@@ -61,6 +64,14 @@
 25. [`2026-09-24-merge-22-25/`](2026-09-24-merge-22-25/README.md) — 24의 PR들을 claude가 확인하고 병합한 기록. 쌓인 브랜치의 인계 충돌과 통합 병합, 병합 트리 동일성, 로컬 전체 시험과 코드 검토
 26. [`2026-09-24-post-merge-verification/`](2026-09-24-post-merge-verification/README.md) — codex의 병합 후 재검토(PR #28). GitHub 원문 대조, 실제 브라우저, 승인된 K46 확인, 진단 인코딩 수정, 실행 계약 제안
 27. [`2026-09-24-execution-contract/`](2026-09-24-execution-contract/README.md) — 26의 제안을 claude가 구현한 순서 5(PR #30). 계획 한 번, 계획에서 계산한 판, 옛 판의 정확한 대응, 시도에 저장한 실행 종류
+28. [`2026-09-24-cli-readiness/`](2026-09-24-cli-readiness/README.md) — 27을 codex가 재검토하고 고친 기록(PR #31). 실행 직전 허가 재검사, 자료 연결 개수, stdin 옵션 가림, 서버 연결 전 조회와 무모델 진단, main 보호 적용
+29. [`2026-09-24-pr31-safety-review/`](2026-09-24-pr31-safety-review/README.md) — 28에 대한 ChatGPT의 독립 재검토(PR #32). 계획 뒤 허가 변경의 회귀 시험 보강과 문맥 독립성의 다음 확인
+30. [`2026-09-24-merge-31-32/`](2026-09-24-merge-31-32/README.md) — 28·29를 claude가 확인하고 병합한 기록. 판 직접 계산, 변이 시험, 병합을 막지 않는 발견
+
+## 28번 기록에 대한 단서
+
+- `README.md` 검증 절의 "최종 전체 검사 및 정확한 head CI 결과는 같은 폴더의 `VALIDATION.md`에 기록한다"는 실제와 다르다. 최종 결과는 [`FINAL-VALIDATION.md`](2026-09-24-cli-readiness/FINAL-VALIDATION.md)에 있고, `VALIDATION.md`는 작성 중 상태를 보존한 것이다(30번 기록 N2). 원문은 당시 기록으로 둔다.
+- 28·29번이 인용한 `learn.chatgpt.com` 문서는 30번 세션이 열지 못했다(그 컨테이너의 외부 접속 정책). 웹 검색 색인으로 페이지가 있다는 것만 확인했다. 그 문서의 내용은 28·29번 세션이 읽은 것이다.
 
 ## 25번 기록에 대한 단서
 
