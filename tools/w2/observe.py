@@ -38,8 +38,10 @@ probe — 한 번 부를 때마다 그 provider의 호출 1회로 센다:
 WSL에서는 로그인 셸(`bash -l`)에서 돌린다. CLI 설치 위치(~/.local/bin)는 로그인 셸의 PATH에만 있다 — 없으면
 plan이 "not on the child PATH"로 알려 준다(2026-09-23 aux-pc-wsl, `wsl.exe -- bash` 비로그인 셸에서 관측).
 
-실행 명세는 app.cli_executor.CliExecutor.prepare()로 만든다 — controller가 참여자를 부르는 것과 같은 argv·경계다.
-probe가 바꾼 argv는 결과의 argv_changes에, 실제로 돌린 argv는 argv_run에 적는다(spec은 참여자의 실행 명세 그대로다).
+실행 계획은 app.cli_executor.CliExecutor.plan()으로 만든다 — controller가 참여자를 부르는 것과 같은 argv·경계다.
+probe의 변형(stream-json, 세션 보존, P3의 틀린 값)은 계획을 만들 때 넣는다. 그래서 결과의 spec은 실제로 돌린 계획이고
+그 판(revision)은 변형까지 반영한다 — 변형한 관측은 참여자 계획의 판이 아니다(core.contract). 바꾼 것은 argv_changes에,
+실제로 돌린 argv는 argv_run에 적는다. 기록(runtime-inventory/2)에는 spec.revision을 spec_revision으로 옮긴다.
 원 출력은 저장소 밖 상태 폴더(기본 ~/.local/state/dml-observe, 격리 안에는 연결하지 않음)에 남는다. 저장소에는 요약만
 옮기고, 계정 이메일·조직 ID·토큰은 옮기지 않는다. 요약은 마지막에 모든 문자열을 한 번 더 가린다 — UUID, 긴 16진수 ID
 (입력 digest는 남긴다), 토큰 모양(JWT, 대소문자·숫자가 섞인 긴 조각). 그래도 옮기기 전에 사람이 읽는다. 답·stdout·
@@ -486,7 +488,7 @@ def session_shape(path: Path, scrub, prompt_mark: str | None = None) -> dict:
 
 def summarize(probe: str, run: runner.RunResult, outcome: adapters.Outcome, *, record: dict, argv: list[str],
               changes: list[str], work: Path, home: str, init: dict | None) -> dict:
-    """spec은 controller가 참여자에게 쓸 실행 명세이고, argv_run은 이 probe가 실제로 돌린 argv다(argv_changes만큼 다르다)."""
+    """spec은 실제로 돌린 계획의 기록(판 포함)이고, argv_changes는 probe가 참여자 argv에서 바꾼 것이다."""
     text = outcome.text or ""
     scrub = lambda s: _scrub(s, home)  # noqa: E731
     summary = {
@@ -545,21 +547,21 @@ def call(state: Path, probe: str, model: str, *, pad_kb: int = 0, after_failure:
         work, inputs, forbidden = _workspace(root, probe, state, nonce)
         question = _question(probe, inputs, forbidden, pad_kb, markers)
         try:
-            planned, box = executor.prepare(spec, question, str(work),
-                                            inputs=(str(inputs),) if probe in WITH_INPUTS else ())
-            argv, changes = _argv_for(probe, list(planned.argv), keep_session)
-            isolation.plan(argv, box)
+            planned = executor.plan(spec, question, str(work), inputs=(str(inputs),) if probe in WITH_INPUTS else (),
+                                    variant=lambda argv: _argv_for(probe, argv, keep_session))
+            isolation.plan(list(planned.spec.argv), planned.box)
             isolation._trusted_bwrap()
         except (adapters.AdapterError, isolation.IsolationError, runner.RunnerError, ValueError) as exc:
             raise ObserveError(f"refused before starting: {type(exc).__name__}: {exc}") from None
-        return work, inputs, question, planned, box, argv, changes
+        return work, inputs, question, planned
 
     try:
         approval, provider, n, prepared = _reserve(state, probe, model, after_failure, prepare)
-        work, inputs, question, planned, box, argv, changes = prepared
+        work, inputs, question, planned = prepared
+        box, argv, changes = planned.box, list(planned.spec.argv), list(planned.changes)
         before, sessions = _snapshot(box.read_write), _sessions(executor.home)
-        run = isolation.run(argv, box, timeout=approval["timeout"], stdin_text=planned.stdin_text,
-                            stderr_marks=adapters.STDERR_MARKS.get(ADAPTER[provider], ()))
+        run = isolation.run(argv, box, timeout=approval["timeout"], stdin_text=planned.spec.stdin_text,
+                            stderr_marks=planned.stderr_marks)
         after = _snapshot(box.read_write)
         results = state / "results"
         results.mkdir(parents=True, exist_ok=True)
@@ -635,14 +637,16 @@ def plan(state: Path, executor: CliExecutor | None = None, model: str = "model-p
             spec = ParticipantSpec(probe, probe, provider, CLI, ADAPTER[provider], model)
             try:
                 work, inputs, forbidden = _workspace(root / probe, probe, state)
-                planned, box = executor.prepare(spec, _question(probe, inputs, forbidden), str(work),
-                                                inputs=(str(inputs),) if probe in WITH_INPUTS else ())
-                argv, changes = _argv_for(probe, list(planned.argv))
+                planned = executor.plan(spec, _question(probe, inputs, forbidden), str(work),
+                                        inputs=(str(inputs),) if probe in WITH_INPUTS else (),
+                                        variant=lambda argv, probe=probe: _argv_for(probe, argv))
+                box, argv = planned.box, list(planned.spec.argv)
                 isolation.plan(argv, box)  # 경로 충돌 등은 여기서 거절된다. 실행하지 않는다
-                record = planned.record()  # claude·codex의 argv에는 질문이 없다(stdin). 실제로 돌릴 argv를 보인다
+                # claude·codex의 argv에는 질문이 없다(stdin). 실제로 돌릴 argv와 그 판을 보인다
                 report["probes"][probe] = {
-                    "argv": [hide(a) for a in argv], "argv_changes": changes,
-                    "input_bytes": record["input_bytes"], "read_only": [hide(p) for p in box.read_only],
+                    "argv": [hide(a) for a in argv], "argv_changes": list(planned.changes),
+                    "revision": planned.revision,
+                    "input_bytes": planned.spec.input_bytes, "read_only": [hide(p) for p in box.read_only],
                     "read_write": [hide(p) for p in box.read_write], "never": [hide(p) for p in box.never]}
             except (adapters.AdapterError, isolation.IsolationError, runner.RunnerError, ObserveError, OSError,
                     ValueError) as exc:

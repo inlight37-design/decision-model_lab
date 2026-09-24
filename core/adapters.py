@@ -73,11 +73,9 @@ CODEX_WINDOWS_SANDBOX = 'windows.sandbox="elevated"'
 # profile을 준다(베타, https://learn.chatgpt.com/docs/permissions — 옛 sandbox 설정과 섞지 말라고 한다).
 # exec에는 `-P`가 없어서(0.156.1이 인자 오류로 거절) `default_permissions`로 고른다. `~/.codex` 전체를 막으면
 # Codex의 샌드박스 보조 프로그램이 그 아래의 codex를 다시 실행하지 못한다(같은 진단).
-# 참여자 실행 명세의 판. build_spec이 만드는 argv나 isolation.cli_mounts의 연결이 바뀌면 올린다. 기록(runtime-inventory/2)의
-# 전송·문맥·권한 관측은 관측할 때의 판에 묶이고, 판이 다르면 실행 허가가 나오지 않는다(2026-09-24 리뷰 R04). 옛 argv로 본
-# 관측을 새 argv에 다시 쓰지 않으려는 것이다. 시험(test_core_adapters)이 판마다 argv를 고정한다.
-# discussant-1: 2단계(2026-09-23)에 관측한 argv. codex discussant-2: `--sandbox read-only` 대신 K46 권한 profile.
-SPEC_REVISION = {"claude-code": "discussant-1", "codex": "discussant-2", "antigravity": "discussant-1"}
+# 참여자 실행 명세의 판은 core.contract가 최종 계획(argv·연결·변형)에서 계산한다. 손으로 올리던 이름 판
+# (claude discussant-1, codex discussant-2 — `--sandbox read-only` 대신 K46 권한 profile)은 기록에만 남고,
+# 새 판과의 대응은 contract.LEGACY가 정한다(2026-09-24 리뷰 R04, 구조 검사 G4).
 CODEX_PROFILE = "dml-discussant"
 CODEX_AUTH_FILE = ".codex/auth.json"
 POSIX_HOME = re.compile(r"/[^\x00-\x1f\x7f\"\\]*")

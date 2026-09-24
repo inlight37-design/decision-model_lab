@@ -131,9 +131,9 @@ class ArgvTests(unittest.TestCase):
             with self.subTest(call=call), self.assertRaises(AdapterError):
                 build_argv(call.pop("adapter_id"), exe=EXE, prompt="Q", model="m", **call)
 
-    def test_each_spec_revision_pins_its_argv(self):
-        """argv를 바꾸면 SPEC_REVISION도 올리고 여기에 새 판을 적는다. 기록의 관측은 옛 판에 묶여 있어 다시 관측해야
-        한다(2026-09-24 리뷰 R04). 이 시험이 실패하면 argv만 고치지 말고 판을 올린다."""
+    def test_participant_argv_is_pinned(self):
+        """참여자 argv를 고정한다. argv가 바뀌면 core.contract의 판도 바뀌어 기록의 관측으로 허가하지 않는다(리뷰 R04).
+        이 시험이 실패하면 argv만 고치지 말고, 바뀐 판에 대해 다시 관측해야 함을 인계에 적는다. 이름은 옛 판이다."""
         pinned = {
             ("claude-code", "discussant-1"): (
                 ["-p", "--output-format", "json", "--model", "m", "--permission-mode", "dontAsk",
@@ -146,7 +146,6 @@ class ArgvTests(unittest.TestCase):
         }
         for (adapter_id, revision), (expected, extra) in pinned.items():
             with self.subTest(adapter=adapter_id):
-                self.assertEqual(adapters.SPEC_REVISION[adapter_id], revision)
                 self.assertEqual(build_argv(adapter_id, exe=EXE, prompt="Q", model="m", **extra)[1:], expected)
 
     def test_agy_is_off_until_the_user_turns_it_on(self):

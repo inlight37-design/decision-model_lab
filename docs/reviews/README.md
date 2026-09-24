@@ -22,11 +22,11 @@
 | [`2026-09-24-offline-progression/`](2026-09-24-offline-progression/README.md) | codex의 새 main 검토와 순서 1–4 구현([PR #22](https://github.com/inlight37-design/decision-model_lab/pull/22)–[#25](https://github.com/inlight37-design/decision-model_lab/pull/25)). 주인 모듈별 반영, 검토 중 고친 결함, 검증 범위와 브라우저 미검증 |
 | [`2026-09-24-merge-22-25/`](2026-09-24-merge-22-25/README.md) | claude의 PR #22–#25 병합 검증([PR #26](https://github.com/inlight37-design/decision-model_lab/pull/26)). 정확한 head의 CI, 쌓인 브랜치의 인계 충돌과 통합 병합, 병합 트리 동일성, 코드 검토와 낮은 우선순위 발견 |
 
-최신 추가: [`2026-09-24-post-merge-verification/`](2026-09-24-post-merge-verification/README.md) — 병합 후 재검토, 실제 브라우저·K46 관측, 진단 출력 수정과 실행 계약 제안. GitHub 원문 대조는 같은 폴더의 [`GITHUB.md`](2026-09-24-post-merge-verification/GITHUB.md)에 있다.
+최신 추가: [`2026-09-24-execution-contract/`](2026-09-24-execution-contract/README.md) — claude의 순서 5 실행 계약(G4·G6) 구현([PR #30](https://github.com/inlight37-design/decision-model_lab/pull/30)). 계획 한 번, 계획에서 계산한 판, 옛 판의 정확한 대응, 시도에 저장한 실행 종류. 그 앞 [`2026-09-24-post-merge-verification/`](2026-09-24-post-merge-verification/README.md) — 병합 후 재검토, 실제 브라우저·K46 관측, 진단 출력 수정과 실행 계약 제안. GitHub 원문 대조는 같은 폴더의 [`GITHUB.md`](2026-09-24-post-merge-verification/GITHUB.md)에 있다.
 
 ## 읽는 순서
 
-최신 검토는 [병합 후 재검토·실제 관측](2026-09-24-post-merge-verification/README.md)이다. GitHub head checkout·CI·병합 이력, 실제 브라우저의 모의 흐름/Q4/교차 출처 차단, 승인된 K46 확인, Windows 진단 인코딩 수정과 실행 계약 제안을 담았다. G4·G6과 C3는 남는다. Q4는 화면 확인을 마쳤고 사용자 선택은 미정이다. 취소 확인창·실제 파일 다운로드 끝단은 도구 제약으로 미확인이다.
+최신 구현은 [순서 5 실행 계약](2026-09-24-execution-contract/README.md)이다. 아래 재검토의 제안대로 G4·G6을 닫았고, 옛 판은 실제로 돈 계획에만 대응시켜 기록된 Claude 관측으로는 허가가 나오지 않는다. 그 앞 검토는 [병합 후 재검토·실제 관측](2026-09-24-post-merge-verification/README.md)이다. GitHub head checkout·CI·병합 이력, 실제 브라우저의 모의 흐름/Q4/교차 출처 차단, 승인된 K46 확인, Windows 진단 인코딩 수정과 실행 계약 제안을 담았다. C3는 남는다. Q4는 화면 확인을 마쳤고 사용자 선택은 미정이다. 취소 확인창·실제 파일 다운로드 끝단은 도구 제약으로 미확인이다.
 
 그 앞 구현은 [새 main 후속](2026-09-24-offline-progression/README.md)의 PR #22–#25이며 [병합 검증](2026-09-24-merge-22-25/README.md)을 거쳐 main에 들어왔다. 아래 날짜 기록의 당시 표현은 유지한다.
 
@@ -57,6 +57,8 @@
 23. [`2026-09-24-structure-audit/`](2026-09-24-structure-audit/README.md) — 21 뒤의 main(`99d9bb4`) 전체에 대한 구조 검사. 22와 독립으로 썼다(blind). 사본이 흩어진 규칙, 문서와 코드가 다른 곳, 다음 기능 전에 할 통합. 22와의 비교는 같은 폴더의 `COMPARISON.md`
 24. [`2026-09-24-offline-progression/`](2026-09-24-offline-progression/README.md) — 23의 순서 1–4를 codex가 구현한 기록(PR #22–#25). 판단·주인 모듈·검토 중 고친 결함·검증 범위
 25. [`2026-09-24-merge-22-25/`](2026-09-24-merge-22-25/README.md) — 24의 PR들을 claude가 확인하고 병합한 기록. 쌓인 브랜치의 인계 충돌과 통합 병합, 병합 트리 동일성, 로컬 전체 시험과 코드 검토
+26. [`2026-09-24-post-merge-verification/`](2026-09-24-post-merge-verification/README.md) — codex의 병합 후 재검토(PR #28). GitHub 원문 대조, 실제 브라우저, 승인된 K46 확인, 진단 인코딩 수정, 실행 계약 제안
+27. [`2026-09-24-execution-contract/`](2026-09-24-execution-contract/README.md) — 26의 제안을 claude가 구현한 순서 5(PR #30). 계획 한 번, 계획에서 계산한 판, 옛 판의 정확한 대응, 시도에 저장한 실행 종류
 
 ## 25번 기록에 대한 단서
 

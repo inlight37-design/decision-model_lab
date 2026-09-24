@@ -1,6 +1,6 @@
 # tools/w2 — 격리 백엔드(bubblewrap) 관측
 
-최신 K46 관측: [2026-09-24 실제 확인](../../docs/experiments/w2-isolation/2026-09-24-k46-confirmation/README.md). Codex의 고정 helper에서 인증 파일 열기 금지를 확인했다. 전송·권한만 새 manifest의 `discussant-2`로 갱신했으며 C3 문맥은 failed, 실행 허가는 계속 없다. CLI와 실제 제공 모델의 일치는 별도 미확인이다.
+최신 K46 관측: [2026-09-24 실제 확인](../../docs/experiments/w2-isolation/2026-09-24-k46-confirmation/README.md). Codex의 고정 helper에서 인증 파일 열기 금지를 확인했다. 전송·권한만 새 manifest의 `discussant-2`로 갱신했으며 C3 문맥은 failed, 실행 허가는 계속 없다. 순서 5 뒤로 `discussant-2`는 K46이 실제로 돈 계획(공통 자료 하나)의 판 `codex@8a0128d4c791`만 뒷받침한다([`core/contract.py`](../../core/contract.py)의 `LEGACY`). 새 관측은 요약의 `spec.revision`을 기록의 `spec_revision`으로 옮긴다 — probe 변형(b1의 stream-json, `--keep-session`)은 참여자 계획과 다른 판이다. CLI와 실제 제공 모델의 일치는 별도 미확인이다.
 
 | 파일 | 무엇 |
 |---|---|

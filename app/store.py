@@ -22,7 +22,11 @@ from typing import Any, Iterator
 
 # 1: participants.attempt. 2: runs.quorum_policy. 3: runs.cancel_requested.
 # 4: runs.phase; runs.roster and note remain historical data, never synchronized by the controller.
-SCHEMA_VERSION = 4
+# 5: participants.kind — 시도의 실행 종류(mock/real/synthetic, core.contract). 화면·보고는 이것을 읽는다(G6).
+SCHEMA_VERSION = 5
+# 스키마 5 이전 시도의 종류는 시작 사건에 남은 실행기 이름에서만 복원한다. 모의 실행기의 이름은 격리 방식이었다.
+# 근거가 없으면 NULL로 두고, 화면은 "실행 종류 기록 없음"으로 보인다.
+LEGACY_EXECUTORS = {"bubblewrap": "mock", "job_object": "mock", "process_group": "mock", "cli": "real"}
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS runs (
   run_id TEXT PRIMARY KEY, created_at REAL NOT NULL, question TEXT NOT NULL, prompt TEXT NOT NULL,
@@ -34,7 +38,7 @@ CREATE TABLE IF NOT EXISTS runs (
 );
 CREATE TABLE IF NOT EXISTS participants (
   run_id TEXT NOT NULL, pid TEXT NOT NULL, spec TEXT NOT NULL, state TEXT NOT NULL,
-  status TEXT, detail TEXT, result TEXT, attempt TEXT, PRIMARY KEY (run_id, pid)
+  status TEXT, detail TEXT, result TEXT, attempt TEXT, kind TEXT, PRIMARY KEY (run_id, pid)
 );
 CREATE TABLE IF NOT EXISTS drafts (
   run_id TEXT NOT NULL, pid TEXT NOT NULL, text TEXT NOT NULL, sha256 TEXT NOT NULL,
@@ -136,6 +140,20 @@ class Store:
                             except (ValueError, AttributeError, TypeError) as exc:
                                 raise StoreError("cannot migrate malformed legacy run phase") from exc
                             self._db.execute("UPDATE runs SET phase = ? WHERE run_id = ?", (phase, run_id))
+                if version < 5:
+                    columns = {row[1] for row in self._db.execute("PRAGMA table_info(participants)")}
+                    if "kind" not in columns:
+                        self._db.execute("ALTER TABLE participants ADD COLUMN kind TEXT")
+                        for run_id, payload in self._db.execute(
+                                "SELECT run_id, payload FROM events WHERE kind = 'attempt_started'").fetchall():
+                            try:
+                                event = json.loads(payload)
+                                kind = LEGACY_EXECUTORS.get(event.get("executor"))
+                            except (ValueError, AttributeError):
+                                continue
+                            if kind:
+                                self._db.execute("UPDATE participants SET kind = ? WHERE run_id = ? AND pid = ? "
+                                                 "AND attempt = ?", (kind, run_id, event.get("pid"), event.get("attempt")))
                 if version != SCHEMA_VERSION:
                     self._db.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
                 self._db.execute("COMMIT")

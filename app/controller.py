@@ -47,7 +47,7 @@ from app.report import build_report
 from app.synthesis import SynthesisError, mock_synthesize, unavailable
 from app.state import (CLI, MANUAL, QUEUED, RUNNING, AWAITING_USER, ACCEPTED, REJECTED, UNKNOWN,
                        DONE, INDEPENDENT_ONLY, INCLUDE_UNVERIFIED, QUORUM_POLICIES, RunGate, gate)
-from core import adapters, env as core_env, isolation, membership as m, runner
+from core import adapters, contract, env as core_env, isolation, membership as m, runner
 
 PROMPT = ("다음 질문에, 다른 참여자의 답을 보지 않은 상태로 독립적으로 답하라. "
           "결론, 근거, 그리고 결론을 뒤집을 조건을 쓴다.\n\n질문:\n{question}\n")
@@ -58,9 +58,24 @@ SEALED_VIEW_KEYS = frozenset({"state", "exit_code", "containment", "tree_confirm
 # CLI가 쓴 자유 텍스트(오류 설명)와 runner 메모. 모든 참여자가 끝난 뒤에 넘긴다.
 DIAGNOSTIC_KEYS = frozenset({"detail", "notes"})
 
+# 참여자 표시. CLI는 시도 행에 저장한 실행 종류로 고른다 — 지금 붙은 실행기로 과거 시도를 짐작하지 않는다(G6).
 CONTAMINATION = {
     MANUAL: ("원본 앱의 메모리·다른 대화·프로젝트 지시문을 통제하지 못함", "사용량·시간 관측 안 됨"),
+    contract.MOCK: ("모의 CLI — 모델 호출 없음",),
+    contract.SYNTHETIC: ("합성 실행기 — 모델 호출 없음",),
+    contract.REAL: ("실제 CLI — 구독 사용량을 씀", "계정 문맥은 실행 허가의 관측 범위까지만 확인"),
 }
+NOT_RUN = ("실행하지 않음",)
+UNRECORDED = ("실행 종류 기록 없음",)
+
+
+def _flags(transport: str, part) -> tuple[str, ...]:
+    """시작하지 않은 시도(대기, 시작 전 취소, 계획·프로세스 거절)는 종류와 상관없이 "실행하지 않음"이다."""
+    if transport == MANUAL:
+        return CONTAMINATION[MANUAL]
+    if part["state"] == QUEUED or part["status"] in ("cancelled_before_start", "process_failed_to_start"):
+        return NOT_RUN
+    return CONTAMINATION.get(part["kind"], UNRECORDED)
 
 # 원본 앱에 옮기는 질문의 첫 줄과, 답에서 그것을 찾는 형식(N5)
 MARKER = "[Ledger {run_id}/{pid} · {sha8}]"
@@ -81,11 +96,16 @@ class ParticipantSpec:
 
 
 class Executor(Protocol):
+    """실행 계약(core.contract, G4). plan()이 최종 계획을 한 번 만들고 — 거절하면 예외, 아무것도 시작하지 않았다 —
+    run()이 그 계획 그대로 실행한다. kind는 이 실행기가 만드는 시도의 종류, adapter_ids는 받는 CLI다."""
     name: str
+    kind: str
+    adapter_ids: tuple[str, ...]
 
-    def execute(self, spec: ParticipantSpec, prompt: str, work_dir: str,
-                timeout: float, *, cancel: threading.Event | None = None
-                ) -> tuple[runner.RunResult, adapters.Outcome]: ...
+    def plan(self, spec: ParticipantSpec, prompt: str, work_dir: str) -> contract.Plan: ...
+
+    def run(self, plan: contract.Plan, timeout: float, *, cancel: threading.Event | None = None
+            ) -> tuple[runner.RunResult, adapters.Outcome]: ...
 
 
 class MockExecutor:
@@ -94,26 +114,41 @@ class MockExecutor:
 
     SCRIPT = str(Path(__file__).with_name("fake_cli.py"))
     FLAVOR = {"claude-code": "claude", "codex": "codex"}
+    kind = contract.MOCK
+    adapter_ids = tuple(FLAVOR)
 
     def __init__(self, never: tuple[str, ...] = ()) -> None:
         self.never = never
         self.isolated = sys.platform == "linux" and _bwrap_trusted()
         self.name = "bubblewrap" if self.isolated else ("job_object" if runner.IS_WINDOWS else "process_group")
 
-    def execute(self, spec, prompt, work_dir, timeout, *, cancel=None):
-        flavor = self.FLAVOR[spec.adapter_id]
-        if self.isolated:
-            box = isolation.Sandbox(work_dir=work_dir, home=work_dir + "-home",
-                                    read_only=(os.path.dirname(self.SCRIPT),), env={"LANG": "C.UTF-8"},
-                                    never=self.never)
-            result = isolation.run(["/usr/bin/python3", self.SCRIPT, flavor, spec.behavior], box,
-                                   timeout=timeout, stdin_text=prompt, cancel=cancel)
+    def plan(self, spec, prompt, work_dir):
+        python = "/usr/bin/python3" if self.isolated else sys.executable
+        data = prompt.encode("utf-8")
+        planned = adapters.ExecutionSpec(spec.adapter_id, (python, self.SCRIPT, self.FLAVOR[spec.adapter_id],
+                                                           spec.behavior),
+                                         prompt, adapters.STDIN, hashlib.sha256(data).hexdigest(), len(data))
+        box = isolation.Sandbox(work_dir=work_dir, home=work_dir + "-home", read_only=(os.path.dirname(self.SCRIPT),),
+                                env={"LANG": "C.UTF-8"}, never=self.never) if self.isolated else None
+        tmpl = contract.template(planned, box, home=work_dir + "-home")
+        return contract.Plan(contract.MOCK, planned, work_dir, box, spec.model or "", (), contract.revision(tmpl), tmpl)
+
+    def run(self, plan, timeout, *, cancel=None):
+        if plan.box is not None:
+            result = isolation.run(list(plan.spec.argv), plan.box, timeout=timeout, stdin_text=plan.spec.stdin_text,
+                                   cancel=cancel)
         else:
             child, _ = core_env.child_env(os.environ)
             child["PYTHONUTF8"] = "1"
-            result = runner.run([sys.executable, self.SCRIPT, flavor, spec.behavior], cwd=work_dir, env=child,
-                                timeout=timeout, stdin_text=prompt, cancel=cancel)
-        return result, adapters.interpret(spec.adapter_id, result, requested_model=spec.model or "")
+            result = runner.run(list(plan.spec.argv), cwd=plan.work_dir, env=child, timeout=timeout,
+                                stdin_text=plan.spec.stdin_text, cancel=cancel)
+        return result, adapters.interpret(plan.spec.adapter_id, result, requested_model=plan.model)
+
+
+def _not_started(spec: ParticipantSpec, error: str) -> tuple[runner.RunResult, adapters.Outcome]:
+    """프로세스를 만들기 전에 끝난 시도. 아무것도 시작하지 않았으므로 unknown이 아니다."""
+    result = runner.RunResult((), runner.FAILED_TO_START, None, "", "", False, False, 0, None, True, error=error)
+    return result, adapters.interpret(spec.adapter_id, result, requested_model=spec.model or "")
 
 
 def _bwrap_trusted() -> bool:
@@ -208,7 +243,7 @@ class Controller:
         if len({p.pid for p in participants}) != len(participants) or not participants:
             raise ControllerError("participants must be unique and non-empty")
         for p in participants:
-            if p.transport not in (CLI, MANUAL) or (p.transport == CLI and p.adapter_id not in MockExecutor.FLAVOR):
+            if p.transport not in (CLI, MANUAL) or (p.transport == CLI and p.adapter_id not in self.executor.adapter_ids):
                 raise ControllerError(f"unsupported participant {p.pid!r}")
         if quorum_policy not in QUORUM_POLICIES:
             raise ControllerError(f"quorum_policy must be one of {', '.join(QUORUM_POLICIES)}")
@@ -264,40 +299,35 @@ class Controller:
                 work = os.path.join(self.work_root, row["run_id"], spec.pid)
                 os.makedirs(work, exist_ok=True)
                 prompt = self._run(row["run_id"])["prompt"]
-                record = self._describe(spec, prompt)
+                # 최종 계획을 한 번 만든다. 그 기록(질문 본문 없이)과 실행 종류를 시도 ID와 함께 저장한 뒤에만 같은
+                # 계획을 실행한다(G4·G6). 저장하지 못하면 실행하지 않는다.
+                try:
+                    plan, refused = self.executor.plan(spec, prompt, work), None
+                    record, kind = plan.record(), plan.kind
+                except Exception as exc:  # 거절: 아무것도 시작하지 않았다
+                    plan, refused = None, f"{type(exc).__name__}: {exc}"
+                    record, kind = {"adapter_id": spec.adapter_id, "refused": refused}, self.executor.kind
                 with self.store.tx() as tx:
                     part = self._part(row["run_id"], spec.pid)
                     taken = (self._gate(row["run_id"]).accepting and part["state"] == QUEUED
-                             and self._transition(tx, part, RUNNING, attempt=attempt))
+                             and self._transition(tx, part, RUNNING, attempt=attempt, kind=kind))
                     if taken:
                         tx.event(row["run_id"], "attempt_started", pid=spec.pid, attempt=attempt,
-                                 executor=self.executor.name, behavior=spec.behavior,
-                                 **({"spec": record} if record is not None else {}))
+                                 executor=self.executor.name, execution=kind, behavior=spec.behavior, spec=record)
                 if not taken:
+                    continue
+                if plan is None:
+                    self._finish(row["run_id"], spec.pid, attempt, *_not_started(spec, refused))
                     continue
                 cancel = threading.Event()
                 thread = threading.Thread(target=self._attempt,
-                                          args=(row["run_id"], spec, attempt, prompt, work, cancel), daemon=True)
+                                          args=(row["run_id"], spec, attempt, plan, cancel), daemon=True)
                 self._workers[attempt] = (thread, cancel)
                 try:
                     thread.start()
                 except RuntimeError:
                     self._workers.pop(attempt)
-                    result = runner.RunResult((), runner.FAILED_TO_START, None, "", "", False, False, 0, None, True,
-                                              error="worker thread did not start")
-                    self._finish(row["run_id"], spec.pid, attempt, result,
-                                 adapters.interpret(spec.adapter_id, result, requested_model=spec.model or ""))
-
-    def _describe(self, spec: ParticipantSpec, prompt: str) -> dict | None:
-        """실행기가 알려 주는 실행 명세(ExecutionSpec.record() — 질문 본문 없이 digest와 크기). 시작 사건에
-        시도 ID와 함께 남긴다(N1). describe가 없는 실행기(모의·합성)는 남기지 않는다."""
-        describe = getattr(self.executor, "describe", None)
-        if describe is None:
-            return None
-        try:
-            return describe(spec, prompt)
-        except Exception as exc:  # 기록을 못 만든다고 시도를 막지 않는다. 실행에서 같은 이유로 거절된다
-            return {"refused": type(exc).__name__}
+                    self._finish(row["run_id"], spec.pid, attempt, *_not_started(spec, "worker thread did not start"))
 
     def resume(self) -> None:
         """다시 시작한 뒤 멈춰 둔 대기 시도를 사용자가 이어서 시작하라고 했다."""
@@ -305,11 +335,11 @@ class Controller:
             self.paused = False
         self.pump()
 
-    def _attempt(self, run_id: str, spec: ParticipantSpec, attempt: str, prompt: str, work: str,
+    def _attempt(self, run_id: str, spec: ParticipantSpec, attempt: str, plan: contract.Plan,
                  cancel: threading.Event) -> None:
         try:
             try:
-                result, outcome = self.executor.execute(spec, prompt, work, self.timeout, cancel=cancel)
+                result, outcome = self.executor.run(plan, self.timeout, cancel=cancel)
             except Exception as exc:  # 실행기 자체 실패: 자손 종료는 확인하지 못했다
                 result, outcome, detail = None, None, f"executor error: {type(exc).__name__}"
             else:
@@ -525,7 +555,8 @@ class Controller:
                     item = {"pid": spec.pid, "label": spec.label, "provider": spec.provider,
                             "transport": spec.transport, "behavior": spec.behavior if spec.transport == CLI else None,
                             "state": p["state"], "status": p["status"], "detail": p["detail"] if settled else None,
-                            "contamination": list(CONTAMINATION.get(spec.transport, ("모의 CLI — 모델 호출 없음",))),
+                            "contamination": list(_flags(spec.transport, p)),
+                            "execution": p["kind"] if spec.transport == CLI else None,
                             "independence": "confirmed" if spec.transport == CLI else "unverified",
                             "result": result, "dropped": spec.pid in current_gate.dropped}
                     if current_gate.accepting and spec.transport == MANUAL and p["state"] == AWAITING_USER:
@@ -579,7 +610,7 @@ class Controller:
                    AWAITING_USER: (ACCEPTED, REJECTED), UNKNOWN: (REJECTED,)}
         if state not in allowed.get(expected["state"], ()):
             raise ControllerError(f"invalid participant transition {expected['state']} -> {state}")
-        if set(changes) - {"status", "detail", "result", "attempt"}:
+        if set(changes) - {"status", "detail", "result", "attempt", "kind"}:
             raise ControllerError("invalid participant transition fields")
         updates = {"state": state, **changes}
         assignments = ", ".join(f"{name} = ?" for name in updates)

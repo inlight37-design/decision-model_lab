@@ -10,10 +10,11 @@ from copy import deepcopy
 import hashlib
 from typing import Any
 
-SCHEMA = "a1-draft-report/2"
+# 3: 참여자마다 시도에 저장한 실행 종류(execution)를 싣고, 출처의 "지금 붙은 실행기"는 뺐다(G6).
+SCHEMA = "a1-draft-report/3"
 # 공개 투영에 나중에 필드가 늘어도 원장·토큰·자유 메타데이터를 통째로 내보내지 않는다.
 PARTICIPANT_FIELDS = ("pid", "label", "provider", "transport", "independence", "state", "status", "dropped",
-                      "contamination")
+                      "contamination", "execution")
 OBSERVATION_FIELDS = ("state", "exit_code", "containment", "tree_confirmed_empty", "input_delivery", "duration_ms",
                       "status", "ok", "requested_model", "reported_models", "model_match", "usage", "source",
                       "marker_echo", "user_confirmed", "independence")
@@ -52,8 +53,7 @@ def build_report(view: dict[str, Any], run_id: str) -> dict[str, Any]:
     return {
         "schema": SCHEMA,
         "disposition": "report_without_synthesis",
-        "source": {"run_id": run_id, "created_at": run["created_at"], "phase": run["phase"],
-                   "executor": view["executor"]},
+        "source": {"run_id": run_id, "created_at": run["created_at"], "phase": run["phase"]},
         "input": {"question": run["question"], "prompt": run["prompt"], "sha256": run["input_sha256"],
                   "bytes": run["input_bytes"]},
         "quorum": {key: deepcopy(run["quorum"][key]) for key in QUORUM_FIELDS},
