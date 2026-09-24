@@ -490,6 +490,8 @@ def claude_permission_evidence(stdout: str, forbidden: str) -> dict:
     """Use the CLI's denial record for this fixture, never a model's description."""
     init, terminal, _used = adapters.claude_stream(stdout)
     denials = terminal.get("permission_denials", [])
+    if not isinstance(denials, list):
+        denials = []
     return {"read_only_surface": init.get("tools") == ["Read"] and init.get("mcp_servers") == [],
             "dont_ask": init.get("permissionMode") == "dontAsk",
             "denied_reads": sum(isinstance(d, dict) and d.get("tool_name") == "Read" for d in denials),

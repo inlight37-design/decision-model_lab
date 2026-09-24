@@ -40,6 +40,10 @@ class StreamTests(unittest.TestCase):
         stream = '\n'.join(json.dumps(e) for e in events)
         self.assertTrue(claude_permission_evidence(stream, '/fixture/peer.txt')['forbidden_read_denied'])
         self.assertFalse(claude_permission_evidence(stream, '/fixture/different.txt')['forbidden_read_denied'])
+        events[-1]['permission_denials'] = None
+        missing = claude_permission_evidence('\n'.join(json.dumps(e) for e in events), '/fixture/peer.txt')
+        self.assertEqual(missing['denied_reads'], 0)
+        self.assertFalse(missing['forbidden_read_denied'])
 
     def test_changed_surface_or_unoffered_tool_cannot_be_accepted(self):
         for field, value in (('tools', ['Read', 'Bash']), ('tools', None),

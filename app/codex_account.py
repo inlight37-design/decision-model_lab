@@ -2,8 +2,8 @@
 
 Default is a no-process plan. --probe uses the existing bubblewrap boundary and runner.
 Only a quota allowlist leaves the sandbox; account identity, credentials, stderr and raw
-protocol messages are not saved. Native installed-version compatibility still needs a PC
-observation. Protocol source: https://developers.openai.com/codex/app-server (2026-09-24).
+protocol messages are not saved. Native 0.156.1 was observed on the user's WSL; other versions
+need their own compatibility check. Source: https://developers.openai.com/codex/app-server (2026-09-24).
 """
 from __future__ import annotations
 
