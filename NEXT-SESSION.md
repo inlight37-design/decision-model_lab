@@ -85,6 +85,8 @@
 
 **진행 중:** `codex/shared-policies-20260924` — 순서 1의 공유 정책 통합. 실행 허가가 공통 행 검사를 사용하고, Python 가림·init 이름 공개 규칙을 공유한다. 새 원장은 정족수 정책을 생략할 수 없고, 옛 원장의 이전 기본값은 보존한다. 토큰 환경변수의 전달/격리 거절 경계는 표로 명시한다. 실제 모델 호출·관측 판정·GitHub 설정 변경은 없다. main 대상 draft PR로 제안하며 GitHub CI 결과는 해당 PR에서 확인한다.
 
+**CI 후속:** Linux 관측 시험을 개수만 공개하는 init과 더 강한 자격증명 가림에 맞췄다. 빠르게 만든 실행의 짧은 UUID 접미사가 충돌하는 문제도 확인해 전체 UUID로 바꾸고, 같은 접두사를 가진 두 실행으로 회귀 검증했다. 이 수정의 로컬 WSL 전체 오프라인 시험은 성공했으며 Windows 레지스트리 시험만 해당 OS가 아니어서 건너뛰었다. Windows에서도 실행 식별자·완료 작업 정리 회귀를 확인했다. 새 head의 CI 결과는 PR에서 확인한다.
+
 - **마지막 병합:** [PR #21](https://github.com/inlight37-design/decision-model_lab/pull/21)(`claude/cleanup-merge-branches-il1srl`, 문서만, 모델 호출 없음) — [구조 전수검사](docs/reviews/2026-09-24-structure-audit/README.md), 간결성 검토와의 [비교](docs/reviews/2026-09-24-structure-audit/COMPARISON.md), 다음 일의 순서(4절).
   - 결론: 뼈대는 구조적이고 살은 리뷰마다 덧댔다. 전면 재작성은 필요 없다. 흩어진 사본을 한 주인으로 모은다.
   - 재현한 틈 G1–G9는 PR #20 뒤의 main에서도 그대로다. 4절 순서표가 그것부터 다룬다.
