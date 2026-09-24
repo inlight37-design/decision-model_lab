@@ -465,6 +465,10 @@ def summary(manifest: dict[str, Any]) -> list[str]:
 
 
 def main(argv: list[str] | None = None) -> int:
+    # Windows에서 출력을 파일/파이프로 보내도 한글·기호를 UTF-8로 보존한다.
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--host-label", help="기기 이름표. 영소문자·숫자·하이픈. 실제 hostname을 쓰지 않는다")
     parser.add_argument("--out", type=Path, help="기본값: docs/experiments/v04-01-inventory/hosts/<label>")

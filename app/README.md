@@ -90,7 +90,7 @@ python -m app.server --port 8765
 
 합성은 원문의 줄을 발췌해 같은 문장만 묶는 모의 구현이다. 실행 ID·참여자·문자 위치·저장 해시로 원문 일치를 검사하며, 문장의 의미나 진실은 판정하지 않는다. 모든 주장은 `unresolved`, 카드는 `qualified`다. 표시 한도와 같은 참여자의 반복 줄은 생략 수를 표시하고 전체 초안은 보존한다. 반례와 미합의를 해결했다고 주장하지 않는다.
 
-같은 결과를 **A · 결정 우선 / B · 대조표 우선**으로 바꿔 볼 수 있다. Q4 선호를 저장하거나 확정하지 않는다. 결정 보고서 `GET /api/runs/<run_id>/decision-report`는 모의 결과와 원문 보고를 함께 내보낸다. 회귀 시험은 [`test_app_synthesis.py`](../tests/test_app_synthesis.py)에 있다. 실제 브라우저 시각 검증과 사용자 비교 판단은 별도다.
+같은 결과를 **A · 결정 우선 / B · 대조표 우선**으로 바꿔 볼 수 있다. Q4 선호를 저장하거나 확정하지 않는다. 결정 보고서 `GET /api/runs/<run_id>/decision-report`는 모의 결과와 원문 보고를 함께 내보낸다. 회귀 시험은 [`test_app_synthesis.py`](../tests/test_app_synthesis.py)에 있다. aux-pc의 실제 내장 Chromium에서 데스크톱/좁은 폭의 두 배치와 모의 흐름을 [확인했다](../docs/reviews/2026-09-24-post-merge-verification/README.md). 사용자 선택, 다른 브라우저, 실제 다운로드 완료와 취소 확인창 승인은 남았다.
 
 ## 아직 없는 것
 
