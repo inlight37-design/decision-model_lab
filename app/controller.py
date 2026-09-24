@@ -84,6 +84,13 @@ def _checked_sources(items) -> list[tuple[str, bytes]]:
         checked.append((name, data))
     return sorted(checked)
 
+
+def _source_footer(folder: str, sources) -> str:
+    """생성과 재개가 같은 자료 목록 형식을 쓴다. 경로도 고정 질문의 일부이므로 조용히 바꾸지 않는다."""
+    return PROMPT_SOURCES.format(
+        count=len(sources), folder=folder,
+        listing="\n".join(f"- {item['name']} ({item['bytes']} bytes, sha256 {item['sha256']})" for item in sources))
+
 # 공개 전 화면에 넘기는 결과 필드. 값이 정해진 것만 둔다 — 막을 것을 고르지 않고 넘길 것을 고른다(A1-01).
 SEALED_VIEW_KEYS = frozenset({"state", "exit_code", "containment", "tree_confirmed_empty", "input_delivery",
                               "status", "ok", "model_match"})
@@ -302,10 +309,9 @@ class Controller:
         run_id = f"r{time.strftime('%m%d-%H%M%S')}-{uuid.uuid4().hex}"
         prompt = PROMPT.format(question=question)
         if checked_sources:
-            prompt += PROMPT_SOURCES.format(
-                count=len(checked_sources), folder=self._source_root(run_id),
-                listing="\n".join(f"- {name} ({len(data)} bytes, sha256 {hashlib.sha256(data).hexdigest()})"
-                                  for name, data in checked_sources))
+            prompt += _source_footer(self._source_root(run_id), [
+                {"name": name, "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()}
+                for name, data in checked_sources])
         data = prompt.encode("utf-8")
         with self.lock, self.store.tx() as tx:
             for name, content in checked_sources:
@@ -340,9 +346,14 @@ class Controller:
         """원장의 자료를 폴더로 두고, 시도마다 원장의 목록·크기·sha256과 다시 맞춘다. 다르면 거절한다 — 아무것도
         시작하지 않았다. 폴더는 임시 이름으로 다 쓴 뒤 한 번에 옮긴다. 시도 도중의 바꿔치기(K14)는 막지 못한다."""
         rows = self.store.rows("SELECT name, sha256, bytes, content FROM sources WHERE run_id = ? ORDER BY name", run_id)
+        root = self._source_root(run_id)
+        run = self._run(run_id)
+        expected = PROMPT.format(question=run["question"]) + (_source_footer(root, rows) if rows else "")
+        if run["prompt"] != expected:
+            raise ControllerError("the fixed source manifest or folder differs from the original prompt; "
+                                  "no call was started")
         if not rows:
             return None
-        root = self._source_root(run_id)
         if not os.path.isdir(root):
             staging = f"{root}.{uuid.uuid4().hex}.tmp"
             os.makedirs(staging)
