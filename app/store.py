@@ -128,7 +128,9 @@ class Store:
                         for run_id, roster in self._db.execute("SELECT run_id, roster FROM runs").fetchall():
                             try:
                                 legacy = json.loads(roster)
-                                phase = legacy.get("phase", "drafting")
+                                # A missing phase does not prove that drafts were still sealed.
+                                # Never reset an ambiguous legacy run to the pre-reveal state.
+                                phase = legacy.get("phase")
                                 if phase not in ("preflight", "drafting", "revealed", "synthesis"):
                                     raise ValueError("invalid phase")
                             except (ValueError, AttributeError, TypeError) as exc:

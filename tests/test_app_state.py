@@ -126,3 +126,22 @@ class PhaseMigrationTests(support.Base):
         self.addCleanup(db.close)
         self.assertEqual(db.execute("PRAGMA user_version").fetchone()[0], 3)
         self.assertNotIn("phase", [row[1] for row in db.execute("PRAGMA table_info(runs)")])
+
+    def test_missing_legacy_phase_cannot_reset_a_revealed_run(self):
+        path, rid = self.legacy_run("revealed")
+        db = sqlite3.connect(path)
+        db.execute("UPDATE runs SET roster = '{}' WHERE run_id = ?", (rid,))
+        db.commit()
+        db.close()
+        # Guessing 'drafting' used to hide this run during migration and emit a second reveal
+        # on controller recovery. Missing evidence must leave the old journal untouched.
+        for _ in range(2):
+            with self.assertRaisesRegex(s.StoreError, "malformed legacy run phase"):
+                s.Store(path)
+        db = sqlite3.connect(path)
+        self.addCleanup(db.close)
+        self.assertEqual(db.execute("PRAGMA user_version").fetchone()[0], 3)
+        self.assertNotIn("phase", [row[1] for row in db.execute("PRAGMA table_info(runs)")])
+        self.assertEqual(db.execute("SELECT text FROM drafts WHERE run_id = ?", (rid,)).fetchone()[0], "published")
+        self.assertEqual(db.execute("SELECT count(*) FROM events WHERE run_id = ? AND kind = 'revealed'",
+                                    (rid,)).fetchone()[0], 1)
