@@ -75,6 +75,9 @@ def problems(paths: list[Path]) -> list[str]:
 
 
 def main() -> int:
+    # Windows의 리디렉션된 출력은 CP1252일 수도 있다. 파일 검사와 별도로 출력도 UTF-8로 고정한다.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     missing: list[str] = []
     if len(sys.argv) > 1:
         paths = [Path(argument).resolve() for argument in sys.argv[1:]]

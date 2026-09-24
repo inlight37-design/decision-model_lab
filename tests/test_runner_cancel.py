@@ -67,7 +67,7 @@ class CancellationBoundaryTests(unittest.TestCase):
         from core import contract
         cancel = threading.Event()
         ex = CliExecutor(never=(), unchecked=True, base_env={})
-        planned = SimpleNamespace(argv=(sys.executable,), stdin_text="q", adapter_id="claude-code")
+        planned = SimpleNamespace(argv=(sys.executable, "--tools", ""), stdin_text="q", adapter_id="claude-code")
         plan = contract.Plan(contract.REAL, planned, "/unused", object(), "m")
         result = r.RunResult((), r.FAILED_TO_START, None, "", "", False, False, 0, None, True)
         with patch("app.cli_executor.isolation.run", return_value=result) as run:

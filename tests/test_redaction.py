@@ -66,7 +66,7 @@ class InitPublicationTests(unittest.TestCase):
         spec.loader.exec_module(standalone)
         old = standalone.summarize(self.INIT, {"result": "person@example.test"}, "a" * 64, "b" * 40)
         run = SimpleNamespace(state="exited", exit_code=0, duration_ms=1, containment="pid_namespace",
-                              tree_confirmed_empty=True, input_delivery="complete", stderr_counts={}, stderr="")
+                              tree_confirmed_empty=True, input_delivery="complete", stderr_counts={}, stderr="", stdout="")
         outcome = SimpleNamespace(text="OK", status="ok", ok=True, reported_models=("m",), model_match=True,
                                   usage={}, permission_denials=[], tool_events=[], detail=None)
         with tempfile.TemporaryDirectory() as tmp:

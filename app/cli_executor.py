@@ -20,7 +20,7 @@
   기록과 같고, 구독 로그인일 때만 부른다(core.eligibility). 기록 없이 부르는 것은 관측 도구와 시험뿐이다(unchecked).
   명시적 문맥 미확인 정책은 C3 의미상 합격만 제외하고 계획에 기록한다. 다른 관문과 과금 제한은 유지한다.
 
-서버는 --live-cli로 명시한 경우에만 이 실행기를 쓴다. 문맥 미확인 실행은 별도 opt-in이며 다른 관문은 유지한다.
+서버는 --live-cli/--live-config로 명시한 경우에만 쓴다. 문맥 미확인 실행은 별도 opt-in이며 다른 관문은 유지한다.
 """
 from __future__ import annotations
 
@@ -60,15 +60,23 @@ class CliExecutor:
     def __init__(self, *, never: Sequence[str], inventory: str | Path | None = None, unchecked: bool = False,
                  home: str | None = None, base_env: Mapping[str, str] | None = None,
                  max_output_bytes: int = runner.DEFAULT_MAX_OUTPUT, allow_context_unverified: bool = False,
-                 default_inputs: Sequence[str] = ()) -> None:
+                 default_inputs: Sequence[str] = (),
+                 inputs_by_adapter: Mapping[str, Sequence[str]] | None = None,
+                 inventories_by_adapter: Mapping[str, str | Path] | None = None) -> None:
         """never: 참여자에게 보이면 안 되는 경로(controller 데이터 폴더). inventory: 이 기기의 `runtime-inventory/2`
         기록 — 시도마다 다시 읽어 실행 허가를 계산한다. unchecked: 허가를 계산하지 않는다(관측 도구·시험만).
         base_env: 실행 파일을 찾을 환경."""
-        if inventory is None and not unchecked:
+        if inventory is None and not inventories_by_adapter and not unchecked:
             raise ValueError("the real CLI executor needs a runtime-inventory/2 record (inventory=...); "
                              "only observation tools and tests run it unchecked")
         self.never = tuple(never)
         self.inventory = None if inventory is None else Path(inventory)
+        self.unchecked = unchecked
+        self.inventories_by_adapter = {key: Path(value) for key, value in (inventories_by_adapter or {}).items()}
+        self.inputs_by_adapter = {key: tuple(str(Path(p).resolve()) for p in paths)
+                                  for key, paths in (inputs_by_adapter or {}).items()}
+        if (set(self.inventories_by_adapter) | set(self.inputs_by_adapter)) - set(SUPPORTED):
+            raise ValueError("unknown adapter in provider configuration")
         self.home = home or os.path.expanduser("~")
         self.child_env, _ = core_env.child_env(os.environ if base_env is None else base_env)
         self.max_output_bytes = max_output_bytes
@@ -76,10 +84,13 @@ class CliExecutor:
         self.default_inputs = tuple(str(Path(p).resolve()) for p in default_inputs)
 
     def _check_eligible(self, adapter_id: str, exe: str, revision: str) -> None:
-        if self.inventory is None:
-            return
+        inventory = self.inventories_by_adapter.get(adapter_id, self.inventory)
+        if inventory is None:
+            if self.unchecked:
+                return
+            raise adapters.AdapterError("no inventory configured for this adapter")
         try:
-            record = eligibility.load(self.inventory)
+            record = eligibility.load(inventory)
         except (OSError, ValueError) as exc:
             raise adapters.AdapterError(f"cannot read the inventory: {type(exc).__name__}") from None
         verdict = eligibility.eligibility(record, adapter_id, enabled=True, today=date.today(),
@@ -98,7 +109,7 @@ class CliExecutor:
         """
         if spec.adapter_id not in SUPPORTED:
             raise adapters.AdapterError(f"{spec.adapter_id!r} is not run by the CLI executor")
-        inputs = self.default_inputs if inputs is None else tuple(inputs)
+        inputs = self.inputs_by_adapter.get(spec.adapter_id, self.default_inputs) if inputs is None else tuple(inputs)
         exe = core_env.resolve(adapters.ADAPTERS[spec.adapter_id].command, self.child_env)
         # Claude는 읽을 폴더를 --add-dir로 알려 주고 Read 도구만 준다. Codex에는 그런 옵션을 주지 않는다 —
         # 격리 안에 읽기 전용으로 보이는 것만 읽을 수 있다. 대신 Codex의 명령이 자기 로그인 파일을 읽지 못하게
@@ -133,4 +144,9 @@ class CliExecutor:
         except REFUSED_BEFORE_START as exc:
             result = runner.RunResult((), runner.FAILED_TO_START, None, "", "", False, False, 0, None, True,
                                       error=f"{type(exc).__name__}: {exc}")
-        return result, adapters.interpret(plan.spec.adapter_id, result, requested_model=plan.model)
+        expected_tools = None
+        if plan.spec.adapter_id == "claude-code":
+            configured = plan.spec.argv[plan.spec.argv.index("--tools") + 1]
+            expected_tools = tuple(configured.split(",")) if configured else ()
+        return result, adapters.interpret(plan.spec.adapter_id, result, requested_model=plan.model,
+                                         claude_tools=expected_tools)

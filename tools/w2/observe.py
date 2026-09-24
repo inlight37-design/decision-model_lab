@@ -55,7 +55,6 @@ from __future__ import annotations
 
 import argparse
 import contextlib
-import dataclasses
 import json
 import os
 from pathlib import Path
@@ -344,8 +343,9 @@ def _argv_for(probe: str, argv: list[str], keep_session: bool = False) -> tuple[
         changes.append("- --ephemeral (keep the session record)")
     if probe in ("b1", "b1-combo"):
         i = argv.index("--output-format")
-        argv[i + 1:i + 2] = ["stream-json", "--verbose"]   # init 이벤트를 보려고. 마지막 result는 json과 같은 모양
-        changes.append("--output-format stream-json --verbose")
+        if argv[i + 1] != "stream-json":
+            argv[i + 1:i + 2] = ["stream-json", "--verbose"]
+            changes.append("--output-format stream-json --verbose")
     if probe == "b1-combo":
         argv.insert(argv.index("--restricted") + 1, "--safe-mode")
         changes.append("+ --safe-mode")
@@ -486,6 +486,20 @@ def session_shape(path: Path, scrub, prompt_mark: str | None = None) -> dict:
             "long_texts_not_listed": max(0, len(texts) - 40)}
 
 
+def claude_permission_evidence(stdout: str, forbidden: str) -> dict:
+    """Use the CLI's denial record for this fixture, never a model's description."""
+    init, terminal, _used = adapters.claude_stream(stdout)
+    denials = terminal.get("permission_denials", [])
+    if not isinstance(denials, list):
+        denials = []
+    return {"read_only_surface": init.get("tools") == ["Read"] and init.get("mcp_servers") == [],
+            "dont_ask": init.get("permissionMode") == "dontAsk",
+            "denied_reads": sum(isinstance(d, dict) and d.get("tool_name") == "Read" for d in denials),
+            "forbidden_read_denied": any(isinstance(d, dict) and d.get("tool_name") == "Read"
+                                         and isinstance(d.get("tool_input"), dict)
+                                         and d["tool_input"].get("file_path") == forbidden for d in denials)}
+
+
 def summarize(probe: str, run: runner.RunResult, outcome: adapters.Outcome, *, record: dict, argv: list[str],
               changes: list[str], work: Path, home: str, init: dict | None) -> dict:
     """spec은 실제로 돌린 계획의 기록(판 포함)이고, argv_changes는 probe가 참여자 argv에서 바꾼 것이다."""
@@ -576,10 +590,15 @@ def call(state: Path, probe: str, model: str, *, pad_kb: int = 0, after_failure:
                 shutil.move(found, target)
                 kept.append(target)
         init, result = _stream_json(run.stdout) if probe in ("b1", "b1-combo") else (None, None)
-        judged = dataclasses.replace(run, stdout=json.dumps(result)) if result is not None else run
-        outcome = adapters.interpret(ADAPTER[provider], judged, requested_model=model)
+        expected_tools = None
+        if provider == "claude" and probe not in EXPECT_REFUSAL:
+            configured = argv[argv.index("--tools") + 1]
+            expected_tools = tuple(configured.split(",")) if configured else ()
+        outcome = adapters.interpret(ADAPTER[provider], run, requested_model=model, claude_tools=expected_tools)
         summary = summarize(probe, run, outcome, record=planned.record(), argv=argv, changes=changes, work=work,
                             home=executor.home, init=init)
+        if probe == "b1" and outcome.ok:
+            summary["permission_evidence"] = claude_permission_evidence(run.stdout, str(state / "peer/forbidden.txt"))
         # 모델이 돌린 명령의 실제 출력에서 판정한다. 모델이 답에 옮겨 적은 값이 아니다(리뷰 R01)
         k46 = k46_check(_codex_items(run.stdout), nonce, str(inputs / K46_FILE)) if probe == "k46-codex" else None
         if k46 is not None:

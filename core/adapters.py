@@ -198,7 +198,7 @@ def build_spec(adapter_id: str, *, exe: str, prompt: str, model: str, role: str 
         _require(effort is None, "effort is not wired for claude-code yet")
         _require(len(data) <= CLAUDE_MAX_STDIN, "prompt exceeds the 10MB stdin limit of claude -p")
         # 위치 인자 없이 -p만 주면 질문을 stdin에서 읽는다.
-        argv = [exe, "-p", "--output-format", "json", "--model", model,
+        argv = [exe, "-p", "--output-format", "stream-json", "--verbose", "--model", model,
                 "--permission-mode", "dontAsk", "--no-session-persistence",
                 "--strict-mcp-config", "--disable-slash-commands",
                 "--restricted" if claude_context == "restricted" else "--safe-mode"]
@@ -265,7 +265,8 @@ def _single_json(stdout: str) -> dict | None:
     return value if isinstance(value, dict) else None
 
 
-def interpret(adapter_id: str, run: RunResult, *, requested_model: str) -> Outcome:
+def interpret(adapter_id: str, run: RunResult, *, requested_model: str,
+              claude_tools: tuple[str, ...] | None = None) -> Outcome:
     """실행 결과를 의미로 바꾼다. 프로세스가 끝났다고 확인되지 않으면 답이 보여도 성공이 아니다.
 
     CLI 출력은 외부 입력이다. 문법이 맞는 JSON이어도 중첩 값의 타입이 다르면 예외 대신
@@ -284,6 +285,12 @@ def interpret(adapter_id: str, run: RunResult, *, requested_model: str) -> Outco
         return Outcome(ok=False, status="format_error", text=None, reported_models=(), model_match=None,
                        detail="stdout exceeded the runner limit", **base)
     try:
+        if adapter_id == "claude-code" and claude_tools is not None:
+            init, _result, used = claude_stream(run.stdout)
+            if (init.get("tools") != list(claude_tools) or init.get("permissionMode") != "dontAsk"
+                    or init.get("mcp_servers") != [] or any(name not in claude_tools for name in used)):
+                return Outcome(ok=False, status="permission_mismatch", text=None, reported_models=(),
+                               model_match=None, detail="Claude reported an unexpected tool or permission surface", **base)
         return _parse(adapter_id, run, base)
     except (AttributeError, TypeError, KeyError, RecursionError, _Shape) as exc:
         # RecursionError: 문법은 맞지만 아주 깊게 중첩된 JSON(WSL2 리뷰 WM-06)
@@ -294,6 +301,39 @@ def interpret(adapter_id: str, run: RunResult, *, requested_model: str) -> Outco
 
 class _Shape(ValueError):
     """출력의 중첩 값이 예상한 타입이 아니다."""
+
+
+def claude_stream(stdout: str) -> tuple[dict, dict, list[str]]:
+    """Require one init and one terminal result; malformed/trailing output is not success."""
+    init = result = None
+    used = []
+    for line in stdout.splitlines():
+        if not line.strip():
+            continue
+        try:
+            event = json.loads(line)
+        except ValueError:
+            raise _Shape("broken Claude JSONL") from None
+        if not isinstance(event, dict) or result is not None:
+            raise _Shape("invalid event or data after Claude result")
+        if event.get("type") == "system" and event.get("subtype") == "init":
+            if init is not None:
+                raise _Shape("duplicate Claude init")
+            init = event
+        elif event.get("type") == "result":
+            result = event
+        elif event.get("type") == "assistant":
+            message = _typed(event, "message", Mapping, {})
+            for block in _typed(message, "content", list, []):
+                if not isinstance(block, dict):
+                    raise _Shape("invalid Claude content block")
+                if block.get("type") == "tool_use":
+                    if not isinstance(block.get("name"), str):
+                        raise _Shape("missing Claude tool name")
+                    used.append(block["name"])
+    if init is None or result is None:
+        raise _Shape("expected Claude init and terminal result")
+    return init, result, used
 
 
 def _typed(obj: Mapping[str, Any], key: str, kind: type, default: Any) -> Any:
@@ -310,6 +350,10 @@ def _parse(adapter_id: str, run: RunResult, base: dict[str, str]) -> Outcome:
     requested_model = base["requested_model"]
     if adapter_id == "claude-code":
         obj = _single_json(run.stdout)
+        tools = None
+        if obj is None:
+            _init, obj, used = claude_stream(run.stdout)
+            tools = len(used)
         if obj is None or obj.get("type") != "result":
             return Outcome(ok=False, status="format_error", text=run.stdout or None, reported_models=(),
                            model_match=None, detail="expected one JSON result object", **base)
@@ -322,6 +366,7 @@ def _parse(adapter_id: str, run: RunResult, base: dict[str, str]) -> Outcome:
         return Outcome(ok=ok, status="ok" if ok else "cli_error", text=obj.get("result"),
                        reported_models=models, model_match=_model_match(requested_model, models),
                        usage=usage, permission_denials=len(_typed(obj, "permission_denials", list, [])),
+                       tool_events=tools,
                        detail=None if ok else str(obj.get("terminal_reason") or "is_error"), **base)
     if adapter_id == "codex":
         text, completed, failure, tools, usage, stray = None, False, None, 0, {}, 0

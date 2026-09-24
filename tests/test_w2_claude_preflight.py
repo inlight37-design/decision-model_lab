@@ -43,7 +43,7 @@ class ClaudePreflightTests(unittest.TestCase):
         self.assertEqual(self.exact.spec.argv, plain.spec.argv)
         self.assertEqual(self.exact.revision, plain.revision)
         argv = self.exact.spec.argv
-        self.assertEqual(argv[argv.index("--output-format") + 1], "json")
+        self.assertEqual(argv[argv.index("--output-format") + 1], "stream-json")
         self.assertEqual(argv[argv.index("--tools") + 1], "")
         self.assertNotIn("--add-dir", argv)
         self.assertEqual(self.exact.box.read_only, (self.exe,))
@@ -115,6 +115,17 @@ class ClaudePreflightTests(unittest.TestCase):
         self.assertTrue(out["permission_conformance"].startswith("insufficient:"))
         self.assertTrue(out["context_conformance"].startswith("insufficient:"))
         self.assertFalse(out["eligible_to_run_established"])
+
+    def test_permission_requires_active_denial_of_the_exact_fixture_in_the_same_plan(self):
+        evidence = {"read_only_surface": True, "dont_ask": True, "denied_reads": 1, "forbidden_read_denied": True}
+        summary = {**self.accepted_summary(), "probe": "b1", "permission_evidence": evidence}
+        self.assertEqual(probe.assess(summary, self.exact.revision)["permission_conformance"], "observed")
+        for field, value in (("read_only_surface", False), ("dont_ask", False), ("denied_reads", 0),
+                             ("denied_reads", True), ("forbidden_read_denied", False)):
+            with self.subTest(field=field):
+                changed = {**summary, "permission_evidence": {**evidence, field: value}}
+                self.assertNotEqual(probe.assess(changed, self.exact.revision)["permission_conformance"], "observed")
+        self.assertNotEqual(probe.assess(summary, "another-revision")["permission_conformance"], "observed")
 
     def test_revision_drift_failed_gate_and_missing_evidence_never_pass(self):
         for change in ({"spec": self.diagnostic.record()}, {"input_delivery": "partial"},

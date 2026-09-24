@@ -29,11 +29,15 @@
 | [`2026-09-24-live-cli-pilot/`](2026-09-24-live-cli-pilot/README.md) | codex가 사용자 PC의 PR #34 head에서 첫 실제 Codex 서버 응답을 수용·공개한 기록. 문맥 미확인·제공 모델 미보고·상한 소진, 원문 API 저장, 공개 답의 독립성 표시 정정 |
 | [`2026-09-24-live-pilot-replication/`](2026-09-24-live-pilot-replication/README.md) | claude가 같은 PC에서 PR #35 head로 두 번째 실제 Codex 응답을 받은 기록. 예산 소진 뒤 시작 전 거절, 실제 답의 모의 합성, PR #34·#35 검토(CI·변이 시험)와 병합, 상한 고정·회계·회귀 시험의 발견 |
 
-최신 추가: [`2026-09-24-live-pilot-replication/`](2026-09-24-live-pilot-replication/README.md) — 단일 실제 CLI 경로를 다른 세션이 별도 원장으로 재현하고 #34·#35를 병합했다. C3 `failed`와 strict 허가 없음은 그대로다.
+이전 추가: [`2026-09-24-live-pilot-replication/`](2026-09-24-live-pilot-replication/README.md) — 단일 실제 CLI 경로를 다른 세션이 별도 원장으로 재현하고 #34·#35를 병합했다. C3 `failed`와 strict 허가 없음은 그대로다.
+
+## Windows·실제 병렬 실행 후속
+
+[2026-09-24-windows-live-completion](2026-09-24-windows-live-completion/README.md)([PR #39](https://github.com/inlight37-design/decision-model_lab/pull/39))에서 [PR #38 기록](2026-09-24-cli-unblock/README.md)의 Windows 평문 패치를 적용하고, 실제 계정 한도·Claude의 현재 stream-json/Read 권한 거절·Codex/Claude 병렬 수용과 브라우저를 관측했다. 이전 기록의 패치 미적용·계정/병렬 응답 미관측은 당시 상태다. 현재 문맥 독립성은 여전히 미확인이다.
 
 ## 읽는 순서
 
-최신은 [두 번째 실제 CLI 응답과 #34·#35 병합](2026-09-24-live-pilot-replication/README.md)이다. 같은 경로가 다른 세션·다른 질문에서 재현됐고, 호출 상한이 원장에 고정되지 않는 점과 시작 전 거절이 실행별 회계에 섞이는 점을 찾았다. 그 앞 [첫 실제 CLI 서버 응답](2026-09-24-live-cli-pilot/README.md)은 PR #34의 문맥 미확인 opt-in에서 단일 Codex 응답을 수용·공개했으며 strict 허가는 여전히 없다. 그 앞 [PR #31의 순서 5 재검토·회귀 수정](2026-09-24-cli-readiness/README.md)은 실행 직전 허가 재검사, 자료 연결 개수와 stdin 옵션을 지우지 않는 판, 무모델 조회·진단을 더했고, [독립 재검토](2026-09-24-pr31-safety-review/README.md)와 [병합 검증](2026-09-24-merge-31-32/README.md)을 거쳐 main에 들어왔다. 그 앞 구현은 [순서 5 실행 계약](2026-09-24-execution-contract/README.md)이다. 아래 재검토의 제안대로 G4·G6을 닫았고, 옛 판은 실제로 돈 계획에만 대응시켜 기록된 Claude 관측으로는 허가가 나오지 않는다. 그 앞 검토는 [병합 후 재검토·실제 관측](2026-09-24-post-merge-verification/README.md)이다. GitHub head checkout·CI·병합 이력, 실제 브라우저의 모의 흐름/Q4/교차 출처 차단, 승인된 K46 확인, Windows 진단 인코딩 수정과 실행 계약 제안을 담았다. C3는 남는다. Q4는 화면 확인을 마쳤고 사용자 선택은 미정이다. 취소 확인창·실제 파일 다운로드 끝단은 순서 5 구현 때 claude 세션이 설치된 Edge로 확인했다. 이전 검토 당시의 도구 제약과 현재 상태를 구분한다.
+현재 후속은 위 Windows·실제 병렬 실행 기록이며, 그 이전은 [두 번째 실제 CLI 응답과 #34·#35 병합](2026-09-24-live-pilot-replication/README.md)이다. 같은 경로가 다른 세션·다른 질문에서 재현됐고, 호출 상한이 원장에 고정되지 않는 점과 시작 전 거절이 실행별 회계에 섞이는 점을 찾았다. 그 앞 [첫 실제 CLI 서버 응답](2026-09-24-live-cli-pilot/README.md)은 PR #34의 문맥 미확인 opt-in에서 단일 Codex 응답을 수용·공개했으며 strict 허가는 여전히 없다. 그 앞 [PR #31의 순서 5 재검토·회귀 수정](2026-09-24-cli-readiness/README.md)은 실행 직전 허가 재검사, 자료 연결 개수와 stdin 옵션을 지우지 않는 판, 무모델 조회·진단을 더했고, [독립 재검토](2026-09-24-pr31-safety-review/README.md)와 [병합 검증](2026-09-24-merge-31-32/README.md)을 거쳐 main에 들어왔다. 그 앞 구현은 [순서 5 실행 계약](2026-09-24-execution-contract/README.md)이다. 아래 재검토의 제안대로 G4·G6을 닫았고, 옛 판은 실제로 돈 계획에만 대응시켜 기록된 Claude 관측으로는 허가가 나오지 않는다. 그 앞 검토는 [병합 후 재검토·실제 관측](2026-09-24-post-merge-verification/README.md)이다. GitHub head checkout·CI·병합 이력, 실제 브라우저의 모의 흐름/Q4/교차 출처 차단, 승인된 K46 확인, Windows 진단 인코딩 수정과 실행 계약 제안을 담았다. C3는 남는다. Q4는 화면 확인을 마쳤고 사용자 선택은 미정이다. 취소 확인창·실제 파일 다운로드 끝단은 순서 5 구현 때 claude 세션이 설치된 Edge로 확인했다. 이전 검토 당시의 도구 제약과 현재 상태를 구분한다.
 
 그 앞 구현은 [새 main 후속](2026-09-24-offline-progression/README.md)의 PR #22–#25이며 [병합 검증](2026-09-24-merge-22-25/README.md)을 거쳐 main에 들어왔다. 아래 날짜 기록의 당시 표현은 유지한다.
 

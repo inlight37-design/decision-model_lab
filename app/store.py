@@ -23,7 +23,8 @@ from typing import Any, Iterator
 # 1: participants.attempt. 2: runs.quorum_policy. 3: runs.cancel_requested.
 # 4: runs.phase; runs.roster and note remain historical data, never synchronized by the controller.
 # 5: participants.kind — 시도의 실행 종류(mock/real/synthetic, core.contract). 화면·보고는 이것을 읽는다(G6).
-SCHEMA_VERSION = 5
+# 6: live_budget — 첫 실제 호출 상한은 원장에 고정한다. 재기동으로 늘리거나 없애지 못한다.
+SCHEMA_VERSION = 6
 # 스키마 5 이전 시도의 종류는 시작 사건에 남은 실행기 이름에서만 복원한다. 모의 실행기의 이름은 격리 방식이었다.
 # 근거가 없으면 NULL로 두고, 화면은 "실행 종류 기록 없음"으로 보인다.
 LEGACY_EXECUTORS = {"bubblewrap": "mock", "job_object": "mock", "process_group": "mock", "cli": "real"}
@@ -47,6 +48,10 @@ CREATE TABLE IF NOT EXISTS drafts (
 CREATE TABLE IF NOT EXISTS events (
   run_id TEXT NOT NULL, seq INTEGER NOT NULL, at REAL NOT NULL, kind TEXT NOT NULL, payload TEXT NOT NULL,
   PRIMARY KEY (run_id, seq)
+);
+CREATE TABLE IF NOT EXISTS live_budget (
+  singleton INTEGER PRIMARY KEY CHECK (singleton = 1), cap INTEGER NOT NULL CHECK (cap > 0),
+  provider_caps TEXT NOT NULL
 );
 """
 
@@ -171,6 +176,42 @@ class Store:
 
     def tx(self) -> "_Tx":
         return _Tx(self)
+
+    def bind_call_budget(self, cap: int | None, provider_caps: dict[str, int] | None = None
+                         ) -> tuple[int | None, dict[str, int]]:
+        """상한은 처음 한 번만 쓴다. 과거 예약도 보존하고, 설정 누락을 무제한으로 해석하지 않는다.
+
+        스키마 5 원장은 예약 사건의 cap으로 복원한다. 예전 코드로 이미 상한을 바꿨거나 기록이
+        손상된 경우에는 새 값을 추측하지 않고 거절한다. 더 부를 때는 사유를 적고 새 원장을 쓴다.
+        """
+        if cap is not None and (type(cap) is not int or cap < 1):
+            raise ValueError("call budget must be a positive integer")
+        caps = dict(provider_caps or {})
+        if (caps and cap is None) or any(not isinstance(k, str) or not k or type(v) is not int or v < 1
+                                         for k, v in caps.items()):
+            raise ValueError("provider budgets require a total cap and positive integer limits")
+        with self.tx() as tx:
+            saved = self.row("SELECT cap, provider_caps FROM live_budget WHERE singleton = 1")
+            legacy = self.rows("SELECT payload FROM events WHERE kind = 'live_call_reserved'") if not saved else []
+            if saved:
+                fixed, fixed_caps = saved["cap"], json.loads(saved["provider_caps"])
+            elif legacy:
+                try:
+                    limits = [json.loads(row["payload"])["cap"] for row in legacy]
+                    if any(type(value) is not int or value < 1 for value in limits) or len(set(limits)) != 1:
+                        raise ValueError("inconsistent legacy caps")
+                    fixed, fixed_caps = limits[0], {}
+                    if len(legacy) > fixed:
+                        raise ValueError("legacy reservations exceed cap")
+                except (KeyError, TypeError, ValueError) as exc:
+                    raise StoreError("cannot recover legacy call budget; preserve this ledger and use a new one") from exc
+            else:
+                fixed, fixed_caps = cap, caps
+            if fixed is not None and cap is not None and (cap != fixed or caps != fixed_caps):
+                raise StoreError("call budget is fixed for this ledger; preserve it and use a new ledger")
+            if fixed is not None and not saved:
+                tx.execute("INSERT INTO live_budget VALUES (1, ?, ?)", fixed, json.dumps(fixed_caps, sort_keys=True))
+        return fixed, fixed_caps
 
     def rows(self, sql: str, *args: Any) -> list[sqlite3.Row]:
         with self._lock:

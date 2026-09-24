@@ -24,6 +24,10 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
       # pre-commit hook 이 --no-verify 로 우회됐을 때의 뒷단.
       - name: text encoding
         run: python tools/check_encoding.py
@@ -78,3 +82,23 @@ jobs:
       # 문서에 hash를 고정하는 대신 실행마다 현재 값을 기록한다.
       - name: record current code hashes
         run: python tools/print_code_hashes.py
+
+  windows-checks:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: install design dependencies
+        run: python -m pip install --disable-pip-version-check -r requirements-design.txt
+      - name: text encoding
+        run: python tools/check_encoding.py
+      # Windows regressions are separate from Linux bubblewrap checks; OS-specific skips are explicit.
+      - name: full Windows test suite
+        run: python -m unittest discover -s tests -v
+      - name: compile
+        run: python -m compileall -q tools tests core app

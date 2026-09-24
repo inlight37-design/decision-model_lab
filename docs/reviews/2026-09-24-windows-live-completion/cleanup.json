@@ -1,0 +1,8 @@
+{
+  "schema": "validation-cleanup/1",
+  "port_closed": true,
+  "validation_processes_remaining": 0,
+  "journal_lock_released": true,
+  "participant_trees_confirmed_empty": true,
+  "cleanup_path": "Script exited after revealed-run cancellation was correctly rejected; OS released resources. Post-exit port/process/ledger-lock checks verified cleanup."
+}

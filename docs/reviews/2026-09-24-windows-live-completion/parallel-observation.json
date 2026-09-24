@@ -1,0 +1,110 @@
+{
+  "schema": "bounded-parallel-observation/1",
+  "concurrent_running_observed": true,
+  "sealed_views_checked": 122,
+  "phase": "revealed",
+  "quorum": {
+    "policy": "include_unverified",
+    "min": 2,
+    "confirmed": 0,
+    "unverified": 2,
+    "counted": 2,
+    "met": true,
+    "label": "미확인 참여 포함 정족수 — 답 2명 중 독립성 확인 0명(최소 2명)"
+  },
+  "budgets": {
+    "codex": {
+      "used": 1,
+      "cap": 1
+    },
+    "claude-code": {
+      "used": 1,
+      "cap": 1
+    }
+  },
+  "live_budget": {
+    "used": 2,
+    "cap": 2
+  },
+  "participants": [
+    {
+      "pid": "codex",
+      "label": "Codex",
+      "provider": "openai",
+      "transport": "cli",
+      "behavior": "ok",
+      "state": "accepted",
+      "status": "ok",
+      "execution": "real",
+      "independence": "unverified",
+      "result": {
+        "state": "exited",
+        "exit_code": 0,
+        "containment": "pid_namespace",
+        "tree_confirmed_empty": true,
+        "input_delivery": "complete",
+        "duration_ms": 11335,
+        "notes": [],
+        "status": "ok",
+        "ok": true,
+        "detail": null,
+        "usage": {
+          "input_tokens": 13789,
+          "cached_input_tokens": 11008,
+          "output_tokens": 273,
+          "reasoning_output_tokens": 0
+        },
+        "requested_model": "gpt-6-luna",
+        "reported_models": [],
+        "model_match": null
+      },
+      "dropped": false,
+      "draft_sha256": "84c261a731c4abaf86d0ee779f21e9666a3190568db4b3a89e80c2d5882801ee"
+    },
+    {
+      "pid": "claude",
+      "label": "Claude Code",
+      "provider": "anthropic",
+      "transport": "cli",
+      "behavior": "ok",
+      "state": "accepted",
+      "status": "ok",
+      "execution": "real",
+      "independence": "unverified",
+      "result": {
+        "state": "exited",
+        "exit_code": 0,
+        "containment": "pid_namespace",
+        "tree_confirmed_empty": true,
+        "input_delivery": "complete",
+        "duration_ms": 20081,
+        "notes": [],
+        "status": "ok",
+        "ok": true,
+        "detail": null,
+        "usage": {
+          "input_tokens": 2,
+          "output_tokens": 1786,
+          "cache_creation_input_tokens": 909,
+          "cache_read_input_tokens": 5728,
+          "client_estimate_usd": 0.022645600000000002
+        },
+        "requested_model": "claude-sonnet-5",
+        "reported_models": [
+          "claude-sonnet-5"
+        ],
+        "model_match": true
+      },
+      "dropped": false,
+      "draft_sha256": "d9660e87c9a7956651d5664f157d077030ffceaecaeac443c27fa28f9820bf9a"
+    }
+  ],
+  "source": "User PC Ubuntu-24.04 WSL, isolated native subscription CLIs, 2026-09-24",
+  "account_metadata": {
+    "provider": "codex",
+    "subscription_observed": true,
+    "quota_available": true,
+    "identity_and_raw_response_published": false,
+    "refresh_inference_requests_sent": 0
+  }
+}

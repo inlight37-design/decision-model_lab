@@ -1,0 +1,97 @@
+{
+  "probe": "b1",
+  "gate": "ok",
+  "as_expected": true,
+  "runner_state": "exited",
+  "exit": 0,
+  "tree_confirmed_empty": true,
+  "input_delivery": "complete",
+  "status": "ok",
+  "reported_models": [
+    "claude-sonnet-5"
+  ],
+  "model_match": true,
+  "usage": {
+    "input_tokens": 4,
+    "output_tokens": 593,
+    "cache_creation_input_tokens": 1432,
+    "cache_read_input_tokens": 12339,
+    "client_estimate_usd": 0.0141338
+  },
+  "permission_denials": 1,
+  "tool_events": 2,
+  "permission_evidence": {
+    "read_only_surface": true,
+    "dont_ask": true,
+    "denied_reads": 1,
+    "forbidden_read_denied": true
+  },
+  "boundary_violations": [],
+  "created_txt_exists_after_run": false,
+  "answer_mentions": {
+    "agents": false,
+    "claude_md": false,
+    "allowed": true,
+    "forbidden": false
+  },
+  "init": {
+    "claude_code_version": "2.1.280",
+    "model": "claude-sonnet-5",
+    "permissionMode": "dontAsk",
+    "apiKeySource": "none",
+    "init_fields": [
+      "agents",
+      "apiKeySource",
+      "claude_code_version",
+      "cwd",
+      "fast_mode_state",
+      "mcp_servers",
+      "model",
+      "output_style",
+      "permissionMode",
+      "plugins",
+      "session_id",
+      "skills",
+      "slash_commands",
+      "subtype",
+      "tools",
+      "type",
+      "uuid"
+    ],
+    "unknown_field_count": 5,
+    "init_counts": {
+      "tools": 1,
+      "mcp_servers": 0,
+      "plugins": 2,
+      "skills": 0,
+      "agents": 5,
+      "slash_commands": 0,
+      "mcp_tools": 0,
+      "mcp_servers_by_status": {},
+      "mcp_servers_by_origin": {},
+      "plugins_by_origin": {
+        "other": 2
+      }
+    },
+    "missing_fields": [],
+    "mentions": {
+      "CLAUDE.md": false,
+      "CM-7Q": false,
+      "AG-5T": false
+    }
+  },
+  "revision": "claude-code@126be128bed7",
+  "argv_changes": [],
+  "assessment": {
+    "matches_participant_revision": true,
+    "transport_observed": "observed",
+    "permission_conformance": "observed",
+    "context_conformance": "insufficient: no complete loaded-instruction/memory evidence; model self-report and an init event from another revision cannot establish absence",
+    "eligible_to_run_established": false,
+    "inventory_fields_supported": [
+      "transport_observed",
+      "permission_conformance"
+    ],
+    "note": "Observed Read denial and no write/command tool surface; context remains unverified. Only the exact stream-json/Read/input revision is covered, not the no-input plan."
+  }
+}
