@@ -113,7 +113,7 @@ python -m app.server --live-config /path/live.json --data-dir /path/new-ledger -
 
 같은 조회가 `model/list`(추론 없음)로 이 계정의 가용 모델 이름도 받는다. 화면은 설정한 Codex 모델이 그 목록에 있는지만 보인다. 가용 목록이지 실제로 답한 모델의 보고가 아니다(K32). 목록 메서드만 거절되면 한도는 그대로 두고 목록을 미확인으로 둔다. 시간 초과·서버 요청·에이전트 활동은 여전히 조회 전체를 멈춘다. 표시 이름·설명은 버린다.
 
-Claude에는 따로 조회할 통로를 쓰지 않는다. 실제 Claude 참여자의 stream-json에 오는 `rate_limit_event`에서 상태(`allowed`·`allowed_warning`·`rejected`)와 창별 사용 비율(0–1)·초기화 시각만 남기고, 결제·크레딧 칸은 버린다. 마지막 사건의 모양이 다르면 미확인으로 취급하고 답 수용과 분리하는 것이 계약이다. 극단적으로 큰 JSON 정수가 파서를 중단하는 경계는 [후속 감사](../docs/reviews/2026-09-25-runtime-audit-finish/README.md)에서 재현했다. 로컬 수정은 검증했지만 해당 파일의 GitHub 저장이 도구 보안 판정으로 차단돼 원격 수정은 아직 남아 있다. 계정 패널은 **마지막으로 끝난 실제 실행**의 값만 보인다 — 봉인 중인 실행의 값은 계정 비율의 변화로 초안 길이를 짐작하게 하므로 내보내지 않고, 모의·합성 실행기의 값은 계정 값이 아니므로 쓰지 않는다. 비율은 사용 %로 보일 뿐 Codex 값과 더하지 않는다.
+Claude에는 따로 조회할 통로를 쓰지 않는다. 실제 Claude 참여자의 stream-json에 오는 `rate_limit_event`에서 상태(`allowed`·`allowed_warning`·`rejected`)와 창별 사용 비율(0–1)·초기화 시각만 남기고, 결제·크레딧 칸은 버린다. 마지막 사건의 모양이 다르면 미확인으로 취급하고 답 수용과 분리하는 것이 계약이다. 극단적으로 큰 JSON 정수가 파서를 중단하던 경계는 [후속 감사](../docs/reviews/2026-09-25-runtime-audit-finish/README.md)가 재현했고 [병합 검토](../docs/reviews/2026-09-25-merge-46-47/README.md)에서 고쳤다. 같은 검토에서 시도 결과의 사용량 칸도 NaN·무한대·음수·불리언을 버리게 했다 — 그런 값 하나가 화면 응답 전체를 깨뜨렸다. 계정 패널은 **마지막으로 끝난 실제 실행**의 값만 보인다 — 봉인 중인 실행의 값은 계정 비율의 변화로 초안 길이를 짐작하게 하므로 내보내지 않고, 모의·합성 실행기의 값은 계정 값이 아니므로 쓰지 않는다. 비율은 사용 %로 보일 뿐 Codex 값과 더하지 않는다.
 
 계정 한도 창 사용 비율을 남은 토큰·질문 횟수로 환산하지 않는다. 제공 모델 재지정 사건이나 최소 설정 프로필은 [한계 재검토](../docs/reviews/2026-09-24-cli-unblock/README.md)의 후속 후보다. 문맥 비노출이나 모델 자기 보고를 개인 문맥 부재의 증명으로 삼지 않는다. 관측 없이 C3/permission을 합격으로 바꾸거나 새 옵션을 기존 판에 섞지 않는다.
 
@@ -121,4 +121,4 @@ Claude에는 따로 조회할 통로를 쓰지 않는다. 실제 Claude 참여�
 
 `python -m unittest discover -s tests -v`를 실행한다. Linux 격리 검증은 `DML_REQUIRE_BWRAP=1`을 사용하며 OS 전용 skip을 구분한다. 실제 JavaScript 함수 회귀에는 Node가 필요하다. 테스트 파일은 `test_cli_unblock.py`, `test_live_config.py`, `test_codex_account.py`와 기존 `test_app_*.py`, `test_runner_cancel.py`, `test_server_limits.py`를 본다.
 
-Windows stdout 수정과 Python 3.13/짧은 임시 경로 회귀를 반영했다. 교차 플랫폼 CI의 정확한 head 결과는 PR Checks가 기준이다. 사용자 PC에서의 두 provider 응답·현재 Claude 판의 제한된 권한 증거·계정 한도 화면·공통 자료·실제 합성은 각 날짜의 관측 기록에 있다. 이를 새 웹 세션이 재실측한 것은 아니다. 남은 것은 사용량 파서의 원격 반영, 개인 문맥 독립성, 실제 CLI 중도 취소, 자료 속 지시문·긴 자료·여러 파일 실험, 원본 앱 사용량 비교, Q3 TypeScript와 접근성 전수 검사다. [후속 감사](../docs/reviews/2026-09-25-runtime-audit-finish/README.md)는 로컬 검증본과 원격 미반영 부분을 구분한다.
+Windows stdout 수정과 Python 3.13/짧은 임시 경로 회귀를 반영했다. 교차 플랫폼 CI의 정확한 head 결과는 PR Checks가 기준이다. 사용자 PC에서의 두 provider 응답·현재 Claude 판의 제한된 권한 증거·계정 한도 화면·공통 자료·실제 합성은 각 날짜의 관측 기록에 있다. 이를 새 웹 세션이 재실측한 것은 아니다. 남은 것은 개인 문맥 독립성, 실제 CLI 중도 취소, 자료 속 지시문·긴 자료·여러 파일 실험, 원본 앱 사용량 비교, Q3 TypeScript와 접근성 전수 검사다. [후속 감사](../docs/reviews/2026-09-25-runtime-audit-finish/README.md)가 원격 미반영으로 남긴 사용량 파서는 [병합 검토](../docs/reviews/2026-09-25-merge-46-47/README.md)에서 반영했다.
