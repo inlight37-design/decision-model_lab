@@ -1,6 +1,6 @@
 # core — V04-03 실행 코어
 
-**모델을 부르지 않고도 시험할 수 있는 부분부터 만든 실행 코어다.** 아직 앱이 아니다. 화면도, 저장소도, 여러 참여자를 도는 controller도 없다. 표준 라이브러리만 쓴다.
+**모델을 부르지 않고도 시험할 수 있는 실행 부품이다.** 이 폴더는 화면·저장소·controller를 소유하지 않는다. 그 책임은 이미 구현된 [`app/`](../app/README.md)에 있다. core는 표준 라이브러리만 쓴다.
 
 | 모듈 | 하는 일 | 하지 않는 일 |
 |---|---|---|
@@ -16,11 +16,11 @@
 
 - **시간 초과는 성공이 아니다.** 답 텍스트가 있어도 `timed_out`이다.
 - **끝났는지 확인하지 못하면 `unknown`이다.** 예산을 돌려받지 않는다.
-- **추적 단위가 빈 것과 자손 전체가 끝난 것은 다르다.** Windows는 job object(`containment="job_object"`)라 자손이 떠날 수 없고, 그 밖은 프로세스 그룹(`"process_group"`)이라 새 세션을 만든 자손이 보이지 않는다. 그래서 `unit_confirmed_empty`(추적 단위)와 `tree_confirmed_empty`(자손 전체)를 따로 돌려준다. 프로세스 그룹에서 뒤쪽은 `None`이다. **자원·예산 반환은 `tree_confirmed_empty`가 True일 때만 한다.** Linux에서는 `isolation.run()`으로 실행할 때만 추적 단위가 PID namespace(`"pid_namespace"`)가 되어 True가 된다. 그 보장은 확인한 bubblewrap과 이 모듈의 정책에 한정되고, 참여자가 네트워크로 다른 서비스에 시켜 만든 작업은 포함하지 않는다([경계 리뷰 반영](../docs/reviews/2026-09-23-wsl2-boundary/RESPONSE.md), [W2 기록](../docs/experiments/w2-isolation/aux-pc-wsl.md)).
+- **추적 단위가 빈 것과 자손 전체가 끝난 것은 다르다.** Windows는 job object(`containment="job_object"`)라 자손이 떠날 수 없고, 그 밖은 프로세스 그룹(`"process_group"`)이라 새 세션을 만든 자손이 보이지 않는다. 그래서 `unit_confirmed_empty`(추적 단위)와 `tree_confirmed_empty`(자손 전체)를 따로 돌려준다. 프로세스 그룹에서 뒤쪽은 `None`이다. **실행 자리의 자동 해제에는 `tree_confirmed_empty`가 True라는 증거가 필요하다. 호출 예약은 성공·실패·취소·종료 확인과 무관하게 환불하지 않는다.** controller의 명시적 사용자 종료 확인도 자리만 풀며 자동 재호출을 허용하지 않는다. Linux에서는 `isolation.run()`으로 실행할 때만 추적 단위가 PID namespace(`"pid_namespace"`)가 되어 True가 된다. 그 보장은 확인한 bubblewrap과 이 모듈의 정책에 한정되고, 참여자가 네트워크로 다른 서비스에 시켜 만든 작업은 포함하지 않는다([경계 리뷰 반영](../docs/reviews/2026-09-23-wsl2-boundary/RESPONSE.md), [W2 기록](../docs/experiments/w2-isolation/aux-pc-wsl.md)).
 - **exit 0은 성공이 아니다.** 성공은 `adapters.interpret()`가 CLI별 규칙으로 정한다. Claude는 `is_error`, Codex는 `turn.completed`와 stderr의 명령 거절(stderr가 잘렸으면 받지 않는다), agy는 JSON 형식까지 본다. 출력 모양이 예상과 다르면(빈 값과 잘못된 타입을 구분하고, 아주 깊은 중첩도) 예외가 아니라 `format_error`다. **질문을 다 보내지 못했으면 답이 그럴듯해도 `input_error`다.** 다시 부르지 않는다.
 - **명단에 받는 것과 진행 허가는 다르다.** membership은 바뀐 명단(`roster`)과, 그 뒤 같은 정족수 규칙으로 다시 정한 판정(`action`)을 따로 준다. 대체자가 들어와도 인원이 모자라면 `blocked`다. 단계는 한 칸씩 가고, 초안 단계 진입과 공개에는 정족수(`quorum_met`)가 있어야 한다. 초안이 다 들어왔는지는 controller의 단계 관문이 본다.
 - **모델은 반드시 이름으로 지정한다.** 기본값도 fallback도 없다. 보고된 모델이 다르면 표시한다.
 - **agy는 꺼져 있다.** 사용자가 켜야 쓴다(약관 판단, F31).
 - **과금 경로를 바꾸는 환경변수는 자식에게 넘기지 않는다.** 인증은 각 CLI의 로그인을 쓴다.
 
-검사: [`tests/test_core_runner.py`](../tests/test_core_runner.py), [`test_core_adapters.py`](../tests/test_core_adapters.py), [`test_core_contract.py`](../tests/test_core_contract.py), [`test_core_membership.py`](../tests/test_core_membership.py), [`test_core_env.py`](../tests/test_core_env.py), [`test_core_isolation.py`](../tests/test_core_isolation.py)(bubblewrap을 쓸 수 있는 Linux에서만 돈다. CI는 bubblewrap을 설치하고 `DML_REQUIRE_BWRAP=1`로 건너뛰기를 막는다). 파서 검사는 aux-pc V04-01에서 실제로 받은 출력을 쓴다. CI는 Linux라서 Windows job object 경로는 로컬 Windows에서 확인한다.
+검사: [`tests/test_core_runner.py`](../tests/test_core_runner.py), [`test_core_adapters.py`](../tests/test_core_adapters.py), [`test_core_contract.py`](../tests/test_core_contract.py), [`test_core_membership.py`](../tests/test_core_membership.py), [`test_core_env.py`](../tests/test_core_env.py), [`test_core_isolation.py`](../tests/test_core_isolation.py)(bubblewrap을 쓸 수 있는 Linux에서만 돈다. CI는 bubblewrap을 설치하고 `DML_REQUIRE_BWRAP=1`로 건너뛰기를 막는다). 파서 검사는 aux-pc V04-01에서 실제로 받은 출력을 쓴다. CI는 Linux와 Windows에서 실행한다. Linux는 bubblewrap 경로, Windows는 job object 경로를 검사한다. CI 성공은 사용자 WSL·계정·모델의 새 실측을 대신하지 않는다.

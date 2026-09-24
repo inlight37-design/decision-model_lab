@@ -1,6 +1,6 @@
 # Repository orientation
 
-This is a research and architecture repository with offline synthetic checks and an explicit single-CLI live pilot, not a validated multi-provider orchestrator. It is the one rule file for every agent: Claude Code loads it through [CLAUDE.md](CLAUDE.md), Codex reads it directly, and any other assistant should be given it.
+This is a research and architecture repository with offline synthetic checks and bounded single-CLI and multi-provider live pilots. Shared sources and opt-in model synthesis have local observations; context independence, general reliability and quality improvement are not established. It is the one rule file for every agent: Claude Code loads it through [CLAUDE.md](CLAUDE.md), Codex reads it directly, and any other assistant should be given it.
 
 ## Several sessions share this repository
 
