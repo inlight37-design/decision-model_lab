@@ -276,7 +276,8 @@ function participantRow(run, p) {
         ? h("div", { class: "kv" }, "수동 제출 · 독립성 미확인 · " +
             (r ? `실행 표식 ${echo[r.marker_echo] || r.marker_echo} · 사용자 확인 ${r.user_confirmed ? "예" : "아니오"} · ` : "") +
             "사용량·시간 관측 안 됨")
-        : h("div", { class: "kv" }, `독립성 확인(controller가 고정 입력만 주고 실행) · ` +
+        : h("div", { class: "kv" }, (p.independence === "confirmed"
+              ? "독립성 확인(controller가 고정 입력만 주고 실행) · " : "문맥 미확인 · 독립 정족수에 세지 않음 · ") +
              `상태 ${r.state} · 종료 ${r.containment} ${r.tree_confirmed_empty ? "확인" : "미확인"} · 입력 ${r.input_delivery} · ` +
              `모델 ${r.requested_model || "?"} → ${r.reported_models && r.reported_models.length ? r.reported_models.join(", ") : "보고 없음"}` +
              `${r.model_match === false ? " (불일치)" : ""} · ` +
