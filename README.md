@@ -9,7 +9,7 @@ Jev류 판단 모델은 교체 가능한 선택 부품이며, 전체 시스템�
 
 > **현재: v0.4 상급 모델 협업 확장 (2026-09-22).** 실제 제품·공개 구현·논문과 반례를 F01–F31로 정리하고, 네 실행 모드·P0–P5 프로토콜·D10–D18 결정·비교 실험을 추가했습니다. 이후 외부 검토와 추가 검토에서 CI·원장 계약·오프라인 경계 실험을 보강했습니다([검토 기록](docs/reviews/README.md)). 현재 검사 수와 결과는 [CI 실행 기록](https://github.com/inlight37-design/decision-model_lab/actions/workflows/checks.yml)이 기준입니다. **실제 세 모델 연결·사용자 환경의 권한/과금·품질 향상률을 검증한 상태는 아닙니다.** v0.3 기반과 v0.2 계약은 유지합니다. [최종 검토와 수정 내역](docs/architecture/v0.4/FINAL_REVIEW.md). 이후 남은 출처 27개와 최근 논문 4개를 확인한 [후속 근거 검토](docs/architecture/v0.4/EVIDENCE_FOLLOWUP.md)에서 PAL 설명을 수정하고 평가 기준을 보강했습니다.
 
-사용자 PC의 WSL에서 **Codex·Claude의 실제 동시 응답을 받아 봉인 후 공개**했고, Codex 계정 한도 조회를 화면에 연결했습니다([관측 기록](docs/reviews/2026-09-24-windows-live-completion/README.md), [실행 안내](app/README.md)). 개인 문맥 독립성과 품질 향상은 미확인이며, 현재 합성은 추가 모델 호출 없는 원문 발췌입니다.
+사용자 PC의 WSL에서 **Codex·Claude의 실제 동시 응답을 받아 봉인 후 공개**했고, Codex 계정 한도 조회를 화면에 연결했습니다([관측 기록](docs/reviews/2026-09-24-windows-live-completion/README.md), [실행 안내](app/README.md)). 이어서 실행별 공통 자료, Claude 계정 한도 표시, 공개 뒤 실제 합성 1회(원문 인용 대조)를 붙여 실제로 확인했습니다([공통 자료](docs/reviews/2026-09-24-source-snapshot/README.md), [실제 합성](docs/reviews/2026-09-24-model-synthesis/README.md)). 개인 문맥 독립성과 품질 향상은 미확인이며, 합성은 사실 검증이 아닙니다.
 
 ## 이어서 작업한다면
 
