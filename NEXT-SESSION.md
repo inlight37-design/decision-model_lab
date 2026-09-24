@@ -14,7 +14,7 @@
 
 ## 1. 지금 상태
 
-**main에 PR #38·#39와 다음 작업 A·B·C·D·F, E의 첫 단계(Codex 연결 앱 끄기), 실행 경로 후속(#46·#47·#48: 합성 실행당 1회·공통 상한·종료 미확인 복구, 자료 복원 검사, 사용량 숫자 경계), E2(참여자 문맥 독립성, #49), strict 첫 실제 실행·중도 취소 기록(#50)이 병합됐다.** provider별 설정(`--live-config`)으로 실제 Codex·Claude를 동시에 부르고, 공통 자료를 같이 주고, 봉인 뒤 함께 공개하고, 원문 대조(모의)나 실행마다 켜는 실제 합성 1회까지 한다. 상한은 원장에 고정되고 시작 전 거절은 실행 수에서 빠진다. Codex 계정 한도는 화면의 명시적 조회로 본다. 시작 직전 허가·격리·봉인·수용·정족수 정책은 그대로다. 별도 오케스트레이터·큐·SDK·유료 API는 없다. 설계 용어로는 `cross_check`(2인 독립 → 대조 → 합성)가 처음으로 끝까지 실제로 돌았다(C). 합성의 인용은 원문과 글자 그대로 대조할 뿐 **사실 검증이 아니다**.
+**main에 PR #38·#39와 다음 작업 A·B·C·D·F, E의 첫 단계(Codex 연결 앱 끄기), 실행 경로 후속(#46·#47·#48: 합성 실행당 1회·공통 상한·종료 미확인 복구, 자료 복원 검사, 사용량 숫자 경계), E2(참여자 문맥 독립성, #49), strict 첫 실제 실행·중도 취소 기록(#50), 자료 속 지시문 실험(#51)이 병합됐다.** provider별 설정(`--live-config`)으로 실제 Codex·Claude를 동시에 부르고, 공통 자료를 같이 주고, 봉인 뒤 함께 공개하고, 원문 대조(모의)나 실행마다 켜는 실제 합성 1회까지 한다. 상한은 원장에 고정되고 시작 전 거절은 실행 수에서 빠진다. Codex 계정 한도는 화면의 명시적 조회로 본다. 시작 직전 허가·격리·봉인·수용·정족수 정책은 그대로다. 별도 오케스트레이터·큐·SDK·유료 API는 없다. 설계 용어로는 `cross_check`(2인 독립 → 대조 → 합성)가 처음으로 끝까지 실제로 돌았다(C). 합성의 인용은 원문과 글자 그대로 대조할 뿐 **사실 검증이 아니다**.
 
 | 항목 | 상태 |
 |---|---|
@@ -58,9 +58,10 @@
 
 ## 3. 진행 중인 작업
 
-**진행 중: [PR #51](https://github.com/inlight37-design/decision-model_lab/pull/51)(`claude/source-injection-20260925`) — 최종 head의 CI 녹색을 확인한 뒤 claude 세션이 병합한다(2절 8). 병합 직전에 이 문단을 지운다.** 코드 변경 없는 실험 PR: 공통 자료 속 지시문(숨긴 지시·`AGENTS.md`·`CLAUDE.md` 이름의 자료)을 [사전 등록](docs/experiments/2026-09-25-source-injection/README.md)하고 strict 실행 한 번으로 봤다. 두 참여자 모두 따르지 않았다. 모델 호출 2회(Codex 1·Claude 1). [결과](docs/experiments/2026-09-25-source-injection/RESULTS.md). 실제 상태는 0절대로 GitHub에서 확인한다.
+**진행 중인 작업 없음.** 실제 상태는 0절대로 GitHub에서 확인한다. 다음은 4절의 순서대로다.
 
-- **마지막 병합:** [PR #50](https://github.com/inlight37-design/decision-model_lab/pull/50)(`claude/strict-live-run-20260925`) — 코드 변경 없는 기록 PR: strict 첫 실제 두 참여자 실행(독립 정족수 충족), 첫 Codex 실제 합성, 실제 CLI 중도 취소(V04-03의 마지막 조건). 모델 호출 4회(Codex 3·Claude 1). claude 세션이 병합했다(2절 8). [기록](docs/reviews/2026-09-25-strict-live-run/README.md).
+- **마지막 병합:** [PR #51](https://github.com/inlight37-design/decision-model_lab/pull/51)(`claude/source-injection-20260925`) — 코드 변경 없는 실험 PR: 공통 자료 속 지시문(숨긴 지시·`AGENTS.md`·`CLAUDE.md` 이름의 자료)을 [사전 등록](docs/experiments/2026-09-25-source-injection/README.md)하고 strict 실행 한 번으로 봤다. 두 참여자 모두 따르지 않았다. 모델 호출 2회(Codex 1·Claude 1). claude 세션이 병합했다(2절 8). [결과](docs/experiments/2026-09-25-source-injection/RESULTS.md).
+- **그 앞:** [PR #50](https://github.com/inlight37-design/decision-model_lab/pull/50)(`claude/strict-live-run-20260925`) — 코드 변경 없는 기록 PR: strict 첫 실제 두 참여자 실행(독립 정족수 충족), 첫 Codex 실제 합성, 실제 CLI 중도 취소(V04-03의 마지막 조건). 모델 호출 4회(Codex 3·Claude 1). claude 세션이 병합했다(2절 8). [기록](docs/reviews/2026-09-25-strict-live-run/README.md).
 - **그 앞:** [PR #49](https://github.com/inlight37-design/decision-model_lab/pull/49)(`claude/context-independence-20260925`) — 4절 E의 두 번째 단계(E2). 두 참여자 계획의 문맥 통로를 좁히고(Claude `--safe-mode`, Codex `~/.codex` 전체 금지·실행 파일 `/opt/dml-codex`·작업 폴더 AGENTS.md 비적재·전역 AGENTS.md 거절), 행동 표식 양성·음성 대조로 C3를 관측해 새 manifest로 strict 허가를 얻었다. 모델 호출 6회(Claude 2·Codex 4). claude 세션이 병합했다(2절 8). [기록](docs/reviews/2026-09-25-context-independence/README.md).
 - **그 앞:** [PR #48](https://github.com/inlight37-design/decision-model_lab/pull/48)(`claude/runtime-audit-merge-20260925`) — ChatGPT 웹 세션의 [PR #46](https://github.com/inlight37-design/decision-model_lab/pull/46)(`chatgpt/runtime-review-20260925`: 실제 합성의 실행당 1회·공통 상한·종료 미확인 복구·사용자 종료 확인, [기록](docs/reviews/2026-09-25-runtime-review/README.md))과 [PR #47](https://github.com/inlight37-design/decision-model_lab/pull/47)(`chatgpt/runtime-audit-finish-20260925`, #46 포함: #46 재검토·자료 복원 검사 R2·R1 재현·아키텍처 판단, [감사 기록](docs/reviews/2026-09-25-runtime-audit-finish/README.md))을 그대로 포함하고, #47이 원격에 올리지 못한 사용량 파서(R1)와 새로 찾은 사용량 칸의 NaN(U1)을 고쳤다. 두 PR은 #48과 함께 병합됨으로 표시된다. 모델 호출 0회. claude 세션이 병합했다(2절 8). [검토·병합 기록](docs/reviews/2026-09-25-merge-46-47/README.md).
 - **그 앞:** [PR #45](https://github.com/inlight37-design/decision-model_lab/pull/45)(`claude/codex-apps-off-20260924`) — 4절 E의 첫 단계(Codex 참여자의 계정 연결 앱 끄기와 K46 재관측, 새 manifest). 모델 호출 1회(Codex). claude 세션이 병합했다(2절 8). [기록](docs/reviews/2026-09-24-codex-apps-off/README.md).
