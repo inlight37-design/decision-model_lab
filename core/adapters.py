@@ -79,6 +79,11 @@ CODEX_WINDOWS_SANDBOX = 'windows.sandbox="elevated"'
 # 새 판과의 대응은 contract.LEGACY가 정한다(2026-09-24 리뷰 R04, 구조 검사 G4).
 CODEX_PROFILE = "dml-discussant"
 CODEX_AUTH_FILE = ".codex/auth.json"
+# Linux 참여자에게는 계정의 연결 앱(ChatGPT apps·connectors, MCP `codex_apps`)을 끈다. 켜 두면 사용자의 GitHub·Google
+# Drive 같은 연결 앱 도구(쓰기 포함)가 참여자 모델에 보인다 — 그 도구는 서버 쪽에서 돌므로 bubblewrap이 막지 못하고,
+# 논의자 읽기 전용(NEXT-SESSION 2절 7)과 독립성을 모두 깬다. 2026-09-24 무추론 app-server 조회(참여자와 같은 격리·
+# 실제 로그인): 기본은 codex_apps 도구 198개·호출 가능 앱 9개, `features.apps=false`면 MCP 서버 0개·호출 가능 앱 0개.
+CODEX_APPS_OFF = "features.apps=false"
 POSIX_HOME = re.compile(r"/[^\x00-\x1f\x7f\"\\]*")
 CODEX_REJECTED = "rejected: blocked by policy"
 # 실행기가 runner에 넘겨 stderr 전체에서 세게 하는 표식(K02). Linux Codex의 거절 문자열은 아직 모른다(K30, B2).
@@ -218,7 +223,7 @@ def build_spec(adapter_id: str, *, exe: str, prompt: str, model: str, role: str 
             config: tuple[str, ...] = (CODEX_WINDOWS_SANDBOX,) if codex_windows_sandbox else ()
             argv += ["--sandbox", "read-only"]
         else:
-            config = codex_permissions(codex_user_home)
+            config = codex_permissions(codex_user_home) + (CODEX_APPS_OFF,)
         for value in config:
             argv += ["-c", value]
         # `-`: 지시문을 stdin에서 읽는다(codex exec --help, aux-pc 0.155.1 기록).

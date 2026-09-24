@@ -101,7 +101,8 @@ class ArgvTests(unittest.TestCase):
         define, select = adapters.codex_permissions("/home/u")
         self.assertNotIn("--sandbox", argv)
         self.assertNotIn("-P", argv)
-        self.assertEqual([argv[i + 1] for i, a in enumerate(argv) if a == "-c"], [define, select])
+        self.assertEqual([argv[i + 1] for i, a in enumerate(argv) if a == "-c"], [define, select, adapters.CODEX_APPS_OFF])
+        self.assertEqual(adapters.CODEX_APPS_OFF, "features.apps=false")   # 연결 앱(codex_apps) 도구를 참여자에게서 뺀다
         self.assertEqual(select, 'default_permissions="dml-discussant"')
         key, value = define.split("=", 1)
         self.assertEqual(key, "permissions.dml-discussant")
@@ -142,7 +143,7 @@ class ArgvTests(unittest.TestCase):
             ("codex", "discussant-2"): (
                 ["exec", "--json", "--skip-git-repo-check", "--ephemeral", "--ignore-user-config", "--ignore-rules",
                  "-c", *adapters.codex_permissions("/home/u")[:1], "-c", adapters.codex_permissions("/home/u")[1],
-                 "--model", "m", "-"], {"codex_user_home": "/home/u"}),
+                 "-c", adapters.CODEX_APPS_OFF, "--model", "m", "-"], {"codex_user_home": "/home/u"}),
         }
         for (adapter_id, revision), (expected, extra) in pinned.items():
             with self.subTest(adapter=adapter_id):

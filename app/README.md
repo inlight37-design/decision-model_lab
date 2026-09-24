@@ -65,7 +65,7 @@ python -m app.server --live-config /path/live.json --data-dir /path/new-ledger -
 
 양쪽 준비 조회를 모두 통과해야 서버를 시작한다. 한쪽이 막혔다고 자동으로 빼거나 다른 모델을 넣지 않는다. 두 provider를 설정하면 두 실행 자리와 provider별 상한을 둔다. 각 상한은 1..10, 전체 합은 최대 10이다. 기존 controller의 스레드와 봉인/공개 관문을 재사용한다. 한쪽 초안이 먼저 끝나도 다른 쪽이 진행 중이면 공개하지 않는다.
 
-**실제 Codex·Claude 동시 응답을 별도 상한 원장에서 수용·공개했다.** 현재 Claude는 stream-json/verbose로 init과 최종 결과를 함께 검사한다. 한 입력 폴더의 `claude-code@126be128bed7`에서 Read만 노출, MCP 없음, dontAsk와 금지된 합성 peer 파일의 Read 거절을 새로 관측했다. no-input/다른 옵션 판의 권한까지 입증한 것은 아니다. [새 관측 manifest](../docs/reviews/2026-09-24-windows-live-completion/manifest.v2.json)를 두 설정에 사용할 수 있지만 각자 빈 입력 폴더 하나가 필요하고 설치판·관측일·계획 준비 조회를 다시 해야 한다. 문맥 독립성은 미확인이므로 실제 실험은 명시적 `include_unverified` 정책을 썼다.
+**실제 Codex·Claude 동시 응답을 별도 상한 원장에서 수용·공개했다.** 현재 Claude는 stream-json/verbose로 init과 최종 결과를 함께 검사한다. 한 입력 폴더의 `claude-code@126be128bed7`에서 Read만 노출, MCP 없음, dontAsk와 금지된 합성 peer 파일의 Read 거절을 새로 관측했다. no-input/다른 옵션 판의 권한까지 입증한 것은 아니다. Codex 참여자는 계정의 연결 앱(`-c features.apps=false`)을 끈 계획이며, 그 판 `codex@5a77e0b7dc7f`의 K46을 다시 관측했다([연결 앱 끄기 기록](../docs/reviews/2026-09-24-codex-apps-off/README.md)). 지금 쓰는 [관측 manifest](../docs/reviews/2026-09-24-codex-apps-off/manifest.v2.json)를 두 설정에 쓰되 각자 빈 입력 폴더 하나가 필요하고, 설치판·관측일·계획이 바뀌면 준비 조회를 다시 한다. 연결 앱을 켠 옛 계획의 [#39 manifest](../docs/reviews/2026-09-24-windows-live-completion/manifest.v2.json)로는 지금 Codex 계획이 거절된다. 문맥 독립성은 미확인이므로 실제 실험은 명시적 `include_unverified` 정책을 썼다.
 
 ## 공통 자료
 
