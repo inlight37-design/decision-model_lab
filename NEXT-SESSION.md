@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-24** · 작성 세션: claude(두 번째 실제 CLI 응답·#34·#35 검토와 병합) · 브랜치 `claude/live-pilot-replication-20260924` · 시작 main `0219bc91a36038590eacdedd44023d47bb7063b7`(#35 병합 직후) · 접근: 사용자 PC `aux-pc`의 Windows(Claude 데스크톱 앱)·WSL2 `Ubuntu-24.04`, 실제 Linux-native Codex·내장 브라우저·GitHub. 이 세션의 호출 상한 1도 소진됐다. 앞선 codex 관측은 그대로 보존한다.
+최종 갱신 **2026-09-24** · 작성 세션: claude(두 번째 실제 CLI 응답·#34·#35 검토와 병합, 이어서 상시 승인 기록·쓰기 권한 workflow 규칙·codex 서버 종료) · 브랜치 `claude/standing-approval-20260924` · 시작 main `15ed522e0ced38b799c22ec2e8a5b5f1d52e0f79`(#36 병합 직후) · 접근: 사용자 PC `aux-pc`의 Windows(Claude 데스크톱 앱)·WSL2 `Ubuntu-24.04`, 실제 Linux-native Codex·내장 브라우저·GitHub. 이 세션의 호출 상한 1도 소진됐다. 앞선 codex 관측은 그대로 보존한다.
 
 현재 인계는 이 파일 하나다. 직전 판은 [보관본](docs/handoff/2026-09-24-before-post-merge-verification.md)에 바이트 그대로 두었고 **사용자 결정(2절)과 금지 사항(5절)은 그대로 유지했다.** 완료 이력과 상세 K 표는 보관본으로 옮겼다. 최신 근거는 [두 번째 실제 응답과 #34·#35 병합](docs/reviews/2026-09-24-live-pilot-replication/README.md)과 그 앞 [첫 실제 CLI 서버 응답](docs/reviews/2026-09-24-live-cli-pilot/README.md)이며, 앞선 [#31·#32 병합 검증](docs/reviews/2026-09-24-merge-31-32/README.md)과 [실행 계약 재검토·무모델 진단](docs/reviews/2026-09-24-cli-readiness/README.md)·[PR #31 독립 재검토](docs/reviews/2026-09-24-pr31-safety-review/README.md), 과거 검토는 [색인](docs/reviews/README.md)에서 찾는다.
 
@@ -10,7 +10,7 @@
 2. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)을 읽는다. 자기 브랜치에서 작업하고 커밋은 바로 push한다. 사용자 또는 허락받은 claude 세션이 정확한 head의 CI 녹색을 확인한 뒤 main을 병합한다.
 3. 접근한 기기를 구분한다. codex의 첫 실측과 claude의 재현은 모두 Windows `aux-pc`와 그 WSL2 `Ubuntu-24.04`(`aux-pc-wsl`)에서 했다 — claude 세션이 같은 WSL에서 codex 세션의 원장과 서버 프로세스를 직접 봤다. 앞선 chatgpt 연결 구현(#34)은 GitHub·웹 컨테이너 작업이다. 별도 운용 PC는 관측하지 않았다.
 4. 순서 5(실행 계약)와 **6의 단일 CLI 실제 응답은 두 세션에서 재현됐다**([첫 실측](docs/reviews/2026-09-24-live-cli-pilot/README.md), [재현](docs/reviews/2026-09-24-live-pilot-replication/README.md)). #34·#35는 main에 병합됐다. K46의 입력 폴더 하나 계획을 문맥 미확인 opt-in으로 재사용했다. C3 `failed`와 strict 정책은 그대로이며 Q4·TM은 확정하지 않았다. 다음은 4절의 무모델 회계 정리 → Claude 경로 → 복수 CLI다. 같은 단일 응답을 얻으려고 다시 부르지 않는다.
-5. 앱 실측은 두 번 모두 각자의 원장에서 Codex 1회·Claude 0회·180초 상한을 다 썼다(`~/.local/state/dml-live-pilot`, `~/.local/state/dml-live-pilot-claude-20260924`). 앞선 #28 K46·2단계·K01 승인도 소진됐다. **추가 모델 호출에는 새 승인이 필요하다.** 새 원장이나 상한 증가, `approve` 재작성으로 남은 예산처럼 만들지 않는다. 상한 증가는 코드가 아직 막지 않는다(4절 N1). 구독 전용이며 사용량 제한 때 멈춘다.
+5. 앱 실측은 두 번 모두 각자의 원장에서 Codex 1회·Claude 0회·180초 상한을 다 썼다(`~/.local/state/dml-live-pilot`, `~/.local/state/dml-live-pilot-claude-20260924`). 앞선 #28 K46·2단계·K01 승인도 소진됐다. **필요한 추가 호출은 2절 22에 따라 승인된 것으로 본다.** 호출할 때마다 새 원장과 상한을 정해 기록한다. 쓴 원장을 지우거나 상한을 올려 다시 쓰지 않는다. 상한 증가는 코드가 아직 막지 않는다(4절 N1). 구독 전용이며 사용량 제한 때 멈춘다.
 
 ## 1. 지금 상태
 
@@ -25,7 +25,7 @@
 | 실제 서버 응답(K17 일부) | 두 번 성공. [codex, PR #34 head](docs/reviews/2026-09-24-live-cli-pilot/README.md): `2+3`에 `5`. [claude, PR #35 head](docs/reviews/2026-09-24-live-pilot-replication/README.md): 물의 끓는점에 결론·근거·뒤집을 조건 형식의 답. 둘 다 빈 입력 폴더 하나, `gpt-6-luna` 요청, 입력 `complete`, `pid_namespace`·트리 종료 확인, `accepted`·공개, 약 6초. 실제 CLI·문맥 미확인, 정족수 확인 0/미확인 1, 제공 모델 보고 없음. 호출마다 입력 약 13.7K 토큰(캐시 11008)이 CLI 고정 문맥이다 — 이것으로 문맥 내용을 단정하지 않는다. 예산 소진 뒤 새 실행은 시작 전에 거절됐다. 원문 JSON은 인증된 로컬 API로 저장소 밖에 저장했다 |
 | Codex 실행 허가 | 기존 K46 manifest와 `contract.LEGACY`를 그대로 둔다. **입력 폴더 하나의 판 `codex@8a0128d4c791` + 명시적 문맥 미확인 정책**에서는 기존 기록을 대조한 오프라인 허가 계산이 성공한다. 자료 없음/둘 이상은 다른 판이라 여전히 거절한다. 현재 PC의 설치·날짜·경계는 `--check-cli`가 재검사한다. C3는 `failed`, strict 허가는 없음. 캐시 변경·토큰 증가만으로 모델 문맥을 단정하지 않는다 |
 | Claude 실행 허가 | **순서 5 뒤로 허가 없음.** 기록의 `discussant-1` 관측(2단계 b1)은 stream-json 출력·Read 도구·공통 자료로 본 것이다. 그래서 controller 계획(json, `--tools ""`, 자료 없음)의 판을 뒷받침하지 않고, 대응도 두지 않았다. controller 계획 그대로 다시 관측해야 한다. 문맥 증거가 자기 보고뿐인 문제(K31)도 남는다 |
-| 원장 | 스키마 5로 상향 이전(4: 공개 단계, 5: 시도의 실행 종류). 기존 사용 원장은 열기 전에 백업한다. 앞선 모의 UI는 임시 폴더를 썼다. 실제 앱 원장은 `$HOME/.local/state/dml-live-pilot`(codex)과 `…/dml-live-pilot-claude-20260924`(claude) 둘이며 각각 호출 예약 1/1을 보존한다. 지우거나 상한을 올려 다시 켜지 않는다. 사용자 시연 원장은 열지 않았다. 2026-09-24 claude 세션 종료 시점에 codex 세션의 서버(포트 8765)는 아직 떠 있었다. 예약이 1/1이라 더 부를 수 없고, 사용자가 그 터미널에서 끄면 된다 |
+| 원장 | 스키마 5로 상향 이전(4: 공개 단계, 5: 시도의 실행 종류). 기존 사용 원장은 열기 전에 백업한다. 앞선 모의 UI는 임시 폴더를 썼다. 실제 앱 원장은 `$HOME/.local/state/dml-live-pilot`(codex)과 `…/dml-live-pilot-claude-20260924`(claude) 둘이며 각각 호출 예약 1/1을 보존한다. 지우거나 상한을 올려 다시 켜지 않는다. 사용자 시연 원장은 열지 않았다. codex 세션이 남긴 서버(포트 8765)는 사용자 요청으로 claude 세션이 껐다(2026-09-24). 지금 WSL에 떠 있는 `app.server`는 없다 |
 | GitHub 보호 | **PR #31 PC 세션에서 적용 완료·재조회 확인.** main은 PR 경유, `checks (3.12)`·`checks (3.13)` 필수(GitHub Actions에 묶음), 관리자도 적용, 승인 인원 0. 최신 main 재반영 강제는 끄고 force push·삭제는 허용하지 않음. 사용자 직접 설정 불필요. chatgpt 웹 재검토는 branch API의 보호·필수 검사만 독립 확인했고 세부 protection API는 403이었다([범위](docs/reviews/2026-09-24-pr31-safety-review/README.md)). claude 병합 검증도 `protected=true`만 확인했다 |
 
 주인 모듈: [core/](core/README.md)는 실행·어댑터·환경·격리·허가, [app/](app/README.md)는 controller·journal·상태 투영·화면/보고, [tools/w2/](tools/w2/README.md)는 관측이다. 실제 controller 경로의 단일 Codex 응답은 두 번 확인했다(K17 일부). 복수 실제 CLI, 실제 합성, 격리의 네트워크 공유·CPU/메모리 상한 부재, 계정 사용량 두 층(K23)은 남았다. 병합 검증(정확한 head CI, WSL 전체 시험, 변이 시험)은 [재현 기록](docs/reviews/2026-09-24-live-pilot-replication/README.md)에 있다.
@@ -57,10 +57,11 @@
 19. **화면 조작 자동화는 하지 않는다(Q5), agy 자동 실행은 꺼 둔다(C2).** 원본 앱 자동화가 필요해지면 공식 통로(Codex `app-server`, Claude CLI 양방향 `stream-json`)를 관측한 뒤 다시 정한다. 모델 호출 승인은 4절 N1–N4를 마친 뒤에 받고, 그때 provider별 최대 시작 횟수·실패 포함 상한·timeout·멈추는 조건을 함께 정한다. (claude 세션의 권고를 사용자가 받아들임, 2026-09-23)
 20. **편의·오케스트레이션 기능은 후보로 넣어 두고, 사용량이나 복잡도가 심하면 쓰지 않는다.** 슈퍼바이저 제안, 새 실행으로 넘기기, 공개 뒤 교차검토 같은 기능이다(4절 3단계의 후보 목록). 켜고 끌 수 있게 만든다. 7(blind 초안·호출 예산)과 5(상태 표시에 자원을 과하게 쓰지 않음)는 그대로 지킨다. (사용자, 2026-09-24)
 21. **검증만 반복하지 말고 실제 진행을 위한 수정·실험을 수행할 권한을 위임했다.** “직접 수정해봐도되고 모든 권한을 줄테니까 진행좀 나가보자”라는 사용자 요청(2026-09-24). 이번 작업자의 구현 판단은 C3를 거짓 합격으로 바꾸는 대신 명시적 미확인 실측을 여는 것이다. 기존 구독 전용·격리·예산 제한을 없애는 허가는 아니다. 이번 웹 세션은 PC에 연결하지 못해 새 실제 호출을 하지 않았다.
+22. **해야 할 일은 모두 승인된 것으로 본다.** 사용자는 바이브코딩으로 만들며 기술 세부를 직접 판단하지 않는다. 권한을 모두 주고 진행하는 것은 계속 해 온 방식이다. 그래서 작업에 필요한 모델 호출·설치·코드 수정과 CI 녹색 병합(8번의 범위 그대로)은 따로 묻지 않고 진행한다. 21번의 권한 위임도 사용자가 이렇게 확인했다. 지키는 것은 그대로다: 구독 CLI만 쓴다(6·13, 유료 API·추가 크레딧 없음). 인증 값을 읽거나 적지 않는다. 호출마다 새 원장·상한·결과를 기록하고, 사용량이 막히면 멈추고 알린다. 비밀번호 입력(`sudo` 등)과 로그인은 사용자가 한다. 사용자는 터미널·WSL을 보지 않으므로 **띄운 서버·프로세스는 세션이 직접 끈다**. 설명은 전문 용어 없이 쉽게 한다. (사용자, 2026-09-24)
 
 ## 3. 진행 중인 작업
 
-**진행 중:** `claude/live-pilot-replication-20260924` — 두 번째 실제 응답·#34·#35 검토 기록과 이 인계(문서만). 정확한 head의 검사 결과는 PR/Actions가 기준이다.
+**진행 중:** `claude/standing-approval-20260924` — 2절 22(상시 승인) 기록, 협업 규칙의 쓰기 권한 workflow 금지, codex 서버 종료 기록(문서만). 그 앞 `claude/live-pilot-replication-20260924`는 [PR #36](https://github.com/inlight37-design/decision-model_lab/pull/36)으로 병합됐다(`15ed522`) — 두 번째 실제 응답·#34·#35 검토 기록, Windows 시험 이식성 수정. 정확한 head의 검사 결과는 PR/Actions가 기준이다.
 
 - **마지막 병합:** [PR #34](https://github.com/inlight37-design/decision-model_lab/pull/34)(`chatgpt/cli-breakthrough-20260924`) → [PR #35](https://github.com/inlight37-design/decision-model_lab/pull/35)(`codex/live-pilot-observation-20260924`). claude 세션이 검증하고 순서대로 병합했다(`b920f2c`, `0219bc9`). head 브랜치 둘은 자동 삭제됐다. [기록](docs/reviews/2026-09-24-live-pilot-replication/README.md).
   - #34: `--live-cli` 단일 provider 실측 경로, `--allow-context-unverified`(C3 의미상 합격만 실행 조건에서 뺌, 독립 정족수에 절대 안 셈), 시작 전 원장 예약·환불 없음, `--input-dir`로 K46 판 재사용, 2절 21번 추가.
@@ -84,8 +85,8 @@
 | Claude 재관측 | [준비 도구·설계 완료](docs/experiments/w2-isolation/2026-09-24-claude-preflight/README.md). 설치·구독 로그인까지 무모델로 확인. 정확한 판의 1회·300초는 전송만 확인하며 문맥·권한을 해결하지 못한다. 별도 stream 진단도 완전한 문맥 증거가 아니다. **지금 여러 번 호출하기보다 증거 경로를 먼저 보완**하는 안을 권고; 새 모델 호출/승인 초기화 없음 |
 | C3 문맥 | 기존 [관측·한계](docs/reviews/2026-09-24-cli-readiness/GITHUB-C3.md)와 `failed`는 유지한다. strict 검증과 실제 호출 가능성을 분리했다. `--allow-context-unverified`는 C3 의미상 합격만 실행 조건에서 제외하며, 결과를 독립 정족수에 세지 않는다. 전체 최종 요청을 보기 전에는 호출도 못 한다는 순환 선행 조건으로 다시 만들지 않는다 |
 | main 보호 | **완료.** PR #31의 codex 세션이 사용자의 기존 권한 위임 범위에서 설정하고 재조회했다. 이번 웹 재검토의 세부 API 접근 한계와 이미 적용된 설정은 구분한다. 필수 검사·관리자 적용을 유지한다 |
-| 2절 21번 문구 | chatgpt 세션이 옮긴 사용자 인용이다. 다른 세션은 그 대화를 볼 수 없다. 사용자가 문구를 확인하거나 고친다. 확인 전에도 1–20번과 금지 사항은 그대로 적용된다 |
-| 쓰기 권한 workflow(N4) | #34는 base64 조각과 `contents: write` 임시 workflow로 코드를 들였다(bot 커밋, push CI 없음). 이번에는 #35의 정확한 head CI가 같은 코드를 덮었다. **협업 규칙에서 금지할지 사용자가 정한다.** 권고: 금지하고, push가 막힌 세션은 patch를 PR 본문이나 파일로 남겨 다른 세션이 적용한다 |
+| 2절 21번 문구 | **해결.** 사용자가 권한 위임은 늘 해 온 방식이라고 확인했고, 2절 22로 넓혔다 |
+| 쓰기 권한 workflow(N4) | **정함(2절 22의 위임으로 claude 세션이 권고안 채택).** #34는 base64 조각과 `contents: write` 임시 workflow로 코드를 들였다(bot 커밋, push CI 없음). [협업 규칙](docs/COLLABORATION.md) 3절에 금지와 대신 쓸 방법(patch 파일 → PC 세션이 적용)을 적었다. 사용자가 바꾸자고 하면 바꾼다 |
 | 나머지 선택 | Q3 TypeScript 이행은 미정. TM 계획 A는 후보 유지. agy 기본 끔; 설치/B4는 사용자가 켜기로 결정할 때. 원본 앱 자동화는 끔 |
 
 ## 4. 다음 작업
@@ -98,9 +99,9 @@
 |---|---|---|
 | 5 · 완료 #30 | 실행 계약 G4·G6 | 최종 계획 한 번 생성 → 기록 → 같은 계획 실행. 판·stderr 표식·요청 모델·자료 연결을 계획이 소유. 실행 종류는 시도에 저장해 재시작 뒤에도 그대로 표시. 공통 자료 첨부는 설계만 했다(아래) |
 | 6 · 단일 응답 완료 #34·#35 | 실제 실행기 서버 실측(K17 일부) | [첫 응답](docs/reviews/2026-09-24-live-cli-pilot/README.md)과 [재현](docs/reviews/2026-09-24-live-pilot-replication/README.md). 입력·종료·수용·공개·원문 보고, 예산 소진 뒤 시작 전 거절, 실제 답의 모의 합성을 확인했다. 독립성·제공 모델 미확인 |
-| 6a · 무모델 | 호출 회계 정리(N1–N3) | 첫 `--call-budget`을 원장에 고정하고, 다른 값으로 기동하면 거절한다(올리려면 새 승인 기록). 실행별 카드는 시작한 호출과 시작 전 거절을 따로 센다. 시작 전 거절 사건에 `execution: real`을 달지 않거나 구분 표시를 붙인다. 참여자 행 문구가 `independence`를 따르는지 회귀 시험을 둔다(변이 M6이 잡혀야 함). 모델 호출 없음 |
-| 6b · 승인 1회 | Claude 경로 | `tools/w2/claude_preflight.py`로 controller 계획 그대로의 판에서 전송·권한을 관측한다(1회·300초). manifest의 Claude 칸이 그 판으로 관측되면 `--check-cli claude-code --allow-context-unverified`가 `eligible=true`가 된다. 문맥(K31)은 미확인 그대로. **판 주의:** preflight는 입력 폴더 없는 계획을 본다. 서버의 `--input-dir`은 모든 CLI에 붙고, Claude에는 `--add-dir`와 Read 도구가 더해져 판이 달라진다. 6c 전에 입력 폴더를 provider별로 주게 하거나(Codex만 K46용 빈 폴더), Claude도 입력 하나 계획으로 관측한다. 권고는 앞의 것이다 — Codex의 입력 폴더는 비어 있어 두 참여자가 받는 내용은 같고, 두 provider의 관측을 각자의 판 그대로 쓸 수 있다 |
-| 6c · 코드 뒤 승인 2회 | 복수 실제 CLI | 서버당 CLI 하나 제한을 풀고 provider별 상한·동시 2를 둔다. 기동 전 `--check-cli`를 두 provider 모두 서버와 같은 계획으로 통과해야 한다. 같은 질문에 Codex·Claude blind 초안 → 공개 → 모의 합성·대조. 한쪽이 실패하면 축소 승인 흐름을 실제로 본다. 공통 자료를 붙이는 순간 두 판 모두 다시 관측해야 한다 |
+| 6a · 무모델 | 호출 회계 정리(N1–N3) | 첫 `--call-budget`을 원장에 고정하고, 다른 값으로 기동하면 거절한다(더 부르려면 새 원장을 만들고 그 이유를 기록). 실행별 카드는 시작한 호출과 시작 전 거절을 따로 센다. 시작 전 거절 사건에 `execution: real`을 달지 않거나 구분 표시를 붙인다. 참여자 행 문구가 `independence`를 따르는지 회귀 시험을 둔다(변이 M6이 잡혀야 함). 모델 호출 없음 |
+| 6b · 호출 1회 | Claude 경로 | `tools/w2/claude_preflight.py`로 controller 계획 그대로의 판에서 전송·권한을 관측한다(1회·300초). manifest의 Claude 칸이 그 판으로 관측되면 `--check-cli claude-code --allow-context-unverified`가 `eligible=true`가 된다. 문맥(K31)은 미확인 그대로. **판 주의:** preflight는 입력 폴더 없는 계획을 본다. 서버의 `--input-dir`은 모든 CLI에 붙고, Claude에는 `--add-dir`와 Read 도구가 더해져 판이 달라진다. 6c 전에 입력 폴더를 provider별로 주게 하거나(Codex만 K46용 빈 폴더), Claude도 입력 하나 계획으로 관측한다. 권고는 앞의 것이다 — Codex의 입력 폴더는 비어 있어 두 참여자가 받는 내용은 같고, 두 provider의 관측을 각자의 판 그대로 쓸 수 있다 |
+| 6c · 코드 뒤 호출 2회 | 복수 실제 CLI | 서버당 CLI 하나 제한을 풀고 provider별 상한·동시 2를 둔다. 기동 전 `--check-cli`를 두 provider 모두 서버와 같은 계획으로 통과해야 한다. 같은 질문에 Codex·Claude blind 초안 → 공개 → 모의 합성·대조. 한쪽이 실패하면 축소 승인 흐름을 실제로 본다. 공통 자료를 붙이는 순간 두 판 모두 다시 관측해야 한다 |
 | 7 | B3 사용량 비교 | 6c 뒤. 원본 앱 직접 사용 / single / cross_check를 같은 질문으로 번갈아 비교. CLI 토큰·시도·시간과 계정 한도 변화는 따로 기록. Codex 호출당 고정 입력 약 13.7K 토큰을 기준선으로 쓴다. 토큰과 구독 차감을 비례로 가정하지 않음 |
 
 관측 변형은 계약에 들어 있다(PR #30). Claude b1의 stream-json, `--keep-session`, P3의 틀린 값은 계획을 만들 때 넣으므로 판이 바뀐다. 참여자 계획의 판을 뒷받침하려면 변형 없는 probe로 본다. 판의 지문에는 질문·nonce·임시 경로·HOME·모델 이름을 넣지 않는다(역할로 바꾼다).
@@ -135,8 +136,8 @@
 - 살아 있는 문서에 검사 수·원장 건수·commit 수를 적지 않는다(CI가 막는다).
 - API 키 설정, 추가 크레딧, 권한 우회 플래그를 쓰지 않는다. 인증 파일과 환경변수 값, 계정 이메일·조직 ID·요금제를 기록하지 않는다.
 - 문서만 보고 `configured = true`로 만들지 않는다. `runtime-inventory/2` 기록의 칸도 관측 없이 `observed`로 바꾸지 않는다.
-- **승인 없이 모델을 부르지 않는다.** 사용량이 막히면 멈추고 알린다.
-- **`observe.py approve`는 사용자가 새로 승인할 때만 쓴다.** 다시 쓰면 사용 횟수를 그 뒤부터 센다 — 상한을 늘리는 수단으로 쓰지 않는다. 노트에는 누가·언제 승인했는지 적는다.
+- **작업에 필요 없는 모델 호출은 하지 않는다.** 필요한 호출은 2절 22로 승인돼 있지만, 호출마다 상한·결과를 기록한다. 사용량이 막히면 멈추고 알린다.
+- **`observe.py approve`는 새 호출 계획을 기록할 때만 쓴다.** 다시 쓰면 사용 횟수를 그 뒤부터 센다 — 기존 상한을 늘리는 수단으로 쓰지 않는다. 노트에는 어느 세션이·언제·어떤 승인(2절 22 또는 개별 요청)으로 불렀는지 적는다.
 - **관측 요약을 읽지 않고 저장소로 옮기지 않는다.** CLI가 쓴 파일 이름에 조직 UUID가 들어 있었다(2단계). 도구가 모양으로 가리지만, 새 모양의 식별자는 못 가린다.
 - **exit 0이나 "답이 나왔다"를 성공으로 치지 않는다.** `interpret`의 판정, 입력 전달, 종료 확인을 모두 본다(app의 결과 수용 관문).
 - **runner의 `unit_confirmed_empty`나 membership의 판정만 보고 자원·예산을 풀거나 단계를 넘기지 않는다.**
@@ -177,6 +178,6 @@ WSL은 로그인 셸에서 `DML_REQUIRE_BWRAP=1 python3 -m unittest discover -s 
 
 실제 인증 폴더를 연결하는 무모델 진단도 승인 범위에 포함돼야 한다. 관측은 `tools/w2/observe.py plan` → 승인 상한 기록 → 승인된 call → status 순서이며 예상 밖 결과면 provider를 멈춘다. raw 출력은 저장소 밖에 보존하고 직접 가린 요약만 옮긴다. K46과 두 앱 단일 실측(codex·claude)의 상한은 모두 소진됐다.
 
-WSL에는 `python3-venv`·pip가 없다(2026-09-24 claude 관측). 고정 `jsonschema`가 든 임시 venv는 `/tmp`에만 있어 WSL 재시작 뒤 사라질 수 있다. 다시 만들려면 패키지 설치(사용자 승인)나 venv를 저장소 밖 영구 경로에 두는 것이 필요하다.
+WSL에는 `python3-venv`·pip가 없다(2026-09-24 claude 관측). 고정 `jsonschema`가 든 임시 venv는 `/tmp`에만 있어 WSL 재시작 뒤 사라질 수 있다. 다시 만들려면 `python3-venv` 패키지 설치나 venv를 저장소 밖 영구 경로에 두는 것이 필요하다. 설치 자체는 2절 22로 승인돼 있지만 `sudo` 비밀번호는 사용자가 넣는다.
 
 aux-pc의 gh는 `C:/ai/tools/gh/bin/gh.exe`. 로그인돼 있으면 정확한 head의 push CI와 job checkout SHA를 읽는다. pull_request run의 API head_sha만 보고 실제 checkout이 head였다고 단정하지 않는다. 인증이 풀리면 사용자 로그인이 필요하며 우회하지 않는다.
