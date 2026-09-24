@@ -1,0 +1,23 @@
+# Temporary source-only transfer for this branch; remove before opening the final PR.
+# No credentials, working-tree extras, or model calls are included.
+name: cli-breakthrough-source-snapshot
+on:
+  push:
+    branches: ["chatgpt/cli-breakthrough-20260924"]
+    paths: [".github/workflows/cli-breakthrough-snapshot.yml"]
+permissions:
+  contents: read
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Export tracked source only
+        run: git archive --format=tar HEAD > "$RUNNER_TEMP/source.tar"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tracked-source
+          path: ${{ runner.temp }}/source.tar
+          retention-days: 1
