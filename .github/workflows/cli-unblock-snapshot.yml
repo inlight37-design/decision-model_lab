@@ -1,0 +1,23 @@
+# Temporary review transport. No model calls, credentials, commits, or repository writes.
+# Remove before final handoff; source artifact is only for the authoring web container.
+name: cli-unblock-source
+on:
+  push:
+    branches: ["chatgpt/cli-unblock-20260924"]
+    paths: [".github/workflows/cli-unblock-snapshot.yml"]
+permissions:
+  contents: read
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Archive tracked source only
+        run: git archive --format=zip HEAD -o /tmp/cli-unblock-source.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cli-unblock-source
+          path: /tmp/cli-unblock-source.zip
+          retention-days: 1
