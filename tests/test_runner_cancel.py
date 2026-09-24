@@ -64,13 +64,12 @@ class CancellationBoundaryTests(unittest.TestCase):
     def test_cli_executor_forwards_exact_cancellation_token_to_existing_isolation_path(self):
         from types import SimpleNamespace
         from app.cli_executor import CliExecutor
-        from app.controller import ParticipantSpec, CLI
+        from core import contract
         cancel = threading.Event()
         ex = CliExecutor(never=(), unchecked=True, base_env={})
-        spec = ParticipantSpec("a", "A", "test", CLI, "claude-code", "m")
-        planned = SimpleNamespace(argv=(sys.executable,), stdin_text="q")
+        planned = SimpleNamespace(argv=(sys.executable,), stdin_text="q", adapter_id="claude-code")
+        plan = contract.Plan(contract.REAL, planned, "/unused", object(), "m")
         result = r.RunResult((), r.FAILED_TO_START, None, "", "", False, False, 0, None, True)
-        with patch.object(ex, "prepare", return_value=(planned, object())), \
-                patch("app.cli_executor.isolation.run", return_value=result) as run:
-            ex.execute(spec, "q", "/unused", 1, cancel=cancel)
+        with patch("app.cli_executor.isolation.run", return_value=result) as run:
+            ex.run(plan, 1, cancel=cancel)
         self.assertIs(run.call_args.kwargs["cancel"], cancel)

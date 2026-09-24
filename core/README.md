@@ -9,7 +9,8 @@
 | [`isolation.py`](isolation.py) | 참여자 한 번의 실행을 bubblewrap으로 가둔다(Linux·WSL2). 허용한 폴더만 연결하고, HOME·`/tmp`는 빈 tmpfs, 별도 PID namespace. `cli_mounts()`가 CLI별로 실행 파일과 자기 설정·인증 폴더만 고른다. 진입점은 `isolation.run()` 하나다 — 경로 충돌을 거절하고, root 소유 `/usr/bin/bwrap`인지 확인한 뒤 실행하며, 그때만 자손 전체의 종료를 확인한다. 환경변수 값은 명령 인자에 싣지 않고, 인증 토큰은 넘기지 않는다. [W2 기록](../docs/experiments/w2-isolation/aux-pc-wsl.md) | 네트워크 격리(모델 API 때문에 공유한다), 메모리·CPU 상한 |
 | [`env.py`](env.py) | 자식 환경(과금 변수 제거, 새 터미널 기준 정리), 실행 파일 찾기. WSL에서는 Windows 드라이브의 PATH 항목을 빼고 Windows 실행 파일(경로·링크·`MZ` 내용)을 거절한다. 자식 PATH가 없거나 비면 이 프로세스의 PATH로 되돌아가지 않는다. `tools/runtime_inventory.py`가 이 모듈의 변수 목록을 쓴다 | 인증 파일이나 환경변수 값 읽기·기록 |
 | [`membership.py`](membership.py) | 실행 중 참여자가 빠지거나 바뀔 때의 결정. 조용히 채우지 않고, 공개 전에는 구성이 바뀔 때마다 정족수를 다시 보고 미달이면 막는다 | 실행, 초안이 다 들어왔는지 판단 — controller의 단계 관문이 한다 |
-| [`eligibility.py`](eligibility.py) | 실행 허가(`eligible_for_run`)를 실행 직전에 계산한다(N4). 기록 `runtime-inventory/2`의 다섯 칸(설치·로그인·전송·문맥 준수·권한 준수)이 모두 관측됐고, 오래되지 않았고, 지금 설치된 버전이 기록과 같고, 구독 로그인일 때만 허가한다. 허가는 저장하지 않는다 | 기록된 관측이 사실인지 |
+| [`contract.py`](contract.py) | 실행 계약(순서 5, G4·G6). 한 시도의 최종 계획(`Plan`: 최종 argv·입력·격리 경계·요청 모델·stderr 표식·실행 종류)을 한 번 만들어 기록과 실행에 같이 쓴다. 판(`revision`)은 실행 틀의 지문이다 — 실행 파일 경로·모델·HOME·자료 경로·질문은 역할로 바꾸고, 출력 형식·도구·권한 profile·세션 보존·연결 역할은 남긴다. 옛 이름 판은 검토해 같은 계획으로 확인한 것만 `LEGACY`로 대응시킨다 | 관측이 사실인지, 두 판이 "비슷하면" 같다고 보는 것 |
+| [`eligibility.py`](eligibility.py) | 실행 허가(`eligible_for_run`)를 실행 직전에 계산한다(N4). 기록 `runtime-inventory/2`의 다섯 칸(설치·로그인·전송·문맥 준수·권한 준수)이 모두 관측됐고, 전송·문맥·권한은 지금 계획의 판으로 본 것이고(`contract.covers`), 오래되지 않았고, 지금 설치된 버전이 기록과 같고, 구독 로그인일 때만 허가한다. 허가는 저장하지 않는다 | 기록된 관측이 사실인지 |
 
 ## 지키는 규칙
 
@@ -22,4 +23,4 @@
 - **agy는 꺼져 있다.** 사용자가 켜야 쓴다(약관 판단, F31).
 - **과금 경로를 바꾸는 환경변수는 자식에게 넘기지 않는다.** 인증은 각 CLI의 로그인을 쓴다.
 
-검사: [`tests/test_core_runner.py`](../tests/test_core_runner.py), [`test_core_adapters.py`](../tests/test_core_adapters.py), [`test_core_membership.py`](../tests/test_core_membership.py), [`test_core_env.py`](../tests/test_core_env.py), [`test_core_isolation.py`](../tests/test_core_isolation.py)(bubblewrap을 쓸 수 있는 Linux에서만 돈다. CI는 bubblewrap을 설치하고 `DML_REQUIRE_BWRAP=1`로 건너뛰기를 막는다). 파서 검사는 aux-pc V04-01에서 실제로 받은 출력을 쓴다. CI는 Linux라서 Windows job object 경로는 로컬 Windows에서 확인한다.
+검사: [`tests/test_core_runner.py`](../tests/test_core_runner.py), [`test_core_adapters.py`](../tests/test_core_adapters.py), [`test_core_contract.py`](../tests/test_core_contract.py), [`test_core_membership.py`](../tests/test_core_membership.py), [`test_core_env.py`](../tests/test_core_env.py), [`test_core_isolation.py`](../tests/test_core_isolation.py)(bubblewrap을 쓸 수 있는 Linux에서만 돈다. CI는 bubblewrap을 설치하고 `DML_REQUIRE_BWRAP=1`로 건너뛰기를 막는다). 파서 검사는 aux-pc V04-01에서 실제로 받은 출력을 쓴다. CI는 Linux라서 Windows job object 경로는 로컬 Windows에서 확인한다.

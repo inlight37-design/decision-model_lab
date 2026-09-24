@@ -10,7 +10,7 @@
 | [`store.py`](store.py) | 작은 SQLite journal. 사건은 덧붙이기만 한다. 초안도 여기에 봉인한다 |
 | [`state.py`](state.py) | 참여자 행에서 취소·정족수·축소 승인·공개 관문을 계산. 별도 참여자 명단을 동기화하지 않는다 |
 | [`fake_cli.py`](fake_cli.py) | Claude·Codex 출력 형식을 흉내 내는 가짜 CLI. 행동: 정상, 느림, CLI 오류, 입력 일부만 읽음, 멈춤 |
-| [`cli_executor.py`](cli_executor.py) | 실제 CLI 실행기(Linux·WSL). `env.resolve` → `build_spec` → `isolation.run`(`cli_mounts`, `never`) → `interpret`. **모델을 부른다 — 승인 뒤에만.** 서버는 아직 쓰지 않는다. 이 기기의 기록(`runtime-inventory/2`)을 받아 시도마다 실행 허가를 계산한다 — 기록 없이 부르는 것은 관측 도구와 시험(`unchecked`)뿐이다 |
+| [`cli_executor.py`](cli_executor.py) | 실제 CLI 실행기(Linux·WSL). `plan()`이 `env.resolve` → `build_spec` → 격리 경계(`cli_mounts`, `never`) → 판 계산으로 최종 계획을 한 번 만들고, `run()`이 그 계획 그대로 `isolation.run` → `interpret`한다([실행 계약](../core/contract.py)). **모델을 부른다 — 승인 뒤에만.** 서버는 아직 쓰지 않는다. 이 기기의 기록(`runtime-inventory/2`)과 계획의 판으로 시도마다 실행 허가를 계산한다 — 기록 없이 부르는 것은 관측 도구와 시험(`unchecked`)뿐이다 |
 | [`report.py`](report.py) | 공개된 실행의 합성 없는 보고. 원문·출처·정족수·예산을 투영하며 모델 호출·원장 변경 없음 |
 | [`synthesis.py`](synthesis.py) | 모의 발췌 합성, 원문 위치·저장 해시 대조, 조건부 결정 카드. 사실 검증과 의미상 합의 판정은 하지 않는다 |
 | [`server.py`](server.py) | 127.0.0.1 화면 서버. 모든 `/api` 요청에 토큰 |
@@ -59,7 +59,7 @@ python -m app.server --port 8765
 - **자리와 상한.** 동시 실행 자리는 `running`과 `unknown`이 차지한다. 정리되지 않은 시도(`unknown` + `runner.lingering()`)가 상한에 닿으면 새 시도를 시작하지 않는다.
 - **다시 시작.** 이전 controller가 돌리던 시도는 `unknown`이 된다. 다시 부르지 않는다. 초안 작성 중인 실행은 공개 관문을 다시 본다.
   - 시작하지 못한 시도는 저절로 시작하지 않는다. 화면의 "대기 중인 시도 이어서 시작"을 눌러야 시작한다. 원장에 취소가 기록된 실행은 재시작·재개 뒤에도 시작하지 않는다.
-  - journal에는 스키마 버전이 있다. 예전 journal은 처음 열 때 올리고, 이 코드보다 새 journal은 열지 않는다. 스키마 4는 `runs.phase`를 기존 명단에서 이전한다. 누락되거나 잘못된 단계는 전체 롤백하며, 과거 roster/note는 더 이상 판정에 쓰지 않는다. 사용 중인 journal은 새 코드로 열기 전에 백업한다. 하향 이전은 없다.
+  - journal에는 스키마 버전이 있다. 예전 journal은 처음 열 때 올리고, 이 코드보다 새 journal은 열지 않는다. 스키마 4는 `runs.phase`를 기존 명단에서 이전한다. 누락되거나 잘못된 단계는 전체 롤백하며, 과거 roster/note는 더 이상 판정에 쓰지 않는다. 스키마 5는 시도마다 실행 종류(`participants.kind`: mock/real/synthetic)를 저장하고, 화면·보고는 지금 붙은 실행기가 아니라 이 값을 읽는다. 옛 시도는 시작 사건에 남은 실행기 이름으로 복원하며 근거가 없으면 "실행 종류 기록 없음"이다. 사용 중인 journal은 새 코드로 열기 전에 백업한다. 하향 이전은 없다.
 - **제어 API.** 참여자는 격리 안에서도 localhost를 공유한다. 그래서 모든 `/api` 요청(읽기 포함)에 토큰을 요구하고, Host 머리글이 우리 주소가 아니면 거절한다.
   - Origin이 있으면 해당 서버 origin만 허용한다. JSON 객체·문자열/정수 타입·단일 길이를 검사하고, 모호한 framing·과대/미완성 본문을 거절한다. frame 삽입 거절 헤더와 소켓 유휴 5초 제한이 있다. 인증 전 연결까지 최대 16개, 연결별 I/O 기한 15초이며 느린 전송으로 늘릴 수 없다. 초과 연결은 닫는다. 이 기한은 Python 계산 전체의 실행 시간/CPU/메모리 상한이나 상태 변경 취소 보장이 아니다.
   - 토큰은 URL의 `#` 뒤로만 브라우저에 준다. 페이지 자체에는 토큰이 없다.
@@ -80,7 +80,7 @@ python -m app.server --port 8765
 
 공개 뒤 **“합성 없는 보고 저장(JSON · 원문 포함)”**을 누르면 `<run_id>-without-synthesis.json`을 내려받는다. API는 기존 토큰이 필요한 `GET /api/runs/<run_id>/report`이며, 아직 공개할 수 없으면 409다.
 
-`a1-draft-report/2`는 고정 질문/프롬프트·입력 해시/크기, 수용된 초안 원문과 해시, 참여자 출처/독립성, 고정 정족수 정책, 탈락/축소 승인, 실패 포함 시도 예산을 담는다. 수동 독립성은 `unverified`, 계정 잔여는 `unknown`, 합성은 `not_included`, 검증은 `not_performed`다. 판 1의 `not_implemented`를 원문 전용 내보내기의 뜻에 맞게 바꿨다. 해시는 진실성이나 독립성의 증명이 아니다.
+`a1-draft-report/3`은 고정 질문/프롬프트·입력 해시/크기, 수용된 초안 원문과 해시, 참여자 출처/독립성과 시도의 실행 종류(`execution`), 고정 정족수 정책, 탈락/축소 승인, 실패 포함 시도 예산을 담는다. 수동 독립성은 `unverified`, 계정 잔여는 `unknown`, 합성은 `not_included`, 검증은 `not_performed`다. 판 2의 출처에 있던 "지금 붙은 실행기"는 과거 시도의 출처가 아니어서 뺐다(판 3). 판 1의 `not_implemented`는 판 2에서 원문 전용 내보내기의 뜻에 맞게 바꿨다. 해시는 진실성이나 독립성의 증명이 아니다.
 
 `report.py`는 controller의 공개 투영만 읽고 상태를 바꾸거나 모델을 부르지 않는다. 다른 실행/향후 자유 메타데이터는 허용 목록 밖이면 내보내지 않는다. 입력 해시/크기 또는 저장된 초안 해시 불일치, 공개 초안 누락은 거절한다. 내려받은 파일은 질문과 초안 원문을 포함하므로 공개 저장소에 자동으로 올리지 않는다.
 
@@ -101,6 +101,6 @@ python -m app.server --port 8765
 
 검사: [`tests/test_app_controller.py`](../tests/test_app_controller.py). 대부분은 프로세스 없는 합성 실행기로 보고, 한 묶음은 모의 CLI를 실제 실행 경로(Windows job object, Linux bubblewrap)로 돌린다. 실제 CLI 실행기는 [`tests/test_app_cli_executor.py`](../tests/test_app_cli_executor.py)가 설치된 모양 그대로 만든 가짜 `claude`·`codex`로 격리 경로를 돌려 본다(Linux).
 
-원장/HTTP 회귀는 [`test_app_integrity.py`](../tests/test_app_integrity.py), 보고서/인증 경계는 [`test_app_report.py`](../tests/test_app_report.py)에 있다. [2026-09-24 검증 기록](../docs/reviews/2026-09-24-a1-integrity/README.md)은 실제 HTTP 시험과 오프라인 DOM 시험을 구분한다.
+원장/HTTP 회귀는 [`test_app_integrity.py`](../tests/test_app_integrity.py), 보고서/인증 경계는 [`test_app_report.py`](../tests/test_app_report.py), 실행 계약(계획 한 번·저장한 실행 종류·스키마 5 이전)은 [`test_app_contract.py`](../tests/test_app_contract.py)에 있다. [2026-09-24 검증 기록](../docs/reviews/2026-09-24-a1-integrity/README.md)은 실제 HTTP 시험과 오프라인 DOM 시험을 구분한다.
 
 지속 취소·재시작·예산·늦은 답은 [`test_app_cancel.py`](../tests/test_app_cancel.py), 입력 신호는 [`test_runner_cancel.py`](../tests/test_runner_cancel.py), 연결 상한은 [`test_server_limits.py`](../tests/test_server_limits.py), 조회/의존 방향은 [`test_app_lean.py`](../tests/test_app_lean.py)에서 확인한다. 간결성 측정과 브라우저 취소의 한계는 [후속 기록](../docs/reviews/2026-09-24-lean-lifecycle/README.md)에 있다.

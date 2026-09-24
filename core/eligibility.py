@@ -8,7 +8,7 @@
   permission_conformance  금지한 읽기·쓰기가 실제로 거절되는가(B1·B2)
 각 칸은 status(unknown | observed | failed)와, 관측했으면 observed_at·evidence를 갖는다. failed는 "관측했더니 조건을
 못 맞췄다"는 뜻이고 unknown과 다르다. 참여자 argv로 본 세 칸(전송·문맥·권한)은 그때의 실행 명세 판(spec_revision,
-core.adapters.SPEC_REVISION)도 갖는다. 허가는 기록에 저장하지 않는다 — 실행할 때마다 기록·정책·날짜·지금 설치된
+core.contract가 최종 계획에서 계산한 판)도 갖는다. 허가는 기록에 저장하지 않는다 — 실행할 때마다 기록·정책·날짜·지금 설치된
 버전·지금의 명세 판으로 다시 계산한다. 기록에 `configured: true`가 있다고 허가하지 않는다.
 
 허가 조건: 다섯 칸이 모두 근거와 함께 observed이고, 관측일이 오늘 이전이며 max_age_days 안이다. 지금 설치된 버전을 읽을
@@ -25,7 +25,7 @@ from pathlib import Path
 import re
 from typing import Any, Mapping
 
-from core import adapters
+from core import contract
 
 SCHEMA = "runtime-inventory/2"
 FIELDS = ("installed", "auth_observed", "transport_observed", "context_conformance", "permission_conformance")
@@ -83,11 +83,12 @@ def row_problems(row: Mapping[str, Any]) -> list[str]:
 
 
 def eligibility(manifest: Mapping[str, Any], adapter_id: str, *, enabled: bool, today: date,
-                current_version: str | None, max_age_days: int = 30, allow_api: bool = False,
-                spec_revision: str | None = None) -> Verdict:
+                current_version: str | None, spec_revision: str | None, max_age_days: int = 30,
+                allow_api: bool = False) -> Verdict:
     """이 기록으로 지금 이 CLI를 참여자로 불러도 되는가. 이유를 모두 모아 돌려준다.
 
-    spec_revision: 지금의 실행 명세 판. 주지 않으면 core.adapters.SPEC_REVISION의 값이다.
+    spec_revision: 지금 실행할 계획의 판(core.contract.Plan.revision). 기록의 판이 같거나, 검토해 대응시킨 옛
+    이름 판(contract.LEGACY)일 때만 그 관측을 쓴다. 계획 없이 계산하면(None) 판이 맞는 관측이 없다.
     """
     if not isinstance(manifest, Mapping) or manifest.get("schema") != SCHEMA:
         return Verdict(False, (f"the record is not {SCHEMA}",))
@@ -99,7 +100,7 @@ def eligibility(manifest: Mapping[str, Any], adapter_id: str, *, enabled: bool, 
     if len(matches) > 1:
         return Verdict(False, (f"{adapter_id} appears more than once in the record",))
     row = matches[0]
-    current_spec = spec_revision if spec_revision is not None else adapters.SPEC_REVISION.get(adapter_id)
+    current_spec = spec_revision
     reasons = row_problems(row)
     if not enabled:
         reasons.append(f"{adapter_id} is turned off")
@@ -116,7 +117,7 @@ def eligibility(manifest: Mapping[str, Any], adapter_id: str, *, enabled: bool, 
             reasons.append(f"{field} was observed in the future ({entry.get('observed_at')})")
         elif (today - when).days > max_age_days:
             reasons.append(f"{field} was observed {(today - when).days} days ago (limit {max_age_days})")
-        if field in SPEC_BOUND and (current_spec is None or entry.get("spec_revision") != current_spec):
+        if field in SPEC_BOUND and not contract.covers(entry.get("spec_revision"), current_spec):
             reasons.append(f"{field} was observed with participant spec {entry.get('spec_revision') or 'unknown'};"
                            f" the current spec is {current_spec or 'unknown'} — observe again")
     installed = row.get("installed") if isinstance(row.get("installed"), Mapping) else {}

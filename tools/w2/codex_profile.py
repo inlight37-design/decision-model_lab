@@ -115,8 +115,8 @@ def exec_variants(executor):
         root = tempfile.mkdtemp(prefix="dml-k46-exec-")
         try:
             work, _inputs = _folders(root)
-            planned, box = executor.prepare(spec, "Reply with exactly: OK", work)
-            argv = list(planned.argv)
+            planned = executor.plan(spec, "Reply with exactly: OK", work)
+            box, argv = planned.box, list(planned.spec.argv)
             if name.startswith("legacy"):
                 argv = list(adapters.build_spec("codex", exe=argv[0], prompt="Reply with exactly: OK", model=MODEL).argv)
             if "human output" in name:
@@ -124,7 +124,7 @@ def exec_variants(executor):
             if name.startswith("undefined"):
                 argv[argv.index(select)] = 'default_permissions="notamode"'
             before = _auth_stat(HOME)
-            result = offline(argv, box, planned.stdin_text, timeout=90)
+            result = offline(argv, box, planned.spec.stdin_text, timeout=90)
             events = []
             for line in result.stdout.splitlines():
                 try:

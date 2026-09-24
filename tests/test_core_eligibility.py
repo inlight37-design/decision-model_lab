@@ -11,6 +11,7 @@ from unittest import mock
 from app import cli_executor
 from app.cli_executor import CliExecutor, installed_version
 from core import adapters, eligibility
+from test_core_contract import participant_revision
 from tools import runtime_inventory
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -22,7 +23,8 @@ def observed(**extra):
     return {"status": "observed", "observed_at": "2026-09-23", "evidence": "synthetic", **extra}
 
 
-SPEC = adapters.SPEC_REVISION["claude-code"]
+SPEC = participant_revision("claude-code")   # 지금 실행할 계획의 판(core.contract)
+K46_MANIFEST = ROOT / "docs/experiments/w2-isolation/2026-09-24-k46-confirmation/manifest.v2.json"
 
 
 def record(**overrides):
@@ -39,6 +41,7 @@ def verdict(manifest, **kwargs):
     kwargs.setdefault("enabled", True)
     kwargs.setdefault("today", TODAY)
     kwargs.setdefault("current_version", "2.1.280")
+    kwargs.setdefault("spec_revision", SPEC)
     return eligibility.eligibility(manifest, "claude-code", **kwargs)
 
 
@@ -107,6 +110,8 @@ class EligibilityTests(unittest.TestCase):
         unbound = record(permission_conformance=observed())
         self.assertTrue(any("permission_conformance was observed with participant spec unknown" in reason
                             for reason in verdict(unbound).reasons))
+        # 계획 없이 계산하면 판이 맞는 관측이 없다
+        self.assertEqual(len(verdict(record(), spec_revision=None).reasons), len(eligibility.SPEC_BOUND))
 
     def test_runtime_and_inventory_share_every_structural_refusal(self):
         for field in eligibility.FIELDS:
@@ -125,26 +130,47 @@ class EligibilityTests(unittest.TestCase):
 
 
 class RecordTests(unittest.TestCase):
-    def test_the_committed_wsl_record_allows_claude_and_refuses_codex_for_its_context(self):
-        # 2단계(2026-09-23) 관측 뒤의 기록: Claude는 다섯 칸이 모두 관측됐다. Codex는 작업 폴더의 AGENTS.md를 실어
-        # 문맥 준수가 failed다(K38·K44).
-        manifest = json.loads(WSL_V2.read_text(encoding="utf-8"))
-        self.assertEqual(runtime_inventory.validate_manifest_v2(manifest), [])
-        claude = eligibility.eligibility(manifest, "claude-code", enabled=True, today=TODAY, current_version="2.1.280")
-        self.assertTrue(claude.eligible, claude.reasons)
-        codex = eligibility.eligibility(manifest, "codex", enabled=True, today=TODAY, current_version="0.156.1")
-        # 문맥이 failed이고, 2단계의 전송·권한 관측은 옛 argv(discussant-1, --sandbox read-only)로 본 것이다 — K46
-        # profile을 넣은 지금의 argv(discussant-2)로는 다시 관측해야 한다(리뷰 R04)
-        self.assertEqual(codex.reasons, (
-            "transport_observed was observed with participant spec discussant-1; the current spec is discussant-2"
-            " — observe again", "context_conformance is failed",
-            "permission_conformance was observed with participant spec discussant-1; the current spec is discussant-2"
+    def test_the_committed_records_back_no_participant_plan_yet(self):
+        """순서 5 뒤(core.contract): 관측은 그것을 본 계획의 판에만 묶인다.
+
+        Claude(2단계 b1)는 다섯 칸이 모두 관측됐지만 stream-json·Read 도구·공통 자료로 본 것이라 controller 계획의
+        근거가 아니다. Codex는 문맥이 failed이고(K38·K44), 2단계의 전송·권한은 옛 argv(--sandbox read-only)였다.
+        K46 기록의 discussant-2는 K46이 돈 계획(공통 자료 하나)만 뒷받침한다.
+        """
+        def reasons(manifest, adapter_id, version, revision):
+            return eligibility.eligibility(manifest, adapter_id, enabled=True, today=date(2026, 9, 24),
+                                           current_version=version,
+                                           spec_revision=revision).reasons
+
+        def respec(old, new):
+            return tuple(f"{field} was observed with participant spec {old}; the current spec is {new} — observe again"
+                         for field in ("transport_observed", "permission_conformance"))
+
+        stage2 = json.loads(WSL_V2.read_text(encoding="utf-8"))
+        k46 = json.loads(K46_MANIFEST.read_text(encoding="utf-8"))
+        for manifest in (stage2, k46):
+            self.assertEqual(runtime_inventory.validate_manifest_v2(manifest), [])
+        claude = participant_revision("claude-code")
+        self.assertEqual(reasons(stage2, "claude-code", "2.1.280", claude), (
+            f"transport_observed was observed with participant spec discussant-1; the current spec is {claude}"
+            " — observe again",
+            f"context_conformance was observed with participant spec discussant-1; the current spec is {claude}"
+            " — observe again",
+            f"permission_conformance was observed with participant spec discussant-1; the current spec is {claude}"
             " — observe again"))
-        later = eligibility.eligibility(manifest, "claude-code", enabled=True, today=date(2026, 10, 24),
-                                        current_version="2.1.280")
-        self.assertFalse(later.eligible)                                        # 30일이 지나면 다시 관측한다
-        other = eligibility.eligibility(manifest, "claude-code", enabled=True, today=TODAY, current_version="2.1.281")
-        self.assertFalse(other.eligible)                                        # 버전이 바뀌어도
+        with_materials, plain = (participant_revision("codex", inputs=("/tmp/in",)), participant_revision("codex"))
+        self.assertEqual(reasons(stage2, "codex", "0.156.1", plain),
+                         respec("discussant-1", plain)[:1] + ("context_conformance is failed",)
+                         + respec("discussant-1", plain)[1:])
+        self.assertEqual(reasons(k46, "codex", "0.156.1", with_materials), ("context_conformance is failed",))
+        self.assertEqual(reasons(k46, "codex", "0.156.1", plain),
+                         respec("discussant-2", plain)[:1] + ("context_conformance is failed",)
+                         + respec("discussant-2", plain)[1:])
+        # 판이 맞는 기록이라도 30일이 지나거나 버전이 바뀌면 다시 관측한다
+        fresh = record(installed=observed(version="2.1.280"))
+        self.assertTrue(verdict(fresh).eligible)
+        self.assertFalse(verdict(fresh, today=date(2026, 10, 24)).eligible)
+        self.assertFalse(verdict(fresh, current_version="2.1.281").eligible)
 
     def test_the_validator_refuses_stored_eligibility_and_unbacked_observations(self):
         base = record()
@@ -200,17 +226,17 @@ class ExecutorGateTests(unittest.TestCase):
         ex = CliExecutor(never=(str(self.root),), inventory=path)
         with mock.patch.object(cli_executor, "date") as fake_date:            # 시험이 실제 날짜에 기대지 않게
             fake_date.today.return_value = TODAY
-            ex._check_eligible("claude-code", exe)                              # 허가
+            ex._check_eligible("claude-code", exe, SPEC)                              # 허가
             self.write(record(context_conformance={"status": "failed", "observed_at": "2026-09-23", "evidence": "x"}))
             with self.assertRaisesRegex(adapters.AdapterError, "context_conformance is failed"):
-                ex._check_eligible("claude-code", exe)                          # 기록이 바뀌면 바로 반영
+                ex._check_eligible("claude-code", exe, SPEC)                          # 기록이 바뀌면 바로 반영
             path.write_text("{broken", encoding="utf-8")
             with self.assertRaisesRegex(adapters.AdapterError, "cannot read the inventory"):
-                ex._check_eligible("claude-code", exe)
+                ex._check_eligible("claude-code", exe, SPEC)
             fake_date.today.return_value = date(2027, 1, 1)                    # 오래된 관측은 다시 봐야 한다
             self.write(record())
             with self.assertRaisesRegex(adapters.AdapterError, "days ago"):
-                ex._check_eligible("claude-code", exe)
+                ex._check_eligible("claude-code", exe, SPEC)
 
 
 if __name__ == "__main__":

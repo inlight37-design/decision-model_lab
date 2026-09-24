@@ -3,6 +3,7 @@
 대부분은 프로세스를 띄우지 않는 합성 실행기로 본다. 마지막 묶음만 모의 CLI를 실제 실행 경로(Windows job object,
 Linux bubblewrap)로 돌린다. 모델은 부르지 않는다.
 """
+import hashlib
 import http.client
 from http.server import BaseHTTPRequestHandler
 import json
@@ -13,11 +14,12 @@ import sqlite3
 import sys
 import tempfile
 import threading
+import types
 import unittest
 
 from app import controller as c, server, store as store_module
 from app.store import LedgerBusy, Store, StoreError, events
-from core import adapters, runner
+from core import adapters, contract, runner
 
 
 def claude_stdout(text="모의 답", error=False):
@@ -25,7 +27,23 @@ def claude_stdout(text="모의 답", error=False):
                        "modelUsage": {"m": {}}, "usage": {"input_tokens": 10, "output_tokens": 999}})
 
 
-class SyntheticExecutor:
+class SyntheticContract:
+    """합성 실행기에 실행 계약(core.contract)을 준다. 계획의 argv에 참여자 ID를 적고, run이 그 계획으로 execute를 부른다."""
+    kind = contract.SYNTHETIC
+    adapter_ids = ("claude-code", "codex")
+
+    def plan(self, spec, prompt, work_dir):
+        data = prompt.encode("utf-8")
+        planned = adapters.ExecutionSpec(spec.adapter_id, ("synthetic", spec.pid), prompt, adapters.STDIN,
+                                         hashlib.sha256(data).hexdigest(), len(data))
+        return contract.Plan(contract.SYNTHETIC, planned, work_dir, None, spec.model or "", revision="synthetic")
+
+    def run(self, plan, timeout, *, cancel=None):
+        spec = types.SimpleNamespace(pid=plan.spec.argv[1], adapter_id=plan.spec.adapter_id, model=plan.model)
+        return self.execute(spec, plan.spec.stdin_text, plan.work_dir, timeout, cancel=cancel)
+
+
+class SyntheticExecutor(SyntheticContract):
     """프로세스 없이 결과를 만든다. hold에 든 참여자는 release()까지 기다린다."""
     name = "synthetic"
 
@@ -264,7 +282,7 @@ def codex(pid):
     return c.ParticipantSpec(pid, pid.upper(), "test", c.CLI, "codex", "m")
 
 
-class ShapedExecutor:
+class ShapedExecutor(SyntheticContract):
     """참여자별로 답·오류·입력 전달·보고 모델을 정하는 합성 실행기. 프로세스는 띄우지 않는다."""
     name = "synthetic"
 

@@ -384,9 +384,14 @@ class CallTests(Base):
         self.assertTrue(b1["as_expected"], b1)
         self.assertEqual(b1["boundary_violations"], [])
         self.assertEqual(b1["argv_changes"], ["--output-format stream-json --verbose"])
-        spec_argv = b1["spec"]["argv"]                                          # 참여자의 실행 명세는 그대로 두고
-        self.assertEqual(spec_argv[spec_argv.index("--output-format") + 1], "json")
-        self.assertEqual(b1["argv_run"][b1["argv_run"].index("--output-format") + 1], "stream-json")  # 돌린 것은 따로
+        spec = b1["spec"]                                                       # 명세는 실제로 돌린 계획이다(G4)
+        self.assertEqual(spec["argv"], b1["argv_run"])
+        self.assertEqual(b1["argv_run"][b1["argv_run"].index("--output-format") + 1], "stream-json")
+        self.assertEqual(spec["changes"], b1["argv_changes"])
+        participant = self.executor().plan(
+            observe.ParticipantSpec("b1", "b1", "claude", observe.CLI, "claude-code", "claude-test-9"), "q",
+            str(self.root / "w"), inputs=(str(self.root / "in"),)).revision
+        self.assertNotEqual(spec["revision"], participant)                     # 변형은 참여자 계획의 판이 아니다
         self.assertEqual((b1["init"]["apiKeySource"], b1["init"]["init_counts"]["tools"]), ("none", 1))
         self.assertNotIn("tools", b1["init"])
         self.assertNotIn("Read", json.dumps(b1["init"]))                         # init names stay private
@@ -426,7 +431,8 @@ class CallTests(Base):
         p3 = self.call("p3-claude")
         self.assertTrue(p3["as_expected"])
         self.assertIn("notamode", p3["argv_run"])                               # 실제로 돌린 잘못된 값
-        self.assertNotIn("notamode", p3["spec"]["argv"])                        # 명세에는 참여자의 값
+        self.assertEqual(p3["spec"]["argv"], p3["argv_run"])                   # 명세는 실제로 돌린 계획이고
+        self.assertEqual(p3["spec"]["changes"], ["--permission-mode notamode"])  # 바꾼 것을 적는다
         install(self.home, "claude", "ignore-invalid")                          # 잘못된 값을 무시하고 답한다
         self.assertFalse(self.call("p3-claude")["as_expected"])
         with self.assertRaisesRegex(observe.ObserveError, "did not go as expected"):

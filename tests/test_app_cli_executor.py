@@ -122,20 +122,20 @@ class RefusedBeforeStartTests(Base):
     def test_nothing_starts_when_the_cli_cannot_be_planned(self):
         ex = CliExecutor(never=(str(self.root / "ledger"),), unchecked=True, home=str(self.home),
                          base_env={"PATH": str(self.home)})
-        self.assertIn("refused", ex.describe(claude(), "질문"))
-        result, outcome = ex.execute(claude(), "질문", str(self.root), 5)
-        self.assertEqual(result.state, runner.FAILED_TO_START)
-        self.assertIs(result.tree_confirmed_empty, True)                 # 시작한 것이 없다 — unknown이 아니다
-        self.assertEqual((outcome.ok, outcome.status), (False, "process_failed_to_start"))
+        with self.assertRaises(cli_executor.REFUSED_BEFORE_START):
+            ex.plan(claude(), "질문", str(self.root))
         agy = c.ParticipantSpec("g", "agy", "google", c.CLI, "antigravity", "m")
-        self.assertIn("not run by the CLI executor", ex.describe(agy, "질문")["refused"])
+        with self.assertRaisesRegex(adapters.AdapterError, "not run by the CLI executor"):
+            ex.plan(agy, "질문", str(self.root))
         ctl = self.controller(ex)
         run_id = ctl.create_run("질문", [claude()], min_independent=1)
         self.assertTrue(ctl.wait_idle())
         part = self.parts(ctl, run_id)["claude"]
         self.assertEqual((part["state"], part["status"]), (c.REJECTED, "process_failed_to_start"))
+        self.assertIs(part["result"]["tree_confirmed_empty"], True)     # 시작한 것이 없다 — unknown이 아니다
         started = next(e for e in events(self.store, run_id) if e["kind"] == "attempt_started")
         self.assertIn("refused", started["spec"])
+        self.assertEqual((started["execution"], part["execution"]), ("real", "real"))
 
 
 @unittest.skipUnless(bwrap_usable(), "bubblewrap을 쓸 수 있는 Linux에서만")
@@ -193,7 +193,8 @@ class RealPathTests(Base):
         """N4. 기록의 다섯 칸이 모두 관측됐고 설치 버전이 같을 때만 부른다. 아니면 프로세스를 만들기 전에 거절한다."""
         install(self.home, "claude")
         seen = {"status": "observed", "observed_at": "2026-09-23", "evidence": "synthetic"}
-        spec = {**seen, "spec_revision": adapters.SPEC_REVISION["claude-code"]}   # 참여자 argv로 본 칸(리뷰 R04)
+        # 참여자 계획의 판으로 본 칸(리뷰 R04, core.contract). 계획은 기록 없이 같은 HOME·PATH로 만든다
+        spec = {**seen, "spec_revision": self.executor().plan(claude(), "질문", str(self.root / "w")).revision}
         row = {"adapter_id": "claude-code", "installed": {**seen, "version": "9.9.9"},
                "auth_observed": {**seen, "auth_mode": "subscription_oauth", "funding_mode": "subscription"},
                "transport_observed": spec, "context_conformance": spec, "permission_conformance": spec}
