@@ -29,7 +29,7 @@
 """
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 import hashlib
 import json
 import os
@@ -46,7 +46,7 @@ from app.store import Store
 from app.report import build_report
 from app.synthesis import SynthesisError, mock_synthesize, unavailable
 from app.state import (CLI, MANUAL, QUEUED, RUNNING, AWAITING_USER, ACCEPTED, REJECTED, UNKNOWN,
-                       DONE, INDEPENDENT_ONLY, INCLUDE_UNVERIFIED, QUORUM_POLICIES, RunGate, gate)
+                       DONE, INDEPENDENT_ONLY, INCLUDE_UNVERIFIED, QUORUM_POLICIES, RunGate, gate, confirmed)
 from core import adapters, contract, env as core_env, isolation, membership as m, runner
 
 PROMPT = ("다음 질문에, 다른 참여자의 답을 보지 않은 상태로 독립적으로 답하라. "
@@ -93,6 +93,7 @@ class ParticipantSpec:
     adapter_id: str | None = None   # CLI만
     model: str | None = None
     behavior: str = "ok"            # 모의 CLI의 행동(fake_cli.py)
+    context_unverified: bool = False  # 전송 방식이 아니라 저장된 정책으로 정족수를 계산한다.
 
 
 class Executor(Protocol):
@@ -210,7 +211,7 @@ def acceptance(result: runner.RunResult | None, outcome: adapters.Outcome | None
 def _quorum_label(quorum: dict[str, Any]) -> str:
     """공개된 실행의 정족수 표시. 원본 앱 답을 센 실행은 "독립 정족수 충족"이라고 쓰지 않는다."""
     if quorum["policy"] == INDEPENDENT_ONLY:
-        extra = f" · 원본 앱 답 {quorum['unverified']}개는 보조 근거" if quorum["unverified"] else ""
+        extra = f" · 미확인 답 {quorum['unverified']}개는 보조 근거" if quorum["unverified"] else ""
         return f"독립 정족수 충족 — 독립성이 확인된 참여자 {quorum['confirmed']}명(최소 {quorum['min']}명){extra}"
     return (f"미확인 참여 포함 정족수 — 답 {quorum['counted']}명 중 독립성 확인 {quorum['confirmed']}명"
             f"(최소 {quorum['min']}명)")
@@ -222,10 +223,14 @@ class ControllerError(ValueError):
 
 class Controller:
     def __init__(self, store: Store, executor: Executor, *, max_parallel: int = 2, unsettled_limit: int = 2,
-                 timeout: float = 60.0, work_root: str | None = None) -> None:
+                 timeout: float = 60.0, work_root: str | None = None,
+                 max_real_calls: int | None = None) -> None:
         self.store, self.executor = store, executor
         self.max_parallel, self.unsettled_limit, self.timeout = max_parallel, unsettled_limit, timeout
         self.work_root = work_root or os.path.join(tempfile.gettempdir(), "dml-work")
+        if max_real_calls is not None and (type(max_real_calls) is not int or max_real_calls < 1):
+            raise ValueError("max_real_calls must be a positive integer")
+        self.max_real_calls = max_real_calls
         self.lock = threading.RLock()
         # 진행 중인 시도의 신호만 보관한다. 끝난 스레드/질문/작업 경로를 계속 쌓지 않는다.
         self._workers: dict[str, tuple[threading.Thread, threading.Event]] = {}
@@ -247,10 +252,13 @@ class Controller:
                 raise ControllerError(f"unsupported participant {p.pid!r}")
         if quorum_policy not in QUORUM_POLICIES:
             raise ControllerError(f"quorum_policy must be one of {', '.join(QUORUM_POLICIES)}")
-        confirmable = sum(1 for p in participants if p.transport == CLI)
+        # 프런트엔드가 false를 보내도 실행기의 opt-in 등급을 올려 주지 않는다. 더 낮은 등급은 보존한다.
+        if getattr(self.executor, "allow_context_unverified", False):
+            participants = [replace(p, context_unverified=True) if p.transport == CLI else p for p in participants]
+        confirmable = sum(confirmed(asdict(p)) for p in participants)
         if quorum_policy == INDEPENDENT_ONLY and min_independent > confirmable:
             raise ControllerError(f"only {confirmable} participant(s) can be confirmed independent (CLI); lower "
-                                  "min_independent or choose include_unverified to count original-app answers")
+                                  "min_independent or choose include_unverified to count unverified answers")
         prompt = PROMPT.format(question=question)
         data = prompt.encode("utf-8")
         try:
@@ -280,6 +288,13 @@ class Controller:
         unknown = self.store.row("SELECT COUNT(*) AS n FROM participants WHERE state = ?", UNKNOWN)["n"]
         return unknown + runner.lingering()
 
+    def call_budget(self) -> dict[str, int | None]:
+        """실제 CLI를 시작하기 전에 원장에 예약한다. 재시작·실패·취소로 환불하지 않는다(계정 잔여와 다름)."""
+        if self.max_real_calls is None:
+            return {"used": 0, "cap": None}
+        used = self.store.row("SELECT COUNT(*) AS n FROM events WHERE kind = 'live_call_reserved'")["n"]
+        return {"used": used, "cap": self.max_real_calls}
+
     def pump(self) -> None:
         """자리와 상한이 허락하는 만큼 대기 중인 시도를 시작한다. 한 참여자에 한 번만 — 다시 부르지 않는다.
 
@@ -303,6 +318,11 @@ class Controller:
                 # 계획을 실행한다(G4·G6). 저장하지 못하면 실행하지 않는다.
                 try:
                     plan, refused = self.executor.plan(spec, prompt, work), None
+                    if plan.context_unverified and not spec.context_unverified:
+                        raise ControllerError("queued participant has a different context policy; create a new run")
+                    if plan.kind == contract.REAL and self.max_real_calls is not None:
+                        if self.call_budget()["used"] >= self.max_real_calls:
+                            raise ControllerError("real CLI call budget exhausted; no call was started")
                     record, kind = plan.record(), plan.kind
                 except Exception as exc:  # 거절: 아무것도 시작하지 않았다
                     plan, refused = None, f"{type(exc).__name__}: {exc}"
@@ -312,6 +332,9 @@ class Controller:
                     taken = (self._gate(row["run_id"]).accepting and part["state"] == QUEUED
                              and self._transition(tx, part, RUNNING, attempt=attempt, kind=kind))
                     if taken:
+                        if plan is not None and plan.kind == contract.REAL and self.max_real_calls is not None:
+                            tx.event(row["run_id"], "live_call_reserved", pid=spec.pid, attempt=attempt,
+                                     adapter_id=spec.adapter_id, cap=self.max_real_calls)
                         tx.event(row["run_id"], "attempt_started", pid=spec.pid, attempt=attempt,
                                  executor=self.executor.name, execution=kind, behavior=spec.behavior, spec=record)
                 if not taken:
@@ -555,9 +578,11 @@ class Controller:
                     item = {"pid": spec.pid, "label": spec.label, "provider": spec.provider,
                             "transport": spec.transport, "behavior": spec.behavior if spec.transport == CLI else None,
                             "state": p["state"], "status": p["status"], "detail": p["detail"] if settled else None,
-                            "contamination": list(_flags(spec.transport, p)),
+                            "contamination": list(_flags(spec.transport, p)) +
+                                (["개인 문맥 미확인 — 독립 정족수에 세지 않음"]
+                                 if spec.transport == CLI and spec.context_unverified else []),
                             "execution": p["kind"] if spec.transport == CLI else None,
-                            "independence": "confirmed" if spec.transport == CLI else "unverified",
+                            "independence": "confirmed" if confirmed(asdict(spec)) else "unverified",
                             "result": result, "dropped": spec.pid in current_gate.dropped}
                     if current_gate.accepting and spec.transport == MANUAL and p["state"] == AWAITING_USER:
                         item["packet"] = packet(run["run_id"], spec.pid, run["input_sha256"], run["prompt"])
@@ -589,7 +614,8 @@ class Controller:
                                               "AND kind = 'synthesis_completed' ORDER BY seq DESC LIMIT 1", run["run_id"])
                     if artifact:
                         runs[-1]["synthesis"] = json.loads(artifact["payload"])["result"]
-            return {"executor": self.executor.name, "slots": {"used": self._slots_used(), "cap": self.max_parallel},
+            return {"executor": self.executor.name, "live_call_budget": self.call_budget(),
+                    "slots": {"used": self._slots_used(), "cap": self.max_parallel},
                     "unsettled": {"count": self.unsettled(), "limit": self.unsettled_limit},
                     "paused": self.paused, "runs": runs}
 

@@ -18,8 +18,9 @@
   기록: docs/experiments/w2-isolation/2026-09-24-k46-confirmation/README.md. 문맥 독립성(C3)은 미해결이다.
 - **실행 허가는 시도마다 계산한다(N4).** 기록(`runtime-inventory/2`)의 다섯 칸이 모두 관측됐고, 지금 설치된 버전이
   기록과 같고, 구독 로그인일 때만 부른다(core.eligibility). 기록 없이 부르는 것은 관측 도구와 시험뿐이다(unchecked).
+  명시적 문맥 미확인 정책은 C3 의미상 합격만 제외하고 계획에 기록한다. 다른 관문과 과금 제한은 유지한다.
 
-서버(app.server)는 아직 이 실행기를 쓰지 않는다. 모의 실행기만 쓴다.
+서버는 --live-cli로 명시한 경우에만 이 실행기를 쓴다. 문맥 미확인 실행은 별도 opt-in이며 다른 관문은 유지한다.
 """
 from __future__ import annotations
 
@@ -58,7 +59,8 @@ class CliExecutor:
 
     def __init__(self, *, never: Sequence[str], inventory: str | Path | None = None, unchecked: bool = False,
                  home: str | None = None, base_env: Mapping[str, str] | None = None,
-                 max_output_bytes: int = runner.DEFAULT_MAX_OUTPUT) -> None:
+                 max_output_bytes: int = runner.DEFAULT_MAX_OUTPUT, allow_context_unverified: bool = False,
+                 default_inputs: Sequence[str] = ()) -> None:
         """never: 참여자에게 보이면 안 되는 경로(controller 데이터 폴더). inventory: 이 기기의 `runtime-inventory/2`
         기록 — 시도마다 다시 읽어 실행 허가를 계산한다. unchecked: 허가를 계산하지 않는다(관측 도구·시험만).
         base_env: 실행 파일을 찾을 환경."""
@@ -70,6 +72,8 @@ class CliExecutor:
         self.home = home or os.path.expanduser("~")
         self.child_env, _ = core_env.child_env(os.environ if base_env is None else base_env)
         self.max_output_bytes = max_output_bytes
+        self.allow_context_unverified = allow_context_unverified
+        self.default_inputs = tuple(str(Path(p).resolve()) for p in default_inputs)
 
     def _check_eligible(self, adapter_id: str, exe: str, revision: str) -> None:
         if self.inventory is None:
@@ -79,11 +83,12 @@ class CliExecutor:
         except (OSError, ValueError) as exc:
             raise adapters.AdapterError(f"cannot read the inventory: {type(exc).__name__}") from None
         verdict = eligibility.eligibility(record, adapter_id, enabled=True, today=date.today(),
-                                          current_version=installed_version(adapter_id, exe), spec_revision=revision)
+                                          current_version=installed_version(adapter_id, exe), spec_revision=revision,
+                                          allow_context_unverified=self.allow_context_unverified)
         if not verdict.eligible:
             raise adapters.AdapterError("not eligible to run: " + "; ".join(verdict.reasons))
 
-    def plan(self, spec, prompt: str, work_dir: str, *, inputs: Sequence[str] = (),
+    def plan(self, spec, prompt: str, work_dir: str, *, inputs: Sequence[str] | None = None,
              variant: Callable[[list[str]], tuple[list[str], list[str]]] | None = None) -> contract.Plan:
         """최종 계획을 한 번 만든다. 거절하면 REFUSED_BEFORE_START 중 하나를 던진다 — 아무것도 시작하지 않았다.
 
@@ -93,6 +98,7 @@ class CliExecutor:
         """
         if spec.adapter_id not in SUPPORTED:
             raise adapters.AdapterError(f"{spec.adapter_id!r} is not run by the CLI executor")
+        inputs = self.default_inputs if inputs is None else tuple(inputs)
         exe = core_env.resolve(adapters.ADAPTERS[spec.adapter_id].command, self.child_env)
         # Claude는 읽을 폴더를 --add-dir로 알려 주고 Read 도구만 준다. Codex에는 그런 옵션을 주지 않는다 —
         # 격리 안에 읽기 전용으로 보이는 것만 읽을 수 있다. 대신 Codex의 명령이 자기 로그인 파일을 읽지 못하게
@@ -113,11 +119,13 @@ class CliExecutor:
         revision = contract.revision(tmpl)
         self._check_eligible(spec.adapter_id, exe, revision)
         return contract.Plan(contract.REAL, built, work_dir, box, spec.model or "", marks, revision, tmpl,
-                             tuple(changes))
+                             tuple(changes), context_unverified=self.allow_context_unverified)
 
     def run(self, plan: contract.Plan, timeout: float, *, cancel=None):
         """계획 그대로 한 번 실행한다. 계획을 다시 만들지 않고, 현재 기록의 허가만 다시 확인한다."""
         try:
+            if plan.context_unverified != self.allow_context_unverified:
+                raise adapters.AdapterError("context policy changed after planning; create a new attempt")
             self._check_eligible(plan.spec.adapter_id, plan.spec.argv[0], plan.revision)
             result = isolation.run(list(plan.spec.argv), plan.box, timeout=timeout, stdin_text=plan.spec.stdin_text,
                                    max_output_bytes=self.max_output_bytes, cancel=cancel,

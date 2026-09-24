@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 import hmac
 import json
+import math
 import os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -57,8 +58,11 @@ def _text(body: dict, key: str, default: str = "") -> str:
     return value
 
 
-def make_handler(controller: Controller, token: str, port: int):
+def make_handler(controller: Controller, token: str, port: int, *, participants=None):
     allowed_hosts = {f"127.0.0.1:{port}", f"localhost:{port}"}
+    roster = dict(PARTICIPANTS if participants is None else participants)
+    live = controller.executor.kind == "real"
+    behaviors = ("ok",) if live else BEHAVIORS
 
     class Handler(BaseHTTPRequestHandler):
         server_version = "ledger-mock"
@@ -142,8 +146,10 @@ def make_handler(controller: Controller, token: str, port: int):
             elif path == "/api/state":
                 self._json(200, controller.view())
             elif path == "/api/options":
-                self._json(200, {"participants": [dict(vars(p)) for p in PARTICIPANTS.values()],
-                                 "behaviors": list(BEHAVIORS)})
+                self._json(200, {"participants": [dict(vars(p)) for p in roster.values()],
+                                 "behaviors": list(behaviors), "live": live,
+                                 "context_unverified": bool(getattr(controller.executor,
+                                                                     "allow_context_unverified", False))})
             elif len(parts) == 4 and parts[:2] == ["api", "runs"] and parts[3] == "report":
                 try:
                     self._json(200, build_report(controller.view(parts[2]), parts[2]))
@@ -175,9 +181,9 @@ def make_handler(controller: Controller, token: str, port: int):
                     if not isinstance(items, list) or any(not isinstance(item, dict) for item in items):
                         raise ControllerError("participants must be an array of objects")
                     for item in items:
-                        spec = PARTICIPANTS[item["pid"]]
+                        spec = roster[item["pid"]]
                         behavior = item.get("behavior", "ok")
-                        if behavior not in BEHAVIORS:
+                        if behavior not in behaviors:
                             raise ControllerError(f"unknown behavior {behavior!r}")
                         chosen.append(ParticipantSpec(**{**vars(spec), "behavior": behavior}))
                     minimum = body.get("min_independent", 2)
@@ -272,7 +278,29 @@ def _write_token(path: Path, token: str) -> None:
     os.replace(staging, path)
 
 
-def serve(data_dir: Path, port: int, *, timeout: float = 20.0) -> tuple[ThreadingHTTPServer, str, Controller]:
+def serve(data_dir: Path, port: int, *, timeout: float = 20.0, live_cli: str | None = None,
+          inventory: Path | None = None, model: str | None = None, call_budget: int | None = None,
+          allow_context_unverified: bool = False,
+          input_dir: Path | None = None) -> tuple[ThreadingHTTPServer, str, Controller]:
+    if live_cli is not None:
+        from app.cli_executor import CliExecutor
+        if (sys.platform != "linux" or live_cli not in CliExecutor.adapter_ids or inventory is None
+                or not isinstance(model, str) or not model.strip() or type(call_budget) is not int
+                or not 1 <= call_budget <= 10 or not math.isfinite(timeout) or not 0 < timeout <= 180):
+            raise ValueError("live CLI requires Linux, inventory, full model, call budget 1..10 and timeout 0..180s")
+        # 파일·계정 잔여를 흉내내지 않는다. real 기동에는 명시적인 단일 CLI와 원장 누적 예산이 필요하다.
+        executor = CliExecutor(never=(str(data_dir.resolve()),), inventory=inventory,
+                               allow_context_unverified=allow_context_unverified,
+                               default_inputs=() if input_dir is None else (str(input_dir),))
+        pid = "claude" if live_cli == "claude-code" else "codex"
+        roster = {p.pid: p for p in PARTICIPANTS.values() if p.transport == MANUAL}
+        roster[pid] = ParticipantSpec(**{**vars(PARTICIPANTS[pid]), "model": model,
+                                        "context_unverified": allow_context_unverified})
+    else:
+        if (inventory is not None or model is not None or call_budget is not None
+                or allow_context_unverified or input_dir is not None):
+            raise ValueError("real options require live_cli; refusing a silent mock fallback")
+        executor, roster = MockExecutor(never=(str(data_dir.resolve()),)), PARTICIPANTS
     data_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
     if os.name != "nt":
         data_dir.chmod(0o700)
@@ -283,14 +311,15 @@ def serve(data_dir: Path, port: int, *, timeout: float = 20.0) -> tuple[Threadin
         store.close()
         raise
     try:
-        controller = Controller(store, MockExecutor(never=(str(data_dir.resolve()),)), timeout=timeout)
+        controller = Controller(store, executor, timeout=timeout, max_real_calls=call_budget,
+                                max_parallel=1 if live_cli else 2, unsettled_limit=1 if live_cli else 2)
         token = secrets.token_urlsafe(32)
         _write_token(data_dir / "control-token", token)
     except BaseException:
         server.server_close()
         store.close()
         raise
-    server.RequestHandlerClass = make_handler(controller, token, server.server_address[1])
+    server.RequestHandlerClass = make_handler(controller, token, server.server_address[1], participants=roster)
     return server, token, controller
 
 
@@ -298,30 +327,52 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--port", type=int, default=8765)
     ap.add_argument("--data-dir", type=Path, default=Path.home() / ".decision-model-lab" / "mock")
-    ap.add_argument("--timeout", type=float, default=20.0, help="모의 CLI 한 번의 제한 시간(초)")
+    ap.add_argument("--timeout", type=float, default=20.0, help="CLI 한 번의 제한 시간(초); 실측은 최대 180초")
     ap.add_argument("--check-cli", choices=("claude-code", "codex"),
                     help="현재 실제 CLI 계획의 허가만 조회하고 종료; 서버·모델을 시작하지 않음")
-    ap.add_argument("--inventory", type=Path, help="--check-cli에서 대조할 runtime-inventory/2 기록")
-    ap.add_argument("--model", help="--check-cli의 전체 요청 모델 이름; 기본값·대체 모델 없음")
+    ap.add_argument("--live-cli", choices=("claude-code", "codex"), help="명시한 실제 CLI 하나를 화면에 연결")
+    ap.add_argument("--inventory", type=Path, help="이 기기의 runtime-inventory/2 기록")
+    ap.add_argument("--model", help="전체 요청 모델 이름; 기본값·대체 모델 없음")
+    ap.add_argument("--call-budget", type=int, help="이 원장 전체에서 예약할 실제 CLI 호출 상한(1..10); 재시작은 환불 아님")
+    ap.add_argument("--input-dir", type=Path, help="공통 읽기 전용 입력 폴더 하나; 조회와 실제 실행에 같은 계획 사용")
+    ap.add_argument("--allow-context-unverified", action="store_true",
+                    help="C3만 미확인으로 허용; 독립 정족수에는 절대 세지 않음")
     args = ap.parse_args()
-    if args.check_cli and (args.inventory is None or not args.model):
-        ap.error("--check-cli requires --inventory and --model")
-    if not args.check_cli and (args.inventory is not None or args.model is not None):
-        ap.error("--inventory and --model require --check-cli; the server still uses the mock executor")
+    if args.check_cli and args.live_cli:
+        ap.error("choose --check-cli or --live-cli, not both")
+    if (args.check_cli or args.live_cli) and (args.inventory is None or not args.model or not args.model.strip()):
+        ap.error("--check-cli/--live-cli requires --inventory and --model")
+    if not (args.check_cli or args.live_cli) and (args.inventory is not None or args.model is not None
+                                                 or args.allow_context_unverified or args.input_dir is not None):
+        ap.error("real options require --check-cli or --live-cli; refusing a silent mock fallback")
+    if args.live_cli and (args.call_budget is None or not 1 <= args.call_budget <= 10
+                          or not math.isfinite(args.timeout) or not 0 < args.timeout <= 180):
+        ap.error("--live-cli requires --call-budget 1..10 and finite --timeout greater than 0, at most 180")
+    if args.call_budget is not None and not args.live_cli:
+        ap.error("--call-budget requires --live-cli")
     if hasattr(sys.stdout, "reconfigure"):  # Windows 콘솔의 cp949에서도 한글·기호가 깨지지 않게
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    if args.check_cli:
+    if args.check_cli or args.live_cli:
         from app.readiness import check
-        result = check(args.check_cli, args.model, args.inventory, args.data_dir)
+        if args.live_cli and args.data_dir == Path.home() / ".decision-model-lab" / "mock":
+            ap.error("--live-cli requires a separate explicit --data-dir, not the mock journal")
+        result = check(args.check_cli or args.live_cli, args.model, args.inventory, args.data_dir,
+                       allow_context_unverified=args.allow_context_unverified, input_dir=args.input_dir)
         print(json.dumps(result, ensure_ascii=False, indent=2))
-        return 0 if result["eligible"] else 2
+        if args.check_cli or not result["eligible"]:
+            return 0 if result["eligible"] else 2
     try:
-        server, token, controller = serve(args.data_dir, args.port, timeout=args.timeout)
+        server, token, controller = serve(args.data_dir, args.port, timeout=args.timeout,
+                                           live_cli=args.live_cli, inventory=args.inventory, model=args.model,
+                                           call_budget=args.call_budget,
+                                           allow_context_unverified=args.allow_context_unverified,
+                                           input_dir=args.input_dir)
     except LedgerBusy:
         print(f"이미 다른 서버가 이 데이터 폴더를 쓰고 있다: {args.data_dir}. 그 서버를 쓰거나 끈 뒤 다시 띄운다.",
               file=sys.stderr, flush=True)
         return 1
-    print(f"Ledger 모의 모드 — 실행기 {controller.executor.name}, 데이터 {args.data_dir}", flush=True)
+    mode = "실제 CLI · 구독 사용량 소비" if args.live_cli else "모의 모드"
+    print(f"Ledger {mode} — 실행기 {controller.executor.name}, 데이터 {args.data_dir}", flush=True)
     if controller.paused:
         print("다시 시작하기 전에 시작하지 못한 시도가 있다. 화면에서 '이어서 시작'을 눌러야 시작한다.", flush=True)
     print(f"열기: http://127.0.0.1:{server.server_address[1]}/#token={token}", flush=True)

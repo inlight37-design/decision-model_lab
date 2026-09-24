@@ -11,7 +11,8 @@ from app.controller import CLI, ParticipantSpec
 from core import eligibility, isolation
 
 
-def check(adapter_id: str, model: str, inventory: Path, data_dir: Path) -> dict:
+def check(adapter_id: str, model: str, inventory: Path, data_dir: Path, *,
+          allow_context_unverified: bool = False, input_dir: Path | None = None) -> dict:
     """현재 서버용 계획(자료 없음)을 만든 뒤 설치 버전·관측 기록을 대조한다. 실행 함수는 호출하지 않는다.
 
     허가된 경우에도 실행 승인이나 예산을 만들지 않는다. 이 결과는 조회 시점의 스냅샷이며,
@@ -19,7 +20,8 @@ def check(adapter_id: str, model: str, inventory: Path, data_dir: Path) -> dict:
     """
     result = {"mode": "readiness_only", "model_calls": 0, "adapter_id": adapter_id,
               "requested_model": model, "eligible": False, "revision": None,
-              "installed_version": None, "isolation_execution": "not_tested", "reasons": []}
+              "installed_version": None, "isolation_execution": "not_tested", "reasons": [],
+              "context_unverified": allow_context_unverified}
     if adapter_id not in CliExecutor.adapter_ids or not model.strip():
         result["reasons"] = ["supported adapter and full model name are required"]
         return result
@@ -33,7 +35,8 @@ def check(adapter_id: str, model: str, inventory: Path, data_dir: Path) -> dict:
         return result
     # 관측 조회만: 허가 거절 전에도 정확한 판과 모든 거절 이유를 표시한다.
     # unchecked 실행기를 서버 Controller에 넘기지 않으며 이 모듈에는 run() 경로가 없다.
-    executor = CliExecutor(never=(str(data_dir.resolve()),), unchecked=True)
+    executor = CliExecutor(never=(str(data_dir.resolve()),), unchecked=True,
+                           default_inputs=() if input_dir is None else (str(input_dir),))
     spec = ParticipantSpec(adapter_id, adapter_id, adapter_id, CLI, adapter_id, model)
     try:
         isolation._trusted_bwrap()  # 바이너리 존재·소유/쓰기 권한만 검사; namespace 생성은 실행 때 확인
@@ -44,7 +47,8 @@ def check(adapter_id: str, model: str, inventory: Path, data_dir: Path) -> dict:
             result["installed_version"] = installed_version(adapter_id, plan.spec.argv[0])
         verdict = eligibility.eligibility(record, adapter_id, enabled=True, today=date.today(),
                                           current_version=result["installed_version"],
-                                          spec_revision=result["revision"])
+                                          spec_revision=result["revision"],
+                                          allow_context_unverified=allow_context_unverified)
     except (*REFUSED_BEFORE_START, OSError) as exc:
         # 로컬 경로·환경 값을 출력하지 않는다. 상세 진단은 별도 관측 도구의 가림 정책을 쓴다.
         result["reasons"] = [f"cannot prepare the isolated participant plan ({type(exc).__name__})"]

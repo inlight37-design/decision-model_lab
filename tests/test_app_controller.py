@@ -525,7 +525,7 @@ class ManualParticipationTests(Base):
         self.assertEqual((app["result"]["marker_echo"], app["result"]["user_confirmed"]), ("missing", False))
         self.assertEqual({gpt["independence"], app["independence"], a["independence"]}, {"unverified", "confirmed"})
         self.assertEqual(gpt["independence"], "unverified")                        # 확인해도 독립성 확인이 아니다
-        self.assertIn("원본 앱 답 2개는 보조 근거", opened["quorum"]["label"])
+        self.assertIn("미확인 답 2개는 보조 근거", opened["quorum"]["label"])
         refused = [e["reason"] for e in events(self.store, run_id) if e["kind"] == "manual_refused"]
         self.assertEqual(len(refused), 3)
         self.assertNotIn("packet", gpt)                                             # 제출한 뒤에는 복사할 것이 없다
@@ -556,7 +556,7 @@ class QuorumPolicyTests(Base):
                 self.assertEqual(view["phase"], phase)
                 if policy == c.INDEPENDENT_ONLY:
                     self.assertIn("독립성이 확인된 참여자 1명 — 최소 2명", view["note"])
-                    self.assertIn("원본 앱 답 1개는 정족수에 세지 않습니다", view["note"])
+                    self.assertIn("미확인 답 1개는 정족수에 세지 않습니다", view["note"])
                 else:
                     self.assertTrue(view["quorum"]["label"].startswith("미확인 참여 포함 정족수"))
                     self.assertNotIn("독립 정족수 충족", view["quorum"]["label"])
