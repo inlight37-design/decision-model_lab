@@ -18,6 +18,7 @@
 | [`2026-09-24-review/`](2026-09-24-review/README.md) | 위 요청과 17번 질문에 대한 ChatGPT 검토([PR #14](https://github.com/inlight37-design/decision-model_lab/pull/14)). K46·P3 판정식, 실행 허가의 합성 반례, 구성별 관측 판정, S01–S33·PR 충돌·다음 순서. 원본 판정과 제품 코드는 유지했고 재현 코드·결과·소스 해시를 함께 남겼다. 반영 결과는 같은 폴더의 [`RESPONSE.md`](2026-09-24-review/RESPONSE.md) |
 | [`2026-09-24-a1-integrity/`](2026-09-24-a1-integrity/README.md) | 전체 검토와 직접 수정([PR #18](https://github.com/inlight37-design/decision-model_lab/pull/18)). 원장 거래 실패/HTTP 음성 회귀, 공개 뒤 합성 없는 보고, 화면 배치, 실제 소켓과 오프라인 DOM 검증 범위, 다음 작업 인계 |
 | [`2026-09-24-lean-lifecycle/`](2026-09-24-lean-lifecycle/README.md) | PR #18 위의 간결성 검토와 직접 수정([PR #20](https://github.com/inlight37-design/decision-model_lab/pull/20), 자동 닫힌 PR #19 대체). 지속 취소·스레드/연결 수명·필요한 사건만 읽는 조회, 합성 성능 측정과 남은 경계 |
+| [`2026-09-24-structure-audit/`](2026-09-24-structure-audit/README.md) | claude의 구조 전수검사(main `99d9bb4`): 덧대기인가 구조적 해결인가. core·app·tools·이력의 판정, 직접 재현한 틈 G1–G9, 적은 코드 순서의 해법. 위 간결성 검토와 독립으로 썼고(blind), 둘의 비교는 [`COMPARISON.md`](2026-09-24-structure-audit/COMPARISON.md)([PR #21](https://github.com/inlight37-design/decision-model_lab/pull/21)) |
 
 ## 읽는 순서
 
@@ -45,6 +46,12 @@
 20. [`2026-09-24-review/RESPONSE.md`](2026-09-24-review/RESPONSE.md) — 19의 발견별 반영(R01–R03·R05–R08 수용, R04·R09 부분 수용), 합성 HOME 진단, 리뷰 밖에서 새로 찾은 것, 사용자에게 묻는 것
 21. [`2026-09-24-a1-integrity/`](2026-09-24-a1-integrity/README.md) — 현재 코드 직접 검토·수정과 A1 모의 후속. 기존 관측/결정은 유지했고 K18·K27·K42의 부분 진행과 실제 브라우저/CLI 미검증을 구분
 22. [`2026-09-24-lean-lifecycle/`](2026-09-24-lean-lifecycle/README.md) — 최소 코드/효율 검토. 기존 runner 경로를 재사용한 K19 구현과 자원 상한·조회 개선. 이전 기록의 “취소 없음”과 연결 상한 부재는 이 후속에서 변경했으며 실제 CLI/문맥 검증 완료로 올리지 않음
+23. [`2026-09-24-structure-audit/`](2026-09-24-structure-audit/README.md) — 21 뒤의 main(`99d9bb4`) 전체에 대한 구조 검사. 22와 독립으로 썼다(blind). 사본이 흩어진 규칙, 문서와 코드가 다른 곳, 다음 기능 전에 할 통합. 22와의 비교는 같은 폴더의 `COMPARISON.md`
+
+## 23번 기록에 대한 단서
+
+- 기준은 main `99d9bb4`다. 그 뒤 22번(PR #20)이 K19 취소를 플래그 방식으로 넣었다. 그래서 5절 4의 "K19 취소 전에"는 "다음 기능 전에, 취소 판단을 파생 gate 하나로 모은다"로 읽는다. 지금의 작업 순서는 [NEXT-SESSION.md](../../NEXT-SESSION.md) 4절이다.
+- 4절의 틈 G1–G9는 PR #20 병합 뒤의 main(`962b61c`)에서도 그대로다. 2026-09-24에 claude 세션이 다시 확인했다. 줄 번호는 `99d9bb4` 기준이다.
 
 ## 22번 기록의 통합 상태 정정
 
