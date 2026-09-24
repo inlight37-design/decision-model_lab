@@ -11,6 +11,7 @@ locator 가 가리키는 문단이 실제로 그 주장을 담는지, limits 가
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -50,6 +51,9 @@ def errors_for(registry: Any, definition: str, schema: dict[str, Any]) -> list[s
 
 
 def main() -> int:
+    # Windows의 리디렉션된 출력은 CP1252일 수도 있다. 한글 결과 줄이 검사를 실패시키지 않게 UTF-8로 고정한다.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     try:
         from jsonschema import Draft202012Validator  # noqa: F401
     except ImportError:

@@ -30,6 +30,10 @@ for line in sys.stdin:
         continue
     if method == "initialized":
         continue
+    if mode == "activity" and method == "initialize":
+        print(json.dumps({"method":"turn/started", "params":{"turn":{"id":"PRIVATE TURN"}}}), flush=True)
+    if mode == "notify" and method == "account/read":
+        print(json.dumps({"method":"account/updated", "params":{"email":"PRIVATE EMAIL"}}), flush=True)
     if method == "initialize":
         result = {"userAgent":"PRIVATE INIT"}
     elif method == "account/read":
@@ -98,6 +102,16 @@ class ProtocolTests(unittest.TestCase):
                 self.query(mode, timeout=0.25 if mode == "hang" else 2)
             self.assertNotIn("PRIVATE", str(error.exception))
             self.assertTrue(all(child.poll() is not None for child in self.children))
+
+    def test_notifications_are_dropped_but_agent_activity_stops_the_probe(self):
+        # 변이 M11(PR #39 병합 검토): 에이전트 활동 알림을 거절하는 조건을 지워도 시험이 통과했다.
+        with self.assertRaises(account.ProtocolError) as error:
+            self.query("activity")
+        self.assertNotIn("PRIVATE", str(error.exception))
+        self.assertEqual([m["method"] for m in self.sent()], ["initialize"])
+        result = self.query("notify")
+        self.assertEqual(result["quota"]["limits"][0]["used_percent"], 25)
+        self.assertNotIn("PRIVATE", json.dumps(result))
 
 
 class PlanTests(unittest.TestCase):

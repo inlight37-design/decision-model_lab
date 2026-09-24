@@ -56,6 +56,9 @@ def collect() -> list[dict[str, object]]:
 
 
 def main() -> int:
+    # Windows의 리디렉션된 출력은 CP1252일 수도 있다. 한글 결과 줄이 검사를 실패시키지 않게 UTF-8로 고정한다.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     parser = argparse.ArgumentParser(description="Print Git blob SHA-1 of the checker code.")
     parser.add_argument("--json", action="store_true", help="기계 판독용 JSON 출력")
     args = parser.parse_args()

@@ -51,6 +51,17 @@ class QuotaTests(unittest.TestCase):
         self.assertNotIn('PRIVATE', json.dumps(failed))
         self.assertEqual(original['quota']['status'], 'observed')
 
+    def test_failed_refresh_marks_a_recent_observation_stale(self):
+        # 변이 M6(PR #39 병합 검토): 위 시험은 이미 120초가 지난 뒤에만 실패를 봐서 실패 표시를 가리지 못했다.
+        self.quota.refresh()
+        self.assertEqual(self.quota.view()['quota']['freshness'], 'fresh')
+        self.now += 61   # 다시 조회할 수 있고, 옛 관측은 아직 120초가 안 됐고 초기화 전이다
+        self.reader.side_effect = RuntimeError('PRIVATE PROVIDER ERROR')
+        failed = self.quota.refresh()
+        self.assertTrue(failed['refresh_failed'])
+        self.assertEqual((failed['quota']['freshness'], failed['quota']['status']), ('stale', 'stale'))
+        self.assertEqual(failed['quota']['limits'][0]['status'], 'stale')
+
     def test_concurrent_refresh_is_nonblocking_and_single_flight(self):
         entered, release = threading.Event(), threading.Event()
         def reader(path):

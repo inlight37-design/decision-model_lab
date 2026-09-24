@@ -97,6 +97,20 @@ jobs:
         run: python -m pip install --disable-pip-version-check -r requirements-design.txt
       - name: text encoding
         run: python tools/check_encoding.py
+      # 사용자 PC는 Windows다. 인계 6절의 검증 도구도 CP1252 출력에서 한글 결과 줄 때문에 끝나지 않아야 한다.
+      # 단계를 나눈다: PowerShell의 여러 줄 run은 마지막 명령의 종료 코드만 본다.
+      - name: design tokens
+        run: python tools/validate_design_tokens.py
+      - name: frontier checker
+        run: python tools/check_frontier_protocol.py
+      - name: runtime inventory dry-run
+        run: python tools/runtime_inventory.py --host-label ci --dry-run
+      - name: v0.1 contract checks
+        run: python tools/validate_design.py
+      - name: v0.2 pilot/proof checks
+        run: python tools/validate_v02.py
+      - name: evidence registry schema
+        run: python tools/validate_sources.py
       # Windows regressions are separate from Linux bubblewrap checks; OS-specific skips are explicit.
       - name: full Windows test suite
         run: python -m unittest discover -s tests -v
