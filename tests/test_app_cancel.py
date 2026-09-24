@@ -162,7 +162,8 @@ class CancellationTests(support.Base):
         self.assertTrue(ctl.wait_idle())
         self.assertEqual(ex.started, [])
         self.assertEqual(ctl.view()["slots"]["used"], 0)
-        self.assertEqual(self.run_view(ctl, rid)["budget"]["used"], 1)
+        self.assertEqual(self.run_view(ctl, rid)["budget"]["used"], 0)
+        self.assertEqual(self.run_view(ctl, rid)["budget"]["not_started"], 1)
         self.assertEqual(self.part(ctl, rid, "a")["status"], "process_failed_to_start")
 
     def test_schema_two_migrates_without_changing_existing_run(self):

@@ -31,6 +31,13 @@ class ProtocolError(ValueError):
     """Fixed messages only; never put provider response text in an exception."""
 
 
+def helper_argv(exe: str) -> tuple[str, ...]:
+    # Isolation deliberately drops PYTHONPATH; CI's interpreter may live outside /usr.
+    code = ("import json,sys; sys.path.insert(0,sys.argv[1]); "
+            "from tools.w2.codex_account import query; print(json.dumps(query(tuple(sys.argv[2:]))))")
+    return ("/usr/bin/python3", "-c", code, str(ROOT), exe, "app-server")
+
+
 def query(argv: tuple[str, ...], *, timeout: float = 10) -> dict:
     """Internal stdio dialogue, called INSIDE isolation by --probe (fake processes in tests)."""
     if not math.isfinite(timeout) or not 0 < timeout <= 20:
@@ -137,10 +144,9 @@ def main() -> int:
         # Helper source is read-only, work is empty. Neither journal nor peer CLI home is mounted.
         with tempfile.TemporaryDirectory(prefix="dml-account-") as tmp:
             box = isolation.Sandbox(work_dir=tmp, home=home, read_only=ro + (str(ROOT / "tools"),),
-                                    read_write=rw, env={"PYTHONPATH": str(ROOT), "LANG": "C.UTF-8", "NO_COLOR": "1"},
+                                    read_write=rw, env={"LANG": "C.UTF-8", "NO_COLOR": "1"},
                                     never=(str(args.data_dir.resolve()),))
-            code = "import json,sys; from tools.w2.codex_account import query; print(json.dumps(query(tuple(sys.argv[1:]))))"
-            result = isolation.run((sys.executable, "-c", code, exe, "app-server"), box,
+            result = isolation.run(helper_argv(exe), box,
                                    timeout=13, max_output_bytes=65536)
             if (result.state != runner.EXITED or result.exit_code != 0
                     or not result.tree_confirmed_empty or result.stdout_truncated):

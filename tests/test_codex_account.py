@@ -8,6 +8,8 @@ import unittest
 from unittest import mock
 
 from tools.w2 import codex_account as account
+from core import isolation, runner
+from test_core_isolation import REQUIRED, bwrap_usable
 
 FAKE = r'''
 import json,sys,time
@@ -102,6 +104,39 @@ class PlanTests(unittest.TestCase):
         with mock.patch.object(sys, "argv", ["codex_account.py"]), \
                 mock.patch.object(account.subprocess, "Popen", side_effect=AssertionError("no process")):
             self.assertEqual(account.main(), 0)
+
+    def test_helper_does_not_depend_on_host_python_or_filtered_pythonpath(self):
+        args = account.helper_argv("/fake/codex")
+        self.assertEqual(args[0], "/usr/bin/python3")
+        self.assertEqual(args[3:], (str(account.ROOT), "/fake/codex", "app-server"))
+        self.assertIn("sys.path.insert", args[2])
+
+
+class IsolatedProtocolTests(unittest.TestCase):
+    def test_actual_helper_import_and_metadata_dialogue_inside_bubblewrap(self):
+        if not bwrap_usable():
+            if REQUIRED:
+                self.fail("CI requires usable bubblewrap for the metadata helper")
+            self.skipTest("bubblewrap unavailable; native boundary not tested here")
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            work = root / "work"
+            work.mkdir()
+            script = root / "fake-codex"
+            script.write_text("#!/usr/bin/python3\n" + FAKE.replace(
+                "mode, log = sys.argv[1:]", 'mode, log = "ok", "/tmp/metadata-sent.jsonl"'), encoding="utf-8")
+            script.chmod(0o700)
+            box = isolation.Sandbox(work_dir=str(work), home=str(root / "home"),
+                                    read_only=(str(account.ROOT / "tools"), str(script)),
+                                    never=(str(root / "ledger"),))
+            result = isolation.run(account.helper_argv(str(script)), box, timeout=13, max_output_bytes=65536)
+            self.assertEqual(result.state, runner.EXITED)
+            self.assertEqual(result.exit_code, 0, result.stderr)
+            self.assertTrue(result.tree_confirmed_empty)
+            report = json.loads(result.stdout)
+            self.assertEqual(report["inference_requests_sent"], 0)
+            self.assertEqual(report["quota"]["limits"][0]["used_percent"], 25)
+            self.assertNotIn("PRIVATE", result.stdout)
 
 
 if __name__ == "__main__":

@@ -24,6 +24,7 @@ class BudgetTests(support.Base):
         path = self.store.path
         self.store.close()
         self.store = Store(path)
+        self.addCleanup(self.store.close)
         restored = self.controller(UnverifiedSynthetic())
         self.assertEqual(restored.call_budget(), {"used": 0, "cap": 1})
         self.run_live(restored)
@@ -45,6 +46,7 @@ class BudgetTests(support.Base):
         path = self.store.path
         self.store.close()
         self.store = Store(path)
+        self.addCleanup(self.store.close)
         with self.assertRaises(StoreError):
             self.controller(UnverifiedSynthetic(), max_real_calls=2)
         self.assertEqual(self.controller(UnverifiedSynthetic()).call_budget(), {"used": 1, "cap": 1})
