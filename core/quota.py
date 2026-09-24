@@ -1,5 +1,4 @@
 """Allowlisted account-limit projection shared by runtime and offline experiments."""
-import math
 import re
 from typing import Any
 
@@ -46,8 +45,9 @@ def quota_projection(payload: dict[str, Any] | None, *, observed_at: int,
             require(data is None or isinstance(data, dict), "invalid quota window")
             data = data or {}
             used = data.get("usedPercent")
-            require(used is None or (type(used) in (int, float) and math.isfinite(used) and 0 <= used <= 100),
-                    "invalid usedPercent")
+            # 범위 비교만 쓴다. NaN·무한대도 여기서 떨어지고, math.isfinite와 달리 큰 정수를 float로 바꾸다
+            # OverflowError를 내지 않는다(2026-09-25 감사 R1).
+            require(used is None or (type(used) in (int, float) and 0 <= used <= 100), "invalid usedPercent")
             duration, reset = data.get("windowDurationMins"), data.get("resetsAt")
             require(duration is None or (type(duration) is int and duration > 0), "invalid window duration")
             require(reset is None or (type(reset) is int and reset >= 0), "invalid reset time")
@@ -89,7 +89,7 @@ def claude_limit(info: Any) -> dict[str, Any] | None:
         if not isinstance(name, str) or WINDOW.fullmatch(name) is None or not isinstance(data, dict):
             return None
         used, reset = data.get("utilization"), data.get("resetsAt")
-        if used is not None and not (type(used) in (int, float) and math.isfinite(used) and 0 <= used <= 1):
+        if used is not None and not (type(used) in (int, float) and 0 <= used <= 1):   # 위 usedPercent와 같은 이유
             return None
         if reset is not None and (type(reset) is not int or reset < 0):
             return None

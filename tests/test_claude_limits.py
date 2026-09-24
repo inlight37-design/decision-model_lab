@@ -48,7 +48,8 @@ class ExtractTests(unittest.TestCase):
 
     def test_malformed_or_missing_limits_are_unknown_but_never_reject_the_answer(self):
         for bad in ({"status": "maybe"}, {"utilization": 1.5}, {"utilization": -0.1}, {"utilization": "0.3"},
-                    {"utilization": True}, {"utilization": float("nan")}, {"resetsAt": -1}, {"resetsAt": 1.5},
+                    {"utilization": True}, {"utilization": float("nan")}, {"utilization": float("inf")},
+                    {"resetsAt": -1}, {"resetsAt": 1.5},
                     {"unifiedWindows": []}, {"unifiedWindows": {"Five Hour": {"utilization": 0.1}}},
                     {"unifiedWindows": {"five_hour": 0.1}}, {}, "allowed", None):
             with self.subTest(info=bad):
