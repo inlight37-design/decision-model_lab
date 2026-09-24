@@ -21,6 +21,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 import hashlib
 import json
+import math
 import os
 import re
 import subprocess
@@ -256,8 +257,14 @@ class Outcome:
     rate_limit: dict[str, Any] | None = None  # Claude 계정 한도(stream의 rate_limit_event). 답의 수용과는 별개
 
 
+def _amount(value: Any) -> bool:
+    """사용량으로 남길 숫자. bool·음수·NaN·무한대는 버린다 — json.loads는 NaN·Infinity를 받지만 화면의
+    JSON.parse는 받지 않아 값 하나가 /api/state 전체를 깨뜨린다. 비교만 쓰므로 큰 정수도 float로 바꾸지 않는다."""
+    return type(value) in (int, float) and 0 <= value < math.inf
+
+
 def _usage(source: Mapping[str, Any] | None, keys: Iterable[str]) -> dict[str, Any]:
-    return {k: source[k] for k in keys if isinstance(source, Mapping) and isinstance(source.get(k), (int, float))}
+    return {k: source[k] for k in keys if isinstance(source, Mapping) and _amount(source.get(k))}
 
 
 def _model_match(requested: str, reported: tuple[str, ...]) -> bool | None:
@@ -387,7 +394,7 @@ def _parse(adapter_id: str, run: RunResult, base: dict[str, str]) -> Outcome:
         models = tuple(sorted(_typed(obj, "modelUsage", Mapping, {}).keys()))
         usage = _usage(obj.get("usage"), ("input_tokens", "output_tokens", "cache_creation_input_tokens",
                                           "cache_read_input_tokens"))
-        if isinstance(obj.get("total_cost_usd"), (int, float)):
+        if _amount(obj.get("total_cost_usd")):
             usage["client_estimate_usd"] = obj["total_cost_usd"]  # 정가 기준 추정. 청구액이 아니다
         ok = run.exit_code == 0 and obj.get("is_error") is False and isinstance(obj.get("result"), str)
         return Outcome(ok=ok, status="ok" if ok else "cli_error", text=obj.get("result"),

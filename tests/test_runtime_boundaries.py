@@ -1,12 +1,15 @@
 """추가 경계 회귀: 선택적 계정 메타데이터와 고정 자료 경로. 실제 모델 호출 없음."""
 import hashlib
+import json
 import unittest
 from pathlib import Path
 
 from app import controller as c
+from core import adapters
 from core.quota import quota_projection
 import test_app_controller as support
 from test_claude_limits import outcome, stream
+from test_core_adapters import fake
 from test_sources import Recording, POLICY
 
 
@@ -25,6 +28,23 @@ class OptionalMetadataTests(unittest.TestCase):
             with self.subTest(positive=used > 0), self.assertRaises(ValueError):
                 quota_projection({"rateLimits": {"primary": {"usedPercent": used}}},
                                  observed_at=1000, now=1000)
+
+    def test_usage_numbers_the_screen_cannot_parse_are_dropped_without_losing_the_answer(self):
+        # json.dumps의 기본값이 NaN·Infinity 글자를 쓰므로 CLI가 그렇게 보낸 줄과 같다. 브라우저 JSON.parse는 이를
+        # 받지 않아 화면 응답 전체가 깨진다. 큰 정수는 표준 JSON이라 남긴다.
+        bad = {"output_tokens": float("nan"), "cache_read_input_tokens": float("inf"), "cached_input_tokens": -1,
+               "cache_creation_input_tokens": True, "reasoning_output_tokens": -float("inf")}
+        claude = json.dumps({"type": "result", "is_error": False, "result": "답", "modelUsage": {"m": {}},
+                             "total_cost_usd": float("nan"), "usage": {"input_tokens": 10 ** 400, **bad}})
+        codex = "\n".join(json.dumps(event) for event in (
+            {"type": "item.completed", "item": {"type": "agent_message", "text": "답"}},
+            {"type": "turn.completed", "usage": {"input_tokens": 10 ** 400, **bad}}))
+        for adapter_id, stdout in (("claude-code", claude), ("codex", codex)):
+            with self.subTest(adapter=adapter_id):
+                result = adapters.interpret(adapter_id, fake(stdout), requested_model="m")
+                self.assertTrue(result.ok)
+                self.assertEqual(result.usage, {"input_tokens": 10 ** 400})
+                json.dumps(result.usage, allow_nan=False)
 
 
 class SourceResumeTests(support.Base):

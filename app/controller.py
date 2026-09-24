@@ -50,6 +50,8 @@ from app.state import (CLI, MANUAL, QUEUED, RUNNING, AWAITING_USER, ACCEPTED, RE
                        DONE, INDEPENDENT_ONLY, INCLUDE_UNVERIFIED, QUORUM_POLICIES, RunGate, gate, confirmed, synthesis_attempts)
 from core import adapters, contract, env as core_env, isolation, membership as m, runner
 
+# _source_dir가 원장의 질문 본문을 이 두 문구로 다시 만들어 맞춘다. 문구를 바꾸면 그 전에 만든 대기 실행은
+# 재개 때 호출 없이 거절된다.
 PROMPT = ("다음 질문에, 다른 참여자의 답을 보지 않은 상태로 독립적으로 답하라. "
           "결론, 근거, 그리고 결론을 뒤집을 조건을 쓴다.\n\n질문:\n{question}\n")
 # 공통 자료(P0). 모든 참여자가 같은 질문 본문을 받으므로 목록·해시는 질문에 넣어 입력 digest에 묶는다.
