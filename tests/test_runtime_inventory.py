@@ -1,7 +1,9 @@
 """V04-01 tier 1 도구 검사. 실제 CLI·로그인·모델을 쓰지 않는다. 가짜 실행기와 python 자신만 쓴다."""
 from datetime import datetime, timezone
 import json
+import os
 from pathlib import Path
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -364,6 +366,14 @@ class SummarizeClaudeInitTests(unittest.TestCase):
 
 
 class CliTests(unittest.TestCase):
+    def test_redirected_output_is_utf8_even_with_cp949_default(self):
+        child_env = dict(os.environ, PYTHONIOENCODING="cp949", PATH="")
+        result = subprocess.run(
+            [sys.executable, str(Path(inv.__file__).resolve()), "--host-label", "test-pc", "--dry-run"],
+            env=child_env, capture_output=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr.decode("utf-8", errors="replace"))
+        self.assertIn("PATH에 없음 — 실행하지 않음", result.stdout.decode("utf-8"))
+
     def test_dry_run_executes_nothing(self):
         with mock.patch.object(inv, "run_probe", side_effect=AssertionError("executed")), \
                 mock.patch("sys.stdout"):
