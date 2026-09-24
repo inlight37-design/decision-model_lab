@@ -50,6 +50,7 @@ CREATE TABLE IF NOT EXISTS events (
   run_id TEXT NOT NULL, seq INTEGER NOT NULL, at REAL NOT NULL, kind TEXT NOT NULL, payload TEXT NOT NULL,
   PRIMARY KEY (run_id, seq)
 );
+CREATE INDEX IF NOT EXISTS events_by_kind ON events (kind, run_id, seq);
 CREATE TABLE IF NOT EXISTS live_budget (
   singleton INTEGER PRIMARY KEY CHECK (singleton = 1), cap INTEGER NOT NULL CHECK (cap > 0),
   provider_caps TEXT NOT NULL
@@ -199,7 +200,16 @@ class Store:
             saved = self.row("SELECT cap, provider_caps FROM live_budget WHERE singleton = 1")
             legacy = self.rows("SELECT payload FROM events WHERE kind = 'live_call_reserved'") if not saved else []
             if saved:
-                fixed, fixed_caps = saved["cap"], json.loads(saved["provider_caps"])
+                try:
+                    fixed, fixed_caps = saved["cap"], json.loads(saved["provider_caps"])
+                    # 저장됐다는 이유로 신뢰하지 않는다. SQLite INTEGER affinity는 양의 실수도 받으며,
+                    # null/[] 같은 JSON은 provider 제한을 없는 것처럼 해석하게 만들 수 있다.
+                    if (type(fixed) is not int or fixed < 1 or not isinstance(fixed_caps, dict)
+                            or any(not isinstance(k, str) or not k or type(v) is not int or v < 1
+                                   for k, v in fixed_caps.items())):
+                        raise ValueError("invalid saved budget shape")
+                except (TypeError, ValueError, RecursionError) as exc:
+                    raise StoreError("invalid saved call budget; preserve this ledger and use a new one") from exc
             elif legacy:
                 try:
                     limits = [json.loads(row["payload"])["cap"] for row in legacy]
