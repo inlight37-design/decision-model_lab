@@ -31,7 +31,8 @@ if __package__ in (None, ""):  # `python app/server.py`로 실행해도 저장�
 
 from app.controller import CLI, MANUAL, Controller, ControllerError, MockExecutor, ParticipantSpec
 from app.report import ReportError, build_report
-from app.store import LedgerBusy, Store
+from app.store import LedgerBusy, Store, StoreError
+from app.live_config import Provider, load as load_live_config, validate as validate_providers
 
 STATIC = Path(__file__).with_name("static")
 PARTICIPANTS = {
@@ -281,21 +282,28 @@ def _write_token(path: Path, token: str) -> None:
 def serve(data_dir: Path, port: int, *, timeout: float = 20.0, live_cli: str | None = None,
           inventory: Path | None = None, model: str | None = None, call_budget: int | None = None,
           allow_context_unverified: bool = False,
-          input_dir: Path | None = None) -> tuple[ThreadingHTTPServer, str, Controller]:
+          input_dir: Path | None = None,
+          live_providers: tuple[Provider, ...] | None = None) -> tuple[ThreadingHTTPServer, str, Controller]:
+    if live_providers is not None and any(value is not None for value in (live_cli, inventory, model, call_budget, input_dir)):
+        raise ValueError("do not mix live_providers with single-provider options")
+    providers = validate_providers(tuple(live_providers)) if live_providers is not None else ()
     if live_cli is not None:
+        providers = (Provider(live_cli, model, inventory, call_budget, input_dir),)
+    if providers:
         from app.cli_executor import CliExecutor
-        if (sys.platform != "linux" or live_cli not in CliExecutor.adapter_ids or inventory is None
-                or not isinstance(model, str) or not model.strip() or type(call_budget) is not int
-                or not 1 <= call_budget <= 10 or not math.isfinite(timeout) or not 0 < timeout <= 180):
+        if sys.platform != "linux" or not math.isfinite(timeout) or not 0 < timeout <= 180:
             raise ValueError("live CLI requires Linux, inventory, full model, call budget 1..10 and timeout 0..180s")
-        # 파일·계정 잔여를 흉내내지 않는다. real 기동에는 명시적인 단일 CLI와 원장 누적 예산이 필요하다.
         executor = CliExecutor(never=(str(data_dir.resolve()),), inventory=inventory,
+                               inventories_by_adapter={p.adapter_id: p.inventory for p in providers},
                                allow_context_unverified=allow_context_unverified,
-                               default_inputs=() if input_dir is None else (str(input_dir),))
-        pid = "claude" if live_cli == "claude-code" else "codex"
+                               inputs_by_adapter={p.adapter_id: () if p.input_dir is None else (str(p.input_dir),)
+                                                  for p in providers})
         roster = {p.pid: p for p in PARTICIPANTS.values() if p.transport == MANUAL}
-        roster[pid] = ParticipantSpec(**{**vars(PARTICIPANTS[pid]), "model": model,
-                                        "context_unverified": allow_context_unverified})
+        for provider in providers:
+            pid = "claude" if provider.adapter_id == "claude-code" else "codex"
+            roster[pid] = ParticipantSpec(**{**vars(PARTICIPANTS[pid]), "model": provider.model,
+                                            "context_unverified": allow_context_unverified})
+        call_budget = sum(p.call_budget for p in providers)
     else:
         if (inventory is not None or model is not None or call_budget is not None
                 or allow_context_unverified or input_dir is not None):
@@ -312,7 +320,10 @@ def serve(data_dir: Path, port: int, *, timeout: float = 20.0, live_cli: str | N
         raise
     try:
         controller = Controller(store, executor, timeout=timeout, max_real_calls=call_budget,
-                                max_parallel=1 if live_cli else 2, unsettled_limit=1 if live_cli else 2)
+                                provider_call_caps=({p.adapter_id: p.call_budget for p in providers}
+                                                    if live_providers is not None else None),
+                                max_parallel=len(providers) if providers else 2,
+                                unsettled_limit=len(providers) if providers else 2)
         token = secrets.token_urlsafe(32)
         _write_token(data_dir / "control-token", token)
     except BaseException:
@@ -331,6 +342,8 @@ def main() -> int:
     ap.add_argument("--check-cli", choices=("claude-code", "codex"),
                     help="현재 실제 CLI 계획의 허가만 조회하고 종료; 서버·모델을 시작하지 않음")
     ap.add_argument("--live-cli", choices=("claude-code", "codex"), help="명시한 실제 CLI 하나를 화면에 연결")
+    ap.add_argument("--live-config", type=Path, help="provider별 모델·관측 기록·입력 폴더·호출 상한 JSON")
+    ap.add_argument("--check-config", type=Path, help="live-config와 동일한 계획을 모두 조회한 뒤 종료; 모델 호출 없음")
     ap.add_argument("--inventory", type=Path, help="이 기기의 runtime-inventory/2 기록")
     ap.add_argument("--model", help="전체 요청 모델 이름; 기본값·대체 모델 없음")
     ap.add_argument("--call-budget", type=int, help="이 원장 전체에서 예약할 실제 CLI 호출 상한(1..10); 재시작은 환불 아님")
@@ -338,11 +351,21 @@ def main() -> int:
     ap.add_argument("--allow-context-unverified", action="store_true",
                     help="C3만 미확인으로 허용; 독립 정족수에는 절대 세지 않음")
     args = ap.parse_args()
+    providers = None
+    config_path = args.live_config or args.check_config
+    if config_path:
+        if (args.live_config and args.check_config) or any(value is not None for value in (
+                args.check_cli, args.live_cli, args.inventory, args.model, args.call_budget, args.input_dir)):
+            ap.error("do not mix config mode with single-provider options")
+        try:
+            providers = load_live_config(config_path)
+        except (OSError, ValueError, TypeError) as exc:
+            ap.error(f"invalid live config: {exc}")
     if args.check_cli and args.live_cli:
         ap.error("choose --check-cli or --live-cli, not both")
     if (args.check_cli or args.live_cli) and (args.inventory is None or not args.model or not args.model.strip()):
         ap.error("--check-cli/--live-cli requires --inventory and --model")
-    if not (args.check_cli or args.live_cli) and (args.inventory is not None or args.model is not None
+    if not (args.check_cli or args.live_cli or config_path) and (args.inventory is not None or args.model is not None
                                                  or args.allow_context_unverified or args.input_dir is not None):
         ap.error("real options require --check-cli or --live-cli; refusing a silent mock fallback")
     if args.live_cli and (args.call_budget is None or not 1 <= args.call_budget <= 10
@@ -350,28 +373,40 @@ def main() -> int:
         ap.error("--live-cli requires --call-budget 1..10 and finite --timeout greater than 0, at most 180")
     if args.call_budget is not None and not args.live_cli:
         ap.error("--call-budget requires --live-cli")
+    if args.live_config and (not math.isfinite(args.timeout) or not 0 < args.timeout <= 180):
+        ap.error("live config requires finite --timeout greater than 0, at most 180")
     if hasattr(sys.stdout, "reconfigure"):  # Windows 콘솔의 cp949에서도 한글·기호가 깨지지 않게
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    if args.check_cli or args.live_cli:
+    if args.check_cli or args.live_cli or config_path:
         from app.readiness import check
-        if args.live_cli and args.data_dir == Path.home() / ".decision-model-lab" / "mock":
+        if (args.live_cli or args.live_config) and args.data_dir == Path.home() / ".decision-model-lab" / "mock":
             ap.error("--live-cli requires a separate explicit --data-dir, not the mock journal")
-        result = check(args.check_cli or args.live_cli, args.model, args.inventory, args.data_dir,
-                       allow_context_unverified=args.allow_context_unverified, input_dir=args.input_dir)
+        if providers is not None:
+            results = [check(p.adapter_id, p.model, p.inventory, args.data_dir,
+                             allow_context_unverified=args.allow_context_unverified, input_dir=p.input_dir)
+                       for p in providers]
+            result = {"mode": "readiness_only", "model_calls": 0, "eligible": all(r["eligible"] for r in results),
+                      "providers": results}
+        else:
+            result = check(args.check_cli or args.live_cli, args.model, args.inventory, args.data_dir,
+                           allow_context_unverified=args.allow_context_unverified, input_dir=args.input_dir)
         print(json.dumps(result, ensure_ascii=False, indent=2))
-        if args.check_cli or not result["eligible"]:
+        if args.check_cli or args.check_config or not result["eligible"]:
             return 0 if result["eligible"] else 2
     try:
         server, token, controller = serve(args.data_dir, args.port, timeout=args.timeout,
                                            live_cli=args.live_cli, inventory=args.inventory, model=args.model,
                                            call_budget=args.call_budget,
                                            allow_context_unverified=args.allow_context_unverified,
-                                           input_dir=args.input_dir)
+                                           input_dir=args.input_dir, live_providers=providers)
     except LedgerBusy:
         print(f"이미 다른 서버가 이 데이터 폴더를 쓰고 있다: {args.data_dir}. 그 서버를 쓰거나 끈 뒤 다시 띄운다.",
               file=sys.stderr, flush=True)
         return 1
-    mode = "실제 CLI · 구독 사용량 소비" if args.live_cli else "모의 모드"
+    except StoreError as exc:
+        print(f"원장 정책 때문에 서버를 시작하지 않았습니다: {exc}", file=sys.stderr, flush=True)
+        return 1
+    mode = "실제 CLI · 구독 사용량 소비" if args.live_cli or args.live_config else "모의 모드"
     print(f"Ledger {mode} — 실행기 {controller.executor.name}, 데이터 {args.data_dir}", flush=True)
     if controller.paused:
         print("다시 시작하기 전에 시작하지 못한 시도가 있다. 화면에서 '이어서 시작'을 눌러야 시작한다.", flush=True)
