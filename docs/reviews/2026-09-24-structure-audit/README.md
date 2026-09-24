@@ -206,7 +206,7 @@
 | 7 | **끝난 일회성 진단 은퇴.** 각 기록 색인에 "retired at <sha>"를 단다. 로그인 상태 탐침 하나는 실행 허가의 재관측 주기(30일) 때문에 관측 도구의 모델 없는 probe로 옮긴다 | `codex_sandbox.py`, `v04-03/conformance.py`, `smoke_review_preview.py`, 사용되지 않는 `review_boundary.py`, 겹치는 `cli_boundary.py` | 시험 포함 약 −630 | 낮음. 이력은 git에 남는다 | 사용자 확인 뒤 |
 | 8 | **동결 Windows 경로를 한 모듈로**(runner 약 110줄, `codex_windows_sandbox`, `fresh_environment`) | 공용 코드의 플랫폼 분기 | ±0(이동) | 낮음 | 사용자 확인 뒤(WSL2 전환은 확정, 네이티브 경로는 "두되 제품화하지 않음") |
 
-작은 것 두 가지: G7은 `DEFAULT`를 지우는 1토큰 수정이다. G8은 변수 표 하나에 "격리 여부별 넘김·버림·거절"을 적는다.
+작은 것 두 가지: G7은 `CREATE TABLE`의 `DEFAULT`만 지우는 1토큰 수정이다. 이전(migration)의 `DEFAULT`는 스키마 2 이전 실행의 동작(원본 앱 답도 정족수에 셈)을 지키므로 둔다(병합 전 정정 — 처음 판은 "`DEFAULT`를 지운다"고만 적었다). G8은 변수 표 하나에 "격리 여부별 넘김·버림·거절"을 적는다.
 
 **과정 — 덧대기를 만드는 반영 방식을 바꾼다.**
 
