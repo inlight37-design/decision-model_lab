@@ -46,6 +46,12 @@ for line in sys.stdin:
         result = {"rateLimits":{"primary":{"usedPercent":25, "windowDurationMins":300,
                                              "resetsAt":int(time.time())+300}},
                   "accountId":"PRIVATE ID", "credits":{"balance":"PRIVATE BALANCE"}}
+    elif method == "model/list":
+        if mode == "nomodels":
+            print(json.dumps({"id":msg["id"], "error":{"message":"PRIVATE ERROR"}}), flush=True)
+            continue
+        result = {"data":[{"id":"gpt-test", "model":"gpt-test", "displayName":"PRIVATE_DISPLAY", "hidden":False},
+                          {"id":"bad id", "model":"bad id"}], "nextCursor":None}
     else:
         raise AssertionError("forbidden method sent")
     print(json.dumps({"id":msg["id"], "result":result}), flush=True)
@@ -113,6 +119,15 @@ class ProtocolTests(unittest.TestCase):
         self.assertEqual(result["quota"]["limits"][0]["used_percent"], 25)
         self.assertNotIn("PRIVATE", json.dumps(result))
 
+    def test_model_list_keeps_names_only_and_its_refusal_keeps_the_quota(self):
+        result = self.query("ok")
+        self.assertEqual(result["models"], {"status": "observed", "ids": ["gpt-test"], "truncated": False})
+        self.assertNotIn("PRIVATE", json.dumps(result))
+        refused = self.query("nomodels")
+        self.assertEqual(refused["models"], {"status": "unavailable"})
+        self.assertEqual(refused["quota"]["limits"][0]["used_percent"], 25)
+        self.assertNotIn("PRIVATE", json.dumps(refused))
+
 
 class PlanTests(unittest.TestCase):
     def test_default_plan_does_not_start_any_process(self):
@@ -154,6 +169,7 @@ class IsolatedProtocolTests(unittest.TestCase):
             report = json.loads(result.stdout)
             self.assertEqual(report["inference_requests_sent"], 0)
             self.assertEqual(report["quota"]["limits"][0]["used_percent"], 25)
+            self.assertEqual(report["models"]["ids"], ["gpt-test"])
             self.assertNotIn("PRIVATE", result.stdout)
 
 

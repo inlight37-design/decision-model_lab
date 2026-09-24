@@ -27,6 +27,7 @@ import subprocess
 from typing import Any, Iterable, Mapping
 
 from core.env import BILLING_VARS, KEEP_VARS, child_env, resolve  # noqa: F401 — 호출자가 여기서 쓴다
+from core.quota import claude_limit
 from core.runner import EXITED, INPUT_COMPLETE, RunResult
 
 DISCUSSANT = "discussant"
@@ -247,6 +248,7 @@ class Outcome:
     permission_denials: int | None = None
     tool_events: int | None = None
     detail: str | None = None
+    rate_limit: dict[str, Any] | None = None  # Claude 계정 한도(stream의 rate_limit_event). 답의 수용과는 별개
 
 
 def _usage(source: Mapping[str, Any] | None, keys: Iterable[str]) -> dict[str, Any]:
@@ -336,6 +338,26 @@ def claude_stream(stdout: str) -> tuple[dict, dict, list[str]]:
     return init, result, used
 
 
+def claude_rate_limit(stdout: str) -> dict[str, Any] | None:
+    """스트림의 마지막 rate_limit_event에서 허용한 계정 한도 칸. claude_stream이 받아들인 출력에만 쓴다.
+
+    답의 수용과는 따로다 — 모양이 달라도 답을 거절하지 않고 None(미확인)이 된다. 마지막 사건의 모양이
+    다르면 앞선 사건으로 대신하지 않는다.
+    """
+    last, seen = None, 0
+    for line in stdout.splitlines():
+        if not line.strip():
+            continue
+        try:
+            event = json.loads(line)
+        except ValueError:
+            return None
+        if isinstance(event, dict) and event.get("type") == "rate_limit_event":
+            last, seen = event.get("rate_limit_info"), seen + 1
+    limit = claude_limit(last) if seen else None
+    return None if limit is None else {**limit, "events": seen}
+
+
 def _typed(obj: Mapping[str, Any], key: str, kind: type, default: Any) -> Any:
     """obj[key]가 없거나 null이면 default, 있으면 kind여야 한다. 빈 값과 잘못된 타입을 구분한다."""
     value = obj.get(key)
@@ -350,10 +372,10 @@ def _parse(adapter_id: str, run: RunResult, base: dict[str, str]) -> Outcome:
     requested_model = base["requested_model"]
     if adapter_id == "claude-code":
         obj = _single_json(run.stdout)
-        tools = None
+        tools = rate_limit = None
         if obj is None:
             _init, obj, used = claude_stream(run.stdout)
-            tools = len(used)
+            tools, rate_limit = len(used), claude_rate_limit(run.stdout)
         if obj is None or obj.get("type") != "result":
             return Outcome(ok=False, status="format_error", text=run.stdout or None, reported_models=(),
                            model_match=None, detail="expected one JSON result object", **base)
@@ -366,7 +388,7 @@ def _parse(adapter_id: str, run: RunResult, base: dict[str, str]) -> Outcome:
         return Outcome(ok=ok, status="ok" if ok else "cli_error", text=obj.get("result"),
                        reported_models=models, model_match=_model_match(requested_model, models),
                        usage=usage, permission_denials=len(_typed(obj, "permission_denials", list, [])),
-                       tool_events=tools,
+                       tool_events=tools, rate_limit=rate_limit,
                        detail=None if ok else str(obj.get("terminal_reason") or "is_error"), **base)
     if adapter_id == "codex":
         text, completed, failure, tools, usage, stray = None, False, None, 0, {}, 0

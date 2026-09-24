@@ -296,6 +296,27 @@ class Controller:
         return {"used": used, "cap": self.max_real_calls if adapter_id is None
                 else self.provider_call_caps.get(adapter_id)}
 
+    def claude_account_limit(self) -> dict[str, Any] | None:
+        """마지막으로 끝난 실제 Claude 시도가 stream에서 받은 계정 한도(rate_limit_event)와 그 관측 시각.
+
+        모델을 더 부르지 않는다. 봉인 중인 실행의 값은 내보내지 않는다 — 계정 비율의 변화도 아직 답하는 참여자의
+        초안 길이를 짐작하게 한다(2026-09-24 리뷰 8번). 모의·합성 실행기의 시도는 계정 값이 아니므로 쓰지 않는다.
+        """
+        with self.lock:
+            for event in self.store.rows("SELECT run_id, at, payload FROM events WHERE kind IN "
+                                         "('draft_sealed', 'attempt_rejected') ORDER BY at DESC LIMIT 200"):
+                payload = json.loads(event["payload"])
+                limit = (payload.get("result") or {}).get("rate_limit")
+                if not limit:
+                    continue
+                part = self.store.row("SELECT kind FROM participants WHERE run_id = ? AND pid = ? AND attempt = ?",
+                                      event["run_id"], payload.get("pid"), payload.get("attempt"))
+                current = self._gate(event["run_id"])
+                if part is None or part["kind"] != contract.REAL or not (current.settled or current.revealed):
+                    continue
+                return {**limit, "observed_at": int(event["at"])}
+        return None
+
     def pump(self) -> None:
         """자리와 상한이 허락하는 만큼 대기 중인 시도를 시작한다. 한 참여자에 한 번만 — 다시 부르지 않는다.
 
@@ -389,7 +410,7 @@ class Controller:
                 "duration_ms": result.duration_ms, "notes": list(result.notes),
                 "status": outcome.status, "ok": outcome.ok, "detail": outcome.detail, "usage": outcome.usage,
                 "requested_model": outcome.requested_model, "reported_models": list(outcome.reported_models),
-                "model_match": outcome.model_match}
+                "model_match": outcome.model_match, "rate_limit": outcome.rate_limit}
             state, status, why = acceptance(result, outcome)
             detail = detail or why or (outcome.detail if outcome else None)
             with self.store.tx() as tx:

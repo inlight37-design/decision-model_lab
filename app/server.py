@@ -336,7 +336,10 @@ def serve(data_dir: Path, port: int, *, timeout: float = 20.0, live_cli: str | N
         server.server_close()
         store.close()
         raise
-    quota = AccountQuota(data_dir, enabled=bool(providers and any(p.adapter_id == "codex" for p in providers)))
+    codex = next((p for p in providers if p.adapter_id == "codex"), None)
+    quota = AccountQuota(data_dir, enabled=codex is not None, codex_model=codex.model if codex else None,
+                         claude=(controller.claude_account_limit
+                                 if any(p.adapter_id == "claude-code" for p in providers) else None))
     server.RequestHandlerClass = make_handler(controller, token, server.server_address[1],
                                               participants=roster, account_quota=quota)
     return server, token, controller

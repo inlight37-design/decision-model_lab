@@ -171,40 +171,80 @@ async function api(path, body) {
   if (!res.ok) throw new Error(data.error || res.status);
   return data;
 }
+function quotaPeriod(row) {
+  const minutes = row.window_minutes;
+  if (minutes != null) return minutes % 1440 === 0 ? `${minutes / 1440}일` : minutes % 60 === 0 ? `${minutes / 60}시간` : `${minutes}분`;
+  const named = { primary: "기본 한도", secondary: "추가 한도", five_hour: "5시간 창", seven_day: "7일 창", current: "현재 창" };
+  return named[row.window] || String(row.window);
+}
+function quotaRows(quota, staleNote) {
+  const lines = [];
+  for (const row of quota.limits) {
+    const known = typeof row.used_percent === "number" && Number.isFinite(row.used_percent);
+    const left = known ? Math.max(0, Math.round((100 - row.used_percent) * 10) / 10) : null;
+    const text = known ? `잔여 ${left}% · 사용 ${row.used_percent}%` : "미확인";
+    lines.push([row.status === "observed" ? "kv" : "kv st-unknown",
+      `${row.limit_id} · ${quotaPeriod(row)}: ${text}${row.status === "stale" ? ` (과거 관측값 · ${staleNote})` : ""}`]);
+    if (row.resets_at != null) lines.push(["caption", `초기화 ${new Date(row.resets_at * 1000).toLocaleString()}`]);
+  }
+  return lines;
+}
+// 계정 패널의 줄([class, 글]). DOM 없이 시험할 수 있게 그리기와 나눴다. 모의 모드에는 계정 사용량이 없다.
+function quotaLines(data) {
+  const claude = data.claude || { configured: false, quota: null };
+  if (!data.enabled && !claude.configured) return [["caption", "실제 CLI 연결에서 보입니다. 모의 모드에는 계정 사용량이 없습니다."]];
+  const lines = [];
+  if (data.enabled) {
+    lines.push(["caption", "Codex 계정 전체 · 이 앱 밖에서 쓴 사용량도 포함합니다. 조회는 모델을 호출하지 않습니다."]);
+    if (data.refresh_failed) lines.push(["st-unknown", "현재 조회하지 못했습니다. 이전 값이 있다면 과거 관측값입니다."]);
+    const quota = data.quota;
+    if (!quota) lines.push(["st-unknown", "Codex 잔여 한도 미확인"]);
+    else {
+      lines.push(["caption", `Codex 조회 시각 ${new Date(quota.observed_at * 1000).toLocaleString()}`]);
+      lines.push(...quotaRows(quota, "다시 조회 필요"));
+    }
+    if (data.requested_model) {
+      const models = data.models;
+      const listed = !!models && models.status === "observed" && Array.isArray(models.ids);
+      const found = listed && models.ids.includes(data.requested_model);
+      const verdict = !listed ? "미확인" : found ? "있음" : models.truncated ? "목록 일부만 받아 미확인" : "없음";
+      lines.push([found ? "kv" : "kv st-unknown", `요청 모델 ${data.requested_model}: 이 계정의 가용 목록에 ${verdict}`]);
+      if (listed) lines.push(["caption", "가용 목록일 뿐 실제로 답한 모델의 보고가 아닙니다."]);
+    }
+  }
+  if (claude.configured) {
+    const quota = claude.quota;
+    lines.push(["caption", "Claude 계정 전체 · 마지막으로 끝난 실제 Claude 실행이 받은 값입니다. 따로 조회하지 않습니다."]);
+    if (!quota || quota.observed_at == null) lines.push(["st-unknown", "Claude 한도 미확인 — 실제 Claude 실행이 끝나면 보입니다"]);
+    else {
+      lines.push(["caption", `Claude 관측 시각 ${new Date(quota.observed_at * 1000).toLocaleString()}`]);
+      if (quota.limit_state === "rejected") lines.push(["st-unknown", "그 실행 때 Claude가 한도 도달(rejected)을 알렸습니다."]);
+      else if (quota.limit_state === "allowed_warning") lines.push(["st-unknown", "그 실행 때 Claude가 한도 경고(allowed_warning)를 알렸습니다."]);
+      if (!quota.limits.length) lines.push(["st-unknown", "창별 사용 비율은 받지 못했습니다."]);
+      lines.push(...quotaRows(quota, "다음 실제 실행 때 갱신"));
+    }
+  }
+  lines.push(["caption", "남은 질문 횟수나 토큰 수를 뜻하지 않습니다."]);
+  return lines;
+}
 function renderQuota(data) {
   const box = document.getElementById("account-quota");
   const button = document.getElementById("quota-refresh");
   button.disabled = !data.enabled || data.refreshing || data.retry_after_seconds > 0;
   button.textContent = data.refreshing ? "조회 중…" : data.retry_after_seconds > 0 ? `${data.retry_after_seconds}초 후 조회` : "조회";
-  const signature = JSON.stringify([data.enabled, data.refresh_failed, data.quota]);
+  const signature = JSON.stringify([data.enabled, data.refresh_failed, data.quota, data.models, data.claude]);
   if (signature === quotaSignature) return;
   quotaSignature = signature;
-  box.replaceChildren();
-  if (!data.enabled) {
-    box.append(h("p", {class:"caption"}, "Codex 실제 연결에서 조회할 수 있습니다. Claude 계정 한도는 아직 연결되지 않았습니다."));
-    return;
-  }
-  box.append(h("p", {class:"caption"}, "Codex 계정 전체 · 이 앱 밖에서 쓴 사용량도 포함합니다. 조회는 모델을 호출하지 않습니다."));
-  if (data.refresh_failed) box.append(h("p", {class:"st-unknown"}, "현재 조회하지 못했습니다. 이전 값이 있다면 과거 관측값입니다."));
-  const quota = data.quota;
-  if (!quota) { box.append(h("p", {class:"st-unknown"}, "잔여 한도 미확인")); return; }
-  box.append(h("p", {class:"caption"}, `조회 시각 ${new Date(quota.observed_at * 1000).toLocaleString()}`));
-  for (const row of quota.limits) {
-    const minutes = row.window_minutes;
-    const period = minutes == null ? (row.window === "primary" ? "기본 한도" : "추가 한도") : minutes % 1440 === 0 ? `${minutes / 1440}일` : minutes % 60 === 0 ? `${minutes / 60}시간` : `${minutes}분`;
-    const known = typeof row.used_percent === "number" && Number.isFinite(row.used_percent);
-    const text = known ? `잔여 ${Math.max(0, 100 - row.used_percent)}% · 사용 ${row.used_percent}%` : "미확인";
-    box.append(h("div", {class:row.status === "observed" ? "kv" : "kv st-unknown"},
-      `${row.limit_id} · ${period}: ${text}${row.status === "stale" ? " (과거 관측값 · 다시 조회 필요)" : ""}`));
-    if (row.resets_at != null) box.append(h("div", {class:"caption"}, `초기화 ${new Date(row.resets_at * 1000).toLocaleString()}`));
-  }
-  box.append(h("p", {class:"caption"}, "남은 질문 횟수나 토큰 수를 뜻하지 않습니다."));
+  box.replaceChildren(...quotaLines(data).map(([cls, text]) => h(cls.startsWith("kv") ? "div" : "p", {class: cls}, text)));
 }
 document.getElementById("quota-refresh").onclick = async () => {
   const button = document.getElementById("quota-refresh");
   button.disabled = true; button.textContent = "조회 중…";
   try { renderQuota(await api("/api/account-quota/refresh", {})); }
-  catch (e) { quotaSignature = null; document.getElementById("account-quota").textContent = "계정 한도를 조회하지 못했습니다."; button.disabled = false; }
+  catch (e) {
+    quotaSignature = null; document.getElementById("account-quota").textContent = "계정 한도를 조회하지 못했습니다.";
+    button.disabled = false; button.textContent = "조회";
+  }
 };
 const STATE_LABEL = { queued: "대기", running: "실행 중", awaiting_user: "사용자 전달 대기", accepted: "제출됨",
                       rejected: "받지 않음", unknown: "UNKNOWN · 종료 미확인" };
