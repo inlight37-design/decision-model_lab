@@ -101,7 +101,7 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
             if len(self.headers.get_all("Host", [])) != 1 or self.headers.get("Host") not in allowed_hosts:
                 self._json(403, {"error": "unexpected Host header"})
                 return False
-n            origins = self.headers.get_all("Origin", [])
+            origins = self.headers.get_all("Origin", [])
             if origins and origins != [f"http://{self.headers['Host']}"]:
                 self._json(403, {"error": "unexpected Origin header"})
                 return False
