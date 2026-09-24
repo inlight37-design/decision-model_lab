@@ -220,10 +220,11 @@ function budget(run) {
   for (let i = 0; i < running; i++) cells.push(h("span", { class: "cell run", title: "실행 중" }));
   while (cells.length < b.cap) cells.push(h("span", { class: "cell" }));
   return h("div", { class: "pb", style: "border-bottom:1px solid var(--rule-100)" },
-    h("div", { class: "caption" }, "외부 호출 예산 — 진척도가 아니라 소진량"),
+    h("div", { class: "caption" }, "CLI 실행·진행 — 구독 차감량이 아님"),
     h("span", { class: "metric" }, `${b.used} / ${b.cap}`),
     h("div", { class: "budget" }, cells),
     h("div", { class: "caption" }, `받음 ${b.breakdown.succeeded} · 실패 ${b.breakdown.failed} · 종료 미확인 ${b.breakdown.unknown}` +
+      ` · 시작 전 종료 ${b.not_started || 0} · 실제 CLI 예약 ${b.reserved || 0}(실패해도 환불 안 됨)` +
       (b.manual ? ` · 수동 ${b.manual}(우리 앱의 호출이 아님, 사용량 관측 안 됨)` : "")));
 }
 
