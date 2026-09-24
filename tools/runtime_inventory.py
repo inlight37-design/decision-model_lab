@@ -37,6 +37,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))  # `python tools/runtime_inventory.py`로 실행해도 core를 찾는다
 from core.env import AI_TOOL_VARS, ENV_VARS, fresh_environment  # noqa: E402,F401 — 이 도구의 이름으로도 쓴다
 from core import eligibility  # noqa: E402 — runtime-inventory/2의 칸과 상태
+from tools.redaction import SECRET, USER_PATH, make_redactor  # noqa: E402,F401 — shared publication policy
 SCHEMA = "runtime-inventory/1"
 DEFAULT_OUT = ROOT / "docs/experiments/v04-01-inventory/hosts"
 
@@ -132,25 +133,6 @@ NOT_CHECKED = (
     "권한 제한이 실행 전에 적용되는지", "사용량·한도 조회", "과금 경로", "OS 격리",
 )
 
-# 앞에 영숫자가 오면 비밀이 아니다. 경계가 없으면 '--disk-cache-directory' 안의
-# 'sk-cache-directory'까지 가려서 help 원문과 플래그 탐지가 틀어진다.
-SECRET = re.compile(
-    r"(?<![A-Za-z0-9])(?:"
-    r"sk-(?:ant-|proj-)?[A-Za-z0-9_-]{16,}"
-    r"|AIza[0-9A-Za-z_-]{30,}"
-    r"|gh[pousr]_[A-Za-z0-9]{30,}"
-    r"|github_pat_[A-Za-z0-9_]{30,}"
-    r"|eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}"
-    r"|(?i:bearer)\s+[A-Za-z0-9._-]{20,})"
-)
-# 다른 사용자의 홈 경로에서 사용자 이름 부분. 이름에는 공백이 있을 수 있으므로
-# ('C:\Users\Jane Doe\...') 다음 경로 구분자·따옴표·줄 끝까지를 이름으로 본다. 구분자가
-# 없으면 줄 끝까지 가린다 — 덜 가리는 것보다 더 가리는 쪽이 안전하다. 이미 가린 '<user>'는
-# 건너뛰되, '<user> Doe\'처럼 반쯤 가린 것은 다시 잡는다.
-_USER_NAME = r"(?!<user>(?:[{sep}\"'\r\n]|$))[^{sep}\r\n\"']+"
-USER_PATH = re.compile(
-    r"(?i)([A-Z]:[\\/]+Users[\\/]+)" + _USER_NAME.format(sep=r"\\/")
-    + r"|(/(?:home|Users)/)" + _USER_NAME.format(sep="/"))
 ANSI = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
 LABEL = re.compile(r"[a-z0-9][a-z0-9-]{1,39}")
 ENV_NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_()]*")
@@ -161,18 +143,6 @@ Runner = Callable[[list[str], float], dict[str, Any]]
 
 def git_blob_sha1(data: bytes) -> str:
     return hashlib.sha1(b"blob %d\0" % len(data) + data).hexdigest()
-
-
-def make_redactor(home: str) -> Callable[[str], str]:
-    """홈 경로 → ~, 다른 사용자 경로의 이름 → <user>, 비밀처럼 보이는 문자열 → <redacted>."""
-    homes = sorted({home, home.replace("\\", "/")} - {""}, key=len, reverse=True)
-
-    def redact(text: str) -> str:
-        for value in homes:
-            text = re.sub(re.escape(value), "~", text, flags=re.IGNORECASE)
-        text = USER_PATH.sub(lambda m: (m.group(1) or m.group(2)) + "<user>", text)
-        return SECRET.sub("<redacted>", text)
-    return redact
 
 
 def decode(data: bytes | str | None) -> str:

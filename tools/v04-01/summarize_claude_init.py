@@ -10,14 +10,14 @@
 
     python tools/v04-01/summarize_claude_init.py <tier2/P4-claude.txt> <저장소 밖 원본 보관 경로>
 """
-import collections
 import hashlib
 import json
 import pathlib
 import shutil
 import sys
 
-LIST_FIELDS = ("tools", "mcp_servers", "plugins", "skills", "agents", "slash_commands")
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
+from tools import redaction  # noqa: E402
 
 
 def parse(body: str) -> tuple[dict, dict]:
@@ -36,46 +36,18 @@ def parse(body: str) -> tuple[dict, dict]:
     return init, result
 
 
-def plugin_origin(plugin) -> str:
-    """이름 끝의 '@builtin'이면 Claude Code 내장이다(aux-pc 2.1.280 P4b). 그 밖의 출처 이름은
-    사용자 설치 목록을 드러낼 수 있으므로 'other'로만 센다."""
-    name = plugin.get("name") if isinstance(plugin, dict) else plugin
-    if not isinstance(name, str) or not name:
-        return "unknown"
-    return "builtin" if name.endswith("@builtin") else "other"
-
-
 def summarize(init: dict, result: dict, raw_sha256: str, script_sha1: str) -> dict:
-    def listed(field):
-        value = init.get(field)
-        return value if isinstance(value, list) else None
-
-    counts = {field: (None if listed(field) is None else len(listed(field))) for field in LIST_FIELDS}
-    tools, servers, plugins = listed("tools"), listed("mcp_servers"), listed("plugins")
-    counts["mcp_tools"] = None if tools is None else sum(1 for t in tools if str(t).startswith("mcp__"))
-    counts["mcp_servers_by_status"] = None if servers is None else dict(
-        collections.Counter(server.get("status") for server in servers))
-    counts["mcp_servers_by_origin"] = None if servers is None else dict(collections.Counter(
-        "claude.ai connector" if str(server.get("name", "")).startswith("claude.ai ") else "plugin-provided"
-        for server in servers))
-    counts["plugins_by_origin"] = None if plugins is None else dict(
-        collections.Counter(plugin_origin(p) for p in plugins))
+    policy = pathlib.Path(redaction.__file__).read_bytes()
     usage = result.get("usage") or {}
-    return {
+    summary = {
         "note": "Summary of the stream-json run. The raw stream stays on the PC because it lists "
                 "the user's installed plugins, skills, commands and connected services. Counts are "
                 "what the system/init event announced, not the full prompt sent to the model; "
-                "null means the field was absent.",
+                "null means the field was absent or not a list.",
         "raw_sha256": raw_sha256,
         "summarizer_git_blob_sha1": script_sha1,
-        "claude_code_version": init.get("claude_code_version"),
-        "model": init.get("model"),
-        "permissionMode": init.get("permissionMode"),
-        "apiKeySource": init.get("apiKeySource"),
-        # 값이 아니라 필드 이름만. 버전마다 무엇을 알리는지 비교할 수 있게 한다.
-        "init_fields": sorted(init),
-        "init_counts": counts,
-        "missing_fields": [field for field in LIST_FIELDS if listed(field) is None],
+        "publication_policy_git_blob_sha1": hashlib.sha1(b"blob %d\0" % len(policy) + policy).hexdigest(),
+        **redaction.claude_init_summary(init),
         "result": {
             "is_error": result.get("is_error"),
             "subtype": result.get("subtype"),
@@ -87,6 +59,8 @@ def summarize(init: dict, result: dict, raw_sha256: str, script_sha1: str) -> di
             "total_cost_usd_client_estimate": result.get("total_cost_usd"),
         },
     }
+    return redaction.scrub_all(summary, str(pathlib.Path.home()), keep_digests=(
+        "raw_sha256", "summarizer_git_blob_sha1", "publication_policy_git_blob_sha1"))
 
 
 def main(argv: list[str]) -> int:

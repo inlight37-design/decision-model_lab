@@ -69,6 +69,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from app.cli_executor import CliExecutor  # noqa: E402
 from app.controller import ACCEPTED, CLI, ParticipantSpec, acceptance  # noqa: E402
 from core import adapters, isolation, runner  # noqa: E402
+from tools.redaction import JWT, claude_init_summary, scrub as _scrub, scrub_all  # noqa: E402
 
 STATE = Path(os.environ.get("DML_OBSERVE_STATE") or Path.home() / ".local/state/dml-observe")
 MARK = {"agents": "AG-5T", "claude_md": "CM-7Q", "allowed": "AL-3K", "forbidden": "FB-9Z"}
@@ -106,47 +107,19 @@ K46_QUIET_ITEMS = ("reasoning",)
 # P3에서 그 버전의 CLI가 낸다고 확인한 오류 문구(2단계 p3-claude, 2026-09-24 codex_profile.py의 없는 profile)
 P3_ERRORS = {"p3-claude": "argument 'notamode' is invalid", "p3-codex": "undefined profile `notamode`"}
 SNAPSHOT_LIMIT = 2000
-# 요약의 마지막 가림에서 남기는 값. 입력 digest는 비밀이 아니고 전후 자료를 잇는 데 필요하다(리뷰 질문 8)
-KEEP_UNSCRUBBED = ("input_sha256",)
 # 세션 기록의 긴 글에서 찾는 표식(C3 (a)). 대소문자를 가리지 않는다
 SESSION_MARKS = ("AGENTS.md", "<user_instructions>", "<environment_context>", "skill", "plugin", "mcp")
 # stderr에서 거절·샌드박스의 흔적으로 볼 줄(K12·K30). 요약에는 줄의 앞부분만 옮긴다.
 STDERR_HINT = re.compile(r"(?i)reject|denied|blocked|sandbox|bwrap|permission|policy|landlock|seccomp")
-# CLI가 쓴 파일 이름·오류 문구 속 식별자. 2026-09-23 b1에서 Claude의 모델 목록 캐시 파일 이름에 조직 UUID가
-# 들어 있었고, Codex는 계정의 플러그인 ID로 폴더를 만들었다. 요약은 저장소로 옮기는 것이므로 가린다.
-UUID = re.compile(r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
-LONG_HEX = re.compile(r"(?<![0-9a-fA-F])[0-9a-fA-F]{24,}(?![0-9a-fA-F])")
-# 토큰 모양(K46: 모델이 로그인 파일을 읽어 명령 출력이나 답에 넣으면 요약에도 실린다). JWT와, 숫자·대문자·소문자가
-# 모두 섞인 40자 이상의 base64url 조각. 경로는 `/`·`.`에서 끊기므로 긴 폴더 이름이 섞인 대소문자가 아니면 남는다.
-JWT = re.compile(r"eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]*")
-TOKEN = re.compile(r"(?<![A-Za-z0-9_-])[A-Za-z0-9_-]{40,}(?![A-Za-z0-9_-])")
 
 
 class ObserveError(RuntimeError):
     """호출하지 않았다. 사용량을 쓰지 않았다."""
 
 
-def _token(match: re.Match) -> str:
-    s = match.group(0)
-    mixed = all(re.search(p, s) for p in ("[0-9]", "[a-z]", "[A-Z]"))
-    return "<token>" if mixed else s
-
-
-def _scrub(text: str, home: str) -> str:
-    """CLI 쪽 문자열(파일 이름, stderr, 명령)을 요약에 옮기기 전에 HOME을 ~로, UUID·긴 16진수 ID·토큰 모양을 표시로 바꾼다."""
-    text = LONG_HEX.sub("<hex>", UUID.sub("<uuid>", text.replace(home, "~")))
-    return TOKEN.sub(_token, JWT.sub("<jwt>", text))
-
-
-def _scrub_all(value, home: str, key: str | None = None):
-    """요약의 모든 문자열(키 포함)을 마지막에 한 번 더 가린다(리뷰 R07). 입력 digest는 남긴다."""
-    if isinstance(value, str):
-        return value if key in KEEP_UNSCRUBBED else _scrub(value, home)
-    if isinstance(value, dict):
-        return {(_scrub(k, home) if isinstance(k, str) else k): _scrub_all(v, home, k) for k, v in value.items()}
-    if isinstance(value, list):
-        return [_scrub_all(v, home) for v in value]
-    return value
+def _scrub_all(value, home: str):
+    """공통 공개 정책으로 모든 문자열을 가리고, 입력 digest만 남긴다."""
+    return scrub_all(value, home, keep_digests=("input_sha256",))
 
 
 def pad_markers() -> dict[str, str]:
@@ -434,12 +407,6 @@ def _stream_json(stdout: str) -> tuple[dict | None, dict | None]:
     return init, result
 
 
-def _names(value) -> list:
-    if isinstance(value, list):
-        return [v.get("name", "?") if isinstance(v, dict) else v for v in value]
-    return []
-
-
 def _codex_items(stdout: str) -> list[dict]:
     """Codex JSONL에서 답이 아닌 완료 항목(명령 실행 등)."""
     items = []
@@ -521,11 +488,10 @@ def summarize(probe: str, run: runner.RunResult, outcome: adapters.Outcome, *, r
               changes: list[str], work: Path, home: str, init: dict | None) -> dict:
     """spec은 controller가 참여자에게 쓸 실행 명세이고, argv_run은 이 probe가 실제로 돌린 argv다(argv_changes만큼 다르다)."""
     text = outcome.text or ""
-    hide = lambda s: s.replace(home, "~")  # noqa: E731
     scrub = lambda s: _scrub(s, home)  # noqa: E731
     summary = {
-        "probe": probe, "spec": {**record, "argv": [hide(a) for a in record["argv"]]},
-        "argv_run": [hide(a) for a in argv], "argv_changes": changes,
+        "probe": probe, "spec": record,
+        "argv_run": argv, "argv_changes": changes,
         "runner_state": run.state, "exit": run.exit_code, "duration_ms": run.duration_ms,
         "containment": run.containment, "tree_confirmed_empty": run.tree_confirmed_empty,
         "input_delivery": run.input_delivery, "stderr_counts": run.stderr_counts,
@@ -540,10 +506,7 @@ def summarize(probe: str, run: runner.RunResult, outcome: adapters.Outcome, *, r
     if init is not None:
         blob = json.dumps(init, ensure_ascii=False)
         summary["init"] = {
-            "keys": sorted(init), "model": init.get("model"), "permissionMode": init.get("permissionMode"),
-            "apiKeySource": init.get("apiKeySource"), "tools": _names(init.get("tools")),
-            "mcp_servers": _names(init.get("mcp_servers")), "plugins": _names(init.get("plugins")),
-            "slash_commands": len(init.get("slash_commands") or []),
+            **claude_init_summary(init),
             "mentions": {"CLAUDE.md": "CLAUDE.md" in blob, MARK["claude_md"]: MARK["claude_md"] in blob,
                          MARK["agents"]: MARK["agents"] in blob},
         }
@@ -551,7 +514,7 @@ def summarize(probe: str, run: runner.RunResult, outcome: adapters.Outcome, *, r
         summary["codex_items"] = [{k: (scrub(str(v))[:200] if k != "exit_code" else v) for k, v in item.items()
                                    if k in ("type", "command", "exit_code", "status", "aggregated_output")}
                                   for item in _codex_items(run.stdout)]
-    return summary
+    return _scrub_all(summary, home)
 
 
 def _refused_as_expected(probe: str, run: runner.RunResult, outcome: adapters.Outcome) -> bool:
