@@ -1,8 +1,8 @@
 # app — A1 controller와 모의 화면
 
-**모델을 부르지 않는 모의 모드**의 첫 세로 기능이다(인계 4절 1). 흐름은 한 줄이다.
+**모델을 부르지 않는 모의 모드**의 세로 기능이다(인계 4절 A1). 흐름은 한 줄이다.
 
-고정 입력(질문 → 프롬프트, sha256) → 시도 예약 → 실행 → 결과 수용 관문 → 초안 봉인 → controller가 공개 → 카드
+고정 입력(질문 → 프롬프트, sha256) → 시도 예약 → 실행 → 결과 수용 관문 → 초안 봉인 → controller가 공개 → 초안 카드 → 합성 없는 JSON 보고
 
 | 파일 | 하는 일 |
 |---|---|
@@ -10,6 +10,7 @@
 | [`store.py`](store.py) | 작은 SQLite journal. 사건은 덧붙이기만 한다. 초안도 여기에 봉인한다 |
 | [`fake_cli.py`](fake_cli.py) | Claude·Codex 출력 형식을 흉내 내는 가짜 CLI. 행동: 정상, 느림, CLI 오류, 입력 일부만 읽음, 멈춤 |
 | [`cli_executor.py`](cli_executor.py) | 실제 CLI 실행기(Linux·WSL). `env.resolve` → `build_spec` → `isolation.run`(`cli_mounts`, `never`) → `interpret`. **모델을 부른다 — 승인 뒤에만.** 서버는 아직 쓰지 않는다. 이 기기의 기록(`runtime-inventory/2`)을 받아 시도마다 실행 허가를 계산한다 — 기록 없이 부르는 것은 관측 도구와 시험(`unchecked`)뿐이다 |
+| [`report.py`](report.py) | 공개된 실행의 합성 없는 보고. 원문·출처·정족수·예산을 투영하며 모델 호출·원장 변경 없음 |
 | [`server.py`](server.py) | 127.0.0.1 화면 서버. 모든 `/api` 요청에 토큰 |
 | [`static/index.html`](static/index.html) | 화면. [Ledger](../design/README.md)의 토큰과 규칙을 따른다 |
 
@@ -58,15 +59,26 @@ python -m app.server --port 8765
   - 시작하지 못한 시도는 저절로 시작하지 않는다. 화면의 "대기 중인 시도 이어서 시작"을 눌러야 시작한다 — 취소가 없어서 서버를 끄는 것이 지금 유일한 멈춤 수단이다.
   - journal에는 스키마 버전이 있다. 예전 journal은 처음 열 때 올리고, 이 코드보다 새 journal은 열지 않는다.
 - **제어 API.** 참여자는 격리 안에서도 localhost를 공유한다. 그래서 모든 `/api` 요청(읽기 포함)에 토큰을 요구하고, Host 머리글이 우리 주소가 아니면 거절한다.
+  - Origin이 있으면 해당 서버 origin만 허용한다. JSON 객체·문자열/정수 타입·단일 길이를 검사하고, 모호한 framing·과대/미완성 본문을 거절한다. frame 삽입 거절 헤더와 소켓 유휴 제한이 있다. 전체 요청 시간/동시 연결 수 상한은 아니다.
   - 토큰은 URL의 `#` 뒤로만 브라우저에 준다. 페이지 자체에는 토큰이 없다.
   - 토큰 파일은 controller 데이터 폴더에 있고, 이 폴더는 참여자 격리에 연결하지 않는다(`never`). 토큰 파일은 처음부터 0600으로 만들어 통째로 바꾸고, 데이터 폴더는 0700이다(POSIX).
+
+## 합성 없는 보고
+
+공개 뒤 **“합성 없는 보고 저장(JSON · 원문 포함)”**을 누르면 `<run_id>-without-synthesis.json`을 내려받는다. API는 기존 토큰이 필요한 `GET /api/runs/<run_id>/report`이며, 아직 공개할 수 없으면 409다.
+
+`a1-draft-report/1`은 고정 질문/프롬프트·입력 해시/크기, 수용된 초안 원문과 해시, 참여자 출처/독립성, 고정 정족수 정책, 탈락/축소 승인, 실패 포함 시도 예산을 담는다. 수동 독립성은 `unverified`, 계정 잔여는 `unknown`, 합성은 `not_implemented`, 검증은 `not_performed`로 유지한다. 해시는 진실성이나 독립성의 증명이 아니다.
+
+`report.py`는 controller의 공개 투영만 읽고 상태를 바꾸거나 모델을 부르지 않는다. 다른 실행/향후 자유 메타데이터는 허용 목록 밖이면 내보내지 않는다. 입력 해시/크기 불일치나 공개 초안 누락은 거절한다. 실제 합성 실패 복구가 아니라 **합성자가 없는 현재 A1의 산출물**이다. 내려받은 파일은 질문과 초안 원문을 포함하므로 공개 저장소에 자동으로 올리지 않는다.
 
 ## 아직 없는 것
 
 - 화면 서버에서 실제 CLI를 고르는 설정. 승인된 호출을 할 때 붙인다.
-- 합성, 주장 대조, 첫 화면 Q4(결정 우선·대조표 우선) 비교. 초안 공개까지만 있다.
+- 합성, 주장 대조, 첫 화면 Q4(결정 우선·대조표 우선) 비교. 초안 공개와 합성 없는 원문 보고만 있다.
 - 취소 버튼과 취소 중 입력 전송 시험.
-- TypeScript 화면. node가 없어서 지금은 빌드 없는 HTML·JS다.
+- TypeScript 화면. 현재 제품 화면은 빌드 없는 HTML·JS이고 이행 시점은 Q3로 남아 있다.
 - 입력 manifest의 공통 자료(파일) 첨부. 지금은 질문 한 개다.
 
 검사: [`tests/test_app_controller.py`](../tests/test_app_controller.py). 대부분은 프로세스 없는 합성 실행기로 보고, 한 묶음은 모의 CLI를 실제 실행 경로(Windows job object, Linux bubblewrap)로 돌린다. 실제 CLI 실행기는 [`tests/test_app_cli_executor.py`](../tests/test_app_cli_executor.py)가 설치된 모양 그대로 만든 가짜 `claude`·`codex`로 격리 경로를 돌려 본다(Linux).
+
+원장/HTTP 회귀는 [`test_app_integrity.py`](../tests/test_app_integrity.py), 보고서/인증 경계는 [`test_app_report.py`](../tests/test_app_report.py)에 있다. [2026-09-24 검증 기록](../docs/reviews/2026-09-24-a1-integrity/README.md)은 실제 HTTP 시험과 오프라인 DOM 시험을 구분한다.

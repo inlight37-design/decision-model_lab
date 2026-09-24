@@ -152,12 +152,23 @@ class _Tx:
 
     def __enter__(self) -> "_Tx":
         self.store._lock.acquire()
-        self.store._db.execute("BEGIN IMMEDIATE")
+        try:
+            self.store._db.execute("BEGIN IMMEDIATE")
+        except BaseException:
+            # __enter__가 실패하면 Python은 __exit__를 부르지 않는다.
+            self.store._lock.release()
+            raise
         return self
 
     def __exit__(self, kind, value, trace) -> None:
         try:
-            self.store._db.execute("COMMIT" if kind is None else "ROLLBACK")
+            try:
+                self.store._db.execute("COMMIT" if kind is None else "ROLLBACK")
+            except BaseException:
+                # 지연 제약 등으로 COMMIT이 실패해도 다음 거래를 막는 열린 거래를 남기지 않는다.
+                if self.store._db.in_transaction:
+                    self.store._db.execute("ROLLBACK")
+                raise
         finally:
             self.store._lock.release()
 

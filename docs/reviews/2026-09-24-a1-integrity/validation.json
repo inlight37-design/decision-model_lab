@@ -1,0 +1,45 @@
+{
+  "date": "2026-09-24",
+  "base_commit": "28a18676842f31cd25a0629b2efdc8c3686b46df",
+  "product_commit": "a2e94695d34ae046d8687cf4fa2dbdd27279dcb6",
+  "product_tree": "fbccd3a9c6d34d06ded064e8f8d903a2243bf9cf",
+  "local_full_suite": {
+    "command": "python -m unittest discover -s tests -v",
+    "user": "unprivileged analysis-container user",
+    "tests": 325,
+    "skipped": 18,
+    "failures": 0,
+    "errors": 0,
+    "result": "OK; skips are not passes"
+  },
+  "new_regression_tests": 15,
+  "ci": {
+    "http_fix_run": 35910086428,
+    "report_run": 35911675663,
+    "report_run_conclusion": "success",
+    "final_documentation_head": "see PR 18 exact-head checks"
+  },
+  "browser": {
+    "mode": "offline DOM/controller fixture; HTTP and auth bootstrap not exercised",
+    "chromium": "144.0.7559.96",
+    "page_errors": [],
+    "model_calls": 0,
+    "download_preserved_original": true,
+    "script_rendered_as_text": true,
+    "pre_reveal_download_absent": true,
+    "mobile_dimensions": {
+      "width": 390,
+      "scroll": 390
+    }
+  },
+  "untested": [
+    "user PC and WSL installation",
+    "authenticated native provider CLI/model calls",
+    "real browser localhost HTTP/auth/bootstrap/origin integration",
+    "Windows job objects on Windows",
+    "long-duration resource stability",
+    "factual quality and account-wide usage"
+  ],
+  "model_calls": 0,
+  "original_handoff_blob": "68ae7d14e993b982d11a80d4effa26d171dd7cae"
+}
