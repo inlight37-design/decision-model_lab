@@ -36,6 +36,40 @@ assert.ok(!text.includes("모델 불일치"));
         result = subprocess.run([shutil.which("node"), "-e", script], capture_output=True, text=True, timeout=15)
         self.assertEqual(result.returncode, 0, result.stderr)
 
+    def test_controls_never_retry_and_acknowledge_the_exact_unknown_attempt(self):
+        html = (Path(__file__).resolve().parents[1] / "app/static/index.html").read_text(encoding="utf-8")
+        functions = html[html.index("function modelControls("):html.index("function synthesisPanel(")]
+        script = r"""
+const assert = require("node:assert/strict");
+let liveMode = true, confirmed = false;
+const calls = [];
+const window = {confirm: () => confirmed};
+const act = (...args) => calls.push(args);
+const h = (tag, attrs, ...children) => ({tag, attrs, children: children.flat(Infinity)});
+const walk = node => node && typeof node === "object" ? [node, ...node.children.flatMap(walk)] : [];
+""" + functions + r"""
+const run = {run_id: "r1", participants: [{transport: "cli", adapter_id: "claude-code", label: "C"}]};
+assert.equal(walk(modelControls(run)).filter(n => n.tag === "button").length, 1);
+for (const status of ["failed", "completed", "acknowledged", "running"]) {
+  run.model_synthesis = {status, message: "state"};
+  assert.equal(walk(modelControls(run)).filter(n => n.tag === "button").length, 0);
+}
+run.model_synthesis = {status: "unknown", attempts: ["exact-attempt"], message: "unknown"};
+liveMode = false; // Saved unresolved attempts still need an explicit acknowledgement.
+const buttons = walk(modelControls(run)).filter(n => n.tag === "button");
+assert.equal(buttons.length, 1);
+buttons[0].attrs.onclick();
+assert.equal(calls.length, 0);
+confirmed = true;
+buttons[0].attrs.onclick();
+assert.deepEqual(calls, [["/api/runs/r1/acknowledge-synthesis", {attempt: "exact-attempt"}]]);
+"""
+        result = subprocess.run([shutil.which("node"), "-e", script], capture_output=True, text=True, timeout=15)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        panel = html[html.index("function synthesisPanel("):]
+        start = panel.index('if (result.mode === "model")')
+        self.assertIn("modelControls(run)", panel[start:panel.index("const controls", start)])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -39,7 +39,8 @@ class SourceTests(support.Base):
     def test_invalid_sources_are_refused_before_anything_is_stored(self):
         ctl = self.controller(Recording())
         for bad in ([("../x.md", "t")], [(".hidden", "t")], [("a/b.md", "t")], [("CON.txt", "t")], [("", "t")],
-                    [("a" * 81, "t")], [("a.md", "t"), ("A.md", "u")], [("x.md", "a\x00b")], [("x.md", 3)],
+                    [("a" * 81, "t")], [("a.", "t")], [("a.md", "t"), ("a.md.", "u")],
+                    [("a.md", "t"), ("A.md", "u")], [("x.md", "a\x00b")], [("x.md", 3)],
                     [(f"f{i}.md", "t") for i in range(c.MAX_SOURCES + 1)],
                     [("big.md", "x" * (c.MAX_SOURCE_BYTES + 1))],
                     [(f"f{i}.md", "x" * c.MAX_SOURCE_BYTES) for i in range(5)], "not-a-list"):

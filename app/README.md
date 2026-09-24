@@ -10,7 +10,7 @@
 |---|---|
 | [controller.py](controller.py) | 상태 전이·원자적 예약·자리/상한·수용·봉인/공개·취소/재시작·화면 투영 |
 | [store.py](store.py) | SQLite 원장, 배타 잠금, 스키마 이전, 첫 호출 상한 고정, 실행별 공통 자료 |
-| [state.py](state.py) | 참여자 행에서 정족수·축소 승인·공개 가능 여부 계산 |
+| [state.py](state.py) | 참여자 행에서 정족수·축소 승인·공개 가능 여부 계산, 합성 사건을 시도별 상태로 투영해 자리·복구·화면이 함께 사용 |
 | [cli_executor.py](cli_executor.py) | provider별 입력·inventory로 최종 계획을 만들고 같은 계획을 기존 격리 경계에서 실행 |
 | [live_config.py](live_config.py) | 명시적 provider 설정 파싱·검사. 새 실행 엔진이 아님 |
 | [codex_account.py](codex_account.py), [account_quota.py](account_quota.py) | 격리된 무모델 계정 조회·명시적 갱신·캐시/오래된 관측 표시 |
@@ -39,7 +39,7 @@ python -m app.server --check-cli codex --model <전체-요청-모델> --inventor
 python -m app.server --live-cli codex --model <전체-요청-모델> --inventory <관측-json> --input-dir <빈-입력-폴더> --data-dir <원장> --allow-context-unverified --call-budget 1 --timeout 180
 ```
 
-위 모델/경로는 자리표시자이며 실제 관측값을 쓴다. 기존 K46 호환 Codex 계획은 입력 폴더 하나가 있는 `codex@8a0128d4c791`다. 자료 없음/복수 폴더는 다른 판이다. 과거 [첫 실측](../docs/reviews/2026-09-24-live-cli-pilot/README.md)과 [재현](../docs/reviews/2026-09-24-live-pilot-replication/README.md)은 그대로 보존하며 소진 원장을 다시 쓸 목적으로 상한을 바꾸지 않는다.
+위 모델/경로는 자리표시자이며 실제 관측값을 쓴다. 입력 폴더 하나의 `codex@8a0128d4c791`는 연결 앱을 끄기 전의 과거 K46 계획이다. 현재 `codex@5a77e0b7dc7f`와 그 [관측 manifest](../docs/reviews/2026-09-24-codex-apps-off/manifest.v2.json)를 기준으로 준비 조회한다. 자료 없음/복수 폴더는 다른 판이다. 과거 [첫 실측](../docs/reviews/2026-09-24-live-cli-pilot/README.md)과 [재현](../docs/reviews/2026-09-24-live-pilot-replication/README.md)은 그대로 보존하며 소진 원장을 다시 쓸 목적으로 상한을 바꾸지 않는다.
 
 서버 기동 자체는 질문을 시작하지 않는다. 화면에서 시작하면 실제 구독 사용량을 쓴다. 준비 조회는 실행 승인/계정 잔여나 현재 namespace 생성 가능성의 증명이 아니다. 실행기는 시작 직전에 같은 최종 계획의 허가를 다시 계산한다.
 
@@ -69,9 +69,9 @@ python -m app.server --live-config /path/live.json --data-dir /path/new-ledger -
 
 ## 공통 자료
 
-실행을 만들 때 텍스트 파일을 붙이면(화면의 “공통 자료”, API의 `sources: [{name, text}]`) controller가 내용·크기·sha256을 원장(스키마 7)에 고정하고 목록을 질문 본문에 넣는다. 그래서 입력 digest가 모든 파일을 묶는다. 이름은 영문·숫자·점·밑줄·하이픈, 파일 20개·파일당 256 KiB·합계 1 MiB까지다. 화면은 파일 이름의 다른 글자를 `_`로 바꾼다.
+실행을 만들 때 텍스트 파일을 붙이면(화면의 “공통 자료”, API의 `sources: [{name, text}]`) controller가 내용·크기·sha256을 원장(스키마 7)에 고정하고 목록을 질문 본문에 넣는다. 그래서 입력 digest가 모든 파일을 묶는다. 이름은 영문·숫자·점·밑줄·하이픈, 파일 20개·파일당 256 KiB·합계 1 MiB까지다. 화면은 파일 이름의 다른 글자를 `_`로 바꾼다. 서버는 끝이 점인 이름·장치 이름·경로 구분자·대소문자 중복도 거절한다.
 
-시도마다 원장의 사본을 데이터 폴더 밖(`<work_root>/_sources/<run>`)에 두고 목록·크기·sha256을 다시 맞춘다. 다르면 그 시도를 시작 전에 거절한다. CLI 참여자는 provider별 빈 입력 폴더 대신 이 폴더 하나를 읽기 전용으로 받으므로 계획의 판(입력 폴더 하나)이 그대로다. 수동 참여자는 같은 목록을 받지만 파일 첨부 여부는 확인하지 못한다(K21). 시도 도중의 바꿔치기(K14)는 막지 못한다. 실제 확인은 [공통 자료 기록](../docs/reviews/2026-09-24-source-snapshot/README.md)에 있다.
+시도마다 원장의 사본을 데이터 폴더 밖(`<work_root>/_sources/<run>`)에 두고 목록·크기·sha256을 다시 맞춘다. 다르면 그 시도를 시작 전에 거절한다. 자료 목록과 제공 폴더가 원래 고정 질문에 적힌 것과 같은지도 계획·예약 전에 확인한다. 복원 시 `work_root`만 바꾸어 옛 질문으로 다른 폴더를 주지 않는다. 기존 경로로 복원하거나 새 실행을 만들며 원래 질문을 덮어쓰지 않는다. CLI 참여자는 provider별 빈 입력 폴더 대신 이 폴더 하나를 읽기 전용으로 받으므로 계획의 판(입력 폴더 하나)이 그대로다. 수동 참여자는 같은 목록을 받지만 파일 첨부 여부는 확인하지 못한다(K21). 시도 도중의 바꿔치기(K14)는 막지 못한다. 실제 확인은 [공통 자료 기록](../docs/reviews/2026-09-24-source-snapshot/README.md)에 있다.
 
 ## 회계와 원장
 
@@ -87,6 +87,8 @@ python -m app.server --live-config /path/live.json --data-dir /path/new-ledger -
 
 `running`·`unknown`이 자리를 차지하고 정리되지 않은 시도가 상한에 닿으면 새 실행을 막는다. 재시작 당시 running은 unknown이며 다시 부르지 않는다. 사용자의 종료 확인은 자리만 풀고 예산을 환불하거나 답을 수용하지 않는다. queued 작업은 명시적 재개까지 멈춘다.
 
+실제 합성도 같은 pause·병렬 자리·미종료 상한을 따른다. 시작 사건이 있으면 성공·실패·재시작 뒤에도 같은 실행에서 재호출하지 않는다. 합성의 종료 미확인은 사건에 남아 재시작 뒤에도 자리를 차지한다. 화면의 종료 확인 또는 인증된 `POST /api/runs/<run_id>/acknowledge-synthesis`에 `{"attempt": "<시도 ID>"}`를 보내면 해당 미확인 시도의 자리만 푼다. 종료를 실제로 확인한 사용자의 선언이지 서버가 외부 프로세스를 검사하는 기능이 아니다. 다른 시도 ID·중복 확인은 거절하며 환불·재시도는 없다. `wait_idle()`도 합성 작업을 포함한다.
+
 초안 작성 중 취소는 원장에 먼저 저장한 뒤 worker에 신호를 보낸다. API 성공은 취소 요청 저장이지 자손 종료 확인이 아니다. 시작 전 대기는 거절하고, 이미 시작된 취소/실패/종료 미확인은 환불하지 않는다. 늦은 정상 답도 버린다. 기존 봉인 초안은 비공개로 보존하며 수동 답·축소 승인·보고/공개는 막는다. 이미 공개된 실행을 다시 숨기는 취소는 없다. 원본 앱 작업은 별도 중단이 필요하다.
 
 공개는 controller가 상태 변경과 같은 거래에서 결정한다. 참여자가 빠지면 자동 축소하지 않고 명시적 축소 승인을 기다리며, 최소 정족수가 안 되면 승인해도 공개하지 않는다. 서버·자손은 작업한 세션이 종료 확인 후 정리한다.
@@ -99,7 +101,7 @@ python -m app.server --live-config /path/live.json --data-dir /path/new-ledger -
 
 `POST /api/runs/<run_id>/synthesize`(본문 없음 또는 `{"mode": "mock"}`)는 공개 원문의 줄을 발췌·중복 묶기하고 참조 위치만 검사한다. 모델 호출·외부 사실 검증은 없고 주장은 unresolved, 카드는 qualified다. 실패하면 unavailable과 원문 보고를 남긴다.
 
-`{"mode": "model", "adapter_id": …}`는 **실제 합성 1회**다(실제 CLI 연결에서만, 실행마다 사용자가 켠다). 공개 초안을 이름표 D1·D2로 바꿔 그 실행의 CLI provider 하나에 참여자와 같은 계획으로 보내고, 같은 원장의 전체·provider 상한에서 예약한다. 답의 인용은 초안에 글자 그대로 있어야 원문 일치이고, 일치하는 인용이 없는 주장은 원문에 없는 추가 주장으로 남는다. 모든 주장은 미해결이며 사실 검증은 없다. 실패하면 원문 보고와 모의 대조표를 쓰고 시작한 호출은 환불하지 않는다([실제 합성 기록](../docs/reviews/2026-09-24-model-synthesis/README.md)).
+`{"mode": "model", "adapter_id": …}`는 **실제 합성 1회**다(실제 CLI 연결에서만, 실행마다 사용자가 켠다). 공개 초안을 이름표 D1·D2로 바꿔 그 실행의 CLI provider 하나에 참여자와 같은 계획으로 보내고, 같은 원장의 전체·provider 상한에서 예약한다. 답의 인용은 초안에 글자 그대로 있어야 원문 일치이고, 일치하는 인용이 없는 주장은 추가 주장으로 표시되지만, 이는 **일치 인용을 확보하지 못했다**는 뜻이다. 바꿔 쓴 문장이 원문에 없는 사실인지 판정한 것은 아니다. 모든 주장은 미해결이며 사실 검증은 없다. 실패하면 원문 보고와 모의 대조표를 쓰고 시작한 호출은 환불하지 않는다([실제 합성 기록](../docs/reviews/2026-09-24-model-synthesis/README.md)).
 
 결정 보고는 `GET /api/runs/<run_id>/decision-report`의 `a1-decision-report/2`이며 합성의 `schema`(모의 `a1-mock-synthesis/1`, 실제 `a1-model-synthesis/1`)로 종류를 가른다. Q4의 A 결정 우선/B 대조표 우선은 같은 결과의 표시 순서만 바꾸며 사용자 선호를 확정하지 않는다.
 
@@ -111,7 +113,7 @@ python -m app.server --live-config /path/live.json --data-dir /path/new-ledger -
 
 같은 조회가 `model/list`(추론 없음)로 이 계정의 가용 모델 이름도 받는다. 화면은 설정한 Codex 모델이 그 목록에 있는지만 보인다. 가용 목록이지 실제로 답한 모델의 보고가 아니다(K32). 목록 메서드만 거절되면 한도는 그대로 두고 목록을 미확인으로 둔다. 시간 초과·서버 요청·에이전트 활동은 여전히 조회 전체를 멈춘다. 표시 이름·설명은 버린다.
 
-Claude에는 따로 조회할 통로를 쓰지 않는다. 실제 Claude 참여자의 stream-json에 오는 `rate_limit_event`에서 상태(`allowed`·`allowed_warning`·`rejected`)와 창별 사용 비율(0–1)·초기화 시각만 남기고, 결제·크레딧 칸은 버린다. 마지막 사건의 모양이 다르면 미확인이며 답의 수용과는 상관없다. 계정 패널은 **마지막으로 끝난 실제 실행**의 값만 보인다 — 봉인 중인 실행의 값은 계정 비율의 변화로 초안 길이를 짐작하게 하므로 내보내지 않고, 모의·합성 실행기의 값은 계정 값이 아니므로 쓰지 않는다. 비율은 사용 %로 보일 뿐 Codex 값과 더하지 않는다.
+Claude에는 따로 조회할 통로를 쓰지 않는다. 실제 Claude 참여자의 stream-json에 오는 `rate_limit_event`에서 상태(`allowed`·`allowed_warning`·`rejected`)와 창별 사용 비율(0–1)·초기화 시각만 남기고, 결제·크레딧 칸은 버린다. 마지막 사건의 모양이 다르면 미확인으로 취급하고 답 수용과 분리하는 것이 계약이다. 극단적으로 큰 JSON 정수가 파서를 중단하던 경계는 [후속 감사](../docs/reviews/2026-09-25-runtime-audit-finish/README.md)가 재현했고 [병합 검토](../docs/reviews/2026-09-25-merge-46-47/README.md)에서 고쳤다. 같은 검토에서 시도 결과의 사용량 칸도 NaN·무한대·음수·불리언을 버리게 했다 — 그런 값 하나가 화면 응답 전체를 깨뜨렸다. 계정 패널은 **마지막으로 끝난 실제 실행**의 값만 보인다 — 봉인 중인 실행의 값은 계정 비율의 변화로 초안 길이를 짐작하게 하므로 내보내지 않고, 모의·합성 실행기의 값은 계정 값이 아니므로 쓰지 않는다. 비율은 사용 %로 보일 뿐 Codex 값과 더하지 않는다.
 
 계정 한도 창 사용 비율을 남은 토큰·질문 횟수로 환산하지 않는다. 제공 모델 재지정 사건이나 최소 설정 프로필은 [한계 재검토](../docs/reviews/2026-09-24-cli-unblock/README.md)의 후속 후보다. 문맥 비노출이나 모델 자기 보고를 개인 문맥 부재의 증명으로 삼지 않는다. 관측 없이 C3/permission을 합격으로 바꾸거나 새 옵션을 기존 판에 섞지 않는다.
 
@@ -119,4 +121,4 @@ Claude에는 따로 조회할 통로를 쓰지 않는다. 실제 Claude 참여�
 
 `python -m unittest discover -s tests -v`를 실행한다. Linux 격리 검증은 `DML_REQUIRE_BWRAP=1`을 사용하며 OS 전용 skip을 구분한다. 실제 JavaScript 함수 회귀에는 Node가 필요하다. 테스트 파일은 `test_cli_unblock.py`, `test_live_config.py`, `test_codex_account.py`와 기존 `test_app_*.py`, `test_runner_cancel.py`, `test_server_limits.py`를 본다.
 
-Windows stdout 수정과 Python 3.13/짧은 임시 경로 회귀를 반영했다. 교차 플랫폼 CI의 정확한 head 결과는 PR Checks가 기준이다. 실제 두 provider 응답·현재 Claude 판의 제한된 권한 증거·계정 한도 화면은 직접 관측했다. 개인 문맥 독립성·원본 앱 사용량 비교·실제 합성·공통 자료 스냅샷/해시·Q3 TypeScript·접근성 전수 검사는 남은 작업이다.
+Windows stdout 수정과 Python 3.13/짧은 임시 경로 회귀를 반영했다. 교차 플랫폼 CI의 정확한 head 결과는 PR Checks가 기준이다. 사용자 PC에서의 두 provider 응답·현재 Claude 판의 제한된 권한 증거·계정 한도 화면·공통 자료·실제 합성은 각 날짜의 관측 기록에 있다. 이를 새 웹 세션이 재실측한 것은 아니다. 남은 것은 개인 문맥 독립성, 실제 CLI 중도 취소, 자료 속 지시문·긴 자료·여러 파일 실험, 원본 앱 사용량 비교, Q3 TypeScript와 접근성 전수 검사다. [후속 감사](../docs/reviews/2026-09-25-runtime-audit-finish/README.md)가 원격 미반영으로 남긴 사용량 파서는 [병합 검토](../docs/reviews/2026-09-25-merge-46-47/README.md)에서 반영했다.

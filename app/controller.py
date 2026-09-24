@@ -47,9 +47,11 @@ from app.report import build_report
 from app.synthesis import (SynthesisError, check_model_synthesis, mock_synthesize, model_prompt, model_unavailable,
                            unavailable)
 from app.state import (CLI, MANUAL, QUEUED, RUNNING, AWAITING_USER, ACCEPTED, REJECTED, UNKNOWN,
-                       DONE, INDEPENDENT_ONLY, INCLUDE_UNVERIFIED, QUORUM_POLICIES, RunGate, gate, confirmed)
+                       DONE, INDEPENDENT_ONLY, INCLUDE_UNVERIFIED, QUORUM_POLICIES, RunGate, gate, confirmed, synthesis_attempts)
 from core import adapters, contract, env as core_env, isolation, membership as m, runner
 
+# _source_dir가 원장의 질문 본문을 이 두 문구로 다시 만들어 맞춘다. 문구를 바꾸면 그 전에 만든 대기 실행은
+# 재개 때 호출 없이 거절된다.
 PROMPT = ("다음 질문에, 다른 참여자의 답을 보지 않은 상태로 독립적으로 답하라. "
           "결론, 근거, 그리고 결론을 뒤집을 조건을 쓴다.\n\n질문:\n{question}\n")
 # 공통 자료(P0). 모든 참여자가 같은 질문 본문을 받으므로 목록·해시는 질문에 넣어 입력 digest에 묶는다.
@@ -72,7 +74,7 @@ def _checked_sources(items) -> list[tuple[str, bytes]]:
             raise ControllerError("each source needs a name and a text")
         name, text = item
         if (not isinstance(name, str) or SOURCE_NAME.fullmatch(name) is None or WINDOWS_DEVICES.fullmatch(name)
-                or name.lower() in seen):
+                or name.endswith(".") or name.lower() in seen):
             raise ControllerError("source names use letters, digits, dot, dash or underscore and must be unique")
         if not isinstance(text, str) or "\x00" in text:
             raise ControllerError(f"source {name!r} must be text")
@@ -83,6 +85,13 @@ def _checked_sources(items) -> list[tuple[str, bytes]]:
         seen.add(name.lower())
         checked.append((name, data))
     return sorted(checked)
+
+
+def _source_footer(folder: str, sources) -> str:
+    """생성과 재개가 같은 자료 목록 형식을 쓴다. 경로도 고정 질문의 일부이므로 조용히 바꾸지 않는다."""
+    return PROMPT_SOURCES.format(
+        count=len(sources), folder=folder,
+        listing="\n".join(f"- {item['name']} ({item['bytes']} bytes, sha256 {item['sha256']})" for item in sources))
 
 # 공개 전 화면에 넘기는 결과 필드. 값이 정해진 것만 둔다 — 막을 것을 고르지 않고 넘길 것을 고른다(A1-01).
 SEALED_VIEW_KEYS = frozenset({"state", "exit_code", "containment", "tree_confirmed_empty", "input_delivery",
@@ -266,7 +275,7 @@ class Controller:
         self.lock = threading.RLock()
         # 진행 중인 시도의 신호만 보관한다. 끝난 스레드/질문/작업 경로를 계속 쌓지 않는다.
         self._workers: dict[str, tuple[threading.Thread, threading.Event]] = {}
-        self._synthesis: dict[str, tuple[threading.Thread, threading.Event]] = {}   # run_id → 진행 중인 실제 합성
+        self._synthesis: dict[str, tuple[threading.Thread, threading.Event, str]] = {}   # run_id → 진행 중인 실제 합성
         self._recover()
         # 이전 controller가 시작하지 못한 시도가 남아 있으면 사용자가 이어서 시작하라고 할 때까지 기다린다
         self.paused = self.store.row("SELECT COUNT(*) AS n FROM participants JOIN runs USING (run_id) "
@@ -302,10 +311,9 @@ class Controller:
         run_id = f"r{time.strftime('%m%d-%H%M%S')}-{uuid.uuid4().hex}"
         prompt = PROMPT.format(question=question)
         if checked_sources:
-            prompt += PROMPT_SOURCES.format(
-                count=len(checked_sources), folder=self._source_root(run_id),
-                listing="\n".join(f"- {name} ({len(data)} bytes, sha256 {hashlib.sha256(data).hexdigest()})"
-                                  for name, data in checked_sources))
+            prompt += _source_footer(self._source_root(run_id), [
+                {"name": name, "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()}
+                for name, data in checked_sources])
         data = prompt.encode("utf-8")
         with self.lock, self.store.tx() as tx:
             for name, content in checked_sources:
@@ -340,9 +348,14 @@ class Controller:
         """원장의 자료를 폴더로 두고, 시도마다 원장의 목록·크기·sha256과 다시 맞춘다. 다르면 거절한다 — 아무것도
         시작하지 않았다. 폴더는 임시 이름으로 다 쓴 뒤 한 번에 옮긴다. 시도 도중의 바꿔치기(K14)는 막지 못한다."""
         rows = self.store.rows("SELECT name, sha256, bytes, content FROM sources WHERE run_id = ? ORDER BY name", run_id)
+        root = self._source_root(run_id)
+        run = self._run(run_id)
+        expected = PROMPT.format(question=run["question"]) + (_source_footer(root, rows) if rows else "")
+        if run["prompt"] != expected:
+            raise ControllerError("the fixed source manifest or folder differs from the original prompt; "
+                                  "no call was started")
         if not rows:
             return None
-        root = self._source_root(run_id)
         if not os.path.isdir(root):
             staging = f"{root}.{uuid.uuid4().hex}.tmp"
             os.makedirs(staging)
@@ -365,8 +378,16 @@ class Controller:
                 raise ControllerError("the source snapshot changed after the run was created; no call was started")
         return root
 
+    def _synthesis_attempts(self, run_id: str | None = None) -> dict:
+        """한 사건 투영을 호출 제한·자리·종료 확인·화면이 같이 사용한다. controller.lock 안에서 읽는다."""
+        rows = self.store.rows("SELECT run_id, kind, payload FROM events WHERE kind IN "
+                               "('synthesis_started', 'synthesis_failed', 'synthesis_completed', "
+                               "'synthesis_unknown_acknowledged')" + (" AND run_id = ?" if run_id else "") +
+                               " ORDER BY run_id, seq", *((run_id,) if run_id else ()))
+        return synthesis_attempts(rows, ((rid, worker[2]) for rid, worker in self._synthesis.items()))
+
     def _slots_used(self) -> int:
-        return len(self._synthesis) + self.store.row(
+        return sum(item["status"] in (RUNNING, UNKNOWN) for item in self._synthesis_attempts().values()) + self.store.row(
             "SELECT COUNT(*) AS n FROM participants WHERE state IN (?, ?)", RUNNING, UNKNOWN)["n"]
 
     def _budget_exhausted(self, adapter_id: str) -> bool:
@@ -376,8 +397,9 @@ class Controller:
             provider["cap"] is None or provider["used"] >= provider["cap"]))
 
     def unsettled(self) -> int:
-        unknown = self.store.row("SELECT COUNT(*) AS n FROM participants WHERE state = ?", UNKNOWN)["n"]
-        return unknown + runner.lingering()
+        with self.lock:
+            unknown = self.store.row("SELECT COUNT(*) AS n FROM participants WHERE state = ?", UNKNOWN)["n"]
+            return unknown + sum(item["status"] == UNKNOWN for item in self._synthesis_attempts().values()) + runner.lingering()
 
     def call_budget(self, adapter_id: str | None = None) -> dict[str, int | None]:
         """실제 CLI를 시작하기 전에 원장에 예약한다. 재시작·실패·취소로 환불하지 않는다(계정 잔여와 다름)."""
@@ -688,6 +710,12 @@ class Controller:
                 raise ControllerError("model synthesis requires controller-revealed drafts")
             if run_id in self._synthesis:
                 raise ControllerError("a model synthesis is already running for this run")
+            if self._synthesis_attempts(run_id):
+                raise ControllerError("model synthesis was already attempted; no new call was started")
+            if self.paused or self.unsettled() >= self.unsettled_limit:
+                raise ControllerError("execution is paused or has unsettled attempts; no call was started")
+            if self._slots_used() >= self.max_parallel:
+                raise ControllerError("parallel execution limit reached; no call was started")
             chosen = next((spec for spec in (ParticipantSpec(**json.loads(row["spec"])) for row in self.store.rows(
                 "SELECT spec FROM participants WHERE run_id = ? ORDER BY rowid", run_id))
                 if spec.transport == CLI and spec.adapter_id == adapter_id), None)
@@ -718,7 +746,7 @@ class Controller:
             cancel = threading.Event()
             thread = threading.Thread(target=self._synthesis_attempt,
                                       args=(run_id, attempt, plan, report, labels, cancel), daemon=True)
-            self._synthesis[run_id] = (thread, cancel)
+            self._synthesis[run_id] = (thread, cancel, attempt)
             try:
                 thread.start()
             except RuntimeError:
@@ -839,21 +867,33 @@ class Controller:
 
     # ---- 내부 ---------------------------------------------------------------------------------
     def _model_synthesis_state(self, run_id: str) -> dict[str, Any] | None:
-        """가장 최근 실제 합성의 진행 상태. 모의 합성 사건은 건너뛴다."""
+        """같은 사건 투영으로 진행·실패·종료 미확인을 보인다. 과거 미확인 시도도 숨기지 않는다."""
+        attempts = self._synthesis_attempts(run_id)
+        if not attempts:
+            return None
+        unknown = [attempt for (_, attempt), item in attempts.items() if item["status"] == UNKNOWN]
+        if unknown:
+            return {"status": UNKNOWN, "attempts": unknown,
+                    "message": "합성 자손의 종료를 확인하지 못했습니다. 자리는 유지하며 재호출·환불하지 않습니다."}
         if run_id in self._synthesis:
-            return {"status": "running"}
-        for event in self.store.rows("SELECT kind, payload FROM events WHERE run_id = ? AND kind IN "
-                                     "('synthesis_started', 'synthesis_failed', 'synthesis_completed') "
-                                     "ORDER BY seq DESC", run_id):
-            result = json.loads(event["payload"]).get("result") or {}
-            if event["kind"] == "synthesis_started":
-                return {"status": "unknown",
-                        "message": "controller가 결과를 받기 전에 다시 시작했습니다. 예약은 환불하지 않습니다."}
-            if event["kind"] == "synthesis_failed":
-                return {"status": "failed", "message": result.get("message"), "reason": result.get("reason")}
-            if result.get("mode") == "model":
-                return {"status": "completed"}
-        return None
+            return {"status": RUNNING}
+        latest = list(attempts.values())[-1]
+        if latest["status"] == "completed":
+            return {"status": "completed"}
+        if latest["status"] == "acknowledged":
+            return {"status": "acknowledged", "message": "사용자가 종료를 확인했습니다. 재호출·환불하지 않습니다."}
+        result = latest["result"]
+        return {"status": "failed", "message": result.get("message"), "reason": result.get("reason")}
+
+    def acknowledge_synthesis_unknown(self, run_id: str, attempt: str) -> None:
+        """사용자가 특정 합성 시도의 자손 종료를 직접 확인했다. 자리만 풀고 재호출·환불하지 않는다."""
+        with self.lock, self.store.tx() as tx:
+            self._run(run_id)
+            item = self._synthesis_attempts(run_id).get((run_id, attempt))
+            if item is None or item["status"] != UNKNOWN:
+                raise ControllerError("only an unknown synthesis attempt can be acknowledged")
+            tx.event(run_id, "synthesis_unknown_acknowledged", attempt=attempt)
+        self.pump()
 
     def _gate(self, run_id: str) -> RunGate:
         """Read inside a Store transaction for decisions that change state."""
@@ -897,7 +937,7 @@ class Controller:
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
             with self.lock:
-                if not self._workers:
+                if not self._workers and not self._synthesis:
                     return True
             time.sleep(0.05)
         return False

@@ -182,7 +182,7 @@ class ControllerTests(support.Base):
 
 
 class HttpTests(unittest.TestCase):
-    def post(self, kind, body):
+    def post(self, kind, body, path="/api/runs/r1/synthesize"):
         controller = Mock()
         controller.executor.kind = kind
         server = _Server(("127.0.0.1", 0), make_handler(controller, "token", 0))
@@ -192,9 +192,17 @@ class HttpTests(unittest.TestCase):
         self.addCleanup(server.server_close)
         self.addCleanup(server.shutdown)
         with closing(http.client.HTTPConnection("127.0.0.1", port, timeout=2)) as conn:
-            conn.request("POST", "/api/runs/r1/synthesize", json.dumps(body),
+            conn.request("POST", path, json.dumps(body),
                          {"Content-Type": "application/json", "Authorization": "Bearer token"})
             return conn.getresponse().status, controller
+
+    def test_unknown_synthesis_acknowledgement_requires_the_exact_attempt(self):
+        status, controller = self.post("real", {"attempt": "a1"}, "/api/runs/r1/acknowledge-synthesis")
+        self.assertEqual(status, 200)
+        controller.acknowledge_synthesis_unknown.assert_called_once_with("r1", "a1")
+        status, controller = self.post("real", {}, "/api/runs/r1/acknowledge-synthesis")
+        self.assertEqual(status, 400)
+        controller.acknowledge_synthesis_unknown.assert_not_called()
 
     def test_model_mode_needs_a_live_connection_and_names_the_provider(self):
         status, controller = self.post("real", {"mode": "model", "adapter_id": "claude-code"})
