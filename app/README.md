@@ -2,7 +2,7 @@
 
 기본은 **모델 호출 없는 모의 모드**다. 실제 구독 CLI는 Linux/WSL에서 `--live-cli`(단일) 또는 `--live-config`(명시적 provider 설정)로만 연결한다. 자동 모델·provider·유료 API 대체는 없다. Windows 수정·실제 계정 한도·구독 CLI 병렬 응답은 [직접 관측 기록](../docs/reviews/2026-09-24-windows-live-completion/README.md), 앞선 구현은 [PR #38 기록](../docs/reviews/2026-09-24-cli-unblock/README.md)에 있다.
 
-고정 입력 → 계획·시도 예약 → 실행 → 결과 수용 → 초안 봉인 → controller 공개 → 모의 발췌·원문 대조 → 조건부 카드/JSON 보고의 흐름이다. 실제 모델 합성·의미상 합의 판정·외부 사실 검증은 아직 없다.
+고정 입력(공통 자료 포함) → 계획·시도 예약 → 실행 → 결과 수용 → 초안 봉인 → controller 공개 → 모의 발췌 대조 또는 실행마다 켜는 실제 합성 1회(원문 인용 대조) → 조건부 카드/JSON 보고의 흐름이다. 의미상 합의 판정·외부 사실 검증은 없다.
 
 ## 파일과 책임
 
@@ -15,7 +15,7 @@
 | [live_config.py](live_config.py) | 명시적 provider 설정 파싱·검사. 새 실행 엔진이 아님 |
 | [codex_account.py](codex_account.py), [account_quota.py](account_quota.py) | 격리된 무모델 계정 조회·명시적 갱신·캐시/오래된 관측 표시 |
 | [server.py](server.py) | localhost API·인증·전체 준비 조회·화면 연결 |
-| [report.py](report.py), [synthesis.py](synthesis.py) | 공개 원문의 허용 목록 투영, 모의 발췌/참조 검사. 모델 호출 없음 |
+| [report.py](report.py), [synthesis.py](synthesis.py) | 공개 원문의 허용 목록 투영, 모의 발췌/참조 검사, 실제 합성의 질문 만들기와 인용 대조(이 파일들은 모델을 부르지 않는다) |
 | [fake_cli.py](fake_cli.py), [static/index.html](static/index.html) | 가짜 CLI와 빌드 없는 HTML/JS 화면 |
 
 ## 모의 실행과 화면
@@ -97,7 +97,11 @@ python -m app.server --live-config /path/live.json --data-dir /path/new-ledger -
 
 공개 뒤 `GET /api/runs/<run_id>/report`는 `a1-draft-report/4` 원문 보고다. 질문/입력 해시, 공통 자료 목록(이름·크기·sha256), 초안/해시, 출처·독립성·시도 종류, 정책·탈락·축소 승인·회계를 내보낸다. 보고의 회계는 실행 원장의 값이다. 계정 전체 잔여는 아래 별도 계정 API와 화면에서 관측 시각을 붙여 제공하며 과거 실행의 사용량으로 소급하지 않는다. 해시 불일치·초안 누락·공개 전 요청은 거절한다. 원문이 들어가므로 공개 저장소에 자동 업로드하지 않는다.
 
-`POST /api/runs/<run_id>/synthesize`는 공개 원문의 줄을 발췌·중복 묶기하고 참조 위치만 검사한다. 모델 호출·외부 사실 검증은 없고 주장은 unresolved, 카드는 qualified다. 실패하면 unavailable과 원문 보고를 남긴다. 결정 보고는 `GET /api/runs/<run_id>/decision-report`다. Q4의 A 결정 우선/B 대조표 우선은 같은 결과의 표시 순서만 바꾸며 사용자 선호를 확정하지 않는다.
+`POST /api/runs/<run_id>/synthesize`(본문 없음 또는 `{"mode": "mock"}`)는 공개 원문의 줄을 발췌·중복 묶기하고 참조 위치만 검사한다. 모델 호출·외부 사실 검증은 없고 주장은 unresolved, 카드는 qualified다. 실패하면 unavailable과 원문 보고를 남긴다.
+
+`{"mode": "model", "adapter_id": …}`는 **실제 합성 1회**다(실제 CLI 연결에서만, 실행마다 사용자가 켠다). 공개 초안을 이름표 D1·D2로 바꿔 그 실행의 CLI provider 하나에 참여자와 같은 계획으로 보내고, 같은 원장의 전체·provider 상한에서 예약한다. 답의 인용은 초안에 글자 그대로 있어야 원문 일치이고, 일치하는 인용이 없는 주장은 원문에 없는 추가 주장으로 남는다. 모든 주장은 미해결이며 사실 검증은 없다. 실패하면 원문 보고와 모의 대조표를 쓰고 시작한 호출은 환불하지 않는다([실제 합성 기록](../docs/reviews/2026-09-24-model-synthesis/README.md)).
+
+결정 보고는 `GET /api/runs/<run_id>/decision-report`의 `a1-decision-report/2`이며 합성의 `schema`(모의 `a1-mock-synthesis/1`, 실제 `a1-model-synthesis/1`)로 종류를 가른다. Q4의 A 결정 우선/B 대조표 우선은 같은 결과의 표시 순서만 바꾸며 사용자 선호를 확정하지 않는다.
 
 ## 계정 한도와 문맥 진단
 
