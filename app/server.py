@@ -20,7 +20,9 @@ import os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 import secrets
+import socket
 import sys
+import threading
 from urllib.parse import urlsplit
 
 if __package__ in (None, ""):  # `python app/server.py`로 실행해도 저장소 루트에서 app·core를 찾는다
@@ -60,7 +62,13 @@ def make_handler(controller: Controller, token: str, port: int):
 
     class Handler(BaseHTTPRequestHandler):
         server_version = "ledger-mock"
-        timeout = 5.0  # 헤더·본문의 소켓 유휴 제한. 전체 요청의 벽시계/동시 연결 상한은 아니다.
+        timeout = 5.0  # 유휴 제한. 별도로 _Server가 연결 수와 네트워크 I/O 기한을 제한한다.
+
+        def handle(self):
+            try:
+                super().handle()
+            except (ConnectionError, TimeoutError):
+                pass  # 연결 만료/클라이언트 종료는 애플리케이션 오류가 아니다.
 
         def log_message(self, fmt, *args):  # 요청 줄에 토큰이 없으므로 그대로 두되, 조용히
             pass
@@ -138,7 +146,7 @@ def make_handler(controller: Controller, token: str, port: int):
                                  "behaviors": list(BEHAVIORS)})
             elif len(parts) == 4 and parts[:2] == ["api", "runs"] and parts[3] == "report":
                 try:
-                    self._json(200, build_report(controller.view(), parts[2]))
+                    self._json(200, build_report(controller.view(parts[2]), parts[2]))
                 except ReportError as exc:
                     self._json(409, {"error": str(exc)})
             else:
@@ -182,6 +190,9 @@ def make_handler(controller: Controller, token: str, port: int):
                 elif len(parts) == 4 and parts[:2] == ["api", "runs"] and parts[3] == "approve-reduction":
                     controller.approve_reduction(parts[2])
                     self._json(200, {"ok": True})
+                elif len(parts) == 4 and parts[:2] == ["api", "runs"] and parts[3] == "cancel":
+                    controller.cancel_run(parts[2])
+                    self._json(200, {"ok": True})  # 요청을 저장했다는 뜻. 자손 종료 성공 응답이 아니다.
                 elif parts == ["api", "resume"]:
                     controller.resume()
                     self._json(200, {"ok": True})
@@ -199,6 +210,39 @@ class _Server(ThreadingHTTPServer):
     # Windows의 SO_REUSEADDR은 이미 듣고 있는 포트에도 bind를 허락해서 같은 포트에 서버가 둘 떴다(A1 리뷰 반영
     # 중 관측). Windows에서는 끈다. POSIX에서는 TIME_WAIT 포트를 다시 쓰게 할 뿐이므로 둔다.
     allow_reuse_address = os.name != "nt"
+    max_connections = 16
+    connection_deadline = 15.0  # 바이트를 조금씩 보내도 연장되지 않는 네트워크 I/O 기한
+
+    def __init__(self, *args, **kwargs):
+        self._connections = threading.BoundedSemaphore(self.max_connections)
+        super().__init__(*args, **kwargs)
+
+    def process_request(self, request, client_address):
+        # 인증 전에도 같은 상한을 적용한다. 응답을 쓰다가 막히지 않도록 포화 시 연결만 닫는다.
+        if not self._connections.acquire(blocking=False):
+            self.shutdown_request(request)
+            return
+        try:
+            super().process_request(request, client_address)
+        except BaseException:
+            self._connections.release()
+            raise
+
+    def process_request_thread(self, request, client_address):
+        def expire():
+            try:
+                request.shutdown(socket.SHUT_RDWR)
+            except OSError:
+                pass  # 이미 닫힌 소켓. 파일 기술자를 다시 열거나 다른 연결을 건드리지 않는다.
+        timer = threading.Timer(self.connection_deadline, expire)
+        timer.daemon = True
+        try:
+            timer.start()
+            super().process_request_thread(request, client_address)
+        finally:
+            timer.cancel()
+            self.shutdown_request(request)  # timer/handler를 시작하지 못한 경우에도 닫는다.
+            self._connections.release()
 
 
 def _write_token(path: Path, token: str) -> None:

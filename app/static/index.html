@@ -203,7 +203,9 @@ function budget(run) {
 
 function participantRow(run, p) {
   const revealed = run.phase === "revealed";
-  const label = p.state === "accepted" && !revealed ? "제출됨" : (STATE_LABEL[p.state] || p.state);
+  const label = p.status === "cancelled_before_start" ? "시작 전 취소"
+    : p.status === "cancelled" ? "취소 · 종료 확인"
+    : p.state === "accepted" && !revealed ? "제출됨" : (STATE_LABEL[p.state] || p.state);
   const who = h("div", { class: "who" }, h("span", {}, p.label),
     h("span", { class: "v" }, `${p.provider} · ${p.transport === "cli" ? "CLI 모의" + (p.behavior && p.behavior !== "ok" ? " · " + (BEHAVIOR_LABEL[p.behavior] || p.behavior) : "") : "원본 앱 · 수동"}`),
     h("div", { class: "flags" }, p.contamination.map(c => h("span", { class: "flag" }, c))));
@@ -215,7 +217,7 @@ function participantRow(run, p) {
     who.append(h("div", { style: "margin-top:6px" }, h("button", { class: "quiet", onclick: () => act(`/api/runs/${run.run_id}/acknowledge/${p.pid}`) },
       "종료를 직접 확인했음(예산은 돌려받지 않는다)")));
   }
-  if (p.state === "awaiting_user" && run.phase === "drafting") {
+  if (p.state === "awaiting_user" && run.phase === "drafting" && !run.cancel_requested) {
     const key = run.run_id + "/" + p.pid;
     const ta = h("textarea", { rows: 4, placeholder: "원본 앱의 답을 붙여 넣는다", "aria-label": p.label + " 답",
                                oninput: e => { drafts[key] = e.target.value; } });
@@ -261,13 +263,13 @@ function render() {
   if (!state) return;
   document.getElementById("status").textContent =
     `실행기 ${state.executor} · 실행 자리 ${state.slots.used}/${state.slots.cap} · 정리 안 된 시도 ${state.unsettled.count}/${state.unsettled.limit}`;
-  // 다시 시작한 뒤에는 대기 중인 시도를 사용자가 누를 때까지 시작하지 않는다(취소가 없어서 서버를 끄는 것이 멈춤 수단이다)
+  // 다시 시작한 뒤에도 명시적으로 이어서 시작한다. 취소된 실행은 이 동작으로 되살리지 않는다.
   document.getElementById("resume").replaceChildren(state.paused
     ? h("button", { onclick: () => act("/api/resume"), title: "다시 시작하기 전에 시작하지 못한 시도를 이제 시작한다" }, "대기 중인 시도 이어서 시작")
     : "");
   const list = document.getElementById("runs"); list.replaceChildren();
   for (const run of state.runs) list.append(h("button", { "aria-current": run.run_id === selected, onclick: () => { selected = run.run_id; render(); } },
-    h("span", { class: "meta" }, `${run.run_id} · ${PHASE_LABEL[run.phase] || run.phase}`), h("span", { class: "q" }, run.question)));
+    h("span", { class: "meta" }, `${run.run_id} · ${run.cancel_requested ? "취소 요청됨" : (PHASE_LABEL[run.phase] || run.phase)}`), h("span", { class: "q" }, run.question)));
   const run = state.runs.find(r => r.run_id === selected) || state.runs[0];
   const detail = document.getElementById("detail");
   if (!run) return;
@@ -282,7 +284,7 @@ function render() {
     budget(run),
     run.participants.map(p => participantRow(run, p)),
     run.note ? h("div", { class: "foot" }, h("div", { class: "warn" }, run.note),
-      run.participants.some(p => p.dropped) && !run.reduction_approved
+      !run.cancel_requested && run.participants.some(p => p.dropped) && !run.reduction_approved
         ? h("div", { style: "margin-top:8px" }, h("button", { onclick: () => act(`/api/runs/${run.run_id}/approve-reduction`) }, "축소 승인")) : null) : null);
   detail.replaceChildren(
     h("h2", {}, run.question),
@@ -292,6 +294,14 @@ function render() {
       : "공개 전에는 초안의 내용·길이·토큰 수를 화면에 넘기지 않는다. 공개는 controller가 정한다."),
     revealed && run.quorum && run.quorum.label ? h("p", { class: "caption" }, run.quorum.label) : "",  // replaceChildren은 null을 "null" 글자로 쓴다
     panel,
+    run.phase === "drafting" && !run.cancel_requested ? h("div", { class: "pb" },
+      h("button", { onclick: () => {
+        if (confirm("이 실행을 되돌릴 수 없게 취소합니다. 받은 초안도 공개하지 않으며 이미 예약한 예산은 돌려받지 않습니다. 원본 앱 작업은 따로 중단해야 합니다."))
+          act(`/api/runs/${run.run_id}/cancel`);
+      } }, "이 실행 취소")) : "",
+    run.cancel_requested ? h("p", { class: "caption" }, run.participants.some(p => p.state === "running" || p.state === "unknown")
+      ? "취소 요청 저장됨 · 종료 대기/미확인 작업이 있습니다. 실행 자리는 종료 확인 뒤에만 풀립니다."
+      : "취소 요청 저장됨 · controller에 종료 대기/미확인 시도는 없습니다. 초안은 계속 봉인됩니다. 원본 앱의 작업 종료는 별도입니다.") : "",
     revealed ? h("div", { class: "pb" },
       h("button", { onclick: () => downloadReport(run.run_id) }, "합성 없는 보고 저장(JSON · 원문 포함)"),
       h("p", { class: "caption" }, "공개된 답과 출처만 저장합니다. 합성·추천·사실 검증은 하지 않으며 모델을 추가로 부르지 않습니다.")) : "",

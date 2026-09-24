@@ -24,8 +24,8 @@
   답도 세지만, 그 결과를 "독립 정족수 충족"으로 표시하지 않는다.
 - 정리되지 않은 시도(unknown + runner.lingering())가 상한에 닿으면 새 시도를 시작하지 않는다.
 - 다시 시작: running이던 시도는 unknown으로 둔다. 초안 작성 중인 실행은 공개 관문을 다시 본다. 대기 중인
-  시도는 사용자가 이어서 시작하라고 할 때까지(resume) 시작하지 않는다 — 취소가 없어서(K19) 서버를 끄는 것이
-  지금 유일한 멈춤 수단이다.
+  시도는 사용자가 이어서 시작하라고 할 때까지(resume) 시작하지 않는다. 실행 취소는 원장에 먼저 저장하며
+  재시작해도 되돌리지 않는다. 취소 요청과 실제 자손 종료 확인은 다르다(K19).
 """
 from __future__ import annotations
 
@@ -42,7 +42,7 @@ import time
 import uuid
 from typing import Any, Protocol
 
-from app.store import Store, events
+from app.store import Store
 from core import adapters, env as core_env, isolation, membership as m, runner
 
 CLI, MANUAL = "cli", "manual"
@@ -88,7 +88,8 @@ class Executor(Protocol):
     name: str
 
     def execute(self, spec: ParticipantSpec, prompt: str, work_dir: str,
-                timeout: float) -> tuple[runner.RunResult, adapters.Outcome]: ...
+                timeout: float, *, cancel: threading.Event | None = None
+                ) -> tuple[runner.RunResult, adapters.Outcome]: ...
 
 
 class MockExecutor:
@@ -103,19 +104,19 @@ class MockExecutor:
         self.isolated = sys.platform == "linux" and _bwrap_trusted()
         self.name = "bubblewrap" if self.isolated else ("job_object" if runner.IS_WINDOWS else "process_group")
 
-    def execute(self, spec, prompt, work_dir, timeout):
+    def execute(self, spec, prompt, work_dir, timeout, *, cancel=None):
         flavor = self.FLAVOR[spec.adapter_id]
         if self.isolated:
             box = isolation.Sandbox(work_dir=work_dir, home=work_dir + "-home",
                                     read_only=(os.path.dirname(self.SCRIPT),), env={"LANG": "C.UTF-8"},
                                     never=self.never)
             result = isolation.run(["/usr/bin/python3", self.SCRIPT, flavor, spec.behavior], box,
-                                   timeout=timeout, stdin_text=prompt)
+                                   timeout=timeout, stdin_text=prompt, cancel=cancel)
         else:
             child, _ = core_env.child_env(os.environ)
             child["PYTHONUTF8"] = "1"
             result = runner.run([sys.executable, self.SCRIPT, flavor, spec.behavior], cwd=work_dir, env=child,
-                                timeout=timeout, stdin_text=prompt)
+                                timeout=timeout, stdin_text=prompt, cancel=cancel)
         return result, adapters.interpret(spec.adapter_id, result, requested_model=spec.model or "")
 
 
@@ -219,10 +220,12 @@ class Controller:
         self.max_parallel, self.unsettled_limit, self.timeout = max_parallel, unsettled_limit, timeout
         self.work_root = work_root or os.path.join(tempfile.gettempdir(), "dml-work")
         self.lock = threading.RLock()
-        self.threads: list[threading.Thread] = []
+        # 진행 중인 시도의 신호만 보관한다. 끝난 스레드/질문/작업 경로를 계속 쌓지 않는다.
+        self._workers: dict[str, tuple[threading.Thread, threading.Event]] = {}
         self._recover()
         # 이전 controller가 시작하지 못한 시도가 남아 있으면 사용자가 이어서 시작하라고 할 때까지 기다린다
-        self.paused = self.store.row("SELECT COUNT(*) AS n FROM participants WHERE state = ?", QUEUED)["n"] > 0
+        self.paused = self.store.row("SELECT COUNT(*) AS n FROM participants JOIN runs USING (run_id) "
+                                     "WHERE state = ? AND NOT cancel_requested", QUEUED)["n"] > 0
 
     # ---- 만들기와 예약 -------------------------------------------------------------------------
     def create_run(self, question: str, participants: list[ParticipantSpec], *, min_independent: int,
@@ -281,14 +284,14 @@ class Controller:
             if self.paused or self.unsettled() >= self.unsettled_limit:
                 return
             queued = self.store.rows("SELECT p.run_id, p.pid, p.spec FROM participants p JOIN runs r USING (run_id) "
-                                     "WHERE p.state = ? ORDER BY r.created_at, p.rowid", QUEUED)
+                                     "WHERE p.state = ? AND NOT r.cancel_requested ORDER BY r.created_at, p.rowid", QUEUED)
             for row in queued:
                 if self._slots_used() >= self.max_parallel:
                     return
                 if _roster(self._run(row["run_id"])["roster"]).phase != m.DRAFTING:
                     continue
                 spec = ParticipantSpec(**json.loads(row["spec"]))
-                attempt = uuid.uuid4().hex[:8]
+                attempt = uuid.uuid4().hex
                 work = os.path.join(self.work_root, row["run_id"], spec.pid)
                 os.makedirs(work, exist_ok=True)
                 prompt = self._run(row["run_id"])["prompt"]
@@ -303,10 +306,18 @@ class Controller:
                                  **({"spec": record} if record is not None else {}))
                 if not taken:
                     continue
-                thread = threading.Thread(target=self._attempt, args=(row["run_id"], spec, attempt, prompt, work),
-                                          daemon=True)
-                self.threads.append(thread)
-                thread.start()
+                cancel = threading.Event()
+                thread = threading.Thread(target=self._attempt,
+                                          args=(row["run_id"], spec, attempt, prompt, work, cancel), daemon=True)
+                self._workers[attempt] = (thread, cancel)
+                try:
+                    thread.start()
+                except RuntimeError:
+                    self._workers.pop(attempt)
+                    result = runner.RunResult((), runner.FAILED_TO_START, None, "", "", False, False, 0, None, True,
+                                              error="worker thread did not start")
+                    self._finish(row["run_id"], spec.pid, attempt, result,
+                                 adapters.interpret(spec.adapter_id, result, requested_model=spec.model or ""))
 
     def _describe(self, spec: ParticipantSpec, prompt: str) -> dict | None:
         """실행기가 알려 주는 실행 명세(ExecutionSpec.record() — 질문 본문 없이 digest와 크기). 시작 사건에
@@ -325,15 +336,20 @@ class Controller:
             self.paused = False
         self.pump()
 
-    def _attempt(self, run_id: str, spec: ParticipantSpec, attempt: str, prompt: str, work: str) -> None:
+    def _attempt(self, run_id: str, spec: ParticipantSpec, attempt: str, prompt: str, work: str,
+                 cancel: threading.Event) -> None:
         try:
-            result, outcome = self.executor.execute(spec, prompt, work, self.timeout)
-        except Exception as exc:  # 실행기 자체의 실패도 기록하고 넘어간다. 종료는 확인하지 못했다
-            result, outcome = None, None
-            detail = f"executor error: {type(exc).__name__}"
-        else:
-            detail = None
-        self._finish(run_id, spec.pid, attempt, result, outcome, detail)
+            try:
+                result, outcome = self.executor.execute(spec, prompt, work, self.timeout, cancel=cancel)
+            except Exception as exc:  # 실행기 자체 실패: 자손 종료는 확인하지 못했다
+                result, outcome, detail = None, None, f"executor error: {type(exc).__name__}"
+            else:
+                detail = None
+            self._finish(run_id, spec.pid, attempt, result, outcome, detail)
+        finally:
+            with self.lock:
+                self._workers.pop(attempt, None)
+                self.pump()
 
     # ---- 결과 수용 관문 ------------------------------------------------------------------------
     def _finish(self, run_id, pid, attempt, result, outcome, detail=None) -> None:
@@ -347,7 +363,13 @@ class Controller:
                 "model_match": outcome.model_match}
             state, status, why = acceptance(result, outcome)
             detail = detail or why or (outcome.detail if outcome else None)
-            roster = _roster(self._run(run_id)["roster"])
+            run = self._run(run_id)
+            roster = _roster(run["roster"])
+            if run["cancel_requested"]:
+                # 신호를 늦게 본 실행기가 정상 답을 돌려줘도 취소된 실행에는 봉인/공개하지 않는다.
+                state = REJECTED if result is not None and result.tree_confirmed_empty is True else UNKNOWN
+                status = "cancelled" if state == REJECTED else "cancel_unconfirmed"
+                detail = "run cancellation requested; answer discarded"
             with self.store.tx() as tx:
                 # 이 시도가 아직 이 참여자의 진행 중인 시도일 때만 반영한다. 다시 시작한 controller가 unknown으로
                 # 돌렸거나 사용자가 종료를 확인한 뒤에 온 결과는 사건으로만 남긴다 — 초안·명단은 그대로다.
@@ -370,7 +392,6 @@ class Controller:
                     tx.event(run_id, "attempt_rejected", pid=pid, attempt=attempt, status=status, result=summary)
                 tx.execute("UPDATE runs SET roster = ? WHERE run_id = ?", _roster_json(roster), run_id)
                 self._maybe_reveal(run_id, tx)
-        self.pump()
 
     def _maybe_reveal(self, run_id: str, tx) -> None:
         """남은 참여자가 모두 끝났고 정족수가 있으면 연다. 빠진 사람이 있으면 축소 승인이 먼저다.
@@ -381,7 +402,7 @@ class Controller:
         roster = _roster(run["roster"])
         rows = self.store.rows("SELECT pid, state, spec FROM participants WHERE run_id = ?", run_id)
         states = [r["state"] for r in rows]
-        if roster.phase != m.DRAFTING or any(s not in DONE for s in states):
+        if run["cancel_requested"] or roster.phase != m.DRAFTING or any(s not in DONE for s in states):
             return
         quorum = _quorum(run, roster, rows)
         note = None
@@ -403,6 +424,29 @@ class Controller:
             tx.event(run_id, "revealed", drafts=len([s for s in states if s == ACCEPTED]), quorum=quorum)
 
     # ---- 사용자 행동 ---------------------------------------------------------------------------
+    def cancel_run(self, run_id: str) -> None:
+        """되돌리지 않는 실행 취소. 먼저 저장하고 신호를 보낸다. 다시 눌러도 예산/사건을 중복 변경하지 않는다.
+
+        대기 CLI·수동 제출은 시작 없이 거절한다. 진행 중인 시도는 종료 결과가 올 때까지 자리를 유지한다.
+        기존 초안은 계속 봉인한다. 외부 앱 작업 자체를 중단시키거나 이미 쓴 예산을 돌려받는 기능은 아니다.
+        """
+        with self.lock:
+            run = self._run(run_id)
+            if _roster(run["roster"]).phase != m.DRAFTING:
+                raise ControllerError("only a drafting run can be cancelled; revealed drafts cannot be hidden again")
+            if not run["cancel_requested"]:
+                with self.store.tx() as tx:
+                    tx.execute("UPDATE runs SET cancel_requested = 1, note = ? WHERE run_id = ?",
+                               "취소를 요청했습니다. 새 시도·수동 제출·공개는 막았습니다. 진행 중인 작업의 종료는 별도 확인합니다.", run_id)
+                    tx.execute("UPDATE participants SET state = ?, status = ? "
+                               "WHERE run_id = ? AND state IN (?, ?)", REJECTED, "cancelled_before_start",
+                               run_id, QUEUED, AWAITING_USER)
+                    tx.event(run_id, "run_cancel_requested")
+            for part in self.store.rows("SELECT attempt FROM participants WHERE run_id = ? AND state = ?", run_id, RUNNING):
+                worker = self._workers.get(part["attempt"])
+                if worker:
+                    worker[1].set()
+
     def submit_manual(self, run_id: str, pid: str, text: str, input_sha256: str, *,
                       user_confirmed: bool = False) -> None:
         """원본 앱의 답을 받는다. user_confirmed: 사용자가 "이 질문을 원본 앱에 넣어 받은 답"이라고 확인했다 —
@@ -414,7 +458,7 @@ class Controller:
             reason = None
             if spec.transport != MANUAL:
                 reason = "not a manual participant"
-            elif _roster(run["roster"]).phase != m.DRAFTING:
+            elif run["cancel_requested"] or _roster(run["roster"]).phase != m.DRAFTING:
                 reason = "late: drafts were already revealed or the run ended"
             elif part["state"] != AWAITING_USER:
                 reason = "duplicate: this participant already has a result"
@@ -462,7 +506,7 @@ class Controller:
             run = self._run(run_id)
             roster = _roster(run["roster"])
             states = [r["state"] for r in self.store.rows("SELECT state FROM participants WHERE run_id = ?", run_id)]
-            if (roster.phase != m.DRAFTING or not roster.dropped or run["reduction_approved"]
+            if (run["cancel_requested"] or roster.phase != m.DRAFTING or not roster.dropped or run["reduction_approved"]
                     or any(s not in DONE for s in states)):
                 raise ControllerError("no reduction is waiting for approval")
             with self.store.tx() as tx:
@@ -508,7 +552,7 @@ class Controller:
                     self._maybe_reveal(run["run_id"], tx)
 
     # ---- 화면용 투영 ---------------------------------------------------------------------------
-    def view(self) -> dict[str, Any]:
+    def view(self, run_id: str | None = None) -> dict[str, Any]:
         """화면에 넘기는 것. 공개 전에는 제출 여부와 실행 상태의 고정된 필드만 넘긴다(BlindBarrier 계약).
 
         초안의 내용·길이·digest, 토큰 수, 걸린 시간은 공개 뒤에 넘긴다. CLI가 쓴 오류 설명과 runner 메모는 모든
@@ -517,7 +561,8 @@ class Controller:
         """
         with self.lock:
             runs = []
-            for run in self.store.rows("SELECT * FROM runs ORDER BY created_at DESC"):
+            query = "SELECT * FROM runs" + (" WHERE run_id = ?" if run_id is not None else "")
+            for run in self.store.rows(query + " ORDER BY created_at DESC", *(() if run_id is None else (run_id,))):
                 roster = _roster(run["roster"])
                 revealed = roster.phase in (m.REVEALED, m.SYNTHESIS)
                 rows = self.store.rows("SELECT * FROM participants WHERE run_id = ? ORDER BY rowid", run["run_id"])
@@ -529,7 +574,8 @@ class Controller:
                     result = json.loads(p["result"]) if p["result"] else None
                     if result and not revealed:
                         result = {k: v for k, v in result.items() if k in keep}
-                    if spec.transport == CLI and p["state"] in (ACCEPTED, REJECTED, UNKNOWN):
+                    if (spec.transport == CLI and p["state"] in (ACCEPTED, REJECTED, UNKNOWN)
+                            and p["status"] != "cancelled_before_start"):
                         calls[{"accepted": "succeeded", "rejected": "failed", "unknown": "unknown"}[p["state"]]] += 1
                     item = {"pid": spec.pid, "label": spec.label, "provider": spec.provider,
                             "transport": spec.transport, "behavior": spec.behavior if spec.transport == CLI else None,
@@ -553,12 +599,14 @@ class Controller:
                              "min_independent": roster.min_independent, "note": run["note"],
                              "quorum": quorum,
                              "reduction_approved": bool(run["reduction_approved"]),
+                             "cancel_requested": bool(run["cancel_requested"]),
                              "diagnostics_sealed": not settled,
                              "budget": {"used": sum(calls.values()) + sum(1 for p in parts if p["state"] == RUNNING),
                                         "cap": cli_total, "breakdown": calls,
                                         "manual": sum(1 for p in parts if p["transport"] == MANUAL)},
                              "participants": parts,
-                             "events": [e["kind"] for e in events(self.store, run["run_id"])][-12:]})
+                             "events": [e["kind"] for e in reversed(self.store.rows(
+                                 "SELECT kind FROM events WHERE run_id = ? ORDER BY seq DESC LIMIT 12", run["run_id"]))]})
             return {"executor": self.executor.name, "slots": {"used": self._slots_used(), "cap": self.max_parallel},
                     "unsettled": {"count": self.unsettled(), "limit": self.unsettled_limit},
                     "paused": self.paused, "runs": runs}
@@ -580,7 +628,8 @@ class Controller:
         """시험용: 시작한 시도가 모두 돌아올 때까지 기다린다."""
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
-            if not any(t.is_alive() for t in self.threads):
-                return True
+            with self.lock:
+                if not self._workers:
+                    return True
             time.sleep(0.05)
         return False
