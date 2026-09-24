@@ -24,9 +24,9 @@ class ConfigTests(unittest.TestCase):
                      "call_budget": 1}]
             path.write_text(json.dumps({"providers": rows}), encoding="utf-8")
             parsed = live_config.load(path)
-            self.assertEqual(parsed[0].input_dir, Path(tmp) / "empty")
+            self.assertEqual(parsed[0].input_dir, (Path(tmp) / "empty").resolve())
             self.assertIsNone(parsed[1].input_dir)
-            self.assertEqual(parsed[1].inventory, Path(tmp) / "claude.json")
+            self.assertEqual(parsed[1].inventory, (Path(tmp) / "claude.json").resolve())
             for bad in ([], [rows[0], rows[0]], [{**rows[0], "call_budget": True}],
                         [{**rows[0], "model": " "}], [{**rows[0], "funding": "api"}]):
                 path.write_text(json.dumps({"providers": bad}), encoding="utf-8")
@@ -46,7 +46,7 @@ class ConfigTests(unittest.TestCase):
                     mock.patch.object(server, "serve", side_effect=AssertionError("must not serve")):
                 self.assertEqual(server.main(), 2)
                 self.assertEqual(check.call_count, 2)
-                self.assertEqual(check.call_args_list[0].kwargs["input_dir"], Path(tmp) / "empty")
+                self.assertEqual(check.call_args_list[0].kwargs["input_dir"], (Path(tmp) / "empty").resolve())
                 self.assertIsNone(check.call_args_list[1].kwargs["input_dir"])
 
     @unittest.skipUnless(sys.platform == "linux", "live server is Linux-only")

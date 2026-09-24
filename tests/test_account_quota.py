@@ -30,7 +30,7 @@ class QuotaTests(unittest.TestCase):
         self.quota.refresh()
         for _ in range(5):
             self.quota.view()
-            self.quota.refresh()
+            self.assertFalse(self.quota.refresh()['refreshing'])
         self.assertEqual(self.reader.call_count, 1)
         self.now += 61
         self.quota.refresh()

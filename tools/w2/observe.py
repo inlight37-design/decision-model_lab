@@ -486,6 +486,18 @@ def session_shape(path: Path, scrub, prompt_mark: str | None = None) -> dict:
             "long_texts_not_listed": max(0, len(texts) - 40)}
 
 
+def claude_permission_evidence(stdout: str, forbidden: str) -> dict:
+    """Use the CLI's denial record for this fixture, never a model's description."""
+    init, terminal, _used = adapters.claude_stream(stdout)
+    denials = terminal.get("permission_denials", [])
+    return {"read_only_surface": init.get("tools") == ["Read"] and init.get("mcp_servers") == [],
+            "dont_ask": init.get("permissionMode") == "dontAsk",
+            "denied_reads": sum(isinstance(d, dict) and d.get("tool_name") == "Read" for d in denials),
+            "forbidden_read_denied": any(isinstance(d, dict) and d.get("tool_name") == "Read"
+                                         and isinstance(d.get("tool_input"), dict)
+                                         and d["tool_input"].get("file_path") == forbidden for d in denials)}
+
+
 def summarize(probe: str, run: runner.RunResult, outcome: adapters.Outcome, *, record: dict, argv: list[str],
               changes: list[str], work: Path, home: str, init: dict | None) -> dict:
     """spec은 실제로 돌린 계획의 기록(판 포함)이고, argv_changes는 probe가 참여자 argv에서 바꾼 것이다."""
@@ -512,17 +524,6 @@ def summarize(probe: str, run: runner.RunResult, outcome: adapters.Outcome, *, r
             "mentions": {"CLAUDE.md": "CLAUDE.md" in blob, MARK["claude_md"]: MARK["claude_md"] in blob,
                          MARK["agents"]: MARK["agents"] in blob},
         }
-        # Fixed names only; do not publish provider IDs, denied paths or raw events.
-        try:
-            _init, terminal, _used = adapters.claude_stream(run.stdout)
-            denials = terminal.get("permission_denials", [])
-            summary["permission_evidence"] = {
-                "read_only_surface": init.get("tools") == ["Read"] and init.get("mcp_servers") == [],
-                "dont_ask": init.get("permissionMode") == "dontAsk",
-                "denied_reads": sum(isinstance(d, dict) and d.get("tool_name") == "Read" for d in denials),
-            }
-        except (ValueError, TypeError):
-            summary["permission_evidence"] = None
     if ADAPTER[PROVIDER[probe]] == "codex":
         summary["codex_items"] = [{k: (scrub(str(v))[:200] if k != "exit_code" else v) for k, v in item.items()
                                    if k in ("type", "command", "exit_code", "status", "aggregated_output")}
@@ -594,6 +595,8 @@ def call(state: Path, probe: str, model: str, *, pad_kb: int = 0, after_failure:
         outcome = adapters.interpret(ADAPTER[provider], run, requested_model=model, claude_tools=expected_tools)
         summary = summarize(probe, run, outcome, record=planned.record(), argv=argv, changes=changes, work=work,
                             home=executor.home, init=init)
+        if probe == "b1" and outcome.ok:
+            summary["permission_evidence"] = claude_permission_evidence(run.stdout, str(state / "peer/forbidden.txt"))
         # 모델이 돌린 명령의 실제 출력에서 판정한다. 모델이 답에 옮겨 적은 값이 아니다(리뷰 R01)
         k46 = k46_check(_codex_items(run.stdout), nonce, str(inputs / K46_FILE)) if probe == "k46-codex" else None
         if k46 is not None:

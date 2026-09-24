@@ -11,7 +11,7 @@ def require(ok: bool, message: str) -> None:
 
 def quota_projection(payload: dict[str, Any] | None, *, observed_at: int,
                      now: int, max_age_s: int = 120) -> dict[str, Any]:
-    """Codex account/rateLimits/read의 result를 화면 행으로 변환하는 합성 실험.
+    """Codex account/rateLimits/read의 result를 허용한 화면 행으로 변환한다.
 
     endpoint를 호출하지 않는다. 문서 지원과 실제 호스트 관측은 다른 사실이다.
     legacy rateLimits와 신규 rateLimitsByLimitId를 합산하지 않는다.

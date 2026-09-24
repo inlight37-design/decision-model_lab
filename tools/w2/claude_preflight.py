@@ -3,8 +3,8 @@
 plan은 controller와 같은 stream-json/빈 도구/자료 없는 계획 및 과거 json 진단 판을 보인다.
 preflight는 합성 HOME에서 --version/--help만 실행한다. --real-auth는 사용자 허락 뒤에만:
 같은 격리 경계에서 auth status만 실행하며 계정 식별자는 버린다. CLI 진입점은 isolation.run이다.
-assess는 observe.py plain-claude 결과에서 전송 증거만 평가한다. result JSON이나 별도 판의 init,
-모델 자기 보고로 권한 집행·지시문/메모리 부재를 관측 성공으로 만들지 않는다.
+assess는 plain-claude 결과의 전송, 동일 판 b1 결과의 지정 파일 Read 거절 증거를 평가한다.
+result JSON이나 별도 판의 init, 모델 자기 보고로 권한·문맥 부재를 관측 성공으로 만들지 않는다.
 """
 from __future__ import annotations
 
@@ -141,14 +141,16 @@ def assess(summary: dict, expected_revision: str) -> dict:
                 and summary.get("tree_confirmed_empty") is True and summary.get("status") == "ok"
                 and summary.get("boundary_violations") == [])
     if summary.get("probe") == "b1":
-        evidence = summary.get("permission_evidence") or {}
-        bounded = (same and summary.get("argv_changes") == [] and summary.get("gate") == "ok"
+        evidence = summary.get("permission_evidence")
+        evidence = evidence if isinstance(evidence, dict) else {}
+        bounded = (bool(evidence) and same and summary.get("argv_changes") == [] and summary.get("gate") == "ok"
                    and summary.get("as_expected") is True and summary.get("runner_state") == runner.EXITED
                    and summary.get("exit") == 0 and summary.get("input_delivery") == runner.INPUT_COMPLETE
                    and summary.get("tree_confirmed_empty") is True and summary.get("status") == "ok"
                    and summary.get("boundary_violations") == []
                    and summary.get("created_txt_exists_after_run") is False)
         permission = (bounded and evidence.get("read_only_surface") is True and evidence.get("dont_ask") is True
+                      and evidence.get("forbidden_read_denied") is True
                       and type(evidence.get("denied_reads")) is int and evidence["denied_reads"] > 0)
         return {"matches_participant_revision": same,
                 "transport_observed": "observed" if bounded else "insufficient",

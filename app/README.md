@@ -1,6 +1,6 @@
 # app — controller·원장·명시적 CLI 연결
 
-기본은 **모델 호출 없는 모의 모드**다. 실제 구독 CLI는 Linux/WSL에서 `--live-cli`(단일) 또는 `--live-config`(명시적 provider 설정)로만 연결한다. 자동 모델·provider·유료 API 대체는 없다. 이번 구현·검증 범위와 미적용 Windows 수정은 [PR #38 기록](../docs/reviews/2026-09-24-cli-unblock/README.md), 이전 안내의 역사적 설명은 [보관본](../docs/handoff/2026-09-24-before-cli-unblock-app.md)에 있다.
+기본은 **모델 호출 없는 모의 모드**다. 실제 구독 CLI는 Linux/WSL에서 `--live-cli`(단일) 또는 `--live-config`(명시적 provider 설정)로만 연결한다. 자동 모델·provider·유료 API 대체는 없다. Windows 수정·실제 계정 한도·구독 CLI 병렬 응답은 [직접 관측 기록](../docs/reviews/2026-09-24-windows-live-completion/README.md), 앞선 구현은 [PR #38 기록](../docs/reviews/2026-09-24-cli-unblock/README.md)에 있다.
 
 고정 입력 → 계획·시도 예약 → 실행 → 결과 수용 → 초안 봉인 → controller 공개 → 모의 발췌·원문 대조 → 조건부 카드/JSON 보고의 흐름이다. 실제 모델 합성·의미상 합의 판정·외부 사실 검증은 아직 없다.
 
@@ -13,6 +13,7 @@
 | [state.py](state.py) | 참여자 행에서 정족수·축소 승인·공개 가능 여부 계산 |
 | [cli_executor.py](cli_executor.py) | provider별 입력·inventory로 최종 계획을 만들고 같은 계획을 기존 격리 경계에서 실행 |
 | [live_config.py](live_config.py) | 명시적 provider 설정 파싱·검사. 새 실행 엔진이 아님 |
+| [codex_account.py](codex_account.py), [account_quota.py](account_quota.py) | 격리된 무모델 계정 조회·명시적 갱신·캐시/오래된 관측 표시 |
 | [server.py](server.py) | localhost API·인증·전체 준비 조회·화면 연결 |
 | [report.py](report.py), [synthesis.py](synthesis.py) | 공개 원문의 허용 목록 투영, 모의 발췌/참조 검사. 모델 호출 없음 |
 | [fake_cli.py](fake_cli.py), [static/index.html](static/index.html) | 가짜 CLI와 빌드 없는 HTML/JS 화면 |
@@ -51,8 +52,8 @@ python -m app.server --live-cli codex --model <전체-요청-모델> --inventory
 ```json
 {
   "providers": [
-    {"adapter_id":"codex", "model":"<관측한-모델>", "inventory":"codex.json", "input_dir":"empty", "call_budget":1},
-    {"adapter_id":"claude-code", "model":"<관측한-모델>", "inventory":"claude.json", "call_budget":1}
+    {"adapter_id":"codex", "model":"<관측한-모델>", "inventory":"codex.json", "input_dir":"codex-empty", "call_budget":1},
+    {"adapter_id":"claude-code", "model":"<관측한-모델>", "inventory":"claude.json", "input_dir":"claude-empty", "call_budget":1}
   ]
 }
 ```
@@ -64,7 +65,7 @@ python -m app.server --live-config /path/live.json --data-dir /path/new-ledger -
 
 양쪽 준비 조회를 모두 통과해야 서버를 시작한다. 한쪽이 막혔다고 자동으로 빼거나 다른 모델을 넣지 않는다. 두 provider를 설정하면 두 실행 자리와 provider별 상한을 둔다. 각 상한은 1..10, 전체 합은 최대 10이다. 기존 controller의 스레드와 봉인/공개 관문을 재사용한다. 한쪽 초안이 먼저 끝나도 다른 쪽이 진행 중이면 공개하지 않는다.
 
-**실제 두 provider 응답은 아직 검증하지 않았다.** Codex의 K46용 빈 폴더를 Claude에 전파하지 않는 문제는 고쳤지만 Claude 현재 계획의 권한 관측은 남아 있다. 옛 stream-json/Read/자료 있음 관측을 현재 json/도구 없음/자료 없음 판에 복사하지 않는다. 정상 답을 한 번 받는 것만으로 권한 증거가 생기지도 않는다. [PC 실행 절차](../docs/reviews/2026-09-24-cli-unblock/README.md)를 따른다.
+**실제 Codex·Claude 동시 응답을 별도 상한 원장에서 수용·공개했다.** 현재 Claude는 stream-json/verbose로 init과 최종 결과를 함께 검사한다. 한 입력 폴더의 `claude-code@126be128bed7`에서 Read만 노출, MCP 없음, dontAsk와 금지된 합성 peer 파일의 Read 거절을 새로 관측했다. no-input/다른 옵션 판의 권한까지 입증한 것은 아니다. [새 관측 manifest](../docs/reviews/2026-09-24-windows-live-completion/manifest.v2.json)를 두 설정에 사용할 수 있지만 각자 빈 입력 폴더 하나가 필요하고 설치판·관측일·계획 준비 조회를 다시 해야 한다. 문맥 독립성은 미확인이므로 실제 실험은 명시적 `include_unverified` 정책을 썼다.
 
 ## 회계와 원장
 
@@ -88,13 +89,15 @@ python -m app.server --live-config /path/live.json --data-dir /path/new-ledger -
 
 모든 `/api` 읽기/쓰기는 토큰이 필요하다. 토큰은 URL fragment로만 전달하고 페이지에 포함하지 않는다. Host·Origin 검사, JSON 타입·본문 크기·framing 검사, 프레임 삽입 차단을 유지한다. 인증 전 연결도 상한과 I/O 기한을 적용하지만 CPU/메모리 전체 제한은 아니다. 원장은 참여자의 `never` 경로이며 토큰 파일은 POSIX 0600, 데이터 폴더는 0700이다. localhost 네트워크 공유를 파일 격리만으로 안전하다고 가정하지 않는다.
 
-공개 뒤 `GET /api/runs/<run_id>/report`는 `a1-draft-report/3` 원문 보고다. 질문/입력 해시, 초안/해시, 출처·독립성·시도 종류, 정책·탈락·축소 승인·회계를 내보낸다. 계정 잔여는 아직 unknown이며 아래 진단 도구의 결과를 자동 연결하지 않았다. 해시 불일치·초안 누락·공개 전 요청은 거절한다. 원문이 들어가므로 공개 저장소에 자동 업로드하지 않는다.
+공개 뒤 `GET /api/runs/<run_id>/report`는 `a1-draft-report/3` 원문 보고다. 질문/입력 해시, 초안/해시, 출처·독립성·시도 종류, 정책·탈락·축소 승인·회계를 내보낸다. 보고의 회계는 실행 원장의 값이다. 계정 전체 잔여는 아래 별도 계정 API와 화면에서 관측 시각을 붙여 제공하며 과거 실행의 사용량으로 소급하지 않는다. 해시 불일치·초안 누락·공개 전 요청은 거절한다. 원문이 들어가므로 공개 저장소에 자동 업로드하지 않는다.
 
 `POST /api/runs/<run_id>/synthesize`는 공개 원문의 줄을 발췌·중복 묶기하고 참조 위치만 검사한다. 모델 호출·외부 사실 검증은 없고 주장은 unresolved, 카드는 qualified다. 실패하면 unavailable과 원문 보고를 남긴다. 결정 보고는 `GET /api/runs/<run_id>/decision-report`다. Q4의 A 결정 우선/B 대조표 우선은 같은 결과의 표시 순서만 바꾸며 사용자 선호를 확정하지 않는다.
 
 ## 계정 한도와 문맥 진단
 
-`python tools/w2/codex_account.py`는 무프로세스 계획 조회다. 사용자 PC에서 명시적으로 `--probe --data-dir <원장>`을 주면 기존 Linux 격리 안의 Codex app-server로 계정 메타데이터를 조회한다. 질문·로그인 변경·유료 API 대체·추가 크레딧 요청은 없고, 식별자·인증 값·원시 프로토콜은 내보내지 않는다. 시간/출력 제한과 자손 종료 확인을 적용한다. 현재는 가짜 서버와 격리 helper를 시험했으며 실제 설치판 호환성·계정 응답·화면 연결은 미완료다.
+`python tools/w2/codex_account.py`는 `app/codex_account.py`의 진단 진입점이며 기본은 무프로세스 계획 조회다. 사용자 PC에서 명시적으로 `--probe --data-dir <원장>`을 주면 기존 Linux 격리 안의 Codex app-server로 계정 메타데이터를 조회한다. 질문·로그인 변경·유료 API 대체·추가 크레딧 요청은 없고, 식별자·인증 값·원시 프로토콜은 내보내지 않는다. 시간/출력 제한과 자손 종료 확인을 적용한다. 사용자 WSL의 native Codex에서 실제 구독 계정 응답과 화면 연결을 확인했다. 실행 파일의 symlink 대상이 격리에 연결되는 경로와 자식 실행 경로가 달랐던 오류도 수정했다.
+
+화면의 **조회** 또는 인증된 `POST /api/account-quota/refresh`만 프로세스를 시작한다. `GET /api/account-quota`는 캐시만 읽으며, 동시 갱신은 합치고 재조회는 60초 간격으로 제한한다. 120초 초과·초기화 시각 경과·조회 실패는 과거 관측값으로 표시한다. 없는 값은 미확인이며, 모델 호출이나 추가 크레딧 사용은 없다. Claude 계정 한도는 미연결이다.
 
 계정 한도 창 사용 비율을 남은 토큰·질문 횟수로 환산하지 않는다. 제공 모델 재지정 사건이나 최소 설정 프로필은 [한계 재검토](../docs/reviews/2026-09-24-cli-unblock/README.md)의 후속 후보다. 문맥 비노출이나 모델 자기 보고를 개인 문맥 부재의 증명으로 삼지 않는다. 관측 없이 C3/permission을 합격으로 바꾸거나 새 옵션을 기존 판에 섞지 않는다.
 
@@ -102,4 +105,4 @@ python -m app.server --live-config /path/live.json --data-dir /path/new-ledger -
 
 `python -m unittest discover -s tests -v`를 실행한다. Linux 격리 검증은 `DML_REQUIRE_BWRAP=1`을 사용하며 OS 전용 skip을 구분한다. 실제 JavaScript 함수 회귀에는 Node가 필요하다. 테스트 파일은 `test_cli_unblock.py`, `test_live_config.py`, `test_codex_account.py`와 기존 `test_app_*.py`, `test_runner_cancel.py`, `test_server_limits.py`를 본다.
 
-새 Windows CI에서 드러난 출력 오류의 수정은 [미적용 패치](../docs/reviews/2026-09-24-cli-unblock/WINDOWS-CONSOLE.patch)로 남아 있다. 이를 적용하고 정확한 head를 검증하기 전 전체 CI 성공이라고 말하지 않는다. 실제 두 provider 응답·Claude 권한 증거·원본 앱 사용량 비교·실제 합성·공통 자료 스냅샷/해시·Q3 TypeScript·접근성 전수 검사는 남은 작업이다.
+Windows stdout 수정과 Python 3.13/짧은 임시 경로 회귀를 반영했다. 교차 플랫폼 CI의 정확한 head 결과는 PR Checks가 기준이다. 실제 두 provider 응답·현재 Claude 판의 제한된 권한 증거·계정 한도 화면은 직접 관측했다. 개인 문맥 독립성·원본 앱 사용량 비교·실제 합성·공통 자료 스냅샷/해시·Q3 TypeScript·접근성 전수 검사는 남은 작업이다.

@@ -148,6 +148,7 @@ const TOKEN = (() => {
 })();
 window.addEventListener("hashchange", () => location.reload());   // 열린 탭에 토큰 주소를 붙여 넣어도 동작한다
 let selected = null, state = null;
+let quotaSignature = null;
 let firstView = "decision"; // Q4 comparison only; no project preference is saved.
 const drafts = {};   // 수동 답 입력칸의 임시 내용(참여자별). 다시 그려도 지우지 않는다
 const confirms = {}; // 수동 답의 "원본 앱에 이 질문을 넣었다" 확인(참여자별). 다시 그려도 지우지 않는다
@@ -175,6 +176,9 @@ function renderQuota(data) {
   const button = document.getElementById("quota-refresh");
   button.disabled = !data.enabled || data.refreshing || data.retry_after_seconds > 0;
   button.textContent = data.refreshing ? "조회 중…" : data.retry_after_seconds > 0 ? `${data.retry_after_seconds}초 후 조회` : "조회";
+  const signature = JSON.stringify([data.enabled, data.refresh_failed, data.quota]);
+  if (signature === quotaSignature) return;
+  quotaSignature = signature;
   box.replaceChildren();
   if (!data.enabled) {
     box.append(h("p", {class:"caption"}, "Codex 실제 연결에서 조회할 수 있습니다. Claude 계정 한도는 아직 연결되지 않았습니다."));
@@ -187,7 +191,7 @@ function renderQuota(data) {
   box.append(h("p", {class:"caption"}, `조회 시각 ${new Date(quota.observed_at * 1000).toLocaleString()}`));
   for (const row of quota.limits) {
     const minutes = row.window_minutes;
-    const period = minutes == null ? row.window : minutes % 1440 === 0 ? `${minutes / 1440}일` : minutes % 60 === 0 ? `${minutes / 60}시간` : `${minutes}분`;
+    const period = minutes == null ? (row.window === "primary" ? "기본 한도" : "추가 한도") : minutes % 1440 === 0 ? `${minutes / 1440}일` : minutes % 60 === 0 ? `${minutes / 60}시간` : `${minutes}분`;
     const known = typeof row.used_percent === "number" && Number.isFinite(row.used_percent);
     const text = known ? `잔여 ${Math.max(0, 100 - row.used_percent)}% · 사용 ${row.used_percent}%` : "미확인";
     box.append(h("div", {class:row.status === "observed" ? "kv" : "kv st-unknown"},
@@ -200,7 +204,7 @@ document.getElementById("quota-refresh").onclick = async () => {
   const button = document.getElementById("quota-refresh");
   button.disabled = true; button.textContent = "조회 중…";
   try { renderQuota(await api("/api/account-quota/refresh", {})); }
-  catch (e) { document.getElementById("account-quota").textContent = "계정 한도를 조회하지 못했습니다."; button.disabled = false; }
+  catch (e) { quotaSignature = null; document.getElementById("account-quota").textContent = "계정 한도를 조회하지 못했습니다."; button.disabled = false; }
 };
 const STATE_LABEL = { queued: "대기", running: "실행 중", awaiting_user: "사용자 전달 대기", accepted: "제출됨",
                       rejected: "받지 않음", unknown: "UNKNOWN · 종료 미확인" };
@@ -219,7 +223,7 @@ async function loadOptions() {
     : "CLI 참여자는 모의 CLI로 돕니다. ") +
     "문맥 미확인 CLI·원본 앱 답은 독립 정족수에 세지 않습니다. 합성은 여전히 모의 처리이며 사실 검증이 아닙니다.";
   if (opt.live) {
-    document.getElementById("min").value = "1";
+    document.getElementById("min").value = String(opt.participants.filter(p => p.transport === "cli").length);
     if (opt.context_unverified) document.getElementById("policy").value = "include_unverified";
   }
   const box = document.getElementById("choices");

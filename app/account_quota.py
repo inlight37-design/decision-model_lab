@@ -40,22 +40,21 @@ class AccountQuota:
             return self.view()
         try:
             now = int(self._clock())
-            if self._attempted_at is not None and now - self._attempted_at < 60:
-                return self.view()
-            self._attempted_at = now
-            if self._reader is None:
-                from app.codex_account import probe
-                reader = probe
-            else:
-                reader = self._reader
-            try:
-                report = reader(self.data_dir)
-                quota = report.get("quota") if report.get("tree_confirmed_empty") is True else None
-                self._failed = quota is None
-                if quota is not None:
-                    self._snapshot = copy.deepcopy(quota)
-            except (OSError, ValueError, RuntimeError):
-                self._failed = True  # Never return exception text or erase the last observation.
+            if self._attempted_at is None or now - self._attempted_at >= 60:
+                self._attempted_at = now
+                if self._reader is None:
+                    from app.codex_account import probe
+                    reader = probe
+                else:
+                    reader = self._reader
+                try:
+                    report = reader(self.data_dir)
+                    quota = report.get("quota") if report.get("tree_confirmed_empty") is True else None
+                    self._failed = quota is None
+                    if quota is not None:
+                        self._snapshot = copy.deepcopy(quota)
+                except (OSError, ValueError, RuntimeError):
+                    self._failed = True  # Never return exception text or erase the last observation.
         finally:
             self._refresh_lock.release()
         return self.view()

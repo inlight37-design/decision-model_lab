@@ -33,6 +33,14 @@ class StreamTests(unittest.TestCase):
             with self.subTest(events=bad):
                 self.assertFalse(self.interpret(bad).ok)
 
+    def test_permission_evidence_requires_the_exact_forbidden_fixture(self):
+        from tools.w2.observe import claude_permission_evidence
+        events = self.events()
+        events[-1]['permission_denials'][0]['tool_input'] = {'file_path': '/fixture/peer.txt'}
+        stream = '\n'.join(json.dumps(e) for e in events)
+        self.assertTrue(claude_permission_evidence(stream, '/fixture/peer.txt')['forbidden_read_denied'])
+        self.assertFalse(claude_permission_evidence(stream, '/fixture/different.txt')['forbidden_read_denied'])
+
     def test_changed_surface_or_unoffered_tool_cannot_be_accepted(self):
         for field, value in (('tools', ['Read', 'Bash']), ('tools', None),
                              ('permissionMode', 'bypassPermissions'), ('mcp_servers', [{}])):
