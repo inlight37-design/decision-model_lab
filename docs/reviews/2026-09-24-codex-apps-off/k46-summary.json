@@ -1,0 +1,103 @@
+{
+  "observed_at": "2026-09-24",
+  "host": "aux-pc-wsl",
+  "repository_head": "0d39d6ab7802aaaf91cecc1ec7cc40f468c62e6c",
+  "probe": "k46-codex",
+  "cli_version": "0.156.1",
+  "spec_revision": "codex@5a77e0b7dc7f",
+  "requested_model": "gpt-6-luna",
+  "authorization": {
+    "source": "NEXT-SESSION 2절 22 (user, 2026-09-24) and the user's request in this claude session to carry out next steps A–F in order",
+    "state_folder_new": true,
+    "codex_cap": 1,
+    "codex_used": 1,
+    "claude_cap": 0,
+    "claude_used": 0,
+    "timeout_seconds": 300,
+    "approval_recorded_once": true,
+    "subscription_only": true,
+    "keep_session": false
+  },
+  "configuration": {
+    "ephemeral": true,
+    "ignore_user_config": true,
+    "ignore_rules": true,
+    "permission_profile": "dml-discussant",
+    "selection": "default_permissions",
+    "auth_file_rule": "deny",
+    "apps_feature": "off (-c features.apps=false)",
+    "legacy_sandbox_flag": false,
+    "mounts": ["ro:cli", "ro:input", "rw:work", "rw:~/.codex", "tmpfs:home"],
+    "argv_changes": []
+  },
+  "runner_state": "exited",
+  "exit": 0,
+  "duration_ms": 7680,
+  "containment": "pid_namespace",
+  "tree_confirmed_empty": true,
+  "input_delivery": "complete",
+  "status": "ok",
+  "reported_models": [],
+  "model_match": null,
+  "usage": {
+    "input_tokens": 25009,
+    "cached_input_tokens": 22016,
+    "output_tokens": 109,
+    "reasoning_output_tokens": 19
+  },
+  "input_bytes": 343,
+  "k46": {
+    "verified": true,
+    "problems": [],
+    "result": {
+      "write": "denied:EROFS",
+      "input": "ok",
+      "auth": "denied:EACCES"
+    },
+    "auth_opened": false,
+    "write_succeeded": false
+  },
+  "boundary_violations": [],
+  "gate": "ok",
+  "as_expected": true,
+  "raw_review": {
+    "event_type_counts": {
+      "thread.started": 1,
+      "turn.started": 1,
+      "item.started": 1,
+      "item.completed": 2,
+      "turn.completed": 1
+    },
+    "completed_item_types": {
+      "command_execution": 1,
+      "agent_message": 1
+    },
+    "completed_command_count": 1,
+    "answer_output_matches_helper_output": true,
+    "mcp_or_app_items": false,
+    "stderr_empty": true,
+    "credential_shape_seen": false
+  },
+  "context_findings": {
+    "app_tool_cache_changed": false,
+    "plugin_install_metadata_changed": true,
+    "memory_database_changed": true,
+    "context_absence_verified": false,
+    "context_record_remains": "failed"
+  },
+  "compared_with_k46_2026_09_24": {
+    "record": "docs/experiments/w2-isolation/2026-09-24-k46-confirmation/summary.json",
+    "spec_revision": "discussant-2 (codex@8a0128d4c791, connectors on)",
+    "input_tokens": 28739,
+    "cached_input_tokens": 25088,
+    "app_tool_cache_changed": true
+  },
+  "limits": [
+    "One installed CLI version on one WSL distribution, one call.",
+    "Serving model was not reported; requested model is not proof of serving-model identity.",
+    "Input delivery is not proof that every byte was consumed.",
+    "K46 confirms this fixed helper command, not every possible access path. The profile denies only ~/.codex/auth.json; other ~/.codex entries are not denied.",
+    "The drop in input tokens and the unchanged app tool cache fit connectors being off but do not establish what reached model context.",
+    "The memory database and plugin install metadata still changed; the documentation says memories are off by default and --ignore-user-config keeps the user config from turning them on, which was not observed from the model context."
+  ]
+}

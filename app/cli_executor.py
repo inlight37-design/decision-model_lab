@@ -15,7 +15,8 @@
 - Codex의 명령 거절 표식은 보관 상한과 상관없이 stderr 전체에서 센다(K02).
 - Codex에는 `--sandbox read-only` 대신 로그인 파일(`~/.codex/auth.json`)만 읽기 금지한 권한 profile을 준다(K46).
   2026-09-24 aux-pc-wsl의 Codex 0.156.1 exec에서 고정 helper의 인증 파일 열기가 EACCES로 거절됐다.
-  기록: docs/experiments/w2-isolation/2026-09-24-k46-confirmation/README.md. 문맥 독립성(C3)은 미해결이다.
+  기록: docs/experiments/w2-isolation/2026-09-24-k46-confirmation/README.md. 계정의 연결 앱을 끈 지금 계획의 재관측은
+  docs/reviews/2026-09-24-codex-apps-off/README.md. 문맥 독립성(C3)은 미해결이다.
 - **실행 허가는 시도마다 계산한다(N4).** 기록(`runtime-inventory/2`)의 다섯 칸이 모두 관측됐고, 지금 설치된 버전이
   기록과 같고, 구독 로그인일 때만 부른다(core.eligibility). 기록 없이 부르는 것은 관측 도구와 시험뿐이다(unchecked).
   명시적 문맥 미확인 정책은 C3 의미상 합격만 제외하고 계획에 기록한다. 다른 관문과 과금 제한은 유지한다.
