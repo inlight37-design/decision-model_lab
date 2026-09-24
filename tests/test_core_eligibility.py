@@ -11,7 +11,7 @@ from unittest import mock
 from app import cli_executor
 from app.cli_executor import CliExecutor, installed_version
 from core import adapters, eligibility
-from test_core_contract import participant_revision
+from test_core_contract import k46_revision, participant_plan, participant_revision
 from tools import runtime_inventory
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -162,7 +162,12 @@ class RecordTests(unittest.TestCase):
         self.assertEqual(reasons(stage2, "codex", "0.156.1", plain),
                          respec("discussant-1", plain)[:1] + ("context_conformance is failed",)
                          + respec("discussant-1", plain)[1:])
-        self.assertEqual(reasons(k46, "codex", "0.156.1", with_materials), ("context_conformance is failed",))
+        k46_plan = k46_revision(participant_plan("codex", inputs=("/tmp/in",)))
+        self.assertEqual(reasons(k46, "codex", "0.156.1", k46_plan), ("context_conformance is failed",))
+        # 연결 앱 끄기를 더한 지금 계획은 K46 기록이 덮지 않는다 — 전송·권한을 다시 관측한다
+        self.assertEqual(reasons(k46, "codex", "0.156.1", with_materials),
+                         respec("discussant-2", with_materials)[:1] + ("context_conformance is failed",)
+                         + respec("discussant-2", with_materials)[1:])
         self.assertEqual(reasons(k46, "codex", "0.156.1", plain),
                          respec("discussant-2", plain)[:1] + ("context_conformance is failed",)
                          + respec("discussant-2", plain)[1:])

@@ -35,6 +35,17 @@ def participant_revision(adapter_id, **kwargs):
     return participant_plan(adapter_id, **kwargs)[0]
 
 
+def k46_revision(plan):
+    """K46(2026-09-24)이 돈 Codex 계획의 판: 지금 계획에서 연결 앱 끄기(-c features.apps=false)만 뺀 것.
+
+    그 뒤 참여자 계획에 연결 앱 끄기를 더했으므로 K46 기록은 지금 계획을 뒷받침하지 않는다 — 다시 관측해야 한다."""
+    _, tmpl = plan
+    argv = list(tmpl["argv"])
+    index = argv.index(adapters.CODEX_APPS_OFF)
+    del argv[index - 1:index + 1]
+    return contract.revision({**tmpl, "argv": argv})
+
+
 class RevisionTests(unittest.TestCase):
     def test_values_that_change_every_attempt_do_not_change_the_revision(self):
         for adapter_id in EXE:
@@ -66,8 +77,8 @@ class RevisionTests(unittest.TestCase):
         self.assertEqual(len(set(others.values())), len(others))
 
     def test_an_additional_codex_input_mount_changes_the_revision(self):
-        one = participant_revision("codex", inputs=("/tmp/in",))
-        two = participant_revision("codex", inputs=("/tmp/in", "/tmp/other"))
+        one = k46_revision(participant_plan("codex", inputs=("/tmp/in",)))
+        two = k46_revision(participant_plan("codex", inputs=("/tmp/in", "/tmp/other")))
         self.assertNotEqual(one, two)
         self.assertTrue(contract.covers("discussant-2", one))
         self.assertFalse(contract.covers("discussant-2", two))
@@ -90,10 +101,14 @@ class RevisionTests(unittest.TestCase):
 class LegacyTests(unittest.TestCase):
     def test_codex_discussant_2_covers_exactly_the_plan_k46_ran(self):
         """K46(2026-09-24): 참여자 argv 그대로(argv_changes 없음), 공통 자료 하나 읽기 전용. 자료 없는 계획은 대응하지 않는다."""
-        k46 = participant_revision("codex", inputs=("/tmp/in",))
+        k46 = k46_revision(participant_plan("codex", inputs=("/tmp/in",)))
         self.assertEqual(contract.LEGACY["discussant-2"], (k46,))
         self.assertTrue(contract.covers("discussant-2", k46))
         self.assertFalse(contract.covers("discussant-2", participant_revision("codex")))
+        # 연결 앱 끄기를 더한 지금 계획은 다른 판이다. 옛 이름 판을 넓혀 덮지 않는다
+        current = participant_revision("codex", inputs=("/tmp/in",))
+        self.assertNotEqual(current, k46)
+        self.assertFalse(contract.covers("discussant-2", current))
 
     def test_claude_discussant_1_covers_no_participant_plan(self):
         """2단계 b1은 stream-json·Read 도구·공통 자료로 관측했다. controller 계획 그대로 다시 관측한다."""

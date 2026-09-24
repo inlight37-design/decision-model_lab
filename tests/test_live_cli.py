@@ -18,7 +18,7 @@ from core import adapters, contract, eligibility, runner
 import test_app_controller as support
 import test_app_cli_executor as cli_support
 import test_core_eligibility as evidence
-from test_core_contract import participant_plan
+from test_core_contract import k46_revision, participant_plan
 
 
 class ContextGateTests(unittest.TestCase):
@@ -46,14 +46,16 @@ class ContextGateTests(unittest.TestCase):
         record = json.loads(evidence.K46_MANIFEST.read_text(encoding="utf-8"))
         before = copy.deepcopy(record)
         observed_plan = participant_plan("codex", inputs=("/tmp/public-input",))
-        self.assertEqual(observed_plan[0], "codex@8a0128d4c791")
+        self.assertEqual(k46_revision(observed_plan), "codex@8a0128d4c791")
         options = dict(enabled=True, today=date(2026, 9, 24), current_version="0.156.1",
-                       spec_revision=observed_plan[0])
+                       spec_revision=k46_revision(observed_plan))
         self.assertFalse(eligibility.eligibility(record, "codex", **options).eligible)
         self.assertTrue(eligibility.eligibility(record, "codex", **options,
                                                allow_context_unverified=True).eligible)
-        for inputs in ((), ("/tmp/one", "/tmp/two")):
-            options["spec_revision"] = participant_plan("codex", inputs=inputs)[0]
+        # 연결 앱 끄기를 더한 지금 계획, 자료 없음·둘 이상은 K46 기록으로 허가되지 않는다
+        for spec_revision in (observed_plan[0], participant_plan("codex")[0],
+                              participant_plan("codex", inputs=("/tmp/one", "/tmp/two"))[0]):
+            options["spec_revision"] = spec_revision
             self.assertFalse(eligibility.eligibility(record, "codex", **options,
                                                     allow_context_unverified=True).eligible)
         self.assertEqual(before, record)
