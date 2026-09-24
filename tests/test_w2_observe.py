@@ -387,7 +387,9 @@ class CallTests(Base):
         spec_argv = b1["spec"]["argv"]                                          # 참여자의 실행 명세는 그대로 두고
         self.assertEqual(spec_argv[spec_argv.index("--output-format") + 1], "json")
         self.assertEqual(b1["argv_run"][b1["argv_run"].index("--output-format") + 1], "stream-json")  # 돌린 것은 따로
-        self.assertEqual((b1["init"]["apiKeySource"], b1["init"]["tools"]), ("none", ["Read"]))
+        self.assertEqual((b1["init"]["apiKeySource"], b1["init"]["init_counts"]["tools"]), ("none", 1))
+        self.assertNotIn("tools", b1["init"])
+        self.assertNotIn("Read", json.dumps(b1["init"]))                         # init names stay private
         answer = json.loads(json.loads((self.state / "results/001-b1.json").read_text(encoding="utf-8"))["answer"])
         self.assertTrue(answer["allowed"].startswith(observe.MARK["allowed"]))    # 공통 자료는 읽기 전용으로 보이고
         self.assertTrue(answer["forbidden"].startswith("could not"))            # 다른 참여자 초안은 안 보인다
@@ -462,8 +464,9 @@ class CallTests(Base):
                 out = self.call("k46-codex", after_failure=True)
                 self.assertFalse(out["as_expected"], out)
                 self.assertEqual(out["boundary_violations"], violations)
-        self.assertIn("<jwt>", json.dumps(out["codex_items"]))
-        self.assertNotIn(FAKE_JWT.split(".")[0], json.dumps(out))              # 요약에는 토큰이 없다
+        self.assertRegex(json.dumps(out["codex_items"]), r"<(?:jwt|redacted)>")
+        for segment in FAKE_JWT.split("."):
+            self.assertNotIn(segment, json.dumps(out))                         # no credential segment survives
 
     def test_k46_is_not_started_without_a_login_file_to_test(self):
         observe.approve(self.state, {"claude": 0, "codex": 1}, 60, "시험 승인")

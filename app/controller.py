@@ -220,7 +220,7 @@ class Controller:
             m.start(tuple(p.pid for p in participants), min_independent=min_independent)
         except m.MembershipError as exc:
             raise ControllerError(str(exc)) from None
-        run_id = f"r{time.strftime('%m%d-%H%M%S')}-{uuid.uuid4().hex[:4]}"
+        run_id = f"r{time.strftime('%m%d-%H%M%S')}-{uuid.uuid4().hex}"
         with self.lock, self.store.tx() as tx:
             tx.execute("INSERT INTO runs (run_id, created_at, question, prompt, input_sha256, input_bytes, "
                        "min_independent, roster, quorum_policy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
