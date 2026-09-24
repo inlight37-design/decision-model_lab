@@ -2,6 +2,9 @@
 
 저장소 밖에서 수행된 검토의 원문을 보존한다. 요약으로 대체하지 않는다.
 
+현재 실행 경로의 후속은 [2026-09-25 감사·PR #47](2026-09-25-runtime-audit-finish/README.md)이다. [이전 #46 기록](2026-09-25-runtime-review/README.md)의 저장된 수명주기 수정 위에 자료 복원 검사를 추가했고, 사용량 파서의 로컬 수정과 원격 미반영을 구분했다. 과거 기록의 완료 상태를 현재 head의 CI로 읽지 않는다.
+
+
 | 파일 | 무엇 |
 |---|---|
 | [`2026-09-22-external-review.md`](2026-09-22-external-review.md) | 첫 외부 정밀 검토. 코드·문서·근거 원장 전체를 읽고 검사를 재실행한 기록 |
@@ -36,7 +39,7 @@
 | [`2026-09-24-model-synthesis/`](2026-09-24-model-synthesis/README.md) | claude의 다음 작업 C. 공개 뒤 실행마다 켜는 실제 합성 1회, 원문 글자 그대로의 인용 대조와 원문에 없는 추가 주장 표시, 같은 상한 안의 예약, 실제 Claude 합성 확인 |
 | [`2026-09-24-codex-apps-off/`](2026-09-24-codex-apps-off/README.md) | claude의 다음 작업 E 첫 단계. Codex 참여자에게 열려 있던 계정 연결 앱(도구 198개, 쓰기 포함)을 끄고, 바뀐 판으로 K46을 다시 관측했다. 새 manifest와 아직 열린 문맥 통로 |
 
-최신 추가: [`2026-09-24-codex-apps-off/`](2026-09-24-codex-apps-off/README.md) — Codex 참여자가 사용자 계정의 연결 앱 도구(GitHub·Google Drive 쓰기 포함)를 볼 수 있던 것을 막고 권한을 다시 관측했다. 문맥 독립성(C3)은 아직 미확인이다.
+최신 추가: [`2026-09-25-runtime-audit-finish/`](2026-09-25-runtime-audit-finish/README.md) — #46의 합성 수명주기를 재검토하고 자료 복원 오류를 수정했다. 사용량 파서는 로컬 수정만 검증되어 원격 반영이 남았다. 앞선 [`Codex 연결 앱 끄기`](2026-09-24-codex-apps-off/README.md)의 관측은 보존하며 문맥 독립성(C3)은 아직 미확인이다.
 
 ## Windows·실제 병렬 실행 후속
 
@@ -44,7 +47,7 @@
 
 ## 읽는 순서
 
-현재 최신은 [다음 작업 E의 첫 단계](2026-09-24-codex-apps-off/README.md), [D 결과](../experiments/2026-09-24-comparison-pilot/RESULTS.md), [C](2026-09-24-model-synthesis/README.md), [B](2026-09-24-source-snapshot/README.md), [A·F](2026-09-24-account-limits/README.md)이고, 그 앞은 그 작업들을 정한 [#38·#39 검토·병합](2026-09-24-merge-39/README.md)이다. 그 앞이 위 Windows·실제 병렬 실행 기록과 [#38 기록](2026-09-24-cli-unblock/README.md)이며, 그 이전은 [두 번째 실제 CLI 응답과 #34·#35 병합](2026-09-24-live-pilot-replication/README.md)이다. 같은 경로가 다른 세션·다른 질문에서 재현됐고, 호출 상한이 원장에 고정되지 않는 점과 시작 전 거절이 실행별 회계에 섞이는 점을 찾았다. 그 앞 [첫 실제 CLI 서버 응답](2026-09-24-live-cli-pilot/README.md)은 PR #34의 문맥 미확인 opt-in에서 단일 Codex 응답을 수용·공개했으며 strict 허가는 여전히 없다. 그 앞 [PR #31의 순서 5 재검토·회귀 수정](2026-09-24-cli-readiness/README.md)은 실행 직전 허가 재검사, 자료 연결 개수와 stdin 옵션을 지우지 않는 판, 무모델 조회·진단을 더했고, [독립 재검토](2026-09-24-pr31-safety-review/README.md)와 [병합 검증](2026-09-24-merge-31-32/README.md)을 거쳐 main에 들어왔다. 그 앞 구현은 [순서 5 실행 계약](2026-09-24-execution-contract/README.md)이다. 아래 재검토의 제안대로 G4·G6을 닫았고, 옛 판은 실제로 돈 계획에만 대응시켜 기록된 Claude 관측으로는 허가가 나오지 않는다. 그 앞 검토는 [병합 후 재검토·실제 관측](2026-09-24-post-merge-verification/README.md)이다. GitHub head checkout·CI·병합 이력, 실제 브라우저의 모의 흐름/Q4/교차 출처 차단, 승인된 K46 확인, Windows 진단 인코딩 수정과 실행 계약 제안을 담았다. C3는 남는다. Q4는 화면 확인을 마쳤고 사용자 선택은 미정이다. 취소 확인창·실제 파일 다운로드 끝단은 순서 5 구현 때 claude 세션이 설치된 Edge로 확인했다. 이전 검토 당시의 도구 제약과 현재 상태를 구분한다.
+현재 후속은 [실행 경로 감사·미반영 사항](2026-09-25-runtime-audit-finish/README.md)과 [이전 실행 경로 리뷰](2026-09-25-runtime-review/README.md)다. 그 앞은 [다음 작업 E의 첫 단계](2026-09-24-codex-apps-off/README.md), [D 결과](../experiments/2026-09-24-comparison-pilot/RESULTS.md), [C](2026-09-24-model-synthesis/README.md), [B](2026-09-24-source-snapshot/README.md), [A·F](2026-09-24-account-limits/README.md)이고, 그 앞은 그 작업들을 정한 [#38·#39 검토·병합](2026-09-24-merge-39/README.md)이다. 그 앞이 위 Windows·실제 병렬 실행 기록과 [#38 기록](2026-09-24-cli-unblock/README.md)이며, 그 이전은 [두 번째 실제 CLI 응답과 #34·#35 병합](2026-09-24-live-pilot-replication/README.md)이다. 같은 경로가 다른 세션·다른 질문에서 재현됐고, 호출 상한이 원장에 고정되지 않는 점과 시작 전 거절이 실행별 회계에 섞이는 점을 찾았다. 그 앞 [첫 실제 CLI 서버 응답](2026-09-24-live-cli-pilot/README.md)은 PR #34의 문맥 미확인 opt-in에서 단일 Codex 응답을 수용·공개했으며 strict 허가는 여전히 없다. 그 앞 [PR #31의 순서 5 재검토·회귀 수정](2026-09-24-cli-readiness/README.md)은 실행 직전 허가 재검사, 자료 연결 개수와 stdin 옵션을 지우지 않는 판, 무모델 조회·진단을 더했고, [독립 재검토](2026-09-24-pr31-safety-review/README.md)와 [병합 검증](2026-09-24-merge-31-32/README.md)을 거쳐 main에 들어왔다. 그 앞 구현은 [순서 5 실행 계약](2026-09-24-execution-contract/README.md)이다. 아래 재검토의 제안대로 G4·G6을 닫았고, 옛 판은 실제로 돈 계획에만 대응시켜 기록된 Claude 관측으로는 허가가 나오지 않는다. 그 앞 검토는 [병합 후 재검토·실제 관측](2026-09-24-post-merge-verification/README.md)이다. GitHub head checkout·CI·병합 이력, 실제 브라우저의 모의 흐름/Q4/교차 출처 차단, 승인된 K46 확인, Windows 진단 인코딩 수정과 실행 계약 제안을 담았다. C3는 남는다. Q4는 화면 확인을 마쳤고 사용자 선택은 미정이다. 취소 확인창·실제 파일 다운로드 끝단은 순서 5 구현 때 claude 세션이 설치된 Edge로 확인했다. 이전 검토 당시의 도구 제약과 현재 상태를 구분한다.
 
 그 앞 구현은 [새 main 후속](2026-09-24-offline-progression/README.md)의 PR #22–#25이며 [병합 검증](2026-09-24-merge-22-25/README.md)을 거쳐 main에 들어왔다. 아래 날짜 기록의 당시 표현은 유지한다.
 
