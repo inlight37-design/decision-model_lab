@@ -60,7 +60,7 @@
 
 - **현재 브랜치:** 순서 5 재검토에서 허가 철회 재검사·자료 연결 개수·stdin 옵션 가림을 고쳤고, 실제 서버 연결 전 조회와 Claude/C3 무모델 진단을 추가했다. [기록](docs/reviews/2026-09-24-cli-readiness/README.md). main 보호는 저장소에 이미 적용됐다. 이 브랜치는 정확한 head CI 확인 뒤 사용자 또는 허락받은 claude 세션이 병합한다. 이번 작업의 모델 호출은 없다.
 
-**진행 중:** 위 codex 브랜치의 검토·병합. 열린 PR과 `git branch -r --no-merged origin/main`의 실제 상태가 기준이다.
+**진행 중:** [PR #31](https://github.com/inlight37-design/decision-model_lab/pull/31)의 검토·병합. 코드 커밋의 Windows·WSL 전체 검사와 정확한 head CI를 [확인했다](docs/reviews/2026-09-24-cli-readiness/FINAL-VALIDATION.md). 병합할 때 최종 head CI를 다시 본다. 열린 PR과 `git branch -r --no-merged origin/main`의 실제 상태가 기준이다.
 
 - **마지막 병합:** [PR #30](https://github.com/inlight37-design/decision-model_lab/pull/30)(`claude/execution-contract-20260924`) — 순서 5 실행 계약(G4·G6). 모델 호출 없음. [기록](docs/reviews/2026-09-24-execution-contract/README.md).
   - 실행기 계약은 `plan()` → 기록 → `run(plan)`이다. controller와 관측 도구가 같은 계획을 쓰고, 관측 변형도 계획을 만들 때 넣는다.

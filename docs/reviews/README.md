@@ -24,7 +24,7 @@
 
 최신 추가: [`2026-09-24-execution-contract/`](2026-09-24-execution-contract/README.md) — claude의 순서 5 실행 계약(G4·G6) 구현([PR #30](https://github.com/inlight37-design/decision-model_lab/pull/30)). 계획 한 번, 계획에서 계산한 판, 옛 판의 정확한 대응, 시도에 저장한 실행 종류. 그 앞 [`2026-09-24-post-merge-verification/`](2026-09-24-post-merge-verification/README.md) — 병합 후 재검토, 실제 브라우저·K46 관측, 진단 출력 수정과 실행 계약 제안. GitHub 원문 대조는 같은 폴더의 [`GITHUB.md`](2026-09-24-post-merge-verification/GITHUB.md)에 있다.
 
-최신 추가: [`2026-09-24-cli-readiness/`](2026-09-24-cli-readiness/README.md) — 순서 5 재검토·회귀 수정, main 보호 적용, 서버 연결 전 조회, Claude 재관측 준비 및 Codex C3 무모델 진단. 실행 허가를 임의로 승격하지 않았다. 앞 기록의 “main 보호 없음”은 이 후속 작업으로 해소됐다.
+최신 추가: [`2026-09-24-cli-readiness/`](2026-09-24-cli-readiness/README.md) — 순서 5 재검토·회귀 수정, main 보호 적용, 서버 연결 전 조회, Claude 재관측 준비 및 Codex C3 무모델 진단([PR #31](https://github.com/inlight37-design/decision-model_lab/pull/31)). 실행 허가를 임의로 승격하지 않았다. 앞 기록의 “main 보호 없음”은 이 후속 작업으로 해소됐다. 작성 중 검증 상태는 보존하고 [완료 검증](2026-09-24-cli-readiness/FINAL-VALIDATION.md)으로 대체한다.
 
 ## 읽는 순서
 
