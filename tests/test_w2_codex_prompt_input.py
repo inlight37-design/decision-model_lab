@@ -1,5 +1,6 @@
 """tools/w2/codex_prompt_input.py 검사(E2). 실제 CLI·모델은 부르지 않는다 — 격리 실행을 가짜 결과로 바꾼다."""
 import json
+import sys
 import unittest
 from unittest import mock
 
@@ -16,7 +17,7 @@ def rendered(*texts):
 
 class PromptInputTests(unittest.TestCase):
     def test_the_values_are_the_participant_plans(self):
-        values = probe.participant_values("/home/u")
+        values = probe.participant_values("/home/u", sys.executable)   # 어느 OS에서나 절대 경로
         self.assertEqual(values[1::2], [*adapters.codex_permissions("/home/u"), adapters.CODEX_APPS_OFF,
                                         adapters.CODEX_NO_PROJECT_DOCS])
         self.assertEqual(set(values[::2]), {"-c"})

@@ -75,7 +75,7 @@ CODEX_WINDOWS_SANDBOX = 'windows.sandbox="elevated"'
 # https://learn.chatgpt.com/docs/permissions — 옛 sandbox 설정과 섞지 말라고 한다). exec에는 `-P`가 없어서(0.156.1이
 # 인자 오류로 거절) `default_permissions`로 고른다. 처음에는 로그인 파일 하나만 막았으나, 2026-09-25 무모델 진단에서
 # 모델의 명령이 나머지 `~/.codex`(상태·로그·메모리 DB, 로그 폴더, 플러그인·연결 앱 캐시)를 모두 읽을 수 있었다 — 지난
-# 실행의 질문·초안이 남는 곳이다. 그래서 `~/.codex` 전체를 막는다. 그러려면 Codex 실행 파일이 그 밖에 보여야 한다
+# 실행의 흔적이 남을 수 있는 곳이다(내용은 읽지 않았다). 그래서 `~/.codex` 전체를 막는다. 그러려면 Codex 실행 파일이 그 밖에 보여야 한다
 # (isolation.participant_mounts). CLI 자신은 이 profile 밖에서 돌므로 로그인·토큰 갱신·상태 기록은 그대로다.
 # 참여자 실행 명세의 판은 core.contract가 최종 계획(argv·연결·변형)에서 계산한다. 손으로 올리던 이름 판
 # (claude discussant-1, codex discussant-2 — `--sandbox read-only` 대신 K46 권한 profile)은 기록에만 남고,

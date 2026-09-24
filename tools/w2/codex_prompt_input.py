@@ -34,10 +34,9 @@ def _strings(value):
             yield from _strings(item)
 
 
-def participant_values(home: str) -> list[str]:
+def participant_values(home: str, exe: str) -> list[str]:
     """참여자 exec argv의 `-c` 값 그대로. build_spec에서 뽑으므로 계획이 바뀌면 함께 바뀐다."""
-    argv = adapters.build_spec("codex", exe="/opt/dml-codex/bin/codex", prompt="-", model="m",
-                               codex_user_home=home).argv
+    argv = adapters.build_spec("codex", exe=exe, prompt="-", model="m", codex_user_home=home).argv
     return [x for i, a in enumerate(argv) if a == "-c" for x in ("-c", argv[i + 1])]
 
 
@@ -95,8 +94,8 @@ def real_home_comparison(exe: str) -> dict:
         work, synth = os.path.join(root, "work"), os.path.join(root, "home")
         os.makedirs(work)
         os.makedirs(os.path.join(synth, ".codex"))
-        s_summary, s_text = render(exe, synth, work, participant_values(synth))
-        r_summary, r_text = render(exe, HOME, work, participant_values(HOME))
+        s_summary, s_text = render(exe, synth, work, participant_values(synth, exe))
+        r_summary, r_text = render(exe, HOME, work, participant_values(HOME, exe))
         report = {"synthetic_home": s_summary, "real_home": r_summary}
         if s_text is not None and r_text is not None:
             a = [line.replace(synth, "<HOME>") for line in s_text.splitlines() if line.strip()]
