@@ -17,7 +17,7 @@
 | [`2026-09-24-review-request/`](2026-09-24-review-request/README.md) | 위 요청서를 이어받는 검토 요청서. 지금까지의 흐름(연표), 2단계 뒤의 PR #8–#12, K46 방어, 새 실패·시행착오(S22–S33)와 S01–S21의 현재 상태. PC에만 있던 관측 요약을 가려서 함께 옮겼다. 결과는 `<YYYY-MM-DD>-review/`로 받는다 |
 | [`2026-09-24-review/`](2026-09-24-review/README.md) | 위 요청과 17번 질문에 대한 ChatGPT 검토([PR #14](https://github.com/inlight37-design/decision-model_lab/pull/14)). K46·P3 판정식, 실행 허가의 합성 반례, 구성별 관측 판정, S01–S33·PR 충돌·다음 순서. 원본 판정과 제품 코드는 유지했고 재현 코드·결과·소스 해시를 함께 남겼다. 반영 결과는 같은 폴더의 [`RESPONSE.md`](2026-09-24-review/RESPONSE.md) |
 | [`2026-09-24-a1-integrity/`](2026-09-24-a1-integrity/README.md) | 전체 검토와 직접 수정([PR #18](https://github.com/inlight37-design/decision-model_lab/pull/18)). 원장 거래 실패/HTTP 음성 회귀, 공개 뒤 합성 없는 보고, 화면 배치, 실제 소켓과 오프라인 DOM 검증 범위, 다음 작업 인계 |
-| [`2026-09-24-lean-lifecycle/`](2026-09-24-lean-lifecycle/README.md) | PR #18 위의 간결성 검토와 직접 수정([PR #19](https://github.com/inlight37-design/decision-model_lab/pull/19)). 지속 취소·스레드/연결 수명·필요한 사건만 읽는 조회, 합성 성능 측정과 남은 경계 |
+| [`2026-09-24-lean-lifecycle/`](2026-09-24-lean-lifecycle/README.md) | PR #18 위의 간결성 검토와 직접 수정([PR #20](https://github.com/inlight37-design/decision-model_lab/pull/20), 자동 닫힌 PR #19 대체). 지속 취소·스레드/연결 수명·필요한 사건만 읽는 조회, 합성 성능 측정과 남은 경계 |
 
 ## 읽는 순서
 
@@ -45,6 +45,12 @@
 20. [`2026-09-24-review/RESPONSE.md`](2026-09-24-review/RESPONSE.md) — 19의 발견별 반영(R01–R03·R05–R08 수용, R04·R09 부분 수용), 합성 HOME 진단, 리뷰 밖에서 새로 찾은 것, 사용자에게 묻는 것
 21. [`2026-09-24-a1-integrity/`](2026-09-24-a1-integrity/README.md) — 현재 코드 직접 검토·수정과 A1 모의 후속. 기존 관측/결정은 유지했고 K18·K27·K42의 부분 진행과 실제 브라우저/CLI 미검증을 구분
 22. [`2026-09-24-lean-lifecycle/`](2026-09-24-lean-lifecycle/README.md) — 최소 코드/효율 검토. 기존 runner 경로를 재사용한 K19 구현과 자원 상한·조회 개선. 이전 기록의 “취소 없음”과 연결 상한 부재는 이 후속에서 변경했으며 실제 CLI/문맥 검증 완료로 올리지 않음
+
+## 22번 기록의 통합 상태 정정
+
+- 기술 검토·측정·코드는 그대로다. 작업 중 PR #18이 2026-09-24 13:01:34 KST에 다른 세션에서 main으로 병합됐고, 13:01:37 KST에 그 브랜치가 삭제되어 기준으로 쓰던 PR #19가 자동으로 닫혔다. 변경 거절이나 코드 유실이 아니다.
+- 삭제된 base로는 PR #19를 다시 열거나 main으로 바꿀 수 없어, 같은 `chatgpt/lean-cancellation-20260924` 브랜치의 [PR #20](https://github.com/inlight37-design/decision-model_lab/pull/20)을 main 대상으로 열었다. 원문의 “PR #18을 먼저 병합하고 #19를 retarget” 및 “PR #19의 Checks”는 **PR #18 병합 완료, PR #20의 최신 head Checks 확인**으로 정정한다. 원문은 당시 기록으로 보존한다.
+- 현재 인계는 [NEXT-SESSION.md](../../NEXT-SESSION.md) 3절이고, PR #20 본문/Checks가 최종 검증 commit의 기준이다. ChatGPT는 main이나 이전 세션 브랜치를 수정·병합하지 않았다.
 
 ## 20번 기록에 대한 단서
 

@@ -1,8 +1,8 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-24** · 작성 세션: chatgpt (GitHub 연결 + 격리된 분석 컨테이너, 사용자 PC·로그인된 CLI 접근 없음) · 브랜치 `chatgpt/lean-cancellation-20260924` · [PR #19](https://github.com/inlight37-design/decision-model_lab/pull/19), PR #18 위의 후속
+최종 갱신 **2026-09-24** · 작성 세션: chatgpt (GitHub 연결 + 격리된 분석 컨테이너, 사용자 PC·로그인된 CLI 접근 없음) · 브랜치 `chatgpt/lean-cancellation-20260924` · [PR #20](https://github.com/inlight37-design/decision-model_lab/pull/20), main 대상 후속
 
-현재 인계는 이 파일 하나다. 완료 이력이 다음 일을 가리지 않도록 정리했다. **이전 판 전체는 [보관본](docs/handoff/2026-09-24-before-a1-integrity.md)에 바이트 그대로 있다.** 사용자 결정(2절)과 금지 사항(5절)은 유지했고, 기기 관측·승인·명세 판정을 바꾸지 않았다. 직전 수정은 [PR #18 기록](docs/reviews/2026-09-24-a1-integrity/README.md), 간결성 점검·지속 취소·자원 정리는 [PR #19 기록](docs/reviews/2026-09-24-lean-lifecycle/README.md)에 있다. 이 판은 이전 인계의 필요한 부분만 고쳤으며 2절·5절 원문과 승인 경계를 유지했다.
+현재 인계는 이 파일 하나다. 완료 이력이 다음 일을 가리지 않도록 정리했다. **이전 판 전체는 [보관본](docs/handoff/2026-09-24-before-a1-integrity.md)에 바이트 그대로 있다.** 사용자 결정(2절)과 금지 사항(5절)은 유지했고, 기기 관측·승인·명세 판정을 바꾸지 않았다. 직전 수정은 [PR #18 기록](docs/reviews/2026-09-24-a1-integrity/README.md), 간결성 점검·지속 취소·자원 정리는 [간결성 검토 기록](docs/reviews/2026-09-24-lean-lifecycle/README.md)에 있다. 이 판은 이전 인계의 필요한 부분만 고쳤으며 2절·5절 원문과 승인 경계를 유지했다.
 
 ## 0. 먼저 확인할 것
 
@@ -41,7 +41,7 @@
 
 ### 기록과 열린 결정
 
-검토는 [목록](docs/reviews/README.md) 시간순으로 읽는다. 최근 이전 리뷰는 [PR #14 원문과 반영](docs/reviews/2026-09-24-review/README.md), 그 뒤 [PR #18 검토·수정](docs/reviews/2026-09-24-a1-integrity/README.md), [PR #19 간결성·수명 관리](docs/reviews/2026-09-24-lean-lifecycle/README.md)다. 예전 요청서가 아직 답을 기다리는 것은 아니다. [Hermes 조사·교차 확인](docs/research/hermes-2026-09-23/CROSSCHECK.md), [tmux 조사](docs/research/tmux-2026-09-23/README.md)는 후보이지 채택된 실행 엔진이 아니다.
+검토는 [목록](docs/reviews/README.md) 시간순으로 읽는다. 최근 이전 리뷰는 [PR #14 원문과 반영](docs/reviews/2026-09-24-review/README.md), 그 뒤 [PR #18 검토·수정](docs/reviews/2026-09-24-a1-integrity/README.md), [간결성·수명 관리](docs/reviews/2026-09-24-lean-lifecycle/README.md)다. 예전 요청서가 아직 답을 기다리는 것은 아니다. [Hermes 조사·교차 확인](docs/research/hermes-2026-09-23/CROSSCHECK.md), [tmux 조사](docs/research/tmux-2026-09-23/README.md)는 후보이지 채택된 실행 엔진이 아니다.
 
 | ID | 상태 |
 |---|---|
@@ -77,11 +77,12 @@
 
 ## 3. 진행 중인 작업
 
-**[PR #19](https://github.com/inlight37-design/decision-model_lab/pull/19), `chatgpt/lean-cancellation-20260924`: 간결성 검토·지속 취소·자원 수명 정리.** 시작점은 아직 열린 [PR #18](https://github.com/inlight37-design/decision-model_lab/pull/18)의 `2e9a74731770b59f2c57f154abe28a9d84654154`다. PR #19의 base도 그 브랜치여서 이번 변경만 보인다. ChatGPT는 main이나 이전 세션 브랜치를 변경·병합하지 않았다.
+**[PR #20](https://github.com/inlight37-design/decision-model_lab/pull/20), `chatgpt/lean-cancellation-20260924`: 간결성 검토·지속 취소·자원 수명 정리.** main을 대상으로 한다. 시작점은 PR #18의 `2e9a74731770b59f2c57f154abe28a9d84654154`이며, 작업 중 다른 세션이 PR #18을 `99d9bb44720bed2d6917dd4626eb8a172af5ab23`로 main에 병합했다. 두 commit의 파일 tree는 같다. ChatGPT는 main이나 이전 세션 브랜치를 변경·병합하지 않았다.
 
-- **병합 순서:** PR #18을 먼저 main에 병합한 뒤 PR #19의 base를 main으로 바꾸고 최신 head의 CI와 충돌을 다시 확인한다. PR #19를 이전 세션 브랜치에 병합하지 않는다. 실제 PR 상태가 이 파일보다 우선이다.
-- 코드 체크포인트 `32c1e2a4402037d9b065d72eb12d629fe542f584`, 임시 전송 파일 제거 `7390530cfcd8f78b7b5e86c64c712ccddbe63c73`. 최종 CI·검증 범위는 PR과 [검토 기록](docs/reviews/2026-09-24-lean-lifecycle/README.md). 모델 호출·실제 인증 폴더 연결은 없었다.
-- 기존 병합 이력·원 관측은 바꾸지 않았다. 완전히 병합된 브랜치만 병합한 쪽이 지운다. 필요하면 [prune-merged-branches](.github/workflows/prune-merged-branches.yml)의 `dry_run`으로 먼저 확인한다. 두 열린 작업 브랜치는 아직 지우지 않는다.
+- **PR 번호 변경:** 처음에는 PR #18 위에 PR #19를 열었지만, 2026-09-24 13:01:37 KST 기준 브랜치 삭제로 GitHub가 PR #19를 자동으로 닫았다. 삭제된 base 때문에 재개/대상 변경도 거절되어 같은 작업 브랜치에서 main 대상 PR #20을 열었다. 코드와 커밋은 보존됐다. 날짜가 박힌 검토 기록의 PR #19/병합 순서는 당시 상태이며, 현재 통합 상태는 이 절과 [목록 단서](docs/reviews/README.md)가 대체한다.
+- **병합 경계:** PR #18은 이미 병합됐다. 사용자 또는 허락받은 claude 세션이 PR #20의 최신 head CI와 최신 main/겹치는 열린 작업을 확인하고 병합한다. 실제 GitHub 상태가 이 파일보다 우선이다.
+- 코드 체크포인트 `32c1e2a4402037d9b065d72eb12d629fe542f584`, 임시 전송 파일 제거 `7390530cfcd8f78b7b5e86c64c712ccddbe63c73`, 기술 검토/인계 `d19b90fefd8a8f45fbb9561508650b33692ce61b`. 최종 CI·검증 범위는 PR과 [검토 기록](docs/reviews/2026-09-24-lean-lifecycle/README.md). 모델 호출·실제 인증 폴더 연결은 없었다.
+- 기존 병합 이력·원 관측은 바꾸지 않았다. 이전 PR #18 브랜치는 이미 삭제됐다. 현재 작업 브랜치는 병합 전까지 유지하고, 완전히 병합된 브랜치만 병합한 쪽이 지운다. 필요하면 [prune-merged-branches](.github/workflows/prune-merged-branches.yml)의 `dry_run`으로 먼저 확인한다.
 
 ### 사용자 판단·승인을 기다리는 것
 
