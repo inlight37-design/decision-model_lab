@@ -66,6 +66,8 @@
 
 **비밀 값**(API 키, 토큰, 인증 파일 내용, 환경변수 전체 출력)은 어떤 형태로도 커밋하지 않는다.
 
+**쓰기 권한이 있는 workflow로 코드를 들이지 않는다.** 파일을 직접 고치기 어려운 세션(웹 세션 등)은 변경을 patch 파일(`git diff` 결과)로 자기 브랜치에 올리고 PR 본문에 적는다. 그러면 PC 세션이 적용해 커밋하고, 커밋 본문에 원래 작성 세션을 밝힌다. `contents: write` workflow가 대신 커밋하면 세 가지가 깨진다. 작성자가 `github-actions[bot]`으로 남아 누가 썼는지 흐려진다. bot 토큰으로 push한 커밋에는 push CI가 돌지 않는다. 그리고 검토 없이 브랜치를 바꾸는 통로가 하나 생긴다. 2026-09-24 PR #34가 이 방식을 썼다([기록 N4](reviews/2026-09-24-live-pilot-replication/README.md)).
+
 **인코딩.** Windows PowerShell 5.1의 `Get-Content`/`Set-Content`로 문서를 일괄 치환하지 않는다. [`AGENTS.md`](../AGENTS.md)의 경고를 따른다.
 
 ## 4. 문서의 두 종류
