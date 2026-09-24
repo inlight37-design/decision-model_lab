@@ -55,7 +55,6 @@ from __future__ import annotations
 
 import argparse
 import contextlib
-import dataclasses
 import json
 import os
 from pathlib import Path
@@ -344,8 +343,9 @@ def _argv_for(probe: str, argv: list[str], keep_session: bool = False) -> tuple[
         changes.append("- --ephemeral (keep the session record)")
     if probe in ("b1", "b1-combo"):
         i = argv.index("--output-format")
-        argv[i + 1:i + 2] = ["stream-json", "--verbose"]   # init 이벤트를 보려고. 마지막 result는 json과 같은 모양
-        changes.append("--output-format stream-json --verbose")
+        if argv[i + 1] != "stream-json":
+            argv[i + 1:i + 2] = ["stream-json", "--verbose"]
+            changes.append("--output-format stream-json --verbose")
     if probe == "b1-combo":
         argv.insert(argv.index("--restricted") + 1, "--safe-mode")
         changes.append("+ --safe-mode")
@@ -512,6 +512,17 @@ def summarize(probe: str, run: runner.RunResult, outcome: adapters.Outcome, *, r
             "mentions": {"CLAUDE.md": "CLAUDE.md" in blob, MARK["claude_md"]: MARK["claude_md"] in blob,
                          MARK["agents"]: MARK["agents"] in blob},
         }
+        # Fixed names only; do not publish provider IDs, denied paths or raw events.
+        try:
+            _init, terminal, _used = adapters.claude_stream(run.stdout)
+            denials = terminal.get("permission_denials", [])
+            summary["permission_evidence"] = {
+                "read_only_surface": init.get("tools") == ["Read"] and init.get("mcp_servers") == [],
+                "dont_ask": init.get("permissionMode") == "dontAsk",
+                "denied_reads": sum(isinstance(d, dict) and d.get("tool_name") == "Read" for d in denials),
+            }
+        except (ValueError, TypeError):
+            summary["permission_evidence"] = None
     if ADAPTER[PROVIDER[probe]] == "codex":
         summary["codex_items"] = [{k: (scrub(str(v))[:200] if k != "exit_code" else v) for k, v in item.items()
                                    if k in ("type", "command", "exit_code", "status", "aggregated_output")}
@@ -576,8 +587,11 @@ def call(state: Path, probe: str, model: str, *, pad_kb: int = 0, after_failure:
                 shutil.move(found, target)
                 kept.append(target)
         init, result = _stream_json(run.stdout) if probe in ("b1", "b1-combo") else (None, None)
-        judged = dataclasses.replace(run, stdout=json.dumps(result)) if result is not None else run
-        outcome = adapters.interpret(ADAPTER[provider], judged, requested_model=model)
+        expected_tools = None
+        if provider == "claude" and probe not in EXPECT_REFUSAL:
+            configured = argv[argv.index("--tools") + 1]
+            expected_tools = tuple(configured.split(",")) if configured else ()
+        outcome = adapters.interpret(ADAPTER[provider], run, requested_model=model, claude_tools=expected_tools)
         summary = summarize(probe, run, outcome, record=planned.record(), argv=argv, changes=changes, work=work,
                             home=executor.home, init=init)
         # 모델이 돌린 명령의 실제 출력에서 판정한다. 모델이 답에 옮겨 적은 값이 아니다(리뷰 R01)

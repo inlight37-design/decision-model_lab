@@ -117,7 +117,7 @@ if FLAVOR == "claude":
     if opt("--output-format") == "stream-json":
         assert "--verbose" in argv
         print(json.dumps({{"type": "system", "subtype": "init", "model": model, "permissionMode": opt("--permission-mode"),
-                          "apiKeySource": "none", "tools": ["Read"], "mcp_servers": [], "plugins": [],
+                          "apiKeySource": "none", "tools": ["Read"] if opt("--tools") else [], "mcp_servers": [], "plugins": [],
                           "slash_commands": [], "cwd": os.getcwd(), "session_id": "fake"}}))
     print(json.dumps(result))
 else:
@@ -383,7 +383,7 @@ class CallTests(Base):
         b1 = self.call("b1")
         self.assertTrue(b1["as_expected"], b1)
         self.assertEqual(b1["boundary_violations"], [])
-        self.assertEqual(b1["argv_changes"], ["--output-format stream-json --verbose"])
+        self.assertEqual(b1["argv_changes"], [])
         spec = b1["spec"]                                                       # 명세는 실제로 돌린 계획이다(G4)
         self.assertEqual(spec["argv"], b1["argv_run"])
         self.assertEqual(b1["argv_run"][b1["argv_run"].index("--output-format") + 1], "stream-json")
@@ -391,7 +391,7 @@ class CallTests(Base):
         participant = self.executor().plan(
             observe.ParticipantSpec("b1", "b1", "claude", observe.CLI, "claude-code", "claude-test-9"), "q",
             str(self.root / "w"), inputs=(str(self.root / "in"),)).revision
-        self.assertNotEqual(spec["revision"], participant)                     # 변형은 참여자 계획의 판이 아니다
+        self.assertEqual(spec["revision"], participant)  # The stream is now the actual participant plan.
         self.assertEqual((b1["init"]["apiKeySource"], b1["init"]["init_counts"]["tools"]), ("none", 1))
         self.assertNotIn("tools", b1["init"])
         self.assertNotIn("Read", json.dumps(b1["init"]))                         # init names stay private

@@ -1,6 +1,9 @@
 """core.contract 검사 — 최종 계획의 판(지문)과 옛 이름 판의 대응(순서 5, G4). CLI·모델은 부르지 않는다."""
 import os
+import posixpath
+import sys
 import unittest
+from unittest import mock
 
 from core import adapters, contract, isolation
 
@@ -9,6 +12,7 @@ EXE = {"claude-code": "/home/u/.local/share/claude/versions/2.1.280",
        "codex": "/home/u/.codex/packages/standalone/releases/0.156.1-x86_64-unknown-linux-musl/bin/codex"}
 
 
+@mock.patch.object(adapters.os.path, "isabs", posixpath.isabs)
 def participant_plan(adapter_id, *, inputs=(), home=HOME, exe=None, model="m", prompt="질문", variant=None):
     """app.cli_executor.CliExecutor.plan()과 같은 틀을 실제 CLI 없이 만든다(POSIX 경로)."""
     exe = exe or EXE[adapter_id].replace(HOME, home)
@@ -42,15 +46,16 @@ class RevisionTests(unittest.TestCase):
 
     def test_what_changes_the_run_changes_the_revision(self):
         """자료 유무·출력 형식·세션 보존·연결은 실행 의미가 다르다. 관측 변형으로 본 관측이 참여자 계획을 뒷받침하지 않는다."""
-        def stream_json(argv):
+        def legacy_json(argv):
             i = argv.index("--output-format")
-            return argv[:i + 1] + ["stream-json", "--verbose"] + argv[i + 2:]
+            argv[i + 1] = "json"
+            return [a for a in argv if a != "--verbose"]
 
         claude = participant_revision("claude-code")
         codex = participant_revision("codex", inputs=("/tmp/in",))
         others = {
             "claude with materials": participant_revision("claude-code", inputs=("/tmp/in",)),
-            "claude stream-json": participant_revision("claude-code", variant=stream_json),
+            "claude legacy json": participant_revision("claude-code", variant=legacy_json),
             "codex without materials": participant_revision("codex"),
             "codex keeping the session": participant_revision(
                 "codex", inputs=("/tmp/in",), variant=lambda a: [x for x in a if x != "--ephemeral"]),
@@ -76,7 +81,7 @@ class RevisionTests(unittest.TestCase):
                 self.assertEqual(baseline, matching)
 
     def test_the_prompt_never_enters_the_record(self):
-        spec = adapters.build_spec("claude-code", exe=EXE["claude-code"], prompt="비밀 질문", model="m")
+        spec = adapters.build_spec("claude-code", exe=sys.executable, prompt="비밀 질문", model="m")
         plan = contract.Plan(contract.REAL, spec, "/tmp/work", None, "m", revision="claude-code@x")
         self.assertNotIn("비밀 질문", repr(plan.record()))
         self.assertEqual(plan.record()["kind"], contract.REAL)

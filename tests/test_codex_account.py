@@ -8,7 +8,7 @@ import tempfile
 import unittest
 from unittest import mock
 
-from tools.w2 import codex_account as account
+from app import codex_account as account
 from core import isolation, runner
 from test_core_isolation import REQUIRED, bwrap_usable
 
@@ -130,7 +130,7 @@ class IsolatedProtocolTests(unittest.TestCase):
             link = root / "codex-link"
             link.symlink_to(script)
             box = isolation.Sandbox(work_dir=str(work), home=str(root / "home"),
-                                    read_only=(str(account.ROOT / "tools"), str(script)),
+                                    read_only=(str(account.ROOT / "app"), str(account.ROOT / "core"), str(script)),
                                     never=(str(root / "ledger"),))
             # Only the real binary is mounted; the installation symlink is hidden.
             result = isolation.run(account.helper_argv(str(link)), box, timeout=13, max_output_bytes=65536)

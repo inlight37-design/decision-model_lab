@@ -136,7 +136,7 @@ class ArgvTests(unittest.TestCase):
         이 시험이 실패하면 argv만 고치지 말고, 바뀐 판에 대해 다시 관측해야 함을 인계에 적는다. 이름은 옛 판이다."""
         pinned = {
             ("claude-code", "discussant-1"): (
-                ["-p", "--output-format", "json", "--model", "m", "--permission-mode", "dontAsk",
+                ["-p", "--output-format", "stream-json", "--verbose", "--model", "m", "--permission-mode", "dontAsk",
                  "--no-session-persistence", "--strict-mcp-config", "--disable-slash-commands", "--restricted",
                  "--tools", ""], {}),
             ("codex", "discussant-2"): (

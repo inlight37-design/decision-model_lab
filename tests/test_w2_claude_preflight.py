@@ -43,7 +43,7 @@ class ClaudePreflightTests(unittest.TestCase):
         self.assertEqual(self.exact.spec.argv, plain.spec.argv)
         self.assertEqual(self.exact.revision, plain.revision)
         argv = self.exact.spec.argv
-        self.assertEqual(argv[argv.index("--output-format") + 1], "json")
+        self.assertEqual(argv[argv.index("--output-format") + 1], "stream-json")
         self.assertEqual(argv[argv.index("--tools") + 1], "")
         self.assertNotIn("--add-dir", argv)
         self.assertEqual(self.exact.box.read_only, (self.exe,))

@@ -144,4 +144,9 @@ class CliExecutor:
         except REFUSED_BEFORE_START as exc:
             result = runner.RunResult((), runner.FAILED_TO_START, None, "", "", False, False, 0, None, True,
                                       error=f"{type(exc).__name__}: {exc}")
-        return result, adapters.interpret(plan.spec.adapter_id, result, requested_model=plan.model)
+        expected_tools = None
+        if plan.spec.adapter_id == "claude-code":
+            configured = plan.spec.argv[plan.spec.argv.index("--tools") + 1]
+            expected_tools = tuple(configured.split(",")) if configured else ()
+        return result, adapters.interpret(plan.spec.adapter_id, result, requested_model=plan.model,
+                                         claude_tools=expected_tools)

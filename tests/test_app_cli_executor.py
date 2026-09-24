@@ -38,7 +38,7 @@ import json, os, sys, time
 FLAVOR, BEHAVIOR, OWN = {flavor!r}, {behavior!r}, {own!r}
 argv = sys.argv[1:]
 question = sys.stdin.read()
-if FLAVOR == "claude" and not ("-p" in argv and argv[argv.index("--output-format") + 1] == "json"):
+if FLAVOR == "claude" and not ("-p" in argv and argv[argv.index("--output-format") + 1] == "stream-json"):
     sys.exit(3)
 if FLAVOR == "codex" and not (argv[0] == "exec" and "--json" in argv and argv[-1] == "-"):
     sys.exit(3)
@@ -59,6 +59,8 @@ text = json.dumps({{"question_bytes": len(question.encode()), "seen": seen,
 if BEHAVIOR.startswith("flood"):
     sys.stderr.write("n" * 70000 + ("rejected: blocked by policy" if BEHAVIOR == "flood-rejected" else ""))
 if FLAVOR == "claude":
+    print(json.dumps({{"type": "system", "subtype": "init", "tools": [],
+                      "permissionMode": "dontAsk", "mcp_servers": []}}))
     print(json.dumps({{"type": "result", "is_error": False, "result": text, "modelUsage": {{model: {{}}}},
                       "usage": {{"input_tokens": 1, "output_tokens": 1}}, "permission_denials": []}}))
 else:

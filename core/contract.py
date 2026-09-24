@@ -27,8 +27,8 @@ KINDS = (MOCK, REAL, SYNTHETIC)
 # 옛 이름 판 → 같은 계획으로 확인한 판. 기록의 spec_revision이 옛 이름이면 여기에 적은 판에서만 인정한다.
 # - codex discussant-2: K46 확인(2026-09-24, argv_changes 없음)이 돈 계획 — 참여자 argv 그대로, 공통 자료 하나를
 #   읽기 전용으로 연결. 자료 없는 계획은 연결이 하나 적을 뿐이지만 같은 계획이 아니므로 적지 않았다.
-# - claude-code discussant-1(2단계 b1)은 stream-json 출력·Read 도구·공통 자료로 관측했다. 지금의 어느 참여자
-#   계획과도 같지 않아 적지 않는다 — controller 계획 그대로 다시 관측한다.
+# - claude-code discussant-1은 포괄적 이름이며 예전 진단과 참여자 구분이 없었다. stream-json을 참여자에
+#   채택한 뒤에도 자동 대응시키지 않는다. 정확한 새 해시로 다시 관측한 기록만 사용한다.
 LEGACY: dict[str, tuple[str, ...]] = {"discussant-2": ("codex@8a0128d4c791",)}
 
 

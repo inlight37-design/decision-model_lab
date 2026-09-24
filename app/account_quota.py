@@ -44,7 +44,7 @@ class AccountQuota:
                 return self.view()
             self._attempted_at = now
             if self._reader is None:
-                from tools.w2.codex_account import probe
+                from app.codex_account import probe
                 reader = probe
             else:
                 reader = self._reader
