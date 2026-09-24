@@ -254,6 +254,8 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
 
 
 class _Server(ThreadingHTTPServer):
+    # server_close가 HTTP writer까지 회수한 뒤에만 원장을 닫는다. 연결 수·I/O 기한 상한은 그대로 둔다.
+    daemon_threads = False
     # Windows의 SO_REUSEADDR은 이미 듣고 있는 포트에도 bind를 허락해서 같은 포트에 서버가 둘 떴다(A1 리뷰 반영
     # 중 관측). Windows에서는 끈다. POSIX에서는 TIME_WAIT 포트를 다시 쓰게 할 뿐이므로 둔다.
     allow_reuse_address = os.name != "nt"
@@ -446,7 +448,20 @@ def main() -> int:
         server.serve_forever()
     except KeyboardInterrupt:
         pass
-    return 0
+    finally:
+        # 같은 serve_forever 스레드에서 server.shutdown()을 호출하면 교착된다. 새 호출부터 막고 소켓을 닫는다.
+        controller.shutdown(timeout=0)
+        try:
+            server.server_close()
+        finally:
+            idle = controller.shutdown()
+            clean = idle and controller.unsettled() == 0
+            if idle:
+                controller.store.close()
+            if not clean:
+                print("종료를 확인하지 못한 작업이 남았습니다. 원장은 보존되며 재호출·예산 환불은 하지 않습니다.",
+                      file=sys.stderr, flush=True)
+    return 0 if clean else 1
 
 
 if __name__ == "__main__":
