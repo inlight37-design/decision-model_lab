@@ -18,7 +18,7 @@ from core import adapters, contract, eligibility, runner
 import test_app_controller as support
 import test_app_cli_executor as cli_support
 import test_core_eligibility as evidence
-from test_core_contract import k46_revision, participant_plan
+from test_core_contract import apps_off_revision, k46_revision, participant_plan, restricted_only_revision
 from tools import runtime_inventory
 
 
@@ -62,14 +62,16 @@ class ContextGateTests(unittest.TestCase):
         self.assertEqual(before, record)
         self.assertEqual(record["adapters"][1]["context_conformance"]["status"], "failed")
 
-    def test_the_apps_off_record_backs_only_the_current_one_input_plans(self):
-        """E(2026-09-24): 연결 앱을 끈 지금 Codex 계획으로 K46을 다시 관측한 기록. 그 판과 #39가 관측한 Claude 판만
-        뒷받침하고 문맥은 그대로라 strict는 거절한다. 판 문자열을 고정해 계획이 바뀌면 이 기록도 다시 보게 한다."""
+    def test_the_apps_off_record_backs_only_the_plans_it_observed(self):
+        """E(2026-09-24): 연결 앱을 끈 Codex 계획으로 K46을 다시 관측한 기록. 그 판과 #39가 관측한 Claude 판만
+        뒷받침하고 문맥은 그대로라 strict는 거절한다. E2(2026-09-25)의 지금 계획은 이 기록으로 허가되지 않는다."""
         record = json.loads(evidence.APPS_OFF_MANIFEST.read_text(encoding="utf-8"))
         before = copy.deepcopy(record)
         self.assertEqual(runtime_inventory.validate_manifest_v2(record), [])
-        plans = {"codex": (participant_plan("codex", inputs=("/tmp/public-input",))[0], "0.156.1"),
-                 "claude-code": (participant_plan("claude-code", inputs=("/tmp/public-input",))[0], "2.1.280")}
+        codex = participant_plan("codex", inputs=("/tmp/public-input",))
+        claude = participant_plan("claude-code", inputs=("/tmp/public-input",))
+        plans = {"codex": (apps_off_revision(codex), "0.156.1"),
+                 "claude-code": (restricted_only_revision(claude), "2.1.280")}
         self.assertEqual(plans["codex"][0], "codex@5a77e0b7dc7f")
         self.assertEqual(plans["claude-code"][0], "claude-code@126be128bed7")
         for adapter_id, (revision, version) in plans.items():
@@ -78,11 +80,13 @@ class ContextGateTests(unittest.TestCase):
                 self.assertFalse(eligibility.eligibility(record, adapter_id, **options).eligible)
                 self.assertTrue(eligibility.eligibility(record, adapter_id, **options,
                                                        allow_context_unverified=True).eligible)
-        # 연결 앱을 켠 옛 K46 계획, 자료 없음·둘 이상은 이 기록으로 허가되지 않는다
-        for revision in (k46_revision(participant_plan("codex", inputs=("/tmp/public-input",))),
-                         participant_plan("codex")[0], participant_plan("codex", inputs=("/tmp/one", "/tmp/two"))[0]):
-            self.assertFalse(eligibility.eligibility(record, "codex", enabled=True, today=date(2026, 9, 24),
-                                                    current_version="0.156.1", spec_revision=revision,
+        # 지금(E2) 계획, 연결 앱을 켠 옛 K46 계획, 자료 없음·둘 이상은 이 기록으로 허가되지 않는다
+        for adapter_id, version, revision in (
+                ("codex", "0.156.1", codex[0]), ("claude-code", "2.1.280", claude[0]),
+                ("codex", "0.156.1", k46_revision(codex)), ("codex", "0.156.1", participant_plan("codex")[0]),
+                ("codex", "0.156.1", participant_plan("codex", inputs=("/tmp/one", "/tmp/two"))[0])):
+            self.assertFalse(eligibility.eligibility(record, adapter_id, enabled=True, today=date(2026, 9, 24),
+                                                    current_version=version, spec_revision=revision,
                                                     allow_context_unverified=True).eligible)
         self.assertEqual(before, record)
         self.assertEqual(record["adapters"][1]["context_conformance"]["status"], "failed")

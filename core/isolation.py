@@ -13,6 +13,9 @@ PID namespace 추적(자손 전체의 종료 확인)을 이름만 bwrap인 다�
   바깥 연결보다 안쪽의 쓰기 권한을 넓히면 거절한다. 봉인할 호스트 경로(never)는 모든 호스트 연결과 비교한다
   (시스템 폴더·병합되지 않은 /bin·/lib·/etc 밖의 네트워크 파일 포함). 빈 HOME·/tmp는 호스트 파일을 보이지 않는다.
   쓰기 폴더 안의 읽기 전용 연결(Codex의 실행 버전 폴더)은 의도한 겹침이다.
+- 다른 위치의 읽기 전용 연결(read_only_at): 호스트 폴더를 안에서 다른 경로로 보인다. 그 경로는 bubblewrap 자신의
+  빈 루트에 생겨야 한다 — 호스트 연결 안이면 연결 지점이 호스트에 생기므로 거절한다. 실행 파일이 그런 폴더 안에
+  있으면 안에서는 옮긴 경로로 실행한다(participant_mounts의 Codex).
 - 수명: 별도 PID namespace(--unshare-all에 포함)와 --die-with-parent. namespace의 첫 프로세스(bwrap의
   reaper)가 끝나면 커널이 안의 모든 프로세스를 끝내고, 그 첫 프로세스는 안이 빌 때까지 끝나지 않는다.
   그래서 runner는 bwrap의 프로세스 그룹이 빈 것으로 자손 전체의 종료를 확인한다(runner.PID_NAMESPACE).
@@ -71,6 +74,7 @@ class Sandbox:
     read_write: tuple[str, ...] = ()       # 그 CLI의 설정·인증 폴더
     env: Mapping[str, str] = field(default_factory=dict)   # PASS_ENV에 있는 것만 넘어간다
     never: tuple[str, ...] = ()            # 호스트 연결과 겹치면 안 되는 경로(원장, 봉인 저장소)
+    read_only_at: tuple[tuple[str, str], ...] = ()   # (호스트 폴더, 안에서 보일 경로). 읽기 전용
 
 
 def cli_mounts(adapter_id: str, exe: str, home: str) -> tuple[tuple[str, ...], tuple[str, ...]]:
@@ -89,6 +93,26 @@ def cli_mounts(adapter_id: str, exe: str, home: str) -> tuple[tuple[str, ...], t
     raise IsolationError(f"no mount profile for {adapter_id!r}")
 
 
+# 참여자 Codex의 실행 버전 폴더가 격리 안에서 보이는 곳. HOME 밖이다.
+CODEX_RELEASE_AT = "/opt/dml-codex"
+
+
+def participant_mounts(adapter_id: str, exe: str, home: str) -> tuple[tuple[str, ...], tuple[str, ...],
+                                                                     tuple[tuple[str, str], ...]]:
+    """참여자 실행의 연결: (읽기 전용, 쓰기, 다른 위치의 읽기 전용). 계정 조회 같은 다른 실행은 cli_mounts를 쓴다.
+
+    Codex는 실행 버전 폴더를 CODEX_RELEASE_AT에만 보이고 그 경로로 실행한다. 참여자 권한 profile이 모델의 명령에게
+    `~/.codex` 전체를 막는데(adapters.codex_permissions), Codex의 내부 샌드박스는 자기 실행 파일을 다시 실행하므로 그
+    파일이 막힌 폴더 밖에 있어야 한다. 2026-09-25 aux-pc-wsl 0.156.1 무모델 관측: 실행 파일이 `~/.codex` 안이면
+    그 아래를 "read"로 다시 열어도 `execvp … Permission denied`였고, "write"로 열면 Codex가 그 안에 연결 지점(`.git`)을
+    만들려 했다(사용자의 실제 폴더다). 밖으로 옮기면 모델의 명령이 `~/.codex`의 어떤 항목도 읽지 못한 채 정상 종료했다.
+    """
+    ro, rw = cli_mounts(adapter_id, exe, home)
+    if adapter_id != "codex":
+        return ro, rw, ()
+    return (), rw, ((ro[0], CODEX_RELEASE_AT),)
+
+
 def _within(path: str, parent: str) -> bool:
     """path가 parent이거나 그 아래인가(실제 경로끼리)."""
     return path == parent or path.startswith(parent.rstrip("/") + "/")
@@ -96,19 +120,25 @@ def _within(path: str, parent: str) -> bool:
 
 @dataclass(frozen=True)
 class _Mount:
-    path: str
+    path: str              # 안에서 보이는 경로
     mode: str
     link_target: str = ""
+    source: str = ""       # 호스트 경로가 path와 다를 때(read_only_at)
+
+    @property
+    def host(self) -> str:
+        return self.source or self.path
 
     def argv(self) -> list[str]:
         if self.mode == "symlink":
             return ["--symlink", self.link_target, self.path]
         if self.mode in ("ro", "rw"):
-            return ["--ro-bind" if self.mode == "ro" else "--bind", self.path, self.path]
+            return ["--ro-bind" if self.mode == "ro" else "--bind", self.host, self.path]
         return ["--" + self.mode, self.path]
 
 
-def _mount_plan(work: str, home: str, ro: Sequence[str], rw: Sequence[str]) -> list[_Mount]:
+def _mount_plan(work: str, home: str, ro: Sequence[str], rw: Sequence[str],
+                ro_at: Sequence[tuple[str, str]] = ()) -> list[_Mount]:
     """실제 적용 순서. tmpfs 안의 호스트 연결은 빈 파일시스템을 만든 뒤에 놓는다."""
     mounts = [_Mount(os.path.realpath(path), "ro") for path in SYSTEM_READ_ONLY]
     for link in MERGED_USR_LINKS:
@@ -123,6 +153,7 @@ def _mount_plan(work: str, home: str, ro: Sequence[str], rw: Sequence[str]) -> l
         if os.path.islink(link) and os.path.isfile(target) and not any(
                 m.mode == "ro" and _within(target, m.path) for m in mounts):
             mounts.append(_Mount(target, "ro"))
+    mounts += [_Mount(inside, "ro", source=host) for host, inside in ro_at]
     # 같은 권한의 중첩 요청은 부모부터 놓는다. Codex의 ro 설정 폴더+실행 버전 조합도 보존한다.
     for mode, paths in (("rw", rw), ("ro", ro)):
         mounts += [_Mount(path, mode) for path in sorted(paths, key=lambda p: p.count("/"))]
@@ -137,8 +168,11 @@ def _validate_mounts(mounts: Sequence[_Mount], never: Sequence[str]) -> None:
             continue
         _require(mount.path != "/", "the root directory cannot be bound")
         if mount.mode in ("ro", "rw"):
-            _require(not any(_within(mount.path, n) or _within(n, mount.path) for n in never),
+            _require(not any(_within(mount.host, n) or _within(n, mount.host) for n in never),
                      "a mount overlaps a path that must stay out of the sandbox")
+        if mount.source:  # 연결 지점이 호스트 연결 안이면 bubblewrap이 그 호스트 폴더에 만든다
+            _require(not any(_within(mount.path, p.path) for p in applied if p.mode in ("ro", "rw", "proc", "dev")),
+                     f"{mount.path} must be created inside the sandbox, not inside a host mount")
         for previous in applied:
             _require(not _within(previous.path, mount.path),
                      f"mount at {mount.path} would cover an earlier mount at {previous.path}")
@@ -151,19 +185,29 @@ def _validate_mounts(mounts: Sequence[_Mount], never: Sequence[str]) -> None:
 def plan(argv: Sequence[str], box: Sandbox) -> tuple[list[str], dict[str, str]]:
     """box 안에서 argv를 실행하는 bwrap 명령과, bwrap 프로세스에 줄 환경. 실행은 run()이 한다."""
     _require(bool(argv) and all(isinstance(a, str) for a in argv), "argv must be a non-empty list of strings")
-    given = (box.work_dir, box.home, *box.read_only, *box.read_write, *box.never)
+    hosts_at = tuple(host for host, _inside in box.read_only_at)
+    insides = tuple(inside for _host, inside in box.read_only_at)
+    given = (box.work_dir, box.home, *box.read_only, *box.read_write, *box.never, *hosts_at, *insides)
     _require(all(PurePosixPath(p).is_absolute() for p in given), "sandbox paths must be absolute")
+    # 안의 경로는 호스트에서 풀지 않는다. 그래서 `..`·중복 구분자 없는 정규형만 받는다
+    _require(all(os.path.normpath(p) == p and p != "/" for p in insides),
+             "a path inside the sandbox must be normalized and not the root")
     refused = sorted(name for name in box.env if name.upper() in REFUSED_ENV)
     _require(not refused, f"credential or billing variables are not passed into a sandbox: {refused}")
-    for path in (box.work_dir, *box.read_only, *box.read_write):
+    for path in (box.work_dir, *box.read_only, *box.read_write, *hosts_at):
         _require(os.path.lexists(path), f"{path} does not exist")
 
     real = os.path.realpath
     work, home = real(box.work_dir), real(box.home)
     ro, rw, never = ([real(p) for p in group] for group in (box.read_only, box.read_write, box.never))
-    mounts = _mount_plan(work, home, ro, rw)
+    ro_at = [(real(host), inside) for host, inside in box.read_only_at]
+    mounts = _mount_plan(work, home, ro, rw, ro_at)
     _validate_mounts(mounts, never)
     exe = real(argv[0])
+    for host, inside in ro_at:  # 옮겨 보인 폴더 안의 실행 파일은 안에서 그 경로로 실행한다
+        if _within(exe, host):
+            exe = inside + exe[len(host):]
+            break
     _require(any(m.mode == "ro" and _within(exe, m.path) for m in mounts),
              "the executable must be inside a read-only mount")
 

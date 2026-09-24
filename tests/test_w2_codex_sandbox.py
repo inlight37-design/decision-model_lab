@@ -10,7 +10,7 @@ import tomllib
 import unittest
 from unittest import mock
 
-from core import runner
+from core import isolation, runner
 from tools.w2 import codex_profile, codex_sandbox, observe
 
 
@@ -68,7 +68,7 @@ class ProfileDiagnosticTests(unittest.TestCase):
         helper.write_text(observe.K46_HELPER.format(nonce="n0"), encoding="utf-8")
         out = subprocess.run([sys.executable, str(helper)], cwd=work, env={**os.environ, "HOME": root},
                              capture_output=True, text=True, check=True).stdout.strip()
-        self.assertEqual(observe.K46_LINE.match(out).groups(), ("n0", "ok", "ok", "denied:ENOENT"))
+        self.assertEqual(observe.K46_LINE.match(out).groups(), ("n0", "ok", "ok", "denied:ENOENT", "denied:ENOENT"))
 
 
 class WriteStateTests(unittest.TestCase):
@@ -88,7 +88,7 @@ class SyntheticHomeTests(unittest.TestCase):
 
         def fake_offline(argv, box, stdin_text, timeout):
             boxes.append((argv, box))
-            line = "K46 diagnostic write=denied:EROFS input=ok auth=denied:EACCES end\n"
+            line = "K46 diagnostic write=denied:EROFS input=ok auth=denied:EACCES home=denied:EACCES end\n"
             return runner.RunResult(tuple(argv), runner.EXITED, 0, line, "", False, False, 1, 0, True,
                                     containment=runner.PID_NAMESPACE)
 
@@ -100,10 +100,12 @@ class SyntheticHomeTests(unittest.TestCase):
             self.assertNotEqual(box.home, codex_profile.HOME)
             self.assertEqual(box.read_write, (os.path.join(box.home, ".codex"),))
             self.assertFalse(any(p == real_codex for p in box.read_only + box.read_write))
-            if "-c" in argv:                                                    # profile은 합성 HOME의 파일을 막는다
-                self.assertIn(f'"{box.home}/.codex/auth.json" = "deny"', argv[argv.index("-c") + 1])
+            # E2: 실행 버전 폴더는 참여자처럼 HOME 밖에 보인다
+            self.assertEqual([inside for _host, inside in box.read_only_at], [isolation.CODEX_RELEASE_AT])
+            if "-c" in argv:                                                    # profile은 합성 HOME의 .codex를 막는다
+                self.assertIn(f'"{box.home}/.codex" = "deny"', argv[argv.index("-c") + 1])
         self.assertEqual(report["helper"]["no profile (control)"]["result"],
-                         {"write": "denied:EROFS", "input": "ok", "auth": "denied:EACCES"})
+                         {"write": "denied:EROFS", "input": "ok", "auth": "denied:EACCES", "home": "denied:EACCES"})
 
 
 if __name__ == "__main__":

@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import sys
+import tempfile
 import tomllib
 import unittest
 
@@ -95,8 +96,9 @@ class ArgvTests(unittest.TestCase):
             with self.subTest(call=call), self.assertRaises(AdapterError):
                 build_argv(call.pop("adapter_id"), exe=EXE, prompt="Q", model="m", **call)
 
-    def test_codex_on_linux_denies_its_login_file_instead_of_the_old_sandbox(self):
-        """K46. 옛 --sandbox와 섞지 않고(권한 문서), exec에 없는 -P 대신 default_permissions로 고른다(0.156.1)."""
+    def test_codex_on_linux_denies_its_whole_home_instead_of_the_old_sandbox(self):
+        """K46·E2. 옛 --sandbox와 섞지 않고(권한 문서), exec에 없는 -P 대신 default_permissions로 고른다(0.156.1).
+        모델의 명령에게 로그인 파일만이 아니라 `~/.codex` 전체(상태·로그·메모리 DB)를 막는다."""
         argv = build_argv("codex", exe=EXE, prompt="Q", model="gpt-x", codex_user_home="/home/u/")
         define, select = adapters.codex_permissions("/home/u")
         self.assertNotIn("--sandbox", argv)
@@ -107,9 +109,25 @@ class ArgvTests(unittest.TestCase):
         key, value = define.split("=", 1)
         self.assertEqual(key, "permissions.dml-discussant")
         self.assertEqual(tomllib.loads(f"profile = {value}")["profile"],
-                         {"extends": ":read-only", "filesystem": {"/home/u/.codex/auth.json": "deny"}})
+                         {"extends": ":read-only", "filesystem": {"/home/u/.codex": "deny"}})
         self.assertLess(argv.index("-c"), argv.index("--model"))
         self.assertEqual(argv[-1], "-")
+
+    def test_only_non_empty_codex_global_instructions_count(self):
+        """E2. Codex는 홈의 AGENTS.override.md·AGENTS.md를 모든 대화에 싣고 빈 파일은 건너뛴다. 크기를 믿을 수 없는
+        링크·폴더는 남긴다(거절 쪽). 내용은 읽지 않는다."""
+        with tempfile.TemporaryDirectory() as home:
+            codex = os.path.join(home, ".codex")
+            os.mkdir(codex)
+            self.assertEqual(adapters.codex_global_instructions(home), ())
+            open(os.path.join(codex, "AGENTS.md"), "w").close()
+            self.assertEqual(adapters.codex_global_instructions(home), ())
+            with open(os.path.join(codex, "AGENTS.override.md"), "w", encoding="utf-8") as f:
+                f.write("x")
+            self.assertEqual(adapters.codex_global_instructions(home), (os.path.join(codex, "AGENTS.override.md"),))
+            os.remove(os.path.join(codex, "AGENTS.md"))
+            os.mkdir(os.path.join(codex, "AGENTS.md"))
+            self.assertEqual(len(adapters.codex_global_instructions(home)), 2)
 
     def test_codex_config_exception_is_only_the_values_of_this_run(self):
         define, select = adapters.codex_permissions("/home/u")
@@ -134,12 +152,13 @@ class ArgvTests(unittest.TestCase):
 
     def test_participant_argv_is_pinned(self):
         """참여자 argv를 고정한다. argv가 바뀌면 core.contract의 판도 바뀌어 기록의 관측으로 허가하지 않는다(리뷰 R04).
-        이 시험이 실패하면 argv만 고치지 말고, 바뀐 판에 대해 다시 관측해야 함을 인계에 적는다. 이름은 옛 판이다."""
+        이 시험이 실패하면 argv만 고치지 말고, 바뀐 판에 대해 다시 관측해야 함을 인계에 적는다. 이름은 옛 판이다.
+        E2(2026-09-25): Claude에 --safe-mode, Codex profile은 `~/.codex` 전체 금지."""
         pinned = {
             ("claude-code", "discussant-1"): (
                 ["-p", "--output-format", "stream-json", "--verbose", "--model", "m", "--permission-mode", "dontAsk",
                  "--no-session-persistence", "--strict-mcp-config", "--disable-slash-commands", "--restricted",
-                 "--tools", ""], {}),
+                 "--safe-mode", "--tools", ""], {}),
             ("codex", "discussant-2"): (
                 ["exec", "--json", "--skip-git-repo-check", "--ephemeral", "--ignore-user-config", "--ignore-rules",
                  "-c", *adapters.codex_permissions("/home/u")[:1], "-c", adapters.codex_permissions("/home/u")[1],

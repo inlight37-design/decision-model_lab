@@ -224,6 +224,46 @@ class PlanTests(unittest.TestCase):
         index = argv.index(str(target))
         self.assertEqual(argv[index - 1:index + 2], ["--ro-bind", str(target), str(target)])
 
+    def test_a_relocated_folder_is_bound_at_its_inside_path_and_its_executable_runs_from_there(self):
+        """E2: 호스트 폴더를 안에서 다른 경로로 보인다. 그 안의 실행 파일은 안의 경로로 실행하고, 원래 자리에는 잇지 않는다."""
+        r = self.root
+        release = r / "home/.codex/packages/v1"
+        (release / "bin").mkdir()
+        exe = release / "bin/tool"
+        exe.write_text("#!/usr/bin/python3\n")
+        box = self.box(read_write=(str(r / "home/.codex"),), read_only_at=((str(release), "/opt/dml-tool"),))
+        argv, _ = isolation.plan([str(exe), "--flag"], box)
+        index = argv.index("/opt/dml-tool")
+        self.assertEqual(argv[index - 2:index + 1], ["--ro-bind", str(release), "/opt/dml-tool"])
+        self.assertEqual(argv[argv.index("--") + 1:], ["/opt/dml-tool/bin/tool", "--flag"])
+        self.assertNotIn(str(exe), argv)
+
+    def test_a_relocated_folder_must_land_inside_the_sandbox(self):
+        """연결 지점이 호스트 연결 안이면 bubblewrap이 그 호스트 폴더에 만든다. 봉인 경로와 겹치거나 정규형이 아니어도 거절."""
+        r = self.root
+        source = str(r / "home/.codex/packages/v1")
+        for label, inside, extra in (
+                ("inside the writable work folder", str(r / "work/tool"), {}),
+                ("inside a read-only host mount", "/usr/dml-tool", {}),
+                ("inside the writable config folder", str(r / "home/.codex/tool"),
+                 {"read_write": (str(r / "home/.codex"),)}),
+                ("not normalized", "/opt/../opt/dml-tool", {}),
+                ("the root", "/", {}),
+                ("relative", "opt/dml-tool", {}),
+                ("a sealed source", "/opt/dml-tool", {"never": (source,)})):
+            with self.subTest(label), self.assertRaises(isolation.IsolationError):
+                isolation.plan([SYSTEM_PY], self.box(read_only_at=((source, inside),), **extra))
+
+    def test_participant_mounts_move_only_the_codex_release(self):
+        home = str(self.root / "home")
+        exe = str(self.root / "home/.codex/packages/v1/bin/codex")
+        ro, rw, ro_at = isolation.participant_mounts("codex", exe, home)
+        self.assertEqual((ro, rw), ((), (home + "/.codex",)))
+        self.assertEqual(ro_at, ((str(self.root / "home/.codex/packages/v1"), isolation.CODEX_RELEASE_AT),))
+        claude = str(self.root / "claude-bin")
+        self.assertEqual(isolation.participant_mounts("claude-code", claude, home),
+                         (*isolation.cli_mounts("claude-code", claude, home), ()))
+
     def test_same_permission_nested_inputs_are_planned_parent_first(self):
         r = self.root
         parent, child = str(r / "home/.codex"), str(r / "home/.codex/packages/v1")
@@ -339,6 +379,29 @@ print(json.dumps([write(path) for path in sys.argv[1:]]))
                                     str(target)], self.box, timeout=5)
         self.assertEqual(result.state, runner.EXITED, result.stderr)
         self.assertEqual(result.stdout.strip(), "NETWORK-3K")
+
+    def test_a_relocated_folder_runs_read_only_and_leaves_no_mount_point_on_the_host(self):
+        """E2: 옮겨 보인 폴더의 실행 파일이 안의 경로로 돌고, 그 폴더는 읽기 전용이며, 호스트의 원래 자리는 보이지 않는다."""
+        release = self.root / "release"
+        (release / "bin").mkdir(parents=True)
+        tool = release / "bin/tool.py"
+        tool.write_text("import json, os, sys\n"
+                        "def write(p):\n"
+                        "    try:\n"
+                        "        open(p, 'w').close()\n"
+                        "        return True\n"
+                        "    except OSError:\n"
+                        "        return False\n"
+                        "print(json.dumps({'self': sys.argv[0], 'write': write('/opt/dml-tool/new.txt'),\n"
+                        "                  'host_path_visible': os.path.exists(sys.argv[1])}))\n")
+        box = isolation.Sandbox(work_dir=self.box.work_dir, home=self.home,
+                                read_only=(str(self.root / "input"),), read_only_at=((str(release), "/opt/dml-tool"),))
+        result = isolation.run([SYSTEM_PY, "/opt/dml-tool/bin/tool.py", str(release)], box, timeout=5)
+        self.assertEqual(result.state, runner.EXITED, result.stderr)
+        self.assertEqual(json.loads(result.stdout), {"self": "/opt/dml-tool/bin/tool.py", "write": False,
+                                                     "host_path_visible": False})
+        self.assertEqual(sorted(p.name for p in release.iterdir()), ["bin"])
+        self.assertFalse(Path("/opt/dml-tool").exists())
 
     def test_a_detached_descendant_ends_with_the_namespace(self):
         """R01의 Linux 해법. 새 세션으로 떨어져 나간 손자도 namespace와 함께 끝난다."""

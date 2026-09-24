@@ -71,15 +71,22 @@ FORBIDDEN: dict[str, frozenset[str]] = {
 # 0.152부터; aux-pc 0.155.1에서 재현하고 이 덮어쓰기로 풀리는 것을 관측).
 CODEX_WINDOWS_SANDBOX = 'windows.sandbox="elevated"'
 # Linux(K46): read-only 샌드박스 안의 명령이 Codex 로그인 파일을 읽을 수 있었다(2026-09-24 `codex sandbox` 진단).
-# 옛 `--sandbox read-only` 대신, 읽기 전용 기본 profile에 그 파일 하나의 읽기 금지를 더한 이름 있는 권한
-# profile을 준다(베타, https://learn.chatgpt.com/docs/permissions — 옛 sandbox 설정과 섞지 말라고 한다).
-# exec에는 `-P`가 없어서(0.156.1이 인자 오류로 거절) `default_permissions`로 고른다. `~/.codex` 전체를 막으면
-# Codex의 샌드박스 보조 프로그램이 그 아래의 codex를 다시 실행하지 못한다(같은 진단).
+# 옛 `--sandbox read-only` 대신, 읽기 전용 기본 profile에 읽기 금지를 더한 이름 있는 권한 profile을 준다(베타,
+# https://learn.chatgpt.com/docs/permissions — 옛 sandbox 설정과 섞지 말라고 한다). exec에는 `-P`가 없어서(0.156.1이
+# 인자 오류로 거절) `default_permissions`로 고른다. 처음에는 로그인 파일 하나만 막았으나, 2026-09-25 무모델 진단에서
+# 모델의 명령이 나머지 `~/.codex`(상태·로그·메모리 DB, 로그 폴더, 플러그인·연결 앱 캐시)를 모두 읽을 수 있었다 — 지난
+# 실행의 질문·초안이 남는 곳이다. 그래서 `~/.codex` 전체를 막는다. 그러려면 Codex 실행 파일이 그 밖에 보여야 한다
+# (isolation.participant_mounts). CLI 자신은 이 profile 밖에서 돌므로 로그인·토큰 갱신·상태 기록은 그대로다.
 # 참여자 실행 명세의 판은 core.contract가 최종 계획(argv·연결·변형)에서 계산한다. 손으로 올리던 이름 판
 # (claude discussant-1, codex discussant-2 — `--sandbox read-only` 대신 K46 권한 profile)은 기록에만 남고,
 # 새 판과의 대응은 contract.LEGACY가 정한다(2026-09-24 리뷰 R04, 구조 검사 G4).
 CODEX_PROFILE = "dml-discussant"
+CODEX_HOME_DIR = ".codex"
 CODEX_AUTH_FILE = ".codex/auth.json"
+# Codex가 자기 홈에서 모든 대화에 싣는 사용자 지시문(공식 AGENTS.md 안내: override가 먼저, 비어 있지 않은 첫 파일).
+# 2026-09-25 무모델 `codex debug prompt-input`(합성 HOME): 이 파일의 표식이 모델 입력에 실렸고 project_doc_max_bytes=0으로도
+# 빠지지 않았다. 빈 파일은 건너뛴다. 참여자 문맥에 개인 지시문이 실리지 않게, 있으면 실행 전에 거절한다.
+CODEX_GLOBAL_INSTRUCTIONS = ("AGENTS.override.md", "AGENTS.md")
 # Linux 참여자에게는 계정의 연결 앱(ChatGPT apps·connectors, MCP `codex_apps`)을 끈다. 켜 두면 사용자의 GitHub·Google
 # Drive 같은 연결 앱 도구(쓰기 포함)가 참여자 모델에 보인다 — 그 도구는 서버 쪽에서 돌므로 bubblewrap이 막지 못하고,
 # 논의자 읽기 전용(NEXT-SESSION 2절 7)과 독립성을 모두 깬다. 2026-09-24 무추론 app-server 조회(참여자와 같은 격리·
@@ -91,7 +98,12 @@ CODEX_REJECTED = "rejected: blocked by policy"
 STDERR_MARKS: dict[str, tuple[str, ...]] = {"codex": (CODEX_REJECTED,)}
 MODEL = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:/-]{0,79}")
 AGY_EFFORT = ("low", "medium", "high")
-CLAUDE_CONTEXT = ("restricted", "safe_mode")  # 어느 쪽이 blind 입력을 막는지는 V04-03에서 관측
+# Claude 참여자의 문맥 옵션. 공식 CLI reference(2026-09-25 읽음): `--restricted`는 명령·코드 실행 도구를 빼고 파일 도구를
+# 작업 폴더에 가두며 managed 설정과 --settings만 읽는다 — CLAUDE.md·메모리는 말하지 않는다. `--safe-mode`는 CLAUDE.md·
+# skills·plugins·hooks·MCP·자동 메모리 등을 싣지 않고 인증·도구·권한은 그대로다. 참여자는 둘 다 준다(E2). 하나만 주는
+# 조합은 V04-03 시험 도구의 비교용이다.
+CLAUDE_CONTEXT = {"restricted_safe_mode": ("--restricted", "--safe-mode"),
+                  "restricted": ("--restricted",), "safe_mode": ("--safe-mode",)}
 # Windows CreateProcess 명령줄 상한은 32,767자다. 여유를 둔다.
 MAX_COMMAND_LINE = 30_000
 # Claude Code 문서: 파이프로 받는 stdin은 10MB까지이고 넘으면 비영 종료한다(2026-09-23 확인).
@@ -141,15 +153,27 @@ def _require(ok: bool, message: str) -> None:
 
 
 def codex_permissions(home: str) -> tuple[str, str]:
-    """Linux Codex 참여자에게 `-c`로 넘길 두 값: 권한 profile 정의와 그것을 기본으로 고르는 키(K46).
+    """Linux Codex 참여자에게 `-c`로 넘길 두 값: 권한 profile 정의와 그것을 기본으로 고르는 키(K46, E2).
 
-    home은 격리 안의 HOME(실제 경로)이다. 값이 TOML 문자열 안에 들어가므로 따옴표·백슬래시·제어 문자는 받지 않는다.
+    읽기 전용 기본 profile에서 `~/.codex` 전체를 모델의 명령에게 막는다. home은 격리 안의 HOME(실제 경로)이다. 값이
+    TOML 문자열 안에 들어가므로 따옴표·백슬래시·제어 문자는 받지 않는다.
     """
     _require(isinstance(home, str) and POSIX_HOME.fullmatch(home) is not None and home.rstrip("/") != "",
              "codex_user_home must be an absolute POSIX path without quotes, backslashes or control characters")
-    path = f'{home.rstrip("/")}/{CODEX_AUTH_FILE}'
+    path = f'{home.rstrip("/")}/{CODEX_HOME_DIR}'
     return (f'permissions.{CODEX_PROFILE}={{ extends = ":read-only", filesystem = {{ "{path}" = "deny" }} }}',
             f'default_permissions="{CODEX_PROFILE}"')
+
+
+def codex_global_instructions(home: str) -> tuple[str, ...]:
+    """Codex가 모든 대화에 실을 사용자 지시문 파일 중 지금 있는 것(CODEX_GLOBAL_INSTRUCTIONS). 빈 일반 파일은 Codex가
+    건너뛰므로 빼고, 링크·폴더처럼 크기를 믿을 수 없는 것은 남긴다(거절 쪽). 내용은 읽지 않는다."""
+    found = []
+    for name in CODEX_GLOBAL_INSTRUCTIONS:
+        path = os.path.join(home, CODEX_HOME_DIR, name)
+        if os.path.islink(path) or (os.path.lexists(path) and not (os.path.isfile(path) and os.path.getsize(path) == 0)):
+            found.append(path)
+    return tuple(found)
 
 
 def _check(adapter_id: str, argv: list[str], user_text: Iterable[int], config: Iterable[str] = ()) -> list[str]:
@@ -169,7 +193,7 @@ def _check(adapter_id: str, argv: list[str], user_text: Iterable[int], config: I
 
 def build_spec(adapter_id: str, *, exe: str, prompt: str, model: str, role: str = DISCUSSANT,
                enabled: bool | None = None, read_dirs: Iterable[str] = (),
-               claude_context: str = "restricted", effort: str | None = None,
+               claude_context: str = "restricted_safe_mode", effort: str | None = None,
                codex_windows_sandbox: bool = False, codex_user_home: str | None = None) -> ExecutionSpec:
     """읽기 전용 논의자 한 번의 실행 명세. 허용된 조각 밖의 옵션은 받지 않는다.
 
@@ -177,9 +201,9 @@ def build_spec(adapter_id: str, *, exe: str, prompt: str, model: str, role: str 
     `sandbox backend elevated`, `provisioning complete`를 보일 때). 주의: Codex의 read-only
     샌드박스는 쓰기를 막을 뿐 **작업 폴더 밖 읽기를 막지 않는다**(aux-pc 관측) — blind 격리는
     이것으로 성립하지 않는다.
-    codex_user_home: Linux에서 격리 안의 HOME. 주면 `--sandbox read-only` 대신 그 HOME의 `.codex/auth.json`만
-    읽기 금지하는 권한 profile을 준다(K46). 실제 실행기(app.cli_executor)는 늘 준다. 없으면 옛 read-only 샌드박스다
-    (동결한 Windows 경로).
+    codex_user_home: Linux에서 격리 안의 HOME. 주면 `--sandbox read-only` 대신 모델의 명령에게 그 HOME의 `.codex`
+    전체를 막는 권한 profile을 준다(K46, E2). 실행 파일은 그 밖에 보여야 한다(isolation.participant_mounts). 실제
+    실행기(app.cli_executor)는 늘 준다. 없으면 옛 read-only 샌드박스다(동결한 Windows 경로).
     """
     _require(adapter_id in ADAPTERS, f"unknown adapter {adapter_id!r}")
     spec = ADAPTERS[adapter_id]
@@ -201,14 +225,13 @@ def build_spec(adapter_id: str, *, exe: str, prompt: str, model: str, role: str 
                              hashlib.sha256(data).hexdigest(), len(data))
 
     if adapter_id == "claude-code":
-        _require(claude_context in CLAUDE_CONTEXT, f"claude_context must be one of {CLAUDE_CONTEXT}")
+        _require(claude_context in CLAUDE_CONTEXT, f"claude_context must be one of {tuple(CLAUDE_CONTEXT)}")
         _require(effort is None, "effort is not wired for claude-code yet")
         _require(len(data) <= CLAUDE_MAX_STDIN, "prompt exceeds the 10MB stdin limit of claude -p")
         # 위치 인자 없이 -p만 주면 질문을 stdin에서 읽는다.
         argv = [exe, "-p", "--output-format", "stream-json", "--verbose", "--model", model,
                 "--permission-mode", "dontAsk", "--no-session-persistence",
-                "--strict-mcp-config", "--disable-slash-commands",
-                "--restricted" if claude_context == "restricted" else "--safe-mode"]
+                "--strict-mcp-config", "--disable-slash-commands", *CLAUDE_CONTEXT[claude_context]]
         for d in dirs:
             argv += ["--add-dir", d]
         argv += ["--tools", "Read" if dirs else ""]

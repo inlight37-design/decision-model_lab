@@ -43,11 +43,13 @@ if FLAVOR == "claude" and not ("-p" in argv and argv[argv.index("--output-format
 if FLAVOR == "codex" and not (argv[0] == "exec" and "--json" in argv and argv[-1] == "-"):
     sys.exit(3)
 home = os.environ["HOME"]
-# K46: 격리 안의 HOME 기준으로 로그인 파일만 읽기 금지하는 권한 profile. 옛 --sandbox와 섞지 않는다
-deny = '"' + os.path.join(home, ".codex", "auth.json") + '" = "deny"'
+# K46·E2: 격리 안의 HOME 기준으로 `~/.codex` 전체를 읽기 금지하는 권한 profile. 옛 --sandbox와 섞지 않는다
+deny = '"' + os.path.join(home, ".codex") + '" = "deny"'
 if FLAVOR == "codex" and ("--sandbox" in argv or 'default_permissions="dml-discussant"' not in argv
                           or not any(deny in a for a in argv) or "features.apps=false" not in argv):
     sys.exit(4)   # 연결 앱(codex_apps)을 끈 계획만 받는다
+if FLAVOR == "codex" and not sys.argv[0].startswith("/opt/dml-codex/"):
+    sys.exit(5)   # E2: 막힌 ~/.codex 밖으로 옮겨 보인 실행 버전 폴더에서 돈다
 with open(os.path.join(home, OWN, "fake-was-here"), "w") as f:
     f.write("1")
 if BEHAVIOR == "slow":
