@@ -77,7 +77,7 @@ def gate(run, rows) -> RunGate:
         note = f"요청한 {len(requested)}인 구성이 완료되지 않았습니다. 남은 참여자로 진행하려면 축소 승인이 필요합니다."
     elif not quorum["met"]:
         status = "quorum_blocked"
-        if quorum["policy"] == INDEPENDENT_ONLY:
+        if run["quorum_policy"] == INDEPENDENT_ONLY:
             note = (f"독립성이 확인된 참여자 {independent}명 — 최소 {quorum['min']}명이 필요합니다. "
                     f"미확인 답 {unverified}개는 정족수에 세지 않습니다. 유료로 채우지 않습니다.")
         else:
@@ -86,3 +86,34 @@ def gate(run, rows) -> RunGate:
     else:
         status = "ready"
     return RunGate(status, accepting, revealed, settled, quorum, requested, dropped, note)
+
+
+def synthesis_attempts(rows, active=()) -> dict[tuple[str, str], dict[str, Any]]:
+    """시작·결과·사용자 종료 확인을 시도별로 투영한다. 별도 상태 표/캐시는 만들지 않는다.
+
+    결과 없는 시작이나 종료 미확인은 자리를 유지한다. 모의 합성과 다른 시도의 결과로 풀지 않는다.
+    예전 코드가 한 실행에서 여러 번 합성한 원장도 시도마다 보존한다. 사용자 확인은 사실 검증이 아니다.
+    rows는 실행별 사건 순서여야 하며 active는 현재 controller가 소유한 (run_id, attempt)다.
+    """
+    attempts = {}
+    for row in rows:
+        payload = json.loads(row["payload"])
+        attempt = payload.get("attempt")
+        if not isinstance(attempt, str) or not attempt:
+            continue   # 모의 합성은 모델 시도 ID가 없다.
+        key = (row["run_id"], attempt)
+        if row["kind"] == "synthesis_started":
+            attempts.setdefault(key, {"status": UNKNOWN, "result": {}})
+        elif key in attempts and attempts[key]["status"] != "acknowledged":
+            if row["kind"] == "synthesis_unknown_acknowledged":
+                attempts[key]["status"] = "acknowledged"
+            elif row["kind"] in ("synthesis_completed", "synthesis_failed"):
+                result = payload.get("result") or {}
+                meta = result.get("synthesizer") or {}
+                ended = meta.get("tree_confirmed_empty") is True or meta.get("started") is False
+                attempts[key] = {"status": ("completed" if result.get("status") == "completed" else "failed")
+                                if ended else UNKNOWN, "result": result}
+    for key in active:
+        if key in attempts:
+            attempts[key]["status"] = RUNNING
+    return attempts

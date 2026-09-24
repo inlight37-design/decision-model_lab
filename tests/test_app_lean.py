@@ -33,9 +33,15 @@ class ProjectionTests(unittest.TestCase):
         view = self.ctl.view()
         self.assertEqual(view['runs'][0]['events'], [f'event_{i}' for i in range(88, 100)])
         queries = [q.upper() for q in sql if q.upper().startswith('SELECT') and 'FROM EVENTS' in q.upper()]
-        self.assertEqual(len(queries), 1)
-        self.assertIn('SELECT KIND ', queries[0])
-        self.assertIn('LIMIT 12', queries[0])
+        tail = [q for q in queries if q.startswith('SELECT KIND ')]
+        self.assertEqual(len(tail), 1)
+        self.assertIn('LIMIT 12', tail[0])
+        lifecycle = [q for q in queries if q not in tail]
+        for query in lifecycle:
+            self.assertIn("WHERE KIND IN ('SYNTHESIS_STARTED', 'SYNTHESIS_FAILED', 'SYNTHESIS_COMPLETED', "
+                          "'SYNTHESIS_UNKNOWN_ACKNOWLEDGED')", query)
+        # 종료 미확인의 자리를 재시작 뒤에도 세려면 별도로 합성 사건만 읽어야 한다.
+        self.assertTrue(lifecycle)
         self.assertNotIn('x' * 20, json.dumps(view))
 
     def test_one_run_projection_does_not_materialize_other_runs(self):
