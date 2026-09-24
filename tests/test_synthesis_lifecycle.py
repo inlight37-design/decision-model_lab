@@ -122,3 +122,111 @@ class SynthesisLifecycleTests(support.Base):
             ex.release("synthesis")
             self.finish(ctl, rid)
         self.assertTrue(ctl.wait_idle())
+
+    def test_acknowledgement_is_attempt_bound_persistent_and_never_refunds(self):
+        ex = Unconfirmed()
+        ctl, rid = self.revealed(ex, cap=8)
+        ctl.synthesize_with_model(rid, "claude-code")
+        self.finish(ctl, rid)
+        attempt = self.run_view(ctl, rid)["model_synthesis"]["attempts"][0]
+        with self.assertRaises(c.ControllerError):
+            ctl.acknowledge_synthesis_unknown(rid, "wrong-attempt")
+        self.assertEqual(ctl.unsettled(), 1)
+        ctl.acknowledge_synthesis_unknown(rid, attempt)
+        self.assertEqual((ctl.view()["slots"]["used"], ctl.unsettled()), (0, 0))
+        with self.assertRaises(c.ControllerError):
+            ctl.acknowledge_synthesis_unknown(rid, attempt)
+        restarted = self.controller(ex, max_real_calls=8)
+        self.assertEqual(self.run_view(restarted, rid)["model_synthesis"]["status"], "acknowledged")
+        self.assertEqual((restarted.view()["slots"]["used"], restarted.call_budget()["used"]), (0, 3))
+        with self.assertRaises(c.ControllerError):
+            restarted.synthesize_with_model(rid, "claude-code")
+
+    def test_running_synthesis_cannot_be_acknowledged(self):
+        ex = SynthExecutor(hold=("synthesis",))
+        ctl, rid = self.revealed(ex)
+        ctl.synthesize_with_model(rid, "claude-code")
+        attempt = next(e["attempt"] for e in events(self.store, rid)
+                       if e["kind"] == "synthesis_started")
+        with self.assertRaises(c.ControllerError):
+            ctl.acknowledge_synthesis_unknown(rid, attempt)
+        self.assertEqual(ctl.view()["slots"]["used"], 1)
+
+    def test_executor_exception_is_unknown_not_a_released_failed_slot(self):
+        class Broken(SynthExecutor):
+            def execute(self, spec, *args, **kwargs):
+                if spec.pid == "synthesis":
+                    raise RuntimeError("synthetic executor failed")
+                return super().execute(spec, *args, **kwargs)
+        ctl, rid = self.revealed(Broken(), cap=8)
+        ctl.synthesize_with_model(rid, "claude-code")
+        self.finish(ctl, rid)
+        self.assertEqual((ctl.view()["slots"]["used"], ctl.unsettled()), (1, 1))
+        self.assertEqual(self.run_view(ctl, rid)["model_synthesis"]["status"], "unknown")
+
+    def test_thread_start_failure_releases_slot_not_the_reservation_or_one_attempt(self):
+        ex = SynthExecutor()
+        ctl, rid = self.revealed(ex, cap=8)
+        with patch.object(threading.Thread, "start", side_effect=RuntimeError("thread refused")):
+            ctl.synthesize_with_model(rid, "claude-code")
+        self.assertEqual((ctl.view()["slots"]["used"], ctl.unsettled()), (0, 0))
+        self.assertEqual(ctl.call_budget()["used"], 3)
+        self.assertEqual(self.run_view(ctl, rid)["model_synthesis"]["status"], "failed")
+        with self.assertRaises(c.ControllerError):
+            ctl.synthesize_with_model(rid, "claude-code")
+        self.assertNotIn("synthesis", ex.started)
+
+    def test_legacy_repeated_attempts_cannot_be_hidden_by_a_later_result(self):
+        ctl, rid = self.revealed(SynthExecutor(), cap=8)
+        other = ctl.create_run("other", [support.cli("claude")], min_independent=1,
+                               quorum_policy=c.INCLUDE_UNVERIFIED)
+        self.assertTrue(ctl.wait_idle())
+        with self.store.tx() as tx:
+            for attempt in ("lost1", "lost2", "done"):
+                tx.event(rid, "synthesis_started", attempt=attempt)
+            tx.event(rid, "synthesis_completed", attempt="done", result={
+                "status": "completed", "synthesizer": {"tree_confirmed_empty": True}})
+            tx.event(rid, "synthesis_completed", result={"mode": "mock_extractive"})
+            tx.event(other, "synthesis_failed", attempt="lost1", result={
+                "synthesizer": {"tree_confirmed_empty": True}})
+        self.assertEqual((ctl.view()["slots"]["used"], ctl.unsettled()), (2, 2))
+        self.assertEqual(self.run_view(ctl, rid)["model_synthesis"]["attempts"], ["lost1", "lost2"])
+        ctl.acknowledge_synthesis_unknown(rid, "lost1")
+        self.assertEqual(ctl.unsettled(), 1)
+        ctl.acknowledge_synthesis_unknown(rid, "lost2")
+        self.assertEqual(ctl.unsettled(), 0)
+        with self.assertRaises(c.ControllerError):
+            ctl.synthesize_with_model(rid, "claude-code")
+
+    def test_competing_requests_reserve_only_one_attempt(self):
+        ex = SynthExecutor(hold=("synthesis",))
+        ctl, rid = self.revealed(ex, cap=8)
+        barrier = threading.Barrier(3)
+        results = []
+        def request():
+            barrier.wait(timeout=3)
+            try:
+                ctl.synthesize_with_model(rid, "claude-code")
+                results.append("started")
+            except c.ControllerError:
+                results.append("refused")
+        threads = [threading.Thread(target=request) for _ in range(2)]
+        for thread in threads:
+            thread.start()
+        barrier.wait(timeout=3)
+        for thread in threads:
+            thread.join(3)
+            self.assertFalse(thread.is_alive())
+        self.assertCountEqual(results, ["started", "refused"])
+        self.assertEqual(ctl.call_budget()["used"], 3)
+
+    def test_running_draft_uses_the_same_parallel_limit_as_synthesis(self):
+        ex = SynthExecutor()
+        ctl, rid = self.revealed(ex, cap=8)
+        ex.gates["claude"] = threading.Event()
+        ctl.max_parallel = 1
+        ctl.create_run("later", [support.cli("claude")], min_independent=1,
+                       quorum_policy=c.INCLUDE_UNVERIFIED)
+        with self.assertRaises(c.ControllerError):
+            ctl.synthesize_with_model(rid, "claude-code")
+        self.assertEqual(ctl.call_budget()["used"], 3)

@@ -217,6 +217,12 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                 elif len(parts) == 5 and parts[:2] == ["api", "runs"] and parts[3] == "acknowledge":
                     controller.acknowledge_unknown(parts[2], parts[4])
                     self._json(200, {"ok": True})
+                elif len(parts) == 4 and parts[:2] == ["api", "runs"] and parts[3] == "acknowledge-synthesis":
+                    attempt = _text(body, "attempt")
+                    if not attempt:
+                        raise ControllerError("attempt is required")
+                    controller.acknowledge_synthesis_unknown(parts[2], attempt)
+                    self._json(200, {"ok": True})
                 elif len(parts) == 4 and parts[:2] == ["api", "runs"] and parts[3] == "approve-reduction":
                     controller.approve_reduction(parts[2])
                     self._json(200, {"ok": True})
