@@ -43,6 +43,8 @@ import uuid
 from typing import Any, Protocol
 
 from app.store import Store
+from app.report import build_report
+from app.synthesis import SynthesisError, mock_synthesize, unavailable
 from app.state import (CLI, MANUAL, QUEUED, RUNNING, AWAITING_USER, ACCEPTED, REJECTED, UNKNOWN,
                        DONE, INDEPENDENT_ONLY, INCLUDE_UNVERIFIED, QUORUM_POLICIES, RunGate, gate)
 from core import adapters, env as core_env, isolation, membership as m, runner
@@ -220,7 +222,7 @@ class Controller:
             m.start(tuple(p.pid for p in participants), min_independent=min_independent)
         except m.MembershipError as exc:
             raise ControllerError(str(exc)) from None
-        run_id = f"r{time.strftime('%m%d-%H%M%S')}-{uuid.uuid4().hex[:4]}"
+        run_id = f"r{time.strftime('%m%d-%H%M%S')}-{uuid.uuid4().hex}"
         with self.lock, self.store.tx() as tx:
             tx.execute("INSERT INTO runs (run_id, created_at, question, prompt, input_sha256, input_bytes, "
                        "min_independent, roster, quorum_policy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -481,6 +483,20 @@ class Controller:
             with self.store.tx() as tx:
                 self._maybe_reveal(run["run_id"], tx)
 
+    def synthesize(self, run_id: str) -> None:
+        """One offline post-reveal transition. Persist once; failure keeps the draft report."""
+        with self.lock, self.store.tx() as tx:
+            if not self._gate(run_id).public()["can_synthesize"]:
+                raise ControllerError("mock synthesis requires controller-revealed drafts")
+            if self.store.row("SELECT 1 FROM events WHERE run_id = ? AND kind = 'synthesis_completed'", run_id):
+                return
+            report = build_report(self.view(run_id), run_id)
+            try:
+                result = mock_synthesize(report)
+            except SynthesisError:
+                result = unavailable(report)
+            tx.event(run_id, "synthesis_completed", result=result)
+
     # ---- 화면용 투영 ---------------------------------------------------------------------------
     def view(self, run_id: str | None = None) -> dict[str, Any]:
         """화면에 넘기는 것. 공개 전에는 제출 여부와 실행 상태의 고정된 필드만 넘긴다(BlindBarrier 계약).
@@ -537,6 +553,11 @@ class Controller:
                              "participants": parts,
                              "events": [e["kind"] for e in reversed(self.store.rows(
                                  "SELECT kind FROM events WHERE run_id = ? ORDER BY seq DESC LIMIT 12", run["run_id"]))]})
+                if revealed:
+                    artifact = self.store.row("SELECT payload FROM events WHERE run_id = ? "
+                                              "AND kind = 'synthesis_completed' ORDER BY seq DESC LIMIT 1", run["run_id"])
+                    if artifact:
+                        runs[-1]["synthesis"] = json.loads(artifact["payload"])["result"]
             return {"executor": self.executor.name, "slots": {"used": self._slots_used(), "cap": self.max_parallel},
                     "unsettled": {"count": self.unsettled(), "limit": self.unsettled_limit},
                     "paused": self.paused, "runs": runs}

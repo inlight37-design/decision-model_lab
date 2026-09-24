@@ -149,6 +149,17 @@ def make_handler(controller: Controller, token: str, port: int):
                     self._json(200, build_report(controller.view(parts[2]), parts[2]))
                 except ReportError as exc:
                     self._json(409, {"error": str(exc)})
+            elif len(parts) == 4 and parts[:2] == ["api", "runs"] and parts[3] == "decision-report":
+                try:
+                    view = controller.view(parts[2])
+                    report = build_report(view, parts[2])
+                    synthesis = view["runs"][0].get("synthesis")
+                    if synthesis is None:
+                        raise ReportError("mock synthesis has not been requested")
+                    self._json(200, {"schema": "a1-decision-report/1", "draft_report": report,
+                                     "synthesis": synthesis})
+                except ReportError as exc:
+                    self._json(409, {"error": str(exc)})
             else:
                 self._json(404, {"error": "not found"})
 
@@ -193,6 +204,9 @@ def make_handler(controller: Controller, token: str, port: int):
                 elif len(parts) == 4 and parts[:2] == ["api", "runs"] and parts[3] == "cancel":
                     controller.cancel_run(parts[2])
                     self._json(200, {"ok": True})  # 요청을 저장했다는 뜻. 자손 종료 성공 응답이 아니다.
+                elif len(parts) == 4 and parts[:2] == ["api", "runs"] and parts[3] == "synthesize":
+                    controller.synthesize(parts[2])
+                    self._json(200, {"ok": True})
                 elif parts == ["api", "resume"]:
                     controller.resume()
                     self._json(200, {"ok": True})
