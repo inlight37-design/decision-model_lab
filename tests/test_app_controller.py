@@ -572,12 +572,13 @@ class JournalSchemaTests(unittest.TestCase):
             "prompt TEXT NOT NULL, input_sha256 TEXT NOT NULL, input_bytes INTEGER NOT NULL, "
             "min_independent INTEGER NOT NULL, roster TEXT NOT NULL, reduction_approved INTEGER NOT NULL DEFAULT 0, "
             "note TEXT);"
-            "INSERT INTO runs VALUES ('r1', 0, 'q', 'p', 'x', 1, 1, '{}', 0, NULL);"
+            "INSERT INTO runs VALUES ('r1', 0, 'q', 'p', 'x', 1, 1, '{\"phase\":\"drafting\"}', 0, NULL);"
             "PRAGMA user_version = 1;")
         db.close()
         store = Store(self.path)
         self.addCleanup(store.close)
         self.assertEqual(store.row("SELECT quorum_policy FROM runs WHERE run_id = 'r1'")[0], c.INCLUDE_UNVERIFIED)
+        self.assertEqual(store.row("SELECT phase FROM runs WHERE run_id = 'r1'")[0], "drafting")
         self.assertEqual(store.row("PRAGMA user_version")[0], store_module.SCHEMA_VERSION)
 
     def test_a_newer_journal_is_left_untouched(self):
