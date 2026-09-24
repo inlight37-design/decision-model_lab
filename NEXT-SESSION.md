@@ -58,9 +58,10 @@
 
 ## 3. 진행 중인 작업
 
-**진행 중:** `claude/merge-39-next-steps-20260924` — PR #39 병합 기록, 검증 도구 넷의 Windows 출력 수정과 Windows CI 확장, 변이 시험 빈틈(M6·M11)의 시험 보강, 이 인계의 다음 작업 구체화. 모델 호출 없음. 병합 직전 커밋에서 이 줄을 지운다.
+**진행 중인 작업 없음.** 이 판을 병합할 때 열린 PR과 병합 안 된 원격 브랜치가 없었다. 실제 상태는 0절대로 GitHub에서 확인한다.
 
-- **마지막 병합:** [PR #39](https://github.com/inlight37-design/decision-model_lab/pull/39)(`codex/windows-live-completion-20260924`)를 claude 세션이 검토하고 정확한 head로 병합했다(`40b2e67`). 조상인 [PR #38](https://github.com/inlight37-design/decision-model_lab/pull/38)(`chatgpt/cli-unblock-20260924`, 초안)도 함께 들어가 GitHub이 병합됨으로 표시했다. 두 head 브랜치는 자동 삭제됐다. [병합 기록](docs/reviews/2026-09-24-merge-39/README.md).
+- **마지막 병합:** [PR #40](https://github.com/inlight37-design/decision-model_lab/pull/40)(`claude/merge-39-next-steps-20260924`) — #39 병합 기록, 검증 도구 넷의 Windows 출력 수정과 Windows CI 확장, 변이 시험 빈틈(M6·M11)의 시험 보강, 이 인계의 다음 작업 구체화. 모델 호출 없음. claude 세션이 병합했다(2절 8).
+- **그 앞:** [PR #39](https://github.com/inlight37-design/decision-model_lab/pull/39)(`codex/windows-live-completion-20260924`)를 claude 세션이 검토하고 정확한 head로 병합했다(`40b2e67`). 조상인 [PR #38](https://github.com/inlight37-design/decision-model_lab/pull/38)(`chatgpt/cli-unblock-20260924`, 초안)도 함께 들어가 GitHub이 병합됨으로 표시했다. 두 head 브랜치는 자동 삭제됐다. [병합 기록](docs/reviews/2026-09-24-merge-39/README.md).
   - #38(ChatGPT 웹): 스키마 6 상한 고정, 시작 전 거절 회계 분리, provider별 입력·inventory, `--live-config`·`--check-config`, Codex 계정 메타데이터 조회 도구, Node 화면 회귀, Windows CI. Windows 패치는 평문으로만 남겼다.
   - #39(codex): #38의 Windows 패치 적용, 계정 조회를 app·core로 옮기고 화면에 연결, Claude 참여자를 stream-json으로 바꾸고 권한 표면 검사, 실제 Codex·Claude 병렬 응답 관측.
 - 그 앞의 병합 이력은 [보관한 인계](docs/handoff/README.md)와 [검토 색인](docs/reviews/README.md)에 있다.
