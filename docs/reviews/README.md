@@ -19,10 +19,12 @@
 | [`2026-09-24-a1-integrity/`](2026-09-24-a1-integrity/README.md) | 전체 검토와 직접 수정([PR #18](https://github.com/inlight37-design/decision-model_lab/pull/18)). 원장 거래 실패/HTTP 음성 회귀, 공개 뒤 합성 없는 보고, 화면 배치, 실제 소켓과 오프라인 DOM 검증 범위, 다음 작업 인계 |
 | [`2026-09-24-lean-lifecycle/`](2026-09-24-lean-lifecycle/README.md) | PR #18 위의 간결성 검토와 직접 수정([PR #20](https://github.com/inlight37-design/decision-model_lab/pull/20), 자동 닫힌 PR #19 대체). 지속 취소·스레드/연결 수명·필요한 사건만 읽는 조회, 합성 성능 측정과 남은 경계 |
 | [`2026-09-24-structure-audit/`](2026-09-24-structure-audit/README.md) | claude의 구조 전수검사(main `99d9bb4`): 덧대기인가 구조적 해결인가. core·app·tools·이력의 판정, 직접 재현한 틈 G1–G9, 적은 코드 순서의 해법. 위 간결성 검토와 독립으로 썼고(blind), 둘의 비교는 [`COMPARISON.md`](2026-09-24-structure-audit/COMPARISON.md)([PR #21](https://github.com/inlight37-design/decision-model_lab/pull/21)) |
+| [`2026-09-24-offline-progression/`](2026-09-24-offline-progression/README.md) | codex의 새 main 검토와 순서 1–4 구현([PR #22](https://github.com/inlight37-design/decision-model_lab/pull/22)–[#25](https://github.com/inlight37-design/decision-model_lab/pull/25)). 주인 모듈별 반영, 검토 중 고친 결함, 검증 범위와 브라우저 미검증 |
+| [`2026-09-24-merge-22-25/`](2026-09-24-merge-22-25/README.md) | claude의 PR #22–#25 병합 검증([PR #26](https://github.com/inlight37-design/decision-model_lab/pull/26)). 정확한 head의 CI, 쌓인 브랜치의 인계 충돌과 통합 병합, 병합 트리 동일성, 코드 검토와 낮은 우선순위 발견 |
 
 ## 읽는 순서
 
-최신 구현 검토: [2026-09-24 새 main 후속](2026-09-24-offline-progression/README.md). 구조 검사의 G1·G2·G3·G5·G7·G8·G9와 모의 결정 흐름을 PR #22부터 순서대로 구현했다. G4·G6, 실제 모델/정책 결정과 브라우저 시각 확인은 남았다. 아래 날짜 기록의 당시 표현은 유지한다.
+최신 구현 검토: [2026-09-24 새 main 후속](2026-09-24-offline-progression/README.md). 구조 검사의 G1·G2·G3·G5·G7·G8·G9와 모의 결정 흐름을 PR #22–#25로 구현했고, [병합 검증](2026-09-24-merge-22-25/README.md)을 거쳐 main에 들어왔다. G4·G6, 실제 모델/정책 결정과 브라우저 시각 확인은 남았다. 아래 날짜 기록의 당시 표현은 유지한다.
 
 이 저장소의 검토 기록은 아래 시간순으로 읽는다. **뒤로 갈수록 최신이며, 앞의 것은 그 시점의 기록으로 남긴다.**
 
@@ -49,6 +51,8 @@
 21. [`2026-09-24-a1-integrity/`](2026-09-24-a1-integrity/README.md) — 현재 코드 직접 검토·수정과 A1 모의 후속. 기존 관측/결정은 유지했고 K18·K27·K42의 부분 진행과 실제 브라우저/CLI 미검증을 구분
 22. [`2026-09-24-lean-lifecycle/`](2026-09-24-lean-lifecycle/README.md) — 최소 코드/효율 검토. 기존 runner 경로를 재사용한 K19 구현과 자원 상한·조회 개선. 이전 기록의 “취소 없음”과 연결 상한 부재는 이 후속에서 변경했으며 실제 CLI/문맥 검증 완료로 올리지 않음
 23. [`2026-09-24-structure-audit/`](2026-09-24-structure-audit/README.md) — 21 뒤의 main(`99d9bb4`) 전체에 대한 구조 검사. 22와 독립으로 썼다(blind). 사본이 흩어진 규칙, 문서와 코드가 다른 곳, 다음 기능 전에 할 통합. 22와의 비교는 같은 폴더의 `COMPARISON.md`
+24. [`2026-09-24-offline-progression/`](2026-09-24-offline-progression/README.md) — 23의 순서 1–4를 codex가 구현한 기록(PR #22–#25). 판단·주인 모듈·검토 중 고친 결함·검증 범위
+25. [`2026-09-24-merge-22-25/`](2026-09-24-merge-22-25/README.md) — 24의 PR들을 claude가 확인하고 병합한 기록. 쌓인 브랜치의 인계 충돌과 통합 병합, 병합 트리 동일성, 로컬 전체 시험과 코드 검토
 
 ## 23번 기록에 대한 단서
 
