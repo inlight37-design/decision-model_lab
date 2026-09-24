@@ -1,0 +1,102 @@
+{
+  "cli": "codex 0.156.1",
+  "home": "synthetic only",
+  "network": "nested user+network namespace; no egress",
+  "real_auth_mounted": false,
+  "model_calls": 0,
+  "thread_started": false,
+  "outer_state": "exited",
+  "outer_exit": 0,
+  "tree_confirmed_empty": true,
+  "supported_schema_methods": [
+    "skills/list",
+    "mcpServerStatus/list",
+    "app/installed"
+  ],
+  "methods": [
+    {
+      "method": "initialize",
+      "timeout_or_eof": false,
+      "success": true,
+      "response_keys": [
+        "id",
+        "result"
+      ],
+      "response_sha256": "663b3fd33178e94f9d4c6b2d2fa62fa937b0f8c4720561d3d2dc7640abb4e567"
+    },
+    {
+      "method": "skills/list",
+      "timeout_or_eof": false,
+      "success": true,
+      "response_keys": [
+        "id",
+        "result"
+      ],
+      "response_sha256": "15df2929285106cf66c0a0e64f7e9039b85c920fb10f2b510b3caf51e996bae1",
+      "entry_count": 1,
+      "skill_count": 7,
+      "error_count": 0,
+      "scope_counts": {
+        "repo": 1,
+        "system": 6
+      },
+      "synthetic_skill_present": true,
+      "description_marker_present": true,
+      "body_marker_present": false
+    },
+    {
+      "method": "mcpServerStatus/list",
+      "timeout_or_eof": false,
+      "success": true,
+      "response_keys": [
+        "id",
+        "result"
+      ],
+      "response_sha256": "d1bd392655ae060fda1b078ec2b5e3e8fc0cda1b0b6ffaddbf31a9ec4d1cdf45",
+      "server_count": 1,
+      "tools_count": 1,
+      "synthetic_tool_present": true,
+      "tool_schema_present": true,
+      "instructions_marker_present": false,
+      "tool_errors": 0,
+      "next_cursor_present": false,
+      "runtime_statuses": [
+        null
+      ]
+    },
+    {
+      "method": "app/installed",
+      "timeout_or_eof": false,
+      "success": true,
+      "response_keys": [
+        "id",
+        "result"
+      ],
+      "response_sha256": "f0da5f8ad712c5639d858c83ad3a016448f46099408b0e2e4b5aa140766df0fa",
+      "result_keys": [
+        "apps"
+      ],
+      "array_lengths": {
+        "apps": 0
+      }
+    }
+  ],
+  "request_trace": [
+    "initialize",
+    "initialized",
+    "skills/list",
+    "mcpServerStatus/list",
+    "app/installed"
+  ],
+  "notification_methods": [
+    "remoteControl/status/changed"
+  ],
+  "app_server_shutdown": "terminated",
+  "app_server_exit": 0,
+  "mcp_methods": [
+    "initialize",
+    "notifications/initialized",
+    "tools/list"
+  ],
+  "app_stderr_lines": 1
+}

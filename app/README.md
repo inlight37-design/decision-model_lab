@@ -90,7 +90,13 @@ python -m app.server --port 8765
 
 합성은 원문의 줄을 발췌해 같은 문장만 묶는 모의 구현이다. 실행 ID·참여자·문자 위치·저장 해시로 원문 일치를 검사하며, 문장의 의미나 진실은 판정하지 않는다. 모든 주장은 `unresolved`, 카드는 `qualified`다. 표시 한도와 같은 참여자의 반복 줄은 생략 수를 표시하고 전체 초안은 보존한다. 반례와 미합의를 해결했다고 주장하지 않는다.
 
-같은 결과를 **A · 결정 우선 / B · 대조표 우선**으로 바꿔 볼 수 있다. Q4 선호를 저장하거나 확정하지 않는다. 결정 보고서 `GET /api/runs/<run_id>/decision-report`는 모의 결과와 원문 보고를 함께 내보낸다. 회귀 시험은 [`test_app_synthesis.py`](../tests/test_app_synthesis.py)에 있다. aux-pc의 실제 내장 Chromium에서 데스크톱/좁은 폭의 두 배치와 모의 흐름을 [확인했다](../docs/reviews/2026-09-24-post-merge-verification/README.md). 사용자 선택, 다른 브라우저, 실제 다운로드 완료와 취소 확인창 승인은 남았다.
+같은 결과를 **A · 결정 우선 / B · 대조표 우선**으로 바꿔 볼 수 있다. Q4 선호를 저장하거나 확정하지 않는다. 결정 보고서 `GET /api/runs/<run_id>/decision-report`는 모의 결과와 원문 보고를 함께 내보낸다. 회귀 시험은 [`test_app_synthesis.py`](../tests/test_app_synthesis.py)에 있다. aux-pc의 실제 내장 Chromium에서 데스크톱/좁은 폭의 두 배치와 모의 흐름을 [확인했다](../docs/reviews/2026-09-24-post-merge-verification/README.md). 사용자 선택과 교차 브라우저·접근성 전수 검사는 남았다. 실제 다운로드 완료와 취소 확인창 수락/거절은 후속 claude 세션이 설치된 Edge로 [확인했다](../docs/reviews/2026-09-24-execution-contract/README.md).
+
+## 실제 연결 전 준비 조회
+
+WSL 로그인 셸에서 `python -m app.server --check-cli codex --model gpt-6-luna --inventory <manifest.v2.json>`처럼 provider·전체 모델 이름·기록을 지정한다. Claude는 `--check-cli claude-code`다. 이 명령은 자료 없는 현재 참여자 계획의 판과 설치 버전·관측 기록을 대조한 JSON만 출력하고 끝난다. 서버·원장·CLI 프로세스·모델을 시작하지 않으며 인증을 갱신하지 않는다. 허가되지 않으면 종료 코드 2, 관측 조건을 만족하면 0이다. 조회 결과는 실행 승인/예산이 아니고 bubblewrap namespace를 실제 만들 수 있다는 보장도 아니다. 실행기는 시작 직전에 허가를 다시 검사한다.
+
+현재 두 CLI 모두 허가가 없다. Claude는 옛 관측과 현재 판이 다르고, Codex는 현재 판 불일치와 C3 failed가 함께 남는다. 모의 서버에 `--inventory`/`--model`만 주면 실제 실행처럼 오인하지 않도록 거절한다. 실제 실행기 선택은 아직 연결하지 않았다.
 
 ## 아직 없는 것
 

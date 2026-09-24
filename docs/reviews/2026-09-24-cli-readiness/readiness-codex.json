@@ -1,0 +1,15 @@
+{
+  "mode": "readiness_only",
+  "model_calls": 0,
+  "adapter_id": "codex",
+  "requested_model": "gpt-6-luna",
+  "eligible": false,
+  "revision": "codex@58bee2560d83",
+  "installed_version": "0.156.1",
+  "isolation_execution": "not_tested",
+  "reasons": [
+    "transport_observed was observed with participant spec discussant-2; the current spec is codex@58bee2560d83 — observe again",
+    "context_conformance is failed",
+    "permission_conformance was observed with participant spec discussant-2; the current spec is codex@58bee2560d83 — observe again"
+  ]
+}

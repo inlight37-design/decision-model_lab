@@ -119,7 +119,7 @@ class ExecutionSpec:
         질문이 argv에 있으면 그 자리를 digest 표시로 바꾼다.
         """
         mask = f"<input sha256:{self.input_sha256}>"
-        argv = [mask if hashlib.sha256(a.encode("utf-8")).hexdigest() == self.input_sha256 else a
+        argv = [mask if self.input_via == ARGV and hashlib.sha256(a.encode("utf-8")).hexdigest() == self.input_sha256 else a
                 for a in self.argv]
         return {"adapter_id": self.adapter_id, "argv": argv, "input_via": self.input_via,
                 "input_sha256": self.input_sha256, "input_bytes": self.input_bytes}

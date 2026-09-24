@@ -116,8 +116,9 @@ class CliExecutor:
                              tuple(changes))
 
     def run(self, plan: contract.Plan, timeout: float, *, cancel=None):
-        """계획 그대로 한 번 실행한다. 계획을 다시 만들지 않는다."""
+        """계획 그대로 한 번 실행한다. 계획을 다시 만들지 않고, 현재 기록의 허가만 다시 확인한다."""
         try:
+            self._check_eligible(plan.spec.adapter_id, plan.spec.argv[0], plan.revision)
             result = isolation.run(list(plan.spec.argv), plan.box, timeout=timeout, stdin_text=plan.spec.stdin_text,
                                    max_output_bytes=self.max_output_bytes, cancel=cancel,
                                    stderr_marks=plan.stderr_marks)
