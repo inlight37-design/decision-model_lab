@@ -27,12 +27,13 @@
 | [`2026-09-24-pr31-safety-review/`](2026-09-24-pr31-safety-review/README.md) | 위 PR #31에 대한 ChatGPT의 독립 재검토([PR #32](https://github.com/inlight37-design/decision-model_lab/pull/32)). 계획 뒤 허가 변경·전송 증거 누락의 회귀 시험과 양성 대조, 문맥 독립성의 다음 확인. 제품 코드는 바꾸지 않았다 |
 | [`2026-09-24-merge-31-32/`](2026-09-24-merge-31-32/README.md) | claude의 PR #31·#32 병합 검증. 정확한 head의 CI와 job 로그, 판 직접 계산, 로컬 전체 검사, 변이 시험, 병합을 막지 않는 발견 |
 | [`2026-09-24-live-cli-pilot/`](2026-09-24-live-cli-pilot/README.md) | codex가 사용자 PC의 PR #34 head에서 첫 실제 Codex 서버 응답을 수용·공개한 기록. 문맥 미확인·제공 모델 미보고·상한 소진, 원문 API 저장, 공개 답의 독립성 표시 정정 |
+| [`2026-09-24-live-pilot-replication/`](2026-09-24-live-pilot-replication/README.md) | claude가 같은 PC에서 PR #35 head로 두 번째 실제 Codex 응답을 받은 기록. 예산 소진 뒤 시작 전 거절, 실제 답의 모의 합성, PR #34·#35 검토(CI·변이 시험)와 병합, 상한 고정·회계·회귀 시험의 발견 |
 
-최신 추가: [`2026-09-24-live-cli-pilot/`](2026-09-24-live-cli-pilot/README.md) — PR #34의 단일 실제 CLI 서버 연결로 첫 응답을 확인한 기록. 기존 기록의 “실제 서버 경로 미실측”은 이 범위에서 해소됐고 C3 `failed`와 strict 허가 없음은 그대로다.
+최신 추가: [`2026-09-24-live-pilot-replication/`](2026-09-24-live-pilot-replication/README.md) — 단일 실제 CLI 경로를 다른 세션이 별도 원장으로 재현하고 #34·#35를 병합했다. C3 `failed`와 strict 허가 없음은 그대로다.
 
 ## 읽는 순서
 
-최신은 [첫 실제 CLI 서버 응답](2026-09-24-live-cli-pilot/README.md)이다. PR #34의 문맥 미확인 opt-in에서 단일 Codex 응답을 수용·공개했으며 strict 허가는 여전히 없다. 그 앞 [PR #31의 순서 5 재검토·회귀 수정](2026-09-24-cli-readiness/README.md)은 실행 직전 허가 재검사, 자료 연결 개수와 stdin 옵션을 지우지 않는 판, 무모델 조회·진단을 더했고, [독립 재검토](2026-09-24-pr31-safety-review/README.md)와 [병합 검증](2026-09-24-merge-31-32/README.md)을 거쳐 main에 들어왔다. 그 앞 구현은 [순서 5 실행 계약](2026-09-24-execution-contract/README.md)이다. 아래 재검토의 제안대로 G4·G6을 닫았고, 옛 판은 실제로 돈 계획에만 대응시켜 기록된 Claude 관측으로는 허가가 나오지 않는다. 그 앞 검토는 [병합 후 재검토·실제 관측](2026-09-24-post-merge-verification/README.md)이다. GitHub head checkout·CI·병합 이력, 실제 브라우저의 모의 흐름/Q4/교차 출처 차단, 승인된 K46 확인, Windows 진단 인코딩 수정과 실행 계약 제안을 담았다. C3는 남는다. Q4는 화면 확인을 마쳤고 사용자 선택은 미정이다. 취소 확인창·실제 파일 다운로드 끝단은 순서 5 구현 때 claude 세션이 설치된 Edge로 확인했다. 이전 검토 당시의 도구 제약과 현재 상태를 구분한다.
+최신은 [두 번째 실제 CLI 응답과 #34·#35 병합](2026-09-24-live-pilot-replication/README.md)이다. 같은 경로가 다른 세션·다른 질문에서 재현됐고, 호출 상한이 원장에 고정되지 않는 점과 시작 전 거절이 실행별 회계에 섞이는 점을 찾았다. 그 앞 [첫 실제 CLI 서버 응답](2026-09-24-live-cli-pilot/README.md)은 PR #34의 문맥 미확인 opt-in에서 단일 Codex 응답을 수용·공개했으며 strict 허가는 여전히 없다. 그 앞 [PR #31의 순서 5 재검토·회귀 수정](2026-09-24-cli-readiness/README.md)은 실행 직전 허가 재검사, 자료 연결 개수와 stdin 옵션을 지우지 않는 판, 무모델 조회·진단을 더했고, [독립 재검토](2026-09-24-pr31-safety-review/README.md)와 [병합 검증](2026-09-24-merge-31-32/README.md)을 거쳐 main에 들어왔다. 그 앞 구현은 [순서 5 실행 계약](2026-09-24-execution-contract/README.md)이다. 아래 재검토의 제안대로 G4·G6을 닫았고, 옛 판은 실제로 돈 계획에만 대응시켜 기록된 Claude 관측으로는 허가가 나오지 않는다. 그 앞 검토는 [병합 후 재검토·실제 관측](2026-09-24-post-merge-verification/README.md)이다. GitHub head checkout·CI·병합 이력, 실제 브라우저의 모의 흐름/Q4/교차 출처 차단, 승인된 K46 확인, Windows 진단 인코딩 수정과 실행 계약 제안을 담았다. C3는 남는다. Q4는 화면 확인을 마쳤고 사용자 선택은 미정이다. 취소 확인창·실제 파일 다운로드 끝단은 순서 5 구현 때 claude 세션이 설치된 Edge로 확인했다. 이전 검토 당시의 도구 제약과 현재 상태를 구분한다.
 
 그 앞 구현은 [새 main 후속](2026-09-24-offline-progression/README.md)의 PR #22–#25이며 [병합 검증](2026-09-24-merge-22-25/README.md)을 거쳐 main에 들어왔다. 아래 날짜 기록의 당시 표현은 유지한다.
 
@@ -69,6 +70,7 @@
 29. [`2026-09-24-pr31-safety-review/`](2026-09-24-pr31-safety-review/README.md) — 28에 대한 ChatGPT의 독립 재검토(PR #32). 계획 뒤 허가 변경의 회귀 시험 보강과 문맥 독립성의 다음 확인
 30. [`2026-09-24-merge-31-32/`](2026-09-24-merge-31-32/README.md) — 28·29를 claude가 확인하고 병합한 기록. 판 직접 계산, 변이 시험, 병합을 막지 않는 발견
 31. [`2026-09-24-live-cli-pilot/`](2026-09-24-live-cli-pilot/README.md) — PR #34 head의 단일 실제 서버 응답과 공개 답 독립성 표시 정정. 원문 API 저장과 다운로드 미관측을 구분하고 추가 호출 예산이 없음을 기록
+32. [`2026-09-24-live-pilot-replication/`](2026-09-24-live-pilot-replication/README.md) — 31을 claude가 별도 원장·다른 질문으로 재현하고 #34·#35를 검토·병합한 기록. 변이 시험, 예산 소진 거절, 발견 N1–N5, 다음 작업 권고
 
 ## 28번 기록에 대한 단서
 

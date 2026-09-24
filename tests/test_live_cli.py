@@ -117,6 +117,7 @@ class PersistedPolicyTests(support.Base):
         self.assertEqual(again.call_budget()["used"], 1)
 
 
+@unittest.skipUnless(sys.platform == "linux", "installs a Linux fake CLI through a symlink; no bubblewrap needed")
 class ExecutorPolicyTests(cli_support.Base):
     def test_policy_and_permission_revocation_still_refuse_before_process_start(self):
         cli_support.install(self.home, "codex")
