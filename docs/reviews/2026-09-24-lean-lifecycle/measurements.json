@@ -1,0 +1,134 @@
+{
+  "date": "2026-09-24",
+  "environment": "isolated Linux analysis container, Python 3.13.5; not user PC or WSL",
+  "baseline_commit": "2e9a74731770b59f2c57f154abe28a9d84654154",
+  "product_commit": "32c1e2a4402037d9b065d72eb12d629fe542f584",
+  "verified_clean_source_tree": "180d8591a9249e32e780eb1c818ee3479cea6dc0",
+  "before": {
+    "runtime_python_files": 14,
+    "runtime_python_lines": 2796,
+    "runtime_dependencies": {
+      "app.__init__": [],
+      "app.cli_executor": [
+        "core",
+        "core.adapters",
+        "core.eligibility",
+        "core.env",
+        "core.isolation",
+        "core.runner"
+      ],
+      "app.controller": [
+        "app.store",
+        "core",
+        "core.adapters",
+        "core.env",
+        "core.isolation",
+        "core.membership",
+        "core.runner"
+      ],
+      "app.fake_cli": [],
+      "app.report": [],
+      "app.server": [
+        "app.controller",
+        "app.report",
+        "app.store"
+      ],
+      "app.store": [],
+      "core.__init__": [],
+      "core.adapters": [
+        "core.env",
+        "core.runner"
+      ],
+      "core.eligibility": [
+        "core",
+        "core.adapters"
+      ],
+      "core.env": [],
+      "core.isolation": [
+        "core",
+        "core.env",
+        "core.runner"
+      ],
+      "core.membership": [],
+      "core.runner": []
+    },
+    "view_3000_events": {
+      "median_ms": 18.14143349997721,
+      "min_ms": 17.265806000011708,
+      "samples": 20,
+      "event_payload_bytes": 2048,
+      "returned_events": 12
+    }
+  },
+  "after": {
+    "runtime_python_files": 14,
+    "runtime_python_lines": 2905,
+    "runtime_dependencies": {
+      "app.__init__": [],
+      "app.cli_executor": [
+        "core",
+        "core.adapters",
+        "core.eligibility",
+        "core.env",
+        "core.isolation",
+        "core.runner"
+      ],
+      "app.controller": [
+        "app.store",
+        "core",
+        "core.adapters",
+        "core.env",
+        "core.isolation",
+        "core.membership",
+        "core.runner"
+      ],
+      "app.fake_cli": [],
+      "app.report": [],
+      "app.server": [
+        "app.controller",
+        "app.report",
+        "app.store"
+      ],
+      "app.store": [],
+      "core.__init__": [],
+      "core.adapters": [
+        "core.env",
+        "core.runner"
+      ],
+      "core.eligibility": [
+        "core",
+        "core.adapters"
+      ],
+      "core.env": [],
+      "core.isolation": [
+        "core",
+        "core.env",
+        "core.runner"
+      ],
+      "core.membership": [],
+      "core.runner": []
+    },
+    "view_3000_events": {
+      "median_ms": 0.05281450000893528,
+      "min_ms": 0.04992499998479616,
+      "samples": 20,
+      "event_payload_bytes": 2048,
+      "returned_events": 12
+    }
+  },
+  "scope": "Physical lines include comments/blanks and fake_cli. View-only synthetic local SQLite benchmark, not HTTP/model/system throughput. One manual run; no executors started; 3000 events; warm-up plus 20 timed calls. No peak-memory claim.",
+  "local_tests": {
+    "total": 347,
+    "skipped": 18,
+    "failures": 0,
+    "errors": 0,
+    "real_model_calls": 0
+  },
+  "offline_dom": {
+    "cancel": "passed",
+    "report": "passed",
+    "width_px": 390,
+    "page_errors": [],
+    "real_browser_http_auth_chain_verified": false
+  }
+}
