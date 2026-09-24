@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-24** · 작성 세션: codex(순서 1–4 구현), 병합 뒤 claude가 3절과 병합 표현을 고침 (둘 다 `aux-pc` — hostname `DESKTOP-L6EA2UJ`, 1절 기기 이름 — Windows와 WSL Ubuntu-24.04, 실제 모델 호출·인증 연결 진단 없음) · 브랜치 `claude/merge-offline-progression-20260924` · 기준 main `34975794dec2a45b9fd8a11f3133d2b202ebb8ee`
+최종 갱신 **2026-09-24** · 작성 세션: codex(순서 1–4 구현), 병합 뒤 claude가 3절과 병합 표현을 고침 (둘 다 `aux-pc` — hostname `DESKTOP-L6EA2UJ`, 1절 기기 이름 — Windows와 WSL Ubuntu-24.04, 실제 모델 호출·인증 연결 진단 없음) · 브랜치 `claude/branch-autodelete-note-20260924`(병합 뒤 브랜치 삭제 정정) · 기준 main `ff8e356375d4d302b4b228661e868f0575873bfc`
 
 현재 인계는 이 파일 하나다. 완료 이력이 다음 일을 가리지 않도록 정리했다. **이전 판 전체는 [보관본](docs/handoff/2026-09-24-before-a1-integrity.md)에 바이트 그대로 있다.** 사용자 결정(2절)과 금지 사항(5절)은 유지했고, 기기 관측·승인·명세 판정을 바꾸지 않았다. 직전 수정은 [PR #18 기록](docs/reviews/2026-09-24-a1-integrity/README.md), 간결성 점검·지속 취소·자원 정리는 [간결성 검토 기록](docs/reviews/2026-09-24-lean-lifecycle/README.md)에 있다. 이 판은 이전 인계의 필요한 부분만 고쳤으며 2절·5절 원문과 승인 경계를 유지했다. 4절의 순서표는 2026-09-24 claude 세션이 두 검사(간결성·[구조](docs/reviews/2026-09-24-structure-audit/README.md))와 새 main의 실행 허가 계산을 보고 정했다.
 
@@ -87,13 +87,13 @@
 
 **진행 중:** 없음. 열린 PR이나 `git branch -r --no-merged origin/main`에 무엇이 보이면 GitHub가 기준이다.
 
-- **마지막 병합:** 순서 1–4(codex) — [PR #22](https://github.com/inlight37-design/decision-model_lab/pull/22) 공유 가림·실행 허가 → [#23](https://github.com/inlight37-design/decision-model_lab/pull/23) 격리 연결 모델 → [#24](https://github.com/inlight37-design/decision-model_lab/pull/24) 참여자 상태·gate → [#25](https://github.com/inlight37-design/decision-model_lab/pull/25) 모의 합성·결정 카드·Q4 미리보기. claude 세션이 [PR #26](https://github.com/inlight37-design/decision-model_lab/pull/26)(`claude/merge-offline-progression-20260924`)으로 이 순서대로 병합했다. 모델 호출 없음. 병합 검증과 검토는 [병합 기록](docs/reviews/2026-09-24-merge-22-25/README.md), 구현 판단과 검토 중 고친 결함(실행 ID 충돌, 공개 단계 없는 옛 원장 이전, 초안 해시 검증 누락)은 [codex 검토](docs/reviews/2026-09-24-offline-progression/README.md)에 있다.
+- **마지막 병합:** 순서 1–4(codex) — [PR #22](https://github.com/inlight37-design/decision-model_lab/pull/22) 공유 가림·실행 허가 → [#23](https://github.com/inlight37-design/decision-model_lab/pull/23) 격리 연결 모델 → [#24](https://github.com/inlight37-design/decision-model_lab/pull/24) 참여자 상태·gate → [#25](https://github.com/inlight37-design/decision-model_lab/pull/25) 모의 합성·결정 카드·Q4 미리보기. claude 세션이 [PR #26](https://github.com/inlight37-design/decision-model_lab/pull/26)(`claude/merge-offline-progression-20260924`)으로 이 순서대로 병합했다(`ff8e356`). GitHub는 네 PR을 병합됨으로 표시했다. 모델 호출 없음. 병합 검증과 검토는 [병합 기록](docs/reviews/2026-09-24-merge-22-25/README.md), 구현 판단과 검토 중 고친 결함(실행 ID 충돌, 공개 단계 없는 옛 원장 이전, 초안 해시 검증 누락)은 [codex 검토](docs/reviews/2026-09-24-offline-progression/README.md)에 있다.
   - 네 브랜치는 차례로 쌓였지만 같은 수정("공개 검사·짧은 실행 ID")이 층마다 따로 커밋돼, #22를 병합하면 #23·#24가 이 파일에서 충돌했다(코드는 충돌 없음). 다른 세션의 브랜치에는 push하지 않으므로 통합 브랜치에서 순서대로 병합하고 이 파일은 뒤 브랜치 판을 택했다. 병합 트리는 CI를 통과한 #25 head `e053d0d`와 같고, 네 PR의 head가 모두 main 이력에 들어간다.
   - 구조 검사의 틈 중 G1·G2·G3·G5·G7·G8·G9를 닫았다. 실행 계약의 G4·G6은 순서 5에 남는다.
 - **그 앞:** [PR #21](https://github.com/inlight37-design/decision-model_lab/pull/21)(`claude/cleanup-merge-branches-il1srl`, 문서만, 모델 호출 없음) — [구조 전수검사](docs/reviews/2026-09-24-structure-audit/README.md), 간결성 검토와의 [비교](docs/reviews/2026-09-24-structure-audit/COMPARISON.md), 다음 일의 순서(4절). 결론: 뼈대는 구조적이고 살은 리뷰마다 덧댔다. 전면 재작성은 필요 없다. 흩어진 사본을 한 주인으로 모은다.
 - **그 앞:** [PR #20](https://github.com/inlight37-design/decision-model_lab/pull/20) ChatGPT의 간결성 검토·지속 취소(K19)·자원 수명 정리. 사용자 지시로 claude 세션이 병합했다(`962b61c`). 병합 전에 CI 녹색에 더해 aux-pc의 Windows(job object 경로)와 WSL(`DML_REQUIRE_BWRAP=1`)에서 전체 시험이 통과했다. 처음 연 PR #19가 자동으로 닫히고 #20으로 다시 열린 경위는 [검토 목록](docs/reviews/README.md)의 22번 단서에 있다.
 - **그 앞:** [PR #18](https://github.com/inlight37-design/decision-model_lab/pull/18) ChatGPT의 A1 무결성 수정과 합성 없는 보고. 보관한 인계와 2절·5절 원문이 그대로인지 확인하고 병합했다. 그보다 앞은 [직전 인계](docs/handoff/2026-09-24-before-a1-integrity.md) 3절과 Git 로그에 있다.
-- 병합된 PR의 브랜치는 저장소 설정(병합 시 자동 삭제 — 켜져 있음을 2026-09-24 확인)이 지운다. 로컬에서 병합해 push한 브랜치와 통합 PR로 들어간 브랜치(PR #22–#25의 codex 브랜치처럼)는 자동으로 지워지지 않으므로 병합한 쪽이 지운다. 남은 것은 [prune-merged-branches](.github/workflows/prune-merged-branches.yml)를 `dry_run`부터 돌려 지운다.
+- 병합된 PR의 브랜치는 저장소 설정(병합 시 자동 삭제 — 켜져 있음을 2026-09-24 확인)이 지운다. 다른 PR에 포함돼 들어가 GitHub가 병합됨으로 표시한 PR의 브랜치도 같이 지워진다 — PR #26 병합 1–3초 뒤 #22–#25의 codex 브랜치 넷이 저장소 설정으로 지워졌다(각 PR의 `head_ref_deleted` 사건). 열린 PR 없이 로컬에서 병합해 push한 브랜치는 병합한 쪽이 지운다. 남은 것은 [prune-merged-branches](.github/workflows/prune-merged-branches.yml)를 `dry_run`부터 돌려 지운다.
 
 ### 사용자 판단·승인을 기다리는 것
 
