@@ -9,7 +9,7 @@
 | 파일 | 책임 |
 |---|---|
 | [controller.py](controller.py) | 상태 전이·원자적 예약·자리/상한·수용·봉인/공개·취소/재시작·화면 투영 |
-| [store.py](store.py) | SQLite 원장, 배타 잠금, 스키마 이전, 첫 호출 상한 고정 |
+| [store.py](store.py) | SQLite 원장, 배타 잠금, 스키마 이전, 첫 호출 상한 고정, 실행별 공통 자료 |
 | [state.py](state.py) | 참여자 행에서 정족수·축소 승인·공개 가능 여부 계산 |
 | [cli_executor.py](cli_executor.py) | provider별 입력·inventory로 최종 계획을 만들고 같은 계획을 기존 격리 경계에서 실행 |
 | [live_config.py](live_config.py) | 명시적 provider 설정 파싱·검사. 새 실행 엔진이 아님 |
@@ -67,6 +67,12 @@ python -m app.server --live-config /path/live.json --data-dir /path/new-ledger -
 
 **실제 Codex·Claude 동시 응답을 별도 상한 원장에서 수용·공개했다.** 현재 Claude는 stream-json/verbose로 init과 최종 결과를 함께 검사한다. 한 입력 폴더의 `claude-code@126be128bed7`에서 Read만 노출, MCP 없음, dontAsk와 금지된 합성 peer 파일의 Read 거절을 새로 관측했다. no-input/다른 옵션 판의 권한까지 입증한 것은 아니다. [새 관측 manifest](../docs/reviews/2026-09-24-windows-live-completion/manifest.v2.json)를 두 설정에 사용할 수 있지만 각자 빈 입력 폴더 하나가 필요하고 설치판·관측일·계획 준비 조회를 다시 해야 한다. 문맥 독립성은 미확인이므로 실제 실험은 명시적 `include_unverified` 정책을 썼다.
 
+## 공통 자료
+
+실행을 만들 때 텍스트 파일을 붙이면(화면의 “공통 자료”, API의 `sources: [{name, text}]`) controller가 내용·크기·sha256을 원장(스키마 7)에 고정하고 목록을 질문 본문에 넣는다. 그래서 입력 digest가 모든 파일을 묶는다. 이름은 영문·숫자·점·밑줄·하이픈, 파일 20개·파일당 256 KiB·합계 1 MiB까지다. 화면은 파일 이름의 다른 글자를 `_`로 바꾼다.
+
+시도마다 원장의 사본을 데이터 폴더 밖(`<work_root>/_sources/<run>`)에 두고 목록·크기·sha256을 다시 맞춘다. 다르면 그 시도를 시작 전에 거절한다. CLI 참여자는 provider별 빈 입력 폴더 대신 이 폴더 하나를 읽기 전용으로 받으므로 계획의 판(입력 폴더 하나)이 그대로다. 수동 참여자는 같은 목록을 받지만 파일 첨부 여부는 확인하지 못한다(K21). 시도 도중의 바꿔치기(K14)는 막지 못한다. 실제 확인은 [공통 자료 기록](../docs/reviews/2026-09-24-source-snapshot/README.md)에 있다.
+
 ## 회계와 원장
 
 스키마 6은 첫 전체·provider별 상한을 `live_budget`에 저장한다. 첫 호출 전에 고정되며 다른 상한으로 다시 켜면 거절한다. 상한 옵션을 생략해도 저장된 값을 읽는다. 구형 원장은 기존 예약의 일관된 cap으로 복원하고 모순된 이력은 거절한다. 기존 사건·초안을 지우지 않는다. 새 스키마로 열기 전 백업하며 하향 이전은 없다.
@@ -89,7 +95,7 @@ python -m app.server --live-config /path/live.json --data-dir /path/new-ledger -
 
 모든 `/api` 읽기/쓰기는 토큰이 필요하다. 토큰은 URL fragment로만 전달하고 페이지에 포함하지 않는다. Host·Origin 검사, JSON 타입·본문 크기·framing 검사, 프레임 삽입 차단을 유지한다. 인증 전 연결도 상한과 I/O 기한을 적용하지만 CPU/메모리 전체 제한은 아니다. 원장은 참여자의 `never` 경로이며 토큰 파일은 POSIX 0600, 데이터 폴더는 0700이다. localhost 네트워크 공유를 파일 격리만으로 안전하다고 가정하지 않는다.
 
-공개 뒤 `GET /api/runs/<run_id>/report`는 `a1-draft-report/3` 원문 보고다. 질문/입력 해시, 초안/해시, 출처·독립성·시도 종류, 정책·탈락·축소 승인·회계를 내보낸다. 보고의 회계는 실행 원장의 값이다. 계정 전체 잔여는 아래 별도 계정 API와 화면에서 관측 시각을 붙여 제공하며 과거 실행의 사용량으로 소급하지 않는다. 해시 불일치·초안 누락·공개 전 요청은 거절한다. 원문이 들어가므로 공개 저장소에 자동 업로드하지 않는다.
+공개 뒤 `GET /api/runs/<run_id>/report`는 `a1-draft-report/4` 원문 보고다. 질문/입력 해시, 공통 자료 목록(이름·크기·sha256), 초안/해시, 출처·독립성·시도 종류, 정책·탈락·축소 승인·회계를 내보낸다. 보고의 회계는 실행 원장의 값이다. 계정 전체 잔여는 아래 별도 계정 API와 화면에서 관측 시각을 붙여 제공하며 과거 실행의 사용량으로 소급하지 않는다. 해시 불일치·초안 누락·공개 전 요청은 거절한다. 원문이 들어가므로 공개 저장소에 자동 업로드하지 않는다.
 
 `POST /api/runs/<run_id>/synthesize`는 공개 원문의 줄을 발췌·중복 묶기하고 참조 위치만 검사한다. 모델 호출·외부 사실 검증은 없고 주장은 unresolved, 카드는 qualified다. 실패하면 unavailable과 원문 보고를 남긴다. 결정 보고는 `GET /api/runs/<run_id>/decision-report`다. Q4의 A 결정 우선/B 대조표 우선은 같은 결과의 표시 순서만 바꾸며 사용자 선호를 확정하지 않는다.
 
