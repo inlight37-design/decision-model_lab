@@ -20,7 +20,7 @@
 |---|---|
 | 병합·CI | #22→#23→#24→#25 순서와 각 head의 push CI checkout/Python 3.12·3.13 성공을 [재확인](docs/reviews/2026-09-24-post-merge-verification/GITHUB.md)했다. #25 head와 전체 트리가 같은 것은 문서 정리 전 `fbb7225eaeec72360731d58db214da7375411375`; 검토 시작 main `eec60e9`는 문서만 다르고 코드는 같았다 |
 | Windows·WSL | 전체 오프라인 시험 성공. WSL은 `DML_REQUIRE_BWRAP=1`; OS 전용 skip은 구분했다. Windows 진단 stdout의 CP949 오류를 고치고 회귀 검증했다. [검토 기록](docs/reviews/2026-09-24-post-merge-verification/README.md) |
-| 실제 브라우저(K27·K42) | aux-pc의 Codex 내장 Chromium에서 localhost 실행→공개→모의 합성, A/B·좁은 폭, 합성 수동 답, 교차 출처 읽기/프레임 차단을 확인했다. 취소 확인창과 파일 다운로드의 끝단은 도구 제약으로 미확인; HTTP 취소/보고 및 취소 화면은 확인했다. 다른 브라우저·접근성 전수 검사는 미실시 |
+| 실제 브라우저(K27·K42) | aux-pc의 Codex 내장 Chromium에서 localhost 실행→공개→모의 합성, A/B·좁은 폭, 합성 수동 답, 교차 출처 읽기/프레임 차단을 확인했다. 남았던 끝단은 claude 세션이 설치된 Edge 153(headless, Playwright)으로 확인했다(PR #30의 코드). 취소 확인창을 거절하면 취소되지 않고 수락하면 저장됐다. 원문 보고·결정 보고 버튼은 실제 JSON 파일을 저장했고, 내용·해시가 원장과 맞았다. 사람이 직접 누른 조작, 다른 브라우저, 접근성 전수 검사는 미실시 |
 | K46 | [실제 확인 성공](docs/experiments/w2-isolation/2026-09-24-k46-confirmation/README.md): Codex 0.156.1, 고정 helper의 쓰기 EROFS·인증 열기 EACCES, 입력/종료/수용 관문 성공. 요청 모델과 실제 제공 모델 일치는 CLI가 보고하지 않아 미확인 |
 | Codex 실행 허가 | [새 manifest](docs/experiments/w2-isolation/2026-09-24-k46-confirmation/manifest.v2.json)의 전송·권한은 `discussant-2`이고, 순서 5 뒤로 그 이름은 K46이 실제로 돈 계획(공통 자료 하나)의 판 `codex@8a0128d4c791`만 뒷받침한다(`contract.LEGACY`). 자료 없는 controller 계획은 다른 판이다. **어느 쪽이든 문맥(C3)은 failed라 허가 없음.** 캐시 변경·토큰 증가만으로 모델 문맥의 내용을 단정하지 않는다 |
 | Claude 실행 허가 | **순서 5 뒤로 허가 없음.** 기록의 `discussant-1` 관측(2단계 b1)은 stream-json 출력·Read 도구·공통 자료로 본 것이다. 그래서 controller 계획(json, `--tools ""`, 자료 없음)의 판을 뒷받침하지 않고, 대응도 두지 않았다. controller 계획 그대로 다시 관측해야 한다. 문맥 증거가 자기 보고뿐인 문제(K31)도 남는다 |
@@ -99,7 +99,7 @@
 - **K46는 이번 고정 helper 범위에서 완료**했다. 같은 호출을 반복할 필요는 없다. [요약](docs/experiments/w2-isolation/2026-09-24-k46-confirmation/summary.json)은 전송·권한만 뒷받침한다.
 - **C3/K44·K09:** 인증/상태/플러그인 연결을 좁히고 입력 직전 문맥을 확인할 수 있는 경로부터 조사한다. 실패 판정을 정책 완화로 몰래 바꾸지 않는다. 새 옵션·연결 변형은 별도 명세와 상한을 기록한다.
 - **Claude 재관측:** controller의 최종 계획 그대로(위 probe 설계). 모델 자기 보고 외의 문맥 증거를 먼저 설계한다(K31). 기존 Claude 칸의 값은 바꾸지 않았다 — 판이 맞지 않아 허가에 쓰이지 않을 뿐이다.
-- **브라우저 잔여:** 일반 사용자 브라우저에서 취소 확인창 승인과 실제 JSON 파일 저장을 마저 확인한다. 내장 브라우저의 CDP 확인창 응답 지연·download event 시간 초과를 앱 성공으로 기록하지 않았다. 교차 브라우저·접근성도 남는다.
+- **브라우저 잔여:** 취소 확인창과 실제 JSON 파일 저장은 Edge(headless, Playwright)로 확인했다([기록](docs/reviews/2026-09-24-execution-contract/README.md)). Playwright는 저장소 의존성이 아니라 임시 가상환경에 설치했고, 브라우저는 설치된 Edge를 썼다. 사람이 직접 누른 조작, 교차 브라우저, 접근성은 남는다.
 - **B3·agy B4:** 선행 실행 계약/허가와 채택 결정이 있어야 의미가 있다. 권한 부족 때문에 미루는 것이 아니라 선행 조건 미충족이다. 추가 API·크레딧으로 대체하지 않는다.
 
 ### 한계와 정리 후보
