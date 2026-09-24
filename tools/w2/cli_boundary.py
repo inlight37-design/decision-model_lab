@@ -13,6 +13,7 @@ import json, os, shutil, sys, tempfile
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from core import env as core_env, isolation, runner
+from tools.redaction import scrub_all
 
 HOME = os.path.expanduser("~")
 SEEN = {"claude_credentials": "~/.claude/.credentials.json", "claude_config": "~/.claude.json",
@@ -60,7 +61,7 @@ def main():
             "read_only": [p.replace(HOME, "~") for p in ro], "read_write": [p.replace(HOME, "~") for p in rw],
         }
         shutil.rmtree(work, ignore_errors=True)
-    print(json.dumps(report, ensure_ascii=False, indent=1))
+    print(json.dumps(scrub_all(report, HOME), ensure_ascii=False, indent=1))
 
 
 if __name__ == "__main__":

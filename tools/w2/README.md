@@ -9,3 +9,14 @@
 | [`codex_profile.py`](codex_profile.py) | K46. adapter가 넘기는 권한 profile(`core.adapters.codex_permissions`)을 모델 없이 본다. **기본은 합성 HOME**(가짜 `auth.json`)이다 — 사용자의 로그인 상태를 연결하지 않는다. `codex sandbox`로 `k46-codex`와 같은 helper를 profile 없음(대조군)·`default_permissions`·`-P` 변형으로 돌려 errno를 본다. `--real-home`(사용자 허락 뒤에만)은 실제 `~/.codex`로 같은 helper를 돌리고, 참여자의 exec argv를 네트워크 없는 격리에서 돌려 설정 수용과 없는 profile 거절을 본다. 인증 파일은 크기·수정 시각만 비교한다. exec에서 모델의 명령에 금지가 적용되는지는 `observe.py k46-codex`가 본다. 결과: [합성 HOME](../../docs/experiments/w2-isolation/k46-synthetic-aux-pc-wsl.md), [실제 HOME(2026-09-24)](../../docs/experiments/w2-isolation/k46-profile-aux-pc-wsl.md) |
 
 합성 파일 경계 시험은 도구가 아니라 회귀 시험([`tests/test_core_isolation.py`](../../tests/test_core_isolation.py))이다. 결과: [docs/experiments/w2-isolation/](../../docs/experiments/w2-isolation/aux-pc-wsl.md).
+
+공개용 Python 출력의 가림과 init 이름 공개 정책은 [`tools/redaction.py`](../redaction.py)가 소유한다. 관측·설치 조사·인증 진단이 같은 이메일·사용자 경로·토큰 가림을 쓰며, init의 도구·MCP·플러그인·스킬·에이전트·명령 이름은 개수로만 남긴다. 없는 목록이나 잘못된 목록은 `null`이다. 인증 오류 줄은 기존처럼 긴 불투명 문자열도 가리는 엄격한 모드를 쓰고, 도움말·경로는 옵션과 패키지 이름을 보존한다. 자유 문자열 가림은 모든 비밀을 알아내는 장치가 아니므로 요약의 사람 검토는 계속 필요하다.
+
+환경 정책은 실행 경계별로 다음과 같다. 값은 기록하지 않는다. 이번 정리는 정책을 명시하며 기존 로그인·관측 상태를 바꾸지 않는다.
+
+| 변수 | 비격리 자식 환경 (`core.env.child_env`) | Linux 격리 (`core.isolation`) |
+|---|---|---|
+| `BILLING_VARS` (API 키·과금/endpoint 전환) | 제거 | 명시적으로 주면 실행 전에 거절 |
+| `CLAUDE_CODE_OAUTH_TOKEN` (구독 토큰) | 네이티브 경로 호환을 위해 유지 | 거절; 인증은 연결한 로그인 파일만 사용 |
+| `CLAUDE_CONFIG_DIR`, `CODEX_HOME` | 유지 | 허용 목록에 따라 전달; 경로 연결은 별도 검사 |
+| 그 밖의 변수 | 기존 환경 유지 (`PATH`와 `NO_COLOR`는 별도 처리) | `PASS_ENV`만 전달하고 나머지는 버림 |

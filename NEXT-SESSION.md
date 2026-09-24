@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-24** · 작성 세션: claude (Claude Code — 구조 검사는 웹 컨테이너, PR #20·#21 병합과 이 판은 사용자 PC `aux-pc`의 Windows와 그 WSL, 모델 호출 없음) · 브랜치 `claude/cleanup-merge-branches-il1srl` · 그 앞 판: chatgpt, [PR #20](https://github.com/inlight37-design/decision-model_lab/pull/20)
+최종 갱신 **2026-09-24** · 작성 세션: codex(순서 1–4 구현), 병합 뒤 claude가 3절과 병합 표현을 고침 (둘 다 `aux-pc` — hostname `DESKTOP-L6EA2UJ`, 1절 기기 이름 — Windows와 WSL Ubuntu-24.04, 실제 모델 호출·인증 연결 진단 없음) · 브랜치 `claude/merge-offline-progression-20260924` · 기준 main `34975794dec2a45b9fd8a11f3133d2b202ebb8ee`
 
 현재 인계는 이 파일 하나다. 완료 이력이 다음 일을 가리지 않도록 정리했다. **이전 판 전체는 [보관본](docs/handoff/2026-09-24-before-a1-integrity.md)에 바이트 그대로 있다.** 사용자 결정(2절)과 금지 사항(5절)은 유지했고, 기기 관측·승인·명세 판정을 바꾸지 않았다. 직전 수정은 [PR #18 기록](docs/reviews/2026-09-24-a1-integrity/README.md), 간결성 점검·지속 취소·자원 정리는 [간결성 검토 기록](docs/reviews/2026-09-24-lean-lifecycle/README.md)에 있다. 이 판은 이전 인계의 필요한 부분만 고쳤으며 2절·5절 원문과 승인 경계를 유지했다. 4절의 순서표는 2026-09-24 claude 세션이 두 검사(간결성·[구조](docs/reviews/2026-09-24-structure-audit/README.md))와 새 main의 실행 허가 계산을 보고 정했다.
 
@@ -9,12 +9,12 @@
 1. `git fetch --all --prune` 뒤 열린 PR과 `git branch -r --no-merged origin/main`을 본다. 3절과 다르면 GitHub가 기준이다. 아직 병합되지 않은 PR의 최신 인계는 그 브랜치에서 읽는다.
 2. 접근 범위를 PR에 적는다. 기기는 Windows `aux-pc`, 그 안의 WSL2 `Ubuntu-24.04`(`aux-pc-wsl`)로 구분한다. 운용 PC는 별도 관측이 없다. 웹 컨테이너의 성공을 사용자 PC의 성공으로 옮기지 않는다.
 3. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)을 읽는다. 작은 작업마다 커밋하고 곧바로 push한다. **ChatGPT는 main을 병합하지 않는다.** 사용자 또는 허락받은 claude 세션이 정확한 head의 CI 녹색을 확인한 뒤 병합한다.
-4. **이번 전체 검토·수정 요청은 실제 모델 호출 승인이 아니다.** 이전 2단계와 K01 승인은 사용했다. 새 호출, 실제 인증 폴더를 연결하는 진단, 설치·로그인은 별도 승인 경계를 지킨다. 사용량 한도 메시지면 멈추고 알린다.
-5. 다음 일은 4절의 순서표를 따른다. 1–4는 모델 호출도 사용자 결정도 필요 없다. 사용자 결정이 필요한 것은 3절 표에 있다. Claude 문맥 상태 변경, C3 정책, TM 후보 채택, Q4 결정은 대신 확정하지 않는다.
+4. **PR #22–#25의 검토·수정과 그 병합 요청은 실제 모델 호출 승인이 아니다.** 이전 2단계와 K01 승인은 사용했다. 새 호출, 실제 인증 폴더를 연결하는 진단, 설치·로그인은 별도 승인 경계를 지킨다. 사용량 한도 메시지면 멈추고 알린다.
+5. 다음 일은 4절의 순서표를 따른다. 1–4는 끝났고 다음은 5다 — 5의 명세 판 설계는 사용자와 먼저 정한다. 사용자 결정이 필요한 것은 3절 표에 있다. Claude 문맥 상태 변경, C3 정책, TM 후보 채택, Q4 결정은 대신 확정하지 않는다.
 
 ## 1. 지금 상태
 
-**A1은 독립 초안 공개 후 `report_without_synthesis` JSON을 저장할 수 있다. 합성자·주장 검증·결정 카드는 아직 없다.** 화면 서버는 모의 실행기만 쓴다. PR #18의 원장·HTTP·보고서 수정에 이어, PR #20이 실제 모델 호출 없이 지속 취소(K19), 작업 스레드 수명, 필요한 사건만 읽는 조회와 HTTP 연결/I/O 상한을 구현했다. 기존 runner의 취소 경로를 재사용하며 새 실행 엔진·서비스·런타임 의존성을 추가하지 않았다. 기존 실행 명세·격리·실행 허가·기기 관측 판정은 그대로다.
+**main에 순서 1–4가 들어왔다**(PR #22–#25, 3절). 공유 가림·실행 허가 검사, 격리 연결 모델, 참여자 행을 원본으로 삼는 gate에 이어 공개 뒤 모의 합성·원문 대조·조건부 결정 카드와 Q4 두 배치 미리보기가 있다. 모의 합성은 같은 문장을 묶고 원문 위치·저장 해시를 대조할 뿐 의미나 사실을 판정하지 않는다. 모든 주장은 미해결이며 실제 모델 합성·품질 검증은 아직 없다. 화면 서버는 모의 실행기만 쓴다. 새 서비스·런타임 의존성·실제 모델 호출은 추가하지 않았다. 기존 기기 관측과 실행 명세 판정은 유지한다.
 
 | 부품 | 책임과 현재 경계 |
 |---|---|
@@ -23,13 +23,14 @@
 | [`core/isolation.py`](core/isolation.py) | 참여자 진입점 `isolation.run()` 하나. 파일 허용 목록·빈 HOME/tmp·PID namespace·`never` 충돌 검사. 네트워크 공유와 자원 상한 부재는 남는다 |
 | [`core/membership.py`](core/membership.py), [`eligibility.py`](core/eligibility.py) | 구성 변경·정족수와 실행 허가 계산. 허가는 근거·날짜·설치 버전·구독·현재 `spec_revision` 관측을 요구한다. 기록 자체의 진실성은 증명하지 않는다 |
 | [`app/controller.py`](app/controller.py), [`store.py`](app/store.py) | 고정 입력 → 예약 → 수용 관문 → 봉인 → 공개의 유일한 상태 권위. 한 원장/한 controller, 시도 ID 조건부 전이, 늦은 결과 배제, 재시작 시 unknown. 거래 실패 복구에 이어 취소 의도를 영속화하고 COMMIT 뒤 신호를 보낸다. 늦은 답은 받지 않고 미확인 종료의 자리·예약 예산은 유지한다. 끝난 작업은 활성 스레드 목록에서 제거한다 |
+| [`app/state.py`](app/state.py), [`synthesis.py`](app/synthesis.py) | 참여자 행에서 진행 gate를 파생. 공개 뒤 모의 합성을 한 번 저장하고 원문 위치·저장 해시 대조·조건부 결정 카드로 표시. 실패도 원문 보고를 보존하며 추가 호출 없음 |
 | [`app/report.py`](app/report.py) | controller가 공개한 해당 실행만 원문·출처·고정 정족수·실패 포함 예산과 함께 JSON으로 투영. 합성·추천·사실 검증·추가 호출·원장 변경 없음 |
 | [`app/server.py`](app/server.py), [`화면`](app/static/index.html) | 토큰이 필요한 localhost API와 빌드 없는 HTML/JS. 엄격한 요청 검사와 취소/보고 버튼. 인증 전 포함 동시 연결 상한, 소켓 유휴 및 연결별 I/O 기한. Python 계산 전체의 시간·CPU·메모리 상한은 아님 |
 | [`app/cli_executor.py`](app/cli_executor.py) | 실제 Linux CLI 경로는 있지만 서버에 연결하지 않았다. 시도마다 기록으로 허가 계산. 관측 도구는 `prepare()`를 재사용하며 실제 controller의 `execute()` 호출 관측과는 다르다(K17) |
 | [`tools/w2/observe.py`](tools/w2/observe.py) | 실제 관측 호출의 단일 경로. 승인·예약 잠금, provider별 예산, 수용 관문, K46 nonce/helper/errno, 큰 입력 가운데·끝 표식, 최종 가림 |
 | [`tools/w2/`](tools/w2/README.md) | 모델 없는 CLI·인증 연결·Codex sandbox/profile 진단. 실제 로그인 폴더 연결도 승인 뒤에만. 합성 HOME을 먼저 쓴다 |
 | [`tools/runtime_inventory.py`](tools/runtime_inventory.py) | 버전/help 수집과 기록 구조 검사. 수집 성공만으로 `observed`나 `configured=true`를 만들지 않는다 |
-| [`design/`](design/README.md), [`아키텍처`](docs/architecture/v0.4/README.md) | Ledger 디자인과 계약·근거 원장. PR #18·#20·#21은 디자인 토큰·발행 아티팩트·근거 판정을 변경하지 않았다 |
+| [`design/`](design/README.md), [`아키텍처`](docs/architecture/v0.4/README.md) | Ledger 디자인과 계약·근거 원장. PR #18·#20–#26은 디자인 토큰·발행 아티팩트·근거 판정을 변경하지 않았다 |
 
 ### 기기 관측
 
@@ -38,12 +39,13 @@
 - 현재 [manifest](docs/experiments/v04-01-inventory/hosts/aux-pc-wsl/manifest.v2.json)의 Claude 칸은 유지했다. 다만 K31/리뷰 R04가 문맥 관측의 증거 수준을 문제 삼는다. Codex 문맥은 `failed`이고 K46 변경 뒤 명세 판도 다시 맞춰야 하므로 **실제 실행 허가 없음**. 이를 고치지 않고 실제 실행기를 연결하지 않는다.
 - 2단계는 Claude `claude-sonnet-5` 3회·Codex `gpt-6-luna` 2회였고 승인한 상한을 다 썼다. K01의 추가 Claude 1회도 끝났다. 이 모델 이름은 당시 관측/요청값이지 현재 공급자 모델 목록에 대한 새 주장이나 호출 승인이 아니다.
 - WSL에서는 `bash -l`, 저장소 `/mnt/c/ai/decision-model_lab`를 쓴다. 비로그인 셸은 `~/.local/bin`을 못 찾는다. 설치·버전·로그인·OS 상세와 기기별 함정은 보관본 1절 및 위 관측 원문이 기준이다.
-- **2026-09-24 claude 세션(aux-pc, 모델 호출 없음):** PR #20 head에서 Windows 전체 시험과 WSL `DML_REQUIRE_BWRAP=1` 전체 시험이 통과했다. Windows에서 건너뛴 것은 Linux 전용 시험뿐이고, WSL에서는 Windows 레지스트리 시험 하나뿐이다. CLI 설치·로그인·버전은 다시 보지 않았다.
+- **2026-09-24 claude 세션(aux-pc, 모델 호출 없음):** PR #20 head에 이어, PR #22–#25를 병합한 트리(#25 head `e053d0de35f71396d701020e43a032e2c43dc806`와 같은 트리)에서도 Windows 전체 시험과 WSL `DML_REQUIRE_BWRAP=1` 전체 시험이 통과했다. Windows에서 건너뛴 것은 Linux 전용 시험뿐이고, WSL에서는 Windows 레지스트리 시험 하나뿐이다. CLI 설치·로그인·버전은 다시 보지 않았다.
+- **기기 이름:** codex 기록의 hostname `DESKTOP-L6EA2UJ`는 `aux-pc`로 본다. 같은 날 claude 세션이 그 hostname에서 OS 판(10.0.26200)·Windows Python 판·`C:\ai\tools\gh`·저장소 경로·WSL 배포판이 [aux-pc 기록](docs/experiments/v04-01-inventory/hosts/aux-pc/manifest.json)과 이 인계 6절과 같음을 봤다. hostname 자체는 aux-pc 기록에 없으므로 사용자가 다르다고 하면 고친다. 기록에는 hostname 대신 `aux-pc`/`aux-pc-wsl`을 쓴다.
 - **실행 허가(같은 날 `eligibility()`로 계산, 설치 버전은 기록값으로 가정):**
   - **Claude:** 허가가 나온다. 다만 관측 30일 규칙으로 2026-10-23까지다. 그 근거인 전송·문맥·권한 관측은 모두 2단계 b1(`--add-dir … --tools Read`)에서 나왔다. controller의 실제 실행기는 공통 자료 없이 `--tools ""`로 부른다(구조 검사 G4).
   - **Codex:** 허가가 나오지 않는다. 명세 판이 `discussant-2`로 바뀌어 전송·권한을 다시 관측해야 하고, 문맥은 `failed`다.
   - **agy:** WSL에 설치돼 있지 않다.
-- aux-pc의 시연용 journal(`~/.decision-model-lab/mock`)은 새 코드로 처음 열 때 스키마 3으로 올라간다. 되돌릴 수 없다(K28).
+- 기존 journal은 지금 main의 코드로 처음 열 때 스키마 4로 올라간다. 기존 `roster.phase`가 없거나 잘못되면 이전 전체를 롤백한다. 사용자 시연용 journal은 PR #22–#26의 세션 모두 열지 않았다. 사용 중인 원장은 새 코드로 열기 전에 백업하며 하향 이전은 없다(K28).
 
 ### 기록과 열린 결정
 
@@ -52,7 +54,7 @@
 | ID | 상태 |
 |---|---|
 | Q3 | Python 코어, TypeScript는 화면 경계. 현재는 빌드 없는 HTML/JS이며 이행 시점 미정 |
-| Q4 | `unresolved`. 같은 내용의 결정 우선/대조표 우선을 비교한 뒤 정한다. 이번 배치 수정은 Q4 선택이 아니다 |
+| Q4 | `unresolved`. 같은 결과의 결정 우선/대조표 우선 미리보기를 구현했다. 사용자 비교·선택과 실제 브라우저 시각 확인은 남았다 |
 | Q5·Q6·C2 | 결정됨: 원본 앱 화면 자동화 안 함, 고정 정족수 정책으로 미확인 수동 답 구분, agy 자동 실행 기본 끔 |
 | C3 | Claude 자기 보고의 증거 수준과 Codex 계정 플러그인·MCP 문맥 문제. 추가 관측 또는 명시적 정책 완화 중 사용자가 결정. 완화를 `observed`로 위장하지 않는다 |
 
@@ -83,29 +85,30 @@
 
 ## 3. 진행 중인 작업
 
-**지금 병합되지 않은 브랜치: 없음.** 이 줄은 병합 뒤에 맞도록 브랜치에서 미리 적었다. 새 작업을 시작하면 여기에 브랜치를 적는다. GitHub(열린 PR, `git branch -r --no-merged origin/main`)와 다르면 GitHub가 기준이다.
+**진행 중:** 없음. 열린 PR이나 `git branch -r --no-merged origin/main`에 무엇이 보이면 GitHub가 기준이다.
 
-- **마지막 병합:** [PR #21](https://github.com/inlight37-design/decision-model_lab/pull/21)(`claude/cleanup-merge-branches-il1srl`, 문서만, 모델 호출 없음) — [구조 전수검사](docs/reviews/2026-09-24-structure-audit/README.md), 간결성 검토와의 [비교](docs/reviews/2026-09-24-structure-audit/COMPARISON.md), 다음 일의 순서(4절).
-  - 결론: 뼈대는 구조적이고 살은 리뷰마다 덧댔다. 전면 재작성은 필요 없다. 흩어진 사본을 한 주인으로 모은다.
-  - 재현한 틈 G1–G9는 PR #20 뒤의 main에서도 그대로다. 4절 순서표가 그것부터 다룬다.
+- **마지막 병합:** 순서 1–4(codex) — [PR #22](https://github.com/inlight37-design/decision-model_lab/pull/22) 공유 가림·실행 허가 → [#23](https://github.com/inlight37-design/decision-model_lab/pull/23) 격리 연결 모델 → [#24](https://github.com/inlight37-design/decision-model_lab/pull/24) 참여자 상태·gate → [#25](https://github.com/inlight37-design/decision-model_lab/pull/25) 모의 합성·결정 카드·Q4 미리보기. claude 세션이 [PR #26](https://github.com/inlight37-design/decision-model_lab/pull/26)(`claude/merge-offline-progression-20260924`)으로 이 순서대로 병합했다. 모델 호출 없음. 병합 검증과 검토는 [병합 기록](docs/reviews/2026-09-24-merge-22-25/README.md), 구현 판단과 검토 중 고친 결함(실행 ID 충돌, 공개 단계 없는 옛 원장 이전, 초안 해시 검증 누락)은 [codex 검토](docs/reviews/2026-09-24-offline-progression/README.md)에 있다.
+  - 네 브랜치는 차례로 쌓였지만 같은 수정("공개 검사·짧은 실행 ID")이 층마다 따로 커밋돼, #22를 병합하면 #23·#24가 이 파일에서 충돌했다(코드는 충돌 없음). 다른 세션의 브랜치에는 push하지 않으므로 통합 브랜치에서 순서대로 병합하고 이 파일은 뒤 브랜치 판을 택했다. 병합 트리는 CI를 통과한 #25 head `e053d0d`와 같고, 네 PR의 head가 모두 main 이력에 들어간다.
+  - 구조 검사의 틈 중 G1·G2·G3·G5·G7·G8·G9를 닫았다. 실행 계약의 G4·G6은 순서 5에 남는다.
+- **그 앞:** [PR #21](https://github.com/inlight37-design/decision-model_lab/pull/21)(`claude/cleanup-merge-branches-il1srl`, 문서만, 모델 호출 없음) — [구조 전수검사](docs/reviews/2026-09-24-structure-audit/README.md), 간결성 검토와의 [비교](docs/reviews/2026-09-24-structure-audit/COMPARISON.md), 다음 일의 순서(4절). 결론: 뼈대는 구조적이고 살은 리뷰마다 덧댔다. 전면 재작성은 필요 없다. 흩어진 사본을 한 주인으로 모은다.
 - **그 앞:** [PR #20](https://github.com/inlight37-design/decision-model_lab/pull/20) ChatGPT의 간결성 검토·지속 취소(K19)·자원 수명 정리. 사용자 지시로 claude 세션이 병합했다(`962b61c`). 병합 전에 CI 녹색에 더해 aux-pc의 Windows(job object 경로)와 WSL(`DML_REQUIRE_BWRAP=1`)에서 전체 시험이 통과했다. 처음 연 PR #19가 자동으로 닫히고 #20으로 다시 열린 경위는 [검토 목록](docs/reviews/README.md)의 22번 단서에 있다.
 - **그 앞:** [PR #18](https://github.com/inlight37-design/decision-model_lab/pull/18) ChatGPT의 A1 무결성 수정과 합성 없는 보고. 보관한 인계와 2절·5절 원문이 그대로인지 확인하고 병합했다. 그보다 앞은 [직전 인계](docs/handoff/2026-09-24-before-a1-integrity.md) 3절과 Git 로그에 있다.
-- 병합된 PR의 브랜치는 저장소 설정(병합 시 자동 삭제 — 켜져 있음을 2026-09-24 확인)이 지운다. 로컬에서 병합해 push한 브랜치는 병합한 쪽이 지운다. 남은 것은 [prune-merged-branches](.github/workflows/prune-merged-branches.yml)를 `dry_run`부터 돌려 지운다.
+- 병합된 PR의 브랜치는 저장소 설정(병합 시 자동 삭제 — 켜져 있음을 2026-09-24 확인)이 지운다. 로컬에서 병합해 push한 브랜치와 통합 PR로 들어간 브랜치(PR #22–#25의 codex 브랜치처럼)는 자동으로 지워지지 않으므로 병합한 쪽이 지운다. 남은 것은 [prune-merged-branches](.github/workflows/prune-merged-branches.yml)를 `dry_run`부터 돌려 지운다.
 
 ### 사용자 판단·승인을 기다리는 것
 
-결정이 없어도 4절 순서 1–4는 진행한다. 아래 결정은 그 뒤의 실제 사용(허가·관측·실행기 연결)과 정리 작업을 푼다.
+순서 1–4는 main에 들어왔다. 다음은 순서 5의 실행 계약 설계와 아래 결정이다. 실제 모델 호출·정책 완화·설정 변경을 검토·병합 요청의 승인으로 해석하지 않았다.
 
 | 결정 | 권고 | 무엇을 막고 있나 |
 |---|---|---|
-| **K46 확인 호출 승인.** 카드: Codex 최대 1회(Claude 0), 실패·거부·timeout 포함, 호출당 300초, 요청 모델 `gpt-6-luna`, `--keep-session`은 따로 정한다. 멈춤 조건은 4절 K46 절 | 4절 순서 1(가림 통합) 뒤에 승인한다. 이 호출의 요약을 저장소로 옮기기 때문이다 | Codex의 전송·권한 재관측 |
+| **K46 확인 호출 승인.** 카드: Codex 최대 1회(Claude 0), 실패·거부·timeout 포함, 호출당 300초, 요청 모델 `gpt-6-luna`, `--keep-session`은 따로 정한다. 멈춤 조건은 4절 K46 절 | 이제 승인할 수 있다. 이 호출의 요약을 저장소로 옮기므로 먼저 하기로 한 가림 통합(4절 순서 1)이 PR #22로 main에 들어왔다 | Codex의 전송·권한 재관측 |
 | **C3 Codex 문맥.** (a) 추가 관측 (b) 빈 작업 폴더 완화를 실행 허가의 정책 칸으로 받아들인다. 정책 칸은 관측과 구분해 화면·보고에 표시한다 | (b). 관측만으로는 계정 플러그인·원격 MCP가 문맥에 "없음"을 보이기 어렵다(K44). (b)는 실행 허가에 칸 하나를 더하는 작은 코드 변경이다. `--keep-session`은 탐색 보조이지 독립성 증명이 아니다 | Codex의 실행 허가 |
 | **Claude 실행 허가를 다시 세우는 방법**(리뷰 R04(a)·K31·G4) | 4절 순서 5 뒤에 Claude 1회로 controller argv 그대로 다시 관측한다. 문맥은 모델 자기 보고가 아닌 방법으로 본다. 그때까지 기록은 바꾸지 않는다 — 서버가 모의 실행기만 써서 당장 막히는 일은 없다 | Claude의 실제 실행(순서 6) |
 | **Codex 자동 리뷰** | 자동은 끄고, 코드를 바꾸는 PR에서만 세션이 `@codex review`로 부른다. 실제 버그를 두 번 잡았지만, 문서 PR에도 Codex 사용량을 쓸 수 있다. 설정: [Codex 설정](https://chatgpt.com/codex/cloud/settings/general) | 없음 |
 | **main 필수 상태 검사**(저장소 주인만) | 켠다(`checks (3.12)`·`checks (3.13)`). "CI 녹색 전 병합 금지"가 문장이 아니라 장치가 된다. 주인 계정으로 한 push는 규칙을 우회할 수 있다 | 없음 |
 | **정리 작업:** 끝난 일회성 진단 은퇴, 동결 Windows 경로를 한 모듈로, 인계 축소(구조 검사 P-2) | 셋 다 한다. 은퇴하는 파일은 기록 색인에 `retired at <sha>`를 남기고 지운다 | 4절 정리 작업 |
-| **TM 적용 계획 A.** PR #8 병합은 조사 보존이지 채택이 아니다. tmux를 참여자 실행 엔진으로 붙이지 않는다 | 순서 4의 화면 작업 때 함께 한다 | 없음 |
-| **Q3(TypeScript)·Q4(첫 화면)** | Q4는 순서 4 뒤에 두 첫 화면을 보고 정한다. Q3은 미룬다 | 없음 |
+| **TM 적용 계획 A.** PR #8 병합은 조사 보존이지 채택이 아니다. tmux를 참여자 실행 엔진으로 붙이지 않는다 | 순서 4(PR #25)에는 넣지 않았다. 채택하면 다음 화면 작업 때 함께 한다 | 없음 |
+| **Q3(TypeScript)·Q4(첫 화면)** | Q4: 두 첫 화면이 main에 있다. 모의 화면(6절)에서 공개 뒤 "모의 합성" 버튼을 누르고 A(결정 우선)·B(대조표 우선)를 실제 브라우저로 비교해 고른다 — 아직 없는 실제 브라우저 시각 확인(K27)도 이때 된다. Q3은 미룬다 | 없음 |
 | **agy(B4)** | 필요할 때만 켠다. WSL에는 설치돼 있지 않다 | B4 |
 
 ## 4. 다음 작업
@@ -114,14 +117,14 @@
 
 ### 순서 — 2026-09-24 정리
 
-두 검사(간결성·[구조](docs/reviews/2026-09-24-structure-audit/README.md))와 새 main의 실행 허가 계산으로 정했다. 원칙은 하나다: **기능을 더하기 전에, 그 기능이 기댈 규칙의 주인을 하나로 모은다.** 각 단계는 PR 하나다. 반례를 먼저 회귀 시험으로 만들고 고친다. 1–4는 모델을 부르지 않고 사용자 결정 없이 할 수 있다. G1–G9는 구조 검사 4절의 틈이다.
+두 검사(간결성·[구조](docs/reviews/2026-09-24-structure-audit/README.md))와 main의 실행 허가 계산으로 정한 순서다. **1–4는 PR #22–#25로 main에 들어왔다. 다음 구현은 5다.** 각 단계는 main 대상 PR로 나누었다. G1–G9는 구조 검사 4절의 틈이다. Q4 배치 선택과 실제 호출 승인은 여전히 사용자 판단이다.
 
 | 순서 | 할 일 | 왜 이 자리인가 |
 |---|---|---|
-| 1 | **작은 통합 묶음**(PR 둘로 나눠도 된다). 제품 쪽: 실행 허가가 `row_problems`로 시작한다(G5). 원장 `CREATE TABLE`의 정책 기본값을 지운다(G7) — 이전(migration)의 기본값은 스키마 2 이전 실행의 동작을 지키므로 둔다. 토큰 변수의 넘김·거절을 격리 여부별 표 하나로 적는다(G8). 도구 쪽: 가림을 한 모듈로 모으고 init 이름 공개 정책을 하나로 한다(G2·G3) | 작고 서로 독립이다. 가림 누락(G2)은 다음 실제 관측(K46) 전에 닫는다 |
-| 2 | **격리 연결 모델**(G1). bwrap 적용 순서의 `(경로, ro/rw/tmpfs)` 목록 하나를 인자 조립과 검사에 함께 쓴다. 규칙은 셋이다: 덮음 거절, 바깥보다 넓은 안쪽 권한 거절, `never`와 겹침 거절 | 시스템 경로를 쓰기 가능하게 연결하는 부류를 통째로 막는다. 공통 자료 첨부와 실제 실행기 연결로 사용자가 고른 경로가 들어오기 전에 둔다 |
-| 3 | **참여자 상태의 주인 하나 + 파생 gate**(구조 검사 5절 4, G9). 참여자 행을 유일한 주인으로 두고 전이를 헬퍼 하나로 모은다. `runs.roster` 사본은 참여자 행에서 파생해 손 동기화를 없앤다(`cancel_run`은 지금 명단을 맞추지 않는다). `cancel_requested` 판단 7곳을 gate 하나로 모은다. membership 결정의 `action`은 쓰거나 지운다 | 합성 단계가 전이를 더 만들기 전이다. PR #20의 취소 회귀 시험이 안전망이다 |
-| 4 | **모의 합성자 → 주장 대조 → [결정 카드](design/project/components/DecisionCard/README.md)**, 그 뒤 Q4의 두 첫 화면 비교(K18). 반례·미합의·확인 불가를 보존하고, 합의를 사실 검증처럼 표시하지 않는다 | A1 완성이다. 3 위에서 전이 하나로 붙인다 |
+| 1 · 완료 #22 | **작은 통합 묶음**(PR 둘로 나눠도 된다). 제품 쪽: 실행 허가가 `row_problems`로 시작한다(G5). 원장 `CREATE TABLE`의 정책 기본값을 지운다(G7) — 이전(migration)의 기본값은 스키마 2 이전 실행의 동작을 지키므로 둔다. 토큰 변수의 넘김·거절을 격리 여부별 표 하나로 적는다(G8). 도구 쪽: 가림을 한 모듈로 모으고 init 이름 공개 정책을 하나로 한다(G2·G3) | 작고 서로 독립이다. 가림 누락(G2)은 다음 실제 관측(K46) 전에 닫는다 |
+| 2 · 완료 #23 | **격리 연결 모델**(G1). bwrap 적용 순서의 `(경로, ro/rw/tmpfs)` 목록 하나를 인자 조립과 검사에 함께 쓴다. 규칙은 셋이다: 덮음 거절, 바깥보다 넓은 안쪽 권한 거절, `never`와 겹침 거절 | 시스템 경로를 쓰기 가능하게 연결하는 부류를 통째로 막는다. 공통 자료 첨부와 실제 실행기 연결로 사용자가 고른 경로가 들어오기 전에 둔다 |
+| 3 · 완료 #24 | **참여자 상태의 주인 하나 + 파생 gate**(구조 검사 5절 4, G9). 참여자 행을 유일한 주인으로 두고 전이를 헬퍼 하나로 모은다. `runs.roster` 사본은 참여자 행에서 파생해 손 동기화를 없앤다(`cancel_run`은 지금 명단을 맞추지 않는다). `cancel_requested` 판단 7곳을 gate 하나로 모은다. membership 결정의 `action`은 쓰거나 지운다 | 합성 단계가 전이를 더 만들기 전이다. PR #20의 취소 회귀 시험이 안전망이다 |
+| 4 · 완료 #25 | **모의 합성자 → 주장 대조 → [결정 카드](design/project/components/DecisionCard/README.md)**, 그 뒤 Q4의 두 첫 화면 비교(K18). 반례·미합의·확인 불가를 보존하고, 합의를 사실 검증처럼 표시하지 않는다 | A1 완성이다. 3 위에서 전이 하나로 붙인다 |
 | 5 | **실행 계약 완결**(G4·G6). `ExecutionSpec`이 명세 판·stderr 표식·모델을 갖고, 판은 argv 틀에서 정한다. 실행기는 계획 → 기록 → 실행(계획) 한 길로 간다. controller에서 모의 실행기 지식을 뺀다. 공통 자료 첨부도 여기서 함께 설계한다 | K17과 다음 Claude 관측 전에 한다. Claude argv는 공통 자료 유무로 두 모양인데, 지금 허가의 근거는 자료가 있는 모양이고 controller는 없는 모양을 쓴다(1절 기기 관측). 판이 갈리면 Claude 기록을 다시 적어야 하므로 판 설계는 사용자와 먼저 정한다 |
 | 6 | **실제 실행기를 서버에 연결**(K17) | 5 뒤에 한다. 허가가 나온 CLI만 붙인다 |
 | 7 | **B3 파일럿과 사용량 비교**(아래 B3 절) | 6 뒤, 승인 뒤에 한다. 여러 번 부른다 |
@@ -141,11 +144,11 @@
 
 ### A1 모의 후속 — 실제 모델 호출 없음
 
-**끝난 부분:** 공개된 초안의 `report_without_synthesis` JSON 저장. 합성자가 없는 현재 A1의 산출물이며, 실제 합성 실패 복구나 결정 카드 완성이라고 부르지 않는다. 정족수 부족/미승인 축소/공개 전에는 저장할 수 없다.
+**PR #25에서 끝난 부분:** 공개 초안의 원문 JSON 저장, 명시적 모의 합성, 원문 위치·저장 해시 대조, 조건부 결정 카드, Q4 두 배치 미리보기. 원문 보고 판 2의 합성 상태는 `not_included`이며 결정 보고는 모의 결과를 별도로 묶는다. 정족수 부족/미승인 축소/공개 전에는 합성하거나 저장할 수 없다. 실패는 `unavailable`로 기록하고 원문을 보존한다. 실제 모델 합성 실패나 사실 검증을 재현했다는 뜻은 아니다.
 
 **PR #20에서 끝난 부분(K19):** 원장에 저장되는 취소, API/버튼, 실행기 신호 전달, 시작 전/입력 청크 사이 중단, 늦은 답 배제, 재시작 후 취소 유지. 취소 거래가 실패하면 신호도 보내지 않는다. 예약한 호출 예산을 돌려주지 않고 종료 미확인은 unknown/자리 점유를 유지한다. 원본 앱에서 사용자가 실행한 작업이나 이미 OS에 넘긴 입력을 강제로 되돌린다는 보장은 아니다.
 
-**다음:** 위 순서표 3과 4다. ChatGPT(PR #20)는 모의 합성자·주장 대조·결정 카드를 먼저 완성하라고 권했고, 구조 검사는 그 전에 참여자 상태의 주인을 하나로 모으라고 권했다. 순서표는 상태 통합(3)을 먼저 둔다. 합성 단계가 전이를 더 만들기 때문이다. 기본 상태 조회는 여전히 모든 실행을 읽으므로, 이력이 커질 때 목록 페이지화/선택 실행 상세를 먼저 잰다.
+**다음:** 위 순서표 5의 실행 명세 판 설계, Q4의 사용자 비교 판단, 실제 브라우저 시각 확인이다. PR #25를 만든 codex 세션은 브라우저 연결 목록이 비어 있어 시각 검증을 하지 못했고, HTTP 경계와 오프라인 JavaScript 렌더링만 따로 검사했다. 병합한 claude 세션도 브라우저로 보지 않았다. 기본 상태 조회는 여전히 모든 실행을 읽으므로, 이력이 커질 때 목록 페이지화/선택 실행 상세를 먼저 잰다.
 
 순서표 4 안팎의 남은 A1 범위:
 
@@ -156,7 +159,7 @@
 
 ### K46 실제 확인과 C3 — 새 승인 뒤에만
 
-K46은 K09보다 먼저다. 순서표 1의 가림 통합(G2)을 먼저 한다 — 이 호출의 요약을 저장소로 옮기기 때문이다. adapter profile과 합성 HOME 진단은 끝났으나 **실제 exec에서 모델 명령이 인증 파일 읽기를 거절당하는지는 아직 모른다.** `codex exec`에는 `-P`가 없고 `-c default_permissions=…`를 쓴다. 옛 `--sandbox read-only`와 함께 주지 않는다.
+K46은 K09보다 먼저다. 이 호출의 요약을 저장소로 옮기므로 먼저 하기로 한 순서표 1의 가림 통합(G2)은 PR #22로 끝났다. adapter profile과 합성 HOME 진단은 끝났으나 **실제 exec에서 모델 명령이 인증 파일 읽기를 거절당하는지는 아직 모른다.** `codex exec`에는 `-P`가 없고 `-c default_permissions=…`를 쓴다. 옛 `--sandbox read-only`와 함께 주지 않는다.
 
 승인이 생기면 `aux-pc-wsl` 로그인 셸에서 저장소 루트로 이동하여:
 
@@ -199,7 +202,7 @@ ID는 유지했다. 아래는 현재 조치 요약이며 상세 증거/과거 �
 | K15 | bwrap 신뢰는 root 소유 `/usr/bin/bwrap` 검사. 같은 Python 프로세스의 악성 코드를 격리하는 장치 아님 |
 | K16 | WSL Windows CLI 탐지는 경험칙. 실제 경계는 `/mnt`·`/init`·`/run`을 연결하지 않는 격리 |
 | K17 | 실제 executor가 서버에 연결되지 않음. 관측의 `prepare()` 재사용 ≠ controller 전체 실제 호출. B3 전 필요 |
-| K18 | **부분 진행:** 공개 뒤 합성 없는 JSON 보고 있음. 합성자·주장 대조·결정 카드·Q4 비교 없음 |
+| K18 | **모의 흐름 구현:** 공개 뒤 발췌 합성·원문 대조·조건부 결정 카드·Q4 두 배치 미리보기. 실제 모델 합성·외부 사실 검증·Q4 사용자 선택은 남음 |
 | K19 | **구현:** `runs.cancel_requested` 영속화 후 신호, 신규 시작/수동 제출/공개 차단, 늦은 답 배제, 재시작 유지. 예약 예산·미확인 종료 자리 유지. 시작 전/청크 사이 취소 확인이며 이미 진행 중인 OS 쓰기나 외부 앱 작업의 즉시 중단 보장은 아님 |
 | K20 | 한 기기 파일 잠금/한 원장. 다중 기기 공유 미지원, 실행별 사건 순번. 거래 실패 복구 보강은 분산 원장 보장이 아님 |
 | K21 | 수동 입력 일치/원본 앱 사용은 증명 불가. 다른 실행 표식은 거절하나 표식 없음도 받음; 사용자 확인은 별도 기록 |
@@ -209,7 +212,7 @@ ID는 유지했다. 아래는 현재 조치 요약이며 상세 증거/과거 �
 | K25 | 화면은 HTML/JS, TypeScript 이행 미정(Q3). 분석 컨테이너의 Node 존재는 사용자 PC 설치 관측이 아님 |
 | K26 | 토큰은 데이터 폴더와 서버 출력에 있음. 격리 밖 동일 사용자 프로세스는 신뢰 범위; POSIX 폴더 0700/파일 0600 |
 | K27 | **부분 진행:** Chromium 오프라인 DOM/취소·보고서 다운로드·한글·390px 배치 확인. 실제 브라우저 localhost 탐색은 관리 정책으로 차단되어 미검증; 사용자 PC/접근성/교차 브라우저도 미검증 |
-| K28 | journal 스키마 3: 취소 칸을 추가하며 기존 실행은 취소 아님으로 이전. 상향 이전만 지원, 더 새로운 버전은 거절. 이전 코드로 되돌리기 전 백업 필요 |
+| K28 | journal 스키마 4: 기존 명단에서 공개 단계를 한 번 이전. 참여자 상태는 행에서만 파생. 단계 누락/오류는 전체 롤백. 상향 이전만 지원하므로 새 코드 사용 전 백업 필요 |
 | K30 | Linux Codex의 실행 전 거부 문자열 미확인. 파일 쓰기 차단과 stderr 문자열 판정은 별개 |
 | K31 | Claude 지시문 미적재는 모델 자기 보고뿐. init으로 확인 불가. 상태 변경/추가 관측은 사용자 판단 |
 | K32 | Codex·agy 결과의 모델 보고 부재로 조용한 강등을 결과만으로 감지 불가 |
@@ -225,9 +228,9 @@ ID는 유지했다. 아래는 현재 조치 요약이며 상세 증거/과거 �
 | K45 | Claude safe-mode의 agents-md 플러그인 의미 미확인. 참여자 argv는 restricted만 유지 |
 | K46 | Codex auth.json 읽기 위험. adapter profile·합성 HOME errno 검증은 있으나 모델 exec의 집행 미관측. 새 승인 확인 호출 전 닫지 않음 |
 
-기존에 닫힌 ID도 지우지 않는다: K12·K29·K33·K36은 [2단계 기록](docs/experiments/w2-isolation/stage2-aux-pc-wsl.md), K37은 사용자의 gh 로그인 후 claude가 CI 로그를 읽은 기록이다. 로그인이 풀리면 익명 API로 결과만 본다. 이번 PR의 CI 성공은 실제 CLI 인증/모델 품질 검증이 아니다.
+기존에 닫힌 ID도 지우지 않는다: K12·K29·K33·K36은 [2단계 기록](docs/experiments/w2-isolation/stage2-aux-pc-wsl.md), K37은 사용자의 gh 로그인 후 claude가 CI 로그를 읽은 기록이다. 로그인이 풀리면 익명 API로 결과만 본다. CI 성공은 실제 CLI 인증/모델 품질 검증이 아니다.
 
-낮은 우선순위 후보는 그대로다: 토큰 대비 수정, `quota_projection`의 실제 응답 대조, Hermes HP-04–HP-10, 원장 `recheck`, 외부 리뷰 L1–L4, 개수 lint SHA 범위, Actions Node 경고, 저장소 설명·토픽. 다른 리뷰가 오면 원문을 고치지 말고 반례 재현/원본 수정/회귀 시험/반영 기록 순으로 처리한다.
+낮은 우선순위 후보는 그대로다: 가림의 `Bearer` 최소 길이(PR #22 뒤 help 문장의 "Bearer token"도 가린다, [병합 기록](docs/reviews/2026-09-24-merge-22-25/README.md)), 토큰 대비 수정, `quota_projection`의 실제 응답 대조, Hermes HP-04–HP-10, 원장 `recheck`, 외부 리뷰 L1–L4, 개수 lint SHA 범위, Actions Node 경고, 저장소 설명·토픽. 다른 리뷰가 오면 원문을 고치지 말고 반례 재현/원본 수정/회귀 시험/반영 기록 순으로 처리한다.
 
 ## 5. 하지 말 것
 

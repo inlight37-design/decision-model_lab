@@ -44,6 +44,9 @@ ENV_VARS: tuple[tuple[str, str, str], ...] = (
 
 # 자식 환경에서 뺀다: 구독 대신 API 과금이나 다른 endpoint로 바꿀 수 있는 변수. 남기는 것은
 # 설정 위치(CLAUDE_CONFIG_DIR, CODEX_HOME — 빼면 로그인을 못 찾는다)와 구독 토큰뿐이다.
+# child_env는 비격리 네이티브 경로의 정책이다. Linux 참여자는 이 환경을 그대로 넘기지 않고
+# isolation.PASS_ENV/REFUSED_ENV로 다시 제한하며, 구독 OAuth 토큰도 거절한다.
+# 격리 안 인증은 로그인 파일 연결만 쓴다. 정책 표: tools/w2/README.md.
 KEEP_VARS = frozenset({"CLAUDE_CONFIG_DIR", "CODEX_HOME", "CLAUDE_CODE_OAUTH_TOKEN"})
 BILLING_VARS = frozenset(name for name, _, _ in ENV_VARS) - KEEP_VARS
 

@@ -100,7 +100,7 @@ def eligibility(manifest: Mapping[str, Any], adapter_id: str, *, enabled: bool, 
         return Verdict(False, (f"{adapter_id} appears more than once in the record",))
     row = matches[0]
     current_spec = spec_revision if spec_revision is not None else adapters.SPEC_REVISION.get(adapter_id)
-    reasons: list[str] = []
+    reasons = row_problems(row)
     if not enabled:
         reasons.append(f"{adapter_id} is turned off")
     for field in FIELDS:
@@ -109,11 +109,9 @@ def eligibility(manifest: Mapping[str, Any], adapter_id: str, *, enabled: bool, 
         if status != "observed":
             reasons.append(f"{field} is {status or 'missing'}")
             continue
-        if not _text(entry.get("evidence")):
-            reasons.append(f"{field} is observed without evidence")
         when = observed_on(entry)
         if when is None:
-            reasons.append(f"{field} has no valid observed_at")
+            continue  # row_problems owns evidence, date shape and spec presence
         elif (today - when).days < 0:
             reasons.append(f"{field} was observed in the future ({entry.get('observed_at')})")
         elif (today - when).days > max_age_days:
@@ -124,11 +122,9 @@ def eligibility(manifest: Mapping[str, Any], adapter_id: str, *, enabled: bool, 
     installed = row.get("installed") if isinstance(row.get("installed"), Mapping) else {}
     recorded = installed.get("version")
     if installed.get("status") == "observed":
-        if not _text(recorded):
-            reasons.append("the record has no installed version")
-        elif current_version is None:
+        if current_version is None:
             reasons.append(f"installed version unknown; the record says {recorded} — observe again")
-        elif recorded != current_version:
+        elif _text(recorded) and recorded != current_version:
             reasons.append(f"installed version {current_version} differs from the recorded {recorded}"
                            " — observe again")
     auth = row.get("auth_observed") if isinstance(row.get("auth_observed"), Mapping) else {}
