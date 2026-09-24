@@ -21,6 +21,7 @@ import tempfile
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from core import env as core_env, isolation  # noqa: E402
 from tools.w2.cli_boundary import STATUS, status_summary  # noqa: E402
+from tools.redaction import scrub, scrub_all  # noqa: E402
 
 HOME = os.path.expanduser("~")
 SANDBOX_ENV = {"LANG": "C.UTF-8", "NO_COLOR": "1"}
@@ -47,13 +48,12 @@ HINT = re.compile(r"(?i)read-only|EROFS|permission|denied|not logged|login|auth|
 
 
 def tilde(path: str) -> str:
-    return path.replace(HOME, "~")
+    return scrub(path, HOME)
 
 
 def hide(text: str) -> str:
     """출력 글에서 HOME은 ~로, 이메일 모양과 긴 토큰 모양 문자열은 지운다. 오류 줄에 값이 섞여 나와도 옮기지 않는다."""
-    text = re.sub(r"[\w.+-]+@[\w-]+\.[\w.]+", "<email>", tilde(text))
-    return re.sub(r"[A-Za-z0-9_\-]{24,}", "<redacted>", text)
+    return scrub(text, HOME, opaque_tokens=True)
 
 
 def case_mounts(adapter_id: str, exe: str, paths) -> tuple[tuple[str, ...], tuple[str, ...]]:
@@ -97,7 +97,7 @@ def main() -> int:
             report["cli"][adapter_id] = {"refused": str(exc)}
             continue
         report["cli"][adapter_id] = [observe_case(adapter_id, exe, label, paths) for label, paths in CASES[adapter_id]]
-    print(json.dumps(report, ensure_ascii=False, indent=1))
+    print(json.dumps(scrub_all(report, HOME), ensure_ascii=False, indent=1))
     return 0
 
 

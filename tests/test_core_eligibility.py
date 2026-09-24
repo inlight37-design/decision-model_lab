@@ -87,9 +87,9 @@ class EligibilityTests(unittest.TestCase):
         twice = record()
         twice["adapters"].append(copy.deepcopy(twice["adapters"][0]))
         cases = ((every(lambda e: e.update(observed_at="2099-01-01")), {}, "observed in the future"),
-                 (every(lambda e: e.update(observed_at="2026-02-30")), {}, "no valid observed_at"),
-                 (missing_evidence, {}, "context_conformance is observed without evidence"),
-                 (no_version, {"current_version": None}, "no installed version"),
+                 (every(lambda e: e.update(observed_at="2026-02-30")), {}, "observed_at as"),
+                 (missing_evidence, {}, "context_conformance: observed needs a non-empty evidence"),
+                 (no_version, {"current_version": None}, "installed: observed needs the version"),
                  (twice, {}, "appears more than once"),
                  (record(context_conformance="observed"), {}, "context_conformance is missing"))
         for manifest, kwargs, words in cases:
@@ -105,7 +105,23 @@ class EligibilityTests(unittest.TestCase):
         self.assertEqual(len(v.reasons), len(eligibility.SPEC_BOUND))
         self.assertTrue(all("the current spec is discussant-99" in r for r in v.reasons), v.reasons)
         unbound = record(permission_conformance=observed())
-        self.assertIn("permission_conformance was observed with participant spec unknown", verdict(unbound).reasons[0])
+        self.assertTrue(any("permission_conformance was observed with participant spec unknown" in reason
+                            for reason in verdict(unbound).reasons))
+
+    def test_runtime_and_inventory_share_every_structural_refusal(self):
+        for field in eligibility.FIELDS:
+            for entry in (None, "observed", {"status": "invented"}, {"status": "observed"},
+                          observed(evidence=" "), observed(observed_at="2026-02-30")):
+                with self.subTest(field=field, entry=entry):
+                    broken = record(**{field: entry})
+                    problems = eligibility.row_problems(broken["adapters"][0])
+                    self.assertTrue(problems)
+                    runtime = verdict(broken)
+                    inventory = runtime_inventory.validate_manifest_v2(broken)
+                    self.assertFalse(runtime.eligible)
+                    for problem in problems:
+                        self.assertIn(problem, runtime.reasons)
+                        self.assertIn("claude-code." + problem, inventory)
 
 
 class RecordTests(unittest.TestCase):
@@ -186,7 +202,7 @@ class ExecutorGateTests(unittest.TestCase):
             fake_date.today.return_value = TODAY
             ex._check_eligible("claude-code", exe)                              # 허가
             self.write(record(context_conformance={"status": "failed", "observed_at": "2026-09-23", "evidence": "x"}))
-            with self.assertRaisesRegex(adapters.AdapterError, "not eligible to run: context_conformance is failed"):
+            with self.assertRaisesRegex(adapters.AdapterError, "context_conformance is failed"):
                 ex._check_eligible("claude-code", exe)                          # 기록이 바뀌면 바로 반영
             path.write_text("{broken", encoding="utf-8")
             with self.assertRaisesRegex(adapters.AdapterError, "cannot read the inventory"):
