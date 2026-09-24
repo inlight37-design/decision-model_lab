@@ -1,0 +1,53 @@
+diff --git a/tools/check_encoding.py b/tools/check_encoding.py
+index f87f7c0..1e26066 100644
+--- a/tools/check_encoding.py
++++ b/tools/check_encoding.py
+@@ -75,6 +75,9 @@ def problems(paths: list[Path]) -> list[str]:
+ 
+ 
+ def main() -> int:
++    # Windows의 리디렉션된 출력은 CP1252일 수도 있다. 파일 검사와 별도로 출력도 UTF-8로 고정한다.
++    if hasattr(sys.stdout, "reconfigure"):
++        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+     missing: list[str] = []
+     if len(sys.argv) > 1:
+         paths = [Path(argument).resolve() for argument in sys.argv[1:]]
+diff --git a/tests/test_encoding_console.py b/tests/test_encoding_console.py
+new file mode 100644
+index 0000000..d9e58c9
+--- /dev/null
++++ b/tests/test_encoding_console.py
+@@ -0,0 +1,32 @@
++"""The encoding checker must report results even through a Windows ANSI output pipe."""
++import io
++from pathlib import Path
++import tempfile
++import unittest
++from unittest import mock
++
++from tools import check_encoding
++
++
++class ConsoleTests(unittest.TestCase):
++    def test_cp1252_stdout_reports_both_success_and_failure_in_utf8(self):
++        with tempfile.TemporaryDirectory() as tmp:
++            path = Path(tmp) / "sample.md"
++            for data, status, message in (("한글\n".encode("utf-8"), 0, "PASS:"),
++                                          (b"\xef\xbb\xbftext", 1, "인코딩 문제:")):
++                with self.subTest(status=status):
++                    path.write_bytes(data)
++                    raw = io.BytesIO()
++                    stream = io.TextIOWrapper(raw, encoding="cp1252")
++                    try:
++                        with mock.patch.object(check_encoding.sys, "stdout", stream), \
++                                mock.patch.object(check_encoding.sys, "argv", ["check_encoding.py", str(path)]):
++                            self.assertEqual(check_encoding.main(), status)
++                            stream.flush()
++                        self.assertIn(message, raw.getvalue().decode("utf-8"))
++                    finally:
++                        stream.close()
++
++
++if __name__ == "__main__":
++    unittest.main()
+\ No newline at end of file
