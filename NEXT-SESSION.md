@@ -1,20 +1,20 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-25** · 작성 세션: ChatGPT 웹(격리 컨테이너·GitHub, 사용자 PC 미접근) · 브랜치 `chatgpt/runtime-audit-finish-20260925` · 시작 main `6842406dfaa22f33edc1f44190391b767bd52e13`(PR #45 병합), 미병합 #46 head `5d75bab7cfd53b989585fdcec952e8fd003d6239`를 이어받음. **이 브랜치는 미병합이며 사용량 파서 원격 수정이 남아 있다.**
+최종 갱신 **2026-09-25** · 작성 세션: claude(`aux-pc` Windows와 WSL `aux-pc-wsl`, 모델 호출 없음) · 브랜치 `claude/runtime-audit-merge-20260925`([PR #48](https://github.com/inlight37-design/decision-model_lab/pull/48)) · 시작 #47 head `f80074f64bbbc4a4bd1e8b13d65bd09f63bd0b3a`(#46 head `5d75bab` 포함, 기준 main `6842406`). 앞 판은 ChatGPT 웹 세션이 #47에서 썼다.
 
-현재 인계는 이 파일 하나다. 3절은 미병합 후속 작업, 4절은 A–F의 기존 결과와 남은 순서다. PR마다 해당 절만 고친다(부분 갱신은 Git 이력이 보관한다). 크게 다시 쓰기 전 판은 [보관본](docs/handoff/2026-09-24-before-merge-39-next-steps.md)이고 **2절·5절은 그대로다.** 다음 작업의 근거는 [병합 기록](docs/reviews/2026-09-24-merge-39/README.md), 진행 결과는 [A·F 기록](docs/reviews/2026-09-24-account-limits/README.md), [B 기록](docs/reviews/2026-09-24-source-snapshot/README.md), [C 기록](docs/reviews/2026-09-24-model-synthesis/README.md), [D 결과](docs/experiments/2026-09-24-comparison-pilot/RESULTS.md), [E 첫 단계 기록](docs/reviews/2026-09-24-codex-apps-off/README.md), 실제 병렬 실행은 [Windows·계정 한도·병렬 실행 기록](docs/reviews/2026-09-24-windows-live-completion/README.md)에 있다.
+현재 인계는 이 파일 하나다. 3절은 진행 중인 작업과 병합 이력, 4절은 A–F의 기존 결과와 남은 순서다. PR마다 해당 절만 고친다(부분 갱신은 Git 이력이 보관한다). 크게 다시 쓰기 전 판은 [보관본](docs/handoff/2026-09-24-before-merge-39-next-steps.md)이고 **2절·5절은 그대로다.** 다음 작업의 근거는 [병합 기록](docs/reviews/2026-09-24-merge-39/README.md), 진행 결과는 [A·F 기록](docs/reviews/2026-09-24-account-limits/README.md), [B 기록](docs/reviews/2026-09-24-source-snapshot/README.md), [C 기록](docs/reviews/2026-09-24-model-synthesis/README.md), [D 결과](docs/experiments/2026-09-24-comparison-pilot/RESULTS.md), [E 첫 단계 기록](docs/reviews/2026-09-24-codex-apps-off/README.md), 실제 병렬 실행은 [Windows·계정 한도·병렬 실행 기록](docs/reviews/2026-09-24-windows-live-completion/README.md)에 있다.
 
 ## 0. 먼저 확인할 것
 
 1. 열린 PR·현재 main·미병합 브랜치를 먼저 확인한다(`git fetch --all --prune`, `git branch -r --no-merged origin/main`, PR 목록). 실제 GitHub 상태가 이 인계보다 우선이다.
 2. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)을 읽고 자기 브랜치에서 작업·즉시 push한다. 사용자 또는 권한 받은 Claude가 정확한 head의 CI를 확인한 뒤 병합한다.
-3. 이전 판을 쓴 claude 세션은 `aux-pc`의 Windows와 WSL `aux-pc-wsl`에서 시험·변이 시험과 실제 호출(B: Codex 1·Claude 1, C: Claude 1, D: Codex 6·Claude 9, E: Codex 1)을 했다. E에서는 실제 로그인 폴더를 연결한 모델 없는 Codex app-server 조회도 했다. WSL의 Codex 0.156.1·Claude Code 2.1.280이 구독 로그인으로 동작했고, 띄운 서버는 끝냈다. 인증 폴더 내용은 읽지 않았다. 이번 ChatGPT 웹 세션은 그 기록과 코드를 검토하고 오프라인 검사를 했을 뿐, 사용자 PC·로그인·실제 모델을 다시 관측하지 않았다.
+3. 이전 판을 쓴 claude 세션은 `aux-pc`의 Windows와 WSL `aux-pc-wsl`에서 시험·변이 시험과 실제 호출(B: Codex 1·Claude 1, C: Claude 1, D: Codex 6·Claude 9, E: Codex 1)을 했다. E에서는 실제 로그인 폴더를 연결한 모델 없는 Codex app-server 조회도 했다. WSL의 Codex 0.156.1·Claude Code 2.1.280이 구독 로그인으로 동작했고, 띄운 서버는 끝냈다. 인증 폴더 내용은 읽지 않았다. #46·#47의 ChatGPT 웹 세션은 기록과 코드를 검토하고 오프라인 검사를 했을 뿐 사용자 PC를 보지 않았다. 그 둘을 병합한 claude 세션은 aux-pc Windows·WSL에서 시험만 돌렸고 CLI 로그인·모델을 다시 관측하지 않았다.
 4. 실측한 같은 질문을 반복하지 않는다. 필요한 새 실험에는 별도 원장·provider별 상한·멈춤 조건을 기록한다. 기존 소진 원장·권한 관측 원장·병렬 실행 원장을 지우거나 증액하지 않는다.
 5. 기존 원장은 새 코드로 열기 전 백업한다(지금 스키마 7 — 공통 자료). 최초 전체·provider별 상한은 원장에 고정되며 재시작으로 늘지 않는다.
 
 ## 1. 지금 상태
 
-**main에 PR #38·#39와 다음 작업 A·B·C·D·F, E의 첫 단계(Codex 연결 앱 끄기)가 병합됐다.** provider별 설정(`--live-config`)으로 실제 Codex·Claude를 동시에 부르고, 공통 자료를 같이 주고, 봉인 뒤 함께 공개하고, 원문 대조(모의)나 실행마다 켜는 실제 합성 1회까지 한다. 상한은 원장에 고정되고 시작 전 거절은 실행 수에서 빠진다. Codex 계정 한도는 화면의 명시적 조회로 본다. 시작 직전 허가·격리·봉인·수용·정족수 정책은 그대로다. 별도 오케스트레이터·큐·SDK·유료 API는 없다. 설계 용어로는 `cross_check`(2인 독립 → 대조 → 합성)가 처음으로 끝까지 실제로 돌았다(C). 합성의 인용은 원문과 글자 그대로 대조할 뿐 **사실 검증이 아니다**.
+**main에 PR #38·#39와 다음 작업 A·B·C·D·F, E의 첫 단계(Codex 연결 앱 끄기), 실행 경로 후속(#46·#47·#48: 합성 실행당 1회·공통 상한·종료 미확인 복구, 자료 복원 검사, 사용량 숫자 경계)이 병합됐다.** provider별 설정(`--live-config`)으로 실제 Codex·Claude를 동시에 부르고, 공통 자료를 같이 주고, 봉인 뒤 함께 공개하고, 원문 대조(모의)나 실행마다 켜는 실제 합성 1회까지 한다. 상한은 원장에 고정되고 시작 전 거절은 실행 수에서 빠진다. Codex 계정 한도는 화면의 명시적 조회로 본다. 시작 직전 허가·격리·봉인·수용·정족수 정책은 그대로다. 별도 오케스트레이터·큐·SDK·유료 API는 없다. 설계 용어로는 `cross_check`(2인 독립 → 대조 → 합성)가 처음으로 끝까지 실제로 돌았다(C). 합성의 인용은 원문과 글자 그대로 대조할 뿐 **사실 검증이 아니다**.
 
 | 항목 | 상태 |
 |---|---|
@@ -24,7 +24,7 @@
 | Claude 권한 | 설치판 2.1.280, `claude-code@126be128bed7`(stream-json/Read/입력 폴더 하나)에서 init의 도구·MCP·dontAsk와 금지된 합성 peer 파일의 Read 거절을 관측. 다른 판의 증거를 복사하지 않음 |
 | 실행 관측 기록 | [manifest](docs/reviews/2026-09-24-codex-apps-off/manifest.v2.json). Codex는 연결 앱을 끈 계획 `codex@5a77e0b7dc7f`의 K46 재관측, Claude는 #39의 `claude-code@126be128bed7`. 두 provider 모두 입력 폴더 하나가 필요하다. 판은 경로·내용이 아니라 역할만 보므로 그 폴더에 자료가 있어도 같은 판이다(`core/contract.template`). 날짜·설치판·계획이 바뀌면 준비 조회를 다시 한다. [#39 manifest](docs/reviews/2026-09-24-windows-live-completion/manifest.v2.json)로는 지금 Codex 계획이 거절된다 |
 | 독립성·모델 | 양쪽 문맥 미확인, 독립성 확인 정족수 0. 참여자 격리가 `~/.claude`·`~/.codex`를 폴더째 쓰기로 연결하는 것이 구조적 원인이다(4절 E). Codex 참여자에게 열려 있던 계정 연결 앱(GitHub·Google Drive 쓰기 도구 포함)은 E에서 껐다. 로그·shell 스냅샷·상태·메모리 DB 같은 나머지 하위 항목은 아직 모델의 명령이 읽을 수 있다. Claude 보고 모델 일치, Codex 제공 모델 미보고. Codex C3 failed·strict 불허 유지 |
-| 원장·서버 | 이전 원장 보존. #39 병렬 원장은 전체 2/2 소진. B·C 원장 `~/.local/state/dml-live-b-20260924`(aux-pc-wsl)은 전체 3/3·Codex 1/1·Claude 2/2로 소진(참여자 2 + 합성 1). D 원장은 [결과](docs/experiments/2026-09-24-comparison-pilot/RESULTS.md)에 적은 대로 소진. E의 K46 상태 폴더 `~/.local/state/dml-observe-e-20260924`는 Codex 1/1 소진. 이전 claude 세션은 자신이 띄운 서버 종료를 확인했다(포트 닫힘·잠금 해제). 이번 웹 세션은 사용자 PC 상태를 재확인하지 않았다 |
+| 원장·서버 | 이전 원장 보존. #39 병렬 원장은 전체 2/2 소진. B·C 원장 `~/.local/state/dml-live-b-20260924`(aux-pc-wsl)은 전체 3/3·Codex 1/1·Claude 2/2로 소진(참여자 2 + 합성 1). D 원장은 [결과](docs/experiments/2026-09-24-comparison-pilot/RESULTS.md)에 적은 대로 소진. E의 K46 상태 폴더 `~/.local/state/dml-observe-e-20260924`는 Codex 1/1 소진. 이전 claude 세션은 자신이 띄운 서버 종료를 확인했다(포트 닫힘·잠금 해제). #48의 claude 세션이 시작할 때 aux-pc의 WSL은 꺼져 있었고(남은 서버 없음), 그 세션은 서버를 띄우지 않았다 |
 | CI·병합 | #39 정확한 head(`948f5a3`)의 push·PR CI와 병합 뒤 main CI가 Linux·Windows 모두 성공. 변이 시험에서 빠진 두 곳(M6·M11)은 시험을 더해 막았다([기록](docs/reviews/2026-09-24-merge-39/README.md)) |
 
 주인 모듈: [core](core/README.md)는 실행·격리·허가·한도 응답 투영, [app](app/README.md)은 controller·원장·계정 조회·화면, [tools/w2](tools/w2/README.md)는 관측이다. 날짜가 붙은 과거 관측은 고치지 않았다.
@@ -58,13 +58,10 @@
 
 ## 3. 진행 중인 작업
 
-**실행 경로 후속 감사 진행 중 — 아직 병합하지 않는다.** 시작 시 #46이 열려 있었으므로 이전 “진행 중인 작업 없음”은 현재 상태가 아니다. 실제 상태는 0절대로 GitHub에서 확인한다.
+**진행 중: [PR #48](https://github.com/inlight37-design/decision-model_lab/pull/48)(`claude/runtime-audit-merge-20260925`) — 최종 head의 CI 녹색을 확인한 뒤 claude 세션이 병합한다(2절 8). 병합 직전에 이 문단을 지운다.** #46·#47을 그대로 포함하고, #47이 원격에 올리지 못한 사용량 파서(R1)와 새로 찾은 사용량 칸의 NaN(U1)을 고쳤다. 모델 호출 0회. [검토·병합 기록](docs/reviews/2026-09-25-merge-46-47/README.md).
 
-- **이어받은 작업:** [PR #46](https://github.com/inlight37-design/decision-model_lab/pull/46), `chatgpt/runtime-review-20260925` head `5d75bab7cfd53b989585fdcec952e8fd003d6239`. 합성의 실행별 1회·공통 상한·종료 미확인 복구·종료 확인 API/화면과 회귀가 저장돼 있었다. 해당 head의 push·PR CI 성공을 확인했다. 다른 세션 브랜치는 수정하지 않았다.
-- **이번 작업:** [PR #47](https://github.com/inlight37-design/decision-model_lab/pull/47), `chatgpt/runtime-audit-finish-20260925`는 그 head 위에 만든 별도 브랜치다. 자료 폴더·목록이 고정 질문과 달라진 복원은 계획·예약 전에 거절하도록 수정했다. 사용량 수치의 극단 정수 오류도 로컬 수정·검증했으나 `core/quota.py`의 GitHub 저장 요청은 도구 보안 판정으로 차단됐다. 원격에는 이를 드러내는 회귀 시험이 있으므로 현재 전체 CI 성공을 주장하지 않는다. [감사·체크포인트](docs/reviews/2026-09-25-runtime-audit-finish/README.md)를 기준으로 이어간다.
-- **다음 행동:** 미반영 파서를 검토·반영한 뒤 정확한 새 head의 Linux·Windows 전체 CI를 확인한다. 이 브랜치는 #46 변경을 포함하므로 두 PR을 독립적으로 중복 병합하지 않는다. 사용자 또는 권한 받은 Claude가 통합 PR의 포함 관계와 변경 파일을 확인해 병합한다. 이번 웹 세션은 main에 쓰거나 병합하지 않았다.
-- **그다음:** 4절 E의 인증 갱신·동시성 설계와 표식 양성/음성 대조, 실제 취소 관측, D 후속 순서다. 인계의 사용자 결정·금지 사항과 기존 관측·소진 원장은 유지했다.
-
+- **#48에 들어간 것:** [PR #46](https://github.com/inlight37-design/decision-model_lab/pull/46)(`chatgpt/runtime-review-20260925`, ChatGPT 웹) — 실제 합성의 실행당 1회·공통 상한·종료 미확인 복구·사용자 종료 확인([기록](docs/reviews/2026-09-25-runtime-review/README.md)). [PR #47](https://github.com/inlight37-design/decision-model_lab/pull/47)(`chatgpt/runtime-audit-finish-20260925`, ChatGPT 웹, #46 포함) — #46 재검토, 자료 복원 검사(R2), R1 재현, 아키텍처 판단([감사 기록](docs/reviews/2026-09-25-runtime-audit-finish/README.md)). 두 PR을 따로 병합하지 않는다. #48이 병합되면 두 head가 main의 조상이 되어 GitHub이 둘 다 병합됨으로 표시한다.
+- **그다음:** 4절의 순서대로다.
 
 - **마지막 병합:** [PR #45](https://github.com/inlight37-design/decision-model_lab/pull/45)(`claude/codex-apps-off-20260924`) — 4절 E의 첫 단계(Codex 참여자의 계정 연결 앱 끄기와 K46 재관측, 새 manifest). 모델 호출 1회(Codex). claude 세션이 병합했다(2절 8). [기록](docs/reviews/2026-09-24-codex-apps-off/README.md).
 - **그 앞:** [PR #44](https://github.com/inlight37-design/decision-model_lab/pull/44)(`claude/comparison-pilot-20260924`) — 4절 D(작은 비교: 사전 등록과 결과). 모델 호출 15회. claude 세션이 병합했다(2절 8). [결과](docs/experiments/2026-09-24-comparison-pilot/RESULTS.md).
@@ -87,11 +84,11 @@
 
 ## 4. 다음 작업
 
-V04-03(두 provider의 읽기 전용 독립 답변, [완료 조건](docs/architecture/v0.4/03-evaluation-and-roadmap.md))은 #39로 거의 채웠다 — 실제 두 참여자, 입력·초안 digest, 권한 거절, 종료 관측, 사용량 범위. 남은 것은 실제 CLI를 실행 중에 취소하는 관측 하나다(모의 CLI로는 시험했다). 아래 A–F는 그 뒤 진행한 구현·관측의 이력이다. **현재 순서는 3절의 미반영 수정·CI 확인 → E2의 인증 갱신·동시성 설계 → 실제 취소·자료 실험 → D 후속 비교**다. 이미 끝난 A–D를 처음부터 다시 호출하지 않는다. 새 프레임워크·SDK·유료 API는 추가하지 않는다. 실제 호출은 모두 새 원장·provider별 상한·멈춤 조건으로 하고 결과를 기록한다(2절 22). 근거가 된 사실 확인은 [병합 기록 7절](docs/reviews/2026-09-24-merge-39/README.md)에 있다.
+V04-03(두 provider의 읽기 전용 독립 답변, [완료 조건](docs/architecture/v0.4/03-evaluation-and-roadmap.md))은 #39로 거의 채웠다 — 실제 두 참여자, 입력·초안 digest, 권한 거절, 종료 관측, 사용량 범위. 남은 것은 실제 CLI를 실행 중에 취소하는 관측 하나다(모의 CLI로는 시험했다). 아래 A–F는 그 뒤 진행한 구현·관측의 이력이다. **현재 순서는 E2의 인증 갱신·동시성 설계 → 실제 취소·자료 실험 → D 후속 비교**다. 이미 끝난 A–D를 처음부터 다시 호출하지 않는다. 새 프레임워크·SDK·유료 API는 추가하지 않는다. 실제 호출은 모두 새 원장·provider별 상한·멈춤 조건으로 하고 결과를 기록한다(2절 22). 근거가 된 사실 확인은 [병합 기록 7절](docs/reviews/2026-09-24-merge-39/README.md)에 있다.
 
 | 순서 | 할 일 | 구체 작업 | 완료 조건 | 모델 호출 |
 |---|---|---|---|---|
-| A | Claude 계정 한도를 화면에(2절 4) — **완료**(B의 실제 실행에서 사건 1번·두 창이 계정 패널에 뜸) | `core/quota.claude_limit`·`core.adapters.claude_rate_limit`이 stream의 마지막 `rate_limit_event`에서 상태와 창별 비율·초기화 시각만 남긴다(결제·식별 칸은 버림). 시도 결과 요약에 넣고, `Controller.claude_account_limit`이 끝난 실제 실행의 값만 계정 패널에 넘긴다. 조회 버튼은 없다(2절 5). [기록](docs/reviews/2026-09-24-account-limits/README.md) | 사건 없음·모양 불일치·범위 밖 값은 미확인이고 답을 보존하는 것이 계약이다. 극단 정수 경계의 미반영 수정은 3절과 후속 감사 R1을 먼저 확인한다. 여러 번 오면 마지막 사건이 기준이며, 그 모양이 다르면 앞 사건으로 대신하지 않는다(계획의 “두 번 오면 미확인”은 다회 실행을 늘 미확인으로 만들어 바꿨다). 봉인 중·모의 값은 안 보인다(실제 실행에서도 봉인 중 숨김 확인). Codex 값과 섞지 않는다 | 0(B 실행에 묻어 감) |
+| A | Claude 계정 한도를 화면에(2절 4) — **완료**(B의 실제 실행에서 사건 1번·두 창이 계정 패널에 뜸) | `core/quota.claude_limit`·`core.adapters.claude_rate_limit`이 stream의 마지막 `rate_limit_event`에서 상태와 창별 비율·초기화 시각만 남긴다(결제·식별 칸은 버림). 시도 결과 요약에 넣고, `Controller.claude_account_limit`이 끝난 실제 실행의 값만 계정 패널에 넘긴다. 조회 버튼은 없다(2절 5). [기록](docs/reviews/2026-09-24-account-limits/README.md) | 사건 없음·모양 불일치·범위 밖 값은 미확인이고 답을 보존하는 것이 계약이다. 극단 정수(R1)와 사용량 칸의 NaN(U1)은 [#46·#47 병합 기록](docs/reviews/2026-09-25-merge-46-47/README.md)에서 고쳤다. 여러 번 오면 마지막 사건이 기준이며, 그 모양이 다르면 앞 사건으로 대신하지 않는다(계획의 “두 번 오면 미확인”은 다회 실행을 늘 미확인으로 만들어 바꿨다). 봉인 중·모의 값은 안 보인다(실제 실행에서도 봉인 중 숨김 확인). Codex 값과 섞지 않는다 | 0(B 실행에 묻어 감) |
 | B | 공통 자료 스냅샷(P0) — **완료** | 실행을 만들 때 텍스트 파일의 내용·sha256을 원장(스키마 7)에 고정하고 목록을 질문 본문에 넣는다. 시도마다 데이터 폴더 밖 사본의 목록·해시를 다시 맞추고, 그 폴더 하나를 모든 CLI 참여자의 읽기 전용 입력으로 준다. 보고서 `a1-draft-report/4`. 수동 참여자에게는 목록·해시만(K21). [기록](docs/reviews/2026-09-24-source-snapshot/README.md) | 판 불변을 시험으로 고정했고 준비 조회가 관측된 두 판 그대로 허가했다. 이름·크기·수정·추가·삭제를 거절한다. 실제 1회에서 두 답이 같은 자료의 표식·내용을 인용했다. 남은 것: 긴 자료·여러 파일·자료 속 지시문(프롬프트 주입), 시도 도중 바꿔치기(K14) | 2(사용) |
 | C | 실제 합성 1회(P5, K18) — **완료** | 공개 뒤 사용자가 켠 실행만. 공개 초안을 이름표 D1·D2로 바꿔 그 실행의 CLI provider 하나에 참여자와 같은 계획으로 보낸다. 답은 JSON(주장·인용·갈리는 점·반례·미해결·권고). 인용은 초안에 글자 그대로 있어야 원문 일치이고 `compare_claims`로 다시 대조한다. 일치하는 인용이 없는 주장은 추가 주장으로 표시하되, 이는 일치 인용을 확보하지 못했다는 뜻이지 원문에 없는 사실을 증명한 것은 아니다. 같은 원장의 전체·provider 상한에서 예약한다. [기록](docs/reviews/2026-09-24-model-synthesis/README.md) | 실패·형식 오류·상한 소진이면 원문 보고와 모의 대조표를 그대로 쓴다(Q7). 모든 주장은 미해결 — 사실 검증이 아니다. 실제 1회에서 인용 5개 모두 원문 일치, 추가 주장 0, 반례 보존. D에서 미합의 보존과 부정확한 설명 전이를 함께 봤다. 남은 것은 합성자 교체·충돌 과제·blind 채점으로 일반화 여부를 확인하는 것이다 | 1(사용) |
 | D | 작은 비교: 단독 vs 병렬 vs 합성 — **완료(파일럿)** | 과제 셋(계산·코드 결함·제약 있는 설계)과 채점 기준·순서를 호출 전에 커밋했다([사전 등록](docs/experiments/2026-09-24-comparison-pilot/README.md)). 과제마다 Codex 혼자·Claude 혼자·병렬+대조표(Q7)·병렬+합성(`cross_check`) | 결과([RESULTS](docs/experiments/2026-09-24-comparison-pilot/RESULTS.md)): 계산에서 Codex 혼자는 두 번 틀렸고 병렬+합성은 맞혔다(미합의 보존, 합성 손실 0). 다만 합성자가 맞힌 쪽과 같은 Claude라 판단력의 증거는 아니다. 코드는 모두 맞았으나 합성이 한 초안의 부정확한 설명을 받아들였다(인용 대조로는 못 잡음). 설계는 모든 조건이 같은 선택·만점이라 가르지 못했다. 남은 것: 합성자를 Codex로 바꾼 같은 비교, 제약이 충돌하는 설계 과제, blind 채점 | 15(사용) |
