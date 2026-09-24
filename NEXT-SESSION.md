@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-24** · 작성 세션: codex(병합 재검토·실제 브라우저·K46 관측) · `aux-pc`/`aux-pc-wsl` · 브랜치 `codex/post-merge-verification-20260924` · 시작 main `eec60e93ef6c95639181eb8cd251506c16290075`
+최종 갱신 **2026-09-24** · 작성 세션: codex(병합 재검토·실제 브라우저·K46 관측), 병합 뒤 claude가 3절을 고침 · `aux-pc`/`aux-pc-wsl` · 브랜치 `claude/handoff-after-28-20260924` · 시작 main `e0d21a685cb85a6c6d444591e947aff3c7ee59a6`
 
 현재 인계는 이 파일 하나다. 직전 판은 [보관본](docs/handoff/2026-09-24-before-post-merge-verification.md)에 바이트 그대로 두었고 **사용자 결정(2절)과 금지 사항(5절)은 그대로 유지했다.** 완료 이력과 상세 K 표는 보관본으로 옮겼다. 최신 근거는 [이번 검토](docs/reviews/2026-09-24-post-merge-verification/README.md), 과거 검토는 [색인](docs/reviews/README.md)에서 찾는다.
 
@@ -25,7 +25,7 @@
 | Codex 실행 허가 | [새 manifest](docs/experiments/w2-isolation/2026-09-24-k46-confirmation/manifest.v2.json)의 전송·권한은 `discussant-2`. **문맥(C3)은 failed라 허가 없음.** 캐시 변경·토큰 증가만으로 모델 문맥의 내용을 단정하지 않는다 |
 | Claude 실행 허가 | 기존 기록값을 가정하면 허가가 계산되지만, 전송·문맥·권한 관측은 공통 자료/Read 도구가 있는 변형이다. controller는 자료 없는 변형이며 자기 보고 기반 문맥 증거(K31)도 남는다. 순서 5 뒤 정확한 최종 계획으로 재관측한다 |
 | 원장 | 스키마 4로 상향 이전. 기존 사용 원장은 열기 전에 백업한다. 이번 UI는 별도 임시 데이터 폴더를 사용했고 사용자 시연 원장은 열지 않았다 |
-| GitHub 보호 | 병합 시 브랜치 자동 삭제는 켜져 있다. main 필수 CI 보호/ruleset은 아직 없다. 이번에 설정하지 않았다 |
+| GitHub 보호 | 병합 시 브랜치 자동 삭제는 켜져 있다. main 필수 CI 보호/ruleset은 아직 없다 — 켜는 방법은 3절 표 |
 
 주인 모듈: [core/](core/README.md)는 실행·어댑터·환경·격리·허가, [app/](app/README.md)는 controller·journal·상태 투영·모의 화면/보고, [tools/w2/](tools/w2/README.md)는 관측이다. 격리의 네트워크 공유·CPU/메모리 상한 부재, 실제 controller 연결(K17), 계정 사용량 두 층(K23)은 남았다.
 
@@ -58,16 +58,17 @@
 
 ## 3. 진행 중인 작업
 
-**이번 브랜치:** `codex/post-merge-verification-20260924` — 병합·CI 재검토, 실제 브라우저 관측, 승인된 K46 확인과 새 manifest, Windows 진단 인코딩 수정, 인계 축소. [기록](docs/reviews/2026-09-24-post-merge-verification/README.md). main 병합 여부는 GitHub를 확인한다.
+**진행 중:** 순서 5 실행 계약(G4·G6) — claude 세션, 브랜치 `claude/execution-contract-20260924`. PR이 열리면 그 브랜치의 인계를 읽는다. 같은 파일(`core/adapters.py`, `app/cli_executor.py`, `app/controller.py`, `app/store.py`, `tools/w2/observe.py`)을 고칠 세션은 그 위에서 시작하거나 병합을 기다린다.
 
-직전 main은 #26으로 #22–#25를 순서대로 통합하고 #27로 자동 삭제 표현을 정정했다. 작업 시작 시 열린 PR은 없고 원격은 main만 있었다. 이번 작업 브랜치는 별개다. 과거 병합과 정리의 상세는 [GitHub 대조](docs/reviews/2026-09-24-post-merge-verification/GITHUB.md)와 [직전 인계](docs/handoff/2026-09-24-before-post-merge-verification.md)에 보존했다.
+- **마지막 병합:** [PR #28](https://github.com/inlight37-design/decision-model_lab/pull/28)(`codex/post-merge-verification-20260924`) — 병합·CI 재검토, 실제 브라우저 관측, 승인된 K46 확인과 새 manifest, Windows 진단 인코딩 수정, 인계 축소. [기록](docs/reviews/2026-09-24-post-merge-verification/README.md). claude 세션이 확인하고 병합했다(`e0d21a6`). 정확한 head의 push CI, 그 head에서 Windows·WSL(`DML_REQUIRE_BWRAP=1`) 전체 시험, 보관본의 바이트 동일성과 2·5절 보존을 확인했다. K46 공개 요약에 식별자가 없음도 확인했다. 새 manifest가 Codex 전송·권한만 바꿨고 Codex 허가가 문맥 `failed` 하나로 거절됨도 대조했다.
+- **그 앞:** #26으로 #22–#25를 순서대로 통합하고 #27로 자동 삭제 표현을 정정했다. 과거 병합과 정리의 상세는 [GitHub 대조](docs/reviews/2026-09-24-post-merge-verification/GITHUB.md)와 [직전 인계](docs/handoff/2026-09-24-before-post-merge-verification.md)에 보존했다.
 
 | 사용자 판단 | 권고 / 지금까지 한 일 |
 |---|---|
 | Q4 첫 화면 | A(결정 우선)를 기본으로 권고. 판단·뒤집을 조건·미해결 항목이 먼저 보인다. B는 원문 검토용 전환으로 유지. 실제 A/B 화면을 확인했지만 선호는 확정하지 않았다 |
 | 순서 5 실행 명세 판 | 실제 최종 argv 틀·격리 정책·자료/도구 변형을 구분한 계획 하나를 기록과 실행에 같이 쓴다. 과거 discussant-1/2를 자동 승격하지 않고 동등성 검토 후 연결하는 안을 권고. [구체안](docs/reviews/2026-09-24-post-merge-verification/README.md) |
 | C3 문맥 | 정책 완화보다 입력 직전 지시문·도구/스킬 목록을 볼 수 있는 진단 및 최소 연결 관측을 우선 권고. 그런 증거가 없으면 Codex strict blind 허가는 계속 보류한다 |
-| main 보호 | `checks (3.12)`·`checks (3.13)`을 필수 상태 검사로 설정하는 안을 권고. 아직 설정하지 않았다 |
+| main 보호 | `checks (3.12)`·`checks (3.13)`을 필수 상태 검사로 설정하는 안을 권고. 모든 세션이 사용자 계정으로 움직이므로 "관리자도 우회 불가"를 함께 켜야 효력이 있다. 2026-09-24 claude 세션이 API로 켜려 했으나 그 세션의 도구 권한 분류기가 거절해 **아직 없다.** 사용자가 GitHub 저장소 Settings → Branches → Add branch protection rule(`main`)에서 켠다: Require a pull request before merging(승인 0), Require status checks to pass(`checks (3.12)`, `checks (3.13)`, "up to date" 요구는 끔), Do not allow bypassing the above settings |
 | 나머지 선택 | Q3 TypeScript 이행은 미정. TM 계획 A는 후보 유지. agy 기본 끔; 설치/B4는 사용자가 켜기로 결정할 때. 원본 앱 자동화는 끔 |
 
 ## 4. 다음 작업
