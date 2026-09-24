@@ -7,7 +7,7 @@ Host 머리글이 우리 주소가 아니면 거절한다(DNS rebinding).
 
 시작 순서(A1 리뷰 A1-03): 원장 잠금 → 포트 → 복구 → 토큰. 같은 데이터 폴더로 서버를 하나 더 띄우면 원장
 잠금에서 멈추므로 돌던 서버의 원장과 토큰 파일을 건드리지 않는다. 포트를 먼저 잡는 것에 기대지 않는다 —
-다른 포트로 띄우면 막지 못하고, Windows에서는 SO_REUSEADDR 때문에 같은 포트에도 서버가 둘 떴다.
+다른 포트로 띄우면 막지 못하고, Windows에서는 SO_REUSEADDR 때문에 같은 포트에 서버가 둘 떴다.
 
   python -m app.server [--port 8765] [--data-dir ~/.decision-model-lab/mock]
 """
@@ -101,7 +101,7 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
             if len(self.headers.get_all("Host", [])) != 1 or self.headers.get("Host") not in allowed_hosts:
                 self._json(403, {"error": "unexpected Host header"})
                 return False
-            origins = self.headers.get_all("Origin", [])
+n            origins = self.headers.get_all("Origin", [])
             if origins and origins != [f"http://{self.headers['Host']}"]:
                 self._json(403, {"error": "unexpected Origin header"})
                 return False
@@ -274,6 +274,10 @@ class _Server(ThreadingHTTPServer):
         try:
             super().process_request(request, client_address)
         except BaseException:
+            # CPython 3.12/3.13 ThreadingMixIn은 start 전에 스레드를 등록한다. 시작 실패를 남기면
+            # server_close의 join이 실패한다. 기존 목록에서 죽은 항목만 회수하고 살아 있는 handler는 보존한다.
+            if self.block_on_close:
+                self._threads.reap()
             self._connections.release()
             raise
 
