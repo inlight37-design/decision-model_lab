@@ -33,6 +33,7 @@ from app.controller import CLI, MANUAL, Controller, ControllerError, MockExecuto
 from app.report import ReportError, build_report
 from app.store import LedgerBusy, Store, StoreError
 from app.live_config import Provider, load as load_live_config, validate as validate_providers
+from app.account_quota import AccountQuota
 
 STATIC = Path(__file__).with_name("static")
 PARTICIPANTS = {
@@ -59,11 +60,12 @@ def _text(body: dict, key: str, default: str = "") -> str:
     return value
 
 
-def make_handler(controller: Controller, token: str, port: int, *, participants=None):
+def make_handler(controller: Controller, token: str, port: int, *, participants=None, account_quota=None):
     allowed_hosts = {f"127.0.0.1:{port}", f"localhost:{port}"}
     roster = dict(PARTICIPANTS if participants is None else participants)
     live = controller.executor.kind == "real"
     behaviors = ("ok",) if live else BEHAVIORS
+    account_quota = account_quota or AccountQuota(Path("."), enabled=False)
 
     class Handler(BaseHTTPRequestHandler):
         server_version = "ledger-mock"
@@ -146,6 +148,8 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                 self._send(200, (STATIC / "index.html").read_bytes(), "text/html; charset=utf-8")
             elif path == "/api/state":
                 self._json(200, controller.view())
+            elif path == "/api/account-quota":
+                self._json(200, account_quota.view())
             elif path == "/api/options":
                 self._json(200, {"participants": [dict(vars(p)) for p in roster.values()],
                                  "behaviors": list(behaviors), "live": live,
@@ -176,7 +180,9 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
             try:
                 body = self._read_json()
                 parts = urlsplit(self.path).path.strip("/").split("/")
-                if parts == ["api", "runs"]:
+                if parts == ["api", "account-quota", "refresh"]:
+                    self._json(200, account_quota.refresh())
+                elif parts == ["api", "runs"]:
                     chosen = []
                     items = body.get("participants", [])
                     if not isinstance(items, list) or any(not isinstance(item, dict) for item in items):
@@ -330,7 +336,9 @@ def serve(data_dir: Path, port: int, *, timeout: float = 20.0, live_cli: str | N
         server.server_close()
         store.close()
         raise
-    server.RequestHandlerClass = make_handler(controller, token, server.server_address[1], participants=roster)
+    quota = AccountQuota(data_dir, enabled=bool(providers and any(p.adapter_id == "codex" for p in providers)))
+    server.RequestHandlerClass = make_handler(controller, token, server.server_address[1],
+                                              participants=roster, account_quota=quota)
     return server, token, controller
 
 

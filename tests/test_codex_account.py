@@ -1,5 +1,6 @@
 """Real local subprocesses pretending to be app-server. No account/credentials/network."""
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -108,7 +109,7 @@ class PlanTests(unittest.TestCase):
     def test_helper_does_not_depend_on_host_python_or_filtered_pythonpath(self):
         args = account.helper_argv("/fake/codex")
         self.assertEqual(args[0], "/usr/bin/python3")
-        self.assertEqual(args[3:], (str(account.ROOT), "/fake/codex", "app-server"))
+        self.assertEqual(args[3:], (str(account.ROOT), os.path.realpath("/fake/codex"), "app-server"))
         self.assertIn("sys.path.insert", args[2])
 
 
@@ -126,10 +127,13 @@ class IsolatedProtocolTests(unittest.TestCase):
             script.write_text("#!/usr/bin/python3\n" + FAKE.replace(
                 "mode, log = sys.argv[1:]", 'mode, log = "ok", "/tmp/metadata-sent.jsonl"'), encoding="utf-8")
             script.chmod(0o700)
+            link = root / "codex-link"
+            link.symlink_to(script)
             box = isolation.Sandbox(work_dir=str(work), home=str(root / "home"),
                                     read_only=(str(account.ROOT / "tools"), str(script)),
                                     never=(str(root / "ledger"),))
-            result = isolation.run(account.helper_argv(str(script)), box, timeout=13, max_output_bytes=65536)
+            # Only the real binary is mounted; the installation symlink is hidden.
+            result = isolation.run(account.helper_argv(str(link)), box, timeout=13, max_output_bytes=65536)
             self.assertEqual(result.state, runner.EXITED)
             self.assertEqual(result.exit_code, 0, result.stderr)
             self.assertTrue(result.tree_confirmed_empty)

@@ -35,7 +35,9 @@ def helper_argv(exe: str) -> tuple[str, ...]:
     # Isolation deliberately drops PYTHONPATH; CI's interpreter may live outside /usr.
     code = ("import json,sys; sys.path.insert(0,sys.argv[1]); "
             "from tools.w2.codex_account import query; print(json.dumps(query(tuple(sys.argv[2:]))))")
-    return ("/usr/bin/python3", "-c", code, str(ROOT), exe, "app-server")
+    # cli_mounts exposes the resolved binary, not the host's ~/.local/bin symlink.
+    # The outer runner resolves only argv[0] (Python), so resolve this child too.
+    return ("/usr/bin/python3", "-c", code, str(ROOT), os.path.realpath(exe), "app-server")
 
 
 def query(argv: tuple[str, ...], *, timeout: float = 10) -> dict:
@@ -123,17 +125,10 @@ def query(argv: tuple[str, ...], *, timeout: float = 10) -> dict:
         proc.stdout.close()
 
 
-def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--probe", action="store_true", help="explicitly query existing login inside bubblewrap; no agent turn")
-    ap.add_argument("--data-dir", type=Path, help="controller journal directory to exclude from isolation")
-    args = ap.parse_args()
-    if not args.probe:
-        print(json.dumps({"mode": "plan_only", "processes_started": 0, "inference_requests_sent": 0,
-                          "methods": METHODS, "timeout_seconds": 10, "raw_protocol_saved": False}, indent=2))
-        return 0
-    if sys.platform != "linux" or args.data_dir is None:
-        ap.error("--probe requires Linux and --data-dir; never query outside the isolation boundary")
+def probe(data_dir: Path) -> dict:
+    """One bounded metadata read; reusable by the CLI and an explicit UI refresh."""
+    if sys.platform != "linux":
+        raise ValueError("metadata probe requires Linux isolation")
     from core import env, isolation, runner
     from app.cli_executor import installed_version
     try:
@@ -145,7 +140,7 @@ def main() -> int:
         with tempfile.TemporaryDirectory(prefix="dml-account-") as tmp:
             box = isolation.Sandbox(work_dir=tmp, home=home, read_only=ro + (str(ROOT / "tools"),),
                                     read_write=rw, env={"LANG": "C.UTF-8", "NO_COLOR": "1"},
-                                    never=(str(args.data_dir.resolve()),))
+                                    never=(str(data_dir.resolve()),))
             result = isolation.run(helper_argv(exe), box,
                                    timeout=13, max_output_bytes=65536)
             if (result.state != runner.EXITED or result.exit_code != 0
@@ -154,12 +149,26 @@ def main() -> int:
             report = json.loads(result.stdout)
             report["installed_version"] = installed_version("codex", exe)
             report["tree_confirmed_empty"] = True
-            print(json.dumps(report, ensure_ascii=False, indent=2))
-        return 0
+            return report
     except (OSError, ValueError, RuntimeError):
-        print(json.dumps({"status": "unknown", "inference_requests_sent": 0,
-                          "reason": "metadata probe unavailable, refused, timed out or unsupported; no fallback"}))
-        return 2
+        return {"status": "unknown", "inference_requests_sent": 0,
+                "reason": "metadata probe unavailable, refused, timed out or unsupported; no fallback"}
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("--probe", action="store_true", help="explicitly query existing login inside bubblewrap; no agent turn")
+    ap.add_argument("--data-dir", type=Path, help="controller journal directory to exclude from isolation")
+    args = ap.parse_args()
+    if not args.probe:
+        print(json.dumps({"mode": "plan_only", "processes_started": 0, "inference_requests_sent": 0,
+                          "methods": METHODS, "timeout_seconds": 10, "raw_protocol_saved": False}, indent=2))
+        return 0
+    if sys.platform != "linux" or args.data_dir is None:
+        ap.error("--probe requires Linux and --data-dir; never query outside the isolation boundary")
+    report = probe(args.data_dir)
+    print(json.dumps(report, ensure_ascii=False, indent=2))
+    return 0 if report.get("tree_confirmed_empty") is True else 2
 
 
 if __name__ == "__main__":
