@@ -5,6 +5,7 @@ from dataclasses import replace
 import io
 import json
 import threading
+import unittest
 from unittest.mock import Mock, call, patch
 
 from app import controller as c, server
@@ -50,7 +51,9 @@ class ShutdownTests(support.Base):
 
     def test_shutdown_waits_outside_the_controller_lock(self):
         class Cooperative(support.SyntheticExecutor):
-            entered = threading.Event()
+            def __init__(self):
+                super().__init__()
+                self.entered = threading.Event()
 
             def execute(self, spec, prompt, work_dir, timeout, *, cancel=None):
                 self.entered.set()
@@ -66,6 +69,15 @@ class ShutdownTests(support.Base):
         self.assertTrue(ctl.shutdown(timeout=2))
         self.assertEqual(ex.started, ["a"])
         self.assertEqual(ctl.view()["slots"]["used"], 0)
+
+    def test_invalid_shutdown_timeout_does_not_stop_the_controller(self):
+        ctl = self.controller(support.SyntheticExecutor(), max_parallel=0)
+        for timeout in (-1, float("nan"), float("inf")):
+            with self.subTest(timeout=timeout), self.assertRaises(ValueError):
+                ctl.shutdown(timeout=timeout)
+        self.assertFalse(ctl.paused)
+        ctl.create_run("q", [support.cli("a")], min_independent=1)
+        self.assertEqual(len(self.store.rows("SELECT * FROM runs")), 1)
 
     def test_finished_worker_is_not_proof_that_the_process_tree_ended(self):
         ex = support.SyntheticExecutor({"a": "unknown"})
@@ -129,13 +141,15 @@ class ShutdownTests(support.Base):
         self.assertEqual(ex.started, ["a", "synthesis"])
 
 
-class ServerShutdownTests(support.unittest.TestCase):
+class ServerShutdownTests(unittest.TestCase):
     def run_main(self, *, idle=True, unsettled=0, failure=KeyboardInterrupt):
         resource = Mock()
+        resource.server.server_address = ("127.0.0.1", 0)
         resource.server.serve_forever.side_effect = failure
         resource.controller.shutdown.return_value = idle
         resource.controller.unsettled.return_value = unsettled
         resource.controller.executor.name = "synthetic"
+        resource.controller.paused = False
         with patch.object(server, "serve", return_value=(resource.server, "test-token", resource.controller)), \
                 patch("sys.argv", ["ledger", "--data-dir", "test-only-unused-directory"]), \
                 patch("sys.stdout", new=io.StringIO()), patch("sys.stderr", new=io.StringIO()):
