@@ -2,7 +2,7 @@
 
 입력은 controller.view()의 사본만 받는다. 공개 권한은 controller가 정하며, 이 함수는 그 권한을 만들지 않는다.
 초안과 입력 원문이 들어가므로 내려받은 보고서는 민감한 사용자 자료다. 저장소에 자동으로 올리지 않는다.
-이 판은 실제 합성자의 실패 복구 구현이 아니라, 합성자가 아직 없는 A1의 명시적인 종료 산출물이다.
+이 원문 전용 보고에는 모의 합성 결과를 포함하지 않는다. 결정 보고서는 이 원문과 모의 결과를 함께 묶는다.
 """
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from copy import deepcopy
 import hashlib
 from typing import Any
 
-SCHEMA = "a1-draft-report/1"
+SCHEMA = "a1-draft-report/2"
 # 공개 투영에 나중에 필드가 늘어도 원장·토큰·자유 메타데이터를 통째로 내보내지 않는다.
 PARTICIPANT_FIELDS = ("pid", "label", "provider", "transport", "independence", "state", "status", "dropped",
                       "contamination")
@@ -43,6 +43,8 @@ def build_report(view: dict[str, Any], run_id: str) -> dict[str, Any]:
                 raise ReportError("an accepted participant has no public draft")
             item["draft"] = text
             item["draft_sha256"] = hashlib.sha256(text.encode("utf-8")).hexdigest()
+            if item["draft_sha256"] != part.get("draft_sha256"):
+                raise ReportError("public draft does not match its sealed digest")
         observation = part.get("result") or {}
         item["observation"] = {key: deepcopy(observation[key]) for key in OBSERVATION_FIELDS if key in observation}
         participants.append(item)
@@ -56,13 +58,13 @@ def build_report(view: dict[str, Any], run_id: str) -> dict[str, Any]:
                   "bytes": run["input_bytes"]},
         "quorum": {key: deepcopy(run["quorum"][key]) for key in QUORUM_FIELDS},
         "reduction_approved": run["reduction_approved"],
-        "synthesis": {"status": "not_implemented", "additional_model_calls": 0},
+        "synthesis": {"status": "not_included", "additional_model_calls": 0},
         "verification": {"status": "not_performed", "agreement_is_verification": False},
         "accounting": {"scope": "this_run_cli_attempts_only", "account_remaining": "unknown",
                        "client_estimates_are_invoices": False,
                        "attempts": {key: deepcopy(budget[key]) for key in ("used", "cap", "breakdown", "manual")}},
         "participants": participants,
-        "limitations": ["No synthesis, recommendation or factual verification was performed.",
+        "limitations": ["This draft-only export omits synthesis and recommendations; factual verification was not performed.",
                         "Checksums detect content changes; they do not prove truth, authorship or independence.",
                         "Manual-app context, independence and account-wide remaining usage are not observed.",
                         "Mock/synthetic execution is not evidence of real model quality or entitlement."],

@@ -40,7 +40,7 @@ class ReportTests(Base):
         self.assertEqual(list(events(self.store, run)), before)
         self.assertEqual(report["schema"], SCHEMA)
         self.assertEqual(report["disposition"], "report_without_synthesis")
-        self.assertEqual(report["synthesis"], {"status": "not_implemented", "additional_model_calls": 0})
+        self.assertEqual(report["synthesis"], {"status": "not_included", "additional_model_calls": 0})
         self.assertFalse(report["verification"]["agreement_is_verification"])
         self.assertEqual(report["accounting"]["account_remaining"], "unknown")
         for part in report["participants"]:
@@ -58,6 +58,8 @@ class ReportTests(Base):
         variants = []
         altered = deepcopy(view); altered["runs"][0]["prompt"] += " altered"; variants.append(altered)
         altered = deepcopy(view); altered["runs"][0]["participants"][0]["draft"] = None; variants.append(altered)
+        altered = deepcopy(view); altered["runs"][0]["participants"][0]["draft"] += " tampered"; variants.append(altered)
+        altered = deepcopy(view); altered["runs"][0]["participants"][0]["draft_sha256"] = "bad"; variants.append(altered)
         altered = deepcopy(view); altered["runs"][0]["participants"][0]["state"] = "unknown"; variants.append(altered)
         for altered in variants:
             with self.subTest(altered=altered):
