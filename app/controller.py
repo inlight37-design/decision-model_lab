@@ -51,6 +51,37 @@ from core import adapters, contract, env as core_env, isolation, membership as m
 
 PROMPT = ("다음 질문에, 다른 참여자의 답을 보지 않은 상태로 독립적으로 답하라. "
           "결론, 근거, 그리고 결론을 뒤집을 조건을 쓴다.\n\n질문:\n{question}\n")
+# 공통 자료(P0). 모든 참여자가 같은 질문 본문을 받으므로 목록·해시는 질문에 넣어 입력 digest에 묶는다.
+PROMPT_SOURCES = ("\n참고 자료 {count}개가 읽기 전용 폴더 {folder}에 있다. 자료에서 가져온 내용은 파일 이름을 밝히고, "
+                  "자료에 없는 판단은 자료 밖의 판단이라고 표시한다.\n{listing}\n")
+SOURCE_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,79}")
+WINDOWS_DEVICES = re.compile(r"(?i)(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?")
+MAX_SOURCES, MAX_SOURCE_BYTES, MAX_SOURCES_TOTAL = 20, 256 * 1024, 1024 * 1024
+
+
+def _checked_sources(items) -> list[tuple[str, bytes]]:
+    """(이름, 글) 목록을 검사한다. 경로 구분자·숨김 이름·장치 이름·중복(대소문자 무시)·크기 초과·NUL을 거절한다."""
+    if items is None:
+        return []
+    if not isinstance(items, (list, tuple)) or len(items) > MAX_SOURCES:
+        raise ControllerError(f"sources must be a list of at most {MAX_SOURCES} files")
+    checked, seen, total = [], set(), 0
+    for item in items:
+        if not isinstance(item, (list, tuple)) or len(item) != 2:
+            raise ControllerError("each source needs a name and a text")
+        name, text = item
+        if (not isinstance(name, str) or SOURCE_NAME.fullmatch(name) is None or WINDOWS_DEVICES.fullmatch(name)
+                or name.lower() in seen):
+            raise ControllerError("source names use letters, digits, dot, dash or underscore and must be unique")
+        if not isinstance(text, str) or "\x00" in text:
+            raise ControllerError(f"source {name!r} must be text")
+        data = text.encode("utf-8")
+        total += len(data)
+        if len(data) > MAX_SOURCE_BYTES or total > MAX_SOURCES_TOTAL:
+            raise ControllerError(f"sources are limited to {MAX_SOURCE_BYTES} bytes each and {MAX_SOURCES_TOTAL} in total")
+        seen.add(name.lower())
+        checked.append((name, data))
+    return sorted(checked)
 
 # 공개 전 화면에 넘기는 결과 필드. 값이 정해진 것만 둔다 — 막을 것을 고르지 않고 넘길 것을 고른다(A1-01).
 SEALED_VIEW_KEYS = frozenset({"state", "exit_code", "containment", "tree_confirmed_empty", "input_delivery",
@@ -103,7 +134,8 @@ class Executor(Protocol):
     kind: str
     adapter_ids: tuple[str, ...]
 
-    def plan(self, spec: ParticipantSpec, prompt: str, work_dir: str) -> contract.Plan: ...
+    def plan(self, spec: ParticipantSpec, prompt: str, work_dir: str, *, inputs: tuple[str, ...] = ()
+             ) -> contract.Plan: ...   # inputs: 실행의 공통 자료 폴더. 자료가 있는 실행에만 넘긴다
 
     def run(self, plan: contract.Plan, timeout: float, *, cancel: threading.Event | None = None
             ) -> tuple[runner.RunResult, adapters.Outcome]: ...
@@ -123,15 +155,16 @@ class MockExecutor:
         self.isolated = sys.platform == "linux" and _bwrap_trusted()
         self.name = "bubblewrap" if self.isolated else ("job_object" if runner.IS_WINDOWS else "process_group")
 
-    def plan(self, spec, prompt, work_dir):
+    def plan(self, spec, prompt, work_dir, *, inputs=()):
         python = "/usr/bin/python3" if self.isolated else sys.executable
         data = prompt.encode("utf-8")
         planned = adapters.ExecutionSpec(spec.adapter_id, (python, self.SCRIPT, self.FLAVOR[spec.adapter_id],
                                                            spec.behavior),
                                          prompt, adapters.STDIN, hashlib.sha256(data).hexdigest(), len(data))
-        box = isolation.Sandbox(work_dir=work_dir, home=work_dir + "-home", read_only=(os.path.dirname(self.SCRIPT),),
+        box = isolation.Sandbox(work_dir=work_dir, home=work_dir + "-home",
+                                read_only=(os.path.dirname(self.SCRIPT),) + tuple(inputs),
                                 env={"LANG": "C.UTF-8"}, never=self.never) if self.isolated else None
-        tmpl = contract.template(planned, box, home=work_dir + "-home")
+        tmpl = contract.template(planned, box, home=work_dir + "-home", inputs=inputs)
         return contract.Plan(contract.MOCK, planned, work_dir, box, spec.model or "", (), contract.revision(tmpl), tmpl)
 
     def run(self, plan, timeout, *, cancel=None):
@@ -239,10 +272,13 @@ class Controller:
 
     # ---- 만들기와 예약 -------------------------------------------------------------------------
     def create_run(self, question: str, participants: list[ParticipantSpec], *, min_independent: int,
-                   quorum_policy: str = INDEPENDENT_ONLY) -> str:
+                   quorum_policy: str = INDEPENDENT_ONLY, sources=None) -> str:
+        """sources: (이름, 글) 목록. 원장에 내용·해시를 고정하고, CLI 참여자에게는 그 사본 폴더 하나를 읽기
+        전용 입력으로 준다(provider별 빈 입력 폴더 대신). 입력 폴더가 하나인 것은 같으므로 계획의 판은 그대로다."""
         question = question.strip()
         if not question:
             raise ControllerError("question is empty")
+        checked_sources = _checked_sources(sources)
         if len({p.pid for p in participants}) != len(participants) or not participants:
             raise ControllerError("participants must be unique and non-empty")
         for p in participants:
@@ -257,14 +293,22 @@ class Controller:
         if quorum_policy == INDEPENDENT_ONLY and min_independent > confirmable:
             raise ControllerError(f"only {confirmable} participant(s) can be confirmed independent (CLI); lower "
                                   "min_independent or choose include_unverified to count unverified answers")
-        prompt = PROMPT.format(question=question)
-        data = prompt.encode("utf-8")
         try:
             m.start(tuple(p.pid for p in participants), min_independent=min_independent)
         except m.MembershipError as exc:
             raise ControllerError(str(exc)) from None
         run_id = f"r{time.strftime('%m%d-%H%M%S')}-{uuid.uuid4().hex}"
+        prompt = PROMPT.format(question=question)
+        if checked_sources:
+            prompt += PROMPT_SOURCES.format(
+                count=len(checked_sources), folder=self._source_root(run_id),
+                listing="\n".join(f"- {name} ({len(data)} bytes, sha256 {hashlib.sha256(data).hexdigest()})"
+                                  for name, data in checked_sources))
+        data = prompt.encode("utf-8")
         with self.lock, self.store.tx() as tx:
+            for name, content in checked_sources:
+                tx.execute("INSERT INTO sources (run_id, name, sha256, bytes, content) VALUES (?, ?, ?, ?, ?)",
+                           run_id, name, hashlib.sha256(content).hexdigest(), len(content), content)
             tx.execute("INSERT INTO runs (run_id, created_at, question, prompt, input_sha256, input_bytes, "
                        "min_independent, roster, quorum_policy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                        run_id, time.time(), question, prompt, hashlib.sha256(data).hexdigest(), len(data),
@@ -274,10 +318,50 @@ class Controller:
                            json.dumps(asdict(p), ensure_ascii=False), QUEUED if p.transport == CLI else AWAITING_USER)
             tx.event(run_id, "run_created", input_sha256=hashlib.sha256(data).hexdigest(), input_bytes=len(data),
                      participants=[p.pid for p in participants], min_independent=min_independent,
-                     quorum_policy=quorum_policy)
+                     quorum_policy=quorum_policy,
+                     sources=[{"name": name, "sha256": hashlib.sha256(content).hexdigest(), "bytes": len(content)}
+                              for name, content in checked_sources])
             tx.event(run_id, "drafting_started")
         self.pump()
         return run_id
+
+    def _source_root(self, run_id: str) -> str:
+        """참여자가 읽기 전용으로 볼 자료 폴더. 참여자의 작업 폴더(work_root/<run>/<pid>)와 겹치지 않는다."""
+        return os.path.join(self.work_root, "_sources", run_id)
+
+    def sources(self, run_id: str) -> list[dict[str, Any]]:
+        """화면·보고에 보일 목록. 내용은 넘기지 않는다."""
+        return [{"name": row["name"], "sha256": row["sha256"], "bytes": row["bytes"]} for row in self.store.rows(
+            "SELECT name, sha256, bytes FROM sources WHERE run_id = ? ORDER BY name", run_id)]
+
+    def _source_dir(self, run_id: str) -> str | None:
+        """원장의 자료를 폴더로 두고, 시도마다 원장의 목록·크기·sha256과 다시 맞춘다. 다르면 거절한다 — 아무것도
+        시작하지 않았다. 폴더는 임시 이름으로 다 쓴 뒤 한 번에 옮긴다. 시도 도중의 바꿔치기(K14)는 막지 못한다."""
+        rows = self.store.rows("SELECT name, sha256, bytes, content FROM sources WHERE run_id = ? ORDER BY name", run_id)
+        if not rows:
+            return None
+        root = self._source_root(run_id)
+        if not os.path.isdir(root):
+            staging = f"{root}.{uuid.uuid4().hex}.tmp"
+            os.makedirs(staging)
+            for row in rows:
+                path = os.path.join(staging, row["name"])
+                with open(path, "xb") as handle:
+                    handle.write(row["content"])
+                if os.name == "posix":
+                    os.chmod(path, 0o444)
+            os.rename(staging, root)   # 원장은 controller 하나만 열고 계획은 self.lock 안에서만 한다 — 경쟁 없음
+        if sorted(os.listdir(root)) != [row["name"] for row in rows]:
+            raise ControllerError("the source snapshot changed after the run was created; no call was started")
+        for row in rows:
+            path = os.path.join(root, row["name"])
+            if os.path.islink(path) or not os.path.isfile(path):
+                raise ControllerError("the source snapshot changed after the run was created; no call was started")
+            with open(path, "rb") as handle:
+                data = handle.read(MAX_SOURCE_BYTES + 1)
+            if len(data) != row["bytes"] or hashlib.sha256(data).hexdigest() != row["sha256"]:
+                raise ControllerError("the source snapshot changed after the run was created; no call was started")
+        return root
 
     def _slots_used(self) -> int:
         return self.store.row("SELECT COUNT(*) AS n FROM participants WHERE state IN (?, ?)", RUNNING, UNKNOWN)["n"]
@@ -339,7 +423,10 @@ class Controller:
                 # 최종 계획을 한 번 만든다. 그 기록(질문 본문 없이)과 실행 종류를 시도 ID와 함께 저장한 뒤에만 같은
                 # 계획을 실행한다(G4·G6). 저장하지 못하면 실행하지 않는다.
                 try:
-                    plan, refused = self.executor.plan(spec, prompt, work), None
+                    # 자료가 있는 실행은 그 사본 폴더 하나를 입력으로 준다. 목록·해시가 다르면 여기서 거절된다.
+                    source = self._source_dir(row["run_id"])
+                    extra = {"inputs": (source,)} if source else {}
+                    plan, refused = self.executor.plan(spec, prompt, work, **extra), None
                     if plan.context_unverified and not spec.context_unverified:
                         raise ControllerError("queued participant has a different context policy; create a new run")
                     record, kind = plan.record(), plan.kind
@@ -625,7 +712,8 @@ class Controller:
                 quorum["label"] = _quorum_label(quorum) if revealed else None
                 runs.append({"run_id": run["run_id"], "created_at": run["created_at"], "question": run["question"],
                              "prompt": run["prompt"], "input_sha256": run["input_sha256"],
-                             "input_bytes": run["input_bytes"], "phase": run["phase"],
+                             "input_bytes": run["input_bytes"], "sources": self.sources(run["run_id"]),
+                             "phase": run["phase"],
                              "min_independent": run["min_independent"], "note": current_gate.note,
                              "quorum": quorum, "gate": current_gate.public(),
                              "reduction_approved": bool(run["reduction_approved"]),

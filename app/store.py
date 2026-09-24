@@ -24,7 +24,8 @@ from typing import Any, Iterator
 # 4: runs.phase; runs.roster and note remain historical data, never synchronized by the controller.
 # 5: participants.kind — 시도의 실행 종류(mock/real/synthetic, core.contract). 화면·보고는 이것을 읽는다(G6).
 # 6: live_budget — 첫 실제 호출 상한은 원장에 고정한다. 재기동으로 늘리거나 없애지 못한다.
-SCHEMA_VERSION = 6
+# 7: sources — 실행을 만들 때 고정한 공통 자료(이름·sha256·크기·내용). 옛 코드가 자료를 모른 채 이어 부르지 않게 올린다.
+SCHEMA_VERSION = 7
 # 스키마 5 이전 시도의 종류는 시작 사건에 남은 실행기 이름에서만 복원한다. 모의 실행기의 이름은 격리 방식이었다.
 # 근거가 없으면 NULL로 두고, 화면은 "실행 종류 기록 없음"으로 보인다.
 LEGACY_EXECUTORS = {"bubblewrap": "mock", "job_object": "mock", "process_group": "mock", "cli": "real"}
@@ -52,6 +53,10 @@ CREATE TABLE IF NOT EXISTS events (
 CREATE TABLE IF NOT EXISTS live_budget (
   singleton INTEGER PRIMARY KEY CHECK (singleton = 1), cap INTEGER NOT NULL CHECK (cap > 0),
   provider_caps TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS sources (
+  run_id TEXT NOT NULL, name TEXT NOT NULL, sha256 TEXT NOT NULL, bytes INTEGER NOT NULL, content BLOB NOT NULL,
+  PRIMARY KEY (run_id, name)
 );
 """
 

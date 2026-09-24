@@ -196,9 +196,14 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                     minimum = body.get("min_independent", 2)
                     if type(minimum) is not int:
                         raise ControllerError("min_independent must be an integer")
+                    sources = body.get("sources", [])
+                    if not isinstance(sources, list) or any(not isinstance(item, dict) or set(item) != {"name", "text"}
+                                                            for item in sources):
+                        raise ControllerError("sources must be an array of {name, text} objects")
                     run_id = controller.create_run(_text(body, "question"), chosen,
                                                    min_independent=minimum,
-                                                   quorum_policy=_text(body, "quorum_policy", "independent_only"))
+                                                   quorum_policy=_text(body, "quorum_policy", "independent_only"),
+                                                   sources=[(item["name"], item["text"]) for item in sources])
                     self._json(200, {"run_id": run_id})
                 elif len(parts) == 5 and parts[:2] == ["api", "runs"] and parts[3] == "manual":
                     controller.submit_manual(parts[2], parts[4], _text(body, "text"),
