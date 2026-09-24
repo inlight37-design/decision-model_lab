@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-25** · 작성 세션: claude(`aux-pc` WSL `aux-pc-wsl`, 모델 호출 2회) · 브랜치 `claude/source-injection-20260925`([PR #51](https://github.com/inlight37-design/decision-model_lab/pull/51)) · 기준 main `c750fcc`(PR #50 병합). 앞 판은 같은 세션이 #48–#50에서 썼다.
+최종 갱신 **2026-09-25** · 작성 세션: ChatGPT 웹(실제 모델 호출 없음, 사용자 PC 미관측) · 브랜치 `chatgpt/deep-review-20260925`([PR #52](https://github.com/inlight37-design/decision-model_lab/pull/52)) · 기준 main `6cd13633ee41ebc26acff7fa71d62953f3bbd43f`(PR #51 병합). 이번 갱신은 검토·수정 인계이며, 아래 실제 PC·모델 관측은 앞 판의 claude 세션이 #48–#51에서 기록한 것이다.
 
 현재 인계는 이 파일 하나다. 3절은 진행 중인 작업과 병합 이력, 4절은 A–F의 기존 결과와 남은 순서다. PR마다 해당 절만 고친다(부분 갱신은 Git 이력이 보관한다). 크게 다시 쓰기 전 판은 [보관본](docs/handoff/2026-09-24-before-merge-39-next-steps.md)이고 **2절·5절은 그대로다.** 다음 작업의 근거는 [병합 기록](docs/reviews/2026-09-24-merge-39/README.md), 진행 결과는 [A·F 기록](docs/reviews/2026-09-24-account-limits/README.md), [B 기록](docs/reviews/2026-09-24-source-snapshot/README.md), [C 기록](docs/reviews/2026-09-24-model-synthesis/README.md), [D 결과](docs/experiments/2026-09-24-comparison-pilot/RESULTS.md), [E 첫 단계 기록](docs/reviews/2026-09-24-codex-apps-off/README.md), [E2 기록](docs/reviews/2026-09-25-context-independence/README.md), 실제 병렬 실행은 [Windows·계정 한도·병렬 실행 기록](docs/reviews/2026-09-24-windows-live-completion/README.md)에 있다.
 
@@ -58,7 +58,7 @@
 
 ## 3. 진행 중인 작업
 
-**진행 중인 작업 없음.** 실제 상태는 0절대로 GitHub에서 확인한다. 다음은 4절의 순서대로다.
+**[PR #52](https://github.com/inlight37-design/decision-model_lab/pull/52) — 검토·수정 인계, 아직 main에 병합하지 않음.** 실제 상태는 0절대로 GitHub에서 확인한다. ChatGPT 웹 세션이 합성 인용 원문 보존·잘못된 Unicode·중복 JSON 키·저장된 호출 상한 복원·사건 조회 인덱스·서버 종료를 고쳤다. 재현과 수정은 단계별로 원격 커밋했다. [검토 기록](docs/reviews/2026-09-25-deep-review/README.md)에 근거·중간 실패·아키텍처 판단·남은 한계가 있다. 기존 GitHub Actions에서 Linux·Windows 검사를 수행했으며 정확한 최종 head의 상태는 PR Checks와 본문에서 확인한다. 사용자 PC·실제 CLI는 새로 관측하지 않았고, 모델 호출·기존 예산 변경·새 프레임워크 추가는 없다. 사용자 또는 권한 받은 Claude가 정확한 녹색 head를 확인해 병합한 뒤 4절 순서로 진행한다. 긴 이력의 목록/상세 조회와 실제 PC 종료·재시작은 별도 검증 범위다.
 
 - **마지막 병합:** [PR #51](https://github.com/inlight37-design/decision-model_lab/pull/51)(`claude/source-injection-20260925`) — 코드 변경 없는 실험 PR: 공통 자료 속 지시문(숨긴 지시·`AGENTS.md`·`CLAUDE.md` 이름의 자료)을 [사전 등록](docs/experiments/2026-09-25-source-injection/README.md)하고 strict 실행 한 번으로 봤다. 두 참여자 모두 따르지 않았다. 모델 호출 2회(Codex 1·Claude 1). claude 세션이 병합했다(2절 8). [결과](docs/experiments/2026-09-25-source-injection/RESULTS.md).
 - **그 앞:** [PR #50](https://github.com/inlight37-design/decision-model_lab/pull/50)(`claude/strict-live-run-20260925`) — 코드 변경 없는 기록 PR: strict 첫 실제 두 참여자 실행(독립 정족수 충족), 첫 Codex 실제 합성, 실제 CLI 중도 취소(V04-03의 마지막 조건). 모델 호출 4회(Codex 3·Claude 1). claude 세션이 병합했다(2절 8). [기록](docs/reviews/2026-09-25-strict-live-run/README.md).
