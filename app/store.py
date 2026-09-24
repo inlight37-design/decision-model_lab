@@ -20,15 +20,17 @@ import time
 from pathlib import Path
 from typing import Any, Iterator
 
-# 1: participants.attempt. 2: runs.quorum_policy. 3: runs.cancel_requested(되돌리지 않는 실행 취소).
-SCHEMA_VERSION = 3
+# 1: participants.attempt. 2: runs.quorum_policy. 3: runs.cancel_requested.
+# 4: runs.phase; runs.roster and note remain historical data, never synchronized by the controller.
+SCHEMA_VERSION = 4
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS runs (
   run_id TEXT PRIMARY KEY, created_at REAL NOT NULL, question TEXT NOT NULL, prompt TEXT NOT NULL,
   input_sha256 TEXT NOT NULL, input_bytes INTEGER NOT NULL, min_independent INTEGER NOT NULL,
   roster TEXT NOT NULL, reduction_approved INTEGER NOT NULL DEFAULT 0, note TEXT,
   quorum_policy TEXT NOT NULL,
-  cancel_requested INTEGER NOT NULL DEFAULT 0
+  cancel_requested INTEGER NOT NULL DEFAULT 0,
+  phase TEXT NOT NULL DEFAULT 'drafting'
 );
 CREATE TABLE IF NOT EXISTS participants (
   run_id TEXT NOT NULL, pid TEXT NOT NULL, spec TEXT NOT NULL, state TEXT NOT NULL,
@@ -119,6 +121,19 @@ class Store:
                     columns = {row[1] for row in self._db.execute("PRAGMA table_info(runs)")}
                     if "cancel_requested" not in columns:
                         self._db.execute("ALTER TABLE runs ADD COLUMN cancel_requested INTEGER NOT NULL DEFAULT 0")
+                if version < 4:
+                    columns = {row[1] for row in self._db.execute("PRAGMA table_info(runs)")}
+                    if "phase" not in columns:
+                        self._db.execute("ALTER TABLE runs ADD COLUMN phase TEXT NOT NULL DEFAULT 'drafting'")
+                        for run_id, roster in self._db.execute("SELECT run_id, roster FROM runs").fetchall():
+                            try:
+                                legacy = json.loads(roster)
+                                phase = legacy.get("phase", "drafting")
+                                if phase not in ("preflight", "drafting", "revealed", "synthesis"):
+                                    raise ValueError("invalid phase")
+                            except (ValueError, AttributeError, TypeError) as exc:
+                                raise StoreError("cannot migrate malformed legacy run phase") from exc
+                            self._db.execute("UPDATE runs SET phase = ? WHERE run_id = ?", (phase, run_id))
                 if version != SCHEMA_VERSION:
                     self._db.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
                 self._db.execute("COMMIT")

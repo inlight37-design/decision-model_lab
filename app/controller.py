@@ -43,12 +43,9 @@ import uuid
 from typing import Any, Protocol
 
 from app.store import Store
+from app.state import (CLI, MANUAL, QUEUED, RUNNING, AWAITING_USER, ACCEPTED, REJECTED, UNKNOWN,
+                       DONE, INDEPENDENT_ONLY, INCLUDE_UNVERIFIED, QUORUM_POLICIES, RunGate, gate)
 from core import adapters, env as core_env, isolation, membership as m, runner
-
-CLI, MANUAL = "cli", "manual"
-QUEUED, RUNNING, AWAITING_USER = "queued", "running", "awaiting_user"
-ACCEPTED, REJECTED, UNKNOWN = "accepted", "rejected", "unknown"
-DONE = (ACCEPTED, REJECTED)
 
 PROMPT = ("다음 질문에, 다른 참여자의 답을 보지 않은 상태로 독립적으로 답하라. "
           "결론, 근거, 그리고 결론을 뒤집을 조건을 쓴다.\n\n질문:\n{question}\n")
@@ -63,9 +60,6 @@ CONTAMINATION = {
     MANUAL: ("원본 앱의 메모리·다른 대화·프로젝트 지시문을 통제하지 못함", "사용량·시간 관측 안 됨"),
 }
 
-# 정족수 정책(Q6). 실행을 만들 때 고르고 바꾸지 않는다.
-INDEPENDENT_ONLY, INCLUDE_UNVERIFIED = "independent_only", "include_unverified"
-QUORUM_POLICIES = (INDEPENDENT_ONLY, INCLUDE_UNVERIFIED)
 # 원본 앱에 옮기는 질문의 첫 줄과, 답에서 그것을 찾는 형식(N5)
 MARKER = "[Ledger {run_id}/{pid} · {sha8}]"
 MARKER_LINE = re.compile(r"^\s*\[Ledger ([^\s/]+)/(\S+) · ([0-9a-f]{8})\]\s*$")
@@ -128,18 +122,6 @@ def _bwrap_trusted() -> bool:
         return False
 
 
-def _roster_json(roster: m.Roster) -> str:
-    data = asdict(roster)
-    data["active"], data["unknown"] = sorted(roster.active), sorted(roster.unknown)
-    return json.dumps(data, ensure_ascii=False)
-
-
-def _roster(text: str) -> m.Roster:
-    d = json.loads(text)
-    return m.Roster(tuple(d["requested"]), d["min_independent"], d["phase"], frozenset(d["active"]),
-                    tuple(d["alternates"]), tuple(tuple(x) for x in d["dropped"]), frozenset(d["unknown"]))
-
-
 def packet(run_id: str, pid: str, input_sha256: str, prompt: str) -> str:
     """원본 앱에 옮길 질문. 첫 줄의 실행 표식을 답 첫 줄에 되말해 달라고 적는다(N5)."""
     return PACKET.format(marker=MARKER.format(run_id=run_id, pid=pid, sha8=input_sha256[:8]), prompt=prompt)
@@ -186,18 +168,6 @@ def acceptance(result: runner.RunResult | None, outcome: adapters.Outcome | None
         return REJECTED, "model_mismatch", (f"requested {outcome.requested_model}, "
                                             f"reported {', '.join(outcome.reported_models)}")
     return ACCEPTED, outcome.status, None
-
-
-def _quorum(run, roster: m.Roster, rows) -> dict[str, Any]:
-    """정족수 계산(Q6, 2절 18). 독립성이 확인된 참여자는 controller가 고정 입력만 주고 실행한 CLI다. 원본 앱 답은
-    독립성을 확인할 수 없다 — 사용자 확인이 있어도 같다. 셀 대상은 실행을 만들 때 고른 정책이 정한다."""
-    transport = {r["pid"]: json.loads(r["spec"])["transport"] for r in rows}
-    live = roster.active - roster.unknown
-    confirmed = sum(1 for p in live if transport.get(p) == CLI)
-    unverified = sum(1 for p in live if transport.get(p) == MANUAL)
-    counted = confirmed if run["quorum_policy"] == INDEPENDENT_ONLY else confirmed + unverified
-    return {"policy": run["quorum_policy"], "min": roster.min_independent, "confirmed": confirmed,
-            "unverified": unverified, "counted": counted, "met": counted >= roster.min_independent}
 
 
 def _quorum_label(quorum: dict[str, Any]) -> str:
@@ -247,8 +217,7 @@ class Controller:
         prompt = PROMPT.format(question=question)
         data = prompt.encode("utf-8")
         try:
-            roster = m.advance(m.start(tuple(p.pid for p in participants), min_independent=min_independent),
-                               m.DRAFTING)
+            m.start(tuple(p.pid for p in participants), min_independent=min_independent)
         except m.MembershipError as exc:
             raise ControllerError(str(exc)) from None
         run_id = f"r{time.strftime('%m%d-%H%M%S')}-{uuid.uuid4().hex[:4]}"
@@ -256,7 +225,7 @@ class Controller:
             tx.execute("INSERT INTO runs (run_id, created_at, question, prompt, input_sha256, input_bytes, "
                        "min_independent, roster, quorum_policy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                        run_id, time.time(), question, prompt, hashlib.sha256(data).hexdigest(), len(data),
-                       min_independent, _roster_json(roster), quorum_policy)
+                       min_independent, "{}", quorum_policy)
             for p in participants:
                 tx.execute("INSERT INTO participants (run_id, pid, spec, state) VALUES (?, ?, ?, ?)", run_id, p.pid,
                            json.dumps(asdict(p), ensure_ascii=False), QUEUED if p.transport == CLI else AWAITING_USER)
@@ -288,8 +257,6 @@ class Controller:
             for row in queued:
                 if self._slots_used() >= self.max_parallel:
                     return
-                if _roster(self._run(row["run_id"])["roster"]).phase != m.DRAFTING:
-                    continue
                 spec = ParticipantSpec(**json.loads(row["spec"]))
                 attempt = uuid.uuid4().hex
                 work = os.path.join(self.work_root, row["run_id"], spec.pid)
@@ -297,9 +264,9 @@ class Controller:
                 prompt = self._run(row["run_id"])["prompt"]
                 record = self._describe(spec, prompt)
                 with self.store.tx() as tx:
-                    taken = tx.execute("UPDATE participants SET state = ?, attempt = ? "
-                                       "WHERE run_id = ? AND pid = ? AND state = ?",
-                                       RUNNING, attempt, row["run_id"], spec.pid, QUEUED)
+                    part = self._part(row["run_id"], spec.pid)
+                    taken = (self._gate(row["run_id"]).accepting and part["state"] == QUEUED
+                             and self._transition(tx, part, RUNNING, attempt=attempt))
                     if taken:
                         tx.event(row["run_id"], "attempt_started", pid=spec.pid, attempt=attempt,
                                  executor=self.executor.name, behavior=spec.behavior,
@@ -363,34 +330,28 @@ class Controller:
                 "model_match": outcome.model_match}
             state, status, why = acceptance(result, outcome)
             detail = detail or why or (outcome.detail if outcome else None)
-            run = self._run(run_id)
-            roster = _roster(run["roster"])
-            if run["cancel_requested"]:
-                # 신호를 늦게 본 실행기가 정상 답을 돌려줘도 취소된 실행에는 봉인/공개하지 않는다.
-                state = REJECTED if result is not None and result.tree_confirmed_empty is True else UNKNOWN
-                status = "cancelled" if state == REJECTED else "cancel_unconfirmed"
-                detail = "run cancellation requested; answer discarded"
             with self.store.tx() as tx:
+                current_gate = self._gate(run_id)
+                if not current_gate.accepting:
+                    # 신호를 늦게 본 실행기의 정상 답도 끝난 실행에는 봉인/공개하지 않는다.
+                    state = REJECTED if result is not None and result.tree_confirmed_empty is True else UNKNOWN
+                    status = "cancelled" if state == REJECTED else "cancel_unconfirmed"
+                    detail = "run no longer accepts results; answer discarded"
                 # 이 시도가 아직 이 참여자의 진행 중인 시도일 때만 반영한다. 다시 시작한 controller가 unknown으로
                 # 돌렸거나 사용자가 종료를 확인한 뒤에 온 결과는 사건으로만 남긴다 — 초안·명단은 그대로다.
-                if not tx.execute("UPDATE participants SET state = ?, status = ?, detail = ?, result = ? "
-                                  "WHERE run_id = ? AND pid = ? AND state = ? AND attempt = ?",
-                                  state, status, detail, json.dumps(summary, ensure_ascii=False),
-                                  run_id, pid, RUNNING, attempt):
+                expected = {"run_id": run_id, "pid": pid, "state": RUNNING, "attempt": attempt}
+                if not self._transition(tx, expected, state, status=status, detail=detail,
+                                        result=json.dumps(summary, ensure_ascii=False)):
                     tx.event(run_id, "attempt_result_ignored", pid=pid, attempt=attempt, result=summary)
                     return
                 if state == UNKNOWN:
-                    if pid in roster.active:
-                        roster = m.decide(roster, "cancel_unconfirmed", pid).roster
                     tx.event(run_id, "attempt_unknown", pid=pid, attempt=attempt, result=summary, detail=detail)
                 elif state == ACCEPTED:
                     tx.execute("INSERT OR REPLACE INTO drafts VALUES (?, ?, ?, ?, ?, ?)", run_id, pid, outcome.text,
                                hashlib.sha256(outcome.text.encode("utf-8")).hexdigest(), CLI, time.time())
                     tx.event(run_id, "draft_sealed", pid=pid, attempt=attempt, result=summary)
                 else:
-                    roster = m.decide(roster, "unavailable", pid).roster
                     tx.event(run_id, "attempt_rejected", pid=pid, attempt=attempt, status=status, result=summary)
-                tx.execute("UPDATE runs SET roster = ? WHERE run_id = ?", _roster_json(roster), run_id)
                 self._maybe_reveal(run_id, tx)
 
     def _maybe_reveal(self, run_id: str, tx) -> None:
@@ -398,30 +359,18 @@ class Controller:
 
         상태를 바꾼 거래 안에서 부른다. 거래 안의 읽기는 그 거래가 쓴 것까지 본다.
         """
-        run = self._run(run_id)
-        roster = _roster(run["roster"])
-        rows = self.store.rows("SELECT pid, state, spec FROM participants WHERE run_id = ?", run_id)
-        states = [r["state"] for r in rows]
-        if run["cancel_requested"] or roster.phase != m.DRAFTING or any(s not in DONE for s in states):
-            return
-        quorum = _quorum(run, roster, rows)
-        note = None
-        if roster.dropped and not run["reduction_approved"]:
-            note = f"요청한 {len(roster.requested)}인 구성이 완료되지 않았습니다. 남은 참여자로 진행하려면 축소 승인이 필요합니다."
-        elif not quorum["met"] and quorum["policy"] == INDEPENDENT_ONLY:
-            note = (f"독립성이 확인된 참여자 {quorum['confirmed']}명 — 최소 {quorum['min']}명이 필요합니다. "
-                    f"원본 앱 답 {quorum['unverified']}개는 정족수에 세지 않습니다. 유료로 채우지 않습니다.")
-        elif not quorum["met"]:
-            note = (f"답을 낸 참여자 {quorum['counted']}명(독립성 미확인 {quorum['unverified']}명 포함) — "
-                    f"최소 {quorum['min']}명이 필요합니다. 유료로 채우지 않습니다.")
-        if note:
-            if note != run["note"]:
-                tx.execute("UPDATE runs SET note = ? WHERE run_id = ?", note, run_id)
-                tx.event(run_id, "reveal_held", note=note)
-        else:
-            tx.execute("UPDATE runs SET roster = ?, note = NULL WHERE run_id = ?",
-                       _roster_json(m.advance(roster, m.REVEALED)), run_id)
-            tx.event(run_id, "revealed", drafts=len([s for s in states if s == ACCEPTED]), quorum=quorum)
+        current_gate = self._gate(run_id)
+        if current_gate.can_reveal:
+            if tx.execute("UPDATE runs SET phase = ? WHERE run_id = ? AND phase = ? AND NOT cancel_requested",
+                          m.REVEALED, run_id, m.DRAFTING):
+                tx.event(run_id, "revealed", drafts=len(current_gate.requested) - len(current_gate.dropped),
+                         quorum=current_gate.quorum)
+        elif current_gate.status in ("reduction_required", "quorum_blocked"):
+            # note is derived, not a mutable copy of the policy decision. Keep only a bounded event lookup.
+            prior = self.store.row("SELECT payload FROM events WHERE run_id = ? AND kind = 'reveal_held' "
+                                   "ORDER BY seq DESC LIMIT 1", run_id)
+            if prior is None or json.loads(prior["payload"])["note"] != current_gate.note:
+                tx.event(run_id, "reveal_held", note=current_gate.note)
 
     # ---- 사용자 행동 ---------------------------------------------------------------------------
     def cancel_run(self, run_id: str) -> None:
@@ -431,16 +380,16 @@ class Controller:
         기존 초안은 계속 봉인한다. 외부 앱 작업 자체를 중단시키거나 이미 쓴 예산을 돌려받는 기능은 아니다.
         """
         with self.lock:
-            run = self._run(run_id)
-            if _roster(run["roster"]).phase != m.DRAFTING:
-                raise ControllerError("only a drafting run can be cancelled; revealed drafts cannot be hidden again")
-            if not run["cancel_requested"]:
-                with self.store.tx() as tx:
-                    tx.execute("UPDATE runs SET cancel_requested = 1, note = ? WHERE run_id = ?",
-                               "취소를 요청했습니다. 새 시도·수동 제출·공개는 막았습니다. 진행 중인 작업의 종료는 별도 확인합니다.", run_id)
-                    tx.execute("UPDATE participants SET state = ?, status = ? "
-                               "WHERE run_id = ? AND state IN (?, ?)", REJECTED, "cancelled_before_start",
-                               run_id, QUEUED, AWAITING_USER)
+            with self.store.tx() as tx:
+                current_gate = self._gate(run_id)
+                if not current_gate.accepting and current_gate.status != "cancelled":
+                    raise ControllerError("only a drafting run can be cancelled; revealed drafts cannot be hidden again")
+                if current_gate.accepting:
+                    tx.execute("UPDATE runs SET cancel_requested = 1 WHERE run_id = ? AND NOT cancel_requested",
+                               run_id)
+                    for part in self.store.rows("SELECT * FROM participants WHERE run_id = ? AND state IN (?, ?)",
+                                                run_id, QUEUED, AWAITING_USER):
+                        self._transition(tx, part, REJECTED, status="cancelled_before_start")
                     tx.event(run_id, "run_cancel_requested")
             for part in self.store.rows("SELECT attempt FROM participants WHERE run_id = ? AND state = ?", run_id, RUNNING):
                 worker = self._workers.get(part["attempt"])
@@ -452,81 +401,68 @@ class Controller:
         """원본 앱의 답을 받는다. user_confirmed: 사용자가 "이 질문을 원본 앱에 넣어 받은 답"이라고 확인했다 —
         따로 남길 뿐 독립성 확인으로 올리지 않는다(K21, 2절 18)."""
         with self.lock:
-            run, part = self._run(run_id), self._part(run_id, pid)
-            spec = ParticipantSpec(**json.loads(part["spec"]))
-            echo, body = _marker_echo(text, run_id, pid, run["input_sha256"])
             reason = None
-            if spec.transport != MANUAL:
-                reason = "not a manual participant"
-            elif run["cancel_requested"] or _roster(run["roster"]).phase != m.DRAFTING:
-                reason = "late: drafts were already revealed or the run ended"
-            elif part["state"] != AWAITING_USER:
-                reason = "duplicate: this participant already has a result"
-            elif input_sha256 != run["input_sha256"]:
-                reason = "different input: the answer was made for another question"
-            elif echo == "other_run":
-                reason = "different run: the answer carries the marker of another run"
-            elif echo == "other_participant":
-                reason = "different participant: the answer carries the marker of another participant"
-            elif not body.strip():
-                reason = "empty answer"
-            if reason:
-                with self.store.tx() as tx:
-                    tx.event(run_id, "manual_refused", pid=pid, reason=reason)
-                raise ControllerError(reason)
-            result = {"source": MANUAL, "marker_echo": echo, "user_confirmed": bool(user_confirmed),
-                      "independence": "unverified"}
             with self.store.tx() as tx:
-                tx.execute("INSERT OR REPLACE INTO drafts VALUES (?, ?, ?, ?, ?, ?)", run_id, pid, body,
-                           hashlib.sha256(body.encode("utf-8")).hexdigest(), MANUAL, time.time())
-                tx.execute("UPDATE participants SET state = ?, status = ?, result = ? WHERE run_id = ? AND pid = ?",
-                           ACCEPTED, "manual", json.dumps(result), run_id, pid)
-                tx.event(run_id, "draft_sealed", pid=pid, source=MANUAL, marker_echo=echo,
-                         user_confirmed=bool(user_confirmed))
-                self._maybe_reveal(run_id, tx)
+                run, part = self._run(run_id), self._part(run_id, pid)
+                spec = ParticipantSpec(**json.loads(part["spec"]))
+                echo, body = _marker_echo(text, run_id, pid, run["input_sha256"])
+                if spec.transport != MANUAL:
+                    reason = "not a manual participant"
+                elif not self._gate(run_id).accepting:
+                    reason = "late: drafts were already revealed or the run ended"
+                elif part["state"] != AWAITING_USER:
+                    reason = "duplicate: this participant already has a result"
+                elif input_sha256 != run["input_sha256"]:
+                    reason = "different input: the answer was made for another question"
+                elif echo == "other_run":
+                    reason = "different run: the answer carries the marker of another run"
+                elif echo == "other_participant":
+                    reason = "different participant: the answer carries the marker of another participant"
+                elif not body.strip():
+                    reason = "empty answer"
+                result = {"source": MANUAL, "marker_echo": echo, "user_confirmed": bool(user_confirmed),
+                          "independence": "unverified"}
+                if reason is None and not self._transition(tx, part, ACCEPTED, status="manual", result=json.dumps(result)):
+                    reason = "duplicate: this participant already has a result"
+                if reason:
+                    tx.event(run_id, "manual_refused", pid=pid, reason=reason)
+                else:
+                    tx.execute("INSERT INTO drafts VALUES (?, ?, ?, ?, ?, ?)", run_id, pid, body,
+                               hashlib.sha256(body.encode("utf-8")).hexdigest(), MANUAL, time.time())
+                    tx.event(run_id, "draft_sealed", pid=pid, source=MANUAL, marker_echo=echo,
+                             user_confirmed=bool(user_confirmed))
+                    self._maybe_reveal(run_id, tx)
+            if reason:
+                raise ControllerError(reason)
 
     def withdraw_manual(self, run_id: str, pid: str) -> None:
         """사용자가 원본 앱에서 답을 받지 못했다. 그 참여자를 빼고, 빈자리는 채우지 않는다."""
-        with self.lock:
+        with self.lock, self.store.tx() as tx:
             part = self._part(run_id, pid)
-            if part["state"] != AWAITING_USER:
+            if not self._gate(run_id).accepting or part["state"] != AWAITING_USER:
                 raise ControllerError("only a participant waiting for the user can be withdrawn")
-            roster = m.decide(_roster(self._run(run_id)["roster"]), "unavailable", pid).roster
-            with self.store.tx() as tx:
-                tx.execute("UPDATE participants SET state = ?, status = ? WHERE run_id = ? AND pid = ?",
-                           REJECTED, "withdrawn", run_id, pid)
-                tx.execute("UPDATE runs SET roster = ? WHERE run_id = ?", _roster_json(roster), run_id)
+            if self._transition(tx, part, REJECTED, status="withdrawn"):
                 tx.event(run_id, "manual_withdrawn", pid=pid)
                 self._maybe_reveal(run_id, tx)
 
     def approve_reduction(self, run_id: str) -> None:
         """축소 승인은 controller가 그것을 기다릴 때만 받는다: 초안 작성 중이고, 모두 끝났고, 빠진 사람이 있고,
         아직 승인하지 않았다. 그 뒤로는 구성이 바뀌지 않으므로 승인은 지금 구성에 대한 것이다(A1-06)."""
-        with self.lock:
-            run = self._run(run_id)
-            roster = _roster(run["roster"])
-            states = [r["state"] for r in self.store.rows("SELECT state FROM participants WHERE run_id = ?", run_id)]
-            if (run["cancel_requested"] or roster.phase != m.DRAFTING or not roster.dropped or run["reduction_approved"]
-                    or any(s not in DONE for s in states)):
+        with self.lock, self.store.tx() as tx:
+            current_gate = self._gate(run_id)
+            if not current_gate.can_approve_reduction:
                 raise ControllerError("no reduction is waiting for approval")
-            with self.store.tx() as tx:
-                tx.execute("UPDATE runs SET reduction_approved = 1 WHERE run_id = ?", run_id)
-                tx.event(run_id, "reduction_approved", requested=list(roster.requested),
-                         dropped=[d[0] for d in roster.dropped])
-                self._maybe_reveal(run_id, tx)
+            tx.execute("UPDATE runs SET reduction_approved = 1 WHERE run_id = ? AND NOT reduction_approved", run_id)
+            tx.event(run_id, "reduction_approved", requested=list(current_gate.requested), dropped=list(current_gate.dropped))
+            self._maybe_reveal(run_id, tx)
 
     def acknowledge_unknown(self, run_id: str, pid: str) -> None:
         """사용자가 그 시도의 종료를 직접 확인했다고 알린다. 자리는 풀지만 예산은 돌려주지 않고, 초안도 받지 않는다."""
-        with self.lock:
-            if self._part(run_id, pid)["state"] != UNKNOWN:
+        with self.lock, self.store.tx() as tx:
+            part = self._part(run_id, pid)
+            if part["state"] != UNKNOWN:
                 raise ControllerError("only an unknown attempt can be acknowledged")
-            roster = _roster(self._run(run_id)["roster"])
-            if pid in roster.active:
-                roster = m.decide(roster, "unavailable", pid).roster
-            with self.store.tx() as tx:
-                tx.execute("UPDATE participants SET state = ?, status = ? WHERE run_id = ? AND pid = ?",
-                           REJECTED, "unknown_acknowledged", run_id, pid)
-                tx.execute("UPDATE runs SET roster = ? WHERE run_id = ?", _roster_json(roster), run_id)
+            if self._transition(tx, part, REJECTED, status="unknown_acknowledged"):
                 tx.event(run_id, "unknown_acknowledged", pid=pid)
                 self._maybe_reveal(run_id, tx)
         self.pump()
@@ -536,20 +472,14 @@ class Controller:
         """이 원장을 연 controller는 이것 하나다(Store의 잠금). running으로 남은 시도는 멈춘 controller의 것이고
         종료를 확인할 수 없으므로 unknown으로 두고 다시 부르지 않는다. 그다음 초안 작성 중인 실행마다 공개 관문을
         다시 본다 — 이 수정 전의 원장은 마지막 초안 저장과 공개 사이에서 멈췄을 수 있다(A1-05). 외부 호출은 없다."""
-        for row in self.store.rows("SELECT run_id, pid FROM participants WHERE state = ?", RUNNING):
-            roster = _roster(self._run(row["run_id"])["roster"])
-            if row["pid"] in roster.active:
-                roster = m.decide(roster, "cancel_unconfirmed", row["pid"]).roster
+        for row in self.store.rows("SELECT * FROM participants WHERE state = ?", RUNNING):
             with self.store.tx() as tx:
-                tx.execute("UPDATE participants SET state = ?, status = ?, detail = ? WHERE run_id = ? AND pid = ?",
-                           UNKNOWN, "controller_restarted", "controller restarted; termination not confirmed",
-                           row["run_id"], row["pid"])
-                tx.execute("UPDATE runs SET roster = ? WHERE run_id = ?", _roster_json(roster), row["run_id"])
-                tx.event(row["run_id"], "attempt_unknown", pid=row["pid"], detail="controller restarted")
-        for run in self.store.rows("SELECT run_id, roster FROM runs"):
-            if _roster(run["roster"]).phase == m.DRAFTING:
-                with self.store.tx() as tx:
-                    self._maybe_reveal(run["run_id"], tx)
+                if self._transition(tx, row, UNKNOWN, status="controller_restarted",
+                                    detail="controller restarted; termination not confirmed"):
+                    tx.event(row["run_id"], "attempt_unknown", pid=row["pid"], detail="controller restarted")
+        for run in self.store.rows("SELECT run_id FROM runs WHERE phase = ?", m.DRAFTING):
+            with self.store.tx() as tx:
+                self._maybe_reveal(run["run_id"], tx)
 
     # ---- 화면용 투영 ---------------------------------------------------------------------------
     def view(self, run_id: str | None = None) -> dict[str, Any]:
@@ -563,10 +493,9 @@ class Controller:
             runs = []
             query = "SELECT * FROM runs" + (" WHERE run_id = ?" if run_id is not None else "")
             for run in self.store.rows(query + " ORDER BY created_at DESC", *(() if run_id is None else (run_id,))):
-                roster = _roster(run["roster"])
-                revealed = roster.phase in (m.REVEALED, m.SYNTHESIS)
                 rows = self.store.rows("SELECT * FROM participants WHERE run_id = ? ORDER BY rowid", run["run_id"])
-                settled = revealed or all(p["state"] in DONE for p in rows)
+                current_gate = gate(run, rows)
+                revealed, settled = current_gate.revealed, current_gate.settled or current_gate.revealed
                 keep = SEALED_VIEW_KEYS | (DIAGNOSTIC_KEYS if settled else frozenset())
                 parts, calls = [], {"succeeded": 0, "failed": 0, "unknown": 0}
                 for p in rows:
@@ -582,22 +511,23 @@ class Controller:
                             "state": p["state"], "status": p["status"], "detail": p["detail"] if settled else None,
                             "contamination": list(CONTAMINATION.get(spec.transport, ("모의 CLI — 모델 호출 없음",))),
                             "independence": "confirmed" if spec.transport == CLI else "unverified",
-                            "result": result, "dropped": any(d[0] == spec.pid for d in roster.dropped)}
-                    if spec.transport == MANUAL and p["state"] == AWAITING_USER:
+                            "result": result, "dropped": spec.pid in current_gate.dropped}
+                    if current_gate.accepting and spec.transport == MANUAL and p["state"] == AWAITING_USER:
                         item["packet"] = packet(run["run_id"], spec.pid, run["input_sha256"], run["prompt"])
                     if revealed and p["state"] == ACCEPTED:
-                        draft = self.store.row("SELECT text, source FROM drafts WHERE run_id = ? AND pid = ?",
+                        draft = self.store.row("SELECT text, source, sha256 FROM drafts WHERE run_id = ? AND pid = ?",
                                                run["run_id"], spec.pid)
                         item["draft"] = draft["text"] if draft else None
+                        item["draft_sha256"] = draft["sha256"] if draft else None
                     parts.append(item)
                 cli_total = sum(1 for p in parts if p["transport"] == CLI)
-                quorum = _quorum(run, roster, rows)
+                quorum = dict(current_gate.quorum)
                 quorum["label"] = _quorum_label(quorum) if revealed else None
                 runs.append({"run_id": run["run_id"], "created_at": run["created_at"], "question": run["question"],
                              "prompt": run["prompt"], "input_sha256": run["input_sha256"],
-                             "input_bytes": run["input_bytes"], "phase": roster.phase,
-                             "min_independent": roster.min_independent, "note": run["note"],
-                             "quorum": quorum,
+                             "input_bytes": run["input_bytes"], "phase": run["phase"],
+                             "min_independent": run["min_independent"], "note": current_gate.note,
+                             "quorum": quorum, "gate": current_gate.public(),
                              "reduction_approved": bool(run["reduction_approved"]),
                              "cancel_requested": bool(run["cancel_requested"]),
                              "diagnostics_sealed": not settled,
@@ -612,6 +542,31 @@ class Controller:
                     "paused": self.paused, "runs": runs}
 
     # ---- 내부 ---------------------------------------------------------------------------------
+    def _gate(self, run_id: str) -> RunGate:
+        """Read inside a Store transaction for decisions that change state."""
+        return gate(self._run(run_id), self.store.rows(
+            "SELECT pid, state, spec FROM participants WHERE run_id = ? ORDER BY rowid", run_id))
+
+    @staticmethod
+    def _transition(tx, expected, state: str, **changes) -> bool:
+        """One participant mutation path: both the old state and attempt must still match.
+
+        NULL is a real expected attempt for manual/queued participants, not a wildcard.
+        The caller writes the corresponding event/draft only when this succeeds.
+        """
+        allowed = {QUEUED: (RUNNING, REJECTED), RUNNING: (ACCEPTED, REJECTED, UNKNOWN),
+                   AWAITING_USER: (ACCEPTED, REJECTED), UNKNOWN: (REJECTED,)}
+        if state not in allowed.get(expected["state"], ()):
+            raise ControllerError(f"invalid participant transition {expected['state']} -> {state}")
+        if set(changes) - {"status", "detail", "result", "attempt"}:
+            raise ControllerError("invalid participant transition fields")
+        updates = {"state": state, **changes}
+        assignments = ", ".join(f"{name} = ?" for name in updates)
+        return bool(tx.execute(f"UPDATE participants SET {assignments} "
+                               "WHERE run_id = ? AND pid = ? AND state = ? AND attempt IS ?",
+                               *updates.values(), expected["run_id"], expected["pid"],
+                               expected["state"], expected["attempt"]))
+
     def _run(self, run_id: str):
         run = self.store.row("SELECT * FROM runs WHERE run_id = ?", run_id)
         if run is None:
