@@ -1,6 +1,6 @@
-# app — A1 controller와 모의 화면
+# app — A1 controller와 명시적 CLI 실측
 
-**모델을 부르지 않는 모의 모드**의 세로 기능이다(인계 4절 A1). 흐름은 한 줄이다.
+기본은 **모델을 부르지 않는 모의 모드**다. `--live-cli`로 명시한 경우에만 실제 구독 CLI를 연결한다. 첫 실측 경로는 서버당 CLI 하나와 수동 참여자로 제한한다. 흐름은 한 줄이다.
 
 고정 입력(질문 → 프롬프트, sha256) → 시도 예약 → 실행 → 결과 수용 관문 → 초안 봉인 → controller가 공개 → 모의 합성 → 원문 대조 → 결정 카드/JSON 보고
 
@@ -10,7 +10,7 @@
 | [`store.py`](store.py) | 작은 SQLite journal. 사건은 덧붙이기만 한다. 초안도 여기에 봉인한다 |
 | [`state.py`](state.py) | 참여자 행에서 취소·정족수·축소 승인·공개 관문을 계산. 별도 참여자 명단을 동기화하지 않는다 |
 | [`fake_cli.py`](fake_cli.py) | Claude·Codex 출력 형식을 흉내 내는 가짜 CLI. 행동: 정상, 느림, CLI 오류, 입력 일부만 읽음, 멈춤 |
-| [`cli_executor.py`](cli_executor.py) | 실제 CLI 실행기(Linux·WSL). `plan()`이 `env.resolve` → `build_spec` → 격리 경계(`cli_mounts`, `never`) → 판 계산으로 최종 계획을 한 번 만들고, `run()`이 그 계획 그대로 `isolation.run` → `interpret`한다([실행 계약](../core/contract.py)). **모델을 부른다 — 승인 뒤에만.** 서버는 아직 쓰지 않는다. 이 기기의 기록(`runtime-inventory/2`)과 계획의 판으로 시도마다 실행 허가를 계산한다 — 기록 없이 부르는 것은 관측 도구와 시험(`unchecked`)뿐이다 |
+| [`cli_executor.py`](cli_executor.py) | 실제 CLI 실행기(Linux·WSL). `plan()`이 `env.resolve` → `build_spec` → 격리 경계(`cli_mounts`, `never`) → 판 계산으로 최종 계획을 한 번 만들고, `run()`이 그 계획 그대로 `isolation.run` → `interpret`한다([실행 계약](../core/contract.py)). **모델을 부른다 — 승인 뒤에만.** 서버의 `--live-cli` 경로가 사용한다. 이 기기의 기록(`runtime-inventory/2`)과 계획의 판으로 시도마다 실행 허가를 계산한다 — 기록 없이 부르는 것은 관측 도구와 시험(`unchecked`)뿐이다 |
 | [`report.py`](report.py) | 공개된 실행의 합성 없는 보고. 원문·출처·정족수·예산을 투영하며 모델 호출·원장 변경 없음 |
 | [`synthesis.py`](synthesis.py) | 모의 발췌 합성, 원문 위치·저장 해시 대조, 조건부 결정 카드. 사실 검증과 의미상 합의 판정은 하지 않는다 |
 | [`server.py`](server.py) | 127.0.0.1 화면 서버. 모든 `/api` 요청에 토큰 |
@@ -26,7 +26,7 @@ python -m app.server --port 8765
 
 ## 참여자 두 종류
 
-- **CLI(자동).** 화면 서버는 모의 CLI만 돌린다. 실제 CLI 실행기(`cli_executor.py`)는 있지만 가짜 CLI로만 시험했고, 서버에서 고르는 설정(참여자별 전체 모델 이름)은 승인된 호출을 할 때 붙인다.
+- **CLI(자동).** 기본은 모의 실행이다. `--live-cli`, 전체 모델 이름, 관측 기록, 별도 데이터 폴더, 호출 예산을 명시해야 실제 실행으로 연결된다. 문맥 미확인 실행은 별도 opt-in이고 독립 정족수에 세지 않는다. 실제 모델로 이번 서버 경로를 검증한 것은 아니다.
   - 실행 명세(`ExecutionSpec.record()` — 질문 본문 없이 digest와 크기)는 시작 사건에 시도 ID와 함께 남는다.
   - 프로세스를 만들기 전에 거절하면(실행 파일 없음, 모델 이름 없음, 경로 충돌) `failed_to_start`로 끝난다. 시작한 것이 없으므로 `unknown`이 아니다.
 - **원본 앱(수동).** ChatGPT·Claude·Antigravity 앱에서 사용자가 직접 돌린다.
@@ -41,8 +41,8 @@ python -m app.server --port 8765
 
 실행을 만들 때 고르고 바꾸지 않는다(journal의 `runs.quorum_policy`).
 
-- **`independent_only`(기본)** — 독립성이 확인된 참여자만 센다. controller가 고정 입력만 주고 실행한 CLI다. CLI가 최소 인원보다 적으면 실행을 만들지 않는다. 원본 앱 답은 정족수에 세지 않고 보조 근거로 함께 공개한다.
-- **`include_unverified`** — 원본 앱 답도 센다. 공개된 실행은 "미확인 참여 포함 정족수"로 표시하고, "독립 정족수 충족"이라고 쓰지 않는다.
+- **`independent_only`(기본)** — 엄격한 문맥 관문을 요구하는 CLI만 센다. 문맥 미확인 CLI와 원본 앱 답은 정족수에 세지 않고 보조 근거로 함께 공개한다. 확인 가능한 인원이 최소보다 적으면 실행을 만들지 않는다.
+- **`include_unverified`** — 문맥 미확인 CLI와 원본 앱 답도 센다. 공개된 실행은 "미확인 참여 포함 정족수"로 표시하고, "독립 정족수 충족"이라고 쓰지 않는다.
 - 이 정책을 두기 전(스키마 1)의 실행은 원본 앱 답을 셌으므로 `include_unverified`로 올린다.
 
 ## 지키는 규칙
@@ -96,11 +96,45 @@ python -m app.server --port 8765
 
 WSL 로그인 셸에서 `python -m app.server --check-cli codex --model gpt-6-luna --inventory <manifest.v2.json>`처럼 provider·전체 모델 이름·기록을 지정한다. Claude는 `--check-cli claude-code`다. 이 명령은 자료 없는 현재 참여자 계획의 판과 설치 버전·관측 기록을 대조한 JSON만 출력하고 끝난다. 서버·원장·CLI 프로세스·모델을 시작하지 않으며 인증을 갱신하지 않는다. 허가되지 않으면 종료 코드 2, 관측 조건을 만족하면 0이다. 조회 결과는 실행 승인/예산이 아니고 bubblewrap namespace를 실제 만들 수 있다는 보장도 아니다. 실행기는 시작 직전에 허가를 다시 검사한다.
 
-현재 두 CLI 모두 허가가 없다. Claude는 옛 관측과 현재 판이 다르고, Codex는 현재 판 불일치와 C3 failed가 함께 남는다. 모의 서버에 `--inventory`/`--model`만 주면 실제 실행처럼 오인하지 않도록 거절한다. 실제 실행기 선택은 아직 연결하지 않았다.
+기본 strict 정책에서는 두 CLI 모두 허가가 없다. `--allow-context-unverified`는 C3의 의미상 합격만 실행의 필수 조건에서 제외한다. 기록의 구조 오류, 설치·구독·전송·권한, 판/버전/날짜 검사는 그대로다. `--inventory`/`--model`만 주면 모의 실행으로 조용히 대체하지 않고 거절한다.
+
+## 첫 실제 실행: 기존 K46 계획을 그대로 사용
+
+Codex K46 관측은 **읽기 전용 입력 폴더 하나**가 있는 `codex@8a0128d4c791` 계획에서 성공했다. 자료 없는 다른 계획으로 바꾼 뒤 같은 시험을 다시 요구하지 않는다. 첫 실측은 별도 빈 입력 폴더를 하나 연결해 기존 판을 그대로 사용한다. `contract.LEGACY`를 확대하거나 manifest의 C3 `failed`를 `observed`로 바꾸지 않았다. 이 판에서 C3 opt-in을 쓰면 기존 기록이 실행을 허용한다는 것은 오프라인으로 확인했다. 설치판·날짜·경로는 기동 시 다시 검사하며, Claude의 다른 전송·권한 판을 대신 허용하지 않는다.
+
+사용자가 승인한 **구독 호출 실측**을 수행할 때, `aux-pc-wsl`의 로그인 셸에서 저장소 루트 기준으로 실행한다. 아래는 Codex만 최대 한 번, 180초 상한이다. 이전 `observe.py` 승인 원장을 초기화하지 않는다. 이 예산은 새 앱 실측의 별도 누적 상한이며 다른 앱/계정 전체 사용량의 잔여가 아니다.
+
+```bash
+input_dir="$(mktemp -d /tmp/dml-pilot-input.XXXXXX)"
+inventory="docs/experiments/w2-isolation/2026-09-24-k46-confirmation/manifest.v2.json"
+data_dir="$HOME/.local/state/dml-live-pilot"
+
+# 프로세스·서버·모델·원장을 시작하지 않는 조회
+python3 -m app.server --check-cli codex --model gpt-6-luna \
+  --inventory "$inventory" --input-dir "$input_dir" --data-dir "$data_dir" \
+  --allow-context-unverified
+
+# 위 조회가 eligible=true일 때만. 기동 자체는 모델을 부르지 않고 화면의 시작 버튼이 호출한다.
+python3 -m app.server --live-cli codex --model gpt-6-luna \
+  --inventory "$inventory" --input-dir "$input_dir" --data-dir "$data_dir" \
+  --allow-context-unverified --call-budget 1 --timeout 180
+```
+
+서버가 출력한 localhost 주소를 열고, 비민감한 짧은 질문으로 시작한다. 첫 화면은 실제 모드·전체 요청 모델·문맥 미확인·호출 예약 상한을 표시한다. 요청 모델은 예전 관측에 사용된 이름이며 지금 계정에서 사용 가능한지는 이 세션이 확인하지 않았다. 다른 모델로 자동 대체하지 않는다. Codex가 제공 모델을 보고하지 않는 기존 K32 한계도 그대로 표시한다.
+
+결과는 **실제 CLI / 문맥 미확인**, 정족수는 **확인 0 / 미확인 1**이어야 한다. 원문 JSON을 저장한다. 정족수 미달·실패·UNKNOWN이면 자동 재호출하지 않는다. 실제 시작 전 예약을 원장에 남기며 실패·취소·재시작으로 환불하지 않는다. 같은 원장에 같은 `--call-budget 1`로 다시 켜도 추가 호출은 차단된다. 새 폴더를 만들거나 상한을 올려 한도를 우회하지 않는다. UNKNOWN은 실행 자리를 붙잡고 실측 서버의 다음 시작을 막는다.
+
+입력 폴더는 이 파일의 첫 시험에서는 빈 폴더다. 실제 공통 자료의 스냅샷·내용 해시·수동 참여자 전달 UI는 구현하지 않았으므로 자료 검증까지 했다고 해석하지 않는다. 합성은 계속 **모의 발췌**이며 실제 합성 모델/사실 검증을 호출하지 않는다.
+
+### 문맥을 줄이는 후속 경로와 정정
+
+“구독 로그인에 설정 폴더 전체가 필수”라는 설명은 Codex에는 맞지 않는다. [공식 인증 문서](https://developers.openai.com/codex/auth/)는 파일 저장 방식에서 `auth.json`만 headless 환경으로 옮기는 절차를 제공한다. 깨끗한 전용 로컬 인증 프로필을 만들 수 있다는 근거이지 계정 원격 도구나 최종 요청 전체가 깨끗하다는 증거는 아니다. 실제 토큰을 GitHub·웹 컨테이너로 가져오지 않는다. 갱신 경쟁/키체인 방식은 사용자 PC에서 따로 확인해야 하므로 이 변경은 인증 파일을 자동 복사하지 않는다.
+
+[Claude `--bare`](https://code.claude.com/docs/en/headless)는 구독 OAuth·키체인을 사용하지 않고 API 인증을 요구하므로 이번 구독 전용 해결책으로 쓰지 않는다. [Codex 공식 설정](https://developers.openai.com/codex/config-reference/)의 앱/플러그인 제어는 전용 프로필 실측 후보다. 파일 격리와 원격 계정 문맥을 혼동하지 않는다. 이 변경은 환경·CLI 옵션을 추가로 바꾸지 않아 K46 계획을 유지한다. 확인일: 2026-09-24.
 
 ## 아직 없는 것
 
-- 화면 서버에서 실제 CLI를 고르는 설정. 승인된 호출을 할 때 붙인다.
+- 복수 실제 CLI 동시 참여와 실제 합성. 먼저 위 단일 CLI 경로의 실제 모델 응답을 기록한다.
 - 실제 모델 합성, 의미상 주장 대조·외부 사실 검증. Q4 두 배치의 사용자 선택.
 - TypeScript 화면. 현재 제품 화면은 빌드 없는 HTML·JS이고 이행 시점은 Q3로 남아 있다.
 - 입력 manifest의 공통 자료(파일) 첨부. 지금은 질문 한 개다.

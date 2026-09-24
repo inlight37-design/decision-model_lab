@@ -44,11 +44,13 @@ class Plan:
     revision: str = ""
     template: dict[str, Any] | None = None
     changes: tuple[str, ...] = ()   # 관측 도구의 변형이 참여자 argv에서 바꾼 것
+    context_unverified: bool = False  # 실행 허가 정책. argv 판과 별도로 보존하며 독립 정족수에 세지 않는다.
 
     def record(self) -> dict[str, Any]:
         """journal·관측 요약에 남길 사본. 질문 본문은 넣지 않는다(ExecutionSpec.record())."""
         return {**self.spec.record(), "kind": self.kind, "revision": self.revision, "model": self.model,
-                "template": self.template, "changes": list(self.changes)}
+                "template": self.template, "changes": list(self.changes),
+                "context_unverified": self.context_unverified}
 
 
 def template(spec: adapters.ExecutionSpec, box: isolation.Sandbox | None, *, home: str,

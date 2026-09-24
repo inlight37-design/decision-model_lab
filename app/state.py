@@ -19,6 +19,11 @@ INDEPENDENT_ONLY, INCLUDE_UNVERIFIED = "independent_only", "include_unverified"
 QUORUM_POLICIES = (INDEPENDENT_ONLY, INCLUDE_UNVERIFIED)
 
 
+def confirmed(spec) -> bool:
+    """원장에 저장한 등급만 사용한다. 예전 strict-only CLI 행은 필드가 없으며 기존 의미를 유지한다."""
+    return spec.get("transport") == CLI and spec.get("context_unverified", False) is False
+
+
 @dataclass(frozen=True)
 class RunGate:
     status: str
@@ -54,10 +59,10 @@ def gate(run, rows) -> RunGate:
     requested = tuple(p["pid"] for p in rows)
     dropped = tuple(p["pid"] for p in rows if p["state"] == REJECTED)
     live = [p for p in rows if p["state"] not in (REJECTED, UNKNOWN)]
-    confirmed = sum(json.loads(p["spec"])["transport"] == CLI for p in live)
-    unverified = sum(json.loads(p["spec"])["transport"] == MANUAL for p in live)
-    counted = confirmed if run["quorum_policy"] == INDEPENDENT_ONLY else confirmed + unverified
-    quorum = {"policy": run["quorum_policy"], "min": run["min_independent"], "confirmed": confirmed,
+    independent = sum(confirmed(json.loads(p["spec"])) for p in live)
+    unverified = len(live) - independent
+    counted = independent if run["quorum_policy"] == INDEPENDENT_ONLY else independent + unverified
+    quorum = {"policy": run["quorum_policy"], "min": run["min_independent"], "confirmed": independent,
               "unverified": unverified, "counted": counted, "met": counted >= run["min_independent"]}
     note = None
     if run["cancel_requested"]:
@@ -73,8 +78,8 @@ def gate(run, rows) -> RunGate:
     elif not quorum["met"]:
         status = "quorum_blocked"
         if quorum["policy"] == INDEPENDENT_ONLY:
-            note = (f"독립성이 확인된 참여자 {confirmed}명 — 최소 {quorum['min']}명이 필요합니다. "
-                    f"원본 앱 답 {unverified}개는 정족수에 세지 않습니다. 유료로 채우지 않습니다.")
+            note = (f"독립성이 확인된 참여자 {independent}명 — 최소 {quorum['min']}명이 필요합니다. "
+                    f"미확인 답 {unverified}개는 정족수에 세지 않습니다. 유료로 채우지 않습니다.")
         else:
             note = (f"답을 낸 참여자 {counted}명(독립성 미확인 {unverified}명 포함) — "
                     f"최소 {quorum['min']}명이 필요합니다. 유료로 채우지 않습니다.")

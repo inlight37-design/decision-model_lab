@@ -102,7 +102,7 @@
 </head>
 <body>
 <header>
-  <h1>Ledger</h1><span class="label mock">모의 모드 · 모델 호출 없음</span>
+  <h1>Ledger</h1><span class="label mock" id="mode">모드 확인 중</span>
   <span class="spacer"></span>
   <span id="resume"></span>
   <span class="meta" id="status">연결 중…</span>
@@ -117,13 +117,13 @@
         <label class="row">최소 정족수 인원 <input id="min" type="number" min="1" value="2" style="width:56px"></label>
         <label class="row policy">정족수에 셀 참여자
           <select id="policy" aria-label="정족수 정책">
-            <option value="independent_only">독립성이 확인된 참여자만(CLI)</option>
-            <option value="include_unverified">원본 앱 답도 포함(미확인으로 표시)</option>
+            <option value="independent_only">독립성이 확인된 참여자만</option>
+            <option value="include_unverified">미확인 CLI·원본 앱 답도 포함</option>
           </select></label>
         <div style="display:flex; gap:8px; align-items:center; margin-top:6px">
           <button id="start">시작</button><span class="err" id="formerr"></span>
         </div>
-        <p class="caption">CLI 참여자는 모의 CLI로 돈다. 원본 앱 참여자는 질문을 그 앱에 옮기고 답을 여기 붙여 넣는다. 원본 앱 답은 독립성을 확인할 수 없다 — 엄격한 정책에서는 정족수에 세지 않고 보조 근거로 함께 공개한다.</p>
+        <p class="caption" id="mode-note">실행 모드를 확인하고 있습니다.</p>
       </div>
     </div>
     <div class="panel">
@@ -174,14 +174,27 @@ const EXECUTION_LABEL = { mock: "CLI 모의", real: "실제 CLI", synthetic: "CL
 
 async function loadOptions() {
   const opt = await api("/api/options");
+  document.title = opt.live ? "Ledger 실제 CLI" : "Ledger 모의 모드";
+  document.getElementById("mode").textContent = opt.live
+    ? "실제 CLI · 구독 사용량 소비" + (opt.context_unverified ? " · 문맥 미확인" : "")
+    : "모의 모드 · 모델 호출 없음";
+  document.getElementById("mode-note").textContent = (opt.live
+    ? "시작하면 명시한 실제 CLI를 호출합니다. 서버 재시작은 호출 예산을 보충하지 않습니다. "
+    : "CLI 참여자는 모의 CLI로 돕니다. ") +
+    "문맥 미확인 CLI·원본 앱 답은 독립 정족수에 세지 않습니다. 합성은 여전히 모의 처리이며 사실 검증이 아닙니다.";
+  if (opt.live) {
+    document.getElementById("min").value = "1";
+    if (opt.context_unverified) document.getElementById("policy").value = "include_unverified";
+  }
   const box = document.getElementById("choices");
   for (const p of opt.participants) {
-    const cb = h("input", { type: "checkbox", id: "p-" + p.pid, checked: ["claude", "codex", "chatgpt-app"].includes(p.pid) });
-    const sel = p.transport === "cli"
+    const cb = h("input", { type: "checkbox", id: "p-" + p.pid,
+      checked: opt.live ? p.transport === "cli" : ["claude", "codex", "chatgpt-app"].includes(p.pid) });
+    const sel = p.transport === "cli" && !opt.live
       ? h("select", { id: "b-" + p.pid, "aria-label": p.label + " 모의 행동" },
           opt.behaviors.map(b => h("option", { value: b }, BEHAVIOR_LABEL[b] || b))) : null;
     box.append(h("label", { class: "row" }, cb, h("span", {}, p.label),
-      h("span", { class: "meta" }, p.transport === "cli" ? "CLI 모의" : "원본 앱 · 수동"), sel));
+      h("span", { class: "meta" }, p.transport === "cli" ? (opt.live ? `실제 CLI · ${p.model}` : "CLI 모의") : "원본 앱 · 수동"), sel));
   }
 }
 document.getElementById("start").addEventListener("click", async () => {
@@ -319,7 +332,9 @@ function synthesisPanel(run) {
 function render() {
   if (!state) return;
   document.getElementById("status").textContent =
-    `실행기 ${state.executor} · 실행 자리 ${state.slots.used}/${state.slots.cap} · 정리 안 된 시도 ${state.unsettled.count}/${state.unsettled.limit}`;
+    `실행기 ${state.executor} · 실행 자리 ${state.slots.used}/${state.slots.cap} · 정리 안 된 시도 ${state.unsettled.count}/${state.unsettled.limit}` +
+    (state.live_call_budget && state.live_call_budget.cap !== null
+      ? ` · 실제 호출 예약 ${state.live_call_budget.used}/${state.live_call_budget.cap}` : "");
   // 다시 시작한 뒤에도 명시적으로 이어서 시작한다. 취소된 실행은 이 동작으로 되살리지 않는다.
   document.getElementById("resume").replaceChildren(state.paused
     ? h("button", { onclick: () => act("/api/resume"), title: "다시 시작하기 전에 시작하지 못한 시도를 이제 시작한다" }, "대기 중인 시도 이어서 시작")

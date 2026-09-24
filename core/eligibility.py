@@ -15,6 +15,8 @@ core.contract가 최종 계획에서 계산한 판)도 갖는다. 허가는 기�
 수 있고 기록한 버전과 같다. 세 칸의 명세 판이 지금과 같다. 로그인이 구독이다(API 과금은 명시적 opt-in만, 2절 6). 그 CLI를
 켜 두었다. 기록 검사기(tools/runtime_inventory.py)와 같은 구조 검사(row_problems)를 쓴다 — 2026-09-24 리뷰 R02가 실행
 경로의 검사가 기록 검사기보다 약하다는 것(미래 날짜, 근거 없음, 양쪽 버전 없음)을 보였다.
+이는 기본 strict 정책이다. 명시적 allow_context_unverified 정책은 C3의 의미상 합격만 제외하며
+그 관측을 고치지 않는다. 구조 검사·다른 칸·과금 제한은 그대로다. 독립 정족수에는 사용할 수 없다.
 """
 from __future__ import annotations
 
@@ -84,11 +86,13 @@ def row_problems(row: Mapping[str, Any]) -> list[str]:
 
 def eligibility(manifest: Mapping[str, Any], adapter_id: str, *, enabled: bool, today: date,
                 current_version: str | None, spec_revision: str | None, max_age_days: int = 30,
-                allow_api: bool = False) -> Verdict:
+                allow_api: bool = False, allow_context_unverified: bool = False) -> Verdict:
     """이 기록으로 지금 이 CLI를 참여자로 불러도 되는가. 이유를 모두 모아 돌려준다.
 
     spec_revision: 지금 실행할 계획의 판(core.contract.Plan.revision). 기록의 판이 같거나, 검토해 대응시킨 옛
     이름 판(contract.LEGACY)일 때만 그 관측을 쓴다. 계획 없이 계산하면(None) 판이 맞는 관측이 없다.
+    allow_context_unverified: C3만 실행의 필수 조건에서 제외한다. 기록을 observed로 바꾸거나 독립성을
+    인정하지 않는다. 호출자는 이 정책을 시도와 함께 보존해야 한다. 구조 오류와 다른 관문은 그대로 거절한다.
     """
     if not isinstance(manifest, Mapping) or manifest.get("schema") != SCHEMA:
         return Verdict(False, (f"the record is not {SCHEMA}",))
@@ -105,6 +109,8 @@ def eligibility(manifest: Mapping[str, Any], adapter_id: str, *, enabled: bool, 
     if not enabled:
         reasons.append(f"{adapter_id} is turned off")
     for field in FIELDS:
+        if field == "context_conformance" and allow_context_unverified:
+            continue
         entry = row.get(field)
         status = entry.get("status") if isinstance(entry, Mapping) else None
         if status != "observed":
