@@ -13,6 +13,7 @@ import sys
 import tempfile
 import time
 import unittest
+from unittest.mock import patch
 
 from core import isolation, runner
 
@@ -174,7 +175,70 @@ class PlanTests(unittest.TestCase):
         r = self.root
         argv, _ = isolation.plan([SYSTEM_PY], self.box(read_only=(str(r / "home/.codex/packages/v1"),),
                                                        read_write=(str(r / "home/.codex"),)))
-        self.assertLess(argv.index("--bind"), argv.index("--ro-bind", argv.index("--tmpfs")))
+        self.assertLess(argv.index(str(r / "home/.codex")), argv.index(str(r / "home/.codex/packages/v1")))
+
+    def test_system_mounts_cannot_be_opened_for_writing_or_hidden(self):
+        for label, box in (
+                ("work replaces /etc", self.box(work_dir="/etc")),
+                ("writable child of /usr", self.box(read_write=("/usr/lib",))),
+                ("HOME replaces /usr", self.box(home="/usr")),
+                ("HOME inside /usr", self.box(home="/usr/dml-synthetic-home")),
+                ("work replaces /tmp", self.box(work_dir="/tmp")),
+                ("HOME replaces /proc", self.box(home="/proc")),
+                ("writable child of /dev", self.box(work_dir="/dev/shm"))):
+            with self.subTest(label), self.assertRaises(isolation.IsolationError):
+                isolation.plan([SYSTEM_PY], box)
+
+    def test_duplicate_and_broader_nested_permissions_are_refused(self):
+        r = self.root
+        for label, box in (
+                ("same ro and rw", self.box(read_write=(str(r / "input"),))),
+                ("same ro twice", self.box(read_only=(str(r / "input"), str(r / "input")))),
+                ("rw inside ro", self.box(read_write=(str(r / "input/work"),))),
+                ("work covers rw", self.box(work_dir=str(r / "input"), read_only=(),
+                                           read_write=(str(r / "input/work"),)))):
+            with self.subTest(label), self.assertRaises(isolation.IsolationError):
+                isolation.plan([SYSTEM_PY], box)
+
+    def test_symlink_aliases_cannot_bypass_mount_rules(self):
+        r = self.root
+        (r / "system-alias").symlink_to("/usr/lib")
+        (r / "input-alias").symlink_to(r / "input")
+        for box in (
+                self.box(read_write=(str(r / "system-alias"),)),
+                self.box(read_write=(str(r / "input-alias"),)),
+                self.box(never=(str(r / "input-alias/work"),))):
+            with self.subTest(box=box), self.assertRaises(isolation.IsolationError):
+                isolation.plan([SYSTEM_PY], box)
+
+    def test_implicit_external_etc_target_obeys_the_same_rules(self):
+        target = self.root / "network-file"
+        target.write_text("synthetic resolver")
+        link = self.root / "resolver-link"
+        link.symlink_to(target)
+        with patch.object(isolation, "ETC_LINKS", (str(link),)):
+            for box in (self.box(read_write=(str(target),)), self.box(never=(str(target),))):
+                with self.subTest(box=box), self.assertRaises(isolation.IsolationError):
+                    isolation.plan([SYSTEM_PY], box)
+            argv, _ = isolation.plan([SYSTEM_PY], self.box())
+        index = argv.index(str(target))
+        self.assertEqual(argv[index - 1:index + 2], ["--ro-bind", str(target), str(target)])
+
+    def test_same_permission_nested_inputs_are_planned_parent_first(self):
+        r = self.root
+        parent, child = str(r / "home/.codex"), str(r / "home/.codex/packages/v1")
+        for permission in ("read_only", "read_write"):
+            argv, _ = isolation.plan([SYSTEM_PY], self.box(**{permission: (child, parent)}))
+            self.assertLess(argv.index(parent), argv.index(child))
+
+    def test_synthetic_home_does_not_expose_sealed_host_paths(self):
+        r = self.root
+        home = str(r / "synthetic-home")
+        argv, env = isolation.plan([SYSTEM_PY], self.box(home=home, never=(home, str(r / "ledger"))))
+        self.assertEqual(env["HOME"], home)
+        index = argv.index(home)
+        self.assertEqual(argv[index - 1], "--tmpfs")
+        self.assertNotIn(str(r / "ledger"), argv)
 
     def test_only_a_root_owned_bubblewrap_is_trusted(self):
         """WSL2 리뷰 WM-03. 이름만 bwrap인 사용자 파일로는 격리 실행을 하지 않는다."""
@@ -243,6 +307,38 @@ class BoundaryTests(unittest.TestCase):
         self.assertLess(seen["visible_processes"], 10)
         # 보장하지 않는 것: 네트워크는 공유한다. controller 포트는 토큰으로 막아야 한다
         self.assertTrue(seen["tcp_to_host_localhost"])
+
+    def test_nested_read_only_release_stays_read_only_at_runtime(self):
+        config = self.root / "home/.codex"
+        release = config / "packages/v1"
+        release.mkdir(parents=True)
+        box = isolation.Sandbox(work_dir=self.box.work_dir, home=self.home,
+                                read_only=(str(release),), read_write=(str(config),))
+        script = """
+import json, pathlib, sys
+def write(path):
+    try:
+        pathlib.Path(path, "synthetic.txt").write_text("x")
+        return True
+    except OSError:
+        return False
+print(json.dumps([write(path) for path in sys.argv[1:]]))
+"""
+        result = isolation.run([SYSTEM_PY, "-c", script, str(config), str(release)], box, timeout=5)
+        self.assertEqual(result.state, runner.EXITED, result.stderr)
+        self.assertEqual(json.loads(result.stdout), [True, False])
+        self.assertFalse((release / "synthetic.txt").exists())
+
+    def test_external_etc_target_survives_tmpfs_creation(self):
+        target = self.root / "synthetic-network-file"
+        target.write_text("NETWORK-3K")
+        link = self.root / "synthetic-resolver-link"
+        link.symlink_to(target)
+        with patch.object(isolation, "ETC_LINKS", (str(link),)):
+            result = isolation.run([SYSTEM_PY, "-c", "import pathlib, sys; print(pathlib.Path(sys.argv[1]).read_text())",
+                                    str(target)], self.box, timeout=5)
+        self.assertEqual(result.state, runner.EXITED, result.stderr)
+        self.assertEqual(result.stdout.strip(), "NETWORK-3K")
 
     def test_a_detached_descendant_ends_with_the_namespace(self):
         """R01의 Linux 해법. 새 세션으로 떨어져 나간 손자도 namespace와 함께 끝난다."""
