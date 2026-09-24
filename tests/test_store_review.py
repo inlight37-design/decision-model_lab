@@ -1,6 +1,7 @@
 """Saved policy must fail closed; routine views must not scan unrelated event payloads."""
 from __future__ import annotations
 
+from contextlib import closing
 import json
 from pathlib import Path
 import sqlite3
@@ -99,12 +100,13 @@ class JournalQueryReviewTests(unittest.TestCase):
                     self.assertIn("events_by_kind", [row[1] for row in store.rows("PRAGMA index_list(events)")])
                 finally:
                     store.close()
-            with sqlite3.connect(path) as db:
+            # Connection.__exit__ handles transactions, not connection lifetime.
+            with closing(sqlite3.connect(path)) as db, db:
                 db.execute("DROP INDEX events_by_kind")
                 db.execute(f"PRAGMA user_version = {SCHEMA_VERSION + 1}")
             with self.assertRaises(StoreError):
                 Store(path)
-            with sqlite3.connect(path) as db:
+            with closing(sqlite3.connect(path)) as db:
                 self.assertNotIn("events_by_kind", [row[1] for row in db.execute("PRAGMA index_list(events)")])
 
 
