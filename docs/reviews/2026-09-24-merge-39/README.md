@@ -17,7 +17,7 @@ claude 세션이 사용자 PC에서 검토하고 병합했다. 사용자는 code
 | [#39](https://github.com/inlight37-design/decision-model_lab/pull/39) `codex/windows-live-completion-20260924` | `948f5a3758146027af7f47989a2e5950a6faefb1` | push run 36001671469, pull_request run 36001678089 모두 성공 | job `checks (3.12)`·`checks (3.13)`(`DML_REQUIRE_BWRAP: 1`)·`windows-checks`. job 로그의 checkout이 정확히 `948f5a3`이다 |
 
 - push job 로그: Linux 두 job `Ran 453 tests … OK (skipped=1)`, Windows job `Ran 453 tests … OK (skipped=44)`.
-- 검토 시작 main `16646b34a508f4fbe4fbbd1e00758eb8223a2d65`가 #39 head의 조상이다. 그래서 병합 커밋의 트리는 검사한 head의 트리와 같다.
+- 검토 시작 main `16646b34a508f4fbe4fbbd1e00758eb8223a2d65`가 #39 head의 조상이다. 그래서 병합 커밋의 트리는 검사한 head의 트리와 같다(둘 다 `3f628f9`, 병합 뒤 확인).
 - 병합 뒤 main `40b2e67c65c07321bb9117045610dc6b600bf5cc`의 push run 36004205796도 세 job 모두 성공했다.
 
 ## 2. 로컬 검사(PR #39 head)
@@ -29,7 +29,7 @@ claude 세션이 사용자 PC에서 검토하고 병합했다. 사용자는 code
 
 - **Claude 출력.** 참여자가 `--output-format stream-json --verbose`로 바뀌었다. `core.adapters.claude_stream`은 init 하나와 result 하나를 요구하고, result 뒤의 사건·중복 init·깨진 줄을 거절한다. `interpret`는 init의 도구 목록이 계획의 `--tools`와 **순서까지** 같고, `dontAsk`, MCP 없음, 실제 사용한 도구가 허용 목록 안일 때만 해석을 이어 간다. `--tools`는 Claude 명령에 항상 있으므로 실행 뒤 `argv.index("--tools")`가 실패할 경로는 없다.
 - **예산.** 스키마 6 `live_budget`이 첫 전체·provider별 상한을 고정하고, 구형 원장은 예약 사건의 같은 cap으로 복원하며 모순이면 거절한다. `pump`는 같은 거래 안에서 전체·provider 상한을 검사하고 예약한다(Store의 잠금은 `RLock`이라 거래 안 재조회가 막히지 않는다). 시작 전 거절은 실행 수에서 빠지고 예약은 남는다.
-- **계정 조회.** `GET /api/account-quota`는 캐시만 읽고, `POST …/refresh`만 격리 안의 메타데이터 프로세스를 띄운다. 동시 갱신은 하나만 돌고 60초 간격이다. 120초 초과·초기화 시각 경과·조회 실패는 과거 관측값으로 보인다. 허용 메서드는 `initialize`·`initialized`·`account/read`(`refreshToken: false`)·`account/rateLimits/read`뿐이고, 계정 객체는 받자마자 버린다. `installed_version`은 프로세스를 띄우지 않고 실행 파일 경로에서 판을 읽는다. 원장 폴더는 격리의 `never`다.
+- **계정 조회.** `GET /api/account-quota`는 캐시만 읽고, `POST …/refresh`만 격리 안의 메타데이터 프로세스를 띄운다. 동시 갱신은 하나만 돌고 60초 간격이다. 120초 초과·초기화 시각 경과·조회 실패는 과거 관측값으로 보인다. 허용 메서드는 `initialize`·`initialized`·`account/read`(`refreshToken: false`)·`account/rateLimits/read`뿐이고, 계정 객체는 받자마자 버린다. `installed_version`은 프로세스를 띄우지 않고 실행 파일 경로에서 설치판(버전 번호)을 읽는다. 원장 폴더는 격리의 `never`다.
 - **설정.** `--live-config`는 알 수 없는 칸·중복 provider·불리언 상한·빈 모델 이름을 거절하고, 두 provider의 준비 조회가 모두 통과해야 서버를 띄운다.
 - **기록 파일.** 새 JSON·README에서 이메일·조직 ID·토큰·JWT·개인 홈 경로·UUID 모양을 찾았고 없었다.
 - **인용.** 코드의 `developers.openai.com/codex/app-server`는 기록의 `learn.chatgpt.com/docs/app-server`로 308 이동하는 같은 문서다. 그 본문에 `account/read`(`refreshToken: false`), `account/rateLimits/read`, `rateLimitsByLimitId`, `usedPercent`, `windowDurationMins`, `resetsAt`가 있다. WebFetch 요약은 문서를 중간에서 잘라 “없음”이라고 답했다 — 없다는 판단은 전체 본문(브라우저)으로 확인한다.
@@ -71,7 +71,7 @@ WSL `DML_REQUIRE_BWRAP=1` 전체 시험을 각 변이마다 돌렸다. 매번 �
 
 - #39 → main `40b2e67`(merge commit, `gh pr merge --merge --match-head-commit 948f5a3…`). #38은 head가 main에 들어가 GitHub이 병합됨으로 표시했다.
 - 두 head 브랜치는 병합 때 저장소 설정으로 자동 삭제됐다. 확인한 뒤 원격에는 main만 남았고 열린 PR은 없었다.
-- 이 세션은 서버·참여자를 띄우지 않았다. WSL은 시험을 위해 이 세션이 깨웠다(시작 전 Stopped).
+- 이 세션은 서버·참여자를 띄우지 않았다. WSL은 시험을 위해 이 세션이 깨웠고(시작 전 Stopped), 시험이 끝난 뒤 스스로 다시 Stopped가 된 것을 확인했다.
 
 ## 7. 다음 작업을 구체화하며 확인한 사실(모두 모델 호출 없음)
 
@@ -81,7 +81,7 @@ WSL `DML_REQUIRE_BWRAP=1` 전체 시험을 각 변이마다 돌렸다. 매번 �
 | Claude `--safe-mode`는 CLAUDE.md·skills·plugins·hooks·MCP·custom agents·auto memory를 끄고 인증·모델·내장 도구·권한은 그대로다(`--bare`와 다름). `--restricted`는 명령 실행 도구와 사용자·프로젝트 설정 읽기를 막는다 | [CLI 참조](https://code.claude.com/docs/en/cli-reference), 2026-09-24 읽음 | 참여자 계획은 지금 `--restricted`만 쓴다. 2026-09-23 관측에서는 `--restricted --safe-mode`에서 `agents-md@builtin` 플러그인이 오히려 늘었다([2단계 기록](../../experiments/w2-isolation/stage2-aux-pc-wsl.md), K45) — 문서와 관측이 어긋나는 곳부터 본다 |
 | Claude 참여자의 격리는 `~/.claude`·`~/.claude.json`, Codex는 `~/.codex`를 **폴더째 쓰기**로 연결한다 | `core/isolation.cli_mounts` | 사용자 지시문·플러그인·지난 세션이 참여자에게 보일 수 있는 구조다. 2026-09-23 [K09 기록](../../experiments/w2-isolation/auth-mounts-aux-pc-wsl.md)의 다음 후보(폴더는 쓰기로 두고 필요 없는 하위 폴더를 빈 tmpfs로 덮기)가 C3의 구조적 해법 후보다 |
 | Claude stream-json에는 `rate_limit_event`(5시간·7일 창의 `utilization` 0–1, `resetsAt`)가 있었다 | 2026-09-23 [2단계 기록](../../experiments/w2-isolation/stage2-aux-pc-wsl.md), 같은 2.1.280 | #39로 참여자가 stream-json이 됐으므로 **추가 호출 없이** Claude 계정 한도를 보일 수 있다. 지금 `claude_stream`은 이 사건을 버린다. #39 실행의 출력에 있었는지는 기록되지 않았다 |
-| 판은 경로·내용이 아니라 역할(`<input>`, 연결 개수)로 계산된다 | `core/contract.template` | 입력 폴더 하나에 공통 자료를 넣어도 `claude-code@126be128bed7`·`codex@8a0128d4c791`가 그대로다 — 새 관측 없이 공통 자료를 구현할 수 있다 |
+| 판은 경로·내용이 아니라 역할(`<input>`, 연결 개수)로 계산된다 | `core/contract.template` | 입력 폴더 하나에 공통 자료를 넣어도 `claude-code@126be128bed7`·`codex@8a0128d4c791`가 그대로다 — 새 허가 관측 없이 공통 자료를 구현할 수 있다. 동작은 자료가 있는 실제 실행 1회로 따로 확인한다 |
 | Codex app-server에 `model/list`(추론 없음)가 있다 | [app-server 문서](https://learn.chatgpt.com/docs/app-server) | 요청 모델이 이 계정에서 보이는지를 준비 조회에 더할 수 있다. 실제로 답한 모델의 보고(K32)는 여전히 없다 |
 | 실제 합성의 인용 검사기가 이미 있다 | `app/synthesis.compare_claims` — 원문 글자 위치·run·해시 대조 | 합성 출력의 주장마다 원문 인용을 요구하면, 맞지 않는 주장을 “원문에 없는 추가 주장”으로 표시할 수 있다. 설계 [§6](../../architecture/v0.4/02-frontier-architecture.md) 기준 `cross_check` 2인+합성은 3회 호출이다 |
 
