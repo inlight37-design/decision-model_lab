@@ -30,6 +30,7 @@ Windows에서 job 배정에 실패하면 트리 확인을 하지 않고 unknown 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import math
 import os
 from pathlib import Path
 import signal
@@ -186,9 +187,9 @@ class _Writer(threading.Thread):
     답이 정상 답처럼 보인다. 파이프에 다 썼다는 것이 CLI가 다 썼다는 증거는 아니다.
     """
 
-    def __init__(self, stream, data: bytes) -> None:
+    def __init__(self, stream, data: bytes, cancel: threading.Event | None = None) -> None:
         super().__init__(daemon=True)
-        self.stream, self.data = stream, data
+        self.stream, self.data, self.cancel = stream, data, cancel
         self.written = 0
         self.error: str | None = None
 
@@ -197,6 +198,10 @@ class _Writer(threading.Thread):
             fd = self.stream.fileno()
             view = memoryview(self.data)
             while self.written < len(view):
+                # 이미 파이프에 쓴 바이트는 되돌릴 수 없다. 취소 뒤의 다음 조각은 보내지 않는다.
+                if self.cancel is not None and self.cancel.is_set():
+                    self.error = "cancelled"
+                    break
                 self.written += os.write(fd, view[self.written:self.written + _CHUNK])
         except OSError as exc:
             self.error = type(exc).__name__
@@ -213,6 +218,7 @@ INPUT_FAILED = "failed"          # 다 쓰기 전에 쓰기가 실패했다(CLI�
 INPUT_INCOMPLETE = "incomplete"  # 돌아올 때까지 쓰기가 끝나지 않았다
 
 _LINGERING: set[threading.Thread] = set()
+_LINGERING_LOCK = threading.Lock()
 
 
 def lingering() -> int:
@@ -221,9 +227,9 @@ def lingering() -> int:
     추적 단위 밖에서 파이프를 쥔 프로세스가 끝나야 사라진다. controller는 이 수와 `unknown` 결과로
     정리되지 않은 시도를 세고, 상한을 넘으면 새 시도를 멈춘다.
     """
-    for thread in [t for t in _LINGERING if not t.is_alive()]:
-        _LINGERING.discard(thread)
-    return len(_LINGERING)
+    with _LINGERING_LOCK:
+        _LINGERING.difference_update(t for t in tuple(_LINGERING) if not t.is_alive())
+        return len(_LINGERING)
 
 
 class _Tree:
@@ -334,13 +340,16 @@ def _execute(args: tuple[str, ...], *, cwd: str | os.PathLike, env: Mapping[str,
         data = stdin_text.encode("utf-8") if stdin_text is not None else None
     except UnicodeEncodeError as exc:  # CLI를 띄우기 전에 거절한다
         raise RunnerError(f"stdin_text cannot be encoded as UTF-8 ({exc.reason})") from None
-    if not (isinstance(timeout, (int, float)) and timeout > 0):
-        raise RunnerError("timeout must be a positive number of seconds")
-    if not (isinstance(max_output_bytes, int) and max_output_bytes > 0):
+    if not (type(timeout) in (int, float) and math.isfinite(timeout) and timeout > 0):
+        raise RunnerError("timeout must be a finite positive number of seconds")
+    if not (type(max_output_bytes) is int and max_output_bytes > 0):
         raise RunnerError("max_output_bytes must be a positive integer")
     if not Path(cwd).is_dir():
         raise RunnerError("cwd must be an existing directory")
     started = time.monotonic()
+    if cancel is not None and cancel.is_set():
+        return RunResult(args, FAILED_TO_START, None, "", "", False, False, 0, None, True,
+                         error="cancelled before process start")
     kwargs: dict = {}
     if IS_WINDOWS:
         kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW
@@ -361,7 +370,7 @@ def _execute(args: tuple[str, ...], *, cwd: str | os.PathLike, env: Mapping[str,
     out, err = _Reader(proc.stdout, max_output_bytes), _Reader(proc.stderr, max_output_bytes, stderr_marks)
     out.start()
     err.start()
-    writer = _Writer(proc.stdin, data) if data is not None else None
+    writer = _Writer(proc.stdin, data, cancel) if data is not None else None
     if writer:
         writer.start()
 
@@ -403,13 +412,15 @@ def _execute(args: tuple[str, ...], *, cwd: str | os.PathLike, env: Mapping[str,
             # 닫으면 그 프로세스가 끝날 때까지 여기서 막힌다. 읽는 스레드가 EOF에서 닫는다.
             notes.append("an output pipe stayed open after termination")
             confirmed = False
-            _LINGERING.add(reader)
+            with _LINGERING_LOCK:
+                _LINGERING.add(reader)
     delivery = None
     if writer:
         writer.join(timeout=max(0.0, joined_by - time.monotonic()))
         if writer.is_alive():
             delivery = INPUT_INCOMPLETE
-            _LINGERING.add(writer)
+            with _LINGERING_LOCK:
+                _LINGERING.add(writer)
         else:
             delivery = INPUT_COMPLETE if writer.error is None and writer.written == len(data) else INPUT_FAILED
         if delivery != INPUT_COMPLETE:

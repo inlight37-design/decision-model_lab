@@ -109,11 +109,11 @@ class CliExecutor:
         except REFUSED_BEFORE_START as exc:
             return {"adapter_id": spec.adapter_id, "refused": f"{type(exc).__name__}: {exc}"}
 
-    def execute(self, spec, prompt: str, work_dir: str, timeout: float):
+    def execute(self, spec, prompt: str, work_dir: str, timeout: float, *, cancel=None):
         try:
             planned, box = self.prepare(spec, prompt, work_dir)
             result = isolation.run(list(planned.argv), box, timeout=timeout, stdin_text=planned.stdin_text,
-                                   max_output_bytes=self.max_output_bytes,
+                                   max_output_bytes=self.max_output_bytes, cancel=cancel,
                                    stderr_marks=adapters.STDERR_MARKS.get(spec.adapter_id, ()))
         except REFUSED_BEFORE_START as exc:
             result = runner.RunResult((), runner.FAILED_TO_START, None, "", "", False, False, 0, None, True,

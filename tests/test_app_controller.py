@@ -37,7 +37,7 @@ class SyntheticExecutor:
     def release(self, pid):
         self.gates[pid].set()
 
-    def execute(self, spec, prompt, work_dir, timeout):
+    def execute(self, spec, prompt, work_dir, timeout, *, cancel=None):
         self.started.append(spec.pid)
         if spec.pid in self.gates:
             self.gates[spec.pid].wait(10)
@@ -271,7 +271,7 @@ class ShapedExecutor:
     def __init__(self, **shapes):
         self.shapes, self.started = shapes, []
 
-    def execute(self, spec, prompt, work_dir, timeout):
+    def execute(self, spec, prompt, work_dir, timeout, *, cancel=None):
         self.started.append(spec.pid)
         shape = {"text": f"{spec.pid}의 답", "error": None, "delivery": runner.INPUT_COMPLETE, "model": "m",
                  **self.shapes.get(spec.pid, {})}
