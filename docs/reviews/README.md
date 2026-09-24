@@ -17,7 +17,7 @@
 | [`2026-09-24-review-request/`](2026-09-24-review-request/README.md) | 위 요청서를 이어받는 검토 요청서. 지금까지의 흐름(연표), 2단계 뒤의 PR #8–#12, K46 방어, 새 실패·시행착오(S22–S33)와 S01–S21의 현재 상태. PC에만 있던 관측 요약을 가려서 함께 옮겼다. 결과는 `<YYYY-MM-DD>-review/`로 받는다 |
 | [`2026-09-24-review/`](2026-09-24-review/README.md) | 위 요청과 17번 질문에 대한 ChatGPT 검토([PR #14](https://github.com/inlight37-design/decision-model_lab/pull/14)). K46·P3 판정식, 실행 허가의 합성 반례, 구성별 관측 판정, S01–S33·PR 충돌·다음 순서. 원본 판정과 제품 코드는 유지했고 재현 코드·결과·소스 해시를 함께 남겼다. 반영 결과는 같은 폴더의 [`RESPONSE.md`](2026-09-24-review/RESPONSE.md) |
 | [`2026-09-24-a1-integrity/`](2026-09-24-a1-integrity/README.md) | 전체 검토와 직접 수정([PR #18](https://github.com/inlight37-design/decision-model_lab/pull/18)). 원장 거래 실패/HTTP 음성 회귀, 공개 뒤 합성 없는 보고, 화면 배치, 실제 소켓과 오프라인 DOM 검증 범위, 다음 작업 인계 |
-| [`2026-09-24-structure-audit/`](2026-09-24-structure-audit/README.md) | claude의 구조 전수검사: 덧대기인가 구조적 해결인가. core·app·tools·이력의 판정, 직접 재현한 틈 G1–G9, 적은 코드 순서의 해법. ChatGPT의 같은 주제 검사와 독립으로 썼다(blind) |
+| [`2026-09-24-structure-audit/`](2026-09-24-structure-audit/README.md) | claude의 구조 전수검사: 덧대기인가 구조적 해결인가. core·app·tools·이력의 판정, 직접 재현한 틈 G1–G9, 적은 코드 순서의 해법. ChatGPT의 같은 주제 검사와 독립으로 썼다(blind). 그 뒤 ChatGPT 검토([PR #20](https://github.com/inlight37-design/decision-model_lab/pull/20))와의 비교는 [`COMPARISON.md`](2026-09-24-structure-audit/COMPARISON.md) |
 
 ## 읽는 순서
 
