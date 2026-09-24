@@ -64,7 +64,7 @@ def template(spec: adapters.ExecutionSpec, box: isolation.Sandbox | None, *, hom
             token = "<model>"
         elif previous == "--add-dir":
             token = "<input>"
-        elif hashlib.sha256(token.encode("utf-8")).hexdigest() == spec.input_sha256:
+        elif spec.input_via == adapters.ARGV and hashlib.sha256(token.encode("utf-8")).hexdigest() == spec.input_sha256:
             token = "<prompt>"
         elif home:
             token = token.replace(home + "/", "<home>/")
@@ -73,9 +73,10 @@ def template(spec: adapters.ExecutionSpec, box: isolation.Sandbox | None, *, hom
     def config(path: str) -> str:
         return "rw:~/" + path[len(home) + 1:] if home and path.startswith(home + "/") else "rw:<outside-home>"
 
+    # 역할이 같아도 연결이 늘면 다른 계획이다. set으로 합치면 K46의 자료 하나 관측이 여러 폴더까지 허가한다.
     mounts = ["none"] if box is None else sorted(
-        {f"ro:{'input' if p in inputs else 'cli'}" for p in box.read_only}
-        | {config(p) for p in box.read_write} | {"rw:work", "tmpfs:home"})
+        [f"ro:{'input' if p in inputs else 'cli'}" for p in box.read_only]
+        + [config(p) for p in box.read_write] + ["rw:work", "tmpfs:home"])
     return {"adapter": spec.adapter_id, "argv": argv, "input_via": spec.input_via,
             "stderr_marks": sorted(stderr_marks), "mounts": mounts}
 

@@ -215,6 +215,13 @@ class ExecutionSpecTests(unittest.TestCase):
                 self.assertNotIn(secret, json.dumps(spec.record()))
                 self.assertEqual(spec.record()["input_bytes"], len(secret))
 
+    def test_stdin_matching_an_option_does_not_mask_recorded_argv(self):
+        for adapter_id, prompt in (("codex", "--ephemeral"), ("codex", "-"),
+                                   ("claude-code", "--restricted")):
+            with self.subTest(adapter=adapter_id, prompt=prompt):
+                spec = build_spec(adapter_id, exe=EXE, prompt=prompt, model="m")
+                self.assertEqual(spec.record()["argv"], list(spec.argv))
+
     def test_the_runner_delivers_the_question_byte_for_byte(self):
         """가짜 CLI가 stdin을 그대로 돌려준다. 한글과 선행 대시, 줄바꿈이 그대로 가는지 본다."""
         spec = build_spec("codex", exe=EXE, prompt="첫 줄\n-둘째 줄", model="m")

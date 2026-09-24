@@ -137,6 +137,30 @@ class RefusedBeforeStartTests(Base):
         self.assertIn("refused", started["spec"])
         self.assertEqual((started["execution"], part["execution"]), ("real", "real"))
 
+    def test_revoked_inventory_between_plan_and_run_starts_nothing(self):
+        exe = str(self.root / "versions" / "9.9.9")
+        with mock.patch.object(cli_executor.core_env, "resolve", return_value=exe):
+            revision = self.executor().plan(claude(), "question", str(self.root)).revision
+            seen = {"status": "observed", "observed_at": date.today().isoformat(), "evidence": "synthetic"}
+            observed = {**seen, "spec_revision": revision}
+            row = {"adapter_id": "claude-code", "installed": {**seen, "version": "9.9.9"},
+                   "auth_observed": {**seen, "auth_mode": "subscription_oauth", "funding_mode": "subscription"},
+                   "transport_observed": observed, "context_conformance": observed,
+                   "permission_conformance": observed}
+            path = self.root / "inventory.json"
+            manifest = {"schema": "runtime-inventory/2", "adapters": [row]}
+            path.write_text(json.dumps(manifest), encoding="utf-8")
+            executor = self.executor(inventory=path)
+            planned = executor.plan(claude(), "question", str(self.root))
+        row["permission_conformance"] = {"status": "unknown"}
+        path.write_text(json.dumps(manifest), encoding="utf-8")
+        with mock.patch.object(isolation, "run") as start:
+            result, outcome = executor.run(planned, 5)
+        start.assert_not_called()
+        self.assertEqual(result.state, runner.FAILED_TO_START)
+        self.assertIn("permission_conformance is unknown", result.error)
+        self.assertFalse(outcome.ok)
+
 
 @unittest.skipUnless(bwrap_usable(), "bubblewrap을 쓸 수 있는 Linux에서만")
 class RealPathTests(Base):

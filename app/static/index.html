@@ -170,6 +170,7 @@ const STATE_LABEL = { queued: "대기", running: "실행 중", awaiting_user: "�
                       rejected: "받지 않음", unknown: "UNKNOWN · 종료 미확인" };
 const PHASE_LABEL = { drafting: "독립 초안 · 봉인", revealed: "공개됨", preflight: "준비" };
 const BEHAVIOR_LABEL = { ok: "정상", slow: "느림", fail: "CLI 오류", partial_input: "입력 일부만 읽음(큰 질문에서만 드러남)", hang: "멈춤(시간 초과)" };
+const EXECUTION_LABEL = { mock: "CLI 모의", real: "실제 CLI", synthetic: "CLI 합성 시험" };
 
 async function loadOptions() {
   const opt = await api("/api/options");
@@ -219,7 +220,7 @@ function participantRow(run, p) {
     : p.status === "cancelled" ? "취소 · 종료 확인"
     : p.state === "accepted" && !revealed ? "제출됨" : (STATE_LABEL[p.state] || p.state);
   const who = h("div", { class: "who" }, h("span", {}, p.label),
-    h("span", { class: "v" }, `${p.provider} · ${p.transport === "cli" ? "CLI 모의" + (p.behavior && p.behavior !== "ok" ? " · " + (BEHAVIOR_LABEL[p.behavior] || p.behavior) : "") : "원본 앱 · 수동"}`),
+    h("span", { class: "v" }, `${p.provider} · ${p.transport === "cli" ? (EXECUTION_LABEL[p.execution] || (p.state === "queued" ? "CLI · 실행 전" : "CLI · 실행 종류 미기록")) + (p.execution === "mock" && p.behavior && p.behavior !== "ok" ? " · " + (BEHAVIOR_LABEL[p.behavior] || p.behavior) : "") : "원본 앱 · 수동"}`),
     h("div", { class: "flags" }, p.contamination.map(c => h("span", { class: "flag" }, c))));
   if (p.state === "rejected" || p.state === "unknown") {
     who.append(h("div", { class: "kv" }, [p.status, p.detail, ...(p.result && p.result.notes || []),

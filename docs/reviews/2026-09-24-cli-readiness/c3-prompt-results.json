@@ -1,0 +1,156 @@
+{
+  "cli": "codex 0.156.1",
+  "home": "synthetic only",
+  "network": "nested user+network namespace; no egress",
+  "real_auth_mounted": false,
+  "model_calls": 0,
+  "cases": [
+    {
+      "name": "empty-home",
+      "state": "exited",
+      "exit": 0,
+      "tree_confirmed_empty": true,
+      "stdout_bytes": 12885,
+      "stdout_sha256": "3a25fdf1a8afb7a763ef254b6845a8d1586930f6cf91a7429df3e5ea24c0040a",
+      "stderr_lines": 1,
+      "json": true,
+      "top_type": "list",
+      "top_keys": [],
+      "top_length": 5,
+      "message_roles": [
+        "developer",
+        "developer",
+        "developer",
+        "user",
+        "user"
+      ],
+      "types": [
+        "input_text",
+        "message"
+      ],
+      "has_tools_field": false,
+      "markers": {
+        "C3_PROJECT_SENTINEL": false,
+        "C3_HOME_SENTINEL": false,
+        "C3_USER_SENTINEL": true,
+        "C3_SKILL_DESCRIPTION": false,
+        "C3_SKILL_BODY": false,
+        "C3_MCP_INSTRUCTIONS": false,
+        "c3_probe_tool": false
+      }
+    },
+    {
+      "name": "agents-markers",
+      "state": "exited",
+      "exit": 0,
+      "tree_confirmed_empty": true,
+      "stdout_bytes": 13146,
+      "stdout_sha256": "3458db0559ef714a1c1ff59b8f844b7ed5099ceadbd9cfbb997c9663dd9e66a4",
+      "stderr_lines": 1,
+      "json": true,
+      "top_type": "list",
+      "top_keys": [],
+      "top_length": 5,
+      "message_roles": [
+        "developer",
+        "developer",
+        "developer",
+        "user",
+        "user"
+      ],
+      "types": [
+        "input_text",
+        "message"
+      ],
+      "has_tools_field": false,
+      "markers": {
+        "C3_PROJECT_SENTINEL": true,
+        "C3_HOME_SENTINEL": true,
+        "C3_USER_SENTINEL": true,
+        "C3_SKILL_DESCRIPTION": false,
+        "C3_SKILL_BODY": false,
+        "C3_MCP_INSTRUCTIONS": false,
+        "c3_probe_tool": false
+      }
+    },
+    {
+      "name": "ignore-option",
+      "state": "exited",
+      "exit": 2,
+      "tree_confirmed_empty": true,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_lines": 8,
+      "json": false,
+      "selected_error_lines": [
+        "error: unexpected argument '--ignore-user-config' found",
+        "Usage: codex debug prompt-input [OPTIONS] [PROMPT]"
+      ]
+    },
+    {
+      "name": "mcp-list",
+      "state": "exited",
+      "exit": 0,
+      "tree_confirmed_empty": true,
+      "stdout_bytes": 3,
+      "stdout_sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "stderr_lines": 1,
+      "json": true,
+      "top_type": "list",
+      "top_keys": [],
+      "top_length": 0,
+      "message_roles": [],
+      "types": [],
+      "has_tools_field": false,
+      "markers": {
+        "C3_PROJECT_SENTINEL": false,
+        "C3_HOME_SENTINEL": false,
+        "C3_USER_SENTINEL": false,
+        "C3_SKILL_DESCRIPTION": false,
+        "C3_SKILL_BODY": false,
+        "C3_MCP_INSTRUCTIONS": false,
+        "c3_probe_tool": false
+      }
+    },
+    {
+      "name": "skill-mcp-markers",
+      "state": "exited",
+      "exit": 0,
+      "tree_confirmed_empty": true,
+      "stdout_bytes": 13268,
+      "stdout_sha256": "3667d396194abd4bf6276213006572fb63d98dc77c70094ec5c750f590ba5d34",
+      "stderr_lines": 1,
+      "json": true,
+      "top_type": "list",
+      "top_keys": [],
+      "top_length": 5,
+      "message_roles": [
+        "developer",
+        "developer",
+        "developer",
+        "user",
+        "user"
+      ],
+      "types": [
+        "input_text",
+        "message"
+      ],
+      "has_tools_field": false,
+      "markers": {
+        "C3_PROJECT_SENTINEL": true,
+        "C3_HOME_SENTINEL": true,
+        "C3_USER_SENTINEL": true,
+        "C3_SKILL_DESCRIPTION": true,
+        "C3_SKILL_BODY": false,
+        "C3_MCP_INSTRUCTIONS": false,
+        "c3_probe_tool": false
+      },
+      "mcp_server_started": true,
+      "mcp_methods": [
+        "initialize",
+        "notifications/initialized",
+        "tools/list"
+      ]
+    }
+  ]
+}

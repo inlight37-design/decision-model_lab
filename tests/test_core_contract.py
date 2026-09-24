@@ -60,6 +60,21 @@ class RevisionTests(unittest.TestCase):
                 self.assertNotIn(revision, (claude, codex))
         self.assertEqual(len(set(others.values())), len(others))
 
+    def test_an_additional_codex_input_mount_changes_the_revision(self):
+        one = participant_revision("codex", inputs=("/tmp/in",))
+        two = participant_revision("codex", inputs=("/tmp/in", "/tmp/other"))
+        self.assertNotEqual(one, two)
+        self.assertTrue(contract.covers("discussant-2", one))
+        self.assertFalse(contract.covers("discussant-2", two))
+
+    def test_stdin_matching_an_option_does_not_hide_the_option(self):
+        for adapter_id, prompt in (("codex", "--ephemeral"), ("codex", "-"),
+                                   ("claude-code", "Read"), ("claude-code", "--restricted")):
+            with self.subTest(adapter=adapter_id, prompt=prompt):
+                baseline = participant_plan(adapter_id, inputs=("/tmp/in",))
+                matching = participant_plan(adapter_id, inputs=("/tmp/in",), prompt=prompt)
+                self.assertEqual(baseline, matching)
+
     def test_the_prompt_never_enters_the_record(self):
         spec = adapters.build_spec("claude-code", exe=EXE["claude-code"], prompt="비밀 질문", model="m")
         plan = contract.Plan(contract.REAL, spec, "/tmp/work", None, "m", revision="claude-code@x")

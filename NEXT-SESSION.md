@@ -1,8 +1,8 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-24** · 작성 세션: codex(병합 재검토·실제 브라우저·K46 관측), 그 뒤 claude가 순서 5(실행 계약)를 구현하며 1·3·4절을 고침 · `aux-pc`/`aux-pc-wsl` · 브랜치 `claude/execution-contract-20260924` · 시작 main `af474278bb9031a9e5d52c3778b23f27db3f0f8f`
+최종 갱신 **2026-09-24** · 작성 세션: codex(순서 5 재검토·main 보호·무모델 관측 준비) · `aux-pc`/`aux-pc-wsl` · 브랜치 `codex/cli-readiness-20260924` · 시작 main `56bf5afcce385b8bec33f118421428af99944534`
 
-현재 인계는 이 파일 하나다. 직전 판은 [보관본](docs/handoff/2026-09-24-before-post-merge-verification.md)에 바이트 그대로 두었고 **사용자 결정(2절)과 금지 사항(5절)은 그대로 유지했다.** 완료 이력과 상세 K 표는 보관본으로 옮겼다. 최신 근거는 [이번 검토](docs/reviews/2026-09-24-post-merge-verification/README.md), 과거 검토는 [색인](docs/reviews/README.md)에서 찾는다.
+현재 인계는 이 파일 하나다. 직전 판은 [보관본](docs/handoff/2026-09-24-before-post-merge-verification.md)에 바이트 그대로 두었고 **사용자 결정(2절)과 금지 사항(5절)은 그대로 유지했다.** 완료 이력과 상세 K 표는 보관본으로 옮겼다. 최신 근거는 [실행 계약 재검토·무모델 진단](docs/reviews/2026-09-24-cli-readiness/README.md), 과거 검토는 [색인](docs/reviews/README.md)에서 찾는다.
 
 ## 0. 먼저 확인할 것
 
@@ -10,7 +10,7 @@
 2. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)을 읽는다. 자기 브랜치에서 작업하고 커밋은 바로 push한다. 사용자 또는 허락받은 claude 세션이 정확한 head의 CI 녹색을 확인한 뒤 main을 병합한다.
 3. 접근한 기기를 구분한다. 이번 관측은 Windows `aux-pc`와 그 WSL2 `Ubuntu-24.04`(`aux-pc-wsl`)다. 별도 운용 PC는 관측하지 않았다.
 4. 순서 5(실행 계약)는 끝났다. 다음은 **실제 서버 연결(6)**이고 비교 실험 B3(7)이 뒤따른다. 6에서 실제로 부르려면 허가가 나오는 CLI가 있어야 한다. 지금은 없다(1절). Q4·C3·TM 채택은 대신 확정하지 않는다.
-5. 이번 사용자는 미실행 실험을 허용했고, 그 범위에서 K46을 Codex 1회·Claude 0회·180초 상한으로 실행해 Codex 예산을 다 썼다. 기존 2단계·K01 승인도 사용했다. `approve`를 다시 써서 남은 예산처럼 만들지 않는다. 구독 전용이며 사용량 제한 때 멈춘다.
+5. 앞선 #28 작업에서는 사용자가 허용한 미실행 실험 범위에서 K46을 Codex 1회·Claude 0회·180초 상한으로 실행해 Codex 예산을 다 썼다. 기존 2단계·K01 승인도 사용했다. 이번 순서 5 재검토·연결 준비는 모델 호출 없이 진행했다. `approve`를 다시 써서 남은 예산처럼 만들지 않는다. 구독 전용이며 사용량 제한 때 멈춘다.
 
 ## 1. 지금 상태
 
@@ -25,7 +25,7 @@
 | Codex 실행 허가 | [새 manifest](docs/experiments/w2-isolation/2026-09-24-k46-confirmation/manifest.v2.json)의 전송·권한은 `discussant-2`이고, 순서 5 뒤로 그 이름은 K46이 실제로 돈 계획(공통 자료 하나)의 판 `codex@8a0128d4c791`만 뒷받침한다(`contract.LEGACY`). 자료 없는 controller 계획은 다른 판이다. **어느 쪽이든 문맥(C3)은 failed라 허가 없음.** 캐시 변경·토큰 증가만으로 모델 문맥의 내용을 단정하지 않는다 |
 | Claude 실행 허가 | **순서 5 뒤로 허가 없음.** 기록의 `discussant-1` 관측(2단계 b1)은 stream-json 출력·Read 도구·공통 자료로 본 것이다. 그래서 controller 계획(json, `--tools ""`, 자료 없음)의 판을 뒷받침하지 않고, 대응도 두지 않았다. controller 계획 그대로 다시 관측해야 한다. 문맥 증거가 자기 보고뿐인 문제(K31)도 남는다 |
 | 원장 | 스키마 5로 상향 이전(4: 공개 단계, 5: 시도의 실행 종류). 기존 사용 원장은 열기 전에 백업한다. 이번 UI는 별도 임시 데이터 폴더를 사용했고 사용자 시연 원장은 열지 않았다 |
-| GitHub 보호 | 병합 시 브랜치 자동 삭제는 켜져 있다. main 필수 CI 보호/ruleset은 아직 없다 — 켜는 방법은 3절 표 |
+| GitHub 보호 | **적용 완료·재조회 확인.** main은 PR 경유, `checks (3.12)`·`checks (3.13)` 필수(GitHub Actions에 묶음), 관리자도 적용, 승인 인원 0. 최신 main 재반영 강제는 끄고 force push·삭제는 허용하지 않음. 사용자 직접 설정 불필요 |
 
 주인 모듈: [core/](core/README.md)는 실행·어댑터·환경·격리·허가, [app/](app/README.md)는 controller·journal·상태 투영·모의 화면/보고, [tools/w2/](tools/w2/README.md)는 관측이다. 격리의 네트워크 공유·CPU/메모리 상한 부재, 실제 controller 연결(K17), 계정 사용량 두 층(K23)은 남았다.
 
@@ -58,7 +58,9 @@
 
 ## 3. 진행 중인 작업
 
-**진행 중:** 없음. 열린 PR이나 `git branch -r --no-merged origin/main`에 무엇이 보이면 GitHub가 기준이다.
+- **현재 브랜치:** 순서 5 재검토에서 허가 철회 재검사·자료 연결 개수·stdin 옵션 가림을 고쳤고, 실제 서버 연결 전 조회와 Claude/C3 무모델 진단을 추가했다. [기록](docs/reviews/2026-09-24-cli-readiness/README.md). main 보호는 저장소에 이미 적용됐다. 이 브랜치는 정확한 head CI 확인 뒤 사용자 또는 허락받은 claude 세션이 병합한다. 이번 작업의 모델 호출은 없다.
+
+**진행 중:** 위 codex 브랜치의 검토·병합. 열린 PR과 `git branch -r --no-merged origin/main`의 실제 상태가 기준이다.
 
 - **마지막 병합:** [PR #30](https://github.com/inlight37-design/decision-model_lab/pull/30)(`claude/execution-contract-20260924`) — 순서 5 실행 계약(G4·G6). 모델 호출 없음. [기록](docs/reviews/2026-09-24-execution-contract/README.md).
   - 실행기 계약은 `plan()` → 기록 → `run(plan)`이다. controller와 관측 도구가 같은 계획을 쓰고, 관측 변형도 계획을 만들 때 넣는다.
@@ -72,9 +74,9 @@
 |---|---|
 | Q4 첫 화면 | A(결정 우선)를 기본으로 권고. 판단·뒤집을 조건·미해결 항목이 먼저 보인다. B는 원문 검토용 전환으로 유지. 실제 A/B 화면을 확인했지만 선호는 확정하지 않았다 |
 | 순서 5 판 정책 | **권고안대로 구현했다(PR #30).** 옛 이름 판은 실제로 돈 계획과 정확히 같은 것만 대응시켰다. 그래서 `discussant-2`는 K46 계획(자료 하나)만 뒷받침하고, `discussant-1`은 아무 계획도 뒷받침하지 않는다. 자료 없는 Codex 계획까지 `discussant-2`로 인정하려면 동등성 근거와 함께 `contract.LEGACY`에 더한다. 그 판단은 사용자가 원할 때 한다 |
-| Claude 재관측 승인 | 카드 제안: Claude 최대 1–3회(실패·거부·timeout 포함), 호출당 300초, 요청 모델은 전체 이름. 계획은 **controller 계획 그대로**(json 출력, `--tools ""`, 자료 없음 — 판은 `observe.py plan`의 `revision`)이다. 멈춤 조건은 기대와 다른 결과와 사용량 제한이다. 승인 전에 4절의 probe 설계부터 정한다 |
-| C3 문맥 | 정책 완화보다 입력 직전 지시문·도구/스킬 목록을 볼 수 있는 진단 및 최소 연결 관측을 우선 권고. 그런 증거가 없으면 Codex strict blind 허가는 계속 보류한다 |
-| main 보호 | `checks (3.12)`·`checks (3.13)`을 필수 상태 검사로 설정하는 안을 권고. 모든 세션이 사용자 계정으로 움직이므로 "관리자도 우회 불가"를 함께 켜야 효력이 있다. 2026-09-24 claude 세션이 API로 켜려 했으나 그 세션의 도구 권한 분류기가 거절해 **아직 없다.** 사용자가 GitHub 저장소 Settings → Branches → Add branch protection rule(`main`)에서 켠다: Require a pull request before merging(승인 0), Require status checks to pass(`checks (3.12)`, `checks (3.13)`, "up to date" 요구는 끔), Do not allow bypassing the above settings |
+| Claude 재관측 | [준비 도구·설계 완료](docs/experiments/w2-isolation/2026-09-24-claude-preflight/README.md). 설치·구독 로그인까지 무모델로 확인. 정확한 판의 1회·300초는 전송만 확인하며 문맥·권한을 해결하지 못한다. 별도 stream 진단도 완전한 문맥 증거가 아니다. **지금 여러 번 호출하기보다 증거 경로를 먼저 보완**하는 안을 권고; 새 모델 호출/승인 초기화 없음 |
+| C3 문맥 | 합성 HOME·외부 통신 차단으로 `debug prompt-input`을 직접 시험했다. AGENTS·skill metadata를 보지만 MCP 도구 schema는 빠지고 exec 옵션과도 다르다. [관측·한계](docs/reviews/2026-09-24-cli-readiness/GITHUB-C3.md). 정책 완화 없이 failed 유지; 추가 무모델 증거 대조를 우선한다 |
+| main 보호 | **완료.** 이전 claude 세션의 도구 권한 거절은 이번 세션에는 적용되지 않았다. 사용자의 기존 권한 위임 범위에서 설정하고 재조회했다. 필수 검사·관리자 적용을 유지한다 |
 | 나머지 선택 | Q3 TypeScript 이행은 미정. TM 계획 A는 후보 유지. agy 기본 끔; 설치/B4는 사용자가 켜기로 결정할 때. 원본 앱 자동화는 끔 |
 
 ## 4. 다음 작업
@@ -86,12 +88,12 @@
 | 순서 | 할 일 | 완료 조건 |
 |---|---|---|
 | 5 · 완료 #30 | 실행 계약 G4·G6 | 최종 계획 한 번 생성 → 기록 → 같은 계획 실행. 판·stderr 표식·요청 모델·자료 연결을 계획이 소유. 실행 종류는 시도에 저장해 재시작 뒤에도 그대로 표시. 공통 자료 첨부는 설계만 했다(아래) |
-| 6 | 실제 실행기 서버 연결(K17) | 현재 설치·구독·문맥·권한 관측으로 허가된 CLI만 사용. 실제 controller 경로의 취소·입력·종료·수용을 검증. **선행:** 허가가 나오는 CLI — Claude 재관측(3절 카드) 또는 C3 해결. 서버 설정(실행기 선택, 기록 경로)과 가짜 CLI 시험은 호출 없이 먼저 할 수 있다 |
+| 6 | 실제 실행기 서버 연결(K17) | 현재 설치·구독·문맥·권한 관측으로 허가된 CLI만 사용. 실제 controller 경로의 취소·입력·종료·수용을 검증. **선행:** 허가가 나오는 CLI — Claude의 문맥·권한 증거 또는 C3 해결. `app.server --check-cli`는 현재 계획·설치·기록을 조회하고 거절 이유를 보여 준다(서버·원장·모델 시작 없음). 실제 연결은 미완료 |
 | 7 | B3 사용량 비교 | 원본 앱 직접 사용 / single / cross_check를 같은 질문으로 번갈아 비교. CLI 토큰·시도·시간과 계정 한도 변화는 따로 기록. 토큰과 구독 차감을 비례로 가정하지 않음 |
 
 관측 변형은 계약에 들어 있다(PR #30). Claude b1의 stream-json, `--keep-session`, P3의 틀린 값은 계획을 만들 때 넣으므로 판이 바뀐다. 참여자 계획의 판을 뒷받침하려면 변형 없는 probe로 본다. 판의 지문에는 질문·nonce·임시 경로·HOME·모델 이름을 넣지 않는다(역할로 바꾼다).
 
-- **Claude 재관측 probe 설계(승인 전에 정한다):** b1은 변형이라 쓸 수 없다. controller 계획 그대로의 probe가 필요하다(`plain-claude`가 전송 칸 후보). `--tools ""`라 파일 도구가 없으므로 권한 칸은 "도구가 없어 읽기·쓰기 시도가 없다"를 어떻게 관측으로 적을지 정한다. 문맥 칸을 init 이벤트로 보려면 참여자 계획 자체를 stream-json으로 바꾸는 안(해석기가 마지막 result를 읽는다)을 먼저 정한다. 그러면 관측과 실행이 같은 판이 된다.
+- **Claude 재관측 준비 완료:** `claude_preflight.py`의 plan/preflight/assess는 모델 호출 없이 현재 json 참여자 판과 stream 진단 판을 구분한다. result JSON·init·자기 보고로 문맥/권한 칸을 관측 성공으로 올리지 않는다. stream-json을 참여자 명세로 채택해도 전체 문맥 부재의 증거가 저절로 생기지는 않는다. [설계·실측](docs/experiments/w2-isolation/2026-09-24-claude-preflight/README.md).
 - **공통 자료 첨부 설계(구현은 6 뒤 화면 작업과 함께):** 실행을 만들 때 자료 파일을 controller 소유 폴더로 복사하고 파일별 sha256 목록을 실행에 고정한다(`never`와 겹치지 않는 별도 폴더). 모든 CLI 참여자에게 같은 폴더를 읽기 전용 `input` 연결로 준다. Claude는 `--add-dir`와 Read 도구, Codex는 연결만 받는다. 자료 유무가 판에 들어가므로 자료 있는 계획은 그 판으로 따로 관측해야 허가된다. 수동 참여자에게는 자료 목록과 해시만 보이고, 원본 앱에 옮긴 것은 확인하지 못한다(K21).
 
 ### 남은 실험과 범위

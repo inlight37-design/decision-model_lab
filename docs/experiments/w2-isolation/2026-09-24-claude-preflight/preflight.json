@@ -1,0 +1,182 @@
+{
+  "model_calls": 0,
+  "approval_changed": false,
+  "participant": {
+    "adapter_id": "claude-code",
+    "argv": [
+      "~/.local/bin/claude",
+      "-p",
+      "--output-format",
+      "json",
+      "--model",
+      "claude-sonnet-5",
+      "--permission-mode",
+      "dontAsk",
+      "--no-session-persistence",
+      "--strict-mcp-config",
+      "--disable-slash-commands",
+      "--restricted",
+      "--tools",
+      ""
+    ],
+    "input_via": "stdin",
+    "input_sha256": "d8adb66f9915732364edb6bad6a36db633ed580ae32a4edfa75d17ae3c1801e2",
+    "input_bytes": 22,
+    "kind": "real",
+    "revision": "claude-code@97d0508b4567",
+    "model": "claude-sonnet-5",
+    "template": {
+      "adapter": "claude-code",
+      "argv": [
+        "<exe>",
+        "-p",
+        "--output-format",
+        "json",
+        "--model",
+        "<model>",
+        "--permission-mode",
+        "dontAsk",
+        "--no-session-persistence",
+        "--strict-mcp-config",
+        "--disable-slash-commands",
+        "--restricted",
+        "--tools",
+        ""
+      ],
+      "input_via": "stdin",
+      "stderr_marks": [],
+      "mounts": [
+        "ro:cli",
+        "rw:work",
+        "rw:~/.claude",
+        "rw:~/.claude.json",
+        "tmpfs:home"
+      ]
+    },
+    "changes": []
+  },
+  "diagnostic_stream_json": {
+    "adapter_id": "claude-code",
+    "argv": [
+      "~/.local/bin/claude",
+      "-p",
+      "--output-format",
+      "stream-json",
+      "--verbose",
+      "--model",
+      "claude-sonnet-5",
+      "--permission-mode",
+      "dontAsk",
+      "--no-session-persistence",
+      "--strict-mcp-config",
+      "--disable-slash-commands",
+      "--restricted",
+      "--tools",
+      ""
+    ],
+    "input_via": "stdin",
+    "input_sha256": "d8adb66f9915732364edb6bad6a36db633ed580ae32a4edfa75d17ae3c1801e2",
+    "input_bytes": 22,
+    "kind": "real",
+    "revision": "claude-code@af2906b422af",
+    "model": "claude-sonnet-5",
+    "template": {
+      "adapter": "claude-code",
+      "argv": [
+        "<exe>",
+        "-p",
+        "--output-format",
+        "stream-json",
+        "--verbose",
+        "--model",
+        "<model>",
+        "--permission-mode",
+        "dontAsk",
+        "--no-session-persistence",
+        "--strict-mcp-config",
+        "--disable-slash-commands",
+        "--restricted",
+        "--tools",
+        ""
+      ],
+      "input_via": "stdin",
+      "stderr_marks": [],
+      "mounts": [
+        "ro:cli",
+        "rw:work",
+        "rw:~/.claude",
+        "rw:~/.claude.json",
+        "tmpfs:home"
+      ]
+    },
+    "changes": [
+      "--output-format stream-json --verbose (diagnostic only)"
+    ]
+  },
+  "diagnostic_covers_participant": false,
+  "evidence_limits": {
+    "permission_conformance": "insufficient: no tool execution trace in the exact participant result JSON; zero denials or no created file does not prove enforcement",
+    "context_conformance": "insufficient: no complete loaded-instruction/memory evidence; model self-report and an init event from another revision cannot establish absence"
+  },
+  "proposed_budget": {
+    "provider": "claude",
+    "requested_model": "claude-sonnet-5",
+    "minimum_calls": 1,
+    "optional_diagnostic_calls": 1,
+    "maximum_calls": 2,
+    "timeout_seconds_per_call": 300,
+    "codex_calls": 0,
+    "funding": "subscription only"
+  },
+  "next_call": [
+    "python3",
+    "tools/w2/observe.py",
+    "call",
+    "plain-claude",
+    "claude-sonnet-5"
+  ],
+  "stop_if": [
+    "quota or billing-path change",
+    "unexpected result or model mismatch",
+    "incomplete input or unconfirmed process tree",
+    "boundary violation",
+    "revision differs from reviewed plan"
+  ],
+  "note": "No approval or call is performed here. The optional stream-json plan needs its own approved diagnostic implementation; it is not plain-claude and cannot update the participant record.",
+  "preflight": {
+    "model_calls": 0,
+    "synthetic_home": true,
+    "version": {
+      "state": "exited",
+      "exit": 0,
+      "tree_confirmed_empty": true,
+      "installed_version": "2.1.280",
+      "matches_install_path": true
+    },
+    "help": {
+      "state": "exited",
+      "exit": 0,
+      "tree_confirmed_empty": true,
+      "sections": {
+        "--output-format": "--output-format <format>              Output format (only works with --print):\n                                        \"text\" (default), \"json\" (single\n                                        result), or \"stream-json\" (realtime\n                                        streaming) (choices: \"text\", \"json\",\n                                        \"stream-json\")",
+        "--tools": "--tools <tools...>                    Specify the list of available tools from\n                                        the built-in set. Use \"\" to disable all\n                                        tools, \"default\" to use all tools, or\n                                        specify tool names (e.g.\n                                        \"Bash,Edit,Read\").",
+        "--restricted": "--restricted                          Restricted mode: removes the built-in\n                                        tools that run commands or code (Bash,\n                                        PowerShell, REPL and the other\n                                        code-running tools) and WebFetch unless\n                                        --tools names them, and ignores user,\n                                        project and local settings files\n                                        (managed settings and --settings still\n                                        apply; add --strict-mcp-config to skip\n                                        MCP servers too). Also confines the file\n                                        tools to the working directories\n                                        (--add-dir included), refuses\n                                        bypassPermissions, and lets only a\n                                        person or the configured permission\n                                        handler approve writes to settings, git\n                                        and tool-configuration files.",
+        "--strict-mcp-config": "--strict-mcp-config                   Only use MCP servers from --mcp-config,\n                                        ignoring all other MCP configurations",
+        "--disable-slash-commands": "--disable-slash-commands              Disable all skills",
+        "--no-session-persistence": "--no-session-persistence              Disable session persistence - sessions\n                                        will not be saved to disk and cannot be\n                                        resumed (only works with --print)",
+        "--permission-mode": "--permission-mode <mode>              Permission mode to use for the session\n                                        (choices: \"acceptEdits\", \"auto\",\n                                        \"bypassPermissions\", \"manual\",\n                                        \"dontAsk\", \"plan\")"
+      }
+    },
+    "ready_for_review": true,
+    "auth": {
+      "status": "subscription_observed",
+      "state": "exited",
+      "exit": 0,
+      "tree_confirmed_empty": true
+    },
+    "evidence_limits": {
+      "permission_conformance": "insufficient: no tool execution trace in the exact participant result JSON; zero denials or no created file does not prove enforcement",
+      "context_conformance": "insufficient: no complete loaded-instruction/memory evidence; model self-report and an init event from another revision cannot establish absence"
+    }
+  }
+}

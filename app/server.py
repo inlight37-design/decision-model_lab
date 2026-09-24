@@ -299,9 +299,22 @@ def main() -> int:
     ap.add_argument("--port", type=int, default=8765)
     ap.add_argument("--data-dir", type=Path, default=Path.home() / ".decision-model-lab" / "mock")
     ap.add_argument("--timeout", type=float, default=20.0, help="모의 CLI 한 번의 제한 시간(초)")
+    ap.add_argument("--check-cli", choices=("claude-code", "codex"),
+                    help="현재 실제 CLI 계획의 허가만 조회하고 종료; 서버·모델을 시작하지 않음")
+    ap.add_argument("--inventory", type=Path, help="--check-cli에서 대조할 runtime-inventory/2 기록")
+    ap.add_argument("--model", help="--check-cli의 전체 요청 모델 이름; 기본값·대체 모델 없음")
     args = ap.parse_args()
+    if args.check_cli and (args.inventory is None or not args.model):
+        ap.error("--check-cli requires --inventory and --model")
+    if not args.check_cli and (args.inventory is not None or args.model is not None):
+        ap.error("--inventory and --model require --check-cli; the server still uses the mock executor")
     if hasattr(sys.stdout, "reconfigure"):  # Windows 콘솔의 cp949에서도 한글·기호가 깨지지 않게
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    if args.check_cli:
+        from app.readiness import check
+        result = check(args.check_cli, args.model, args.inventory, args.data_dir)
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0 if result["eligible"] else 2
     try:
         server, token, controller = serve(args.data_dir, args.port, timeout=args.timeout)
     except LedgerBusy:

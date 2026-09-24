@@ -1,0 +1,15 @@
+{
+  "mode": "readiness_only",
+  "model_calls": 0,
+  "adapter_id": "claude-code",
+  "requested_model": "claude-sonnet-5",
+  "eligible": false,
+  "revision": "claude-code@97d0508b4567",
+  "installed_version": "2.1.280",
+  "isolation_execution": "not_tested",
+  "reasons": [
+    "transport_observed was observed with participant spec discussant-1; the current spec is claude-code@97d0508b4567 — observe again",
+    "context_conformance was observed with participant spec discussant-1; the current spec is claude-code@97d0508b4567 — observe again",
+    "permission_conformance was observed with participant spec discussant-1; the current spec is claude-code@97d0508b4567 — observe again"
+  ]
+}
