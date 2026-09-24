@@ -9,11 +9,10 @@ PID namespace 추적(자손 전체의 종료 확인)을 이름만 bwrap인 다�
   폴더만 쓰기다. 원장, 다른 참여자의 초안, 지난 합성, 다른 CLI의 인증, /mnt(Windows 드라이브), /run(WSL
   interop와 사용자 버스 소켓)은 연결하지 않는다. /etc 안의 링크가 밖을 가리키면(WSL의 resolv.conf →
   /mnt/wsl/resolv.conf) 그 파일 하나만 연결한다.
-- 경로 충돌: 연결할 경로를 실제 경로로 풀어 비교한다. 작업 폴더가 HOME이거나, 읽기 전용 입력과 같거나 그
-  안에 있거나(마지막 쓰기 연결이 입력의 그 부분을 쓰기로 연다, A1-04), 다른 연결을 품으면 거절한다. 어떤 연결이
-  HOME 자체나 그 위 폴더여도 거절한다. 봉인할 경로(never)는 명시한 연결뿐 아니라 자동 시스템 연결(/usr, /etc,
-  병합 링크 폴더, /etc 밖을 가리키는 네트워크 파일)과도 비교한다(WM-04, A1-04). 읽기·쓰기 폴더 안의 읽기 전용
-  연결(Codex의 실행 버전 폴더)은 의도한 겹침이다.
+- 경로 충돌: 실제 경로와 적용 순서로 만든 연결 모델 하나를 검사와 인자 조립에 함께 쓴다. 앞선 연결을 덮거나,
+  바깥 연결보다 안쪽의 쓰기 권한을 넓히면 거절한다. 봉인할 호스트 경로(never)는 모든 호스트 연결과 비교한다
+  (시스템 폴더·병합되지 않은 /bin·/lib·/etc 밖의 네트워크 파일 포함). 빈 HOME·/tmp는 호스트 파일을 보이지 않는다.
+  쓰기 폴더 안의 읽기 전용 연결(Codex의 실행 버전 폴더)은 의도한 겹침이다.
 - 수명: 별도 PID namespace(--unshare-all에 포함)와 --die-with-parent. namespace의 첫 프로세스(bwrap의
   reaper)가 끝나면 커널이 안의 모든 프로세스를 끝내고, 그 첫 프로세스는 안이 빌 때까지 끝나지 않는다.
   그래서 runner는 bwrap의 프로세스 그룹이 빈 것으로 자손 전체의 종료를 확인한다(runner.PID_NAMESPACE).
@@ -71,7 +70,7 @@ class Sandbox:
     read_only: tuple[str, ...] = ()        # 입력 자료, CLI 실행 파일
     read_write: tuple[str, ...] = ()       # 그 CLI의 설정·인증 폴더
     env: Mapping[str, str] = field(default_factory=dict)   # PASS_ENV에 있는 것만 넘어간다
-    never: tuple[str, ...] = ()            # 어떤 연결과도 겹치면 안 되는 경로(원장, 봉인 저장소)
+    never: tuple[str, ...] = ()            # 호스트 연결과 겹치면 안 되는 경로(원장, 봉인 저장소)
 
 
 def cli_mounts(adapter_id: str, exe: str, home: str) -> tuple[tuple[str, ...], tuple[str, ...]]:
@@ -95,25 +94,58 @@ def _within(path: str, parent: str) -> bool:
     return path == parent or path.startswith(parent.rstrip("/") + "/")
 
 
-def _system_mounts() -> tuple[list[str], list[str]]:
-    """시스템 연결의 bwrap 인자와, 그 연결이 참여자에게 보이게 하는 호스트 경로(실제 경로)."""
-    args: list[str] = []
-    bound: list[str] = []
-    for path in SYSTEM_READ_ONLY:
-        args += ["--ro-bind", path, path]
-        bound.append(os.path.realpath(path))
+@dataclass(frozen=True)
+class _Mount:
+    path: str
+    mode: str
+    link_target: str = ""
+
+    def argv(self) -> list[str]:
+        if self.mode == "symlink":
+            return ["--symlink", self.link_target, self.path]
+        if self.mode in ("ro", "rw"):
+            return ["--ro-bind" if self.mode == "ro" else "--bind", self.path, self.path]
+        return ["--" + self.mode, self.path]
+
+
+def _mount_plan(work: str, home: str, ro: Sequence[str], rw: Sequence[str]) -> list[_Mount]:
+    """실제 적용 순서. tmpfs 안의 호스트 연결은 빈 파일시스템을 만든 뒤에 놓는다."""
+    mounts = [_Mount(os.path.realpath(path), "ro") for path in SYSTEM_READ_ONLY]
     for link in MERGED_USR_LINKS:
         if os.path.islink(link):
-            args += ["--symlink", os.readlink(link), link]
+            mounts.append(_Mount(link, "symlink", os.readlink(link)))
         elif os.path.isdir(link):
-            args += ["--ro-bind", link, link]
-            bound.append(os.path.realpath(link))
+            mounts.append(_Mount(os.path.realpath(link), "ro"))
+    mounts += [_Mount("/proc", "proc"), _Mount("/dev", "dev"),
+               _Mount("/tmp", "tmpfs"), _Mount(home, "tmpfs")]
     for link in ETC_LINKS:
         target = os.path.realpath(link)
-        if os.path.islink(link) and os.path.isfile(target) and not target.startswith(("/etc/", "/usr/")):
-            args += ["--ro-bind", target, target]
-            bound.append(target)
-    return args, bound
+        if os.path.islink(link) and os.path.isfile(target) and not any(
+                m.mode == "ro" and _within(target, m.path) for m in mounts):
+            mounts.append(_Mount(target, "ro"))
+    # 같은 권한의 중첩 요청은 부모부터 놓는다. Codex의 ro 설정 폴더+실행 버전 조합도 보존한다.
+    for mode, paths in (("rw", rw), ("ro", ro)):
+        mounts += [_Mount(path, mode) for path in sorted(paths, key=lambda p: p.count("/"))]
+    mounts.append(_Mount(work, "rw"))
+    return mounts
+
+
+def _validate_mounts(mounts: Sequence[_Mount], never: Sequence[str]) -> None:
+    applied: list[_Mount] = []
+    for mount in mounts:
+        if mount.mode == "symlink":  # 링크 자체는 호스트 파일을 연결하지 않는다. bind 경로는 이미 realpath다.
+            continue
+        _require(mount.path != "/", "the root directory cannot be bound")
+        if mount.mode in ("ro", "rw"):
+            _require(not any(_within(mount.path, n) or _within(n, mount.path) for n in never),
+                     "a mount overlaps a path that must stay out of the sandbox")
+        for previous in applied:
+            _require(not _within(previous.path, mount.path),
+                     f"mount at {mount.path} would cover an earlier mount at {previous.path}")
+            _require(not (_within(mount.path, previous.path) and
+                          mount.mode in ("rw", "tmpfs") and previous.mode in ("ro", "proc", "dev")),
+                     f"mount at {mount.path} would broaden permissions inside {previous.path}")
+        applied.append(mount)
 
 
 def plan(argv: Sequence[str], box: Sandbox) -> tuple[list[str], dict[str, str]]:
@@ -129,29 +161,16 @@ def plan(argv: Sequence[str], box: Sandbox) -> tuple[list[str], dict[str, str]]:
     real = os.path.realpath
     work, home = real(box.work_dir), real(box.home)
     ro, rw, never = ([real(p) for p in group] for group in (box.read_only, box.read_write, box.never))
-    mounts = [work, *ro, *rw]
-    _require(all(p != "/" for p in mounts + [home]), "the root directory cannot be bound")
-    _require(not any(_within(home, p) for p in mounts),
-             "HOME itself or a folder above it cannot be bound; bind the CLI's own folders instead")
-    _require(work not in ro, "the work folder cannot also be a read-only input")
-    _require(not any(_within(work, p) for p in ro),
-             "the work folder cannot be inside a read-only input; its writable bind would open that part of the input")
-    _require(not any(_within(p, work) for p in ro + rw if p != work),
-             "the work folder cannot contain another mount; a later writable bind would cover it")
-    system_args, system = _system_mounts()
-    _require(not any(_within(p, n) or _within(n, p) for p in mounts + system for n in never),
-             "a mount overlaps a path that must stay out of the sandbox")
+    mounts = _mount_plan(work, home, ro, rw)
+    _validate_mounts(mounts, never)
     exe = real(argv[0])
-    _require(any(_within(exe, p) for p in (*ro, *SYSTEM_READ_ONLY)), "the executable must be inside a read-only mount")
+    _require(any(m.mode == "ro" and _within(exe, m.path) for m in mounts),
+             "the executable must be inside a read-only mount")
 
     args = [BWRAP, "--unshare-all", "--share-net", "--die-with-parent", "--new-session"]
-    args += system_args
-    args += ["--proc", "/proc", "--dev", "/dev", "--tmpfs", "/tmp", "--tmpfs", home]
-    for path in rw:                                # 쓰기 먼저, 그 안의 읽기 전용이 위에 덮이도록
-        args += ["--bind", path, path]
-    for path in ro:
-        args += ["--ro-bind", path, path]
-    args += ["--bind", work, work, "--chdir", work, "--", exe, *argv[1:]]
+    for mount in mounts:
+        args += mount.argv()
+    args += ["--chdir", work, "--", exe, *argv[1:]]
     child_env = {k: v for k, v in box.env.items() if k in PASS_ENV}
     child_env.update(HOME=home, PATH=PATH_INSIDE, TMPDIR="/tmp")
     return args, child_env

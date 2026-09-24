@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-24** · 작성 세션: codex (사용자 PC `DESKTOP-L6EA2UJ`, Windows와 WSL Ubuntu-24.04, 실제 모델 호출·인증 연결 진단 없음) · 브랜치 `codex/shared-policies-20260924` · 기준 main `34975794dec2a45b9fd8a11f3133d2b202ebb8ee`
+최종 갱신 **2026-09-24** · 작성 세션: codex (사용자 PC `DESKTOP-L6EA2UJ`, Windows와 WSL Ubuntu-24.04, 실제 모델 호출·인증 연결 진단 없음) · 브랜치 `codex/mount-model-20260924` · 기준 main `34975794dec2a45b9fd8a11f3133d2b202ebb8ee`
 
 현재 인계는 이 파일 하나다. 완료 이력이 다음 일을 가리지 않도록 정리했다. **이전 판 전체는 [보관본](docs/handoff/2026-09-24-before-a1-integrity.md)에 바이트 그대로 있다.** 사용자 결정(2절)과 금지 사항(5절)은 유지했고, 기기 관측·승인·명세 판정을 바꾸지 않았다. 직전 수정은 [PR #18 기록](docs/reviews/2026-09-24-a1-integrity/README.md), 간결성 점검·지속 취소·자원 정리는 [간결성 검토 기록](docs/reviews/2026-09-24-lean-lifecycle/README.md)에 있다. 이 판은 이전 인계의 필요한 부분만 고쳤으며 2절·5절 원문과 승인 경계를 유지했다. 4절의 순서표는 2026-09-24 claude 세션이 두 검사(간결성·[구조](docs/reviews/2026-09-24-structure-audit/README.md))와 새 main의 실행 허가 계산을 보고 정했다.
 
@@ -84,6 +84,8 @@
 ## 3. 진행 중인 작업
 
 **진행 중:** `codex/shared-policies-20260924` — 순서 1의 공유 정책 통합. 실행 허가가 공통 행 검사를 사용하고, Python 가림·init 이름 공개 규칙을 공유한다. 새 원장은 정족수 정책을 생략할 수 없고, 옛 원장의 이전 기본값은 보존한다. 토큰 환경변수의 전달/격리 거절 경계는 표로 명시한다. 실제 모델 호출·관측 판정·GitHub 설정 변경은 없다. main 대상 draft PR로 제안하며 GitHub CI 결과는 해당 PR에서 확인한다.
+
+**순서 2:** `codex/mount-model-20260924`는 [PR #22](https://github.com/inlight37-design/decision-model_lab/pull/22) 위에 쌓았다. 연결 모델 하나로 시스템·명시적 연결의 덮음/쓰기 확대/봉인 경로 겹침을 검사하고 같은 모델로 bwrap 인자를 만든다. WSL 실제 bubblewrap 경계 시험을 실행했다. 각 PR의 대상은 main이며 순서대로 병합한다. 앞 PR이 main에 들어오기 전에는 누적 diff가 보인다.
 
 - **마지막 병합:** [PR #21](https://github.com/inlight37-design/decision-model_lab/pull/21)(`claude/cleanup-merge-branches-il1srl`, 문서만, 모델 호출 없음) — [구조 전수검사](docs/reviews/2026-09-24-structure-audit/README.md), 간결성 검토와의 [비교](docs/reviews/2026-09-24-structure-audit/COMPARISON.md), 다음 일의 순서(4절).
   - 결론: 뼈대는 구조적이고 살은 리뷰마다 덧댔다. 전면 재작성은 필요 없다. 흩어진 사본을 한 주인으로 모은다.
