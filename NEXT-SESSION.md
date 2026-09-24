@@ -58,12 +58,10 @@
 
 ## 3. 진행 중인 작업
 
-**진행 중: [PR #48](https://github.com/inlight37-design/decision-model_lab/pull/48)(`claude/runtime-audit-merge-20260925`) — 최종 head의 CI 녹색을 확인한 뒤 claude 세션이 병합한다(2절 8). 병합 직전에 이 문단을 지운다.** #46·#47을 그대로 포함하고, #47이 원격에 올리지 못한 사용량 파서(R1)와 새로 찾은 사용량 칸의 NaN(U1)을 고쳤다. 모델 호출 0회. [검토·병합 기록](docs/reviews/2026-09-25-merge-46-47/README.md).
+**진행 중인 작업 없음.** 실제 상태는 0절대로 GitHub에서 확인한다. 다음은 4절의 순서대로다.
 
-- **#48에 들어간 것:** [PR #46](https://github.com/inlight37-design/decision-model_lab/pull/46)(`chatgpt/runtime-review-20260925`, ChatGPT 웹) — 실제 합성의 실행당 1회·공통 상한·종료 미확인 복구·사용자 종료 확인([기록](docs/reviews/2026-09-25-runtime-review/README.md)). [PR #47](https://github.com/inlight37-design/decision-model_lab/pull/47)(`chatgpt/runtime-audit-finish-20260925`, ChatGPT 웹, #46 포함) — #46 재검토, 자료 복원 검사(R2), R1 재현, 아키텍처 판단([감사 기록](docs/reviews/2026-09-25-runtime-audit-finish/README.md)). 두 PR을 따로 병합하지 않는다. #48이 병합되면 두 head가 main의 조상이 되어 GitHub이 둘 다 병합됨으로 표시한다.
-- **그다음:** 4절의 순서대로다.
-
-- **마지막 병합:** [PR #45](https://github.com/inlight37-design/decision-model_lab/pull/45)(`claude/codex-apps-off-20260924`) — 4절 E의 첫 단계(Codex 참여자의 계정 연결 앱 끄기와 K46 재관측, 새 manifest). 모델 호출 1회(Codex). claude 세션이 병합했다(2절 8). [기록](docs/reviews/2026-09-24-codex-apps-off/README.md).
+- **마지막 병합:** [PR #48](https://github.com/inlight37-design/decision-model_lab/pull/48)(`claude/runtime-audit-merge-20260925`) — ChatGPT 웹 세션의 [PR #46](https://github.com/inlight37-design/decision-model_lab/pull/46)(`chatgpt/runtime-review-20260925`: 실제 합성의 실행당 1회·공통 상한·종료 미확인 복구·사용자 종료 확인, [기록](docs/reviews/2026-09-25-runtime-review/README.md))과 [PR #47](https://github.com/inlight37-design/decision-model_lab/pull/47)(`chatgpt/runtime-audit-finish-20260925`, #46 포함: #46 재검토·자료 복원 검사 R2·R1 재현·아키텍처 판단, [감사 기록](docs/reviews/2026-09-25-runtime-audit-finish/README.md))을 그대로 포함하고, #47이 원격에 올리지 못한 사용량 파서(R1)와 새로 찾은 사용량 칸의 NaN(U1)을 고쳤다. 두 PR은 #48과 함께 병합됨으로 표시된다. 모델 호출 0회. claude 세션이 병합했다(2절 8). [검토·병합 기록](docs/reviews/2026-09-25-merge-46-47/README.md).
+- **그 앞:** [PR #45](https://github.com/inlight37-design/decision-model_lab/pull/45)(`claude/codex-apps-off-20260924`) — 4절 E의 첫 단계(Codex 참여자의 계정 연결 앱 끄기와 K46 재관측, 새 manifest). 모델 호출 1회(Codex). claude 세션이 병합했다(2절 8). [기록](docs/reviews/2026-09-24-codex-apps-off/README.md).
 - **그 앞:** [PR #44](https://github.com/inlight37-design/decision-model_lab/pull/44)(`claude/comparison-pilot-20260924`) — 4절 D(작은 비교: 사전 등록과 결과). 모델 호출 15회. claude 세션이 병합했다(2절 8). [결과](docs/experiments/2026-09-24-comparison-pilot/RESULTS.md).
 - **그 앞:** [PR #43](https://github.com/inlight37-design/decision-model_lab/pull/43)(`claude/model-synthesis-20260924`) — 4절 C(공개 뒤 실제 합성 1회)와 그 실제 확인. 모델 호출 1회(Claude). claude 세션이 병합했다(2절 8). [기록](docs/reviews/2026-09-24-model-synthesis/README.md).
 - **그 앞:** [PR #42](https://github.com/inlight37-design/decision-model_lab/pull/42)(`claude/source-snapshot-20260924`) — 4절 B(공통 자료 스냅샷)와 A·F의 실제 확인. 모델 호출 2회(Codex 1·Claude 1). claude 세션이 병합했다(2절 8). [기록](docs/reviews/2026-09-24-source-snapshot/README.md).
