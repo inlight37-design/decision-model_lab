@@ -58,9 +58,10 @@
 
 ## 3. 진행 중인 작업
 
-**진행 중:** `claude/model-synthesis-20260924` — 4절 C(공개 뒤 실제 합성 1회)와 그 실제 확인. 모델 호출 1회(Claude). 병합 직전 커밋에서 이 줄을 지운다.
+**진행 중인 작업 없음.** 이 판을 병합할 때 열린 PR과 병합 안 된 원격 브랜치가 없었다. 실제 상태는 0절대로 GitHub에서 확인한다.
 
-- **마지막 병합:** [PR #42](https://github.com/inlight37-design/decision-model_lab/pull/42)(`claude/source-snapshot-20260924`) — 4절 B(공통 자료 스냅샷)와 A·F의 실제 확인. 모델 호출 2회(Codex 1·Claude 1). claude 세션이 병합했다(2절 8). [기록](docs/reviews/2026-09-24-source-snapshot/README.md).
+- **마지막 병합:** [PR #43](https://github.com/inlight37-design/decision-model_lab/pull/43)(`claude/model-synthesis-20260924`) — 4절 C(공개 뒤 실제 합성 1회)와 그 실제 확인. 모델 호출 1회(Claude). claude 세션이 병합했다(2절 8). [기록](docs/reviews/2026-09-24-model-synthesis/README.md).
+- **그 앞:** [PR #42](https://github.com/inlight37-design/decision-model_lab/pull/42)(`claude/source-snapshot-20260924`) — 4절 B(공통 자료 스냅샷)와 A·F의 실제 확인. 모델 호출 2회(Codex 1·Claude 1). claude 세션이 병합했다(2절 8). [기록](docs/reviews/2026-09-24-source-snapshot/README.md).
 - **그 앞:** [PR #41](https://github.com/inlight37-design/decision-model_lab/pull/41)(`claude/claude-account-limits-20260924`) — 4절 A(Claude 계정 한도 표시)와 F(Codex 가용 모델 확인). 모델 호출 없음, 실제 Codex 메타데이터 조회 1회(추론 없음). claude 세션이 병합했다(2절 8). [기록](docs/reviews/2026-09-24-account-limits/README.md).
 - **그 앞:** [PR #40](https://github.com/inlight37-design/decision-model_lab/pull/40)(`claude/merge-39-next-steps-20260924`) — #39 병합 기록, 검증 도구 넷의 Windows 출력 수정과 Windows CI 확장, 변이 시험 빈틈(M6·M11)의 시험 보강, 이 인계의 다음 작업 구체화. 모델 호출 없음. claude 세션이 병합했다(2절 8).
 - **그 앞:** [PR #39](https://github.com/inlight37-design/decision-model_lab/pull/39)(`codex/windows-live-completion-20260924`)를 claude 세션이 검토하고 정확한 head로 병합했다(`40b2e67`). 조상인 [PR #38](https://github.com/inlight37-design/decision-model_lab/pull/38)(`chatgpt/cli-unblock-20260924`, 초안)도 함께 들어가 GitHub이 병합됨으로 표시했다. 두 head 브랜치는 자동 삭제됐다. [병합 기록](docs/reviews/2026-09-24-merge-39/README.md).
