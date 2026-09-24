@@ -274,7 +274,7 @@ class Controller:
         self.work_root = work_root or os.path.join(tempfile.gettempdir(), "dml-work")
         self.max_real_calls, self.provider_call_caps = store.bind_call_budget(max_real_calls, provider_call_caps)
         self.lock = threading.RLock()
-        self._closing = False   # この controller の終了は resume では戻さない。原帳の実行状態とは別。
+        self._closing = False   # 종료 중인 controller는 resume으로 되돌리지 않는다. 원장의 실행 상태와는 별개다.
         # 진행 중인 시도의 신호만 보관한다. 끝난 스레드/질문/작업 경로를 계속 쌓지 않는다.
         self._workers: dict[str, tuple[threading.Thread, threading.Event]] = {}
         self._synthesis: dict[str, tuple[threading.Thread, threading.Event, str]] = {}   # run_id → 진행 중인 실제 합성
@@ -567,7 +567,7 @@ class Controller:
     def _maybe_reveal(self, run_id: str, tx) -> None:
         """남은 참여자가 모두 끝났고 정족수가 있으면 연다. 빠진 사람이 있으면 축소 승인이 먼저다.
 
-        상태를 바꾼 거래 안에서 부른다. 그交易 안의 읽기는 그 거래가 쓴 것까지 본다.
+        상태를 바꾼 거래 안에서 부른다. 거래 안의 읽기는 그 거래가 쓴 것까지 본다.
         """
         current_gate = self._gate(run_id)
         if current_gate.can_reveal:
@@ -960,6 +960,8 @@ class Controller:
 
     def wait_idle(self, timeout: float = 30.0) -> bool:
         """시작한 시도가 모두 반환했는지 본다. timeout=0은 기다리지 않고 현재 상태만 검사한다."""
+        if not math.isfinite(timeout) or timeout < 0:
+            raise ValueError("idle timeout must be finite and non-negative")
         deadline = time.monotonic() + timeout
         while True:
             with self.lock:
