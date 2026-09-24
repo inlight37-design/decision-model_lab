@@ -39,11 +39,11 @@ python -m app.server --check-cli codex --model <전체-요청-모델> --inventor
 python -m app.server --live-cli codex --model <전체-요청-모델> --inventory <관측-json> --input-dir <빈-입력-폴더> --data-dir <원장> --allow-context-unverified --call-budget 1 --timeout 180
 ```
 
-위 모델/경로는 자리표시자이며 실제 관측값을 쓴다. 입력 폴더 하나의 `codex@8a0128d4c791`는 연결 앱을 끄기 전의 과거 K46 계획이다. 현재 `codex@5a77e0b7dc7f`와 그 [관측 manifest](../docs/reviews/2026-09-24-codex-apps-off/manifest.v2.json)를 기준으로 준비 조회한다. 자료 없음/복수 폴더는 다른 판이다. 과거 [첫 실측](../docs/reviews/2026-09-24-live-cli-pilot/README.md)과 [재현](../docs/reviews/2026-09-24-live-pilot-replication/README.md)은 그대로 보존하며 소진 원장을 다시 쓸 목적으로 상한을 바꾸지 않는다.
+위 모델/경로는 자리표시자이며 실제 관측값을 쓴다. 지금 계획은 입력 폴더 하나의 `codex@bba3751a36f3`·`claude-code@a35129c5a1dc`(E2)이고, 그 [관측 manifest](../docs/reviews/2026-09-25-context-independence/manifest.v2.json)로 aux-pc-wsl에서는 `--allow-context-unverified` 없이도(strict) 준비 조회가 허가됐다. 옛 계획 `codex@8a0128d4c791`(K46)·`codex@5a77e0b7dc7f`(연결 앱 끄기)·`claude-code@126be128bed7`(#39)의 기록으로는 지금 계획이 거절된다. 자료 없음/복수 폴더는 다른 판이다. 과거 [첫 실측](../docs/reviews/2026-09-24-live-cli-pilot/README.md)과 [재현](../docs/reviews/2026-09-24-live-pilot-replication/README.md)은 그대로 보존하며 소진 원장을 다시 쓸 목적으로 상한을 바꾸지 않는다.
 
 서버 기동 자체는 질문을 시작하지 않는다. 화면에서 시작하면 실제 구독 사용량을 쓴다. 준비 조회는 실행 승인/계정 잔여나 현재 namespace 생성 가능성의 증명이 아니다. 실행기는 시작 직전에 같은 최종 계획의 허가를 다시 계산한다.
 
-`--allow-context-unverified`는 C3 의미상 합격만 실행 필수 조건에서 제외한다. 설치·구독·전송·권한·판/버전/날짜 검사는 유지하고 결과를 독립 정족수에 세지 않는다. 관련 옵션만 주고 실제 모드를 생략하면 모의 모드로 조용히 대체하지 않고 거절한다. 실제 실행은 별도 명시적 원장을 사용한다.
+`--allow-context-unverified`는 문맥 기록(C3)이 없거나 판이 맞지 않는 기기에서 쓰는 명시적 예외다. C3 의미상 합격만 실행 필수 조건에서 제외한다. 설치·구독·전송·권한·판/버전/날짜 검사는 유지하고 결과를 독립 정족수에 세지 않는다. 관련 옵션만 주고 실제 모드를 생략하면 모의 모드로 조용히 대체하지 않고 거절한다. 실제 실행은 별도 명시적 원장을 사용한다.
 
 ## provider별 설정과 동시 실행
 
@@ -65,7 +65,9 @@ python -m app.server --live-config /path/live.json --data-dir /path/new-ledger -
 
 양쪽 준비 조회를 모두 통과해야 서버를 시작한다. 한쪽이 막혔다고 자동으로 빼거나 다른 모델을 넣지 않는다. 두 provider를 설정하면 두 실행 자리와 provider별 상한을 둔다. 각 상한은 1..10, 전체 합은 최대 10이다. 기존 controller의 스레드와 봉인/공개 관문을 재사용한다. 한쪽 초안이 먼저 끝나도 다른 쪽이 진행 중이면 공개하지 않는다.
 
-**실제 Codex·Claude 동시 응답을 별도 상한 원장에서 수용·공개했다.** 현재 Claude는 stream-json/verbose로 init과 최종 결과를 함께 검사한다. 한 입력 폴더의 `claude-code@126be128bed7`에서 Read만 노출, MCP 없음, dontAsk와 금지된 합성 peer 파일의 Read 거절을 새로 관측했다. no-input/다른 옵션 판의 권한까지 입증한 것은 아니다. Codex 참여자는 계정의 연결 앱(`-c features.apps=false`)을 끈 계획이며, 그 판 `codex@5a77e0b7dc7f`의 K46을 다시 관측했다([연결 앱 끄기 기록](../docs/reviews/2026-09-24-codex-apps-off/README.md)). 지금 쓰는 [관측 manifest](../docs/reviews/2026-09-24-codex-apps-off/manifest.v2.json)를 두 설정에 쓰되 각자 빈 입력 폴더 하나가 필요하고, 설치판·관측일·계획이 바뀌면 준비 조회를 다시 한다. 연결 앱을 켠 옛 계획의 [#39 manifest](../docs/reviews/2026-09-24-windows-live-completion/manifest.v2.json)로는 지금 Codex 계획이 거절된다. 문맥 독립성은 미확인이므로 실제 실험은 명시적 `include_unverified` 정책을 썼다.
+**실제 Codex·Claude 동시 응답을 별도 상한 원장에서 수용·공개했다.** 현재 Claude는 stream-json/verbose로 init과 최종 결과를 함께 검사한다. 한 입력 폴더의 `claude-code@126be128bed7`에서 Read만 노출, MCP 없음, dontAsk와 금지된 합성 peer 파일의 Read 거절을 새로 관측했다. no-input/다른 옵션 판의 권한까지 입증한 것은 아니다. Codex 참여자는 계정의 연결 앱(`-c features.apps=false`)을 끈 계획이며, 그 판 `codex@5a77e0b7dc7f`의 K46을 다시 관측했다([연결 앱 끄기 기록](../docs/reviews/2026-09-24-codex-apps-off/README.md)). 지금 쓰는 [관측 manifest](../docs/reviews/2026-09-24-codex-apps-off/manifest.v2.json)를 두 설정에 쓰되 각자 빈 입력 폴더 하나가 필요하고, 설치판·관측일·계획이 바뀌면 준비 조회를 다시 한다. 연결 앱을 켠 옛 계획의 [#39 manifest](../docs/reviews/2026-09-24-windows-live-completion/manifest.v2.json)로는 지금 Codex 계획이 거절된다. 그때는 문맥 독립성이 미확인이라 실제 실험이 명시적 `include_unverified` 정책을 썼다.
+
+**E2(2026-09-25)에서 두 참여자 계획의 문맥 통로를 좁히고 문맥 기록(C3)을 관측했다**([기록](../docs/reviews/2026-09-25-context-independence/README.md)). Claude는 `--restricted --safe-mode`, Codex는 모델의 명령에게 `~/.codex` 전체를 막고 실행 파일을 격리 안 `/opt/dml-codex`에서 돌리며 `-c project_doc_max_bytes=0`으로 작업 폴더 AGENTS.md를 싣지 않는다. `~/.codex`에 비어 있지 않은 AGENTS.md·AGENTS.override.md가 있으면 실행기가 시작 전에 거절한다. 작업 폴더의 지시문 파일로 한 양성·음성 행동 대조와 모델 없는 입력 렌더링을 근거로 [새 manifest](../docs/reviews/2026-09-25-context-independence/manifest.v2.json)는 두 provider의 C3를 observed로 적었고, 앱의 준비 조회가 strict에서 두 provider를 허가했다(모델 호출 없음). 이 판정은 그 PC·판·설치판·30일에 묶이고, 최종 요청 전체를 본 것은 아니다. 실제 앱에서 strict 정책으로 두 참여자를 부른 실행은 아직 없다.
 
 ## 공통 자료
 
@@ -121,4 +123,4 @@ Claude에는 따로 조회할 통로를 쓰지 않는다. 실제 Claude 참여�
 
 `python -m unittest discover -s tests -v`를 실행한다. Linux 격리 검증은 `DML_REQUIRE_BWRAP=1`을 사용하며 OS 전용 skip을 구분한다. 실제 JavaScript 함수 회귀에는 Node가 필요하다. 테스트 파일은 `test_cli_unblock.py`, `test_live_config.py`, `test_codex_account.py`와 기존 `test_app_*.py`, `test_runner_cancel.py`, `test_server_limits.py`를 본다.
 
-Windows stdout 수정과 Python 3.13/짧은 임시 경로 회귀를 반영했다. 교차 플랫폼 CI의 정확한 head 결과는 PR Checks가 기준이다. 사용자 PC에서의 두 provider 응답·현재 Claude 판의 제한된 권한 증거·계정 한도 화면·공통 자료·실제 합성은 각 날짜의 관측 기록에 있다. 이를 새 웹 세션이 재실측한 것은 아니다. 남은 것은 개인 문맥 독립성, 실제 CLI 중도 취소, 자료 속 지시문·긴 자료·여러 파일 실험, 원본 앱 사용량 비교, Q3 TypeScript와 접근성 전수 검사다. [후속 감사](../docs/reviews/2026-09-25-runtime-audit-finish/README.md)가 원격 미반영으로 남긴 사용량 파서는 [병합 검토](../docs/reviews/2026-09-25-merge-46-47/README.md)에서 반영했다.
+Windows stdout 수정과 Python 3.13/짧은 임시 경로 회귀를 반영했다. 교차 플랫폼 CI의 정확한 head 결과는 PR Checks가 기준이다. 사용자 PC에서의 두 provider 응답·현재 Claude 판의 제한된 권한 증거·계정 한도 화면·공통 자료·실제 합성은 각 날짜의 관측 기록에 있다. 이를 새 웹 세션이 재실측한 것은 아니다. 남은 것은 strict 정책으로 두 참여자를 부르는 실제 실행, 실제 CLI 중도 취소, 자료 속 지시문·긴 자료·여러 파일 실험, 원본 앱 사용량 비교, Q3 TypeScript와 접근성 전수 검사다. 문맥 독립성(C3)은 [E2 기록](../docs/reviews/2026-09-25-context-independence/README.md)의 범위에서 관측됐다. [후속 감사](../docs/reviews/2026-09-25-runtime-audit-finish/README.md)가 원격 미반영으로 남긴 사용량 파서는 [병합 검토](../docs/reviews/2026-09-25-merge-46-47/README.md)에서 반영했다.

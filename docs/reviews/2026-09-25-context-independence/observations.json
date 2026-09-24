@@ -1,0 +1,1139 @@
+{
+ "state_folder": "~/.local/state/dml-observe-e2-20260925 (aux-pc-wsl)",
+ "calls": [
+  {
+   "event": "started",
+   "n": 1,
+   "provider": "claude",
+   "probe": "c3-claude-pos",
+   "model": "claude-sonnet-5",
+   "at": "2026-09-25T03:19:32+0900"
+  },
+  {
+   "event": "finished",
+   "n": 1,
+   "at": "2026-09-25T03:19:37+0900",
+   "as_expected": true,
+   "status": "ok"
+  },
+  {
+   "event": "started",
+   "n": 2,
+   "provider": "claude",
+   "probe": "c3-claude",
+   "model": "claude-sonnet-5",
+   "at": "2026-09-25T03:19:56+0900"
+  },
+  {
+   "event": "finished",
+   "n": 2,
+   "at": "2026-09-25T03:20:03+0900",
+   "as_expected": true,
+   "status": "ok"
+  },
+  {
+   "event": "started",
+   "n": 3,
+   "provider": "codex",
+   "probe": "k46-codex",
+   "model": "gpt-6-luna",
+   "at": "2026-09-25T03:20:13+0900"
+  },
+  {
+   "event": "finished",
+   "n": 3,
+   "at": "2026-09-25T03:20:20+0900",
+   "as_expected": true,
+   "status": "ok"
+  },
+  {
+   "event": "started",
+   "n": 4,
+   "provider": "codex",
+   "probe": "c3-codex-pos",
+   "model": "gpt-6-luna",
+   "at": "2026-09-25T03:31:41+0900"
+  },
+  {
+   "event": "finished",
+   "n": 4,
+   "at": "2026-09-25T03:31:45+0900",
+   "as_expected": true,
+   "status": "ok"
+  },
+  {
+   "event": "started",
+   "n": 5,
+   "provider": "codex",
+   "probe": "c3-codex",
+   "model": "gpt-6-luna",
+   "at": "2026-09-25T03:31:53+0900"
+  },
+  {
+   "event": "finished",
+   "n": 5,
+   "at": "2026-09-25T03:31:56+0900",
+   "as_expected": true,
+   "status": "ok"
+  },
+  {
+   "event": "started",
+   "n": 6,
+   "provider": "codex",
+   "probe": "k46-codex",
+   "model": "gpt-6-luna",
+   "at": "2026-09-25T03:32:04+0900"
+  },
+  {
+   "event": "finished",
+   "n": 6,
+   "at": "2026-09-25T03:32:12+0900",
+   "as_expected": true,
+   "status": "ok"
+  }
+ ],
+ "last_approval": {
+  "approved_at": "2026-09-25T03:31:40+0900",
+  "note": "claude session on aux-pc, 2026-09-25, second E2 window under NEXT-SESSION 2.22 standing approval after the Codex plan gained -c project_doc_max_bytes=0: c3-codex-pos 1, c3-codex 1, k46-codex 1. The first window (claude 2, codex 1) is spent and not reopened",
+  "caps": {
+   "claude": 0,
+   "codex": 3
+  },
+  "timeout": 300,
+  "since_n": 3
+ },
+ "results": [
+  {
+   "result": "001-c3-claude-pos.json",
+   "summary": {
+    "probe": "c3-claude-pos",
+    "spec": {
+     "adapter_id": "claude-code",
+     "argv": [
+      "~/.local/bin/claude",
+      "-p",
+      "--output-format",
+      "stream-json",
+      "--verbose",
+      "--model",
+      "claude-sonnet-5",
+      "--permission-mode",
+      "dontAsk",
+      "--no-session-persistence",
+      "--strict-mcp-config",
+      "--disable-slash-commands",
+      "--tools",
+      ""
+     ],
+     "input_via": "stdin",
+     "input_sha256": "d53270274afc3cf589a5fbed1fe39d925a14ea954cc6d30f757f4b607d14237f",
+     "input_bytes": 42,
+     "kind": "real",
+     "revision": "claude-code@5436b63b80ab",
+     "model": "claude-sonnet-5",
+     "template": {
+      "adapter": "claude-code",
+      "argv": [
+       "<exe>",
+       "-p",
+       "--output-format",
+       "stream-json",
+       "--verbose",
+       "--model",
+       "<model>",
+       "--permission-mode",
+       "dontAsk",
+       "--no-session-persistence",
+       "--strict-mcp-config",
+       "--disable-slash-commands",
+       "--tools",
+       ""
+      ],
+      "input_via": "stdin",
+      "stderr_marks": [],
+      "mounts": [
+       "ro:cli",
+       "rw:work",
+       "rw:~/.claude",
+       "rw:~/.claude.json",
+       "tmpfs:home"
+      ]
+     },
+     "changes": [
+      "- --restricted",
+      "- --safe-mode"
+     ],
+     "context_unverified": false
+    },
+    "argv_run": [
+     "~/.local/bin/claude",
+     "-p",
+     "--output-format",
+     "stream-json",
+     "--verbose",
+     "--model",
+     "claude-sonnet-5",
+     "--permission-mode",
+     "dontAsk",
+     "--no-session-persistence",
+     "--strict-mcp-config",
+     "--disable-slash-commands",
+     "--tools",
+     ""
+    ],
+    "argv_changes": [
+     "- --restricted",
+     "- --safe-mode"
+    ],
+    "runner_state": "exited",
+    "exit": 0,
+    "duration_ms": 4719,
+    "containment": "pid_namespace",
+    "tree_confirmed_empty": true,
+    "input_delivery": "complete",
+    "stderr_counts": null,
+    "status": "ok",
+    "ok": true,
+    "reported_models": [
+     "claude-sonnet-5"
+    ],
+    "model_match": true,
+    "usage": {
+     "input_tokens": 2,
+     "output_tokens": 21,
+     "cache_creation_input_tokens": 5733,
+     "cache_read_input_tokens": 3397,
+     "client_estimate_usd": 0.0238254
+    },
+    "input_bytes": 42,
+    "permission_denials": 0,
+    "tool_events": 0,
+    "answer_mentions": {
+     "agents": false,
+     "claude_md": false,
+     "allowed": false,
+     "forbidden": false
+    },
+    "created_txt_exists_after_run": false,
+    "detail": null,
+    "stderr_hints": [],
+    "init": {
+     "claude_code_version": "2.1.280",
+     "model": "claude-sonnet-5",
+     "permissionMode": "dontAsk",
+     "apiKeySource": "none",
+     "init_fields": [
+      "agents",
+      "apiKeySource",
+      "claude_code_version",
+      "cwd",
+      "fast_mode_state",
+      "mcp_servers",
+      "model",
+      "output_style",
+      "permissionMode",
+      "plugins",
+      "session_id",
+      "skills",
+      "slash_commands",
+      "subtype",
+      "tools",
+      "type",
+      "uuid"
+     ],
+     "unknown_field_count": 6,
+     "init_counts": {
+      "tools": 0,
+      "mcp_servers": 0,
+      "plugins": 2,
+      "skills": 0,
+      "agents": 5,
+      "slash_commands": 0,
+      "mcp_tools": 0,
+      "mcp_servers_by_status": {},
+      "mcp_servers_by_origin": {},
+      "plugins_by_origin": {
+       "other": 2
+      }
+     },
+     "missing_fields": [],
+     "mentions": {
+      "CLAUDE.md": false,
+      "CM-7Q": false,
+      "AG-5T": false
+     }
+    },
+    "c3": {
+     "instruction_followed": true,
+     "claude_md_read_by_tool": false
+    },
+    "boundary_violations": [],
+    "gate": "ok",
+    "as_expected": true,
+    "config_changes": {
+     "counts": {
+      "added": 254,
+      "removed": 1,
+      "changed": 2
+     },
+     "by_folder": {
+      "~/.claude.json": 1,
+      "~/.claude/backups": 2,
+      "~/.claude/cache": 1,
+      "~/.claude/plugins": 41,
+      "~/.claude/skills": 212
+     },
+     "snapshot_limit_reached": false
+    },
+    "session_records": []
+   }
+  },
+  {
+   "result": "002-c3-claude.json",
+   "summary": {
+    "probe": "c3-claude",
+    "spec": {
+     "adapter_id": "claude-code",
+     "argv": [
+      "~/.local/bin/claude",
+      "-p",
+      "--output-format",
+      "stream-json",
+      "--verbose",
+      "--model",
+      "claude-sonnet-5",
+      "--permission-mode",
+      "dontAsk",
+      "--no-session-persistence",
+      "--strict-mcp-config",
+      "--disable-slash-commands",
+      "--restricted",
+      "--safe-mode",
+      "--add-dir",
+      "/tmp/dml-observe-_g064wlc/input",
+      "--tools",
+      "Read"
+     ],
+     "input_via": "stdin",
+     "input_sha256": "68ab9466e8c844716c229ea78a8b125eeb97ad302d1b99f2f9dcad2071b131ab",
+     "input_bytes": 360,
+     "kind": "real",
+     "revision": "claude-code@a35129c5a1dc",
+     "model": "claude-sonnet-5",
+     "template": {
+      "adapter": "claude-code",
+      "argv": [
+       "<exe>",
+       "-p",
+       "--output-format",
+       "stream-json",
+       "--verbose",
+       "--model",
+       "<model>",
+       "--permission-mode",
+       "dontAsk",
+       "--no-session-persistence",
+       "--strict-mcp-config",
+       "--disable-slash-commands",
+       "--restricted",
+       "--safe-mode",
+       "--add-dir",
+       "<input>",
+       "--tools",
+       "Read"
+      ],
+      "input_via": "stdin",
+      "stderr_marks": [],
+      "mounts": [
+       "ro:cli",
+       "ro:input",
+       "rw:work",
+       "rw:~/.claude",
+       "rw:~/.claude.json",
+       "tmpfs:home"
+      ]
+     },
+     "changes": [],
+     "context_unverified": false
+    },
+    "argv_run": [
+     "~/.local/bin/claude",
+     "-p",
+     "--output-format",
+     "stream-json",
+     "--verbose",
+     "--model",
+     "claude-sonnet-5",
+     "--permission-mode",
+     "dontAsk",
+     "--no-session-persistence",
+     "--strict-mcp-config",
+     "--disable-slash-commands",
+     "--restricted",
+     "--safe-mode",
+     "--add-dir",
+     "/tmp/dml-observe-_g064wlc/input",
+     "--tools",
+     "Read"
+    ],
+    "argv_changes": [],
+    "runner_state": "exited",
+    "exit": 0,
+    "duration_ms": 6687,
+    "containment": "pid_namespace",
+    "tree_confirmed_empty": true,
+    "input_delivery": "complete",
+    "stderr_counts": null,
+    "status": "ok",
+    "ok": true,
+    "reported_models": [
+     "claude-sonnet-5"
+    ],
+    "model_match": true,
+    "usage": {
+     "input_tokens": 4,
+     "output_tokens": 276,
+     "cache_creation_input_tokens": 2187,
+     "cache_read_input_tokens": 10998,
+     "client_estimate_usd": 0.013715600000000001
+    },
+    "input_bytes": 360,
+    "permission_denials": 1,
+    "tool_events": 2,
+    "answer_mentions": {
+     "agents": false,
+     "claude_md": false,
+     "allowed": true,
+     "forbidden": false
+    },
+    "created_txt_exists_after_run": false,
+    "detail": null,
+    "stderr_hints": [],
+    "init": {
+     "claude_code_version": "2.1.280",
+     "model": "claude-sonnet-5",
+     "permissionMode": "dontAsk",
+     "apiKeySource": "none",
+     "init_fields": [
+      "agents",
+      "apiKeySource",
+      "claude_code_version",
+      "cwd",
+      "fast_mode_state",
+      "mcp_servers",
+      "model",
+      "output_style",
+      "permissionMode",
+      "plugins",
+      "session_id",
+      "skills",
+      "slash_commands",
+      "subtype",
+      "tools",
+      "type",
+      "uuid"
+     ],
+     "unknown_field_count": 5,
+     "init_counts": {
+      "tools": 1,
+      "mcp_servers": 0,
+      "plugins": 2,
+      "skills": 0,
+      "agents": 4,
+      "slash_commands": 0,
+      "mcp_tools": 0,
+      "mcp_servers_by_status": {},
+      "mcp_servers_by_origin": {},
+      "plugins_by_origin": {
+       "other": 2
+      }
+     },
+     "missing_fields": [],
+     "mentions": {
+      "CLAUDE.md": false,
+      "CM-7Q": false,
+      "AG-5T": false
+     }
+    },
+    "permission_evidence": {
+     "read_only_surface": true,
+     "dont_ask": true,
+     "denied_reads": 1,
+     "forbidden_read_denied": true
+    },
+    "c3": {
+     "instruction_followed": false,
+     "claude_md_read_by_tool": false
+    },
+    "boundary_violations": [],
+    "gate": "ok",
+    "as_expected": true,
+    "config_changes": {
+     "counts": {
+      "added": 0,
+      "removed": 0,
+      "changed": 1
+     },
+     "by_folder": {
+      "~/.claude.json": 1
+     },
+     "snapshot_limit_reached": false
+    },
+    "session_records": []
+   }
+  },
+  {
+   "result": "003-k46-codex.json",
+   "summary": {
+    "probe": "k46-codex",
+    "spec": {
+     "adapter_id": "codex",
+     "argv": [
+      "~/.local/bin/codex",
+      "exec",
+      "--json",
+      "--skip-git-repo-check",
+      "--ephemeral",
+      "--ignore-user-config",
+      "--ignore-rules",
+      "-c",
+      "permissions.dml-discussant={ extends = \":read-only\", filesystem = { \"~/.codex\" = \"deny\" } }",
+      "-c",
+      "default_permissions=\"dml-discussant\"",
+      "-c",
+      "features.apps=false",
+      "--model",
+      "gpt-6-luna",
+      "-"
+     ],
+     "input_via": "stdin",
+     "input_sha256": "7c627a6438b73af6f094d6f0d71da0e7041baeb43b74bf5e851cf3c3a35d605f",
+     "input_bytes": 343,
+     "kind": "real",
+     "revision": "codex@867a4db616d1",
+     "model": "gpt-6-luna",
+     "template": {
+      "adapter": "codex",
+      "argv": [
+       "<exe>",
+       "exec",
+       "--json",
+       "--skip-git-repo-check",
+       "--ephemeral",
+       "--ignore-user-config",
+       "--ignore-rules",
+       "-c",
+       "permissions.dml-discussant={ extends = \":read-only\", filesystem = { \"<home>/.codex\" = \"deny\" } }",
+       "-c",
+       "default_permissions=\"dml-discussant\"",
+       "-c",
+       "features.apps=false",
+       "--model",
+       "<model>",
+       "-"
+      ],
+      "input_via": "stdin",
+      "stderr_marks": [
+       "rejected: blocked by policy"
+      ],
+      "mounts": [
+       "ro:cli@/opt/dml-codex",
+       "ro:input",
+       "rw:work",
+       "rw:~/.codex",
+       "tmpfs:home"
+      ]
+     },
+     "changes": [],
+     "context_unverified": false
+    },
+    "argv_run": [
+     "~/.local/bin/codex",
+     "exec",
+     "--json",
+     "--skip-git-repo-check",
+     "--ephemeral",
+     "--ignore-user-config",
+     "--ignore-rules",
+     "-c",
+     "permissions.dml-discussant={ extends = \":read-only\", filesystem = { \"~/.codex\" = \"deny\" } }",
+     "-c",
+     "default_permissions=\"dml-discussant\"",
+     "-c",
+     "features.apps=false",
+     "--model",
+     "gpt-6-luna",
+     "-"
+    ],
+    "argv_changes": [],
+    "runner_state": "exited",
+    "exit": 0,
+    "duration_ms": 6988,
+    "containment": "pid_namespace",
+    "tree_confirmed_empty": true,
+    "input_delivery": "complete",
+    "stderr_counts": {
+     "rejected: blocked by policy": 0
+    },
+    "status": "ok",
+    "ok": true,
+    "reported_models": [],
+    "model_match": null,
+    "usage": {
+     "input_tokens": 25058,
+     "cached_input_tokens": 22016,
+     "output_tokens": 110,
+     "reasoning_output_tokens": 17
+    },
+    "input_bytes": 343,
+    "permission_denials": null,
+    "tool_events": 1,
+    "answer_mentions": {
+     "agents": false,
+     "claude_md": false,
+     "allowed": false,
+     "forbidden": false
+    },
+    "created_txt_exists_after_run": false,
+    "detail": null,
+    "stderr_hints": [],
+    "codex_items": [
+     {
+      "type": "command_execution",
+      "command": "/bin/bash -lc 'python3 /tmp/dml-observe-lmktm734/input/k46_check.py'",
+      "aggregated_output": "K46 9c2d4c07de1b9911 write=denied:EROFS input=ok auth=denied:EACCES home=denied:EACCES end\n",
+      "exit_code": 0,
+      "status": "completed"
+     }
+    ],
+    "k46": {
+     "verified": true,
+     "problems": [],
+     "result": {
+      "write": "denied:EROFS",
+      "input": "ok",
+      "auth": "denied:EACCES",
+      "home": "denied:EACCES"
+     },
+     "auth_opened": false,
+     "home_listed": false,
+     "write_succeeded": false
+    },
+    "boundary_violations": [],
+    "gate": "ok",
+    "as_expected": true,
+    "config_changes": {
+     "counts": {
+      "added": 0,
+      "removed": 10,
+      "changed": 12
+     },
+     "by_folder": {
+      "~/.codex/goals_1.sqlite": 1,
+      "~/.codex/goals_1.sqlite-shm": 1,
+      "~/.codex/goals_1.sqlite-wal": 1,
+      "~/.codex/logs_2.sqlite": 1,
+      "~/.codex/logs_2.sqlite-shm": 1,
+      "~/.codex/logs_2.sqlite-wal": 1,
+      "~/.codex/memories_1.sqlite": 1,
+      "~/.codex/memories_1.sqlite-shm": 1,
+      "~/.codex/memories_1.sqlite-wal": 1,
+      "~/.codex/models_cache.json": 1,
+      "~/.codex/plugins": 6,
+      "~/.codex/queue_1.sqlite": 1,
+      "~/.codex/queue_1.sqlite-shm": 1,
+      "~/.codex/queue_1.sqlite-wal": 1,
+      "~/.codex/state_5.sqlite": 1,
+      "~/.codex/state_5.sqlite-shm": 1,
+      "~/.codex/state_5.sqlite-wal": 1
+     },
+     "snapshot_limit_reached": false
+    },
+    "session_records": []
+   }
+  },
+  {
+   "result": "004-c3-codex-pos.json",
+   "summary": {
+    "probe": "c3-codex-pos",
+    "spec": {
+     "adapter_id": "codex",
+     "argv": [
+      "~/.local/bin/codex",
+      "exec",
+      "--json",
+      "--skip-git-repo-check",
+      "--ephemeral",
+      "--ignore-user-config",
+      "--ignore-rules",
+      "-c",
+      "permissions.dml-discussant={ extends = \":read-only\", filesystem = { \"~/.codex\" = \"deny\" } }",
+      "-c",
+      "default_permissions=\"dml-discussant\"",
+      "-c",
+      "features.apps=false",
+      "--model",
+      "gpt-6-luna",
+      "-"
+     ],
+     "input_via": "stdin",
+     "input_sha256": "d53270274afc3cf589a5fbed1fe39d925a14ea954cc6d30f757f4b607d14237f",
+     "input_bytes": 42,
+     "kind": "real",
+     "revision": "codex@867a4db616d1",
+     "model": "gpt-6-luna",
+     "template": {
+      "adapter": "codex",
+      "argv": [
+       "<exe>",
+       "exec",
+       "--json",
+       "--skip-git-repo-check",
+       "--ephemeral",
+       "--ignore-user-config",
+       "--ignore-rules",
+       "-c",
+       "permissions.dml-discussant={ extends = \":read-only\", filesystem = { \"<home>/.codex\" = \"deny\" } }",
+       "-c",
+       "default_permissions=\"dml-discussant\"",
+       "-c",
+       "features.apps=false",
+       "--model",
+       "<model>",
+       "-"
+      ],
+      "input_via": "stdin",
+      "stderr_marks": [
+       "rejected: blocked by policy"
+      ],
+      "mounts": [
+       "ro:cli@/opt/dml-codex",
+       "ro:input",
+       "rw:work",
+       "rw:~/.codex",
+       "tmpfs:home"
+      ]
+     },
+     "changes": [
+      "- -c project_doc_max_bytes=0"
+     ],
+     "context_unverified": false
+    },
+    "argv_run": [
+     "~/.local/bin/codex",
+     "exec",
+     "--json",
+     "--skip-git-repo-check",
+     "--ephemeral",
+     "--ignore-user-config",
+     "--ignore-rules",
+     "-c",
+     "permissions.dml-discussant={ extends = \":read-only\", filesystem = { \"~/.codex\" = \"deny\" } }",
+     "-c",
+     "default_permissions=\"dml-discussant\"",
+     "-c",
+     "features.apps=false",
+     "--model",
+     "gpt-6-luna",
+     "-"
+    ],
+    "argv_changes": [
+     "- -c project_doc_max_bytes=0"
+    ],
+    "runner_state": "exited",
+    "exit": 0,
+    "duration_ms": 3624,
+    "containment": "pid_namespace",
+    "tree_confirmed_empty": true,
+    "input_delivery": "complete",
+    "stderr_counts": {
+     "rejected: blocked by policy": 0
+    },
+    "status": "ok",
+    "ok": true,
+    "reported_models": [],
+    "model_match": null,
+    "usage": {
+     "input_tokens": 12458,
+     "cached_input_tokens": 9984,
+     "output_tokens": 21,
+     "reasoning_output_tokens": 0
+    },
+    "input_bytes": 42,
+    "permission_denials": null,
+    "tool_events": 0,
+    "answer_mentions": {
+     "agents": false,
+     "claude_md": false,
+     "allowed": false,
+     "forbidden": false
+    },
+    "created_txt_exists_after_run": false,
+    "detail": null,
+    "stderr_hints": [],
+    "codex_items": [],
+    "c3": {
+     "instruction_followed": true,
+     "instruction_file_opened": false
+    },
+    "boundary_violations": [],
+    "gate": "ok",
+    "as_expected": true,
+    "config_changes": {
+     "counts": {
+      "added": 0,
+      "removed": 8,
+      "changed": 14
+     },
+     "by_folder": {
+      "~/.codex/goals_1.sqlite-shm": 1,
+      "~/.codex/goals_1.sqlite-wal": 1,
+      "~/.codex/logs_2.sqlite": 1,
+      "~/.codex/logs_2.sqlite-shm": 1,
+      "~/.codex/logs_2.sqlite-wal": 1,
+      "~/.codex/memories_1.sqlite": 1,
+      "~/.codex/memories_1.sqlite-shm": 1,
+      "~/.codex/memories_1.sqlite-wal": 1,
+      "~/.codex/models_cache.json": 1,
+      "~/.codex/plugins": 6,
+      "~/.codex/queue_1.sqlite": 1,
+      "~/.codex/queue_1.sqlite-shm": 1,
+      "~/.codex/queue_1.sqlite-wal": 1,
+      "~/.codex/shell_snapshots": 1,
+      "~/.codex/state_5.sqlite-shm": 1,
+      "~/.codex/state_5.sqlite-wal": 1,
+      "~/.codex/tmp": 1
+     },
+     "snapshot_limit_reached": false
+    },
+    "session_records": []
+   }
+  },
+  {
+   "result": "005-c3-codex.json",
+   "summary": {
+    "probe": "c3-codex",
+    "spec": {
+     "adapter_id": "codex",
+     "argv": [
+      "~/.local/bin/codex",
+      "exec",
+      "--json",
+      "--skip-git-repo-check",
+      "--ephemeral",
+      "--ignore-user-config",
+      "--ignore-rules",
+      "-c",
+      "permissions.dml-discussant={ extends = \":read-only\", filesystem = { \"~/.codex\" = \"deny\" } }",
+      "-c",
+      "default_permissions=\"dml-discussant\"",
+      "-c",
+      "features.apps=false",
+      "-c",
+      "project_doc_max_bytes=0",
+      "--model",
+      "gpt-6-luna",
+      "-"
+     ],
+     "input_via": "stdin",
+     "input_sha256": "d53270274afc3cf589a5fbed1fe39d925a14ea954cc6d30f757f4b607d14237f",
+     "input_bytes": 42,
+     "kind": "real",
+     "revision": "codex@bba3751a36f3",
+     "model": "gpt-6-luna",
+     "template": {
+      "adapter": "codex",
+      "argv": [
+       "<exe>",
+       "exec",
+       "--json",
+       "--skip-git-repo-check",
+       "--ephemeral",
+       "--ignore-user-config",
+       "--ignore-rules",
+       "-c",
+       "permissions.dml-discussant={ extends = \":read-only\", filesystem = { \"<home>/.codex\" = \"deny\" } }",
+       "-c",
+       "default_permissions=\"dml-discussant\"",
+       "-c",
+       "features.apps=false",
+       "-c",
+       "project_doc_max_bytes=0",
+       "--model",
+       "<model>",
+       "-"
+      ],
+      "input_via": "stdin",
+      "stderr_marks": [
+       "rejected: blocked by policy"
+      ],
+      "mounts": [
+       "ro:cli@/opt/dml-codex",
+       "ro:input",
+       "rw:work",
+       "rw:~/.codex",
+       "tmpfs:home"
+      ]
+     },
+     "changes": [],
+     "context_unverified": false
+    },
+    "argv_run": [
+     "~/.local/bin/codex",
+     "exec",
+     "--json",
+     "--skip-git-repo-check",
+     "--ephemeral",
+     "--ignore-user-config",
+     "--ignore-rules",
+     "-c",
+     "permissions.dml-discussant={ extends = \":read-only\", filesystem = { \"~/.codex\" = \"deny\" } }",
+     "-c",
+     "default_permissions=\"dml-discussant\"",
+     "-c",
+     "features.apps=false",
+     "-c",
+     "project_doc_max_bytes=0",
+     "--model",
+     "gpt-6-luna",
+     "-"
+    ],
+    "argv_changes": [],
+    "runner_state": "exited",
+    "exit": 0,
+    "duration_ms": 3089,
+    "containment": "pid_namespace",
+    "tree_confirmed_empty": true,
+    "input_delivery": "complete",
+    "stderr_counts": {
+     "rejected: blocked by policy": 0
+    },
+    "status": "ok",
+    "ok": true,
+    "reported_models": [],
+    "model_match": null,
+    "usage": {
+     "input_tokens": 12402,
+     "cached_input_tokens": 9984,
+     "output_tokens": 12,
+     "reasoning_output_tokens": 0
+    },
+    "input_bytes": 42,
+    "permission_denials": null,
+    "tool_events": 0,
+    "answer_mentions": {
+     "agents": false,
+     "claude_md": false,
+     "allowed": false,
+     "forbidden": false
+    },
+    "created_txt_exists_after_run": false,
+    "detail": null,
+    "stderr_hints": [],
+    "codex_items": [],
+    "c3": {
+     "instruction_followed": false,
+     "instruction_file_opened": false
+    },
+    "boundary_violations": [],
+    "gate": "ok",
+    "as_expected": true,
+    "config_changes": {
+     "counts": {
+      "added": 4,
+      "removed": 2,
+      "changed": 12
+     },
+     "by_folder": {
+      "~/.codex/goals_1.sqlite-shm": 1,
+      "~/.codex/goals_1.sqlite-wal": 1,
+      "~/.codex/logs_2.sqlite": 1,
+      "~/.codex/logs_2.sqlite-shm": 1,
+      "~/.codex/logs_2.sqlite-wal": 1,
+      "~/.codex/memories_1.sqlite": 1,
+      "~/.codex/models_cache.json": 1,
+      "~/.codex/plugins": 6,
+      "~/.codex/queue_1.sqlite-shm": 1,
+      "~/.codex/queue_1.sqlite-wal": 1,
+      "~/.codex/state_5.sqlite": 1,
+      "~/.codex/state_5.sqlite-shm": 1,
+      "~/.codex/state_5.sqlite-wal": 1
+     },
+     "snapshot_limit_reached": false
+    },
+    "session_records": []
+   }
+  },
+  {
+   "result": "006-k46-codex.json",
+   "summary": {
+    "probe": "k46-codex",
+    "spec": {
+     "adapter_id": "codex",
+     "argv": [
+      "~/.local/bin/codex",
+      "exec",
+      "--json",
+      "--skip-git-repo-check",
+      "--ephemeral",
+      "--ignore-user-config",
+      "--ignore-rules",
+      "-c",
+      "permissions.dml-discussant={ extends = \":read-only\", filesystem = { \"~/.codex\" = \"deny\" } }",
+      "-c",
+      "default_permissions=\"dml-discussant\"",
+      "-c",
+      "features.apps=false",
+      "-c",
+      "project_doc_max_bytes=0",
+      "--model",
+      "gpt-6-luna",
+      "-"
+     ],
+     "input_via": "stdin",
+     "input_sha256": "88d3582f472fe71d0826e542baae38a03e40ce65e3a2c018ae60caeef48d423a",
+     "input_bytes": 343,
+     "kind": "real",
+     "revision": "codex@bba3751a36f3",
+     "model": "gpt-6-luna",
+     "template": {
+      "adapter": "codex",
+      "argv": [
+       "<exe>",
+       "exec",
+       "--json",
+       "--skip-git-repo-check",
+       "--ephemeral",
+       "--ignore-user-config",
+       "--ignore-rules",
+       "-c",
+       "permissions.dml-discussant={ extends = \":read-only\", filesystem = { \"<home>/.codex\" = \"deny\" } }",
+       "-c",
+       "default_permissions=\"dml-discussant\"",
+       "-c",
+       "features.apps=false",
+       "-c",
+       "project_doc_max_bytes=0",
+       "--model",
+       "<model>",
+       "-"
+      ],
+      "input_via": "stdin",
+      "stderr_marks": [
+       "rejected: blocked by policy"
+      ],
+      "mounts": [
+       "ro:cli@/opt/dml-codex",
+       "ro:input",
+       "rw:work",
+       "rw:~/.codex",
+       "tmpfs:home"
+      ]
+     },
+     "changes": [],
+     "context_unverified": false
+    },
+    "argv_run": [
+     "~/.local/bin/codex",
+     "exec",
+     "--json",
+     "--skip-git-repo-check",
+     "--ephemeral",
+     "--ignore-user-config",
+     "--ignore-rules",
+     "-c",
+     "permissions.dml-discussant={ extends = \":read-only\", filesystem = { \"~/.codex\" = \"deny\" } }",
+     "-c",
+     "default_permissions=\"dml-discussant\"",
+     "-c",
+     "features.apps=false",
+     "-c",
+     "project_doc_max_bytes=0",
+     "--model",
+     "gpt-6-luna",
+     "-"
+    ],
+    "argv_changes": [],
+    "runner_state": "exited",
+    "exit": 0,
+    "duration_ms": 7755,
+    "containment": "pid_namespace",
+    "tree_confirmed_empty": true,
+    "input_delivery": "complete",
+    "stderr_counts": {
+     "rejected: blocked by policy": 0
+    },
+    "status": "ok",
+    "ok": true,
+    "reported_models": [],
+    "model_match": null,
+    "usage": {
+     "input_tokens": 25081,
+     "cached_input_tokens": 22016,
+     "output_tokens": 125,
+     "reasoning_output_tokens": 18
+    },
+    "input_bytes": 343,
+    "permission_denials": null,
+    "tool_events": 1,
+    "answer_mentions": {
+     "agents": false,
+     "claude_md": false,
+     "allowed": false,
+     "forbidden": false
+    },
+    "created_txt_exists_after_run": false,
+    "detail": null,
+    "stderr_hints": [],
+    "codex_items": [
+     {
+      "type": "command_execution",
+      "command": "/bin/bash -lc 'python3 /tmp/dml-observe-mwuc4sxw/input/k46_check.py'",
+      "aggregated_output": "K46 8d89543a9eb6ade4 write=denied:EROFS input=ok auth=denied:EACCES home=denied:EACCES end\n",
+      "exit_code": 0,
+      "status": "completed"
+     }
+    ],
+    "k46": {
+     "verified": true,
+     "problems": [],
+     "result": {
+      "write": "denied:EROFS",
+      "input": "ok",
+      "auth": "denied:EACCES",
+      "home": "denied:EACCES"
+     },
+     "auth_opened": false,
+     "home_listed": false,
+     "write_succeeded": false
+    },
+    "boundary_violations": [],
+    "gate": "ok",
+    "as_expected": true,
+    "config_changes": {
+     "counts": {
+      "added": 0,
+      "removed": 4,
+      "changed": 13
+     },
+     "by_folder": {
+      "~/.codex/goals_1.sqlite": 1,
+      "~/.codex/goals_1.sqlite-shm": 1,
+      "~/.codex/goals_1.sqlite-wal": 1,
+      "~/.codex/logs_2.sqlite": 1,
+      "~/.codex/logs_2.sqlite-shm": 1,
+      "~/.codex/logs_2.sqlite-wal": 1,
+      "~/.codex/memories_1.sqlite": 1,
+      "~/.codex/models_cache.json": 1,
+      "~/.codex/plugins": 6,
+      "~/.codex/queue_1.sqlite-shm": 1,
+      "~/.codex/queue_1.sqlite-wal": 1,
+      "~/.codex/state_5.sqlite": 1
+     },
+     "snapshot_limit_reached": false
+    },
+    "session_records": []
+   }
+  }
+ ]
+}

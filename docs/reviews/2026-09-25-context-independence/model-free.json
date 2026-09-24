@@ -1,0 +1,544 @@
+{
+ "codex_prompt_input": {
+  "codex_release": "0.156.1-x86_64-unknown-linux-musl",
+  "synthetic_controls": {
+   "default": {
+    "state": "exited",
+    "exit": 0,
+    "tree_confirmed_empty": true,
+    "json": true,
+    "items": [
+     {
+      "role": "developer",
+      "chars": 7748,
+      "tags": [
+       "collaboration_mode",
+       "permissions instructions",
+       "skills_instructions"
+      ]
+     },
+     {
+      "role": "developer",
+      "chars": 2439,
+      "tags": [
+       "author",
+       "multi_agent_role",
+       "payload text",
+       "recipient"
+      ]
+     },
+     {
+      "role": "developer",
+      "chars": 281,
+      "tags": [
+       "multi_agent_mode"
+      ]
+     },
+     {
+      "role": "user",
+      "chars": 698,
+      "tags": [
+       "INSTRUCTIONS",
+       "current_date",
+       "cwd",
+       "environment_context",
+       "filesystem",
+       "root",
+       "shell",
+       "special",
+       "timezone",
+       "workspace_roots"
+      ]
+     },
+     {
+      "role": "user",
+      "chars": 17,
+      "tags": []
+     }
+    ],
+    "instructions_block": true,
+    "global_marker": true,
+    "project_marker": true
+   },
+   "project_doc_max_bytes=0": {
+    "state": "exited",
+    "exit": 0,
+    "tree_confirmed_empty": true,
+    "json": true,
+    "items": [
+     {
+      "role": "developer",
+      "chars": 7748,
+      "tags": [
+       "collaboration_mode",
+       "permissions instructions",
+       "skills_instructions"
+      ]
+     },
+     {
+      "role": "developer",
+      "chars": 2439,
+      "tags": [
+       "author",
+       "multi_agent_role",
+       "payload text",
+       "recipient"
+      ]
+     },
+     {
+      "role": "developer",
+      "chars": 281,
+      "tags": [
+       "multi_agent_mode"
+      ]
+     },
+     {
+      "role": "user",
+      "chars": 584,
+      "tags": [
+       "INSTRUCTIONS",
+       "current_date",
+       "cwd",
+       "environment_context",
+       "filesystem",
+       "root",
+       "shell",
+       "special",
+       "timezone",
+       "workspace_roots"
+      ]
+     },
+     {
+      "role": "user",
+      "chars": 17,
+      "tags": []
+     }
+    ],
+    "instructions_block": true,
+    "global_marker": true,
+    "project_marker": false
+   },
+   "empty global file": {
+    "state": "exited",
+    "exit": 0,
+    "tree_confirmed_empty": true,
+    "json": true,
+    "items": [
+     {
+      "role": "developer",
+      "chars": 7748,
+      "tags": [
+       "collaboration_mode",
+       "permissions instructions",
+       "skills_instructions"
+      ]
+     },
+     {
+      "role": "developer",
+      "chars": 2439,
+      "tags": [
+       "author",
+       "multi_agent_role",
+       "payload text",
+       "recipient"
+      ]
+     },
+     {
+      "role": "developer",
+      "chars": 281,
+      "tags": [
+       "multi_agent_mode"
+      ]
+     },
+     {
+      "role": "user",
+      "chars": 630,
+      "tags": [
+       "INSTRUCTIONS",
+       "current_date",
+       "cwd",
+       "environment_context",
+       "filesystem",
+       "root",
+       "shell",
+       "special",
+       "timezone",
+       "workspace_roots"
+      ]
+     },
+     {
+      "role": "user",
+      "chars": 17,
+      "tags": []
+     }
+    ],
+    "instructions_block": true,
+    "global_marker": false,
+    "project_marker": true
+   }
+  },
+  "participant_values": {
+   "synthetic_home": {
+    "state": "exited",
+    "exit": 0,
+    "tree_confirmed_empty": true,
+    "json": true,
+    "items": [
+     {
+      "role": "developer",
+      "chars": 7991,
+      "tags": [
+       "collaboration_mode",
+       "permissions instructions",
+       "skills_instructions"
+      ]
+     },
+     {
+      "role": "developer",
+      "chars": 2439,
+      "tags": [
+       "author",
+       "multi_agent_role",
+       "payload text",
+       "recipient"
+      ]
+     },
+     {
+      "role": "developer",
+      "chars": 281,
+      "tags": [
+       "multi_agent_mode"
+      ]
+     },
+     {
+      "role": "user",
+      "chars": 567,
+      "tags": [
+       "current_date",
+       "cwd",
+       "environment_context",
+       "filesystem",
+       "path",
+       "root",
+       "shell",
+       "special",
+       "timezone",
+       "workspace_roots"
+      ]
+     },
+     {
+      "role": "user",
+      "chars": 17,
+      "tags": []
+     }
+    ],
+    "instructions_block": false
+   },
+   "real_home": {
+    "state": "exited",
+    "exit": 0,
+    "tree_confirmed_empty": true,
+    "json": true,
+    "items": [
+     {
+      "role": "developer",
+      "chars": 7535,
+      "tags": [
+       "collaboration_mode",
+       "permissions instructions",
+       "skills_instructions"
+      ]
+     },
+     {
+      "role": "developer",
+      "chars": 2439,
+      "tags": [
+       "author",
+       "multi_agent_role",
+       "payload text",
+       "recipient"
+      ]
+     },
+     {
+      "role": "developer",
+      "chars": 281,
+      "tags": [
+       "multi_agent_mode"
+      ]
+     },
+     {
+      "role": "user",
+      "chars": 628,
+      "tags": [
+       "current_date",
+       "cwd",
+       "environment_context",
+       "filesystem",
+       "path",
+       "root",
+       "shell",
+       "special",
+       "timezone",
+       "workspace_roots"
+      ]
+     },
+     {
+      "role": "user",
+      "chars": 17,
+      "tags": []
+     }
+    ],
+    "instructions_block": false
+   },
+   "line_differences": {
+    "message id": {
+     "only_real": 5,
+     "only_synthetic": 5
+    },
+    "other": {
+     "only_real": 1,
+     "only_synthetic": 2
+    },
+    "path": {
+     "only_real": 1,
+     "only_synthetic": 1
+    }
+   }
+  }
+ },
+ "codex_profile_real_home": {
+  "codex": "~/.codex/packages/standalone/releases/0.156.1-x86_64-unknown-linux-musl/bin/codex",
+  "synthetic": {
+   "home": "synthetic",
+   "helper": {
+    "no profile (control)": {
+     "state": "exited",
+     "exit": 0,
+     "tree_confirmed_empty": true,
+     "result": {
+      "write": "denied:EROFS",
+      "input": "ok",
+      "auth": "ok",
+      "home": "ok"
+     },
+     "created_txt_left": false,
+     "auth_size_mtime_unchanged": true,
+     "stderr": [
+      "WARNING: proceeding, even though we could not create PATH aliases: Refusing to create helper binaries under temporary dir \"/tmp\" (codex_home: AbsolutePathBuf(\"~/.codex\"))"
+     ]
+    },
+    "profile via default_permissions (exec's way)": {
+     "state": "exited",
+     "exit": 0,
+     "tree_confirmed_empty": true,
+     "result": {
+      "write": "denied:EROFS",
+      "input": "ok",
+      "auth": "denied:EACCES",
+      "home": "denied:EACCES"
+     },
+     "created_txt_left": false,
+     "auth_size_mtime_unchanged": true,
+     "stderr": [
+      "WARNING: proceeding, even though we could not create PATH aliases: Refusing to create helper binaries under temporary dir \"/tmp\" (codex_home: AbsolutePathBuf(\"~/.codex\"))"
+     ]
+    },
+    "profile via -P": {
+     "state": "exited",
+     "exit": 0,
+     "tree_confirmed_empty": true,
+     "result": {
+      "write": "denied:EROFS",
+      "input": "ok",
+      "auth": "denied:EACCES",
+      "home": "denied:EACCES"
+     },
+     "created_txt_left": false,
+     "auth_size_mtime_unchanged": true,
+     "stderr": [
+      "WARNING: proceeding, even though we could not create PATH aliases: Refusing to create helper binaries under temporary dir \"/tmp\" (codex_home: AbsolutePathBuf(\"~/.codex\"))"
+     ]
+    }
+   }
+  },
+  "real_home": {
+   "helper": {
+    "no profile (control)": {
+     "state": "exited",
+     "exit": 0,
+     "tree_confirmed_empty": true,
+     "result": {
+      "write": "denied:EROFS",
+      "input": "ok",
+      "auth": "ok",
+      "home": "ok"
+     },
+     "created_txt_left": false,
+     "auth_size_mtime_unchanged": true,
+     "stderr": []
+    },
+    "profile via default_permissions (exec's way)": {
+     "state": "exited",
+     "exit": 0,
+     "tree_confirmed_empty": true,
+     "result": {
+      "write": "denied:EROFS",
+      "input": "ok",
+      "auth": "denied:EACCES",
+      "home": "denied:EACCES"
+     },
+     "created_txt_left": false,
+     "auth_size_mtime_unchanged": true,
+     "stderr": []
+    },
+    "profile via -P": {
+     "state": "exited",
+     "exit": 0,
+     "tree_confirmed_empty": true,
+     "result": {
+      "write": "denied:EROFS",
+      "input": "ok",
+      "auth": "denied:EACCES",
+      "home": "denied:EACCES"
+     },
+     "created_txt_left": false,
+     "auth_size_mtime_unchanged": true,
+     "stderr": []
+    }
+   },
+   "exec_offline": {
+    "participant --json": {
+     "argv_tail": [
+      "--json",
+      "--skip-git-repo-check",
+      "--ephemeral",
+      "--ignore-user-config",
+      "--ignore-rules",
+      "-c",
+      "permissions.dml-discussant={ extends = \":read-only\", filesystem = { \"~/.codex\" = \"deny\" } }",
+      "-c",
+      "default_permissions=\"dml-discussant\"",
+      "-c",
+      "features.apps=false",
+      "-c",
+      "project_doc_max_bytes=0",
+      "--model",
+      "gpt-6-luna",
+      "-"
+     ],
+     "state": "timed_out",
+     "exit": -15,
+     "duration_ms": 90057,
+     "tree_confirmed_empty": true,
+     "jsonl_types": [
+      "thread.started",
+      "turn.started",
+      "error",
+      "error",
+      "error",
+      "error",
+      "item.completed"
+     ],
+     "stdout_text": [],
+     "stderr": [
+      "ERROR codex_models_manager::manager: failed to refresh available models: request timed out"
+     ],
+     "auth_size_mtime_unchanged": true
+    },
+    "participant, human output": {
+     "argv_tail": [
+      "--skip-git-repo-check",
+      "--ephemeral",
+      "--ignore-user-config",
+      "--ignore-rules",
+      "-c",
+      "permissions.dml-discussant={ extends = \":read-only\", filesystem = { \"~/.codex\" = \"deny\" } }",
+      "-c",
+      "default_permissions=\"dml-discussant\"",
+      "-c",
+      "features.apps=false",
+      "-c",
+      "project_doc_max_bytes=0",
+      "--model",
+      "gpt-6-luna",
+      "-"
+     ],
+     "state": "timed_out",
+     "exit": -15,
+     "duration_ms": 90062,
+     "tree_confirmed_empty": true,
+     "jsonl_types": [],
+     "stdout_text": [],
+     "stderr": [
+      "--------",
+      "ERROR codex_models_manager::manager: failed to refresh available models: request timed out",
+      "ERROR: Reconnecting... 2/5",
+      "ERROR: Reconnecting... 3/5",
+      "ERROR: Reconnecting... 4/5",
+      "ERROR: Reconnecting... 5/5"
+     ],
+     "auth_size_mtime_unchanged": true
+    },
+    "undefined profile --json": {
+     "argv_tail": [
+      "--json",
+      "--skip-git-repo-check",
+      "--ephemeral",
+      "--ignore-user-config",
+      "--ignore-rules",
+      "-c",
+      "permissions.dml-discussant={ extends = \":read-only\", filesystem = { \"~/.codex\" = \"deny\" } }",
+      "-c",
+      "default_permissions=\"notamode\"",
+      "-c",
+      "features.apps=false",
+      "-c",
+      "project_doc_max_bytes=0",
+      "--model",
+      "gpt-6-luna",
+      "-"
+     ],
+     "state": "exited",
+     "exit": 1,
+     "duration_ms": 50,
+     "tree_confirmed_empty": true,
+     "jsonl_types": [],
+     "stdout_text": [],
+     "stderr": [
+      "Error: default_permissions refers to undefined profile `notamode`"
+     ],
+     "auth_size_mtime_unchanged": true
+    },
+    "legacy --sandbox read-only, human output": {
+     "argv_tail": [
+      "--skip-git-repo-check",
+      "--ephemeral",
+      "--ignore-user-config",
+      "--ignore-rules",
+      "--sandbox",
+      "read-only",
+      "--model",
+      "gpt-6-luna",
+      "-"
+     ],
+     "state": "timed_out",
+     "exit": -15,
+     "duration_ms": 90064,
+     "tree_confirmed_empty": true,
+     "jsonl_types": [],
+     "stdout_text": [],
+     "stderr": [
+      "--------",
+      "ERROR codex_models_manager::manager: failed to refresh available models: request timed out",
+      "ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest(\"ht",
+      "ERROR: Reconnecting... 2/5",
+      "ERROR: Reconnecting... 3/5",
+      "ERROR: Reconnecting... 4/5"
+     ],
+     "auth_size_mtime_unchanged": true
+    }
+   }
+  }
+ },
+ "note": "model-free; exec_offline ran without network, so the participant plans time out after starting a turn"
+}

@@ -92,6 +92,38 @@ class ContextGateTests(unittest.TestCase):
         self.assertEqual(record["adapters"][1]["context_conformance"]["status"], "failed")
 
 
+    def test_the_e2_record_backs_the_current_one_input_plans_in_strict_mode(self):
+        """E2(2026-09-25): 두 지금 계획의 전송·권한·문맥을 관측한 기록. strict에서 허가하고, 자료 없음·둘 이상·옛 계획·
+        다른 설치판·30일 뒤는 허가하지 않는다. 판 문자열을 고정해 계획이 바뀌면 이 기록도 다시 보게 한다."""
+        record = json.loads(evidence.E2_MANIFEST.read_text(encoding="utf-8"))
+        before = copy.deepcopy(record)
+        self.assertEqual(runtime_inventory.validate_manifest_v2(record), [])
+        codex = participant_plan("codex", inputs=("/tmp/public-input",))
+        claude = participant_plan("claude-code", inputs=("/tmp/public-input",))
+        self.assertEqual((codex[0], claude[0]), ("codex@bba3751a36f3", "claude-code@a35129c5a1dc"))
+        today = date(2026, 9, 25)
+        for adapter_id, revision, version in (("codex", codex[0], "0.156.1"), ("claude-code", claude[0], "2.1.280")):
+            with self.subTest(adapter=adapter_id):
+                verdict = eligibility.eligibility(record, adapter_id, enabled=True, today=today,
+                                                  current_version=version, spec_revision=revision)
+                self.assertTrue(verdict.eligible, verdict.reasons)
+                for options in ({"current_version": version + ".1"}, {"today": date(2026, 10, 26)}):
+                    self.assertFalse(eligibility.eligibility(record, adapter_id, enabled=True, **{
+                        "today": today, "current_version": version, "spec_revision": revision, **options}).eligible)
+        for adapter_id, version, revision in (
+                ("codex", "0.156.1", participant_plan("codex")[0]),
+                ("codex", "0.156.1", participant_plan("codex", inputs=("/tmp/one", "/tmp/two"))[0]),
+                ("codex", "0.156.1", apps_off_revision(codex)), ("codex", "0.156.1", k46_revision(codex)),
+                ("claude-code", "2.1.280", participant_plan("claude-code")[0]),
+                ("claude-code", "2.1.280", restricted_only_revision(claude))):
+            self.assertFalse(eligibility.eligibility(record, adapter_id, enabled=True, today=today,
+                                                    current_version=version, spec_revision=revision,
+                                                    allow_context_unverified=True).eligible, (adapter_id, revision))
+        self.assertEqual(before, record)
+        self.assertEqual([row["context_conformance"]["status"] for row in record["adapters"][:2]],
+                         ["observed", "observed"])
+
+
 class UnverifiedSynthetic(support.SyntheticExecutor):
     """Pretends to be live only to exercise classification and reservations; no process/model."""
     kind = contract.REAL

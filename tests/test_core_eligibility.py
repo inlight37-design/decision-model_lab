@@ -26,6 +26,7 @@ def observed(**extra):
 SPEC = participant_revision("claude-code")   # 지금 실행할 계획의 판(core.contract)
 K46_MANIFEST = ROOT / "docs/experiments/w2-isolation/2026-09-24-k46-confirmation/manifest.v2.json"
 APPS_OFF_MANIFEST = ROOT / "docs/reviews/2026-09-24-codex-apps-off/manifest.v2.json"
+E2_MANIFEST = ROOT / "docs/reviews/2026-09-25-context-independence/manifest.v2.json"
 
 
 def record(**overrides):
