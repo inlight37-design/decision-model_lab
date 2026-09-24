@@ -1,0 +1,41 @@
+"""실제 합성 결과 화면의 실제 JavaScript: 원문 일치·원문에 없음·추가 주장·반례·미해결 줄. 모델 호출 없음."""
+from pathlib import Path
+import shutil
+import subprocess
+import unittest
+
+
+@unittest.skipUnless(shutil.which("node"), "Node is required for the actual JavaScript rendering checks")
+class ModelSynthesisRenderTests(unittest.TestCase):
+    def test_lines_mark_unmatched_quotes_and_unsupported_claims(self):
+        html = (Path(__file__).resolve().parents[1] / "app/static/index.html").read_text(encoding="utf-8")
+        functions = html[html.index("function modelSynthesisLines("):html.index("function modelSynthesisView(")]
+        script = r'''
+const assert = require("node:assert/strict");
+''' + functions + r'''
+const q = (draft, pid, text, ok) => ({draft, pid, text, source_check: ok ? "exact_match" : "not_found"});
+const lines = modelSynthesisLines({
+  synthesizer: {adapter_id: "claude-code", requested_model: "m", reported_models: ["m"], model_match: true},
+  checks: {quotes: 3, exact_matches: 2, unsupported_additions: 1},
+  claims: [{id: "S001", statement: "결론이 갈린다", support: "quoted", quotes: [q("D1", "claude", "결론은 A다.", true)]},
+           {id: "S002", statement: "D가 낫다", support: "unsupported_addition", quotes: [q("D9", null, "결론은 D다.", false)]}],
+  disagreements: [{topic: "결론", quotes: []}],
+  strongest_counterexample: {statement: "B", quotes: [q("D1", "claude", "반례는 B다.", true)]},
+  unresolved: ["비용 자료 없음"]});
+const text = lines.map(([, t]) => t).join("\n");
+assert.ok(text.includes("인용 3개 중 원문 일치 2개 · 원문에 없는 추가 주장 1개 · 사실 검증 안 함"));
+assert.ok(text.includes("원문 일치 · D1(claude) “결론은 A다.”"));
+assert.ok(text.includes("원문에 없음 · D9(?) “결론은 D다.”"));
+assert.ok(text.includes("S002 D가 낫다 — 원문에 없는 추가 주장"));
+assert.ok(text.includes("가장 강한 반례 · B"));
+assert.ok(text.includes("미해결 · 비용 자료 없음"));
+assert.equal(lines.find(([, t]) => t.startsWith("S002"))[0], "claim st-unknown");
+assert.equal(lines.find(([, t]) => t.includes("D9(?)"))[0], "kv st-unknown");
+assert.ok(!text.includes("모델 불일치"));
+'''
+        result = subprocess.run([shutil.which("node"), "-e", script], capture_output=True, text=True, timeout=15)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+
+if __name__ == "__main__":
+    unittest.main()

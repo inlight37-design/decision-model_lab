@@ -166,8 +166,9 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                     report = build_report(view, parts[2])
                     synthesis = view["runs"][0].get("synthesis")
                     if synthesis is None:
-                        raise ReportError("mock synthesis has not been requested")
-                    self._json(200, {"schema": "a1-decision-report/1", "draft_report": report,
+                        raise ReportError("synthesis has not been requested")
+                    # 2: synthesis는 모의(a1-mock-synthesis/1) 또는 실제(a1-model-synthesis/1)다. 그 schema로 가른다.
+                    self._json(200, {"schema": "a1-decision-report/2", "draft_report": report,
                                      "synthesis": synthesis})
                 except ReportError as exc:
                     self._json(409, {"error": str(exc)})
@@ -223,7 +224,15 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                     controller.cancel_run(parts[2])
                     self._json(200, {"ok": True})  # 요청을 저장했다는 뜻. 자손 종료 성공 응답이 아니다.
                 elif len(parts) == 4 and parts[:2] == ["api", "runs"] and parts[3] == "synthesize":
-                    controller.synthesize(parts[2])
+                    mode = body.get("mode", "mock")
+                    if mode == "model":   # 실제 합성: 호출 1회, 실제 CLI 연결에서만
+                        if not live:
+                            raise ControllerError("model synthesis needs an explicit live CLI connection")
+                        controller.synthesize_with_model(parts[2], _text(body, "adapter_id"))
+                    elif mode == "mock":
+                        controller.synthesize(parts[2])
+                    else:
+                        raise ControllerError("mode must be mock or model")
                     self._json(200, {"ok": True})
                 elif parts == ["api", "resume"]:
                     controller.resume()

@@ -44,7 +44,8 @@ from typing import Any, Protocol
 
 from app.store import Store
 from app.report import build_report
-from app.synthesis import SynthesisError, mock_synthesize, unavailable
+from app.synthesis import (SynthesisError, check_model_synthesis, mock_synthesize, model_prompt, model_unavailable,
+                           unavailable)
 from app.state import (CLI, MANUAL, QUEUED, RUNNING, AWAITING_USER, ACCEPTED, REJECTED, UNKNOWN,
                        DONE, INDEPENDENT_ONLY, INCLUDE_UNVERIFIED, QUORUM_POLICIES, RunGate, gate, confirmed)
 from core import adapters, contract, env as core_env, isolation, membership as m, runner
@@ -265,6 +266,7 @@ class Controller:
         self.lock = threading.RLock()
         # 진행 중인 시도의 신호만 보관한다. 끝난 스레드/질문/작업 경로를 계속 쌓지 않는다.
         self._workers: dict[str, tuple[threading.Thread, threading.Event]] = {}
+        self._synthesis: dict[str, tuple[threading.Thread, threading.Event]] = {}   # run_id → 진행 중인 실제 합성
         self._recover()
         # 이전 controller가 시작하지 못한 시도가 남아 있으면 사용자가 이어서 시작하라고 할 때까지 기다린다
         self.paused = self.store.row("SELECT COUNT(*) AS n FROM participants JOIN runs USING (run_id) "
@@ -364,7 +366,14 @@ class Controller:
         return root
 
     def _slots_used(self) -> int:
-        return self.store.row("SELECT COUNT(*) AS n FROM participants WHERE state IN (?, ?)", RUNNING, UNKNOWN)["n"]
+        return len(self._synthesis) + self.store.row(
+            "SELECT COUNT(*) AS n FROM participants WHERE state IN (?, ?)", RUNNING, UNKNOWN)["n"]
+
+    def _budget_exhausted(self, adapter_id: str) -> bool:
+        """전체·provider 상한. 거래 안에서 읽고 같은 거래에서 예약한다 — 병렬 요청이 마지막 한 칸을 함께 쓰지 못한다."""
+        budget, provider = self.call_budget(), self.call_budget(adapter_id)
+        return budget["used"] >= budget["cap"] or bool(self.provider_call_caps and (
+            provider["cap"] is None or provider["used"] >= provider["cap"]))
 
     def unsettled(self) -> int:
         unknown = self.store.row("SELECT COUNT(*) AS n FROM participants WHERE state = ?", UNKNOWN)["n"]
@@ -387,10 +396,17 @@ class Controller:
         초안 길이를 짐작하게 한다(2026-09-24 리뷰 8번). 모의·합성 실행기의 시도는 계정 값이 아니므로 쓰지 않는다.
         """
         with self.lock:
-            for event in self.store.rows("SELECT run_id, at, payload FROM events WHERE kind IN "
-                                         "('draft_sealed', 'attempt_rejected') ORDER BY at DESC LIMIT 200"):
+            for event in self.store.rows("SELECT run_id, at, payload FROM events WHERE kind IN ('draft_sealed', "
+                                         "'attempt_rejected', 'synthesis_completed', 'synthesis_failed') "
+                                         "ORDER BY at DESC LIMIT 200"):
                 payload = json.loads(event["payload"])
-                limit = (payload.get("result") or {}).get("rate_limit")
+                result = payload.get("result") or {}
+                if "synthesizer" in result:   # 실제 합성은 공개 뒤에만 돈다 — 봉인 중인 초안이 없다
+                    limit = result["synthesizer"].get("rate_limit")
+                    if limit and result["synthesizer"].get("execution") == contract.REAL:
+                        return {**limit, "observed_at": int(event["at"])}
+                    continue
+                limit = result.get("rate_limit")
                 if not limit:
                     continue
                 part = self.store.row("SELECT kind FROM participants WHERE run_id = ? AND pid = ? AND attempt = ?",
@@ -436,11 +452,7 @@ class Controller:
                 with self.store.tx() as tx:
                     # 같은 거래에서 검사와 예약을 한다. 병렬 pump도 마지막 한 칸을 함께 쓰지 못한다.
                     if plan is not None and plan.kind == contract.REAL and self.max_real_calls is not None:
-                        budget = self.call_budget()
-                        provider = self.call_budget(spec.adapter_id)
-                        exhausted = budget["used"] >= budget["cap"] or (self.provider_call_caps and (
-                            provider["cap"] is None or provider["used"] >= provider["cap"]))
-                        if exhausted:
+                        if self._budget_exhausted(spec.adapter_id):
                             plan, refused = None, "real CLI call budget exhausted; no call was started"
                             record = {"adapter_id": spec.adapter_id, "refused": refused}
                     part = self._part(row["run_id"], spec.pid)
@@ -665,6 +677,88 @@ class Controller:
                 result = unavailable(report)
             tx.event(run_id, "synthesis_completed", result=result)
 
+    def synthesize_with_model(self, run_id: str, adapter_id: str) -> None:
+        """공개 뒤 사용자가 켠 실제 합성 1회(P5, K18). 같은 계획·같은 격리로 그 실행의 CLI provider 하나를 부른다.
+
+        같은 원장의 전체·provider 상한 안에서 예약하고, 예약과 시작 사건을 한 거래로 쓴 뒤 백그라운드로 돈다.
+        시작 전 거절(공개 전·진행 중·provider 아님·계획 거절·상한 소진)은 아무것도 예약하지 않는다.
+        """
+        with self.lock:
+            if not self._gate(run_id).public()["can_synthesize"]:
+                raise ControllerError("model synthesis requires controller-revealed drafts")
+            if run_id in self._synthesis:
+                raise ControllerError("a model synthesis is already running for this run")
+            chosen = next((spec for spec in (ParticipantSpec(**json.loads(row["spec"])) for row in self.store.rows(
+                "SELECT spec FROM participants WHERE run_id = ? ORDER BY rowid", run_id))
+                if spec.transport == CLI and spec.adapter_id == adapter_id), None)
+            if chosen is None or adapter_id not in self.executor.adapter_ids:
+                raise ControllerError("the synthesizer must be one of this run's CLI providers")
+            report = build_report(self.view(run_id), run_id)
+            try:
+                prompt, labels = model_prompt(report)
+            except SynthesisError as exc:
+                raise ControllerError(str(exc)) from None
+            attempt = uuid.uuid4().hex
+            work = os.path.join(self.work_root, run_id, f"synthesis-{attempt[:12]}")
+            os.makedirs(work, exist_ok=True)
+            source = self._source_dir(run_id)
+            try:
+                plan = self.executor.plan(replace(chosen, pid="synthesis", label="합성"), prompt, work,
+                                          **({"inputs": (source,)} if source else {}))
+            except Exception as exc:  # 계획 거절: 아무것도 시작하지 않았다
+                raise ControllerError(f"synthesis plan refused: {type(exc).__name__}: {exc}") from None
+            with self.store.tx() as tx:
+                if plan.kind == contract.REAL and self.max_real_calls is not None:
+                    if self._budget_exhausted(adapter_id):
+                        raise ControllerError("real CLI call budget exhausted; no call was started")
+                    tx.event(run_id, "live_call_reserved", pid="synthesis", attempt=attempt, adapter_id=adapter_id,
+                             cap=self.max_real_calls, purpose="synthesis")
+                tx.event(run_id, "synthesis_started", attempt=attempt, adapter_id=adapter_id, execution=plan.kind,
+                         labels=labels, spec=plan.record())
+            cancel = threading.Event()
+            thread = threading.Thread(target=self._synthesis_attempt,
+                                      args=(run_id, attempt, plan, report, labels, cancel), daemon=True)
+            self._synthesis[run_id] = (thread, cancel)
+            try:
+                thread.start()
+            except RuntimeError:
+                self._synthesis.pop(run_id)
+                with self.store.tx() as tx:
+                    tx.event(run_id, "synthesis_failed", attempt=attempt, result=model_unavailable(
+                        report, {"adapter_id": adapter_id, "started": False}, "worker thread did not start"))
+
+    def _synthesis_attempt(self, run_id: str, attempt: str, plan: contract.Plan, report: dict,
+                           labels: dict[str, str], cancel: threading.Event) -> None:
+        try:
+            try:
+                result, outcome = self.executor.run(plan, self.timeout, cancel=cancel)
+            except Exception:  # 실행기 자체 실패: 자손 종료는 확인하지 못했다
+                result, outcome = None, None
+            state, status, why = acceptance(result, outcome)
+            synthesizer = {"adapter_id": plan.spec.adapter_id, "requested_model": plan.model, "execution": plan.kind,
+                           "started": result is None or result.state != runner.FAILED_TO_START,
+                           "state": state, "status": status, "revision": plan.revision,
+                           "reported_models": list(outcome.reported_models) if outcome else [],
+                           "model_match": outcome.model_match if outcome else None,
+                           "duration_ms": result.duration_ms if result else None,
+                           "tree_confirmed_empty": result.tree_confirmed_empty if result else None,
+                           "usage": outcome.usage if outcome else {},
+                           "rate_limit": outcome.rate_limit if outcome else None}
+            if state == ACCEPTED:
+                try:
+                    record = check_model_synthesis(outcome.text, report, labels, synthesizer)
+                except SynthesisError as exc:
+                    record = model_unavailable(report, synthesizer, str(exc))
+            else:
+                record = model_unavailable(report, synthesizer, why or status)
+            with self.lock, self.store.tx() as tx:
+                tx.event(run_id, "synthesis_completed" if record["status"] == "completed" else "synthesis_failed",
+                         attempt=attempt, result=record)
+        finally:
+            with self.lock:
+                self._synthesis.pop(run_id, None)
+                self.pump()
+
     # ---- 화면용 투영 ---------------------------------------------------------------------------
     def view(self, run_id: str | None = None) -> dict[str, Any]:
         """화면에 넘기는 것. 공개 전에는 제출 여부와 실행 상태의 고정된 필드만 넘긴다(BlindBarrier 계약).
@@ -692,6 +786,7 @@ class Controller:
                         calls[{"accepted": "succeeded", "rejected": "failed", "unknown": "unknown"}[p["state"]]] += 1
                     item = {"pid": spec.pid, "label": spec.label, "provider": spec.provider,
                             "transport": spec.transport, "behavior": spec.behavior if spec.transport == CLI else None,
+                            "adapter_id": spec.adapter_id if spec.transport == CLI else None,
                             "state": p["state"], "status": p["status"], "detail": p["detail"] if settled else None,
                             "contamination": list(_flags(spec.transport, p)) +
                                 (["개인 문맥 미확인 — 독립 정족수에 세지 않음"]
@@ -735,6 +830,7 @@ class Controller:
                                               "AND kind = 'synthesis_completed' ORDER BY seq DESC LIMIT 1", run["run_id"])
                     if artifact:
                         runs[-1]["synthesis"] = json.loads(artifact["payload"])["result"]
+                    runs[-1]["model_synthesis"] = self._model_synthesis_state(run["run_id"])
             return {"executor": self.executor.name, "live_call_budget": self.call_budget(),
                     "provider_call_budgets": {aid: self.call_budget(aid) for aid in self.provider_call_caps},
                     "slots": {"used": self._slots_used(), "cap": self.max_parallel},
@@ -742,6 +838,23 @@ class Controller:
                     "paused": self.paused, "runs": runs}
 
     # ---- 내부 ---------------------------------------------------------------------------------
+    def _model_synthesis_state(self, run_id: str) -> dict[str, Any] | None:
+        """가장 최근 실제 합성의 진행 상태. 모의 합성 사건은 건너뛴다."""
+        if run_id in self._synthesis:
+            return {"status": "running"}
+        for event in self.store.rows("SELECT kind, payload FROM events WHERE run_id = ? AND kind IN "
+                                     "('synthesis_started', 'synthesis_failed', 'synthesis_completed') "
+                                     "ORDER BY seq DESC", run_id):
+            result = json.loads(event["payload"]).get("result") or {}
+            if event["kind"] == "synthesis_started":
+                return {"status": "unknown",
+                        "message": "controller가 결과를 받기 전에 다시 시작했습니다. 예약은 환불하지 않습니다."}
+            if event["kind"] == "synthesis_failed":
+                return {"status": "failed", "message": result.get("message"), "reason": result.get("reason")}
+            if result.get("mode") == "model":
+                return {"status": "completed"}
+        return None
+
     def _gate(self, run_id: str) -> RunGate:
         """Read inside a Store transaction for decisions that change state."""
         return gate(self._run(run_id), self.store.rows(
