@@ -224,13 +224,11 @@ class ControllerError(ValueError):
 class Controller:
     def __init__(self, store: Store, executor: Executor, *, max_parallel: int = 2, unsettled_limit: int = 2,
                  timeout: float = 60.0, work_root: str | None = None,
-                 max_real_calls: int | None = None) -> None:
+                 max_real_calls: int | None = None, provider_call_caps: dict[str, int] | None = None) -> None:
         self.store, self.executor = store, executor
         self.max_parallel, self.unsettled_limit, self.timeout = max_parallel, unsettled_limit, timeout
         self.work_root = work_root or os.path.join(tempfile.gettempdir(), "dml-work")
-        if max_real_calls is not None and (type(max_real_calls) is not int or max_real_calls < 1):
-            raise ValueError("max_real_calls must be a positive integer")
-        self.max_real_calls = max_real_calls
+        self.max_real_calls, self.provider_call_caps = store.bind_call_budget(max_real_calls, provider_call_caps)
         self.lock = threading.RLock()
         # 진행 중인 시도의 신호만 보관한다. 끝난 스레드/질문/작업 경로를 계속 쌓지 않는다.
         self._workers: dict[str, tuple[threading.Thread, threading.Event]] = {}
@@ -288,12 +286,15 @@ class Controller:
         unknown = self.store.row("SELECT COUNT(*) AS n FROM participants WHERE state = ?", UNKNOWN)["n"]
         return unknown + runner.lingering()
 
-    def call_budget(self) -> dict[str, int | None]:
+    def call_budget(self, adapter_id: str | None = None) -> dict[str, int | None]:
         """실제 CLI를 시작하기 전에 원장에 예약한다. 재시작·실패·취소로 환불하지 않는다(계정 잔여와 다름)."""
         if self.max_real_calls is None:
             return {"used": 0, "cap": None}
-        used = self.store.row("SELECT COUNT(*) AS n FROM events WHERE kind = 'live_call_reserved'")["n"]
-        return {"used": used, "cap": self.max_real_calls}
+        reservations = self.store.rows("SELECT payload FROM events WHERE kind = 'live_call_reserved'")
+        used = len(reservations) if adapter_id is None else sum(
+            json.loads(row["payload"]).get("adapter_id") == adapter_id for row in reservations)
+        return {"used": used, "cap": self.max_real_calls if adapter_id is None
+                else self.provider_call_caps.get(adapter_id)}
 
     def pump(self) -> None:
         """자리와 상한이 허락하는 만큼 대기 중인 시도를 시작한다. 한 참여자에 한 번만 — 다시 부르지 않는다.
@@ -320,14 +321,20 @@ class Controller:
                     plan, refused = self.executor.plan(spec, prompt, work), None
                     if plan.context_unverified and not spec.context_unverified:
                         raise ControllerError("queued participant has a different context policy; create a new run")
-                    if plan.kind == contract.REAL and self.max_real_calls is not None:
-                        if self.call_budget()["used"] >= self.max_real_calls:
-                            raise ControllerError("real CLI call budget exhausted; no call was started")
                     record, kind = plan.record(), plan.kind
                 except Exception as exc:  # 거절: 아무것도 시작하지 않았다
                     plan, refused = None, f"{type(exc).__name__}: {exc}"
                     record, kind = {"adapter_id": spec.adapter_id, "refused": refused}, self.executor.kind
                 with self.store.tx() as tx:
+                    # 같은 거래에서 검사와 예약을 한다. 병렬 pump도 마지막 한 칸을 함께 쓰지 못한다.
+                    if plan is not None and plan.kind == contract.REAL and self.max_real_calls is not None:
+                        budget = self.call_budget()
+                        provider = self.call_budget(spec.adapter_id)
+                        exhausted = budget["used"] >= budget["cap"] or (self.provider_call_caps and (
+                            provider["cap"] is None or provider["used"] >= provider["cap"]))
+                        if exhausted:
+                            plan, refused = None, "real CLI call budget exhausted; no call was started"
+                            record = {"adapter_id": spec.adapter_id, "refused": refused}
                     part = self._part(row["run_id"], spec.pid)
                     taken = (self._gate(row["run_id"]).accepting and part["state"] == QUEUED
                              and self._transition(tx, part, RUNNING, attempt=attempt, kind=kind))
@@ -573,7 +580,7 @@ class Controller:
                     if result and not revealed:
                         result = {k: v for k, v in result.items() if k in keep}
                     if (spec.transport == CLI and p["state"] in (ACCEPTED, REJECTED, UNKNOWN)
-                            and p["status"] != "cancelled_before_start"):
+                            and p["status"] not in ("cancelled_before_start", "process_failed_to_start")):
                         calls[{"accepted": "succeeded", "rejected": "failed", "unknown": "unknown"}[p["state"]]] += 1
                     item = {"pid": spec.pid, "label": spec.label, "provider": spec.provider,
                             "transport": spec.transport, "behavior": spec.behavior if spec.transport == CLI else None,
@@ -605,6 +612,11 @@ class Controller:
                              "diagnostics_sealed": not settled,
                              "budget": {"used": sum(calls.values()) + sum(1 for p in parts if p["state"] == RUNNING),
                                         "cap": cli_total, "breakdown": calls,
+                                        "not_started": sum(1 for p in parts if p["transport"] == CLI and p["status"]
+                                                           in ("cancelled_before_start", "process_failed_to_start")),
+                                        "reserved": (self.store.row("SELECT COUNT(*) AS n FROM events WHERE run_id = ? "
+                                                                    "AND kind = 'live_call_reserved'", run["run_id"])["n"]
+                                                     if any(p["execution"] == contract.REAL for p in parts) else 0),
                                         "manual": sum(1 for p in parts if p["transport"] == MANUAL)},
                              "participants": parts,
                              "events": [e["kind"] for e in reversed(self.store.rows(
@@ -615,6 +627,7 @@ class Controller:
                     if artifact:
                         runs[-1]["synthesis"] = json.loads(artifact["payload"])["result"]
             return {"executor": self.executor.name, "live_call_budget": self.call_budget(),
+                    "provider_call_budgets": {aid: self.call_budget(aid) for aid in self.provider_call_caps},
                     "slots": {"used": self._slots_used(), "cap": self.max_parallel},
                     "unsettled": {"count": self.unsettled(), "limit": self.unsettled_limit},
                     "paused": self.paused, "runs": runs}
