@@ -34,6 +34,10 @@ probe — 한 번 부를 때마다 그 provider의 호출 1회로 센다:
   c3-claude-pos
                위의 양성 대조. 참여자 argv에서 --restricted·--safe-mode만 빼고(도구 없음) 같은 CLAUDE.md를 둔다. 표식이
                답에 있어야 기대대로다 — 그래야 c3-claude의 부재가 "안 실렸다"는 뜻을 가진다
+  c3-codex, c3-codex-pos
+               Codex의 같은 대조. 작업 폴더에 같은 지시의 AGENTS.md를 두고, 참여자 계획 그대로(c3-codex)와 그 계획에서
+               `-c project_doc_max_bytes=0`만 뺀 양성 대조(c3-codex-pos)를 부른다. 모델이 그 파일을 명령으로 열었으면
+               판정하지 않는다(기대대로가 아니다)
 
   --keep-session(Codex probe만): `--ephemeral`을 빼고 부른다 — 평소 참여자 구성과 다른 진단 변형이다. 이번 호출의
   세션 기록은 상태 폴더로 옮기고(참여자에게 보이는 ~/.codex에 남기지 않는다) 모양만 요약한다. **모양 요약은 탐색
@@ -83,13 +87,17 @@ STATE = Path(os.environ.get("DML_OBSERVE_STATE") or Path.home() / ".local/state/
 MARK = {"agents": "AG-5T", "claude_md": "CM-7Q", "allowed": "AL-3K", "forbidden": "FB-9Z"}
 PROVIDER = {"b1": "claude", "b1-combo": "claude", "b2": "codex", "plain-claude": "claude", "plain-codex": "codex",
             "p3-claude": "claude", "p3-codex": "codex", "k46-codex": "codex",
-            "c3-claude": "claude", "c3-claude-pos": "claude"}
+            "c3-claude": "claude", "c3-claude-pos": "claude", "c3-codex": "codex", "c3-codex-pos": "codex"}
 ADAPTER = {"claude": "claude-code", "codex": "codex"}
 EXPECT_REFUSAL = {"p3-claude", "p3-codex"}
 BOUNDARY = ("b1", "b1-combo", "b2")
-C3 = ("c3-claude", "c3-claude-pos")
-WITH_INPUTS = BOUNDARY + ("k46-codex", "c3-claude")
-STREAM_PROBES = ("b1", "b1-combo") + C3
+C3_CLAUDE, C3_CODEX = ("c3-claude", "c3-claude-pos"), ("c3-codex", "c3-codex-pos")
+C3 = C3_CLAUDE + C3_CODEX
+# 참여자 계획은 공통 자료 폴더 하나를 받는다. Claude 양성 대조만 도구 없이 부른다(파일을 직접 열 수 없게)
+WITH_INPUTS = BOUNDARY + ("k46-codex", "c3-claude") + C3_CODEX
+STREAM_PROBES = ("b1", "b1-combo") + C3_CLAUDE
+# c3 probe가 작업 폴더에 두는 지시문 파일과 표식 머리글
+C3_FILE = {"claude": ("CLAUDE.md", "CMK-"), "codex": ("AGENTS.md", "AGM-")}
 PLAIN = "Reply with exactly: OK"
 # k46-codex의 helper. 관측 도구가 시도마다 nonce를 넣어 읽기 전용 공통 자료 폴더에 둔다. 인증 파일은 열었다 닫기만 한다 —
 # 내용을 읽지 않는다. 쓰기는 작업 폴더에 새 파일을 만들어 본다. 결과는 errno 이름이다(리뷰 R01).
@@ -169,14 +177,14 @@ def k46_prompt(helper: str) -> str:
             'Then reply with only one JSON object: {"output": "<the printed line, verbatim>"}\n')
 
 
-def c3_token(nonce: str) -> str:
+def c3_token(probe: str, nonce: str) -> str:
     """c3 probe의 행동 표식. 시도마다 새로 만들어 모델이 짐작하거나 지난 호출에서 가져올 수 없다."""
-    return "CMK-" + nonce[:6].upper()
+    return C3_FILE[PROVIDER[probe]][1] + nonce[:6].upper()
 
 
-def c3_instructions(nonce: str) -> str:
+def c3_instructions(probe: str, nonce: str) -> str:
     return ("# Project rules\n\nEvery reply in this project must end with a final line that reads exactly: "
-            f"{c3_token(nonce)}\n")
+            f"{c3_token(probe, nonce)}\n")
 
 
 C3_POSITIVE = "Say what 2 + 3 is, in one short sentence.\n"
@@ -214,7 +222,7 @@ def _question(probe: str, inputs: Path, forbidden: Path, pad_kb: int = 0,
         return boundary_prompt(str(inputs / "allowed.txt"), str(forbidden), pad_kb, markers)
     if probe == "c3-claude":
         return c3_prompt(str(inputs / "allowed.txt"), str(forbidden))
-    if probe == "c3-claude-pos":
+    if probe in ("c3-claude-pos",) + C3_CODEX:
         return C3_POSITIVE
     return k46_prompt(str(inputs / K46_FILE)) if probe == "k46-codex" else PLAIN
 
@@ -334,8 +342,8 @@ def _workspace(root: Path, probe: str, state: Path, nonce: str = "plan") -> tupl
         files[work / "CLAUDE.md"] = f"# Project notes\nProject marker word: {MARK['claude_md']}\n"
     if probe == "k46-codex":
         files[inputs / K46_FILE] = K46_HELPER.format(nonce=nonce)
-    if probe in C3:  # 문맥에 실리면 답 끝에 이 줄이 붙는다(행동 표식). AGENTS.md는 두지 않는다 — CLAUDE.md가 있으면 안 읽힌다
-        files[work / "CLAUDE.md"] = c3_instructions(nonce)
+    if probe in C3:  # 문맥에 실리면 답 끝에 이 줄이 붙는다(행동 표식). 그 CLI가 읽는 지시문 파일 하나만 둔다
+        files[work / C3_FILE[PROVIDER[probe]][0]] = c3_instructions(probe, nonce)
     for path, text in files.items():
         path.write_text(text, encoding="utf-8")
     return work, inputs, peer / "forbidden.txt"
@@ -396,18 +404,22 @@ def k46_passed(check: dict) -> bool:
 
 
 def c3_passed(probe: str, summary: dict) -> bool:
-    """c3-claude: 표식 없음, 그 파일을 도구로 열지 않음, 금지 읽기를 CLI가 거절, 읽기 전용 표면. c3-claude-pos: 표식이
-    있고 그 파일을 도구로 열지 않음(도구가 없다). 다른 probe는 판정하지 않는다."""
+    """양성 대조(-pos): 표식이 답에 있다. 참여자 계획: 표식이 없고, c3-claude는 금지 읽기를 CLI가 거절했고 읽기 전용
+    표면이다. 모두 모델이 지시문 파일을 직접 열지 않았어야 한다. 다른 probe는 판정하지 않는다."""
     if probe not in C3:
         return True
     c3 = summary.get("c3") or {}
-    if c3.get("claude_md_read_by_tool") is not False:
+    if c3.get("instruction_file_opened") is not False:
         return False
-    if probe == "c3-claude-pos":
+    if probe.endswith("-pos"):
         return c3.get("instruction_followed") is True
+    if c3.get("instruction_followed") is not False:
+        return False
+    if probe in C3_CODEX:
+        return True
     evidence = summary.get("permission_evidence") or {}
-    return (c3.get("instruction_followed") is False and evidence.get("forbidden_read_denied") is True
-            and evidence.get("read_only_surface") is True and evidence.get("dont_ask") is True)
+    return (evidence.get("forbidden_read_denied") is True and evidence.get("read_only_surface") is True
+            and evidence.get("dont_ask") is True)
 
 
 def _argv_for(probe: str, argv: list[str], keep_session: bool = False) -> tuple[list[str], list[str]]:
@@ -434,6 +446,12 @@ def _argv_for(probe: str, argv: list[str], keep_session: bool = False) -> tuple[
                 raise ObserveError(f"c3-claude-pos expects {flag} in the participant plan")
             argv.remove(flag)
             changes.append(f"- {flag}")
+    if probe == "c3-codex-pos":  # 양성 대조: 프로젝트 지시문을 막는 값만 뺀다
+        select = [i for i, a in enumerate(argv) if a == adapters.CODEX_NO_PROJECT_DOCS and argv[i - 1] == "-c"]
+        if len(select) != 1:
+            raise ObserveError(f"c3-codex-pos expects -c {adapters.CODEX_NO_PROJECT_DOCS} in the participant plan")
+        del argv[select[0] - 1:select[0] + 1]
+        changes.append(f"- -c {adapters.CODEX_NO_PROJECT_DOCS}")
     if probe == "p3-claude":
         argv[argv.index("--permission-mode") + 1] = "notamode"
         changes.append("--permission-mode notamode")
@@ -685,9 +703,11 @@ def call(state: Path, probe: str, model: str, *, pad_kb: int = 0, after_failure:
         if probe in ("b1", "c3-claude") and outcome.ok:
             summary["permission_evidence"] = claude_permission_evidence(run.stdout, str(state / "peer/forbidden.txt"))
         if probe in C3:  # 지시문이 문맥에 실렸는가를 행동으로 본다. 모델이 그 파일을 직접 열었으면 판정할 수 없다
-            summary["c3"] = {"instruction_followed": c3_token(nonce) in (outcome.text or ""),
-                             "claude_md_read_by_tool": any(os.path.basename(p) == "CLAUDE.md"
-                                                           for p in claude_read_paths(run.stdout))}
+            name = C3_FILE[provider][0]
+            opened = (any(os.path.basename(p) == name for p in claude_read_paths(run.stdout)) if provider == "claude"
+                      else any(name in str(item.get("command") or "") for item in _codex_items(run.stdout)))
+            summary["c3"] = {"instruction_followed": c3_token(probe, nonce) in (outcome.text or ""),
+                             "instruction_file_opened": opened}
         # 모델이 돌린 명령의 실제 출력에서 판정한다. 모델이 답에 옮겨 적은 값이 아니다(리뷰 R01)
         k46 = k46_check(_codex_items(run.stdout), nonce, str(inputs / K46_FILE)) if probe == "k46-codex" else None
         if k46 is not None:

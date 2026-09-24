@@ -122,8 +122,12 @@ model = opt("--model")
 if BEHAVIOR == "other-model":  # 조용한 강등: 요청과 다른 모델이 답했다고 알린다
     model = "some-other-model"
 # 흉내: 문맥 옵션(--restricted·--safe-mode)이 없으면 작업 폴더의 CLAUDE.md를 싣고 그 지시대로 답 끝에 표식을 붙인다
+# Codex는 -c project_doc_max_bytes=0이 없으면 작업 폴더의 AGENTS.md를 싣는다(2단계 b2, K38)
 loads = FLAVOR == "claude" and ("--restricted" not in argv and "--safe-mode" not in argv or BEHAVIOR == "loads-claude-md")
-marker = re.search(r"reads exactly: (\S+)", read_all("CLAUDE.md")) if loads else None
+loads_agents = FLAVOR == "codex" and ("project_doc_max_bytes=0" not in argv or BEHAVIOR == "loads-agents-md")
+marker = re.search(r"reads exactly: (\S+)", read_all("CLAUDE.md" if loads else "AGENTS.md")) if loads or loads_agents else None
+if BEHAVIOR == "reads-agents-md":   # 모델이 지시문 파일을 명령으로 열었다
+    commands.append(("/bin/bash -lc 'cat AGENTS.md'", read_all("AGENTS.md")))
 if marker:
     text += "\n" + marker.group(1)
 usage = {{"input_tokens": len(question.encode()) // 4, "output_tokens": 3}}
@@ -529,20 +533,45 @@ class CallTests(Base):
         observe.approve(self.state, {"claude": 4, "codex": 0}, 60, "시험 승인")
         positive = self.call("c3-claude-pos")
         self.assertTrue(positive["as_expected"], positive)
-        self.assertEqual(positive["c3"], {"instruction_followed": True, "claude_md_read_by_tool": False})
+        self.assertEqual(positive["c3"], {"instruction_followed": True, "instruction_file_opened": False})
         self.assertEqual(positive["argv_changes"], ["- --restricted", "- --safe-mode"])
         negative = self.call("c3-claude")
         self.assertTrue(negative["as_expected"], negative)
-        self.assertEqual(negative["c3"], {"instruction_followed": False, "claude_md_read_by_tool": False})
+        self.assertEqual(negative["c3"], {"instruction_followed": False, "instruction_file_opened": False})
         self.assertEqual(negative["argv_changes"], [])                          # 참여자 계획 그대로
         self.assertTrue(negative["permission_evidence"]["forbidden_read_denied"])
         for behavior, key, value in (("loads-claude-md", "instruction_followed", True),
-                                     ("reads-claude-md", "claude_md_read_by_tool", True)):
+                                     ("reads-claude-md", "instruction_file_opened", True)):
             with self.subTest(behavior=behavior):
                 install(self.home, "claude", behavior)
                 out = self.call("c3-claude", after_failure=True)
                 self.assertEqual(out["c3"][key], value)
                 self.assertFalse(out["as_expected"], out)
+
+    def test_c3_codex_probes_judge_the_agents_md_marker_by_behavior(self):
+        """E2: 양성 대조(project_doc_max_bytes=0을 뺌)는 작업 폴더 AGENTS.md의 표식을 답에 붙여야 하고, 참여자 계획은
+        붙이지 않아야 한다. 모델이 그 파일을 명령으로 열었거나 참여자 계획에서 표식이 보이면 기대대로가 아니다."""
+        observe.approve(self.state, {"claude": 0, "codex": 4}, 60, "시험 승인")
+        positive = self.call("c3-codex-pos")
+        self.assertTrue(positive["as_expected"], positive)
+        self.assertEqual(positive["c3"], {"instruction_followed": True, "instruction_file_opened": False})
+        self.assertEqual(positive["argv_changes"], [f"- -c {adapters.CODEX_NO_PROJECT_DOCS}"])
+        negative = self.call("c3-codex")
+        self.assertTrue(negative["as_expected"], negative)
+        self.assertEqual(negative["c3"], {"instruction_followed": False, "instruction_file_opened": False})
+        self.assertEqual(negative["argv_changes"], [])
+        self.assertEqual(negative["spec"]["revision"], self.call_plan_revision("c3-codex"))
+        for behavior, key in (("loads-agents-md", "instruction_followed"), ("reads-agents-md", "instruction_file_opened")):
+            with self.subTest(behavior=behavior):
+                install(self.home, "codex", behavior)
+                out = self.call("c3-codex", after_failure=True)
+                self.assertTrue(out["c3"][key])
+                self.assertFalse(out["as_expected"], out)
+
+    def call_plan_revision(self, probe):
+        """참여자 계획(공통 자료 하나)의 판. c3-codex·k46-codex가 같은 판을 본다."""
+        return self.executor().plan(observe.ParticipantSpec(probe, probe, "codex", observe.CLI, "codex", "gpt-test-9"),
+                                    "q", str(self.root / "w"), inputs=(str(self.root / "in"),)).revision
 
     def test_b1_combo_is_the_participant_plan_now(self):
         observe.approve(self.state, {"claude": 1, "codex": 0}, 60, "시험 승인")

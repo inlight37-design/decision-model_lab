@@ -38,12 +38,21 @@ def participant_revision(adapter_id, **kwargs):
 
 
 def apps_off_revision(plan):
-    """E 첫 단계(2026-09-24)가 관측한 Codex 계획의 판: 지금 계획에서 E2의 두 변경을 되돌린 것 — profile은 로그인 파일
-    하나만 막고, 실행 버전 폴더는 제자리(`ro:cli`)에 보였다. 시험이 옛 판 문자열과 같은지로 되돌림을 확인한다."""
+    """E 첫 단계(2026-09-24)가 관측한 Codex 계획의 판: 지금 계획에서 E2의 세 변경을 되돌린 것 — 프로젝트 지시문을 막는
+    값이 없고, profile은 로그인 파일 하나만 막고, 실행 버전 폴더는 제자리(`ro:cli`)에 보였다. 시험이 옛 판 문자열과
+    같은지로 되돌림을 확인한다."""
     _, tmpl = plan
-    argv = [a.replace('"<home>/.codex" = "deny"', '"<home>/.codex/auth.json" = "deny"') for a in tmpl["argv"]]
+    argv = _without_config(tmpl["argv"], adapters.CODEX_NO_PROJECT_DOCS)
+    argv = [a.replace('"<home>/.codex" = "deny"', '"<home>/.codex/auth.json" = "deny"') for a in argv]
     mounts = sorted("ro:cli" if m == f"ro:cli@{isolation.CODEX_RELEASE_AT}" else m for m in tmpl["mounts"])
     return contract.revision({**tmpl, "argv": argv, "mounts": mounts})
+
+
+def _without_config(argv, value):
+    argv = list(argv)
+    index = argv.index(value)
+    del argv[index - 1:index + 1]
+    return argv
 
 
 def k46_revision(plan):
@@ -51,9 +60,8 @@ def k46_revision(plan):
 
     그 뒤 참여자 계획이 두 번 바뀌었으므로 K46 기록은 지금 계획을 뒷받침하지 않는다 — 다시 관측해야 한다."""
     _, tmpl = plan
-    argv = [a.replace('"<home>/.codex" = "deny"', '"<home>/.codex/auth.json" = "deny"') for a in tmpl["argv"]]
-    index = argv.index(adapters.CODEX_APPS_OFF)
-    del argv[index - 1:index + 1]
+    argv = _without_config(_without_config(tmpl["argv"], adapters.CODEX_NO_PROJECT_DOCS), adapters.CODEX_APPS_OFF)
+    argv = [a.replace('"<home>/.codex" = "deny"', '"<home>/.codex/auth.json" = "deny"') for a in argv]
     mounts = sorted("ro:cli" if m == f"ro:cli@{isolation.CODEX_RELEASE_AT}" else m for m in tmpl["mounts"])
     return contract.revision({**tmpl, "argv": argv, "mounts": mounts})
 
