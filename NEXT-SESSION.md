@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-25** · 작성 세션: claude(`aux-pc` Windows와 WSL `aux-pc-wsl`, 모델 호출 6회) · 브랜치 `claude/context-independence-20260925`([PR #49](https://github.com/inlight37-design/decision-model_lab/pull/49)) · 기준 main `73444cff7775b17c50309168108e8377f9a7589f`(PR #48 병합). 앞 판은 같은 세션이 #48에서 썼다.
+최종 갱신 **2026-09-25** · 작성 세션: claude(`aux-pc` WSL `aux-pc-wsl`, 모델 호출 4회) · 브랜치 `claude/strict-live-run-20260925`([PR #50](https://github.com/inlight37-design/decision-model_lab/pull/50)) · 기준 main `d9af92b`(PR #49 병합). 앞 판은 같은 세션이 #48·#49에서 썼다.
 
 현재 인계는 이 파일 하나다. 3절은 진행 중인 작업과 병합 이력, 4절은 A–F의 기존 결과와 남은 순서다. PR마다 해당 절만 고친다(부분 갱신은 Git 이력이 보관한다). 크게 다시 쓰기 전 판은 [보관본](docs/handoff/2026-09-24-before-merge-39-next-steps.md)이고 **2절·5절은 그대로다.** 다음 작업의 근거는 [병합 기록](docs/reviews/2026-09-24-merge-39/README.md), 진행 결과는 [A·F 기록](docs/reviews/2026-09-24-account-limits/README.md), [B 기록](docs/reviews/2026-09-24-source-snapshot/README.md), [C 기록](docs/reviews/2026-09-24-model-synthesis/README.md), [D 결과](docs/experiments/2026-09-24-comparison-pilot/RESULTS.md), [E 첫 단계 기록](docs/reviews/2026-09-24-codex-apps-off/README.md), [E2 기록](docs/reviews/2026-09-25-context-independence/README.md), 실제 병렬 실행은 [Windows·계정 한도·병렬 실행 기록](docs/reviews/2026-09-24-windows-live-completion/README.md)에 있다.
 
@@ -8,23 +8,23 @@
 
 1. 열린 PR·현재 main·미병합 브랜치를 먼저 확인한다(`git fetch --all --prune`, `git branch -r --no-merged origin/main`, PR 목록). 실제 GitHub 상태가 이 인계보다 우선이다.
 2. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)을 읽고 자기 브랜치에서 작업·즉시 push한다. 사용자 또는 권한 받은 Claude가 정확한 head의 CI를 확인한 뒤 병합한다.
-3. 이전 판을 쓴 claude 세션들은 `aux-pc`의 Windows와 WSL `aux-pc-wsl`에서 시험·변이 시험과 실제 호출(B: Codex 1·Claude 1, C: Claude 1, D: Codex 6·Claude 9, E: Codex 1, E2: Codex 4·Claude 2)을 했다. E·E2에서는 실제 로그인 폴더를 연결한 모델 없는 조회(Codex app-server, `codex debug prompt-input`, 네트워크 없는 `codex sandbox`·exec)도 했다. WSL의 Codex 0.156.1·Claude Code 2.1.280이 구독 로그인으로 동작했고, 띄운 서버는 끝냈다. 인증 폴더 내용은 읽지 않았다. #46·#47의 ChatGPT 웹 세션은 기록과 코드를 검토하고 오프라인 검사를 했을 뿐 사용자 PC를 보지 않았다.
+3. 이전 판을 쓴 claude 세션들은 `aux-pc`의 Windows와 WSL `aux-pc-wsl`에서 시험·변이 시험과 실제 호출(B: Codex 1·Claude 1, C: Claude 1, D: Codex 6·Claude 9, E: Codex 1, E2: Codex 4·Claude 2, strict 실행·취소: Codex 3·Claude 1)을 했다. E·E2에서는 실제 로그인 폴더를 연결한 모델 없는 조회(Codex app-server, `codex debug prompt-input`, 네트워크 없는 `codex sandbox`·exec)도 했다. WSL의 Codex 0.156.1·Claude Code 2.1.280이 구독 로그인으로 동작했고, 띄운 서버는 끝냈다. 인증 폴더 내용은 읽지 않았다. #46·#47의 ChatGPT 웹 세션은 기록과 코드를 검토하고 오프라인 검사를 했을 뿐 사용자 PC를 보지 않았다.
 4. 실측한 같은 질문을 반복하지 않는다. 필요한 새 실험에는 별도 원장·provider별 상한·멈춤 조건을 기록한다. 기존 소진 원장·권한 관측 원장·병렬 실행 원장을 지우거나 증액하지 않는다.
 5. 기존 원장은 새 코드로 열기 전 백업한다(지금 스키마 7 — 공통 자료). 최초 전체·provider별 상한은 원장에 고정되며 재시작으로 늘지 않는다.
 
 ## 1. 지금 상태
 
-**main에 PR #38·#39와 다음 작업 A·B·C·D·F, E의 첫 단계(Codex 연결 앱 끄기), 실행 경로 후속(#46·#47·#48: 합성 실행당 1회·공통 상한·종료 미확인 복구, 자료 복원 검사, 사용량 숫자 경계), E2(참여자 문맥 독립성, #49)가 병합됐다.** provider별 설정(`--live-config`)으로 실제 Codex·Claude를 동시에 부르고, 공통 자료를 같이 주고, 봉인 뒤 함께 공개하고, 원문 대조(모의)나 실행마다 켜는 실제 합성 1회까지 한다. 상한은 원장에 고정되고 시작 전 거절은 실행 수에서 빠진다. Codex 계정 한도는 화면의 명시적 조회로 본다. 시작 직전 허가·격리·봉인·수용·정족수 정책은 그대로다. 별도 오케스트레이터·큐·SDK·유료 API는 없다. 설계 용어로는 `cross_check`(2인 독립 → 대조 → 합성)가 처음으로 끝까지 실제로 돌았다(C). 합성의 인용은 원문과 글자 그대로 대조할 뿐 **사실 검증이 아니다**.
+**main에 PR #38·#39와 다음 작업 A·B·C·D·F, E의 첫 단계(Codex 연결 앱 끄기), 실행 경로 후속(#46·#47·#48: 합성 실행당 1회·공통 상한·종료 미확인 복구, 자료 복원 검사, 사용량 숫자 경계), E2(참여자 문맥 독립성, #49)가 병합됐다. strict 첫 실제 실행·중도 취소 기록은 3절의 PR에 있다.** provider별 설정(`--live-config`)으로 실제 Codex·Claude를 동시에 부르고, 공통 자료를 같이 주고, 봉인 뒤 함께 공개하고, 원문 대조(모의)나 실행마다 켜는 실제 합성 1회까지 한다. 상한은 원장에 고정되고 시작 전 거절은 실행 수에서 빠진다. Codex 계정 한도는 화면의 명시적 조회로 본다. 시작 직전 허가·격리·봉인·수용·정족수 정책은 그대로다. 별도 오케스트레이터·큐·SDK·유료 API는 없다. 설계 용어로는 `cross_check`(2인 독립 → 대조 → 합성)가 처음으로 끝까지 실제로 돌았다(C). 합성의 인용은 원문과 글자 그대로 대조할 뿐 **사실 검증이 아니다**.
 
 | 항목 | 상태 |
 |---|---|
 | Windows 검사 | UTF-8 출력 패치와 CP1252 회귀(#39). 병합 검토에서 나머지 검증 도구 넷의 같은 문제를 찾아 고쳤고, Windows CI가 6절의 검증 도구를 단계별로 돈다([N1](docs/reviews/2026-09-24-merge-39/README.md)) |
-| 실제 동시 실행 | Codex·Claude 동시 running, 봉인 중 초안 비노출, 두 답 수용·공개, 추가 호출 없는 원문 대조를 확인(#39, 합성 질문 한 건). **공통 자료가 있는 실행**도 확인: 두 답이 같은 자료의 표식·내용을 인용했고 보고서가 자료 목록·해시를 싣는다([B 기록](docs/reviews/2026-09-24-source-snapshot/README.md), 합성 자료 한 파일) |
+| 실제 동시 실행 | Codex·Claude 동시 running, 봉인 중 초안 비노출, 두 답 수용·공개, 추가 호출 없는 원문 대조를 확인(#39, 합성 질문 한 건). **공통 자료가 있는 실행**도 확인: 두 답이 같은 자료의 표식·내용을 인용했고 보고서가 자료 목록·해시를 싣는다([B 기록](docs/reviews/2026-09-24-source-snapshot/README.md), 합성 자료 한 파일). **strict 정책 실행**(2026-09-25): 두 참여자가 독립성 확인으로 세어져 독립 정족수를 채웠고, Codex가 처음 실제 합성을 했으며(인용 11/11 원문 일치), 실행 중인 CLI를 취소해 자손 종료까지 확인했다([기록](docs/reviews/2026-09-25-strict-live-run/README.md)) |
 | 계정 한도 | Codex: `app/codex_account.py`가 격리된 메타데이터 조회를 소유. 화면의 명시적 조회만 프로세스를 띄우고 평소 GET은 캐시만 읽는다. 같은 조회가 `model/list`로 요청 모델이 이 계정의 가용 목록에 있는지도 본다(실제 조회로 확인, 추론 없음). Claude: 마지막으로 끝난 실제 Claude 실행의 stream `rate_limit_event`를 보인다(추가 호출 없음). 봉인 중인 실행·모의 실행의 값은 쓰지 않는다. B의 실제 실행에서 사건·화면·봉인 중 숨김을 확인했다 |
 | Claude 권한 | 설치판 2.1.280, 지금 계획 `claude-code@a35129c5a1dc`(stream-json/Read/입력 폴더 하나, `--restricted --safe-mode`)에서 init의 도구 Read·MCP 0·dontAsk와 금지된 합성 peer 파일의 Read 거절을 관측(E2). 다른 판의 증거를 복사하지 않음 |
 | 실행 관측 기록 | [E2 manifest](docs/reviews/2026-09-25-context-independence/manifest.v2.json). Codex `codex@bba3751a36f3`·Claude `claude-code@a35129c5a1dc`, 둘 다 입력 폴더 하나. 판은 경로·내용이 아니라 역할만 보므로 그 폴더에 자료가 있어도 같은 판이다(`core/contract.template`). 날짜·설치판·계획이 바뀌면 준비 조회를 다시 한다. 앞의 [E manifest](docs/reviews/2026-09-24-codex-apps-off/manifest.v2.json)·[#39 manifest](docs/reviews/2026-09-24-windows-live-completion/manifest.v2.json)로는 지금 계획이 거절된다 |
-| 독립성·모델 | **E2에서 두 지금 계획의 문맥(C3)을 observed로 기록했고, 앱 준비 조회가 strict에서 두 provider를 허가했다**(모델 호출 없음). Claude는 `--safe-mode`를 더했고, Codex는 모델의 명령에게 `~/.codex` 전체를 막고(실행 파일은 격리 안 `/opt/dml-codex`) 작업 폴더 AGENTS.md를 싣지 않으며 전역 AGENTS.md가 있으면 거절한다. 근거는 작업 폴더 지시문 파일로 한 양성·음성 행동 대조와 모델 없는 입력 렌더링이다. 이 PC·판·설치판·30일에 한정되고 최종 요청 전체는 보지 못한다. 앱에서 strict로 두 참여자를 부른 실행은 아직 없다. Claude 보고 모델 일치, Codex 제공 모델 미보고 |
-| 원장·서버 | 이전 원장 보존. #39 병렬 원장은 전체 2/2 소진. B·C 원장 `~/.local/state/dml-live-b-20260924`(aux-pc-wsl)은 전체 3/3·Codex 1/1·Claude 2/2로 소진(참여자 2 + 합성 1). D 원장은 [결과](docs/experiments/2026-09-24-comparison-pilot/RESULTS.md)에 적은 대로 소진. E의 K46 상태 폴더 `~/.local/state/dml-observe-e-20260924`는 Codex 1/1 소진. E2의 상태 폴더 `~/.local/state/dml-observe-e2-20260925`는 두 승인 창(Claude 2·Codex 1, Codex 3)을 모두 썼다. 이전 claude 세션은 자신이 띄운 서버 종료를 확인했다(포트 닫힘·잠금 해제). #48·#49의 claude 세션은 서버를 띄우지 않았다 |
+| 독립성·모델 | **E2에서 두 지금 계획의 문맥(C3)을 observed로 기록했고, 앱 준비 조회가 strict에서 두 provider를 허가했다**(모델 호출 없음). Claude는 `--safe-mode`를 더했고, Codex는 모델의 명령에게 `~/.codex` 전체를 막고(실행 파일은 격리 안 `/opt/dml-codex`) 작업 폴더 AGENTS.md를 싣지 않으며 전역 AGENTS.md가 있으면 거절한다. 근거는 작업 폴더 지시문 파일로 한 양성·음성 행동 대조와 모델 없는 입력 렌더링이다. 이 PC·판·설치판·30일에 한정되고 최종 요청 전체는 보지 못한다. 그 위에서 앱의 strict 실행이 독립 정족수를 채웠다(판정이지 두 판단의 독립 증명은 아니다). Claude 보고 모델 일치, Codex 제공 모델 미보고 |
+| 원장·서버 | 이전 원장 보존. #39 병렬 원장은 전체 2/2 소진. B·C 원장 `~/.local/state/dml-live-b-20260924`(aux-pc-wsl)은 전체 3/3·Codex 1/1·Claude 2/2로 소진(참여자 2 + 합성 1). D 원장은 [결과](docs/experiments/2026-09-24-comparison-pilot/RESULTS.md)에 적은 대로 소진. E의 K46 상태 폴더 `~/.local/state/dml-observe-e-20260924`는 Codex 1/1 소진. E2의 상태 폴더 `~/.local/state/dml-observe-e2-20260925`는 두 승인 창(Claude 2·Codex 1, Codex 3)을 모두 썼다. strict 원장 `~/.local/state/dml-live-strict-20260925`는 3/3(Codex 2·Claude 1), 취소 원장 `~/.local/state/dml-live-cancel-20260925`는 1/1 소진. 이전 claude 세션들은 자신이 띄운 서버 종료를 확인했다(포트 닫힘·잠금 해제). #50의 세션은 두 번 서버를 띄웠고 둘 다 끈 뒤 포트 닫힘과 남은 프로세스 없음을 확인했다 |
 | CI·병합 | #39 정확한 head(`948f5a3`)의 push·PR CI와 병합 뒤 main CI가 Linux·Windows 모두 성공. 변이 시험에서 빠진 두 곳(M6·M11)은 시험을 더해 막았다([기록](docs/reviews/2026-09-24-merge-39/README.md)) |
 
 주인 모듈: [core](core/README.md)는 실행·격리·허가·한도 응답 투영, [app](app/README.md)은 controller·원장·계정 조회·화면, [tools/w2](tools/w2/README.md)는 관측이다. 날짜가 붙은 과거 관측은 고치지 않았다.
@@ -58,7 +58,7 @@
 
 ## 3. 진행 중인 작업
 
-**진행 중인 작업 없음.** 실제 상태는 0절대로 GitHub에서 확인한다. 다음은 4절의 순서대로다.
+**진행 중: [PR #50](https://github.com/inlight37-design/decision-model_lab/pull/50)(`claude/strict-live-run-20260925`) — 최종 head의 CI 녹색을 확인한 뒤 claude 세션이 병합한다(2절 8). 병합 직전에 이 문단을 지운다.** 코드 변경 없는 기록 PR: strict 첫 실제 두 참여자 실행(독립 정족수 충족), 첫 Codex 실제 합성, 실제 CLI 중도 취소(V04-03의 마지막 조건). 모델 호출 4회(Codex 3·Claude 1). [기록](docs/reviews/2026-09-25-strict-live-run/README.md). 실제 상태는 0절대로 GitHub에서 확인한다.
 
 - **마지막 병합:** [PR #49](https://github.com/inlight37-design/decision-model_lab/pull/49)(`claude/context-independence-20260925`) — 4절 E의 두 번째 단계(E2). 두 참여자 계획의 문맥 통로를 좁히고(Claude `--safe-mode`, Codex `~/.codex` 전체 금지·실행 파일 `/opt/dml-codex`·작업 폴더 AGENTS.md 비적재·전역 AGENTS.md 거절), 행동 표식 양성·음성 대조로 C3를 관측해 새 manifest로 strict 허가를 얻었다. 모델 호출 6회(Claude 2·Codex 4). claude 세션이 병합했다(2절 8). [기록](docs/reviews/2026-09-25-context-independence/README.md).
 - **그 앞:** [PR #48](https://github.com/inlight37-design/decision-model_lab/pull/48)(`claude/runtime-audit-merge-20260925`) — ChatGPT 웹 세션의 [PR #46](https://github.com/inlight37-design/decision-model_lab/pull/46)(`chatgpt/runtime-review-20260925`: 실제 합성의 실행당 1회·공통 상한·종료 미확인 복구·사용자 종료 확인, [기록](docs/reviews/2026-09-25-runtime-review/README.md))과 [PR #47](https://github.com/inlight37-design/decision-model_lab/pull/47)(`chatgpt/runtime-audit-finish-20260925`, #46 포함: #46 재검토·자료 복원 검사 R2·R1 재현·아키텍처 판단, [감사 기록](docs/reviews/2026-09-25-runtime-audit-finish/README.md))을 그대로 포함하고, #47이 원격에 올리지 못한 사용량 파서(R1)와 새로 찾은 사용량 칸의 NaN(U1)을 고쳤다. 두 PR은 #48과 함께 병합됨으로 표시된다. 모델 호출 0회. claude 세션이 병합했다(2절 8). [검토·병합 기록](docs/reviews/2026-09-25-merge-46-47/README.md).
@@ -83,7 +83,7 @@
 
 ## 4. 다음 작업
 
-V04-03(두 provider의 읽기 전용 독립 답변, [완료 조건](docs/architecture/v0.4/03-evaluation-and-roadmap.md))은 #39로 거의 채웠다 — 실제 두 참여자, 입력·초안 digest, 권한 거절, 종료 관측, 사용량 범위. 남은 것은 실제 CLI를 실행 중에 취소하는 관측 하나다(모의 CLI로는 시험했다). 아래 A–F는 그 뒤 진행한 구현·관측의 이력이다. **현재 순서는 strict 정책의 실제 두 참여자 실행 → 실제 취소·자료 실험 → D 후속 비교**다. E2는 로그인 파일을 복사하지 않는 길(CLI 자신의 폴더는 그대로 쓰기, 모델의 명령만 막기, CLI 옵션으로 적재 끄기)로 끝냈으므로 인증 갱신·동시성 설계는 필요 없어졌다. 이미 끝난 A–D를 처음부터 다시 호출하지 않는다. 새 프레임워크·SDK·유료 API는 추가하지 않는다. 실제 호출은 모두 새 원장·provider별 상한·멈춤 조건으로 하고 결과를 기록한다(2절 22). 근거가 된 사실 확인은 [병합 기록 7절](docs/reviews/2026-09-24-merge-39/README.md)에 있다.
+V04-03(두 provider의 읽기 전용 독립 답변, [완료 조건](docs/architecture/v0.4/03-evaluation-and-roadmap.md))은 #39로 거의 채웠고 — 실제 두 참여자, 입력·초안 digest, 권한 거절, 종료 관측, 사용량 범위 — 마지막 조건이던 실제 CLI 중도 취소를 2026-09-25에 관측했다([기록](docs/reviews/2026-09-25-strict-live-run/README.md)). 아래 A–F는 그 뒤 진행한 구현·관측의 이력이다. **현재 순서는 자료 실험(자료 속 지시문·긴 자료·여러 파일) → D 후속 비교(합성자 교체·충돌 과제·blind 채점)**다. strict 정책의 실제 두 참여자 실행은 같은 기록에서 독립 정족수를 채웠다. E2는 로그인 파일을 복사하지 않는 길(CLI 자신의 폴더는 그대로 쓰기, 모델의 명령만 막기, CLI 옵션으로 적재 끄기)로 끝냈으므로 인증 갱신·동시성 설계는 필요 없어졌다. 이미 끝난 A–D를 처음부터 다시 호출하지 않는다. 새 프레임워크·SDK·유료 API는 추가하지 않는다. 실제 호출은 모두 새 원장·provider별 상한·멈춤 조건으로 하고 결과를 기록한다(2절 22). 근거가 된 사실 확인은 [병합 기록 7절](docs/reviews/2026-09-24-merge-39/README.md)에 있다.
 
 | 순서 | 할 일 | 구체 작업 | 완료 조건 | 모델 호출 |
 |---|---|---|---|---|
@@ -98,10 +98,9 @@ V04-03(두 provider의 읽기 전용 독립 답변, [완료 조건](docs/archite
 
 ### 남은 범위와 정리 후보
 
-- 앱에서 strict 정책(`independent_only`)으로 두 참여자를 부르는 실제 실행은 아직이다(E2 manifest로 `--live-config`, 새 원장, 호출 2 + 선택 합성 1). 독립 정족수 충족 표시와 공개까지 본다.
-- 실제 CLI를 실행 중에 취소하는 관측(V04-03의 마지막 조건)은 아직이다. 호출 1회가 들며, D의 사전 등록에는 넣지 않았다.
+- strict 실행과 중도 취소는 [기록](docs/reviews/2026-09-25-strict-live-run/README.md)의 [drive.py](docs/reviews/2026-09-25-strict-live-run/drive.py)로 다시 할 수 있다(새 원장 폴더, 먼저 `--mock`으로 흐름 확인). 모델이 답을 쓰는 도중의 취소와 취소 시점에 요청이 공급자에 닿았는지는 보지 않았다.
 - E2 부수 발견: 문맥 옵션 없이 Claude Code를 돌리면 계정의 플러그인·스킬이 `~/.claude/*/synced`로 동기화된다(aux-pc-wsl에 남아 있음, 참여자 계획은 싣지 않음). 자료 이름 규칙은 `AGENTS.md`·`CLAUDE.md`를 허용하므로 자료 속 지시문 실험 때 함께 본다.
-- D의 후속: 합성자를 Codex로 바꾼 같은 비교, 제약이 서로 충돌하는 설계 과제, blind 채점([결과](docs/experiments/2026-09-24-comparison-pilot/RESULTS.md)의 한계). 공통 자료 속 지시문(프롬프트 주입)과 긴 자료·여러 파일은 B 뒤에도 시험하지 않았다.
+- D의 후속: 합성자를 Codex로 바꾼 같은 비교(Codex 합성 자체는 strict 실행에서 한 번 관측했다 — 비교는 아니다), 제약이 서로 충돌하는 설계 과제, blind 채점([결과](docs/experiments/2026-09-24-comparison-pilot/RESULTS.md)의 한계). 공통 자료 속 지시문(프롬프트 주입)과 긴 자료·여러 파일은 B 뒤에도 시험하지 않았다.
 - Codex의 Windows 경로(`--sandbox read-only`)에는 연결 앱 끄기를 넣지 않았다. Windows에서는 Codex를 blind 참여자로 쓰지 않는다(2절 15). 쓰게 되면 같은 조회로 먼저 확인한다.
 - 네트워크 공유(K08), CPU/메모리 상한(K10), TOCTOU(K14), 수동 독립성(K21·K22), 일반 Ubuntu 정책(K13), 별도 PC(K35)는 닫지 않았다. 원본 앱 사용량/품질 비교(2절 17), 접근성 전수·교차 브라우저·원장 규모별 비용·디자인 아티팩트도 남는다.
 - 낮은 우선순위: `--check-cli`의 종료 코드 2가 허가 없음과 인자 오류를 가르지 못함([병합 검증 N3](docs/reviews/2026-09-24-merge-31-32/README.md)), Bearer help 과가림, Hermes HP-04–HP-10, 원장 recheck, 외부 리뷰 L1–L4, 저장소 설명·토픽. 목록의 출처는 [이전 인계](docs/handoff/2026-09-24-before-cli-unblock.md) 4절이다.
