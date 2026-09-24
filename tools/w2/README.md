@@ -4,7 +4,7 @@
 
 | 파일 | 무엇 |
 |---|---|
-| [`codex_account.py`](codex_account.py) | `app.codex_account`의 진단 진입점. 기본은 계획만, `--probe --data-dir <원장>`은 승인된 격리 메타데이터 조회. 화면의 명시적 갱신도 같은 구현을 사용하며 모델을 부르지 않는다 |
+| [`codex_account.py`](codex_account.py) | `app.codex_account`의 진단 진입점. 기본은 계획만, `--probe --data-dir <원장>`은 승인된 격리 메타데이터 조회(한도와 `model/list`의 가용 모델 이름). 화면의 명시적 갱신도 같은 구현을 사용하며 모델을 부르지 않는다 |
 | [`claude_preflight.py`](claude_preflight.py) | Claude 재관측 준비(모델 호출 없음). `plan --model <전체 이름>`은 controller 그대로인 stream-json·빈 도구·자료 없는 판과 과거 json 진단 판을 비교한다. `preflight --model <전체 이름>`은 합성 HOME에서 version/help만 실행하며, 승인된 `--real-auth`는 로그인 상태만 확인한다. `assess <결과 JSON> --revision <검토한 판>`은 plain-claude의 전송 증거와 같은 판 b1의 지정된 합성 peer 파일 Read 거절을 구별한다. 후자만 권한 증거를 뒷받침하며 문맥 미확인은 유지한다. 결과 JSON·init·모델 자기 보고로 문맥을 observed로 바꾸지 않는다. [관측과 호출 선택지](../../docs/experiments/w2-isolation/2026-09-24-claude-preflight/README.md) |
 | [`cli_boundary.py`](cli_boundary.py) | 설치된 Claude Code·Codex를 [`core/isolation.py`](../../core/isolation.py)의 참여자 경계 안에서 실행한다. `--version`, 로그인 상태(모델 호출 아님), 다른 CLI 인증·HOME·`/mnt/c`가 보이는지. 계정 이메일·조직 ID·요금제는 출력에서 버린다. WSL·Linux에서 저장소 루트로 `python3 tools/w2/cli_boundary.py` |
 | [`auth_mounts.py`](auth_mounts.py) | N3(K09). 인증·설정 연결 조합을 바꿔 가며 격리 안에서 `--version`과 로그인 상태만 실행한다 — 모델 호출 없음. 좁힌 조합은 모두 읽기 전용. 이메일·긴 토큰 모양 문자열은 출력에서 지운다. 결과: [auth-mounts-aux-pc-wsl.md](../../docs/experiments/w2-isolation/auth-mounts-aux-pc-wsl.md) |

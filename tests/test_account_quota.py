@@ -9,6 +9,7 @@ from unittest.mock import Mock
 
 from app.account_quota import AccountQuota
 from app.server import _Server, make_handler
+from core.quota import claude_limit
 from tools.review_boundary import quota_projection
 
 
@@ -22,7 +23,34 @@ class QuotaTests(unittest.TestCase):
         return {'tree_confirmed_empty': True, 'inference_requests_sent': 0,
                 'quota': quota_projection({'rateLimits': {'primary': {
                     'usedPercent': 25, 'windowDurationMins': 300, 'resetsAt': self.now + 90}}},
-                    observed_at=self.now, now=self.now)}
+                    observed_at=self.now, now=self.now),
+                'models': {'status': 'observed', 'ids': ['gpt-test'], 'truncated': False}}
+
+    def test_claude_section_only_reads_the_last_real_run_and_ages(self):
+        limit = claude_limit({'status': 'allowed', 'unifiedWindows': {'five_hour': {'utilization': 0.4}}})
+        calls = []
+
+        def last_claude():
+            calls.append(1)
+            return {**limit, 'observed_at': 1000}
+        quota = AccountQuota(Path('/ledger'), enabled=False, reader=self.reader, clock=lambda: self.now,
+                             claude=last_claude)
+        view = quota.view()
+        self.assertTrue(view['claude']['configured'])
+        self.assertEqual(view['claude']['quota']['limits'][0]['used_percent'], 40.0)
+        self.assertEqual(view['claude']['quota']['status'], 'observed')
+        quota.refresh()   # Codex가 없으면 조회 프로세스가 없고, Claude에는 조회 자체가 없다
+        self.reader.assert_not_called()
+        self.now += 121
+        self.assertEqual(quota.view()['claude']['quota']['status'], 'stale')
+        self.assertFalse(self.quota.view()['claude']['configured'])
+        self.assertIsNone(self.quota.view()['claude']['quota'])
+
+    def test_model_names_come_only_from_an_explicit_refresh(self):
+        quota = AccountQuota(Path('/ledger'), enabled=True, reader=self.reader, clock=lambda: self.now,
+                             codex_model='gpt-test')
+        self.assertEqual((quota.view()['requested_model'], quota.view()['models']), ('gpt-test', None))
+        self.assertEqual(quota.refresh()['models']['ids'], ['gpt-test'])
 
     def test_reads_never_query_and_repeat_refreshes_are_coalesced(self):
         self.assertIsNone(self.quota.view()['quota'])

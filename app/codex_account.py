@@ -1,8 +1,9 @@
 """Bounded, explicit account-metadata probe; never sends thread/start or turn/start.
 
 Default is a no-process plan. --probe uses the existing bubblewrap boundary and runner.
-Only a quota allowlist leaves the sandbox; account identity, credentials, stderr and raw
-protocol messages are not saved. Native 0.156.1 was observed on the user's WSL; other versions
+Only the quota allowlist and model names from model/list leave the sandbox; account identity,
+credentials, display names, stderr and raw protocol messages are not saved. A model in the list is
+available to the account; it does not prove which model answered a turn. Native 0.156.1 was observed on the user's WSL; other versions
 need their own compatibility check. Source: https://developers.openai.com/codex/app-server (2026-09-24).
 """
 from __future__ import annotations
@@ -21,14 +22,19 @@ import time
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
-from core.quota import quota_projection
+from core.quota import model_ids, quota_projection
 
-METHODS = ("initialize", "initialized", "account/read", "account/rateLimits/read")
+METHODS = ("initialize", "initialized", "account/read", "account/rateLimits/read", "model/list")
 MAX_BYTES = 1024 * 1024
 
 
 class ProtocolError(ValueError):
     """Fixed messages only; never put provider response text in an exception."""
+
+
+class MethodRefused(ProtocolError):
+    """The server answered this request with an error. Other ProtocolErrors (timeouts, server requests,
+    agent activity) still stop the whole probe."""
 
 
 def helper_argv(exe: str) -> tuple[str, ...]:
@@ -92,7 +98,7 @@ def query(argv: tuple[str, ...], *, timeout: float = 10) -> dict:
                     if type(message.get("id")) is not int or message["id"] != request_id:
                         continue
                     if "error" in message or not isinstance(message.get("result"), dict):
-                        raise ProtocolError("metadata method unavailable or refused")
+                        raise MethodRefused("metadata method unavailable or refused")
                     return message["result"]
 
             send("initialize", {"clientInfo": {"name": "decision_model_lab_quota", "version": "0.1"}}, 0)
@@ -107,8 +113,18 @@ def query(argv: tuple[str, ...], *, timeout: float = 10) -> dict:
             payload = receive(2)
             now = int(time.time())
             projection = quota_projection(payload, observed_at=now, now=now)
-            return {"schema": "codex-account-observation/1", "inference_requests_sent": 0,
-                    "quota": projection}
+            # 이 계정의 가용 모델 목록(추론 없음). 실제로 답한 모델의 보고가 아니다. 목록만 거절되면 한도는 살린다.
+            send("model/list", {"limit": 100, "includeHidden": False}, 3)
+            try:
+                listed = receive(3)   # 시간 초과·서버 요청·에이전트 활동은 여기서 잡지 않는다 — 조회 전체를 멈춘다
+            except MethodRefused:
+                listed = None
+            try:
+                models = {"status": "unavailable"} if listed is None else model_ids(listed)
+            except ValueError:   # 목록의 모양만 다르다. receive()의 ProtocolError는 위에서 이미 지나갔다
+                models = {"status": "unavailable"}
+            return {"schema": "codex-account-observation/2", "inference_requests_sent": 0,
+                    "quota": projection, "models": models}
     finally:
         if proc.stdin:
             try:
