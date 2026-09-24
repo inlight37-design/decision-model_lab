@@ -1,8 +1,8 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-24** · 작성 세션: chatgpt (GitHub 연결 + 격리된 분석 컨테이너, 사용자 PC·로그인된 CLI 접근 없음) · 브랜치 `chatgpt/a1-integrity-20260924` · [PR #18](https://github.com/inlight37-design/decision-model_lab/pull/18)
+최종 갱신 **2026-09-24** · 작성 세션: chatgpt (GitHub 연결 + 격리된 분석 컨테이너, 사용자 PC·로그인된 CLI 접근 없음) · 브랜치 `chatgpt/lean-cancellation-20260924` · [PR #20](https://github.com/inlight37-design/decision-model_lab/pull/20), main 대상 후속
 
-현재 인계는 이 파일 하나다. 완료 이력이 다음 일을 가리지 않도록 정리했다. **이전 판 전체는 [보관본](docs/handoff/2026-09-24-before-a1-integrity.md)에 바이트 그대로 있다.** 사용자 결정(2절)과 금지 사항(5절)은 유지했고, 기기 관측·승인·명세 판정을 바꾸지 않았다. 검토·수정·검증 범위는 [이번 기록](docs/reviews/2026-09-24-a1-integrity/README.md)에 있다.
+현재 인계는 이 파일 하나다. 완료 이력이 다음 일을 가리지 않도록 정리했다. **이전 판 전체는 [보관본](docs/handoff/2026-09-24-before-a1-integrity.md)에 바이트 그대로 있다.** 사용자 결정(2절)과 금지 사항(5절)은 유지했고, 기기 관측·승인·명세 판정을 바꾸지 않았다. 직전 수정은 [PR #18 기록](docs/reviews/2026-09-24-a1-integrity/README.md), 간결성 점검·지속 취소·자원 정리는 [간결성 검토 기록](docs/reviews/2026-09-24-lean-lifecycle/README.md)에 있다. 이 판은 이전 인계의 필요한 부분만 고쳤으며 2절·5절 원문과 승인 경계를 유지했다.
 
 ## 0. 먼저 확인할 것
 
@@ -14,17 +14,17 @@
 
 ## 1. 지금 상태
 
-**A1은 독립 초안 공개 후 `report_without_synthesis` JSON을 저장할 수 있다. 합성자·주장 검증·결정 카드는 아직 없다.** 화면 서버는 모의 실행기만 쓴다. 이번 PR은 실제 모델을 부르지 않고 원장 오류 복구, 제어 API, 보고서 내보내기와 좁은 화면 배치를 고쳤다. 기존 실행 명세·격리·실행 허가·기기 관측 판정은 그대로다.
+**A1은 독립 초안 공개 후 `report_without_synthesis` JSON을 저장할 수 있다. 합성자·주장 검증·결정 카드는 아직 없다.** 화면 서버는 모의 실행기만 쓴다. PR #18의 원장·HTTP·보고서 수정에 이어, 이번 PR은 실제 모델 호출 없이 지속 취소(K19), 작업 스레드 수명, 필요한 사건만 읽는 조회와 HTTP 연결/I/O 상한을 구현했다. 기존 runner의 취소 경로를 재사용하며 새 실행 엔진·서비스·런타임 의존성을 추가하지 않았다. 기존 실행 명세·격리·실행 허가·기기 관측 판정은 그대로다.
 
 | 부품 | 책임과 현재 경계 |
 |---|---|
-| [`core/runner.py`](core/runner.py) | 셸 없이 한 번 실행. 입력 전달, 추적 단위 종료, 전체 자손 종료를 구분한다. 격리 없는 POSIX의 전체 종료는 미확인이다 |
+| [`core/runner.py`](core/runner.py) | 셸 없이 한 번 실행. 프로세스 생성 전/입력 청크 사이 취소 확인, 잔류 스레드 집계 잠금. 입력 전달·추적 단위·전체 자손 종료를 구분하며 격리 없는 POSIX 전체 종료는 미확인이다 |
 | [`core/adapters.py`](core/adapters.py), [`env.py`](core/env.py) | CLI별 읽기 전용 명세와 결과 판정, 자식 환경·실행 파일 검사. 기록은 질문 원문이 없는 `ExecutionSpec.record()`로 한다 |
 | [`core/isolation.py`](core/isolation.py) | 참여자 진입점 `isolation.run()` 하나. 파일 허용 목록·빈 HOME/tmp·PID namespace·`never` 충돌 검사. 네트워크 공유와 자원 상한 부재는 남는다 |
 | [`core/membership.py`](core/membership.py), [`eligibility.py`](core/eligibility.py) | 구성 변경·정족수와 실행 허가 계산. 허가는 근거·날짜·설치 버전·구독·현재 `spec_revision` 관측을 요구한다. 기록 자체의 진실성은 증명하지 않는다 |
-| [`app/controller.py`](app/controller.py), [`store.py`](app/store.py) | 고정 입력 → 예약 → 수용 관문 → 봉인 → 공개의 유일한 상태 권위. 한 원장/한 controller, 시도 ID 조건부 전이, 늦은 결과 배제, 재시작 시 unknown. 거래 시작/커밋 실패의 잠금·열린 거래 복구를 보강했다 |
-| [`app/report.py`](app/report.py) | **새 기능.** controller가 공개한 실행만 원문·출처·고정 정족수·실패 포함 예산과 함께 JSON으로 투영. 합성·추천·사실 검증·추가 호출·원장 변경 없음 |
-| [`app/server.py`](app/server.py), [`화면`](app/static/index.html) | 토큰이 필요한 localhost API와 빌드 없는 HTML/JS. 엄격한 요청 본문·Origin·frame 방어·소켓 유휴 제한. 공개 뒤 보고서 저장 버튼. 전체 요청 시간/연결 수 상한은 아님 |
+| [`app/controller.py`](app/controller.py), [`store.py`](app/store.py) | 고정 입력 → 예약 → 수용 관문 → 봉인 → 공개의 유일한 상태 권위. 한 원장/한 controller, 시도 ID 조건부 전이, 늦은 결과 배제, 재시작 시 unknown. 거래 실패 복구에 이어 취소 의도를 영속화하고 COMMIT 뒤 신호를 보낸다. 늦은 답은 받지 않고 미확인 종료의 자리·예약 예산은 유지한다. 끝난 작업은 활성 스레드 목록에서 제거한다 |
+| [`app/report.py`](app/report.py) | controller가 공개한 해당 실행만 원문·출처·고정 정족수·실패 포함 예산과 함께 JSON으로 투영. 합성·추천·사실 검증·추가 호출·원장 변경 없음 |
+| [`app/server.py`](app/server.py), [`화면`](app/static/index.html) | 토큰이 필요한 localhost API와 빌드 없는 HTML/JS. 엄격한 요청 검사와 취소/보고 버튼. 인증 전 포함 동시 연결 상한, 소켓 유휴 및 연결별 I/O 기한. Python 계산 전체의 시간·CPU·메모리 상한은 아님 |
 | [`app/cli_executor.py`](app/cli_executor.py) | 실제 Linux CLI 경로는 있지만 서버에 연결하지 않았다. 시도마다 기록으로 허가 계산. 관측 도구는 `prepare()`를 재사용하며 실제 controller의 `execute()` 호출 관측과는 다르다(K17) |
 | [`tools/w2/observe.py`](tools/w2/observe.py) | 실제 관측 호출의 단일 경로. 승인·예약 잠금, provider별 예산, 수용 관문, K46 nonce/helper/errno, 큰 입력 가운데·끝 표식, 최종 가림 |
 | [`tools/w2/`](tools/w2/README.md) | 모델 없는 CLI·인증 연결·Codex sandbox/profile 진단. 실제 로그인 폴더 연결도 승인 뒤에만. 합성 HOME을 먼저 쓴다 |
@@ -41,7 +41,7 @@
 
 ### 기록과 열린 결정
 
-검토는 [목록](docs/reviews/README.md) 시간순으로 읽는다. 최근 이전 리뷰는 [PR #14 원문과 반영](docs/reviews/2026-09-24-review/README.md), 그 뒤 이번 [PR #18 검토·수정](docs/reviews/2026-09-24-a1-integrity/README.md)이다. 예전 요청서가 아직 답을 기다리는 것은 아니다. [Hermes 조사·교차 확인](docs/research/hermes-2026-09-23/CROSSCHECK.md), [tmux 조사](docs/research/tmux-2026-09-23/README.md)는 후보이지 채택된 실행 엔진이 아니다.
+검토는 [목록](docs/reviews/README.md) 시간순으로 읽는다. 최근 이전 리뷰는 [PR #14 원문과 반영](docs/reviews/2026-09-24-review/README.md), 그 뒤 [PR #18 검토·수정](docs/reviews/2026-09-24-a1-integrity/README.md), [간결성·수명 관리](docs/reviews/2026-09-24-lean-lifecycle/README.md)다. 예전 요청서가 아직 답을 기다리는 것은 아니다. [Hermes 조사·교차 확인](docs/research/hermes-2026-09-23/CROSSCHECK.md), [tmux 조사](docs/research/tmux-2026-09-23/README.md)는 후보이지 채택된 실행 엔진이 아니다.
 
 | ID | 상태 |
 |---|---|
@@ -77,11 +77,12 @@
 
 ## 3. 진행 중인 작업
 
-**[PR #18](https://github.com/inlight37-design/decision-model_lab/pull/18), `chatgpt/a1-integrity-20260924`: 이번 전체 검토·수정과 A1 모의 후속.** 시작 main은 `28a18676842f31cd25a0629b2efdc8c3686b46df`. ChatGPT는 병합하지 않았다. 다음 세션은 PR 상태와 CI의 정확한 head를 다시 확인한다. 완료된 PR의 상태가 이 문서와 다르면 GitHub가 기준이다.
+**[PR #20](https://github.com/inlight37-design/decision-model_lab/pull/20), `chatgpt/lean-cancellation-20260924`: 간결성 검토·지속 취소·자원 수명 정리.** main을 대상으로 한다. 시작점은 PR #18의 `2e9a74731770b59f2c57f154abe28a9d84654154`이며, 작업 중 다른 세션이 PR #18을 `99d9bb44720bed2d6917dd4626eb8a172af5ab23`로 main에 병합했다. 두 commit의 파일 tree는 같다. ChatGPT는 main이나 이전 세션 브랜치를 변경·병합하지 않았다.
 
-- 코드 체크포인트: `f501103c61e4bfb29f4fe012cff452116e529e1b`(원장·HTTP), `a2e94695d34ae046d8687cf4fa2dbdd27279dcb6`(합성 없는 보고·화면). 상세 결과와 남은 범위는 [검토 기록](docs/reviews/2026-09-24-a1-integrity/README.md). 보고서에는 민감한 질문·초안이 들어가므로 자동 커밋/업로드하지 않는다.
-- 시작할 때 다른 열린 PR은 없었다. 병합된 PR #14–#17의 경위는 [직전 인계](docs/handoff/2026-09-24-before-a1-integrity.md) 3절과 Git 로그에 보존했다. R08의 가운데·끝 표식 판정 보강은 이미 main에 있었다.
-- 이전 브랜치 정리 기능 [prune-merged-branches](.github/workflows/prune-merged-branches.yml)는 손으로만 실행한다. main에 모두 들어간 브랜치만 지우며 `dry_run`으로 먼저 본다. 이번 작업 브랜치는 아직 지우지 않는다. 자동 삭제 설정은 저장소 주인의 선택이다.
+- **PR 번호 변경:** 처음에는 PR #18 위에 PR #19를 열었지만, 2026-09-24 13:01:37 KST 기준 브랜치 삭제로 GitHub가 PR #19를 자동으로 닫았다. 삭제된 base 때문에 재개/대상 변경도 거절되어 같은 작업 브랜치에서 main 대상 PR #20을 열었다. 코드와 커밋은 보존됐다. 날짜가 박힌 검토 기록의 PR #19/병합 순서는 당시 상태이며, 현재 통합 상태는 이 절과 [목록 단서](docs/reviews/README.md)가 대체한다.
+- **병합 경계:** PR #18은 이미 병합됐다. 사용자 또는 허락받은 claude 세션이 PR #20의 최신 head CI와 최신 main/겹치는 열린 작업을 확인하고 병합한다. 실제 GitHub 상태가 이 파일보다 우선이다.
+- 코드 체크포인트 `32c1e2a4402037d9b065d72eb12d629fe542f584`, 임시 전송 파일 제거 `7390530cfcd8f78b7b5e86c64c712ccddbe63c73`, 기술 검토/인계 `d19b90fefd8a8f45fbb9561508650b33692ce61b`. 최종 CI·검증 범위는 PR과 [검토 기록](docs/reviews/2026-09-24-lean-lifecycle/README.md). 모델 호출·실제 인증 폴더 연결은 없었다.
+- 기존 병합 이력·원 관측은 바꾸지 않았다. 이전 PR #18 브랜치는 이미 삭제됐다. 현재 작업 브랜치는 병합 전까지 유지하고, 완전히 병합된 브랜치만 병합한 쪽이 지운다. 필요하면 [prune-merged-branches](.github/workflows/prune-merged-branches.yml)의 `dry_run`으로 먼저 확인한다.
 
 ### 사용자 판단·승인을 기다리는 것
 
@@ -99,7 +100,9 @@
 
 **끝난 부분:** 공개된 초안의 `report_without_synthesis` JSON 저장. 합성자가 없는 현재 A1의 산출물이며, 실제 합성 실패 복구나 결정 카드 완성이라고 부르지 않는다. 정족수 부족/미승인 축소/공개 전에는 저장할 수 없다.
 
-**다음 권고:** K19의 지속 가능한 취소를 먼저 작은 작업으로 만든다. 이것은 다음 작업 제안이며 아직 구현하지 않았다. 예약 전 취소, 실행 중 입력 전송 취소, 자손 종료 미확인, 서버 재시작, 늦은 결과를 각각 시험한다. UI에서 숨기는 것으로 취소를 대신하지 않고 원장에 취소 의도를 남긴다. 이미 시작한 호출의 예산을 돌려주지 않는다.
+**이번에 끝난 부분(K19):** 원장에 저장되는 취소, API/버튼, 실행기 신호 전달, 시작 전/입력 청크 사이 중단, 늦은 답 배제, 재시작 후 취소 유지. 취소 거래가 실패하면 신호도 보내지 않는다. 예약한 호출 예산을 돌려주지 않고 종료 미확인은 unknown/자리 점유를 유지한다. 원본 앱에서 사용자가 실행한 작업이나 이미 OS에 넘긴 입력을 강제로 되돌린다는 보장은 아니다.
+
+**다음 권고:** 새 엔진이나 범용 프레임워크 대신 모의 합성자·주장 대조·결정 카드의 한 흐름을 기존 controller 위에서 완성한다. 전체 사건 payload 조회와 완료 스레드 누적은 제거했지만 기본 상태 조회는 여전히 모든 실행을 읽는다. 이력이 커질 때 목록 페이지화/선택 실행 상세를 먼저 측정하고, TM 조회 경쟁 개선은 아래 승인 후보로 남긴다.
 
 그 뒤 남은 A1 범위:
 
@@ -134,14 +137,14 @@ B4는 사용자가 agy를 켤 때만: 없는 model/effort 처리, stream-json in
 
 ### 알려진 한계와 못 고친 문제
 
-ID는 유지했다. 아래는 현재 조치 요약이며 상세 증거/과거 표현은 [직전 K 표](docs/handoff/2026-09-24-before-a1-integrity.md)와 그 표가 가리킨 관측 원문에 보존했다. **이번에 K18·K27·K42를 부분 진행했을 뿐, 나머지를 닫거나 관측 판정을 올리지 않았다.**
+ID는 유지했다. 아래는 현재 조치 요약이며 상세 증거/과거 표현은 [직전 K 표](docs/handoff/2026-09-24-before-a1-integrity.md)와 그 표가 가리킨 관측 원문에 보존했다. **K19는 모의/합성 경계에서 구현·검증했다. K04·K27·K42는 보강했지만 OS/실제 기기 한계를 닫지 않았고, 기존 문맥·권한 관측 판정을 올리지 않았다.**
 
 | ID | 현재 한계와 다음 경계 |
 |---|---|
 | K01 | 파이프 전송 완료 ≠ CLI 전체 소비. Claude 큰 입력은 전송·응답·토큰 증가 관측. 다음 큰 입력은 가운데/끝 표식 둘 다 확인 |
 | K02 | Codex 명령 거부는 stderr 문자열 휴리스틱. 전체 스트림의 표식을 세며, 셀 수 없고 잘렸으면 수용하지 않음. K30과 함께 |
 | K03 | 격리 없는 POSIX 전체 자손 종료는 미확인. 참여자는 `isolation.run()`만 |
-| K04 | 격리 없는 POSIX의 잔류 파이프 스레드/fd. `runner.lingering()`을 미정리 상한에 포함 |
+| K04 | 잔류 집계에 잠금을 추가했고 끝난 controller 스레드는 보관하지 않음. 격리 없는 POSIX 잔류 파이프/fd 가능성은 남으며 `runner.lingering()`을 미정리 상한에 포함 |
 | K05 | `CLEANUP_LIMIT`는 명시적 대기의 상한이며 벽시계 보장 아님 |
 | K06 | Windows job 배정 전 자식/종료 신호 틈. Windows 경로 동결, 해당 OS 시험 별도 |
 | K07 | agy 입력은 argv이며 stdin 미확인. 원시 argv 대신 `ExecutionSpec.record()`로 기록; B4 |
@@ -155,7 +158,7 @@ ID는 유지했다. 아래는 현재 조치 요약이며 상세 증거/과거 �
 | K16 | WSL Windows CLI 탐지는 경험칙. 실제 경계는 `/mnt`·`/init`·`/run`을 연결하지 않는 격리 |
 | K17 | 실제 executor가 서버에 연결되지 않음. 관측의 `prepare()` 재사용 ≠ controller 전체 실제 호출. B3 전 필요 |
 | K18 | **부분 진행:** 공개 뒤 합성 없는 JSON 보고 있음. 합성자·주장 대조·결정 카드·Q4 비교 없음 |
-| K19 | 취소 없음. 서버 종료/재시작 시 수동 재개뿐이고 paused는 메모리 상태. 지속 취소/입력 전송 취소 시험이 다음 권고 |
+| K19 | **구현:** `runs.cancel_requested` 영속화 후 신호, 신규 시작/수동 제출/공개 차단, 늦은 답 배제, 재시작 유지. 예약 예산·미확인 종료 자리 유지. 시작 전/청크 사이 취소 확인이며 이미 진행 중인 OS 쓰기나 외부 앱 작업의 즉시 중단 보장은 아님 |
 | K20 | 한 기기 파일 잠금/한 원장. 다중 기기 공유 미지원, 실행별 사건 순번. 거래 실패 복구 보강은 분산 원장 보장이 아님 |
 | K21 | 수동 입력 일치/원본 앱 사용은 증명 불가. 다른 실행 표식은 거절하나 표식 없음도 받음; 사용자 확인은 별도 기록 |
 | K22 | 수동 독립성 미확인. 고정 정책 `independent_only`/`include_unverified`와 표시를 구분 |
@@ -163,8 +166,8 @@ ID는 유지했다. 아래는 현재 조치 요약이며 상세 증거/과거 �
 | K24 | 대비 미달 토큰 조합 있음. 화면은 글자에 그 조합을 피함. 토큰 수정 시 발행 아티팩트 동기화 필요 |
 | K25 | 화면은 HTML/JS, TypeScript 이행 미정(Q3). 분석 컨테이너의 Node 존재는 사용자 PC 설치 관측이 아님 |
 | K26 | 토큰은 데이터 폴더와 서버 출력에 있음. 격리 밖 동일 사용자 프로세스는 신뢰 범위; POSIX 폴더 0700/파일 0600 |
-| K27 | **부분 진행:** Chromium 오프라인 DOM/보고서 다운로드·한글·390px 배치 확인. 실제 브라우저 localhost 탐색은 관리 정책으로 차단되어 미검증; 사용자 PC/접근성/교차 브라우저도 미검증 |
-| K28 | journal은 상향 이전만. 새로운 버전은 거절, 되돌리기 절차 없음 |
+| K27 | **부분 진행:** Chromium 오프라인 DOM/취소·보고서 다운로드·한글·390px 배치 확인. 실제 브라우저 localhost 탐색은 관리 정책으로 차단되어 미검증; 사용자 PC/접근성/교차 브라우저도 미검증 |
+| K28 | journal 스키마 3: 취소 칸을 추가하며 기존 실행은 취소 아님으로 이전. 상향 이전만 지원, 더 새로운 버전은 거절. 이전 코드로 되돌리기 전 백업 필요 |
 | K30 | Linux Codex의 실행 전 거부 문자열 미확인. 파일 쓰기 차단과 stderr 문자열 판정은 별개 |
 | K31 | Claude 지시문 미적재는 모델 자기 보고뿐. init으로 확인 불가. 상태 변경/추가 관측은 사용자 판단 |
 | K32 | Codex·agy 결과의 모델 보고 부재로 조용한 강등을 결과만으로 감지 불가 |
@@ -174,7 +177,7 @@ ID는 유지했다. 아래는 현재 조치 요약이며 상세 증거/과거 �
 | K39 | Codex read-only는 읽기 제한 아님. 다른 초안 읽기는 bubblewrap 허용 목록이 막음 |
 | K40 | agy는 잘못된 output-format 값을 무시. adapter가 고정하고 비JSON은 형식 실패 |
 | K41 | 공개 전 거친 상태 변경 시각은 반복 조회로 추정 가능. 정밀 시간·토큰·길이는 봉인, 참여자는 제어 토큰 없음 |
-| K42 | **부분 진행:** Bearer/Host 외 Origin·JSON 타입/길이·frame 정책·소켓 유휴 제한 및 HTTP 음성 시험 추가. 전체 요청 시간/동시 연결 상한·실제 브라우저 교차 출처 시험은 남음 |
+| K42 | **부분 진행:** 기존 요청 검사에 인증 전 포함 동시 연결 16개·연결별 I/O 기한 15초를 추가. 소켓 유휴 5초 유지. 느린 전송·스레드 시작 실패의 자원 회수 시험. 계산 전체의 시간/CPU/메모리 상한·실제 브라우저 교차 출처는 미검증 |
 | K43 | 보고 모델 불일치는 거부/구성 축소. 사용자 승인 대기 상태는 없음; 전체 모델 이름으로 요청 |
 | K44 | Codex 계정 플러그인·공급자 스킬·원격 MCP가 문맥에 들어가는지 미확인. `failed` 유지, 세션 요약은 탐색 보조 |
 | K45 | Claude safe-mode의 agents-md 플러그인 의미 미확인. 참여자 argv는 restricted만 유지 |

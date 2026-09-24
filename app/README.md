@@ -6,7 +6,7 @@
 
 | 파일 | 하는 일 |
 |---|---|
-| [`controller.py`](controller.py) | 상태를 가진 유일한 곳. 자리·예산, 결과 수용 관문, 봉인과 공개, 수동 참여자, 다시 시작, 화면용 투영 |
+| [`controller.py`](controller.py) | 상태를 가진 유일한 곳. 자리·예산, 결과 수용 관문, 봉인과 공개, 수동 참여자, 지속 취소, 다시 시작, 화면용 투영 |
 | [`store.py`](store.py) | 작은 SQLite journal. 사건은 덧붙이기만 한다. 초안도 여기에 봉인한다 |
 | [`fake_cli.py`](fake_cli.py) | Claude·Codex 출력 형식을 흉내 내는 가짜 CLI. 행동: 정상, 느림, CLI 오류, 입력 일부만 읽음, 멈춤 |
 | [`cli_executor.py`](cli_executor.py) | 실제 CLI 실행기(Linux·WSL). `env.resolve` → `build_spec` → `isolation.run`(`cli_mounts`, `never`) → `interpret`. **모델을 부른다 — 승인 뒤에만.** 서버는 아직 쓰지 않는다. 이 기기의 기록(`runtime-inventory/2`)을 받아 시도마다 실행 허가를 계산한다 — 기록 없이 부르는 것은 관측 도구와 시험(`unchecked`)뿐이다 |
@@ -56,12 +56,23 @@ python -m app.server --port 8765
   - 정족수가 모자라면 승인해도 열지 않는다. 유료로 채우지 않는다.
 - **자리와 상한.** 동시 실행 자리는 `running`과 `unknown`이 차지한다. 정리되지 않은 시도(`unknown` + `runner.lingering()`)가 상한에 닿으면 새 시도를 시작하지 않는다.
 - **다시 시작.** 이전 controller가 돌리던 시도는 `unknown`이 된다. 다시 부르지 않는다. 초안 작성 중인 실행은 공개 관문을 다시 본다.
-  - 시작하지 못한 시도는 저절로 시작하지 않는다. 화면의 "대기 중인 시도 이어서 시작"을 눌러야 시작한다 — 취소가 없어서 서버를 끄는 것이 지금 유일한 멈춤 수단이다.
-  - journal에는 스키마 버전이 있다. 예전 journal은 처음 열 때 올리고, 이 코드보다 새 journal은 열지 않는다.
+  - 시작하지 못한 시도는 저절로 시작하지 않는다. 화면의 "대기 중인 시도 이어서 시작"을 눌러야 시작한다. 원장에 취소가 기록된 실행은 재시작·재개 뒤에도 시작하지 않는다.
+  - journal에는 스키마 버전이 있다. 예전 journal은 처음 열 때 올리고, 이 코드보다 새 journal은 열지 않는다. 스키마 3은 `runs.cancel_requested`를 추가하며 기존 실행은 취소 아님으로 이전한다. 이전 코드로 되돌릴 때를 위해 먼저 journal을 백업한다.
 - **제어 API.** 참여자는 격리 안에서도 localhost를 공유한다. 그래서 모든 `/api` 요청(읽기 포함)에 토큰을 요구하고, Host 머리글이 우리 주소가 아니면 거절한다.
-  - Origin이 있으면 해당 서버 origin만 허용한다. JSON 객체·문자열/정수 타입·단일 길이를 검사하고, 모호한 framing·과대/미완성 본문을 거절한다. frame 삽입 거절 헤더와 소켓 유휴 제한이 있다. 전체 요청 시간/동시 연결 수 상한은 아니다.
+  - Origin이 있으면 해당 서버 origin만 허용한다. JSON 객체·문자열/정수 타입·단일 길이를 검사하고, 모호한 framing·과대/미완성 본문을 거절한다. frame 삽입 거절 헤더와 소켓 유휴 5초 제한이 있다. 인증 전 연결까지 최대 16개, 연결별 I/O 기한 15초이며 느린 전송으로 늘릴 수 없다. 초과 연결은 닫는다. 이 기한은 Python 계산 전체의 실행 시간/CPU/메모리 상한이나 상태 변경 취소 보장이 아니다.
   - 토큰은 URL의 `#` 뒤로만 브라우저에 준다. 페이지 자체에는 토큰이 없다.
   - 토큰 파일은 controller 데이터 폴더에 있고, 이 폴더는 참여자 격리에 연결하지 않는다(`never`). 토큰 파일은 처음부터 0600으로 만들어 통째로 바꾸고, 데이터 폴더는 0700이다(POSIX).
+
+## 실행 취소
+
+초안 작성 중 **“이 실행 취소”**를 확인하면 `POST /api/runs/<run_id>/cancel`이 취소를 원장에 저장한다. 기존 인증·Origin 검사를 그대로 쓰며, 200은 요청 저장이지 모든 프로세스 종료 확인이 아니다.
+
+- 취소 거래가 COMMIT된 뒤 기존 executor → isolation → runner 경로에 신호를 보낸다. 실행 단계(`phase`)는 마지막 단계를 보존하고 `cancel_requested`가 다시 시작할 수 없는 중단 여부를 나타낸다. 별도 취소 엔진은 없다.
+- 아직 예약하지 않은 CLI와 수동 대기는 시작 전 취소로 끝난다. 이미 예약한 시도의 예산은 돌려주지 않는다. 종료 미확인은 `unknown`과 자리 점유로 남기고, 나중에 정상 답이 와도 받거나 공개하지 않는다.
+- 취소 뒤 수동 답 제출·축소 승인·초안 공개·보고서 저장은 막는다. 이미 봉인한 초안은 지우지 않고 계속 비공개로 둔다. 공개된 실행을 취소해서 다시 숨기지는 못한다.
+- runner는 프로세스 생성 전과 입력 청크 사이에 신호를 확인한다. 이미 OS에 넘긴 쓰기나 외부 서비스/원본 앱에서 사용자가 실행한 작업의 즉시 중단은 보장하지 않는다. 원본 앱 중단은 사용자가 따로 한다.
+
+완료한 스레드 참조는 활성 작업 목록에서 제거한다. 조회는 사건 전체 payload 대신 마지막 사건 이름만 SQL에서 읽으며 보고서는 해당 실행만 투영한다. 기본 상태 조회는 아직 모든 실행을 읽으므로 큰 이력에서는 목록/상세 분리가 다음 측정 대상이다.
 
 ## 합성 없는 보고
 
@@ -75,10 +86,11 @@ python -m app.server --port 8765
 
 - 화면 서버에서 실제 CLI를 고르는 설정. 승인된 호출을 할 때 붙인다.
 - 합성, 주장 대조, 첫 화면 Q4(결정 우선·대조표 우선) 비교. 초안 공개와 합성 없는 원문 보고만 있다.
-- 취소 버튼과 취소 중 입력 전송 시험.
 - TypeScript 화면. 현재 제품 화면은 빌드 없는 HTML·JS이고 이행 시점은 Q3로 남아 있다.
 - 입력 manifest의 공통 자료(파일) 첨부. 지금은 질문 한 개다.
 
 검사: [`tests/test_app_controller.py`](../tests/test_app_controller.py). 대부분은 프로세스 없는 합성 실행기로 보고, 한 묶음은 모의 CLI를 실제 실행 경로(Windows job object, Linux bubblewrap)로 돌린다. 실제 CLI 실행기는 [`tests/test_app_cli_executor.py`](../tests/test_app_cli_executor.py)가 설치된 모양 그대로 만든 가짜 `claude`·`codex`로 격리 경로를 돌려 본다(Linux).
 
 원장/HTTP 회귀는 [`test_app_integrity.py`](../tests/test_app_integrity.py), 보고서/인증 경계는 [`test_app_report.py`](../tests/test_app_report.py)에 있다. [2026-09-24 검증 기록](../docs/reviews/2026-09-24-a1-integrity/README.md)은 실제 HTTP 시험과 오프라인 DOM 시험을 구분한다.
+
+지속 취소·재시작·예산·늦은 답은 [`test_app_cancel.py`](../tests/test_app_cancel.py), 입력 신호는 [`test_runner_cancel.py`](../tests/test_runner_cancel.py), 연결 상한은 [`test_server_limits.py`](../tests/test_server_limits.py), 조회/의존 방향은 [`test_app_lean.py`](../tests/test_app_lean.py)에서 확인한다. 간결성 측정과 브라우저 취소의 한계는 [후속 기록](../docs/reviews/2026-09-24-lean-lifecycle/README.md)에 있다.

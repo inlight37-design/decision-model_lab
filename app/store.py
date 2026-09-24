@@ -20,14 +20,15 @@ import time
 from pathlib import Path
 from typing import Any, Iterator
 
-# 1: participants.attempt(진행 중인 시도의 ID). 2: runs.quorum_policy(Q6 — 실행마다 고정하는 정족수 정책)
-SCHEMA_VERSION = 2
+# 1: participants.attempt. 2: runs.quorum_policy. 3: runs.cancel_requested(되돌리지 않는 실행 취소).
+SCHEMA_VERSION = 3
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS runs (
   run_id TEXT PRIMARY KEY, created_at REAL NOT NULL, question TEXT NOT NULL, prompt TEXT NOT NULL,
   input_sha256 TEXT NOT NULL, input_bytes INTEGER NOT NULL, min_independent INTEGER NOT NULL,
   roster TEXT NOT NULL, reduction_approved INTEGER NOT NULL DEFAULT 0, note TEXT,
-  quorum_policy TEXT NOT NULL DEFAULT 'include_unverified'
+  quorum_policy TEXT NOT NULL DEFAULT 'include_unverified',
+  cancel_requested INTEGER NOT NULL DEFAULT 0
 );
 CREATE TABLE IF NOT EXISTS participants (
   run_id TEXT NOT NULL, pid TEXT NOT NULL, spec TEXT NOT NULL, state TEXT NOT NULL,
@@ -114,6 +115,10 @@ class Store:
                     if "quorum_policy" not in columns:
                         self._db.execute("ALTER TABLE runs ADD COLUMN quorum_policy TEXT NOT NULL "
                                          "DEFAULT 'include_unverified'")
+                if version < 3:
+                    columns = {row[1] for row in self._db.execute("PRAGMA table_info(runs)")}
+                    if "cancel_requested" not in columns:
+                        self._db.execute("ALTER TABLE runs ADD COLUMN cancel_requested INTEGER NOT NULL DEFAULT 0")
                 if version != SCHEMA_VERSION:
                     self._db.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
                 self._db.execute("COMMIT")
