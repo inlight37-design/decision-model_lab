@@ -138,6 +138,22 @@ class CancellationTests(support.Base):
         self.assertEqual(ctl.view()["slots"]["used"], 0)
         self.assertTrue(all(r["phase"] == "revealed" for r in ctl.view()["runs"]))
 
+    def test_run_ids_remain_distinct_when_generated_uuids_share_a_short_prefix(self):
+        ctl = self.controller(support.SyntheticExecutor())
+        generated = [c.uuid.UUID("12340000-0000-4000-8000-000000000001"),
+                     c.uuid.UUID("12340000-0000-4000-8000-000000000002")]
+        with patch.object(c.time, "strftime", return_value="0101-000000"), \
+                patch.object(c.uuid, "uuid4", side_effect=generated):
+            first, second = [ctl.create_run(question, [support.manual("a")], min_independent=1,
+                                           quorum_policy=c.INCLUDE_UNVERIFIED)
+                             for question in ("first question", "second question")]
+        self.assertNotEqual(first, second)
+        digest = self.run_view(ctl, first)["input_sha256"]
+        ctl.submit_manual(first, "a", "first answer", digest)
+        self.assertEqual(self.part(ctl, first, "a")["draft"], "first answer")
+        self.assertEqual(self.part(ctl, second, "a")["state"], c.AWAITING_USER)
+        self.assertEqual(self.run_view(ctl, second)["question"], "second question")
+
     def test_thread_start_failure_releases_reserved_slot_but_keeps_attempt_record(self):
         ex = support.SyntheticExecutor()
         ctl = self.controller(ex)

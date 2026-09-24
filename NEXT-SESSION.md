@@ -87,6 +87,8 @@
 
 **순서 2:** `codex/mount-model-20260924`는 [PR #22](https://github.com/inlight37-design/decision-model_lab/pull/22) 위에 쌓았다. 연결 모델 하나로 시스템·명시적 연결의 덮음/쓰기 확대/봉인 경로 겹침을 검사하고 같은 모델로 bwrap 인자를 만든다. WSL 실제 bubblewrap 경계 시험을 실행했다. 각 PR의 대상은 main이며 순서대로 병합한다. 앞 PR이 main에 들어오기 전에는 누적 diff가 보인다.
 
+**PR #22 CI 후속 반영:** Linux 관측 시험을 개수만 공개하는 init과 더 강한 자격증명 가림에 맞췄다. 빠르게 만든 실행의 짧은 UUID 접미사가 충돌하는 문제도 확인해 전체 UUID로 바꾸고, 같은 접두사를 가진 두 실행으로 회귀 검증했다. PR #22 수정의 로컬 WSL 전체 오프라인 시험은 성공했으며 Windows 레지스트리 시험만 해당 OS가 아니어서 건너뛰었다. Windows에서도 실행 식별자·완료 작업 정리 회귀를 확인했다. 새 head의 CI 결과는 PR에서 확인한다.
+
 - **마지막 병합:** [PR #21](https://github.com/inlight37-design/decision-model_lab/pull/21)(`claude/cleanup-merge-branches-il1srl`, 문서만, 모델 호출 없음) — [구조 전수검사](docs/reviews/2026-09-24-structure-audit/README.md), 간결성 검토와의 [비교](docs/reviews/2026-09-24-structure-audit/COMPARISON.md), 다음 일의 순서(4절).
   - 결론: 뼈대는 구조적이고 살은 리뷰마다 덧댔다. 전면 재작성은 필요 없다. 흩어진 사본을 한 주인으로 모은다.
   - 재현한 틈 G1–G9는 PR #20 뒤의 main에서도 그대로다. 4절 순서표가 그것부터 다룬다.
