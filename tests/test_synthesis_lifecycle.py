@@ -30,7 +30,9 @@ class SynthesisLifecycleTests(support.Base):
         def cleanup():
             for held in executor.gates.values():
                 held.set()
-            self.assertTrue(support.wait_for(lambda: not ctl._workers and not ctl._synthesis))
+            # wait_idle은 controller 잠금 안에서 본다. 잠금 없이 보면 합성 스레드가 자리를 비운 뒤 같은 잠금 안에서
+            # pump()하는 사이에 원장이 닫혀 "closed database" 스레드 오류가 났다(Windows CI, 2026-09-25).
+            self.assertTrue(ctl.wait_idle())
         self.addCleanup(cleanup)
         return ctl
 

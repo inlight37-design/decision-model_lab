@@ -76,8 +76,10 @@ def template(spec: adapters.ExecutionSpec, box: isolation.Sandbox | None, *, hom
         return "rw:~/" + path[len(home) + 1:] if home and path.startswith(home + "/") else "rw:<outside-home>"
 
     # 역할이 같아도 연결이 늘면 다른 계획이다. set으로 합치면 K46의 자료 하나 관측이 여러 폴더까지 허가한다.
+    # 옮겨 보인 폴더는 안의 경로가 고정값이라 그대로 남긴다(isolation.participant_mounts)
     mounts = ["none"] if box is None else sorted(
         [f"ro:{'input' if p in inputs else 'cli'}" for p in box.read_only]
+        + [f"ro:cli@{inside}" for _host, inside in box.read_only_at]
         + [config(p) for p in box.read_write] + ["rw:work", "tmpfs:home"])
     return {"adapter": spec.adapter_id, "argv": argv, "input_via": spec.input_via,
             "stderr_marks": sorted(stderr_marks), "mounts": mounts}

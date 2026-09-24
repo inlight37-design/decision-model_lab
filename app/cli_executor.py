@@ -13,10 +13,12 @@
 - 프로세스를 만들기 전에 거절하면(실행 파일 없음, 금지 옵션, 경로 충돌, 모델 이름 없음) failed_to_start로
   돌려준다. 아무것도 시작하지 않았으므로 unknown이 아니다.
 - Codex의 명령 거절 표식은 보관 상한과 상관없이 stderr 전체에서 센다(K02).
-- Codex에는 `--sandbox read-only` 대신 로그인 파일(`~/.codex/auth.json`)만 읽기 금지한 권한 profile을 준다(K46).
-  2026-09-24 aux-pc-wsl의 Codex 0.156.1 exec에서 고정 helper의 인증 파일 열기가 EACCES로 거절됐다.
-  기록: docs/experiments/w2-isolation/2026-09-24-k46-confirmation/README.md. 계정의 연결 앱을 끈 지금 계획의 재관측은
-  docs/reviews/2026-09-24-codex-apps-off/README.md. 문맥 독립성(C3)은 미해결이다.
+- Codex에는 `--sandbox read-only` 대신 모델의 명령에게 `~/.codex` 전체를 막는 권한 profile을 주고, 실행 버전 폴더는
+  그 밖(isolation.CODEX_RELEASE_AT)에 보여 그 경로로 실행한다(E2, isolation.participant_mounts). 처음 K46은 로그인 파일
+  하나만 막았다(docs/experiments/w2-isolation/2026-09-24-k46-confirmation/README.md, 연결 앱을 끈 재관측은
+  docs/reviews/2026-09-24-codex-apps-off/README.md). `~/.codex`에 사용자 지시문(AGENTS.md)이 있으면 모든 대화에 실리므로
+  계획·실행 전에 거절한다. Claude는 `--restricted --safe-mode`다. 문맥 독립성(C3)의 관측은
+  docs/reviews/2026-09-25-context-independence/README.md에 있다.
 - **실행 허가는 시도마다 계산한다(N4).** 기록(`runtime-inventory/2`)의 다섯 칸이 모두 관측됐고, 지금 설치된 버전이
   기록과 같고, 구독 로그인일 때만 부른다(core.eligibility). 기록 없이 부르는 것은 관측 도구와 시험뿐이다(unchecked).
   명시적 문맥 미확인 정책은 C3 의미상 합격만 제외하고 계획에 기록한다. 다른 관문과 과금 제한은 유지한다.
@@ -84,6 +86,15 @@ class CliExecutor:
         self.allow_context_unverified = allow_context_unverified
         self.default_inputs = tuple(str(Path(p).resolve()) for p in default_inputs)
 
+    def _check_context(self, adapter_id: str) -> None:
+        """참여자 문맥에 실릴 개인 지시문이 있으면 시작하지 않는다(E2). 관측 도구도 거절한다 — 그 파일이 있는 채로 본
+        관측은 참여자 계획의 근거가 되지 않는다."""
+        found = adapters.codex_global_instructions(self.home) if adapter_id == "codex" else ()
+        if found:
+            names = ", ".join("~/" + os.path.relpath(p, self.home) for p in found)
+            raise adapters.AdapterError(f"Codex would add {names} to every participant's instructions; "
+                                        "move it out of the Codex home to run Codex as a participant")
+
     def _check_eligible(self, adapter_id: str, exe: str, revision: str) -> None:
         inventory = self.inventories_by_adapter.get(adapter_id, self.inventory)
         if inventory is None:
@@ -123,9 +134,10 @@ class CliExecutor:
                                         codex_user_home=os.path.realpath(self.home))
         argv, changes = variant(list(built.argv)) if variant else (list(built.argv), [])
         built = dataclasses.replace(built, argv=tuple(argv))
-        ro, rw = isolation.cli_mounts(spec.adapter_id, exe, self.home)
+        self._check_context(spec.adapter_id)
+        ro, rw, ro_at = isolation.participant_mounts(spec.adapter_id, exe, self.home)
         box = isolation.Sandbox(work_dir=work_dir, home=self.home, read_only=ro + tuple(inputs), read_write=rw,
-                                env=SANDBOX_ENV, never=self.never)
+                                env=SANDBOX_ENV, never=self.never, read_only_at=ro_at)
         marks = adapters.STDERR_MARKS.get(spec.adapter_id, ())
         tmpl = contract.template(built, box, home=os.path.realpath(self.home), inputs=inputs, stderr_marks=marks)
         revision = contract.revision(tmpl)
@@ -138,6 +150,7 @@ class CliExecutor:
         try:
             if plan.context_unverified != self.allow_context_unverified:
                 raise adapters.AdapterError("context policy changed after planning; create a new attempt")
+            self._check_context(plan.spec.adapter_id)
             self._check_eligible(plan.spec.adapter_id, plan.spec.argv[0], plan.revision)
             result = isolation.run(list(plan.spec.argv), plan.box, timeout=timeout, stdin_text=plan.spec.stdin_text,
                                    max_output_bytes=self.max_output_bytes, cancel=cancel,

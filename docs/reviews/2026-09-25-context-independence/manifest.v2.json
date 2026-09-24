@@ -1,0 +1,108 @@
+{
+  "schema": "runtime-inventory/2",
+  "host": {
+    "label": "aux-pc-wsl"
+  },
+  "updated_at": "2026-09-25",
+  "meaning": "Each field is an observation record. Eligibility to run a participant is never stored here; core.eligibility computes it right before each run from these fields, the installed version and the date. observed means the condition was seen to hold; failed means it was seen not to hold; unknown means not observed yet. spec_revision names the participant spec (core.contract: final argv and mounts) a transport, context or permission observation was made with; a record made with another revision does not allow a run (2026-09-24 review R04).",
+  "derived_from": [
+    "docs/reviews/2026-09-24-codex-apps-off/manifest.v2.json (installed/auth rows carried where not re-observed)",
+    "docs/reviews/2026-09-25-context-independence/observations.json (six approved model calls, 2026-09-25: c3-claude-pos, c3-claude, k46-codex on codex@867a4db616d1, c3-codex-pos, c3-codex, k46-codex on codex@bba3751a36f3)",
+    "docs/reviews/2026-09-25-context-independence/model-free.json (codex debug prompt-input controls and real-home comparison; network-less K46 helper and exec acceptance)",
+    "docs/reviews/2026-09-25-context-independence/README.md"
+  ],
+  "adapters": [
+    {
+      "adapter_id": "claude-code",
+      "installed": {
+        "status": "observed",
+        "version": "2.1.280",
+        "observed_at": "2026-09-25",
+        "evidence": "2026-09-25 aux-pc-wsl: `claude --version` printed 2.1.280 (Claude Code); both c3 calls reported claude_code_version 2.1.280 in init."
+      },
+      "auth_observed": {
+        "status": "observed",
+        "observed_at": "2026-09-24",
+        "auth_mode": "subscription_oauth",
+        "funding_mode": "subscription",
+        "evidence": "Carried from docs/reviews/2026-09-24-codex-apps-off/manifest.v2.json: authorized isolated preflight --real-auth: subscription_observed; identity fields discarded. The 2026-09-25 calls reported apiKeySource none."
+      },
+      "transport_observed": {
+        "status": "observed",
+        "observed_at": "2026-09-25",
+        "spec_revision": "claude-code@a35129c5a1dc",
+        "evidence": "observations.json 002-c3-claude: the exact participant plan (stream-json, --restricted --safe-mode, one read-only input folder, Read only), argv_changes empty; stdin complete, reported model claude-sonnet-5 matched, exit 0, pid_namespace with tree_confirmed_empty true, controller gate ok."
+      },
+      "context_conformance": {
+        "status": "observed",
+        "observed_at": "2026-09-25",
+        "spec_revision": "claude-code@a35129c5a1dc",
+        "evidence": "Behavioral control with a fresh marker per call, the question never mentioning it: a work-folder CLAUDE.md told the model to end every reply with the marker. Positive control 001-c3-claude-pos (the plan minus --restricted/--safe-mode, no tools) ended its reply with the marker; the exact plan 002-c3-claude did not, and never opened the file with Read. The official CLI reference (read 2026-09-25) says --safe-mode skips CLAUDE.md, skills, plugins, hooks, MCP, custom agents and auto memory while keeping auth; --restricted confines file tools to the working directories and loads only managed and --settings settings. Init of 002 reported 0 skills, 0 MCP servers, 2 plugins and 4 agents after the positive control had synced the account's plugins and skills into ~/.claude/{plugins,skills}/synced. Limits: the user-level ~/.claude/CLAUDE.md path does not exist on this PC and was not planted (the same loading mechanism was tested in the work folder); auto memory was not planted (each attempt gets a fresh work folder); the final request text is not observable; one call per side on one version and one PC; network is shared (K08)."
+      },
+      "permission_conformance": {
+        "status": "observed",
+        "observed_at": "2026-09-25",
+        "spec_revision": "claude-code@a35129c5a1dc",
+        "evidence": "observations.json 002-c3-claude permission_evidence: init tools exactly Read with no MCP servers, permissionMode dontAsk, and the CLI's own permission_denials recorded a Read of the synthetic peer file outside the working directories; the allowed input file was quoted; no file was written. No claim that an available Write tool was denied."
+      }
+    },
+    {
+      "adapter_id": "codex",
+      "installed": {
+        "status": "observed",
+        "version": "0.156.1",
+        "observed_at": "2026-09-25",
+        "evidence": "2026-09-25 aux-pc-wsl: `codex --version` printed codex-cli 0.156.1; the release folder 0.156.1-x86_64-unknown-linux-musl is what the participant sees at /opt/dml-codex."
+      },
+      "auth_observed": {
+        "status": "observed",
+        "auth_mode": "chatgpt_login",
+        "funding_mode": "subscription",
+        "observed_at": "2026-09-24",
+        "evidence": "Carried from docs/reviews/2026-09-24-codex-apps-off/manifest.v2.json: isolated account metadata probe required account/read type chatgpt before rate limits; no inference, complete namespace exit."
+      },
+      "transport_observed": {
+        "status": "observed",
+        "observed_at": "2026-09-25",
+        "spec_revision": "codex@bba3751a36f3",
+        "evidence": "observations.json 006-k46-codex: the exact participant plan (one read-only input folder, ~/.codex denied to the model's commands, binary at /opt/dml-codex, -c features.apps=false, -c project_doc_max_bytes=0), argv_changes empty; stdin complete, JSONL answer, exit 0, tree_confirmed_empty true, gate ok. Requested model gpt-6-luna; serving model unreported (K32). The answer's output field matched the one completed helper command."
+      },
+      "context_conformance": {
+        "status": "observed",
+        "observed_at": "2026-09-25",
+        "spec_revision": "codex@bba3751a36f3",
+        "evidence": "Behavioral control with a fresh marker per call: a work-folder AGENTS.md told the model to end every reply with the marker. Positive control 004-c3-codex-pos (the plan minus -c project_doc_max_bytes=0) ended its reply with the marker; the exact plan 005-c3-codex did not; neither ran a command. Model-free codex debug prompt-input (model-free.json): in a synthetic HOME a global ~/.codex/AGENTS.md and a work-folder AGENTS.md both reached the model input, project_doc_max_bytes=0 removed only the work-folder one, and an empty global file was skipped; with the participant's -c values and isolation the real HOME rendered no instructions block, differing from a synthetic HOME only in message ids, two built-in collaboration-mode sentences and Codex's own arg0 helper path. The executor refuses to plan or run while a non-empty ~/.codex/AGENTS.md or AGENTS.override.md exists (none here). The model's commands could neither open auth.json nor list ~/.codex (006, EACCES), so earlier sessions' logs, state and memory databases are out of reach. Connectors are off (docs/reviews/2026-09-24-codex-apps-off: 0 MCP servers, 0 callable apps, 6 built-in skills). Limits: prompt-input is not the final request and omits tool schemas and exec-only flags (no user config.toml exists here); memories stay off by default and are not pinned; one call per side on one version and one PC; network is shared (K08)."
+      },
+      "permission_conformance": {
+        "status": "observed",
+        "observed_at": "2026-09-25",
+        "spec_revision": "codex@bba3751a36f3",
+        "evidence": "observations.json 006-k46-codex: k46.verified true with exactly one completed fixed-helper command and this attempt's nonce; write denied:EROFS, input ok, auth denied:EACCES, home (listing ~/.codex) denied:EACCES, boundary_violations empty, as_expected true, no MCP or app tool items. Confirms this helper under default_permissions dml-discussant (~/.codex denied), not every possible access path."
+      }
+    },
+    {
+      "adapter_id": "antigravity",
+      "installed": {
+        "status": "failed",
+        "observed_at": "2026-09-23",
+        "evidence": "tier 1: agy is not on PATH in this distribution"
+      },
+      "auth_observed": {
+        "status": "unknown",
+        "next": "not installed; agy stays off (NEXT-SESSION 2절 19)"
+      },
+      "transport_observed": {
+        "status": "unknown",
+        "next": "not installed"
+      },
+      "context_conformance": {
+        "status": "unknown",
+        "next": "not installed"
+      },
+      "permission_conformance": {
+        "status": "unknown",
+        "next": "not installed"
+      }
+    }
+  ]
+}

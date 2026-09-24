@@ -71,21 +71,23 @@ def profile_variants(home):
 
 
 def helper_variants(exe, home, read_write):
-    """`codex sandbox -- python3 <helper>`를 변형마다 한 번. read_write는 격리 안에 쓰기로 연결할 설정 폴더다."""
+    """`codex sandbox -- python3 <helper>`를 변형마다 한 번. read_write는 격리 안에 쓰기로 연결할 설정 폴더다.
+    실행 버전 폴더는 참여자처럼 HOME 밖에 보인다(isolation.participant_mounts) — profile이 `~/.codex` 전체를 막는다."""
     out = {}
+    release = os.path.dirname(os.path.dirname(os.path.realpath(exe)))
     for name, extra in profile_variants(home).items():
         root = tempfile.mkdtemp(prefix="dml-k46-")
         try:
             work, inputs = _folders(root)
-            ro = (os.path.dirname(os.path.dirname(os.path.realpath(exe))), inputs)
-            box = isolation.Sandbox(work_dir=work, home=home, read_only=ro, read_write=read_write, env=SANDBOX_ENV)
+            box = isolation.Sandbox(work_dir=work, home=home, read_only=(inputs,), read_write=read_write,
+                                    env=SANDBOX_ENV, read_only_at=((release, isolation.CODEX_RELEASE_AT),))
             before = _auth_stat(home)
             result = offline([exe, "sandbox", *extra, "--", "/usr/bin/python3", os.path.join(inputs, K46_FILE)],
                              box, None, timeout=60)
             lines = [m.groups() for line in result.stdout.splitlines() if (m := K46_LINE.match(line.strip()))]
             out[name] = {"state": result.state, "exit": result.exit_code,
                          "tree_confirmed_empty": result.tree_confirmed_empty,
-                         "result": dict(zip(("write", "input", "auth"), lines[0][1:])) if len(lines) == 1 else None,
+                         "result": dict(zip(("write", "input", "auth", "home"), lines[0][1:])) if len(lines) == 1 else None,
                          "created_txt_left": os.path.exists(os.path.join(work, "created.txt")),
                          "auth_size_mtime_unchanged": _auth_stat(home) == before,
                          "stderr": _lines(result.stderr, 6, home)}
