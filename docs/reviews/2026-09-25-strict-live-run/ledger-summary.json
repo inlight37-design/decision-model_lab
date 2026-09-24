@@ -1,0 +1,167 @@
+{
+ "dml-live-strict-20260925": {
+  "events": [
+   "run_created",
+   "drafting_started",
+   "live_call_reserved",
+   "attempt_started",
+   "live_call_reserved",
+   "attempt_started",
+   "draft_sealed",
+   "draft_sealed",
+   "revealed",
+   "live_call_reserved",
+   "synthesis_started",
+   "synthesis_completed"
+  ],
+  "attempts": [
+   {
+    "pid": "codex",
+    "execution": "real",
+    "revision": "codex@bba3751a36f3",
+    "context_unverified": false
+   },
+   {
+    "pid": "claude",
+    "execution": "real",
+    "revision": "claude-code@a35129c5a1dc",
+    "context_unverified": false
+   }
+  ],
+  "reservations": [
+   "participant",
+   "participant",
+   "synthesis"
+  ],
+  "budget": [
+   {
+    "singleton": 1,
+    "cap": 3,
+    "provider_caps": "{\"claude-code\": 1, \"codex\": 2}"
+   }
+  ],
+  "participants": [
+   {
+    "pid": "codex",
+    "state": "accepted",
+    "status": "ok",
+    "independence": "confirmed",
+    "usage": {
+     "input_tokens": 12524,
+     "cached_input_tokens": 9984,
+     "output_tokens": 347,
+     "reasoning_output_tokens": 0
+    },
+    "draft_chars": 576,
+    "rate_limit_event": false
+   },
+   {
+    "pid": "claude",
+    "state": "accepted",
+    "status": "ok",
+    "independence": "confirmed",
+    "usage": {
+     "input_tokens": 2,
+     "output_tokens": 2977,
+     "cache_creation_input_tokens": 753,
+     "cache_read_input_tokens": 5728,
+     "client_estimate_usd": 0.0339316
+    },
+    "draft_chars": 1264,
+    "rate_limit_event": true
+   }
+  ],
+  "model_synthesis": {
+   "status": "completed",
+   "checks": {
+    "quotes": 11,
+    "exact_matches": 11,
+    "unsupported_additions": 0,
+    "method": "exact_verbatim_quote",
+    "factual_check": "not_performed",
+    "agreement_is_verification": false
+   },
+   "claims": 4,
+   "claims_quoted": 4,
+   "disagreements": 1,
+   "counterexample": true,
+   "unresolved": 2,
+   "synthesizer": {
+    "adapter_id": "codex",
+    "requested_model": "gpt-6-luna",
+    "execution": "real",
+    "started": true,
+    "state": "accepted",
+    "status": "ok",
+    "revision": "codex@bba3751a36f3",
+    "reported_models": [],
+    "model_match": null,
+    "duration_ms": 22256,
+    "tree_confirmed_empty": true,
+    "usage": {
+     "input_tokens": 13865,
+     "cached_input_tokens": 9984,
+     "output_tokens": 1051,
+     "reasoning_output_tokens": 0
+    }
+   }
+  },
+  "quorum": {
+   "policy": "independent_only",
+   "min": 2,
+   "confirmed": 2,
+   "unverified": 0,
+   "counted": 2,
+   "met": true,
+   "label": "독립 정족수 충족 — 독립성이 확인된 참여자 2명(최소 2명)"
+  }
+ },
+ "dml-live-cancel-20260925": {
+  "events": [
+   "run_created",
+   "drafting_started",
+   "live_call_reserved",
+   "attempt_started",
+   "run_cancel_requested",
+   "attempt_rejected"
+  ],
+  "attempts": [
+   {
+    "pid": "codex",
+    "execution": "real",
+    "revision": "codex@bba3751a36f3",
+    "context_unverified": false
+   }
+  ],
+  "reservations": [
+   "participant"
+  ],
+  "budget": [
+   {
+    "singleton": 1,
+    "cap": 1,
+    "provider_caps": "{\"codex\": 1}"
+   }
+  ],
+  "participants": [
+   {
+    "pid": "codex",
+    "state": "rejected",
+    "status": "cancelled",
+    "independence": "confirmed",
+    "usage": null,
+    "draft_chars": null,
+    "rate_limit_event": false
+   }
+  ],
+  "quorum": {
+   "policy": "independent_only",
+   "min": 1,
+   "confirmed": 0,
+   "unverified": 0,
+   "counted": 0,
+   "met": false,
+   "label": null
+  }
+ }
+}
