@@ -157,6 +157,7 @@ class SynthesisHttpTests(HttpServerCase):
                             quorum_policy=c.INCLUDE_UNVERIFIED)
         status, result = self.decision_report(run, self.token)
         self.assertEqual(status, 200)
+        self.assertEqual((result["schema"], result["failed_model_synthesis"]), ("a1-decision-report/3", None))
         self.assertEqual(result["synthesis"]["status"], "completed")
         self.assertEqual(result["draft_report"]["synthesis"]["status"], "not_included")
         self.assertNotIn("PRIVATE_OTHER_RUN", json.dumps(result))

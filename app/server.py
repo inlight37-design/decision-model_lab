@@ -170,11 +170,15 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                     view = controller.view(parts[2])
                     report = build_report(view, parts[2])
                     synthesis = view["runs"][0].get("synthesis")
-                    if synthesis is None:
+                    model = view["runs"][0].get("model_synthesis")
+                    failed = model if model and model["status"] == "failed" else None
+                    if synthesis is None and failed is None:
                         raise ReportError("synthesis has not been requested")
                     # 2: synthesis는 모의(a1-mock-synthesis/1) 또는 실제(a1-model-synthesis/1)다. 그 schema로 가른다.
-                    self._json(200, {"schema": "a1-decision-report/2", "draft_report": report,
-                                     "synthesis": synthesis})
+                    # 3: 실패한 실제 합성(이유, 형식 검사에 실패한 원문 raw)을 failed_model_synthesis로 따로 싣는다.
+                    #    결과가 아니므로 synthesis에 넣지 않는다. 실패만 있으면 synthesis는 null이다.
+                    self._json(200, {"schema": "a1-decision-report/3", "draft_report": report,
+                                     "synthesis": synthesis, "failed_model_synthesis": failed})
                 except ReportError as exc:
                     self._json(409, {"error": str(exc)})
             else:
