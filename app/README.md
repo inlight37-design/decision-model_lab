@@ -17,8 +17,29 @@
 | [codex_account.py](codex_account.py), [account_quota.py](account_quota.py) | 격리된 무모델 계정 조회·명시적 갱신·캐시/오래된 관측 표시 |
 | [server.py](server.py) | localhost API·인증·전체 준비 조회·화면 연결, 서버와 헤드리스 실행이 같이 쓰는 실행기·controller 구성(`live_setup`·`new_controller`) |
 | [run.py](run.py) | 헤드리스 실행: 화면 없이 질문 하나를 끝까지 돌리고 결과 JSON 하나를 쓴다 |
+| [start.ps1](start.ps1), [launch.py](launch.py) | 바탕 화면 아이콘의 입구: Windows 쪽이 WSL 쪽을 불러 관측 기록·모델·원장을 고르고 서버를 띄운 뒤 앱 창으로 연다. 창을 닫으면 끈다 |
 | [report.py](report.py), [synthesis.py](synthesis.py) | 공개 원문의 허용 목록 투영, 모의 발췌/참조 검사, 실제 합성의 질문 만들기와 인용 대조(이 파일들은 모델을 부르지 않는다) |
 | [fake_cli.py](fake_cli.py), [static/index.html](static/index.html) | 가짜 CLI와 빌드 없는 HTML/JS 화면 |
+
+## 바탕 화면 아이콘으로 열기 — 사용자가 쓰는 입구
+
+사용자는 터미널 없이 바탕 화면의 **Decision Lab** 아이콘으로 앱을 연다. 아이콘은 한 번 만든다(Windows PowerShell, 저장소 루트):
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File app\start.ps1 -InstallShortcut
+```
+
+아이콘은 그 명령을 부른 사본의 [start.ps1](start.ps1)을 가리킨다 — 사용자의 clone(`C:\ai\decision-model_lab`, main)에서 만든다. 병합된 변경은 그 폴더를 pull해야 앱에 들어간다. 누르면 [start.ps1](start.ps1)이 WSL 안에서 [launch.py](launch.py)를 부르고, 준비 조회를 통과하면 Microsoft Edge의 앱 창(전용 프로필 `%USERPROFILE%\.decision-model-lab\edge-app`)으로 연다. **창을 닫으면 서버가 꺼진다** — 돌던 참여자·합성이 있으면 그것이 끝난 뒤 스스로 꺼진다(호출을 끊지 않는다). 모델 호출 없이 보려면 `-Mock`. 이미 켜져 있으면 창만 하나 더 연다.
+
+[launch.py](launch.py)가 정하는 것은 셋이고 나머지(준비 조회·원장·상한·봉인)는 `app.server` 그대로다.
+
+| 무엇 | 어떻게 |
+|---|---|
+| 관측 기록 | `docs/reviews/*/manifest.v2.json` 가운데 **이 기기에 등록된** 가장 새 것(`updated_at`). 재관측해 등록하면 다음에 열 때 저절로 바뀐다 |
+| 모델 | `launch.py`의 `MODELS`(Codex `gpt-6-luna`·Claude `claude-sonnet-5`) |
+| 원장 | WSL `~/.local/state/decision-model-lab/app/live/<시각>`. 가장 새 원장에 provider마다 호출이 남았으면 이어 쓰고(앞 실행이 화면에 보인다), 하나라도 다 썼으면 새 원장. 원장 하나의 상한은 `CAPS`(Codex 5·Claude 5, 합 10 — 앱의 최대)이며 앞 원장은 지우지 않는다. 모의 모드는 `…/app/mock` |
+
+준비 조회가 거절하면(관측 기록 만료·CLI 판 변경·등록 없음) 이유를 보이고 **모의 모드로 열지 묻는다** — 조용히 바꾸지 않는다. 서버 기록은 `…/app/server.log`, 상태는 `…/app/launcher.json`(토큰 없음). 토큰은 원장의 `control-token`에만 있다. WSL 쪽만 쓸 때는 `python3 -m app.launch serve|url|stop|status`(설명은 [launch.py](launch.py) 첫머리).
 
 ## 모의 실행과 화면
 

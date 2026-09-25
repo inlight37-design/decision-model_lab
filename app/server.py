@@ -471,6 +471,14 @@ def main() -> int:
     if controller.paused:
         print("다시 시작하기 전에 시작하지 못한 시도가 있다. 화면에서 '이어서 시작'을 눌러야 시작한다.", flush=True)
     print(f"열기: http://127.0.0.1:{server.server_address[1]}/#token={token}", flush=True)
+    return serve_until_stopped(server, controller)
+
+
+def serve_until_stopped(server: ThreadingHTTPServer, controller: Controller) -> int:
+    """Ctrl+C(SIGINT)까지 요청을 받고, 새 호출을 막은 뒤 돌던 작업의 반환을 기다려 닫는다. 서버와 app.launch가 같이 쓴다.
+
+    종료 코드 0은 모든 작업이 반환하고 종료 미확인이 없다는 뜻이다. 아니면 1이고 원장은 그대로 둔다.
+    """
     try:
         server.serve_forever()
     except KeyboardInterrupt:
