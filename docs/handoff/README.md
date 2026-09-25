@@ -14,10 +14,11 @@
 | [`2026-09-24-before-cli-unblock-app.md`](2026-09-24-before-cli-unblock-app.md) | 같은 main의 `app/README.md` 원문 — 인계가 아니라 app 안내다. 단일 `--live-cli` 실측 기준. **본문의 "허가되지 않으면 종료 코드 2"는 당시 동작이다. 지금 준비 조회 거절은 3이고 2는 명령줄 인자 오류만 뜻한다([카드 #58](https://github.com/inlight37-design/decision-model_lab/issues/58))** | PR #38이 app 안내를 provider별 설정 기준으로 다시 쓰면서 옮겼다. 색인 행은 PR #39 병합 검토에서 채웠다 |
 | [`2026-09-24-before-windows-live-completion.md`](2026-09-24-before-windows-live-completion.md) | PR #38 인계 원문. Windows 패치 적용·계정 조회·실제 병렬 응답 전 상태 | PR #39에서 사용자 결정·금지 사항을 유지하며 현재 상태를 갱신했다 |
 | [`2026-09-24-before-merge-39-next-steps.md`](2026-09-24-before-merge-39-next-steps.md) | PR #39(codex) 인계 원문. 3절이 #39를 진행 중으로 적은 병합 전 상태 | #39 병합 뒤 claude 세션이 0·1·3·4·6절을 병합 뒤 상태와 구체적인 다음 작업(A–F)으로 다시 쓰면서 옮겼다. 2·5절은 그대로 |
+| [`2026-09-25-before-handoff-diet.md`](2026-09-25-before-handoff-diet.md) | main `2450caf`(PR #74 병합)의 인계 원문. 3절에 병합 이력 스무 개 남짓, 4절에 끝난 A–F 표가 쌓여 현재 판의 약 세 배였다 | 정리 1단계(사용자 요청 2026-09-25)에서 지금 상태·다음 일만 남기고 다시 썼다. 2절·5절은 그대로이고 2절에 23번을 더했다. 3절은 이제 진행 중인 일과 "이 판을 들인 PR" 하나만 둔다 |
 
 ## 규칙
 
-이번 최신 보관본은 위 `2026-09-24-before-merge-39-next-steps.md`다. 표에 행이 없는 이전 보관본 [`2026-09-24-before-post-merge-verification.md`](2026-09-24-before-post-merge-verification.md)는 main `eec60e93ef6c95639181eb8cd251506c16290075`의 인계를 병합 재검토·실제 브라우저·K46 관측 뒤 축소하면서 바이트 그대로 보관했다. 사용자 결정과 금지 사항은 현재 인계에도 유지했다. 이 보관본의 K46 미관측·브라우저 미검증 표현은 [후속 기록](../reviews/2026-09-24-post-merge-verification/README.md)이 갱신한다.
+이번 최신 보관본은 위 `2026-09-25-before-handoff-diet.md`다. 표에 행이 없는 이전 보관본 [`2026-09-24-before-post-merge-verification.md`](2026-09-24-before-post-merge-verification.md)는 main `eec60e93ef6c95639181eb8cd251506c16290075`의 인계를 병합 재검토·실제 브라우저·K46 관측 뒤 축소하면서 바이트 그대로 보관했다. 사용자 결정과 금지 사항은 현재 인계에도 유지했다. 이 보관본의 K46 미관측·브라우저 미검증 표현은 [후속 기록](../reviews/2026-09-24-post-merge-verification/README.md)이 갱신한다.
 
 - **바이트 그대로 둔다.** 내용을 고치지 않는다. 틀린 내용이 있으면 현재 `NEXT-SESSION.md`나 해당 검토 기록에서 정정한다. 무엇이 틀렸는지도 기록이다.
 - **링크는 저장소 루트 기준으로 작성됐다.** 원래 루트에 있던 파일이라 이 폴더에서 열면 상대 링크가 맞지 않는다. 같은 이유로 링크 회귀 검사는 이 폴더를 건너뛴다.
