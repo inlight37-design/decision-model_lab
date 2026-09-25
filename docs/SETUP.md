@@ -61,11 +61,37 @@ irm https://raw.githubusercontent.com/inlight37-design/decision-model_lab/main/t
 
 ## 4. 새 컴퓨터로 옮겨지지 않는 것 — 중요
 
-- **관측 기록은 기기의 것이다.** 지금 참여자 계획을 허가하는 [E2 manifest](reviews/2026-09-25-context-independence/manifest.v2.json)는 `aux-pc-wsl`에서 관측했다. **실제 모드는 이 기기에 등록된 기록만 쓴다**(카드 #71). 준비 조회와 실행 직전 재검사가 사용자 상태 폴더의 로컬 등록(`~/.local/state/decision-model-lab/registrations.json`, 저장소 밖)을 보고, 등록되지 않은 기록이면 거절한다 — 문맥 미확인 허용(`--allow-context-unverified`)도 건너뛰지 않는다. 공개 저장소에는 기기 식별 값이 없다. 새 PC에서는 [V04-01 절차서](experiments/v04-01-inventory/README.md)로 새 이름표의 기록을 만들고 [E2 절차](reviews/2026-09-25-context-independence/README.md)로 관측을 다시 한 뒤, **그 PC에서** `python3 -m app.registration register <새 기록> --host-label <그 이름표>`로 등록한다. 다른 PC의 기록을 등록하지 않는다 — 명령은 기록의 이름표를 확인할 뿐 관측이 어디서 됐는지 증명하지 못한다. 호스트 이름을 바꾸거나 배포판을 다른 PC로 옮기면 다시 등록한다. `python3 -m app.registration status <기록>`으로 이 기기에서 쓸 수 있는지 본다.
+- **관측 기록은 기기의 것이다.** 지금 참여자 계획을 허가하는 [E2 manifest](reviews/2026-09-25-context-independence/manifest.v2.json)는 `aux-pc-wsl`에서 관측했다. **실제 모드는 이 기기에 등록된 기록만 쓴다**(카드 #71). 준비 조회와 실행 직전 재검사가 사용자 상태 폴더의 로컬 등록(`~/.local/state/decision-model-lab/registrations.json`, 저장소 밖)을 보고, 등록되지 않은 기록이면 거절한다 — 문맥 미확인 허용(`--allow-context-unverified`)도 건너뛰지 않는다. 공개 저장소에는 기기 식별 값이 없다. 새 PC에서는 아래 "관측 기록을 새로 만드는 법"으로 관측하고 기록을 만든 뒤, **그 PC에서** `python3 -m app.registration register <새 기록> --host-label <그 이름표>`로 등록한다. 다른 PC의 기록을 등록하지 않는다 — 명령은 기록의 이름표를 확인할 뿐 관측이 어디서 됐는지 증명하지 못한다. 호스트 이름을 바꾸거나 배포판을 다른 PC로 옮기면 다시 등록한다. `python3 -m app.registration status <기록>`으로 이 기기에서 쓸 수 있는지 본다.
 - **관측은 30일 동안만 유효하다.** E2 manifest에서 가장 이른 칸(로그인 방식, 2026-09-24 관측) 때문에 **2026-10-25부터** aux-pc-wsl에서도 준비 조회가 거절한다(`core.eligibility`로 10월 24일·25일을 계산해 확인). 그 전에 다시 관측한다.
 - **CLI 판이 바뀌면 거절된다.** `setup-wsl.sh`는 관측 판(`check_setup.py --observed-versions`)으로 설치하지만 Claude Code 기본 설치는 백그라운드에서 스스로 업데이트된다. 판이 바뀌면 준비 조회가 거절한다 — 안전한 실패다. `--latest`로 새 판을 쓰려면 관측도 새로 한다.
 - **원장은 옮기지 않는다.** `~/.local/state/dml-*`의 기존 원장은 aux-pc-wsl에 남는다. 새 실행은 새 원장·새 상한으로 한다(인계 0절 4). 원장·초안·계정 원시 응답은 저장소로 옮기지 않는다.
-- **계정 플러그인.** 계정에 플러그인을 새로 설치했으면 [플러그인 기록](reviews/2026-09-25-plugin-surface/README.md)의 `probe.py`로 참여자에게 닿는지 다시 본다.
+- **계정 플러그인.** Codex 참여자는 연결 앱과 플러그인을 모두 끈다([플러그인 끄기](reviews/2026-09-25-codex-plugins-off/README.md)). 계정에 플러그인을 새로 설치했으면 [플러그인 기록](reviews/2026-09-25-plugin-surface/README.md)의 `probe.py`로 참여자에게 닿지 않는지 다시 본다.
+
+### 관측 기록을 새로 만드는 법 — 새 PC마다, 30일마다, 참여자 계획이 바뀔 때마다
+
+WSL 로그인 셸에서, 저장소 루트에서 한다. 모델 호출은 행동 대조 다섯 번(Claude 2·Codex 3)이고, 새 상태 폴더 하나에 그 상한을 먼저 적는다(사용자의 상시 승인 안, 인계 2절 22). 나머지는 모델을 부르지 않는다.
+
+```bash
+python3 tools/w2/codex_prompt_input.py --real-home   # Codex가 모델에 싣는 입력(지시문·스킬이 없는지)
+python3 tools/w2/codex_profile.py --real-home        # Codex 권한 profile이 ~/.codex를 막는지
+export DML_OBSERVE_STATE=~/.local/state/dml-observe-<날짜>
+python3 tools/w2/observe.py approve --claude 2 --codex 3 --timeout 300 --note "<누가·언제·어떤 승인>"
+python3 tools/w2/observe.py call c3-claude-pos <Claude 전체 모델 이름>
+python3 tools/w2/observe.py call c3-claude <Claude 전체 모델 이름>
+python3 tools/w2/observe.py call c3-codex-pos <Codex 전체 모델 이름>
+python3 tools/w2/observe.py call c3-codex <Codex 전체 모델 이름>
+python3 tools/w2/observe.py call k46-codex <Codex 전체 모델 이름>
+python3 tools/w2/assemble.py auth --state "$DML_OBSERVE_STATE" --claude-model <Claude 전체 모델 이름>
+python3 tools/w2/assemble.py build --state "$DML_OBSERVE_STATE" --host-label <이 기기 이름표> \
+    --out docs/reviews/<날짜>-<주제>/manifest.v2.json --previous <지금 기록>
+python3 -m app.registration register docs/reviews/<날짜>-<주제>/manifest.v2.json --host-label <이 기기 이름표>
+python3 -m app.server --check-config <live.json> --data-dir <새 원장>   # 두 provider의 strict 허가 확인
+```
+
+- 대조가 기대와 다르면 관측 도구가 그 provider를 멈춘다. 다 쓴 상태 폴더를 다시 승인해 상한을 늘리지 않는다 — 새 폴더에 새 승인을 적는다.
+- `build`는 요약의 칸으로만 판정한다(조건은 [`assemble.py`](../tools/w2/assemble.py) 첫머리). 음성 대조가 지시를 따랐으면 failed로 적고, 양성 대조가 실패했거나 판이 다르면 기록을 쓰지 않는다.
+- 요약(`results/*.json`의 summary)과 `auth.json`은 저장소로 옮기기 전에 사람이 읽는다. 답·stdout 원문은 옮기지 않는다.
+- 새 기록은 새 날짜 폴더에 두고 옛 기록은 고치지 않는다. 인계 1절의 만료일을 바꾼다.
 
 ## 5. 이미 겪은 함정
 
