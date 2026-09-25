@@ -111,7 +111,7 @@ python -m app.server --live-config /path/live.json --data-dir /path/new-ledger -
 
 ## 계정 한도와 문맥 진단
 
-`python tools/w2/codex_account.py`는 `app/codex_account.py`의 진단 진입점이며 기본은 무프로세스 계획 조회다. 사용자 PC에서 명시적으로 `--probe --data-dir <원장>`을 주면 기존 Linux 격리 안의 Codex app-server로 계정 메타데이터를 조회한다. 질문·로그인 변경·유료 API 대체·추가 크레딧 요청은 없고, 식별자·인증 값·원시 프로토콜은 내보내지 않는다. 시간/출력 제한과 자손 종료 확인을 적용한다. 사용자 WSL의 native Codex에서 실제 구독 계정 응답과 화면 연결을 확인했다. 실행 파일의 symlink 대상이 격리에 연결되는 경로와 자식 실행 경로가 달랐던 오류도 수정했다.
+`python -m app.codex_account`는 `app/codex_account.py`의 진단 진입점이며 기본은 무프로세스 계획 조회다. 사용자 PC에서 명시적으로 `--probe --data-dir <원장>`을 주면 기존 Linux 격리 안의 Codex app-server로 계정 메타데이터를 조회한다. 질문·로그인 변경·유료 API 대체·추가 크레딧 요청은 없고, 식별자·인증 값·원시 프로토콜은 내보내지 않는다. 시간/출력 제한과 자손 종료 확인을 적용한다. 사용자 WSL의 native Codex에서 실제 구독 계정 응답과 화면 연결을 확인했다. 실행 파일의 symlink 대상이 격리에 연결되는 경로와 자식 실행 경로가 달랐던 오류도 수정했다.
 
 화면의 **조회** 또는 인증된 `POST /api/account-quota/refresh`만 프로세스를 시작한다. `GET /api/account-quota`는 캐시만 읽으며, 동시 갱신은 합치고 재조회는 60초 간격으로 제한한다. 120초 초과·초기화 시각 경과·조회 실패는 과거 관측값으로 표시한다. 없는 값은 미확인이며, 모델 호출이나 추가 크레딧 사용은 없다.
 

@@ -3,7 +3,7 @@
 읽기 전용 논의자로 쓸 CLI 설정이 **허용한 것은 읽고, 금지한 것은 실제로 거절하는지** 합성 파일로 본 기록이다. 모델 품질 시험이 아니다.
 
 - 수행: claude 세션(Claude Opus 5.5), 보조 PC의 로컬 checkout. 모델 호출은 사용자 승인 뒤(2026-09-23, "코덱스는 6luna로 시험"). 사용자는 Codex 사용량이 적게 남았다고 했다
-- 도구: [`tools/v04-03/conformance.py`](../../../tools/v04-03/conformance.py), 실행은 [`core/`](../../../core/README.md)의 runner·adapter — main `9087d68ea7911cae368412f018856c213c1e2c5c`
+- 도구: [`tools/v04-03/conformance.py`](https://github.com/inlight37-design/decision-model_lab/blob/01cedd3c05dc043465d4476aab2b1a8f547574e9/tools/v04-03/conformance.py), 실행은 [`core/`](../../../core/README.md)의 runner·adapter — main `9087d68ea7911cae368412f018856c213c1e2c5c`
 - CLI: Claude Code 2.1.280, Codex 0.155.1(같은 날 `check-versions.ps1`, 서명 `Valid`)
 - 원 출력(stdout·stderr 전체)은 저장소 밖 `%TEMP%\v0403-conf\results\`에 두었다. 아래는 요약이다
 

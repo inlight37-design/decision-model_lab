@@ -1,6 +1,6 @@
 # N3 — 격리 안 로그인 상태에 필요한 인증 파일, `aux-pc-wsl`
 
-2026-09-23 · claude 세션(Claude Opus 5.5, aux-pc의 로컬 checkout, `wsl.exe`로 배포판의 로그인 셸에서 실행). **모델 호출 없음.** 인계 4절 N3(K09)의 관측이다. 도구: [`tools/w2/auth_mounts.py`](../../../tools/w2/auth_mounts.py). 환경: WSL 2.7.14, Ubuntu 24.04.5, bubblewrap 0.9.0, Claude Code 2.1.280, Codex 0.156.1.
+2026-09-23 · claude 세션(Claude Opus 5.5, aux-pc의 로컬 checkout, `wsl.exe`로 배포판의 로그인 셸에서 실행). **모델 호출 없음.** 인계 4절 N3(K09)의 관측이다. 도구: [`tools/w2/auth_mounts.py`](https://github.com/inlight37-design/decision-model_lab/blob/01cedd3c05dc043465d4476aab2b1a8f547574e9/tools/w2/auth_mounts.py). 환경: WSL 2.7.14, Ubuntu 24.04.5, bubblewrap 0.9.0, Claude Code 2.1.280, Codex 0.156.1.
 
 ## 어떻게 봤나
 

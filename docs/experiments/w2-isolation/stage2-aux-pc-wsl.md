@@ -44,7 +44,7 @@
 - **`CLAUDE.md`를 싣지 않았는지는 여전히 모델의 보고뿐이다(K31).** 2.1.280의 init에는 불러온 지시문·메모리 파일을 보여 주는 칸이 없다. init으로 확인하려던 계획은 이 버전에서 성립하지 않는다. 두 실행 모두 답은 "AG-·CM- 표식 없음"이었고, 모델이 작업 폴더의 `CLAUDE.md`·`AGENTS.md`를 Read로 열지도 않았다. 이 배포판에는 `~/.claude/CLAUDE.md`가 없다.
 - **모델 이름(K43).** 전체 이름 `claude-sonnet-5`로 요청했고 init의 `model`과 `modelUsage`의 키(`canonicalModel` 포함)가 같았다.
 - **답 형식.** `b1-combo`는 JSON 하나만 달라는 지시와 달리 앞에 문장을 붙이고 JSON을 코드 블록에 넣었다. `interpret`의 판정은 형식을 보지 않으므로 `ok`다 — 논의자 답은 자유 글이라 문제는 아니다.
-- **계정 한도(2절 4, K23).** stream-json에 `rate_limit_event`가 있었다. 모양: `rate_limit_info.status`(`allowed`), `rateLimitType`(`five_hour`), `resetsAt`(10자리 Unix 초), `unifiedWindows.five_hour`·`seven_day`의 `utilization`(0–1 비율)과 `resetsAt`, 그리고 초과 사용 칸. 값은 1번과 5번 모두 5시간 창 0.33, 7일 창 0.08로 소수 둘째 자리에서 바뀌지 않았다. **참여자 argv의 `--output-format json` 결과에는 이 칸이 없다**(aux-pc P1 기록). 화면에 사용량을 띄우려면 stream-json을 받거나 다른 경로가 필요하다. 이 모양은 [`review_boundary.quota_projection`](../../../tools/review_boundary.py)이 가정한 Codex의 `usedPercent`(0–100)와 다르다 — 그 가정은 Codex 경로의 것이고 여전히 미확인이다.
+- **계정 한도(2절 4, K23).** stream-json에 `rate_limit_event`가 있었다. 모양: `rate_limit_info.status`(`allowed`), `rateLimitType`(`five_hour`), `resetsAt`(10자리 Unix 초), `unifiedWindows.five_hour`·`seven_day`의 `utilization`(0–1 비율)과 `resetsAt`, 그리고 초과 사용 칸. 값은 1번과 5번 모두 5시간 창 0.33, 7일 창 0.08로 소수 둘째 자리에서 바뀌지 않았다. **참여자 argv의 `--output-format json` 결과에는 이 칸이 없다**(aux-pc P1 기록). 화면에 사용량을 띄우려면 stream-json을 받거나 다른 경로가 필요하다. 이 모양은 [`review_boundary.quota_projection`](https://github.com/inlight37-design/decision-model_lab/blob/01cedd3c05dc043465d4476aab2b1a8f547574e9/tools/review_boundary.py)이 가정한 Codex의 `usedPercent`(0–100)와 다르다 — 그 가정은 Codex 경로의 것이고 여전히 미확인이다.
 
 ### B2 — Codex (`b2`)
 
@@ -67,7 +67,7 @@
 
 ### K12 — 중첩 샌드박스, 모델 없이
 
-`b2`가 쓰기를 시도하지 않아 [`tools/w2/codex_sandbox.py`](../../../tools/w2/codex_sandbox.py)를 새로 두고 돌렸다. 참여자와 같은 경계(Codex의 `cli_mounts`와 읽기 전용 공통 자료 폴더) 안에서 `codex sandbox -- /bin/sh -c …`로 작업 폴더에 쓰기, 공통 자료 읽기, `/tmp` 쓰기를 해 본다. 모델 호출이 아니다.
+`b2`가 쓰기를 시도하지 않아 [`tools/w2/codex_sandbox.py`](https://github.com/inlight37-design/decision-model_lab/blob/01cedd3c05dc043465d4476aab2b1a8f547574e9/tools/w2/codex_sandbox.py)를 새로 두고 돌렸다. 참여자와 같은 경계(Codex의 `cli_mounts`와 읽기 전용 공통 자료 폴더) 안에서 `codex sandbox -- /bin/sh -c …`로 작업 폴더에 쓰기, 공통 자료 읽기, `/tmp` 쓰기를 해 본다. 모델 호출이 아니다.
 
 | 변형 | exit | 작업 폴더 쓰기 | 공통 자료 읽기 | `/tmp` 쓰기 | 자손 종료 |
 |---|---|---|---|---|---|

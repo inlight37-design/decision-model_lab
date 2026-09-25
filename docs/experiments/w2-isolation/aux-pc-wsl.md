@@ -25,7 +25,7 @@ python 탐침을 격리 안에서 실행했다. 원장·초안·인증 대신 �
 | 시간 초과 | 안의 프로세스가 모두 끝난다 |
 | **보장하지 않는 것:** 호스트 localhost TCP 포트 | **닿는다**(네트워크 공유). controller 제어 API는 참여자에게 없는 토큰으로 막아야 한다 |
 
-## 2. 설치된 CLI — [`tools/w2/cli_boundary.py`](../../../tools/w2/cli_boundary.py)
+## 2. 설치된 CLI — [`tools/w2/cli_boundary.py`](https://github.com/inlight37-design/decision-model_lab/blob/01cedd3c05dc043465d4476aab2b1a8f547574e9/tools/w2/cli_boundary.py)
 
 각 CLI의 참여자 경계를 만들고 안에서 `--version`과 로그인 상태 명령(모델 호출 아님)을 실행했다. 계정 이메일·조직 ID·요금제는 버리고 로그인 여부와 방식만 남겼다.
 

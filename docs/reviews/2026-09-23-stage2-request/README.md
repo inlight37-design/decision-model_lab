@@ -5,7 +5,7 @@
 이번 요청의 중심은 세 가지다.
 - 2단계의 실제 호출 다섯 번으로 **기록에 적은 판정이 증거로 뒷받침되는가.** 특히 모델의 보고에 기댄 칸과 모델 없는 진단에 기댄 칸.
 - 그 과정의 **실패·실수·시행착오**(아래 "잘 안 된 것")가 빠짐없이 정직하게 적혔는가. 고친 방식은 맞는가.
-- 관측 도구([`observe.py`](../../../tools/w2/observe.py))의 수정과 새 진단 도구([`codex_sandbox.py`](../../../tools/w2/codex_sandbox.py))가 맞는가.
+- 관측 도구([`observe.py`](../../../tools/w2/observe.py))의 수정과 새 진단 도구([`codex_sandbox.py`](https://github.com/inlight37-design/decision-model_lab/blob/01cedd3c05dc043465d4476aab2b1a8f547574e9/tools/w2/codex_sandbox.py))가 맞는가.
 
 ## 사용자가 리뷰어에게 붙여 넣을 요청문
 
@@ -31,7 +31,7 @@
 | 기록의 세 칸: Claude 전송·문맥·권한 `observed`. Codex 전송·권한 `observed`, **문맥 `failed`** → Claude만 실행 허가 | [`manifest.v2.json`](../../experiments/v04-01-inventory/hosts/aux-pc-wsl/manifest.v2.json) | `runtime_inventory.py --validate`, [`test_core_eligibility.py`](../../../tests/test_core_eligibility.py) |
 | 요약의 ID 가림(UUID, 24자 이상 16진수), 잘린 목록의 전체 수와 폴더별 수, `argv_run` | [`observe.py`](../../../tools/w2/observe.py) | [`test_w2_observe.py`](../../../tests/test_w2_observe.py) — 고치기 전 코드에서 실패 확인 |
 | 멈춤 규칙: 금지 표식이 답·출력에 보이거나 작업 폴더에 파일이 생기면 기대와 다름 | 같은 파일 | 같은 시험 — 고치기 전 코드에서 실패 확인 |
-| K12 진단: Codex 자체 샌드박스가 우리 bubblewrap 안에서 서서 쓰기를 막는지 | [`codex_sandbox.py`](../../../tools/w2/codex_sandbox.py) | aux-pc-wsl 실행 결과(2단계 기록). 자동 시험은 없다 |
+| K12 진단: Codex 자체 샌드박스가 우리 bubblewrap 안에서 서서 쓰기를 막는지 | [`codex_sandbox.py`](https://github.com/inlight37-design/decision-model_lab/blob/01cedd3c05dc043465d4476aab2b1a8f547574e9/tools/w2/codex_sandbox.py) | aux-pc-wsl 실행 결과(2단계 기록). 자동 시험은 없다 |
 | K 표: K12·K29·K33·K36 닫음, K44·K45 추가, K01·K02·K09·K17·K23·K30·K31·K32·K38·K39·K43 갱신. 열린 결정 C3 추가 | [`NEXT-SESSION.md`](../../../NEXT-SESSION.md) 1·4절 | — |
 | PR #8의 코드 주장 대조 | 인계 3절 | `app/static/index.html`, `tools/w2/observe.py` |
 
@@ -105,7 +105,7 @@
 2. [`NEXT-SESSION.md`](../../../NEXT-SESSION.md)의 **2절만**. 논쟁하지 않는 전제다. 그리고 [2단계 기록](../../experiments/w2-isolation/stage2-aux-pc-wsl.md)의 "승인" 절.
 3. 코드와 시험:
    - [`tools/w2/observe.py`](../../../tools/w2/observe.py), [`tests/test_w2_observe.py`](../../../tests/test_w2_observe.py)
-   - [`tools/w2/codex_sandbox.py`](../../../tools/w2/codex_sandbox.py)
+   - [`tools/w2/codex_sandbox.py`](https://github.com/inlight37-design/decision-model_lab/blob/01cedd3c05dc043465d4476aab2b1a8f547574e9/tools/w2/codex_sandbox.py)
    - [`app/cli_executor.py`](../../../app/cli_executor.py), [`core/adapters.py`](../../../core/adapters.py)의 `build_spec`·`interpret`, [`core/isolation.py`](../../../core/isolation.py)의 `cli_mounts`·`plan`
    - [`core/eligibility.py`](../../../core/eligibility.py)의 칸 정의
 4. 관측: 2단계 기록의 "호출과 결과"부터 "설정 폴더에 쓴 것"까지. **"판정" 절은 아직 읽지 않는다.** 여기서 각 CLI의 세 칸(전송·문맥·권한)을 `observed`·`failed`·`unknown` 가운데 무엇으로 적겠는지 스스로 적어 둔다.

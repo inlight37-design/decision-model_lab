@@ -5,10 +5,9 @@ from pathlib import Path
 import tempfile
 from types import SimpleNamespace
 import unittest
-from unittest import mock
 
 from tools import redaction, runtime_inventory
-from tools.w2 import auth_mounts, observe
+from tools.w2 import observe
 
 
 class RedactionTests(unittest.TestCase):
@@ -17,15 +16,13 @@ class RedactionTests(unittest.TestCase):
                    "sk-proj-" + "X" * 24, "github_pat_" + "A" * 40,
                    "Bearer synthetic-short-secret", "password=small-secret",
                    "Cookie: private_session=small-secret; user=someone")
-        with mock.patch.object(auth_mounts, "HOME", "/home/u"):
-            exporters = (runtime_inventory.make_redactor("/home/u"), auth_mounts.hide,
-                         lambda s: observe._scrub(s, "/home/u"))
-            for sample in samples:
-                for export in exporters:
-                    with self.subTest(sample=sample, export=export):
-                        self.assertNotEqual(sample, export(sample))
-                        self.assertNotIn("small-secret", export(sample))
-                        self.assertEqual(export(export(sample)), export(sample))
+        exporters = (runtime_inventory.make_redactor("/home/u"), lambda s: observe._scrub(s, "/home/u"))
+        for sample in samples:
+            for export in exporters:
+                with self.subTest(sample=sample, export=export):
+                    self.assertNotEqual(sample, export(sample))
+                    self.assertNotIn("small-secret", export(sample))
+                    self.assertEqual(export(export(sample)), export(sample))
 
     def test_home_replacement_does_not_expose_a_different_users_suffix(self):
         self.assertEqual(redaction.scrub("/home/user/file /home/u/file", "/home/u"),
@@ -42,11 +39,10 @@ class RedactionTests(unittest.TestCase):
         self.assertEqual(out["nested"]["input_sha256"], "<email>")
         self.assertEqual(out["<email>"], [{"/home/<user>/file": "<email>"}])
 
-    def test_auth_mode_preserves_its_conservative_opaque_string_policy(self):
-        # These long lower-case words are safe in help/paths, ambiguous in an auth error.
+    def test_long_plain_words_and_cli_flags_are_kept(self):
+        # Long lower-case words are safe in help text and paths; only credential shapes are masked.
         value = "z" * 30
         self.assertEqual(redaction.scrub(value), value)
-        self.assertEqual(auth_mounts.hide(value), "<redacted>")
         flag = "--disk-cache-directory-path"
         self.assertEqual(runtime_inventory.make_redactor("")(flag), flag)
 

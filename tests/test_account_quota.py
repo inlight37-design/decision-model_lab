@@ -10,7 +10,7 @@ from unittest.mock import Mock
 from app.account_quota import AccountQuota
 from app.server import _Server, make_handler
 from core.quota import claude_limit
-from tools.review_boundary import quota_projection
+from core.quota import quota_projection
 
 
 class QuotaTests(unittest.TestCase):

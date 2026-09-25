@@ -1,6 +1,6 @@
 # 2단계 후속 — Codex 명령이 닿는 곳과 권한 profile 시험, `aux-pc-wsl`
 
-2026-09-24 · claude 세션(Claude Opus 5.5, aux-pc의 로컬 checkout, `wsl.exe`로 배포판의 로그인 셸에서 실행). **모델 호출 없음.** 도구: [`tools/w2/codex_sandbox.py`](../../../tools/w2/codex_sandbox.py) — 이번에 인증 파일·네트워크 확인과 권한 profile 변형을 더했다. Codex 0.156.1.
+2026-09-24 · claude 세션(Claude Opus 5.5, aux-pc의 로컬 checkout, `wsl.exe`로 배포판의 로그인 셸에서 실행). **모델 호출 없음.** 도구: [`tools/w2/codex_sandbox.py`](https://github.com/inlight37-design/decision-model_lab/blob/01cedd3c05dc043465d4476aab2b1a8f547574e9/tools/w2/codex_sandbox.py) — 이번에 인증 파일·네트워크 확인과 권한 profile 변형을 더했다. Codex 0.156.1.
 
 ## 왜 했나
 

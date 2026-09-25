@@ -58,11 +58,11 @@
 
 ## 3. 진행 중인 작업
 
-**진행 중: 정리(2절 23).** 순서 — ① 인계·규칙 문서 줄이기, CI 실행 방식, 외부 검토 들이기(이 PR) ② 쓸모없는 도구 은퇴와 로컬 정리 ③ 설치기의 실패 경계(외부 검토 R01–R04) ④ 합성 제약 제거 ⑤ 고립 surrogate와 메타데이터 경계(카드 #70, 검토 R05) ⑥ 헤드리스 실행 명령 ⑦ 재관측 자동화와 환경 등록(카드 #71, 검토 R06, 2026-10-25 전) ⑧ 쌓임 방지 원칙(검토를 받고 정한다). 근거는 [검토 요청서](docs/reviews/2026-09-25-review-request/README.md) B·C절과 그에 대한 [외부 검토](docs/reviews/2026-09-25-review/README.md)다. 외부 검토는 ③·⑤를 먼저 권했다 — 사용자가 고른 순서를 따르되 ③을 ④보다 앞에 두었다.
+**진행 중: 정리(2절 23).** 순서 — ① 인계·규칙 문서 줄이기, CI 실행 방식, 외부 검토 들이기(#76, 끝남) ② 쓸모없는 도구 은퇴와 로컬 정리(이 PR) ③ 설치기의 실패 경계(외부 검토 R01–R04) ④ 합성 제약 제거 ⑤ 고립 surrogate와 메타데이터 경계(카드 #70, 검토 R05) ⑥ 헤드리스 실행 명령 ⑦ 재관측 자동화와 환경 등록(카드 #71, 검토 R06, 2026-10-25 전) ⑧ 쌓임 방지 원칙(검토를 받고 정한다). 근거는 [검토 요청서](docs/reviews/2026-09-25-review-request/README.md) B·C절과 그에 대한 [외부 검토](docs/reviews/2026-09-25-review/README.md)다. 외부 검토는 ③·⑤를 먼저 권했다 — 사용자가 고른 순서를 따르되 ③을 ④보다 앞에 두었다.
 
 **진행 중: 작업 카드 시범.** 일은 `card` 라벨 이슈에서 [시범 규칙](docs/experiments/2026-09-25-card-pilot/README.md)대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #76](https://github.com/inlight37-design/decision-model_lab/pull/76)(`claude/handoff-diet-20260925`) — 정리 ①: 인계를 지금 상태·다음 일만 남게 다시 쓰고(이전 판은 보관), AGENTS.md에서 진행 서술을 빼고, v0.4 HANDOFF를 2026-09-22 판으로 표시하고, 검토 색인을 표 하나로 합치고, CI를 PR·main에서만 돌게 했다. ChatGPT 웹 세션의 [외부 검토](docs/reviews/2026-09-25-review/README.md)([PR #75](https://github.com/inlight37-design/decision-model_lab/pull/75), 카드 #73)를 커밋 그대로 함께 들였다 — 설치기의 실패 전파·관측 판 고정·검토한 설치 파일 승인(R01–R04), #70의 메타데이터 경계(R05), #71의 로컬 환경 등록안(R06), 문구 정정(R07). 반영은 위 순서에 넣었다. 모델 호출 0회.
+- **이 판을 들인 PR:** [PR #77](https://github.com/inlight37-design/decision-model_lab/pull/77)(`claude/retire-tools-20260925`) — 정리 ②: 끝난 일회성 도구를 뺐다(`tools/smoke_review_preview.py`, `tools/v04-03/`, `tools/review_boundary.py`, `tools/w2/`의 `cli_boundary.py`·`auth_mounts.py`·`codex_sandbox.py`·`codex_account.py`, 딸린 시험). 지우기 전에 쓰는 곳을 확인했고, `test_account_quota`가 실제 `core.quota` 대신 도구의 사본을 시험하던 것을 바로잡았다. 앞의 기록에서 그 파일로 가던 링크는 main `01cedd3`으로 고정했다. ①(인계·규칙 줄이기, CI 방식, ChatGPT 외부 검토 들이기)은 [PR #76](https://github.com/inlight37-design/decision-model_lab/pull/76)으로 들어갔다. 모델 호출 0회.
 
 | 사용자 판단 | 권고 / 지금까지 한 일 |
 |---|---|
