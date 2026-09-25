@@ -5,6 +5,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location("check_setup", ROOT / "tools" / "setup" / "check_setup.py")
@@ -46,22 +47,46 @@ class CheckSetupTests(unittest.TestCase):
         self.assertNotIn("someone@example.com", text)
         self.assertNotIn("org-secret", text)
 
-    def test_logins_that_are_not_subscriptions_or_absent(self):
+    def test_logins_that_are_not_subscriptions_or_absent_are_not_ready(self):
+        # 이 저장소는 구독 CLI만 쓴다. API 키 로그인은 경고가 아니라 준비 안 됨이다(2026-09-25 외부 검토 R04).
         api = dict(STATUS, authMethod="api_key")
         rows, _ = self.linux({"claude auth": (0, json.dumps(api)), "codex login": (0, "Logged in using an API key")})
-        self.assertEqual((rows["Claude 로그인"].status, rows["Codex 로그인"].status), ("warn", "warn"))
+        self.assertEqual((rows["Claude 로그인"].status, rows["Codex 로그인"].status), ("missing", "missing"))
+        self.assertTrue(rows["Claude 로그인"].required and rows["Codex 로그인"].required)
         rows, _ = self.linux({"claude auth": (1, json.dumps({"loggedIn": False})), "codex login": (1, "Not logged in")})
         self.assertEqual((rows["Claude 로그인"].status, rows["Codex 로그인"].status), ("missing", "missing"))
         rows, _ = self.linux({"claude auth": (0, "not json")})
         self.assertEqual(rows["Claude 로그인"].status, "missing")
+        # 상태 명령이 실패했으면 출력이 구독 로그인을 말해도 믿지 않는다.
+        rows, _ = self.linux({"claude auth": (1, json.dumps(STATUS))})
+        self.assertEqual(rows["Claude 로그인"].status, "missing")
 
-    def test_cli_versions_are_compared_with_the_observation_record(self):
+    def test_cli_versions_are_compared_exactly_with_the_observation_record(self):
         rows, _ = self.linux({"codex --version": (0, "codex-cli 0.156.1"), "claude --version": (0, "2.1.281 (Claude Code)")})
         self.assertEqual(rows["Codex CLI"].status, "ok")
         self.assertEqual(rows["Claude Code"].status, "info")   # 다른 판: 준비 조회가 거절한다는 안내
         self.assertIn("2.1.280", rows["Claude Code"].detail)
+        # 부분 문자열이면 0.156.10이 0.156.1과 같아 보인다(R04).
+        rows, _ = self.linux({"codex --version": (0, "codex-cli 0.156.10")})
+        self.assertEqual(rows["Codex CLI"].status, "info")
+        rows, _ = self.linux({"codex --version": (0, "codex-cli (unknown build)")})
+        self.assertEqual(rows["Codex CLI"].status, "missing")
         rows, _ = self.linux({}, found=("git",))
         self.assertEqual(rows["Codex CLI"].status, "missing")
+
+    def test_observed_versions_fail_loudly_when_the_record_is_incomplete(self):
+        # 빈 출력이나 일부만 내면 설치 스크립트가 최신판을 고른 것처럼 된다(R02). 둘 다 없으면 1로 끝난다.
+        import contextlib
+        import io
+        for versions in ({}, {"codex": "0.156.1"}, {"codex": "0.156.1", "claude-code": "latest"}):
+            with self.subTest(versions=versions), mock.patch.object(cs, "observed_versions", return_value=versions), \
+                    contextlib.redirect_stdout(io.StringIO()) as out, contextlib.redirect_stderr(io.StringIO()):
+                self.assertEqual(cs.main(["--observed-versions"]), 1)
+                self.assertEqual(out.getvalue(), "")
+        with mock.patch.object(cs, "observed_versions", return_value={"codex": "0.156.1", "claude-code": "2.1.280"}), \
+                contextlib.redirect_stdout(io.StringIO()) as out:
+            self.assertEqual(cs.main(["--observed-versions"]), 0)
+        self.assertEqual(out.getvalue().split(), ["codex", "0.156.1", "claude-code", "2.1.280"])
 
     def test_a_windows_cli_found_through_wsl_path_is_refused(self):
         run, _, _ = fake({})
