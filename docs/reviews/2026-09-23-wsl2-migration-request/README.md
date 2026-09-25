@@ -20,7 +20,7 @@
 | 1 | 경계 리뷰 R01–R04 반영. runner가 추적 단위와 자손 전체를 따로 보고(`unit_confirmed_empty`, `tree_confirmed_empty`, `containment`)하고, 정리 단계에 상한(`CLEANUP_LIMIT`)을 둔다. membership은 공개 전 모든 구성 변경 뒤 정족수를 다시 보고, 단계가 한 칸씩만 간다. 출력 해석은 모양이 다르면 형식 실패, Codex stderr가 잘리면 답을 받지 않는다 | `5790316` | 각 시험 파일의 `BoundaryReviewRegressionTests`(수정 전에 실패함을 먼저 확인), [반영 기록](../2026-09-23-wsl2-boundary/RESPONSE.md) |
 | 2 | 실행 명세: 질문을 stdin으로 보내고 기록에는 digest와 크기만(`adapters.build_spec`). 환경 규칙을 [`core/env.py`](../../../core/env.py)로 옮김(R05). WSL에서 Windows PATH 항목을 빼고 Windows 실행 파일을 거절 | `e598de9` | [`tests/test_core_adapters.py`](../../../tests/test_core_adapters.py)의 `ExecutionSpecTests`, [`tests/test_core_env.py`](../../../tests/test_core_env.py) |
 | 3 | WSL2 설치(사용자), 공식 스크립트로 Linux Claude Code 2.1.280·Codex 0.156.1 설치, V04-01 tier 1을 새 이름표 `aux-pc-wsl`로 기록, 로그인(사용자) | `6c4a9d2`, 로그인 갱신은 4 | [`aux-pc-wsl/RESULTS.md`](../../experiments/v04-01-inventory/hosts/aux-pc-wsl/RESULTS.md), [`manifest.json`](../../experiments/v04-01-inventory/hosts/aux-pc-wsl/manifest.json) |
-| 4 | bubblewrap 격리([`core/isolation.py`](../../../core/isolation.py)), runner의 `pid_namespace` 추적 단위, 모델 없는 경계 시험, CI에 bubblewrap 설치 | `03a7d2c` | [`tests/test_core_isolation.py`](../../../tests/test_core_isolation.py), [W2 기록](../../experiments/w2-isolation/aux-pc-wsl.md), [`tools/w2/cli_boundary.py`](../../../tools/w2/cli_boundary.py) |
+| 4 | bubblewrap 격리([`core/isolation.py`](../../../core/isolation.py)), runner의 `pid_namespace` 추적 단위, 모델 없는 경계 시험, CI에 bubblewrap 설치 | `03a7d2c` | [`tests/test_core_isolation.py`](../../../tests/test_core_isolation.py), [W2 기록](../../experiments/w2-isolation/aux-pc-wsl.md), [`tools/w2/cli_boundary.py`](https://github.com/inlight37-design/decision-model_lab/blob/01cedd3c05dc043465d4476aab2b1a8f547574e9/tools/w2/cli_boundary.py) |
 | 5 | `env.resolve()`가 링크를 따라가 Windows 실행 파일을 거절하도록 수정 | 이 요청서와 같은 병합 | `tests/test_core_env.py` |
 
 사용자가 정한 것: 실행 기반은 WSL2(인계 2절 15), 격리 백엔드는 bubblewrap을 먼저 시험(2절 16, 선택은 claude 세션에 맡김). 앞 리뷰는 rootless 컨테이너를 첫 후보로 들었다. 다르게 정한 이유는 반영 기록의 "리뷰와 다르게 정한 것"에 있다.
@@ -71,7 +71,7 @@
 2. [`NEXT-SESSION.md`](../../../NEXT-SESSION.md)의 **2절만**(15·16 포함) — 논쟁하지 않는 전제다.
 3. 앞 리뷰 원문 [`REVIEW.md`](../2026-09-23-wsl2-boundary/REVIEW.md). 우리의 반영 기록은 아직 읽지 않는다.
 4. 코드와 시험: [`core/`](../../../core/)의 `runner.py`, `membership.py`, `adapters.py`, `env.py`, `isolation.py`, [`tests/`](../../../tests/)의 `test_core_*.py`, [`.github/workflows/checks.yml`](../../../.github/workflows/checks.yml). **여기서 스스로 판단을 적어 둔다.**
-5. 관측 기록: [`aux-pc-wsl/RESULTS.md`](../../experiments/v04-01-inventory/hosts/aux-pc-wsl/RESULTS.md)와 [`help/`](../../experiments/v04-01-inventory/hosts/aux-pc-wsl/help/), [W2 기록](../../experiments/w2-isolation/aux-pc-wsl.md), [`tools/w2/cli_boundary.py`](../../../tools/w2/cli_boundary.py).
+5. 관측 기록: [`aux-pc-wsl/RESULTS.md`](../../experiments/v04-01-inventory/hosts/aux-pc-wsl/RESULTS.md)와 [`help/`](../../experiments/v04-01-inventory/hosts/aux-pc-wsl/help/), [W2 기록](../../experiments/w2-isolation/aux-pc-wsl.md), [`tools/w2/cli_boundary.py`](https://github.com/inlight37-design/decision-model_lab/blob/01cedd3c05dc043465d4476aab2b1a8f547574e9/tools/w2/cli_boundary.py).
 6. 우리의 판정: [반영 기록](../2026-09-23-wsl2-boundary/RESPONSE.md), [`core/README.md`](../../../core/README.md), `NEXT-SESSION.md`의 나머지. 4·5에서 적은 판단과 비교한다.
 
 ## 검토 질문 — 중요한 순서

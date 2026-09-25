@@ -73,7 +73,7 @@
 | PR | 무엇 | 근거 |
 |---|---|---|
 | [#8](https://github.com/inlight37-design/decision-model_lab/pull/8) | ChatGPT의 tmux 조사 병합(문서만). 사용자 지시로 claude 세션이 병합했다. 충돌한 인계 3절은 main 쪽을 두었다(S31). claude 세션이 조사의 코드 주장 셋을 대조했다(인계 1절 기록 표) | [조사](../../research/tmux-2026-09-23/README.md) |
-| [#9](https://github.com/inlight37-design/decision-model_lab/pull/9) | 모델 없는 진단으로 K46을 찾았다: Codex 샌드박스 안의 명령이 `~/.codex/auth.json`을 읽을 수 있다. 명령의 네트워크는 막혀 있다. `auth.json`만 금지하는 권한 profile은 `codex sandbox`에서 통했다. GitHub CLI를 설치했다 | [후속 기록](../../experiments/w2-isolation/stage2-followup-aux-pc-wsl.md), [`codex_sandbox.py`](../../../tools/w2/codex_sandbox.py) |
+| [#9](https://github.com/inlight37-design/decision-model_lab/pull/9) | 모델 없는 진단으로 K46을 찾았다: Codex 샌드박스 안의 명령이 `~/.codex/auth.json`을 읽을 수 있다. 명령의 네트워크는 막혀 있다. `auth.json`만 금지하는 권한 profile은 `codex sandbox`에서 통했다. GitHub CLI를 설치했다 | [후속 기록](../../experiments/w2-isolation/stage2-followup-aux-pc-wsl.md), [`codex_sandbox.py`](https://github.com/inlight37-design/decision-model_lab/blob/01cedd3c05dc043465d4476aab2b1a8f547574e9/tools/w2/codex_sandbox.py) |
 | [#10](https://github.com/inlight37-design/decision-model_lab/pull/10) | K01: Claude 1회. 약 95 KB의 stdin 질문이 끝까지 전달됐고 보고 토큰이 입력만큼 늘었다 | [K01 기록](../../experiments/w2-isolation/k01-large-input-aux-pc-wsl.md), `observe-summaries.json`의 6번 |
 | [#11](https://github.com/inlight37-design/decision-model_lab/pull/11) | 사용자 방침(인계 2절 20): 편의·오케스트레이션 기능은 기본이 꺼진 후보로 둔다. 새 실행으로 넘기기, 공개 뒤 교차검토 한 라운드, 슈퍼바이저 제안 | 인계 4절 |
 | [#12](https://github.com/inlight37-design/decision-model_lab/pull/12) | K46 방어의 모델 없는 부분. Linux Codex 명세가 `--sandbox read-only` 대신 `auth.json`만 읽기 금지한 권한 profile을 `-c default_permissions`로 준다. `-c` 예외는 그 실행의 값만 통과한다. 네트워크 없는 exec 진단 도구, `k46-codex` probe, C3 (a)용 `--keep-session`, 토큰 모양 가림을 더했다 | [K46 profile 기록](../../experiments/w2-isolation/k46-profile-aux-pc-wsl.md), 시험 4개 파일 |
@@ -181,7 +181,7 @@
    - [`core/adapters.py`](../../../core/adapters.py)의 `codex_permissions`·`_check`·`build_spec`, [`tests/test_core_adapters.py`](../../../tests/test_core_adapters.py)
    - [`app/cli_executor.py`](../../../app/cli_executor.py), [`tests/test_app_cli_executor.py`](../../../tests/test_app_cli_executor.py)
    - [`tools/w2/observe.py`](../../../tools/w2/observe.py), [`tests/test_w2_observe.py`](../../../tests/test_w2_observe.py)
-   - [`tools/w2/codex_profile.py`](../../../tools/w2/codex_profile.py), [`tools/w2/codex_sandbox.py`](../../../tools/w2/codex_sandbox.py), [`tests/test_w2_codex_sandbox.py`](../../../tests/test_w2_codex_sandbox.py)
+   - [`tools/w2/codex_profile.py`](../../../tools/w2/codex_profile.py), [`tools/w2/codex_sandbox.py`](https://github.com/inlight37-design/decision-model_lab/blob/01cedd3c05dc043465d4476aab2b1a8f547574e9/tools/w2/codex_sandbox.py), [`tests/test_w2_codex_sandbox.py`](https://github.com/inlight37-design/decision-model_lab/blob/01cedd3c05dc043465d4476aab2b1a8f547574e9/tests/test_w2_codex_sandbox.py)
    - [`core/isolation.py`](../../../core/isolation.py)의 `cli_mounts`·`plan`, [`core/eligibility.py`](../../../core/eligibility.py)
 4. 관측: 이 폴더의 JSON 세 개, 그리고 [2단계 기록](../../experiments/w2-isolation/stage2-aux-pc-wsl.md)·[후속 기록](../../experiments/w2-isolation/stage2-followup-aux-pc-wsl.md)·[K01 기록](../../experiments/w2-isolation/k01-large-input-aux-pc-wsl.md)·[K46 profile 기록](../../experiments/w2-isolation/k46-profile-aux-pc-wsl.md)의 결과 절. **"판정" 절은 아직 읽지 않는다.** 여기서 두 가지를 스스로 적어 둔다:
    - 각 CLI의 세 칸(전송·문맥·권한)을 `observed`·`failed`·`unknown` 가운데 무엇으로 적겠는가.

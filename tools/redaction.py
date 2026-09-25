@@ -24,7 +24,6 @@ SECRET = re.compile(
 UUID = re.compile(r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
 LONG_HEX = re.compile(r"(?<![0-9a-fA-F])[0-9a-fA-F]{24,}(?![0-9a-fA-F])")
 TOKEN = re.compile(r"(?<![A-Za-z0-9_-])[A-Za-z0-9_-]{40,}(?![A-Za-z0-9_-])")
-OPAQUE_TOKEN = re.compile(r"[A-Za-z0-9_-]{24,}")
 EMAIL = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
 _USER_NAME = r"(?!<user>(?:[{sep}\"'\r\n]|$))[^{sep}\r\n\"']+"
 USER_PATH = re.compile(
@@ -42,13 +41,8 @@ INIT_FIELDS = frozenset(LIST_FIELDS + INIT_METADATA + (
 SERVER_STATUSES = frozenset({"connected", "failed", "pending", "disabled", "needs-auth"})
 
 
-def scrub(text: str, home: str = "", *, opaque_tokens: bool = False) -> str:
-    """Mask known credential shapes and personal identifiers, preserving CLI flags.
-
-    Auth error lines additionally use opaque_tokens to retain their existing
-    conservative policy for every long word. That mode is unsuitable for help
-    text and paths, where long option and package names carry useful evidence.
-    """
+def scrub(text: str, home: str = "") -> str:
+    """Mask known credential shapes and personal identifiers, preserving CLI flags."""
     homes = {value.rstrip("/\\") for value in (home, home.replace("\\", "/"))} - {""}
     for value in sorted(homes, key=len, reverse=True):
         # A home prefix must end at a path boundary: /home/u is not /home/user.
@@ -62,14 +56,14 @@ def scrub(text: str, home: str = "", *, opaque_tokens: bool = False) -> str:
     text = LONG_HEX.sub("<hex>", UUID.sub("<uuid>", text))
     text = TOKEN.sub(lambda m: "<token>" if all(re.search(p, m[0]) for p in ("[0-9]", "[a-z]", "[A-Z]"))
                      else m[0], text)
-    return OPAQUE_TOKEN.sub("<redacted>", text) if opaque_tokens else text
+    return text
 
 
 def make_redactor(home: str) -> Callable[[str], str]:
     return lambda text: scrub(text, home)
 
 
-def scrub_all(value, home: str = "", *, keep_digests: tuple[str, ...] = (), opaque_tokens: bool = False):
+def scrub_all(value, home: str = "", *, keep_digests: tuple[str, ...] = ()):
     """Redact every string key/value; only named, well-formed digests are exempt."""
     def visit(item, key=None):
         if isinstance(key, str) and PRIVATE_KEYS.fullmatch(key):
@@ -77,9 +71,9 @@ def scrub_all(value, home: str = "", *, keep_digests: tuple[str, ...] = (), opaq
         if isinstance(item, str):
             if key in keep_digests and re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", item):
                 return item
-            return scrub(item, home, opaque_tokens=opaque_tokens)
+            return scrub(item, home)
         if isinstance(item, dict):
-            return {(scrub(k, home, opaque_tokens=opaque_tokens) if isinstance(k, str) else k): visit(v, k)
+            return {(scrub(k, home) if isinstance(k, str) else k): visit(v, k)
                     for k, v in item.items()}
         if isinstance(item, (list, tuple)):
             return [visit(v) for v in item]

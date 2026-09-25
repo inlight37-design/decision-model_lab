@@ -60,6 +60,7 @@
 - 기록에 적힌 완료 상태를 지금 head의 CI로 읽지 않는다.
 - [#38 기록](2026-09-24-cli-unblock/README.md)의 Windows 패치 미적용·계정/병렬 응답 미관측은 당시 상태다. [#39](2026-09-24-windows-live-completion/README.md)에서 관측됐고, 문맥 독립성은 그 뒤 [E2](2026-09-25-context-independence/README.md)에서 이 PC·판·30일 범위로 관측됐다.
 - [Codex 연결 앱 끄기](2026-09-24-codex-apps-off/README.md)의 "C3 미확인"은 그 당시 계획에 대한 것이다.
+- 2026-09-25에 끝난 일회성 도구를 뺐다: `tools/smoke_review_preview.py`, `tools/v04-03/`, `tools/review_boundary.py`, `tools/w2/`의 `cli_boundary.py`·`auth_mounts.py`·`codex_sandbox.py`·`codex_account.py`(시험 포함). 앞의 기록에서 그 파일로 가던 상대 링크는 마지막으로 있던 main `01cedd3`의 GitHub 주소로 고정했다.
 - [초기 D 결과](../experiments/2026-09-24-comparison-pilot/RESULTS.md) "읽는 법과 한계"의 T2 "인용은 모두 진짜였지만"은 같은 파일의 원문 일치 표(T2 9/10)와 다르다 — 표가 맞다. 맞게 인용된 틀린 설명이 옮겨졌다는 결론은 그대로다([외부 검토](2026-09-25-review/README.md) R07).
 
 아래 번호 목록(1–38)은 2026-09-24까지의 기록을 시간순으로 적은 것이다. 뒤의 '단서' 절이 그 번호로 가리키므로 **고치지 않고 남긴다.** 그 뒤의 기록은 위 표에만 있다. 뒤로 갈수록 최신이며, 앞의 것은 그 시점의 기록으로 남긴다.
