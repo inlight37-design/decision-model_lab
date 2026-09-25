@@ -1,0 +1,7 @@
+Python 3에서 다음 코드가 실제로 출력하는 값을 정확히 쓰라. 의도는 연속된 같은 키의 행을 그룹별 목록으로 보존하는 것이다. 실제 결과가 의도와 다르면 이유와 최소 수정 코드를 제시하고, 고친 결과도 쓰라.
+
+from itertools import groupby
+rows = [("a", 1), ("a", 2), ("b", 3)]
+groups = list(groupby(rows, key=lambda row: row[0]))
+result = [(key, list(items)) for key, items in groups]
+print(result)

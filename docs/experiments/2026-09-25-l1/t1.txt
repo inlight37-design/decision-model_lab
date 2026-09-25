@@ -1,0 +1,19 @@
+Python 3에서 다음 코드가 출력하는 세 줄을 정확히 쓰고, 각 차이가 생기는 이유를 설명하라. 앞선 주장과 결론이 다르면 최종 답을 분명히 정정하라.
+
+def funcs():
+    for i in range(3):
+        yield lambda: i
+
+a = [f() for f in funcs()]
+saved = list(funcs())
+b = [f() for f in saved]
+g = funcs()
+first = next(g)
+c = [first()]
+next(g)
+c.append(first())
+list(g)
+c.append(first())
+print(a)
+print(b)
+print(c)
