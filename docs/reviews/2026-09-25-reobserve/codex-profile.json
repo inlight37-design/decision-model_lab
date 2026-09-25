@@ -1,0 +1,271 @@
+{
+ "codex": "~/.codex/packages/standalone/releases/0.156.1-x86_64-unknown-linux-musl/bin/codex",
+ "synthetic": {
+  "home": "synthetic",
+  "helper": {
+   "no profile (control)": {
+    "state": "exited",
+    "exit": 0,
+    "tree_confirmed_empty": true,
+    "result": {
+     "write": "denied:EROFS",
+     "input": "ok",
+     "auth": "ok",
+     "home": "ok"
+    },
+    "created_txt_left": false,
+    "auth_size_mtime_unchanged": true,
+    "stderr": [
+     "WARNING: proceeding, even though we could not create PATH aliases: Refusing to create helper binaries under temporary dir \"/tmp\" (codex_home: AbsolutePathBuf(\"~/.codex\"))"
+    ]
+   },
+   "profile via default_permissions (exec's way)": {
+    "state": "exited",
+    "exit": 0,
+    "tree_confirmed_empty": true,
+    "result": {
+     "write": "denied:EROFS",
+     "input": "ok",
+     "auth": "denied:EACCES",
+     "home": "denied:EACCES"
+    },
+    "created_txt_left": false,
+    "auth_size_mtime_unchanged": true,
+    "stderr": [
+     "WARNING: proceeding, even though we could not create PATH aliases: Refusing to create helper binaries under temporary dir \"/tmp\" (codex_home: AbsolutePathBuf(\"~/.codex\"))"
+    ]
+   },
+   "profile via -P": {
+    "state": "exited",
+    "exit": 0,
+    "tree_confirmed_empty": true,
+    "result": {
+     "write": "denied:EROFS",
+     "input": "ok",
+     "auth": "denied:EACCES",
+     "home": "denied:EACCES"
+    },
+    "created_txt_left": false,
+    "auth_size_mtime_unchanged": true,
+    "stderr": [
+     "WARNING: proceeding, even though we could not create PATH aliases: Refusing to create helper binaries under temporary dir \"/tmp\" (codex_home: AbsolutePathBuf(\"~/.codex\"))"
+    ]
+   }
+  }
+ },
+ "real_home": {
+  "helper": {
+   "no profile (control)": {
+    "state": "exited",
+    "exit": 0,
+    "tree_confirmed_empty": true,
+    "result": {
+     "write": "denied:EROFS",
+     "input": "ok",
+     "auth": "ok",
+     "home": "ok"
+    },
+    "created_txt_left": false,
+    "auth_size_mtime_unchanged": true,
+    "stderr": []
+   },
+   "profile via default_permissions (exec's way)": {
+    "state": "exited",
+    "exit": 0,
+    "tree_confirmed_empty": true,
+    "result": {
+     "write": "denied:EROFS",
+     "input": "ok",
+     "auth": "denied:EACCES",
+     "home": "denied:EACCES"
+    },
+    "created_txt_left": false,
+    "auth_size_mtime_unchanged": true,
+    "stderr": []
+   },
+   "profile via -P": {
+    "state": "exited",
+    "exit": 0,
+    "tree_confirmed_empty": true,
+    "result": {
+     "write": "denied:EROFS",
+     "input": "ok",
+     "auth": "denied:EACCES",
+     "home": "denied:EACCES"
+    },
+    "created_txt_left": false,
+    "auth_size_mtime_unchanged": true,
+    "stderr": []
+   }
+  },
+  "exec_offline": {
+   "participant --json": {
+    "argv_tail": [
+     "--json",
+     "--skip-git-repo-check",
+     "--ephemeral",
+     "--ignore-user-config",
+     "--ignore-rules",
+     "-c",
+     "permissions.dml-discussant={ extends = \":read-only\", filesystem = { \"~/.codex\" = \"deny\" } }",
+     "-c",
+     "default_permissions=\"dml-discussant\"",
+     "-c",
+     "features.apps=false",
+     "-c",
+     "features.plugins=false",
+     "-c",
+     "project_doc_max_bytes=0",
+     "--model",
+     "gpt-6-luna",
+     "-"
+    ],
+    "state": "timed_out",
+    "exit": -15,
+    "duration_ms": 90067,
+    "tree_confirmed_empty": true,
+    "jsonl_types": [
+     "thread.started",
+     "turn.started",
+     "error",
+     "error",
+     "error",
+     "error",
+     "item.completed"
+    ],
+    "stdout_text": [],
+    "stderr": [
+     "2026-09-25T11:42:16.312462Z ERROR codex_models_manager::manager: failed to refresh available models: request timed out"
+    ],
+    "auth_size_mtime_unchanged": true
+   },
+   "participant, human output": {
+    "argv_tail": [
+     "--skip-git-repo-check",
+     "--ephemeral",
+     "--ignore-user-config",
+     "--ignore-rules",
+     "-c",
+     "permissions.dml-discussant={ extends = \":read-only\", filesystem = { \"~/.codex\" = \"deny\" } }",
+     "-c",
+     "default_permissions=\"dml-discussant\"",
+     "-c",
+     "features.apps=false",
+     "-c",
+     "features.plugins=false",
+     "-c",
+     "project_doc_max_bytes=0",
+     "--model",
+     "gpt-6-luna",
+     "-"
+    ],
+    "state": "timed_out",
+    "exit": -15,
+    "duration_ms": 90077,
+    "tree_confirmed_empty": true,
+    "jsonl_types": [],
+    "stdout_text": [],
+    "stderr": [
+     "OpenAI Codex v0.156.1",
+     "--------",
+     "workdir: /tmp/dml-k46-exec-cok4m1rp/work",
+     "model: gpt-6-luna",
+     "provider: openai",
+     "approval: never",
+     "sandbox: read-only",
+     "reasoning effort: none",
+     "reasoning summaries: none",
+     "session id: <uuid>",
+     "--------",
+     "user",
+     "Reply with exactly: OK",
+     "2026-09-25T11:43:47.813976Z ERROR codex_models_manager::manager: failed to refresh available models: request timed out",
+     "ERROR: Reconnecting... 2/5",
+     "ERROR: Reconnecting... 3/5",
+     "ERROR: Reconnecting... 4/5",
+     "ERROR: Reconnecting... 5/5",
+     "warning: Falling back from WebSockets to HTTPS transport. workspace routing discovery failed"
+    ],
+    "auth_size_mtime_unchanged": true
+   },
+   "undefined profile --json": {
+    "argv_tail": [
+     "--json",
+     "--skip-git-repo-check",
+     "--ephemeral",
+     "--ignore-user-config",
+     "--ignore-rules",
+     "-c",
+     "permissions.dml-discussant={ extends = \":read-only\", filesystem = { \"~/.codex\" = \"deny\" } }",
+     "-c",
+     "default_permissions=\"notamode\"",
+     "-c",
+     "features.apps=false",
+     "-c",
+     "features.plugins=false",
+     "-c",
+     "project_doc_max_bytes=0",
+     "--model",
+     "gpt-6-luna",
+     "-"
+    ],
+    "state": "exited",
+    "exit": 1,
+    "duration_ms": 50,
+    "tree_confirmed_empty": true,
+    "jsonl_types": [],
+    "stdout_text": [],
+    "stderr": [
+     "Error: default_permissions refers to undefined profile `notamode`"
+    ],
+    "auth_size_mtime_unchanged": true
+   },
+   "legacy --sandbox read-only, human output": {
+    "argv_tail": [
+     "--skip-git-repo-check",
+     "--ephemeral",
+     "--ignore-user-config",
+     "--ignore-rules",
+     "--sandbox",
+     "read-only",
+     "--model",
+     "gpt-6-luna",
+     "-"
+    ],
+    "state": "timed_out",
+    "exit": -15,
+    "duration_ms": 90067,
+    "tree_confirmed_empty": true,
+    "jsonl_types": [],
+    "stdout_text": [],
+    "stderr": [
+     "OpenAI Codex v0.156.1",
+     "--------",
+     "workdir: /tmp/dml-k46-exec-ngzdf1ia/work",
+     "model: gpt-6-luna",
+     "provider: openai",
+     "approval: never",
+     "sandbox: read-only",
+     "reasoning effort: none",
+     "reasoning summaries: none",
+     "session id: <uuid>",
+     "--------",
+     "user",
+     "Reply with exactly: OK",
+     "2026-09-25T11:45:19.349238Z ERROR codex_models_manager::manager: failed to refresh available models: request timed out",
+     "2026-09-25T11:45:19.514341Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest(\"http/request failed: error sending request for url (https://chatgpt.com/backend-api/ps/mcp)\"))",
+     "2026-09-25T11:45:24.770350Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest(\"http/request failed: error sending request for url (https://chatgpt.com/backend-api/ps/mcp)\"))",
+     "2026-09-25T11:45:31.481556Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest(\"http/request failed: error sending request for url (https://chatgpt.com/backend-api/ps/mcp)\"))",
+     "2026-09-25T11:45:36.487508Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest(\"http/request failed: error sending request for url (https://chatgpt.com/backend-api/ps/mcp)\"))",
+     "2026-09-25T11:45:41.741293Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest(\"http/request failed: error sending request for url (https://chatgpt.com/backend-api/ps/mcp)\"))",
+     "2026-09-25T11:45:47.744653Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest(\"http/request failed: error sending request for url (https://chatgpt.com/backend-api/ps/mcp)\"))",
+     "ERROR: Reconnecting... 2/5",
+     "ERROR: Reconnecting... 3/5",
+     "ERROR: Reconnecting... 4/5",
+     "ERROR: Reconnecting... 5/5"
+    ],
+    "auth_size_mtime_unchanged": true
+   }
+  }
+ }
+}

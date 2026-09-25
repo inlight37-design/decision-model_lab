@@ -39,15 +39,10 @@ TEXT = (".py", ".md", ".ps1", ".sh", ".yml", ".yaml", ".json", ".html", ".js")
 PROCEDURES = {
     "docs/experiments/v04-01-inventory/README.md":
         ("2026-10-25", "AGENTS.md가 설치·권한 재조사 절차로 지정한다 — 카드 #82에서 살아 있는 문서로 옮긴다"),
-    "docs/reviews/2026-09-25-context-independence/README.md":
-        ("2026-10-25", "E2 재관측 명령이 여기 있다 — 카드 #82에서 살아 있는 문서로 옮긴다"),
 }
 
-# 쓰는 곳은 없지만 지우지 않고 남기는 도구.
-KEPT = {
-    "tools/w2/claude_preflight.py":
-        ("2026-10-25", "Claude 재관측 결과의 판정(assess) — 카드 #82가 기록 조립에 쓸지 정한다"),
-}
+# 쓰는 곳은 없지만 지우지 않고 남기는 도구. 비어 있는 것이 정상이다.
+KEPT: dict[str, tuple[str, str]] = {}
 
 
 def tools():
@@ -88,11 +83,11 @@ def references(tool, texts):
     return users
 
 
-def alive_tools():
+def alive_tools(kept=None):
     """쓰는 곳이 있는 도구. 다른 도구만 쓰는 도구는 그 도구가 살아 있을 때만 산다."""
     texts = user_texts()
     users = {tool: references(tool, texts) for tool in tools()}
-    alive = set(KEPT)
+    alive = set(KEPT if kept is None else kept)
     grew = True
     while grew:
         grew = False
@@ -143,11 +138,11 @@ class AccumulationTests(unittest.TestCase):
                     date.fromisoformat(deadline), date.today(),
                     f"{name} was to be decided by {deadline} ({reason}). Delete or move it now, or give a new date "
                     "and the reason in the pull request.")
+        _, alive_without_exceptions = alive_tools(kept=())
         for tool in KEPT:
             with self.subTest(kept=tool):
                 self.assertIn(tool, users, f"{tool} no longer exists; remove it from KEPT")
-                others = {u for u in users[tool] if not u.startswith("tools/") or u.endswith("/README.md")}
-                self.assertFalse(others, f"{tool} is used by {sorted(others)} now; remove it from KEPT")
+                self.assertNotIn(tool, alive_without_exceptions, f"{tool} has a current user now; remove it from KEPT")
         for doc in PROCEDURES:
             with self.subTest(procedure=doc):
                 self.assertTrue((ROOT / doc).is_file(), f"{doc} is gone; remove it from PROCEDURES")
