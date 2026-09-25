@@ -2,6 +2,7 @@
 import http.client
 import json
 from pathlib import Path
+import re
 import socket
 import sqlite3
 import tempfile
@@ -136,6 +137,34 @@ class HttpBoundaryTests(HttpServerCase):
         self.assertEqual(status, 200)
         self.assertEqual(headers.get("X-Frame-Options"), "DENY")
         self.assertEqual(headers.get("Content-Security-Policy"), "frame-ancestors 'none'")
+
+    def get(self, path):
+        conn = http.client.HTTPConnection("127.0.0.1", self.port, timeout=2)
+        self.addCleanup(conn.close)
+        conn.request("GET", path)
+        response = conn.getresponse()
+        return response.status, response.read(), dict(response.getheaders())
+
+    def test_page_loads_only_its_listed_parts(self):
+        status, page, headers = self.get("/")
+        self.assertEqual(status, 200)
+        policy = headers["Content-Security-Policy"]
+        for part in ("default-src 'none'", "script-src 'self' 'unsafe-inline'", "connect-src 'self'", "frame-ancestors 'none'"):
+            self.assertIn(part, policy)
+        text = page.decode("utf-8")
+        for path, (name, kind) in s.ASSETS.items():
+            with self.subTest(path=path):
+                self.assertIn(f'"{path}"', text)
+                status, body, headers = self.get(path)
+                self.assertEqual((status, headers["Content-Type"]), (200, kind))
+                self.assertEqual(body, (Path(s.__file__).with_name("static") / name).read_bytes())
+        for path in ("/island-ui/README.md", "/island-ui/../server.py", "/index.html"):
+            self.assertEqual(self.get(path)[0], 404, path)
+        # 밖에서 받는 것은 고정 해시를 단 글꼴 CSS 하나뿐이다
+        outside = re.findall(r'(?:href|src)="(https?://[^"]+)"', text)
+        self.assertEqual(len(outside), 1)
+        self.assertTrue(outside[0].startswith("https://cdn.jsdelivr.net/"))
+        self.assertRegex(text, r'integrity="sha384-[A-Za-z0-9+/=]+"')
 
     def test_valid_korean_request_keeps_its_original_input(self):
         status, _, _ = self.request({"question": "한글 질문", "participants": [{"pid": "claude"}],

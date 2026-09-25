@@ -19,7 +19,8 @@
 | [run.py](run.py) | 헤드리스 실행: 화면 없이 질문 하나를 끝까지 돌리고 결과 JSON 하나를 쓴다 |
 | [start.ps1](start.ps1), [launch.py](launch.py) | 바탕 화면 아이콘의 입구: Windows 쪽이 WSL 쪽을 불러 관측 기록·모델·원장을 고르고 서버를 띄운 뒤 앱 창으로 연다. 창을 닫으면 끈다 |
 | [report.py](report.py), [synthesis.py](synthesis.py) | 공개 원문의 허용 목록 투영, 모의 발췌/참조 검사, 실제 합성의 질문 만들기와 인용 대조(이 파일들은 모델을 부르지 않는다) |
-| [fake_cli.py](fake_cli.py), [static/index.html](static/index.html) | 가짜 CLI와 빌드 없는 HTML/JS 화면 |
+| [fake_cli.py](fake_cli.py) | 가짜 CLI |
+| [static/index.html](static/index.html), [static/island-ui/](static/island-ui/README.md) | 빌드 없는 HTML/JS 화면. 모양·움직임 부품 island-ui는 사용자가 [ai_unslop](https://github.com/inlight37-design/ai_unslop)에서 고른 것을 그대로 옮겼고 여기서 고치지 않는다. 화면은 결정·권고·뒤집을 조건·미해결과 호출을 쓰는 버튼만 늘 보이고, 해시·실행기·사건 기록·호출 집계·오염 표시는 접어 둔다 |
 
 ## 바탕 화면 아이콘으로 열기 — 사용자가 쓰는 입구
 
@@ -143,7 +144,7 @@ python -m app.run --live-config live.json --data-dir <새 원장> --question-fil
 
 ## API·보고·모의 합성
 
-모든 `/api` 읽기/쓰기는 토큰이 필요하다. 토큰은 URL fragment로만 전달하고 페이지에 포함하지 않는다. Host·Origin 검사, JSON 타입·본문 크기·framing 검사, 프레임 삽입 차단을 유지한다. 인증 전 연결도 상한과 I/O 기한을 적용하지만 CPU/메모리 전체 제한은 아니다. 원장은 참여자의 `never` 경로이며 토큰 파일은 POSIX 0600, 데이터 폴더는 0700이다. localhost 네트워크 공유를 파일 격리만으로 안전하다고 가정하지 않는다.
+모든 `/api` 읽기/쓰기는 토큰이 필요하다. 토큰은 URL fragment로만 전달하고 페이지에 포함하지 않는다. Host·Origin 검사, JSON 타입·본문 크기·framing 검사, 프레임 삽입 차단을 유지한다. 페이지는 서버의 정해진 파일(`ASSETS`)과 고정 해시를 단 글꼴 CSS(jsDelivr의 Pretendard)만 불러오고, 요청은 서버로만 보낸다(CSP). 글꼴을 못 받으면 시스템 글꼴로 그린다. 인증 전 연결도 상한과 I/O 기한을 적용하지만 CPU/메모리 전체 제한은 아니다. 원장은 참여자의 `never` 경로이며 토큰 파일은 POSIX 0600, 데이터 폴더는 0700이다. localhost 네트워크 공유를 파일 격리만으로 안전하다고 가정하지 않는다.
 
 공개 뒤 `GET /api/runs/<run_id>/report`는 `a1-draft-report/4` 원문 보고다. 질문/입력 해시, 공통 자료 목록(이름·크기·sha256), 초안/해시, 출처·독립성·시도 종류, 정책·탈락·축소 승인·회계를 내보낸다. 보고의 회계는 실행 원장의 값이다. 계정 전체 잔여는 아래 별도 계정 API와 화면에서 관측 시각을 붙여 제공하며 과거 실행의 사용량으로 소급하지 않는다. 해시 불일치·초안 누락·공개 전 요청은 거절한다. 원문이 들어가므로 공개 저장소에 자동 업로드하지 않는다.
 

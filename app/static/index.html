@@ -1,146 +1,338 @@
 <!doctype html>
-<html lang="ko">
+<html lang="ko" data-theme="glass">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ledger 모의 모드</title>
+<title>Ledger</title>
+<script>
+  // 테마는 이 창에만 기억한다(편의). 첫 그리기 전에 정해 번쩍임을 막는다.
+  try { const t = localStorage.getItem("ledger-theme"); if (["light", "glass", "dusk"].includes(t)) document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<!-- 글꼴: Pretendard 1.3.9 원본 파일(GitHub 태그와 같은 내용)을 고정 해시로만 받는다. 못 받으면 시스템 글꼴로 그린다 -->
+<link rel="stylesheet" crossorigin="anonymous"
+  href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css"
+  integrity="sha384-2nNKoOPayicGa+aRguOQuiZP+RqQ4G3jalfDeOgftkKD7zBM2gJXTwcFqCZltdv0">
+<!-- island-ui(ai_unslop 저장소의 스킬)를 그대로 쓴다. 이 두 파일과 motion.js는 여기서 고치지 않는다 — island-ui/README.md -->
+<link rel="stylesheet" href="/island-ui/themes.css">
+<link rel="stylesheet" href="/island-ui/base.css">
 <style>
-  :root {
-    --surface-000:#f4f5f3; --surface-100:#fbfbfa; --surface-200:#e9eae6; --rule-100:#dcdeda; --rule-200:#b9bdb7;
-    --ink-000:#16181a; --ink-100:#4c5157; --ink-200:#6b7178; --accent:#33518c; --accent-soft:#e4e9f2;
-    --supported:#1c6b4b; --qualified:#8a6116; --rejected:#59616e; --unresolved:#c22e4e; --unknown:#7b8188;
-    --sealed:#5e4b9a; --danger:#a32c1e;
-    --sans:"IBM Plex Sans","Malgun Gothic",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --surface-000:#141618; --surface-100:#1b1e21; --surface-200:#232629; --rule-100:#2c3034; --rule-200:#3c4147;
-      --ink-000:#e7e8e6; --ink-100:#a9aeb2; --ink-200:#848a90; --accent:#8ea6d8; --accent-soft:#1e2836;
-      --supported:#5cbf95; --qualified:#d6a65a; --rejected:#98a0aa; --unresolved:#f07b95; --unknown:#8e949a;
-      --sealed:#a996e0; --danger:#e8917f;
-    }
-  }
-  * { box-sizing: border-box; }
-  body { margin: 0; background: var(--surface-000); color: var(--ink-000); font: 400 13.5px/21px var(--sans); }
-  header { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 12px 16px;
-           border-bottom: 1px solid var(--rule-200); background: var(--surface-100); }
-  header h1 { font-size: 15px; line-height: 24px; margin: 0; font-weight: 600; }
-  .label { font: 600 11px/16px var(--mono); letter-spacing: .09em; text-transform: uppercase; padding-bottom: 2px;
-           border-bottom: 2px solid currentColor; white-space: nowrap; }
-  .mock { color: var(--ink-100); border: 1px dashed var(--ink-200); border-bottom-width: 1px; padding: 1px 6px; border-radius: 2px; }
-  .meta { font: 400 12px/19px var(--mono); color: var(--ink-100); }
-  .spacer { flex: 1; }
-  main { display: grid; grid-template-columns: minmax(260px, 340px) 1fr; gap: 24px; padding: 16px; max-width: 1280px; margin: 0 auto; }
-  main > section { min-width: 0; }
-  @media (max-width: 860px) { main { grid-template-columns: 1fr; } }
-  .panel { background: var(--surface-100); border: 1px solid var(--rule-200); border-radius: 3px; overflow: hidden; }
-  .panel + .panel { margin-top: 16px; }
-  .ph { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 16px;
-        border-bottom: 1px solid var(--rule-200); background: var(--surface-200); }
-  .ph .t { font-weight: 600; }
-  .pb { padding: 12px 16px; }
-  label.row { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
-  #choices label.row { display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; }
-  #choices .meta { white-space: nowrap; }
-  #choices select { grid-column: 2 / -1; min-width: 0; width: 100%; }
-  label.row.policy { display: grid; gap: 4px; }
-  #policy { min-width: 0; width: 100%; }
-  textarea, select, input[type=number] { font: inherit; color: var(--ink-000); background: var(--surface-000);
-       border: 1px solid var(--rule-200); border-radius: 2px; padding: 6px 8px; }
-  textarea { width: 100%; resize: vertical; }
-  select { padding: 2px 4px; font-size: 12px; }
-  button { font: 500 12.5px/18px var(--sans); color: var(--accent); background: transparent; border: 1px solid var(--accent);
-           border-radius: 2px; padding: 5px 10px; cursor: pointer; }
-  button:hover { background: var(--accent-soft); }
-  button:focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-  button.quiet { color: var(--ink-100); border-color: var(--rule-200); }
-  .caption { font-size: 12px; line-height: 18px; color: var(--ink-100); }
-  .runs button { display: block; width: 100%; text-align: left; border: 0; border-bottom: 1px solid var(--rule-100);
-                 border-radius: 0; color: var(--ink-000); padding: 8px 16px; }
-  .runs button[aria-current=true] { background: var(--accent-soft); }
-  .runs .q { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  h2 { font-size: 19px; line-height: 30px; font-weight: 600; letter-spacing: -.01em; margin: 0 0 4px; }
-  .p { display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--rule-100); }
-  .who { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-  .who .v { font: 400 12px/18px var(--mono); color: var(--ink-200); }  /* ink-200은 12px 이상에서만(토큰 규칙) */
-  .flags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
-  .flag { font: 400 11px/16px var(--mono); color: var(--qualified); border: 1px solid currentColor; border-radius: 2px; padding: 0 6px; }
-  .st-sealed, .st-accepted { color: var(--sealed); } .st-rejected { color: var(--danger); }
-  .st-queued, .st-running, .st-awaiting_user { color: var(--ink-100); }
-  /* unknown 색은 일반 글자 대비가 모자란다(K24). 글자는 잉크로, 관측하지 못했다는 표시는 unknown 색 1px 파선으로 */
-  .st-unknown { color: var(--ink-100); border-bottom: 1px dashed var(--unknown); }
-  .revealed .st-accepted { color: var(--ink-000); }
-  .foot { padding: 12px 16px; border-top: 2px solid var(--unresolved); }
-  .foot .warn { color: var(--unresolved); font-weight: 600; font-size: 13px; }
-  .budget { display: flex; gap: 3px; margin: 8px 0 4px; }
-  .cell { width: 22px; height: 10px; border: 1px solid var(--rule-200); border-radius: 1px; }
-  .cell.ok { background: var(--rejected); border-color: var(--rejected); }
-  .cell.bad { background: var(--rejected); border-color: var(--danger); }
-  .cell.unk { border: 1px dashed var(--unknown); }
-  .cell.run { border-color: var(--ink-100); }
-  .metric { font: 500 21px/30px var(--mono); font-variant-numeric: tabular-nums; }
-  .manual { margin-top: 8px; display: grid; gap: 6px; }
-  .draft { white-space: pre-wrap; font-size: 13.5px; line-height: 21px; background: var(--surface-000);
-           border: 1px solid var(--rule-100); border-radius: 2px; padding: 8px 10px; margin-top: 6px; overflow-wrap: anywhere; }
-  h2 { overflow-wrap: anywhere; }
-  details summary { cursor: pointer; color: var(--accent); font-size: 12.5px; }
-  .kv { font: 400 12px/19px var(--mono); color: var(--ink-100); margin-top: 4px; overflow-wrap: anywhere; }
-  .err { color: var(--danger); font-size: 12.5px; }
-  .trail { font: 400 12px/18px var(--mono); color: var(--ink-200); overflow-wrap: anywhere; }
-  .comparison { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .comparison th, .comparison td { text-align: left; vertical-align: top; padding: 10px;
-    border-bottom: 1px solid var(--rule-100); overflow-wrap: anywhere; }
-  .comparison th { color: var(--ink-100); font-weight: 600; }
-  .compare-scroll { overflow-x: auto; }
-  .comparison th:first-child { min-width: 160px; }
-  .decision h3 { margin: 6px 0 10px; font-size: 18px; }
-  .decision ul { padding-left: 20px; }
-  .decision li { margin: 5px 0; }
-  .layout-controls { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
-  .layout-controls [aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+/* ===== 화면 전용 스타일. 크기·간격·색은 island-ui 토큰만 쓴다 ===== */
+* { box-sizing: border-box; }
+button { border: none; background: none; }
+h1, h2, h3, h4, p, ul { margin: 0; }
+ul { padding: 0; list-style: none; }
+
+/* 창 크기: 900 이하 한 단 · 901~1599 두 단(옆 단 거의 고정, 본문이 늘어남) · 1600 이상 세 단(참여자가 옆으로) */
+.page { max-width: 2400px; margin: 0 auto; padding: var(--s-4); }
+@media (min-width: 601px) { .page { padding: var(--s-5); } }
+@media (min-width: 901px) { .page { padding: var(--s-6); } }
+@media (max-width: 900px) { .page { padding-bottom: calc(var(--s-8) + 64px); } }   /* 떠 있는 새 실행 버튼이 마지막 판을 가리지 않게 */
+
+.layout { display: grid; gap: var(--s-5); align-items: start;
+  grid-template-columns: minmax(0, 1fr); grid-template-areas: "main" "aside" "side"; }
+.side { grid-area: side; } .main { grid-area: main; } .aside { grid-area: aside; }
+.side, .main, .aside { display: flex; flex-direction: column; gap: var(--s-5); min-width: 0; }
+.aside:empty { display: none; }
+@media (min-width: 901px) {
+  .layout { gap: var(--s-6); grid-template-columns: clamp(300px, 26vw, 380px) minmax(0, 1fr);
+    grid-template-rows: auto 1fr; grid-template-areas: "side main" "side aside"; }
+  .aside { margin-top: calc(var(--s-5) - var(--s-6)); }
+}
+@media (min-width: 1600px) {
+  .layout { grid-template-columns: 380px minmax(0, 1.2fr) minmax(0, 1fr); grid-template-rows: auto; grid-template-areas: "side main aside"; }
+  .aside { margin-top: 0; }
+}
+
+/* 섬과 칸: 바탕 위 흰 판(.island), 섬 안의 칸은 --surface-2 */
+.island-block { border-radius: var(--r-island); padding: var(--s-5); }
+@media (max-width: 600px) { .island-block { padding: var(--s-4); } .layout, .side, .main, .aside { gap: var(--s-4); } }
+.block-title { font-size: var(--t-title-size); line-height: var(--t-title-lh); font-weight: 700; }
+.block-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); flex-wrap: wrap; margin-bottom: var(--s-4); }
+.cell { background: var(--surface-2); border-radius: var(--r-cell); padding: var(--s-3) var(--s-4); }
+.stack { display: flex; flex-direction: column; gap: var(--s-2); }
+.stack-lg { display: flex; flex-direction: column; gap: var(--s-4); }
+.row { display: flex; align-items: center; gap: var(--s-2); flex-wrap: wrap; }
+.between { justify-content: space-between; }
+.muted { color: var(--text-2); }
+.cap { font-size: var(--t-cap-size); line-height: var(--t-cap-lh); }
+.sm { font-size: var(--t-sm-size); line-height: var(--t-sm-lh); }
+.lg { font-size: var(--t-lg-size); line-height: var(--t-lg-lh); }
+.strong { font-weight: 700; }
+.hash { word-break: break-all; }
+/* 모르는 값은 0이 아니다: 글자는 그대로 두고 파선 밑줄로 '관측하지 못함'을 표시한다 */
+.st-unknown { text-decoration: underline dashed; text-decoration-color: var(--text-2); text-underline-offset: 3px; }
+
+/* 머리줄: Ledger · 모드 · 상태 알약(필요할 때만) · 테마 */
+.header-island { border-radius: var(--r-island); padding: var(--s-4) var(--s-5); margin-bottom: var(--s-5);
+  display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap; }
+.header-top { display: flex; align-items: center; gap: var(--s-3); min-width: 0; flex-wrap: wrap; }
+.brand-name { font-size: var(--t-title-size); line-height: var(--t-title-lh); font-weight: 700; }
+.pill { display: inline-flex; align-items: center; gap: var(--s-1); padding: var(--s-1) var(--s-3);
+  border-radius: var(--r-pill); background: var(--surface-2); font-size: var(--t-sm-size); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.pill-mode { background: var(--tint-blue); color: var(--on-tint-blue); font-weight: 600; }
+.pill-live { background: var(--tint-orange); color: var(--on-tint-orange); font-weight: 600; }
+.pill-warn { background: var(--tint-orange); color: var(--on-tint-orange); font-weight: 600; }
+.status-row { display: flex; gap: var(--s-2); flex-wrap: wrap; align-items: center; flex: 1 1 auto; min-width: 0; }
+@media (max-width: 600px) {
+  .header-island { padding: var(--s-4); margin-bottom: var(--s-4); }
+  .header-top { flex: 1 1 auto; }
+  .status-row { order: 5; flex: 1 1 100%; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .status-row::-webkit-scrollbar { display: none; }
+  .status-row:empty { display: none; }
+}
+
+/* 버튼 */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--s-2);
+  padding: var(--s-2) var(--s-4); border-radius: var(--r-pill); font-size: var(--t-sm-size); font-weight: 600;
+  background: var(--surface-2); color: var(--text); text-align: center; line-height: 1.4; }
+.btn-primary { background: var(--primary); color: var(--on-primary); }
+.btn-brand { background: var(--brand); color: var(--on-brand); }
+.btn-danger { background: var(--tint-violet); color: var(--on-tint-violet); }
+.btn-block { width: 100%; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* 알약 구간 선택 */
+.seg { position: relative; display: inline-flex; background: var(--surface-2); border-radius: var(--r-pill);
+  padding: var(--s-1); gap: 2px; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+.seg::-webkit-scrollbar { display: none; }
+.seg button { position: relative; z-index: 1; padding: var(--s-1) var(--s-3); border-radius: var(--r-pill);
+  font-size: var(--t-sm-size); white-space: nowrap; color: var(--text-2); }
+.seg button[aria-selected="true"] { color: var(--text); font-weight: 600; }
+@media (max-width: 600px) { .seg button { padding: var(--s-1) var(--s-2); } }
+.seg-indicator { position: absolute; top: var(--s-1); bottom: var(--s-1); left: 0; width: 0; background: var(--surface);
+  border-radius: var(--r-pill); box-shadow: var(--shadow-float); z-index: 0; }
+
+/* 새 실행: 넓은 화면은 섬 안 버튼 → 제자리 양식, 좁은 화면은 떠 있는 + 버튼 → 떠 있는 패널 */
+.new-run-island { position: relative; }
+.new-run-btn { width: 100%; padding: var(--s-3) var(--s-4); border-radius: var(--r-pill); background: var(--brand);
+  color: var(--on-brand); font-weight: 700; display: flex; align-items: center; justify-content: center; gap: var(--s-2); }
+.nr-icon { display: none; font-size: var(--t-num-size); line-height: 1; font-weight: 400; }
+.new-run-panel { position: relative; }
+.new-run-panel .block-title { margin-bottom: var(--s-4); padding-right: var(--s-7); }
+@media (max-width: 900px) {
+  .new-run-island { display: contents; }
+  .new-run-btn { position: fixed; right: var(--s-5); bottom: var(--s-5); width: 56px; height: 56px; padding: 0;
+    border-radius: 50%; box-shadow: var(--shadow-float); z-index: 6; }
+  .new-run-btn .nr-label { display: none; }
+  .nr-icon { display: block; }
+  .new-run-panel { position: fixed; left: var(--s-4); right: var(--s-4); bottom: calc(var(--s-5) + 72px);
+    max-height: 72vh; overflow-y: auto; z-index: 6; border-radius: var(--r-island); padding: var(--s-5);
+    background: var(--surface); backdrop-filter: var(--surface-blur); box-shadow: var(--surface-edge), var(--shadow-float); }
+}
+.form-field { display: flex; flex-direction: column; gap: var(--s-2); }
+.form-label { font-size: var(--t-sm-size); font-weight: 600; }
+textarea, select, input[type="number"] {
+  font: inherit; font-size: var(--t-body-size); border-radius: var(--r-cell); border: 1px solid var(--line);
+  background: var(--surface-2); color: var(--text); padding: var(--s-3); width: 100%; }
+select { padding: var(--s-2) var(--s-3); }
+textarea { min-height: 96px; resize: vertical; }
+textarea::placeholder { color: var(--text-2); }
+input[type="checkbox"] { width: 20px; height: 20px; margin: 0; flex: none; accent-color: var(--primary); }
+.checkbox-row { display: flex; align-items: flex-start; gap: var(--s-2); cursor: pointer; }
+.close-x { position: absolute; top: 0; right: 0; width: 32px; height: 32px; border-radius: 50%;
+  background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-size: var(--t-lg-size); }
+@media (max-width: 900px) { .close-x { top: var(--s-4); right: var(--s-4); } }
+.pick-behavior { margin-top: var(--s-2); padding-left: var(--s-7); }
+.error-line { color: var(--on-tint-orange); background: var(--tint-orange); border-radius: var(--r-cell); padding: var(--s-2) var(--s-3); font-weight: 600; }
+.error-line:empty { display: none; }
+
+/* 파일 고르기: 브라우저 기본 '파일 선택' 대신. 칸 전체가 끌어다 놓는 자리 */
+.file-drop { display: flex; flex-direction: column; gap: var(--s-3); padding: var(--s-3); border-radius: var(--r-cell); background: var(--surface-2); }
+.file-drop.is-over { background: var(--primary-soft); box-shadow: inset 0 0 0 2px var(--primary); }
+.file-list { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+.file-list:empty { display: none; }
+.file-chip { display: inline-flex; align-items: center; gap: var(--s-2); max-width: 100%; background: var(--surface);
+  border-radius: var(--r-pill); padding: var(--s-1) var(--s-1) var(--s-1) var(--s-3); font-size: var(--t-sm-size); }
+.file-chip .mono { overflow-wrap: anywhere; }
+.file-chip button { flex: none; width: 24px; height: 24px; border-radius: 50%; background: var(--surface-2); color: var(--text-2); }
+.file-pick-row { display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap; }
+.file-pick { display: inline-flex; align-items: center; gap: var(--s-2); padding: var(--s-2) var(--s-4); border-radius: var(--r-pill);
+  background: var(--surface); color: var(--text); font-size: var(--t-sm-size); font-weight: 600; }
+.file-pick .plus { font-size: var(--t-lg-size); line-height: 1; color: var(--primary); }
+.file-note { color: var(--on-tint-orange); font-weight: 600; }
+.file-note:empty, .source-note:empty { display: none; }
+
+/* 실행 목록 */
+.run-row { width: 100%; text-align: left; border-radius: var(--r-cell); padding: var(--s-3) var(--s-4);
+  background: var(--surface-2); display: flex; flex-direction: column; gap: var(--s-1); }
+.run-row[aria-current="true"] { background: var(--primary-soft); box-shadow: inset 0 0 0 2px var(--primary); }
+.run-row + .run-row { margin-top: var(--s-2); }
+.run-q { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }   /* 목록의 한 줄 요약만 말줄임 */
+.run-tabs { display: none; }
+@media (max-width: 900px) {
+  .run-tabs { display: flex; gap: var(--s-2); overflow-x: auto; scrollbar-width: none; margin-bottom: var(--s-4); }
+  .run-tabs::-webkit-scrollbar { display: none; }
+  .run-tabs button { flex: 0 0 auto; max-width: 220px; overflow: hidden; text-overflow: ellipsis; padding: var(--s-2) var(--s-4);
+    border-radius: var(--r-pill); background: var(--surface); box-shadow: var(--surface-edge); font-size: var(--t-sm-size); white-space: nowrap; color: var(--text-2); }
+  .run-tabs button[aria-current="true"] { background: var(--primary); color: var(--on-primary); }
+  .run-tabs:empty { display: none; }
+}
+
+/* 배지: 옅은 바탕 + 같은 계열 진한 글자. 진한 판정 색은 점으로만 */
+.badge { display: inline-flex; align-items: center; gap: var(--s-1); padding: var(--s-1) var(--s-3);
+  border-radius: var(--r-pill); font-size: var(--t-sm-size); font-weight: 700; white-space: nowrap; }
+.badge-unresolved { background: var(--tint-orange); color: var(--on-tint-orange); }
+.badge-unresolved::before, .badge-missing::before, .flag::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--unresolved); flex: none; }
+.badge-missing::before { background: var(--failed); }
+.badge-qualified { background: var(--tint-blue); color: var(--on-tint-blue); }
+.badge-rejected { background: var(--tint-violet); color: var(--on-tint-violet); }
+.badge-missing { background: var(--surface-3); color: var(--text); }
+.badge-neutral { background: var(--surface-3); color: var(--text-2); }
+.flag { display: inline-flex; align-items: center; gap: var(--s-1); padding: 0 var(--s-2); border-radius: var(--r-pill);
+  background: var(--tint-orange); color: var(--on-tint-orange); font-weight: 700; }
+.tag { display: inline-flex; align-items: center; padding: 2px var(--s-3); border-radius: var(--r-pill);
+  background: var(--tint-orange); color: var(--on-tint-orange); font-size: var(--t-cap-size); font-weight: 600; }
+.cell-alert { background: var(--tint-orange); color: var(--on-tint-orange); }
+.cell-alert .muted { color: var(--on-tint-orange); }
+
+/* 질문 섬 */
+.run-question { font-size: var(--t-title-size); line-height: var(--t-title-lh); font-weight: 700; }
+.meta-line { margin-top: var(--s-2); font-size: var(--t-sm-size); color: var(--text-2); font-variant-numeric: tabular-nums; }
+.island-part { margin-top: var(--s-4); }
+
+/* 결정 카드: 글자·숫자·점은 카드 색의 짝 토큰만 */
+.hero-card { border-radius: var(--r-island); padding: var(--s-6); background: linear-gradient(150deg, var(--hero-1), var(--hero-2));
+  backdrop-filter: var(--hero-blur); box-shadow: var(--hero-shadow); border: 1px solid var(--hero-line); color: var(--on-hero); }
+@media (max-width: 600px) { .hero-card { padding: var(--s-5); } }
+.hero-recommend { font-size: var(--t-hero-size); line-height: var(--t-hero-lh); font-weight: 700; margin: var(--s-4) 0; }
+.hero-sub { color: var(--on-hero-2); }
+.hero-label { font-weight: 700; }
+.hero-chip { background: var(--hero-chip-bg); border-radius: var(--r-pill); padding: var(--s-1) var(--s-3);
+  display: inline-flex; align-items: center; gap: var(--s-1); font-size: var(--t-sm-size); font-weight: 700; }
+.hero-chip-dot::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--hero-count); flex: none; }
+.hero-count { font-size: var(--t-num-size); line-height: var(--t-num-lh); font-weight: 700; color: var(--hero-count); font-variant-numeric: tabular-nums; }
+.hero-count-row { display: flex; align-items: center; gap: var(--s-3); width: 100%; text-align: left; color: inherit;
+  padding: var(--s-3) var(--s-4); border-radius: var(--r-cell); background: var(--hero-chip-bg); font-weight: 700; }
+.hero-count-row .chev { margin-left: auto; transition: transform .2s ease; }
+.hero-count-row[aria-expanded="false"] .chev { transform: rotate(-90deg); }
+.hero-list { display: flex; flex-direction: column; gap: var(--s-2); margin-top: var(--s-2); }
+.hero-list-item { padding: var(--s-3); background: var(--hero-chip-bg); border-radius: var(--r-cell); }
+.hero-divider { height: 1px; background: var(--hero-line); margin: var(--s-5) 0; }
+
+/* 접기 */
+.collapse-toggle { display: flex; align-items: center; gap: var(--s-2); width: 100%; text-align: left;
+  padding: var(--s-3) var(--s-4); border-radius: var(--r-cell); background: var(--surface-2); font-weight: 600; font-size: var(--t-sm-size); }
+.collapse-toggle .chev { transition: transform .2s ease; margin-left: auto; }
+.collapse-toggle[aria-expanded="true"] .chev { transform: rotate(180deg); }
+.collapse-box { height: 0; overflow: hidden; }
+.collapse-inner { padding: var(--s-3) var(--s-1) var(--s-1); display: flex; flex-direction: column; gap: var(--s-2); }
+.collapse + .collapse { margin-top: var(--s-2); }
+
+/* 주장 대조표: 가로 스크롤 없이, 표를 감싼 판의 폭(@container)에 맞춰 행을 다시 흘린다 */
+.claims { container-type: inline-size; }
+.claims-head { display: none; }
+.claim-row { display: grid; gap: var(--s-2) var(--s-3); padding: var(--s-3) var(--s-4); border-radius: var(--r-cell); font-size: var(--t-sm-size);
+  grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "id verdict" "text text" "loc loc"; }
+.claim-row:nth-child(even) { background: var(--surface-2); }
+.claim-id { grid-area: id; align-self: center; } .claim-text { grid-area: text; } .claim-loc { grid-area: loc; color: var(--text-2); }
+.claim-verdict { grid-area: verdict; display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-1) var(--s-2); }
+.claim-loc .ref { display: block; }
+.claim-loc .ref span { white-space: nowrap; }
+@container (min-width: 480px) {
+  .claim-row { grid-template-columns: 48px minmax(0, 1fr) 128px; grid-template-areas: "id text verdict" ". loc verdict"; }
+  .claim-id { align-self: start; }
+  .claim-verdict { flex-direction: column; align-items: flex-start; align-self: start; }
+}
+@container (min-width: 720px) {
+  .claims-head { display: grid; gap: var(--s-3); padding: 0 var(--s-4) var(--s-2); font-size: var(--t-cap-size); font-weight: 600; color: var(--text-2);
+    grid-template-columns: 48px minmax(0, 1fr) minmax(176px, 28%) 128px; }
+  .claim-row { grid-template-columns: 48px minmax(0, 1fr) minmax(176px, 28%) 128px; grid-template-areas: "id text loc verdict"; }
+}
+
+/* 실제 합성의 인용 목록 */
+.quote { padding-left: var(--s-3); border-left: 2px solid var(--line); }
+.claim-line { font-weight: 700; margin-top: var(--s-2); }
+
+/* 참여자 */
+.participant-card { border-radius: var(--r-cell); background: var(--surface-2); padding: var(--s-4); display: flex; flex-direction: column; gap: var(--s-2); }
+.participant-card + .participant-card { margin-top: var(--s-3); }
+.draft-text { white-space: pre-wrap; overflow-wrap: anywhere; font-size: var(--t-sm-size); background: var(--surface); border-radius: var(--r-cell); padding: var(--s-3); }
+.info-list { display: flex; flex-direction: column; gap: var(--s-1); font-size: var(--t-cap-size); line-height: var(--t-cap-lh); color: var(--text-2); }
+.stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s-2); }
+.stat-box { background: var(--surface); border-radius: var(--r-cell); padding: var(--s-3); text-align: center; }
+.stat-num { font-size: var(--t-title-size); font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* 계정 한도 */
+.quota-kv { background: var(--surface-2); border-radius: var(--r-cell); padding: var(--s-2) var(--s-3); font-size: var(--t-sm-size); }
+
+/* 처음 여는 화면 */
+.step { display: flex; gap: var(--s-3); align-items: flex-start; background: var(--surface-2); border-radius: var(--r-cell); padding: var(--s-3) var(--s-4); }
+.step-num { flex: none; width: 24px; height: 24px; border-radius: 50%; background: var(--surface); display: grid; place-items: center;
+  font-size: var(--t-cap-size); font-weight: 700; }
+
+/* 알림 한 줄(아래 가운데). 움직임은 motion.js의 스프링 */
+.toast { position: fixed; left: 50%; bottom: var(--s-6); z-index: 20; width: max-content; max-width: min(560px, calc(100vw - 32px));
+  padding: var(--s-3) var(--s-5); border-radius: var(--r-cell); background: var(--primary); color: var(--on-primary);
+  box-shadow: var(--shadow-float); font-size: var(--t-sm-size); font-weight: 600; transform: translate(-50%, 0); }
+.toast.is-error { background: var(--tint-orange); color: var(--on-tint-orange); }
+@media (max-width: 900px) { .toast { bottom: calc(var(--s-5) + 72px); } }
+
+/* 칸 안의 버튼·입력은 한 단계 밝게(칸과 같은 색이면 안 보인다) */
+:is(.cell, .participant-card, .file-drop) :is(.btn:not(.btn-primary):not(.btn-brand):not(.btn-danger), .collapse-toggle, textarea, select, input[type="number"]) { background: var(--surface); }
+/* 누르는 동안 눌림 색: 글자색을 8% 섞은 막을 덮는다 */
+button.is-pressed { background-image: linear-gradient(color-mix(in oklch, currentColor 8%, transparent) 0 0); }
 </style>
 </head>
 <body>
-<header>
-  <h1>Ledger</h1><span class="label mock" id="mode">모드 확인 중</span>
-  <span class="spacer"></span>
-  <span id="resume"></span>
-  <span class="meta" id="status">연결 중…</span>
-</header>
-<main>
-  <section>
-    <div class="panel">
-      <div class="ph"><span class="t">새 실행</span></div>
-      <div class="pb">
-        <textarea id="question" rows="4" aria-label="질문">사내 문서 검색을 지금 벡터 DB로 바꿀까, 기존 키워드 검색을 개선할까?</textarea>
-        <label class="row">공통 자료(텍스트 파일, 선택) <input id="sources" type="file" multiple
-          accept=".txt,.md,.csv,.json,.log,.yaml,.yml,.py,.js,.ts,.html,.xml"></label>
-        <p class="caption">모든 CLI 참여자가 같은 파일을 읽기 전용으로 받습니다. 원본 앱 참여자는 같은 파일을 직접 첨부해야 하며, 첨부했는지는 확인하지 못합니다. 파일 이름의 한글·공백은 _로 바뀝니다.</p>
-        <p class="caption" id="sources-note" aria-live="polite"></p>
-        <div id="choices" style="margin-top:8px"></div>
-        <label class="row">최소 정족수 인원 <input id="min" type="number" min="1" value="2" style="width:56px"></label>
-        <label class="row policy">정족수에 셀 참여자
-          <select id="policy" aria-label="정족수 정책">
-            <option value="independent_only">독립성이 확인된 참여자만</option>
-            <option value="include_unverified">미확인 CLI·원본 앱 답도 포함</option>
-          </select></label>
-        <div style="display:flex; gap:8px; align-items:center; margin-top:6px">
-          <button id="start">시작</button><span class="err" id="formerr"></span>
+<div class="page">
+  <header class="header-island island" id="header"></header>
+  <nav class="run-tabs" id="runTabs" aria-label="실행 고르기"></nav>
+  <div class="layout">
+    <aside class="side" id="sideCol" aria-label="새 실행과 실행 목록">
+      <section class="island island-block new-run-island" id="newRunIsland">
+        <button class="new-run-btn" id="newRunBtn" type="button" aria-controls="newRunPanel" aria-expanded="false" aria-label="새 실행">
+          <span class="nr-label">새 실행</span><span class="nr-icon" aria-hidden="true">+</span>
+        </button>
+        <div class="new-run-panel" id="newRunPanel" hidden>
+          <button class="close-x" id="newRunClose" type="button" aria-label="닫기">×</button>
+          <h2 class="block-title">새 실행</h2>
+          <div class="stack-lg">
+            <div class="form-field">
+              <label class="form-label" for="question">질문</label>
+              <textarea id="question" rows="4" placeholder="예: 사내 문서 검색을 벡터 DB로 바꿀까, 기존 키워드 검색을 개선할까?"></textarea>
+            </div>
+            <div class="form-field">
+              <span class="form-label" id="sourcesLabel">공통 자료 <span class="muted">(선택)</span></span>
+              <div class="file-drop" id="fileDrop" aria-labelledby="sourcesLabel">
+                <div class="file-list" id="fileChips"></div>
+                <div class="file-pick-row">
+                  <button type="button" class="file-pick" id="filePick"><span class="plus" aria-hidden="true">+</span>파일 고르기</button>
+                  <span class="cap muted">끌어다 놓아도 됩니다 · 텍스트 파일 20개, 합계 1 MiB까지</span>
+                </div>
+                <input type="file" id="fileInput" multiple hidden accept=".txt,.md,.csv,.json,.log,.yaml,.yml,.py,.js,.ts,.html,.xml">
+                <p class="cap file-note" id="fileNote" role="status"></p>
+              </div>
+              <p class="cap muted source-note" id="sourcesNote" aria-live="polite"></p>
+              <div class="cap muted stack" id="sourcesHelp" hidden></div>
+            </div>
+            <div class="form-field">
+              <span class="form-label">참여자</span>
+              <div class="stack" id="choices"><p class="cap muted">참여자를 불러오는 중…</p></div>
+            </div>
+            <div id="advanced"></div>
+            <button class="btn btn-brand btn-block" id="startBtn" type="button">시작</button>
+            <p class="sm error-line" id="formErr" role="alert"></p>
+            <p class="cap muted" id="modeNote"></p>
+          </div>
         </div>
-        <p class="caption" id="mode-note">실행 모드를 확인하고 있습니다.</p>
-      </div>
-    </div>
-    <div class="panel">
-      <div class="ph"><span class="t">구독 계정 한도</span><button id="quota-refresh" class="quiet" disabled>조회</button></div>
-      <div class="pb" id="account-quota" aria-live="polite"><p class="caption">아직 조회하지 않았습니다.</p></div>
-    </div>
-    <div class="panel">
-      <div class="ph"><span class="t">실행</span></div>
-      <div class="runs" id="runs"></div>
-    </div>
-  </section>
-  <section id="detail"><p class="caption">왼쪽에서 실행을 시작하거나 고른다.</p></section>
-</main>
+      </section>
+      <section class="island island-block" id="runListIsland" aria-label="실행 목록"></section>
+      <section class="island island-block" aria-label="구독 계정 한도">
+        <div class="block-head">
+          <h2 class="block-title">구독 계정 한도</h2>
+          <button class="btn" id="quotaRefresh" type="button" disabled aria-describedby="quotaHint">조회</button>
+        </div>
+        <div id="accountQuota" aria-live="polite"><p class="cap muted">아직 조회하지 않았습니다.</p></div>
+        <p class="cap muted" id="quotaHint" hidden>조회는 모델을 부르지 않습니다.</p>
+      </section>
+    </aside>
+    <main class="main" id="mainCol"></main>
+    <section class="aside" id="asideCol" aria-label="참여자"></section>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="/island-ui/motion.js"></script>
 <script>
 "use strict";
 const TOKEN = (() => {
@@ -151,13 +343,23 @@ const TOKEN = (() => {
   } catch (e) { return m ? m[1] : null; }
 })();
 window.addEventListener("hashchange", () => location.reload());   // 열린 탭에 토큰 주소를 붙여 넣어도 동작한다
-let selected = null, state = null;
-let quotaSignature = null;
-let liveMode = false;       // 실제 CLI 연결일 때만 실제 합성 버튼을 보인다
-let synthesizers = [];      // 설정된 CLI provider. 합성자는 그 실행의 참여자가 아니어도 된다
-let firstView = "decision"; // Q4 comparison only; no project preference is saved.
-const drafts = {};   // 수동 답 입력칸의 임시 내용(참여자별). 다시 그려도 지우지 않는다
-const confirms = {}; // 수동 답의 "원본 앱에 이 질문을 넣었다" 확인(참여자별). 다시 그려도 지우지 않는다
+
+let state = null;            // /api/state
+let selected = null;         // 고른 실행
+let firstPick = true;        // 처음 열 때는 공개된 실행을 보여 준다
+let liveMode = false;        // 실제 CLI 연결일 때만 실제 합성 버튼을 보인다
+let contextUnverified = false;
+let optionsLoaded = false;   // 모드를 서버에서 받기 전에는 모의라고 적지 않는다
+let synthesizers = [];       // 설정된 CLI provider. 합성자는 그 실행의 참여자가 아니어도 된다
+let synthChoice = null;      // 고른 합성자(다시 그려도 유지)
+let firstView = "decision";  // Q4 비교: A 결정 우선 / B 대조표 우선. 저장하지 않는다
+let connection = "";         // 연결 오류 문구
+let headerSig = null, listSig = null, runSig = null, quotaSignature = null;
+let picked = [];             // 새 실행에 붙일 자료(File)
+let morph = null;            // 새 실행 버튼 → 양식
+const drafts = {};           // 수동 답 입력칸의 임시 내용(참여자별). 다시 그려도 지우지 않는다
+const confirms = {};         // 수동 답의 "원본 앱에 이 질문을 넣었다" 확인(참여자별)
+const $ = id => document.getElementById(id);
 
 function h(tag, attrs, ...kids) {
   const el = document.createElement(tag);
@@ -165,7 +367,7 @@ function h(tag, attrs, ...kids) {
     if (k === "class") el.className = v; else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
     else if (v !== null && v !== undefined && v !== false) el.setAttribute(k, v === true ? "" : v);
   }
-  for (const kid of kids.flat()) if (kid !== null && kid !== undefined && kid !== false)
+  for (const kid of kids.flat(Infinity)) if (kid !== null && kid !== undefined && kid !== false && kid !== "")
     el.append(kid instanceof Node ? kid : document.createTextNode(String(kid)));
   return el;
 }
@@ -177,6 +379,54 @@ async function api(path, body) {
   if (!res.ok) throw new Error(data.error || res.status);
   return data;
 }
+
+// ---- 부품: 이름표·접기·배지. h만 쓰므로 tests/가 DOM 없이 부른다 ------------------------------------------
+const OPEN = new Set();      // 처음엔 닫힌 접기 중 사용자가 연 것
+const CLOSED = new Set();    // 처음엔 열린 접기 중 사용자가 닫은 것
+const STATE_LABEL = { queued: "대기", running: "실행 중", awaiting_user: "붙여넣기 대기", accepted: "제출됨 · 봉인",
+                      rejected: "받지 않음", unknown: "종료 미확인" };
+const STATE_BADGE = { accepted: "badge-qualified", rejected: "badge-missing", unknown: "badge-unresolved" };
+const PHASE_LABEL = { drafting: "답 받는 중", revealed: "공개됨", preflight: "준비" };
+const BEHAVIOR_LABEL = { ok: "정상", slow: "느림", fail: "CLI 오류", partial_input: "입력 일부만 읽음(큰 질문에서만 드러남)", hang: "멈춤(시간 초과)" };
+const EXECUTION_LABEL = { mock: "CLI 모의", real: "실제 CLI", synthetic: "CLI 합성 시험" };
+const STATUS_LABEL = { cli_error: "CLI 오류", format_error: "답의 형식 오류", input_error: "입력 전달 실패", tools_rejected: "도구 사용 거절",
+  process_timeout: "시간 초과", process_cancelled: "취소", process_failed_to_start: "시작하지 못함", cancelled: "취소",
+  cancelled_before_start: "시작 전 취소", withdrawn: "답을 받지 못해 뺌", permission_mismatch: "실행 허가 불일치",
+  controller_restarted: "앱 재시작", result_not_stored: "결과 저장 실패", unknown_acknowledged: "종료를 직접 확인함" };
+const CARD_STATUS = { supported: "확인됨 · supported", qualified: "조건부 · qualified", rejected: "반박됨 · rejected", unresolved: "미해결 · unresolved" };
+const DISPOSITION = { supported: ["확인됨", "badge-qualified"], qualified: ["조건부", "badge-qualified"],
+                      rejected: ["반박됨", "badge-rejected"], unresolved: ["미해결", "badge-unresolved"] };
+
+function badge(text, cls) { return h("span", { class: "badge " + (cls || "badge-neutral") }, text); }
+function island(title, kids, extra) {
+  return h("section", { class: "island island-block" + (extra ? " " + extra : "") },
+    title ? h("div", { class: "block-head" }, h("h3", { class: "block-title" }, title)) : null, kids);
+}
+// 접기: 머리 버튼과 내용 칸. 연 상태는 id로 기억해 1초마다 다시 그려도 그대로 둔다. 닫힌 내용은 키보드로도 닿지 않는다.
+function collapsible(id, head, kids, { open = false, cls = "collapse-toggle" } = {}) {
+  const shown = open ? !CLOSED.has(id) : OPEN.has(id);
+  return h("div", { class: "collapse" },
+    h("button", { type: "button", class: cls, "aria-expanded": String(shown), "aria-controls": id,
+                  onclick: e => toggleCollapse(e.currentTarget, id, open) },
+      head, h("span", { class: "chev", "aria-hidden": "true" }, "▾")),
+    h("div", { class: "collapse-box", id, style: shown ? "height:auto" : null, inert: !shown },
+      h("div", { class: "collapse-inner" }, kids)));
+}
+function toggleCollapse(button, id, openFirst) {
+  const show = button.getAttribute("aria-expanded") !== "true", box = document.getElementById(id);
+  button.setAttribute("aria-expanded", String(show));
+  if (openFirst) { if (show) CLOSED.delete(id); else CLOSED.add(id); }
+  else if (show) OPEN.add(id); else OPEN.delete(id);
+  box.toggleAttribute("inert", !show);
+  animateHeight(box, show);
+}
+function fmtTime(sec) {
+  return sec == null ? "시각 미확인" : new Date(sec * 1000).toLocaleString("ko-KR",
+    { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
+}
+function fmtSize(n) { return n < 1000 ? `${n}바이트` : `${Math.round(n / 1000).toLocaleString("ko-KR")} KB`; }
+
+// ---- 계정 한도 -------------------------------------------------------------------------------------
 function quotaPeriod(row) {
   const minutes = row.window_minutes;
   if (minutes != null) return minutes % 1440 === 0 ? `${minutes / 1440}일` : minutes % 60 === 0 ? `${minutes / 60}시간` : `${minutes}분`;
@@ -196,12 +446,13 @@ function quotaRows(quota, staleNote) {
   return lines;
 }
 // 계정 패널의 줄([class, 글]). DOM 없이 시험할 수 있게 그리기와 나눴다. 모의 모드에는 계정 사용량이 없다.
+// note는 숫자의 범위를 설명하는 줄이라 화면에서는 접어 둔다.
 function quotaLines(data) {
   const claude = data.claude || { configured: false, quota: null };
   if (!data.enabled && !claude.configured) return [["caption", "실제 CLI 연결에서 보입니다. 모의 모드에는 계정 사용량이 없습니다."]];
   const lines = [];
   if (data.enabled) {
-    lines.push(["caption", "Codex 계정 전체 · 이 앱 밖에서 쓴 사용량도 포함합니다. 조회는 모델을 호출하지 않습니다."]);
+    lines.push(["note", "Codex 계정 전체 · 이 앱 밖에서 쓴 사용량도 포함합니다. 조회는 모델을 호출하지 않습니다."]);
     if (data.refresh_failed) lines.push(["st-unknown", "현재 조회하지 못했습니다. 이전 값이 있다면 과거 관측값입니다."]);
     const quota = data.quota;
     if (!quota) lines.push(["st-unknown", "Codex 잔여 한도 미확인"]);
@@ -215,12 +466,12 @@ function quotaLines(data) {
       const found = listed && models.ids.includes(data.requested_model);
       const verdict = !listed ? "미확인" : found ? "있음" : models.truncated ? "목록 일부만 받아 미확인" : "없음";
       lines.push([found ? "kv" : "kv st-unknown", `요청 모델 ${data.requested_model}: 이 계정의 가용 목록에 ${verdict}`]);
-      if (listed) lines.push(["caption", "가용 목록일 뿐 실제로 답한 모델의 보고가 아닙니다."]);
+      if (listed) lines.push(["note", "가용 목록일 뿐 실제로 답한 모델의 보고가 아닙니다."]);
     }
   }
   if (claude.configured) {
     const quota = claude.quota;
-    lines.push(["caption", "Claude 계정 전체 · 마지막으로 끝난 실제 Claude 실행이 받은 값입니다. 따로 조회하지 않습니다."]);
+    lines.push(["note", "Claude 계정 전체 · 마지막으로 끝난 실제 Claude 실행이 받은 값입니다. 따로 조회하지 않습니다."]);
     if (!quota || quota.observed_at == null) lines.push(["st-unknown", "Claude 한도 미확인 — 실제 Claude 실행이 끝나면 보입니다"]);
     else {
       lines.push(["caption", `Claude 관측 시각 ${new Date(quota.observed_at * 1000).toLocaleString()}`]);
@@ -230,78 +481,40 @@ function quotaLines(data) {
       lines.push(...quotaRows(quota, "다음 실제 실행 때 갱신"));
     }
   }
-  lines.push(["caption", "남은 질문 횟수나 토큰 수를 뜻하지 않습니다."]);
+  lines.push(["note", "남은 질문 횟수나 토큰 수를 뜻하지 않습니다."]);
   return lines;
 }
 function renderQuota(data) {
-  const box = document.getElementById("account-quota");
-  const button = document.getElementById("quota-refresh");
+  const box = $("accountQuota"), button = $("quotaRefresh");
   button.disabled = !data.enabled || data.refreshing || data.retry_after_seconds > 0;
   button.textContent = data.refreshing ? "조회 중…" : data.retry_after_seconds > 0 ? `${data.retry_after_seconds}초 후 조회` : "조회";
   const signature = JSON.stringify([data.enabled, data.refresh_failed, data.quota, data.models, data.claude]);
   if (signature === quotaSignature) return;
   quotaSignature = signature;
-  box.replaceChildren(...quotaLines(data).map(([cls, text]) => h(cls.startsWith("kv") ? "div" : "p", {class: cls}, text)));
+  const shown = [], notes = [];
+  for (const [cls, text] of quotaLines(data)) {
+    if (cls === "note") notes.push(h("p", { class: "sm muted" }, text));
+    else if (cls.startsWith("kv")) shown.push(h("div", { class: "quota-kv " + cls }, text));
+    else if (cls === "st-unknown") shown.push(h("p", { class: "sm st-unknown" }, text));
+    else shown.push(h("p", { class: "cap muted" }, text));
+  }
+  box.replaceChildren(h("div", { class: "stack" }, shown),
+    notes.length ? h("div", { class: "island-part" }, collapsible("quotaNotes", "이 숫자의 뜻", notes)) : "");
+  pressAll(box);
 }
-document.getElementById("quota-refresh").onclick = async () => {
-  const button = document.getElementById("quota-refresh");
+$("quotaRefresh").onclick = async () => {
+  const button = $("quotaRefresh");
   button.disabled = true; button.textContent = "조회 중…";
   try { renderQuota(await api("/api/account-quota/refresh", {})); }
   catch (e) {
-    quotaSignature = null; document.getElementById("account-quota").textContent = "계정 한도를 조회하지 못했습니다.";
+    quotaSignature = null; $("accountQuota").replaceChildren(h("p", { class: "sm st-unknown" }, "계정 한도를 조회하지 못했습니다."));
     button.disabled = false; button.textContent = "조회";
   }
 };
-const STATE_LABEL = { queued: "대기", running: "실행 중", awaiting_user: "사용자 전달 대기", accepted: "제출됨",
-                      rejected: "받지 않음", unknown: "UNKNOWN · 종료 미확인" };
-const PHASE_LABEL = { drafting: "독립 초안 · 봉인", revealed: "공개됨", preflight: "준비" };
-const BEHAVIOR_LABEL = { ok: "정상", slow: "느림", fail: "CLI 오류", partial_input: "입력 일부만 읽음(큰 질문에서만 드러남)", hang: "멈춤(시간 초과)" };
-const EXECUTION_LABEL = { mock: "CLI 모의", real: "실제 CLI", synthetic: "CLI 합성 시험" };
 
-async function loadOptions() {
-  const opt = await api("/api/options");
-  liveMode = !!opt.live;
-  synthesizers = [...new Map((opt.participants || []).filter(p => p.transport === "cli" && p.adapter_id)
-    .map(p => [p.adapter_id, p])).values()];
-  document.title = opt.live ? "Ledger 실제 CLI" : "Ledger 모의 모드";
-  document.getElementById("mode").textContent = opt.live
-    ? "실제 CLI · 구독 사용량 소비" + (opt.context_unverified ? " · 문맥 미확인" : "")
-    : "모의 모드 · 모델 호출 없음";
-  document.getElementById("mode-note").textContent = (opt.live
-    ? "시작하면 명시한 실제 CLI를 호출합니다. 서버 재시작은 호출 예산을 보충하지 않습니다. "
-    : "CLI 참여자는 모의 CLI로 돕니다. ") +
-    "문맥 미확인 CLI·원본 앱 답은 독립 정족수에 세지 않습니다. " + (opt.live
-      ? "공개 뒤 실제 합성은 실행마다 켜며(호출 1회) 사실 검증이 아닙니다."
-      : "합성은 모의 처리이며 사실 검증이 아닙니다.");
-  if (opt.live) {
-    document.getElementById("min").value = String(opt.participants.filter(p => p.transport === "cli").length);
-    if (opt.context_unverified) document.getElementById("policy").value = "include_unverified";
-  }
-  const box = document.getElementById("choices");
-  for (const p of opt.participants) {
-    const cb = h("input", { type: "checkbox", id: "p-" + p.pid,
-      checked: opt.live ? p.transport === "cli" : ["claude", "codex", "chatgpt-app"].includes(p.pid) });
-    const sel = p.transport === "cli" && !opt.live
-      ? h("select", { id: "b-" + p.pid, "aria-label": p.label + " 모의 행동" },
-          opt.behaviors.map(b => h("option", { value: b }, BEHAVIOR_LABEL[b] || b))) : null;
-    box.append(h("label", { class: "row" }, cb, h("span", {}, p.label),
-      h("span", { class: "meta" }, p.transport === "cli" ? (opt.live ? `실제 CLI · ${p.model}` : "CLI 모의") : "원본 앱 · 수동"), sel));
-  }
-}
-document.getElementById("start").addEventListener("click", async () => {
-  const err = document.getElementById("formerr"); err.textContent = "";
-  const participants = [...document.querySelectorAll("#choices input:checked")].map(cb => {
-    const pid = cb.id.slice(2), sel = document.getElementById("b-" + pid);
-    return { pid, behavior: sel ? sel.value : "ok" };
-  });
-  try {
-    const sources = await sourceFiles([...document.getElementById("sources").files]);
-    const r = await api("/api/runs", { question: document.getElementById("question").value, participants,
-                                       min_independent: +document.getElementById("min").value,
-                                       quorum_policy: document.getElementById("policy").value, sources });
-    selected = r.run_id; await refresh();
-  } catch (e) { err.textContent = e.message; }
-});
+// ---- 새 실행 ---------------------------------------------------------------------------------------
+const SOURCE_LIMITS = { count: 20, each: 256 * 1024, total: 1024 * 1024 };   // 서버의 자료 한도와 같은 값
+const SOURCE_EXT = $("fileInput").accept.split(",");
 // 서버의 자료 이름 규칙(영문·숫자·점·밑줄·하이픈, 대소문자 무시 중복 없음)에 맞춘다. 내용은 UTF-8 글로 읽는다.
 function sourceName(original, taken) {
   let base = original.normalize("NFC").replace(/[^A-Za-z0-9._-]/g, "_").slice(0, 70);
@@ -327,116 +540,251 @@ function sourceNote(sizes, claudeLive) {
     : "");
 }
 function updateSourceNote() {
-  const claude = document.getElementById("p-claude");
-  document.getElementById("sources-note").textContent = sourceNote(
-    [...document.getElementById("sources").files].map(f => f.size), liveMode && !!claude && claude.checked);
+  const claude = $("p-claude");
+  $("sourcesNote").textContent = sourceNote(picked.map(f => f.size), liveMode && !!claude && claude.checked);
 }
-document.getElementById("sources").addEventListener("change", updateSourceNote);
-document.getElementById("choices").addEventListener("change", updateSourceNote);
+// 한도를 넘거나 받지 않는 형식은 넣지 않고 이유를 적는다(조용히 빼지 않는다)
+function addFiles(files) {
+  const refused = [];
+  for (const file of files) {
+    const ext = "." + file.name.split(".").pop().toLowerCase();
+    const total = picked.reduce((sum, f) => sum + f.size, 0);
+    if (!SOURCE_EXT.includes(ext)) refused.push(`${file.name}: 받지 않는 형식`);
+    else if (file.size > SOURCE_LIMITS.each) refused.push(`${file.name}: 256 KiB 넘음`);
+    else if (picked.length >= SOURCE_LIMITS.count) refused.push(`${file.name}: 20개 넘음`);
+    else if (total + file.size > SOURCE_LIMITS.total) refused.push(`${file.name}: 합계 1 MiB 넘음`);
+    else picked.push(file);
+  }
+  renderPicked(refused.length ? "넣지 않음 · " + refused.join(" · ") : "");
+}
+function renderPicked(note) {
+  const box = $("fileChips");
+  box.replaceChildren(...picked.map((f, i) => h("span", { class: "file-chip" },
+    h("span", { class: "mono" }, f.name), h("span", { class: "muted" }, fmtSize(f.size)),
+    h("button", { type: "button", "aria-label": f.name + " 빼기", onclick: () => { picked.splice(i, 1); renderPicked(""); } }, "×"))));
+  $("fileNote").textContent = note;
+  // 보낼 이름은 서버 규칙대로 바뀐다(sourceFiles와 같은 순서로 계산). 바뀌는 것만 적는다
+  const taken = new Set(), renamed = picked.map(f => [f.name, sourceName(f.name, taken)]).filter(([a, b]) => a !== b);
+  $("sourcesHelp").hidden = !picked.length;
+  $("sourcesHelp").replaceChildren(
+    h("p", {}, "CLI 참여자는 같은 파일을 읽기 전용으로 받습니다. 원본 앱 참여자는 같은 파일을 직접 첨부해야 하며, 첨부했는지는 확인하지 못합니다."),
+    renamed.length ? h("p", {}, "영문·숫자가 아닌 글자는 _로 바꿔 보냅니다: " + renamed.map(([a, b]) => `${a} → ${b}`).join(", ")) : null);
+  updateSourceNote();
+  pressAll(box);
+}
+function participantChoice(p, opt) {
+  const kind = p.transport === "cli" ? (opt.live ? `실제 CLI · ${p.model}` : "CLI 모의") : "원본 앱 · 직접 붙여넣기";
+  const cb = h("input", { type: "checkbox", id: "p-" + p.pid, onchange: updateSourceNote,
+    checked: opt.live ? p.transport === "cli" : ["claude", "codex", "chatgpt-app"].includes(p.pid) });
+  const behavior = p.transport === "cli" && !opt.live
+    ? h("div", { class: "pick-behavior" }, h("select", { id: "b-" + p.pid, "aria-label": p.label + " 모의 행동" },
+        opt.behaviors.map(b => h("option", { value: b }, BEHAVIOR_LABEL[b] || b)))) : null;
+  return h("div", { class: "cell" }, h("label", { class: "checkbox-row" }, cb,
+    h("span", { class: "sm" }, h("span", { class: "strong" }, p.label), h("span", { class: "muted" }, " · " + kind))), behavior);
+}
+function advancedSummary() {
+  return `정족수 ${$("min").value}명 · ${$("policy").value === "independent_only" ? "독립성이 확인된 참여자만 셈" : "미확인 답도 셈"}`;
+}
+function initNewRun(opt) {
+  $("choices").replaceChildren(...opt.participants.map(p => participantChoice(p, opt)));
+  const min = h("input", { type: "number", id: "min", min: "1",
+    value: String(opt.live ? opt.participants.filter(p => p.transport === "cli").length : 2) });
+  const policy = h("select", { id: "policy" },
+    h("option", { value: "independent_only" }, "독립성이 확인된 참여자만"),
+    h("option", { value: "include_unverified" }, "미확인 CLI·원본 앱 답도 포함"));
+  if (opt.live && opt.context_unverified) policy.value = "include_unverified";
+  $("advanced").replaceChildren(collapsible("advancedBox", h("span", { id: "advancedHead" }, "정족수 설정"), [
+    h("div", { class: "form-field" }, h("label", { class: "form-label", for: "min" }, "최소 정족수 인원"), min),
+    h("div", { class: "form-field" }, h("label", { class: "form-label", for: "policy" }, "정족수에 셀 참여자"), policy),
+    h("p", { class: "cap muted" }, "정족수가 차야 공개합니다. 모자라도 유료로 채우지 않습니다.")]));
+  const summary = () => { $("advancedHead").textContent = "정족수 설정 · " + advancedSummary(); };
+  min.addEventListener("input", summary); policy.addEventListener("change", summary); summary();
+  $("startBtn").textContent = opt.live ? "시작 — 실제 CLI 호출(구독 사용량 사용)" : "시작 (모의 · 모델 호출 없음)";
+  $("modeNote").textContent = (opt.live
+    ? "시작하면 고른 실제 CLI를 부릅니다. 쓴 호출은 실패·취소해도 돌려받지 않고, 서버를 다시 켜도 채워지지 않습니다. "
+    : "CLI 참여자는 모의 CLI로 돕니다. ") +
+    "문맥 미확인 CLI·원본 앱 답은 독립 정족수에 세지 않습니다.";
+  pressAll($("newRunPanel"));
+}
+async function startRun() {
+  const err = $("formErr"), button = $("startBtn");
+  err.textContent = "";
+  if (!$("question").value.trim()) { err.textContent = "질문을 적어 주세요."; $("question").focus(); return; }
+  const participants = [...document.querySelectorAll("#choices input[type=checkbox]:checked")].map(cb => {
+    const pid = cb.id.slice(2), sel = $("b-" + pid);
+    return { pid, behavior: sel ? sel.value : "ok" };
+  });
+  if (!participants.length) { err.textContent = "참여자를 한 명 이상 고르세요."; return; }
+  button.disabled = true;
+  try {
+    const sources = await sourceFiles(picked);
+    const r = await api("/api/runs", { question: $("question").value, participants,
+                                       min_independent: +$("min").value, quorum_policy: $("policy").value, sources });
+    selected = r.run_id; firstPick = false; picked = []; renderPicked("");
+    morph.close(); toast("실행을 시작했습니다. 모두 끝나면 한꺼번에 공개합니다.");
+    await refresh();
+  } catch (e) { err.textContent = e.message; }
+  finally { button.disabled = false; }
+}
 
+// ---- 참여자 ----------------------------------------------------------------------------------------
+// 실행의 CLI 호출 집계. 구독 차감량이 아니고, 진척도처럼 그리지 않는다.
 function budget(run) {
-  const b = run.budget, cells = [];
-  for (let i = 0; i < b.breakdown.succeeded; i++) cells.push(h("span", { class: "cell ok", title: "받음" }));
-  for (let i = 0; i < b.breakdown.failed; i++) cells.push(h("span", { class: "cell bad", title: "실패도 칸을 차지한다" }));
-  for (let i = 0; i < b.breakdown.unknown; i++) cells.push(h("span", { class: "cell unk", title: "종료 미확인 — 0이 아니다" }));
-  const running = b.used - b.breakdown.succeeded - b.breakdown.failed - b.breakdown.unknown;
-  for (let i = 0; i < running; i++) cells.push(h("span", { class: "cell run", title: "실행 중" }));
-  while (cells.length < b.cap) cells.push(h("span", { class: "cell" }));
-  return h("div", { class: "pb", style: "border-bottom:1px solid var(--rule-100)" },
-    h("div", { class: "caption" }, "CLI 실행·진행 — 구독 차감량이 아님"),
-    h("span", { class: "metric" }, `${b.used} / ${b.cap}`),
-    h("div", { class: "budget" }, cells),
-    h("div", { class: "caption" }, `받음 ${b.breakdown.succeeded} · 실패 ${b.breakdown.failed} · 종료 미확인 ${b.breakdown.unknown}` +
-      ` · 시작 전 종료 ${b.not_started || 0} · 실제 CLI 예약 ${b.reserved || 0}(실패해도 환불 안 됨)` +
+  const b = run.budget, k = b.breakdown;
+  return h("div", { class: "stack" },
+    h("p", { class: "sm strong" }, `CLI 실행·진행 ${b.used} / ${b.cap} — 구독 차감량이 아님`),
+    h("div", { class: "stat-grid" },
+      [["받음", k.succeeded], ["실패", k.failed], ["종료 미확인", k.unknown]].map(([label, n]) =>
+        h("div", { class: "stat-box" }, h("div", { class: "stat-num" }, n), h("div", { class: "cap muted" }, label)))),
+    h("p", { class: "cap muted" }, `시작 전 종료 ${b.not_started || 0} · 실제 CLI 예약 ${b.reserved || 0}(실패해도 환불 안 됨)` +
       (b.manual ? ` · 수동 ${b.manual}(우리 앱의 호출이 아님, 사용량 관측 안 됨)` : "")));
 }
-
+function participantKind(p) {
+  if (p.transport !== "cli") return "원본 앱 · 직접 붙여넣기";
+  const kind = EXECUTION_LABEL[p.execution] || (p.state === "queued" ? "CLI · 실행 전" : "CLI · 실행 종류 미기록");
+  return kind + (p.execution === "mock" && p.behavior && p.behavior !== "ok" ? " · " + (BEHAVIOR_LABEL[p.behavior] || p.behavior) : "");
+}
+function participantState(run, p) {
+  if (p.status === "cancelled_before_start") return ["시작 전 취소", "badge-missing"];
+  if (p.status === "cancelled") return ["취소 · 종료 확인", "badge-missing"];
+  if (p.state === "accepted" && run.phase === "revealed") return ["공개됨", "badge-qualified"];
+  return [STATE_LABEL[p.state] || p.state, STATE_BADGE[p.state] || "badge-neutral"];
+}
+// 공개된 초안의 실행 정보. 독립성·모델·시간·사용량. 모르는 값은 그렇게 적는다.
+function draftInfo(p) {
+  const r = p.result;
+  if (!r || r.source === "manual") {
+    const echo = { matched: "되말함", missing: "없음" };
+    return ["수동 제출 · 독립성 미확인 · " + (r && r.marker_echo ? `실행 표식 ${echo[r.marker_echo] || r.marker_echo} · ` : "") +
+            (r && typeof r.user_confirmed === "boolean" ? `사용자 확인 ${r.user_confirmed ? "예" : "아니오"} · ` : "") + "사용량·시간 관측 안 됨"];
+  }
+  const reported = r.reported_models && r.reported_models.length ? r.reported_models.join(", ") : "보고 없음";
+  return [p.independence === "confirmed" ? "독립성 확인(controller가 고정 입력만 주고 실행)" : "문맥 미확인 · 독립 정족수에 세지 않음",
+    `모델: 요청 ${r.requested_model || "?"} → ${reported}${r.model_match === false ? " (불일치)" : ""}`,
+    `걸린 시간: ${typeof r.duration_ms === "number" ? (r.duration_ms / 1000).toFixed(1) + "초" : "미확인"}`,
+    `사용량: ${r.usage && Object.keys(r.usage).length ? Object.entries(r.usage).map(([k, v]) => `${k} ${v}`).join(" · ") : "관측 안 됨"}`,
+    `종료: ${r.containment || "?"} · 자손 종료 ${r.tree_confirmed_empty ? "확인" : "미확인"} · 입력 전달 ${r.input_delivery || "미확인"} · 상태 ${r.state}`];
+}
 function participantRow(run, p) {
+  const gate = run.gate || {};
   const revealed = run.phase === "revealed";
-  const label = p.status === "cancelled_before_start" ? "시작 전 취소"
-    : p.status === "cancelled" ? "취소 · 종료 확인"
-    : p.state === "accepted" && !revealed ? "제출됨" : (STATE_LABEL[p.state] || p.state);
-  const who = h("div", { class: "who" }, h("span", {}, p.label),
-    h("span", { class: "v" }, `${p.provider} · ${p.transport === "cli" ? (EXECUTION_LABEL[p.execution] || (p.state === "queued" ? "CLI · 실행 전" : "CLI · 실행 종류 미기록")) + (p.execution === "mock" && p.behavior && p.behavior !== "ok" ? " · " + (BEHAVIOR_LABEL[p.behavior] || p.behavior) : "") : "원본 앱 · 수동"}`),
-    h("div", { class: "flags" }, p.contamination.map(c => h("span", { class: "flag" }, c))));
+  const [label, cls] = participantState(run, p);
+  const card = h("div", { class: "participant-card" },
+    h("div", { class: "row between" }, h("strong", { class: "sm" }, p.label), badge(label, cls)),
+    h("p", { class: "cap muted" }, `${p.provider} · ${participantKind(p)}`));
+  if (p.independence !== "confirmed")
+    card.append(h("div", { class: "row" }, h("span", { class: "tag", title: "정족수에서 보조 근거로만 셉니다" }, "독립성 미확인")));
+  if (p.result && p.result.model_match === false)
+    card.append(h("p", { class: "sm cell cell-alert" }, "요청한 모델과 다른 모델이 답했다고 보고했습니다."));
+  const extra = (p.contamination || []).map(c => h("p", {}, c));
   if (p.state === "rejected" || p.state === "unknown") {
-    who.append(h("div", { class: "kv" }, [p.status, p.detail, ...(p.result && p.result.notes || []),
-      run.diagnostics_sealed ? "사유 원문은 모든 참여자가 끝난 뒤 보인다" : null].filter(Boolean).join(" · ")));
+    if (!["cancelled", "cancelled_before_start"].includes(p.status))   // 취소는 배지가 이미 말한다
+      card.append(h("p", { class: "sm strong" }, "사유: " + (STATUS_LABEL[p.status] || p.status || "미확인")));
+    extra.push(...[p.detail, ...(p.result && p.result.notes || [])].filter(Boolean).map(t => h("p", {}, t)));
+    if (run.diagnostics_sealed) extra.push(h("p", {}, "사유 원문은 모든 참여자가 끝난 뒤 보인다"));
   }
   if (p.state === "unknown") {
-    who.append(h("div", { style: "margin-top:6px" }, h("button", { class: "quiet", onclick: () => act(`/api/runs/${run.run_id}/acknowledge/${p.pid}`) },
-      "종료를 직접 확인했음(예산은 돌려받지 않는다)")));
+    card.append(h("div", { class: "stack" },
+      h("p", { class: "sm cell cell-alert" }, "프로세스가 끝났는지 확인하지 못했습니다. 자리를 차지하고 있습니다."),
+      h("div", {}, h("button", { class: "btn btn-danger", type: "button", onclick: () => {
+        if (window.confirm("이 참여자의 프로세스가 모두 끝난 것을 직접 확인했습니까? 예산은 돌려받지 않습니다."))
+          act(`/api/runs/${run.run_id}/acknowledge/${p.pid}`);
+      } }, "종료를 직접 확인했음(예산은 돌려받지 않음)"))));
   }
-  if (p.state === "awaiting_user" && run.gate.can_submit) {
-    const key = run.run_id + "/" + p.pid;
-    const ta = h("textarea", { rows: 4, placeholder: "원본 앱의 답을 붙여 넣는다", "aria-label": p.label + " 답",
-                               oninput: e => { drafts[key] = e.target.value; } });
-    ta.value = drafts[key] || "";
-    const confirm = h("input", { type: "checkbox", "aria-label": p.label + " 입력 확인",
-                                 onchange: e => { confirms[key] = e.target.checked; } });
-    confirm.checked = !!confirms[key];
-    const packetText = p.packet || run.prompt;
-    who.append(h("div", { class: "manual" },
-      h("div", { class: "caption" }, "1) 질문을 복사해 원본 앱에 붙여 넣는다  2) 받은 답을 아래에 붙여 넣는다. " +
-        "복사한 질문 첫 줄의 표식(" + packetText.split("\n")[0] + ")을 답 첫 줄에 되말해 달라고 적혀 있다 — " +
-        "다른 카드의 답을 붙여 넣으면 받지 않는다"),
-      h("div", { style: "display:flex; gap:8px; flex-wrap:wrap" },
-        h("button", { onclick: async e => { await navigator.clipboard.writeText(packetText); e.target.textContent = "복사함"; } }, "질문 복사"),
-        h("button", { class: "quiet", onclick: () => act(`/api/runs/${run.run_id}/withdraw/${p.pid}`) }, "답을 받지 못함(빼기)")),
-      ta,
-      h("label", { class: "row" }, confirm, "원본 앱에 이 질문을 넣어 받은 답이다(기록만 한다 — 독립성 확인이 아니다)"),
-      h("div", {}, h("button", { onclick: () => act(`/api/runs/${run.run_id}/manual/${p.pid}`,
-        { text: ta.value, input_sha256: run.input_sha256, user_confirmed: confirm.checked })
-        .then(ok => { if (ok) { delete drafts[key]; delete confirms[key]; } }) }, "답 넣기"),
-        h("span", { class: "meta", style: "margin-left:8px" }, "입력 sha256 " + run.input_sha256.slice(0, 12)))));
-  }
+  if (p.state === "awaiting_user" && gate.can_submit) card.append(manualForm(run, p));
   if (revealed && p.draft != null) {
-    const r = p.result;
-    const manual = !r || r.source === "manual";
-    const echo = { matched: "되말함", missing: "없음" };
-    who.append(h("details", { open: true }, h("summary", {}, "초안 원문"),
-      h("div", { class: "draft" }, p.draft),
-      manual
-        ? h("div", { class: "kv" }, "수동 제출 · 독립성 미확인 · " +
-            (r ? `실행 표식 ${echo[r.marker_echo] || r.marker_echo} · 사용자 확인 ${r.user_confirmed ? "예" : "아니오"} · ` : "") +
-            "사용량·시간 관측 안 됨")
-        : h("div", { class: "kv" }, (p.independence === "confirmed"
-              ? "독립성 확인(controller가 고정 입력만 주고 실행) · " : "문맥 미확인 · 독립 정족수에 세지 않음 · ") +
-             `상태 ${r.state} · 종료 ${r.containment} ${r.tree_confirmed_empty ? "확인" : "미확인"} · 입력 ${r.input_delivery} · ` +
-             `모델 ${r.requested_model || "?"} → ${r.reported_models && r.reported_models.length ? r.reported_models.join(", ") : "보고 없음"}` +
-             `${r.model_match === false ? " (불일치)" : ""} · ` +
-             `${r.duration_ms} ms · 사용량 ${r.usage && Object.keys(r.usage).length ? JSON.stringify(r.usage) : "관측 안 됨"}`)));
+    card.append(collapsible(`draft-${run.run_id}-${p.pid}`, "초안 원문 보기", [
+      h("div", { class: "draft-text" }, p.draft),
+      h("div", { class: "info-list" }, draftInfo(p).map(t => h("p", {}, t)),
+        p.draft_sha256 ? h("p", { class: "mono hash" }, "sha256 " + p.draft_sha256) : null, extra)]));
+  } else if (extra.length) {
+    card.append(collapsible(`pinfo-${run.run_id}-${p.pid}`, "자세히", h("div", { class: "info-list" }, extra)));
   }
-  return h("div", { class: "p" }, who, h("span", { class: `label st-${p.state}` }, label));
+  return card;
+}
+// 원본 앱 참여자: 질문을 복사해 붙여 넣고, 받은 답을 여기에 넣는다. 화면 자동화는 없다.
+function manualForm(run, p) {
+  const key = run.run_id + "/" + p.pid;
+  const ta = h("textarea", { rows: 5, placeholder: "원본 앱의 답을 붙여 넣으세요", "aria-label": p.label + " 답",
+                             oninput: e => { drafts[key] = e.target.value; } });
+  ta.value = drafts[key] || "";
+  const confirmBox = h("input", { type: "checkbox", id: `confirm-${run.run_id}-${p.pid}`, onchange: e => { confirms[key] = e.target.checked; } });
+  confirmBox.checked = !!confirms[key];
+  const packetText = p.packet || run.prompt || "";
+  return h("div", { class: "stack" },
+    h("p", { class: "sm" }, "① 질문을 복사해 원본 앱에 붙여 넣고  ② 받은 답을 아래에 붙여 넣으세요."),
+    (run.sources || []).length ? h("p", { class: "sm cell cell-alert" }, `공통 자료 ${run.sources.length}개(${run.sources.map(x => x.name).join(", ")})를 원본 앱에도 직접 첨부하세요. 첨부했는지는 확인하지 못합니다.`) : null,
+    h("div", { class: "row" },
+      h("button", { class: "btn btn-primary", type: "button", onclick: async e => {
+        const b = e.currentTarget;
+        try { await navigator.clipboard.writeText(packetText); b.textContent = "복사함"; }
+        catch (err) { toast("복사하지 못했습니다. 브라우저가 클립보드를 막았습니다.", true); }
+      } }, "질문 복사"),
+      h("button", { class: "btn", type: "button", onclick: () => act(`/api/runs/${run.run_id}/withdraw/${p.pid}`) }, "답을 받지 못함(빼기)")),
+    ta,
+    h("label", { class: "checkbox-row sm", for: `confirm-${run.run_id}-${p.pid}` }, confirmBox, "원본 앱에 이 질문을 넣어 받은 답이다(기록만 한다 — 독립성 확인이 아니다)"),
+    h("div", {}, h("button", { class: "btn btn-primary", type: "button", onclick: () => act(`/api/runs/${run.run_id}/manual/${p.pid}`,
+      { text: ta.value, input_sha256: run.input_sha256, user_confirmed: confirmBox.checked })
+      .then(ok => { if (ok) { delete drafts[key]; delete confirms[key]; } }) }, "답 넣기")),
+    collapsible(`packet-${key}`, "답 첫 줄에 되말할 표식", h("div", { class: "info-list" },
+      h("p", { class: "mono hash" }, packetText.split("\n")[0]),
+      h("p", {}, "복사한 질문 첫 줄의 표식을 답 첫 줄에 되말해 달라고 적혀 있습니다. 다른 카드의 답을 붙여 넣으면 받지 않습니다."))));
+}
+function participantsIsland(run) {
+  const revealed = run.phase === "revealed";
+  const done = run.participants.filter(p => p.state === "accepted").length;
+  const n = run.participants.length;
+  return island("참여자", [
+    h("p", { class: "sm muted" }, revealed ? `${n}명 중 ${done}명의 답을 공개했습니다.`
+      : run.cancel_requested ? `${n}명 중 ${done}명 제출 · 취소해서 공개하지 않습니다(봉인 유지).`
+      : (run.gate || {}).status === "waiting" ? `${n}명 중 ${done}명 제출 · 모두 끝나면 한꺼번에 공개합니다.` : `${n}명 중 ${done}명 제출`),
+    h("div", { class: "island-part" }, run.participants.map(p => participantRow(run, p))),
+    h("div", { class: "island-part" }, collapsible(`budget-${run.run_id}`, "호출 집계", budget(run)))]);
 }
 
+// ---- 결정 카드와 합성 -------------------------------------------------------------------------------
 function claimComparison(synthesis, run) {
   const labels = Object.fromEntries(run.participants.map(p => [p.pid, p.label]));
-  const rows = synthesis.claims.map(claim => h("tr", {},
-    h("td", {}, h("span", { class: "meta" }, claim.id), h("div", { class: "draft" }, claim.text)),
-    h("td", {}, claim.references.map(ref => h("div", { class: "kv" },
-      `${labels[ref.pid] || ref.pid} · 문자 ${ref.start}–${ref.end} · ${ref.sha256.slice(0, 8)}`))),
-    h("td", {}, h("span", { class: "label" }, "미해결"), h("div", { class: "caption" }, "원문 일치 · 사실 미검증"))));
-  return h("div", { class: "panel", "data-section": "comparison" },
-    h("div", { class: "ph" }, h("span", { class: "t" }, "주장 대조 · 원문 일치 검사")),
-    h("p", { class: "caption pb" }, "같은 문장은 묶되 사실로 판정하지 않습니다. 다른 입장·반례를 의미상 분류하지 않은 모의 대조입니다."),
-    h("div", { class: "compare-scroll" }, h("table", { class: "comparison" },
-      h("thead", {}, h("tr", {}, ["발췌 주장", "원문 위치", "판정"].map(s => h("th", { scope: "col" }, s)))),
-      h("tbody", {}, rows))));
+  const rows = synthesis.claims.map(claim => {
+    const [verdict, cls] = DISPOSITION[claim.disposition] || [claim.disposition, "badge-neutral"];
+    return h("div", { class: "claim-row", role: "row" },
+      h("span", { class: "claim-id mono cap", role: "cell" }, claim.id),
+      h("span", { class: "claim-text", role: "cell" }, claim.text),
+      h("span", { class: "claim-loc cap", role: "cell" }, claim.references.map(ref => h("span", { class: "ref" },
+        h("span", {}, labels[ref.pid] || ref.pid), " · ", h("span", {}, `문자 ${ref.start}–${ref.end}`), " · ",
+        h("span", { class: "mono" }, ref.sha256.slice(0, 8))))),
+      h("span", { class: "claim-verdict", role: "cell" }, badge(verdict, cls),
+        h("span", { class: "cap muted" }, claim.source_check === "exact_match" ? "원문 일치 · 사실 미검증" : "원문에 없음")));
+  });
+  return collapsible(`claims-${run.run_id}-${firstView}`, `주장 대조표 (${synthesis.claims.length}개)`, [
+    h("p", { class: "sm muted" }, "같은 문장은 묶되 사실로 판정하지 않습니다. 다른 입장·반례를 의미상 분류하지 않은 모의 대조입니다."),
+    h("div", { class: "claims", role: "table", "aria-label": "주장 대조표" },
+      h("div", { class: "claims-head", role: "row" }, ["주장", "발췌문", "원문 위치", "판정"].map(s => h("span", { role: "columnheader" }, s))),
+      rows)], { open: firstView === "comparison" });
 }
-
-function decisionCard(synthesis) {
-  const card = synthesis.card;
-  const section = (title, items) => h("div", {}, h("strong", {}, title), h("ul", {}, items.map(x => h("li", {}, x))));
-  return h("div", { class: "panel decision", "data-section": "decision" },
-    h("div", { class: "ph" }, h("span", { class: "t" }, "결정 카드 · 모의 합성"),
-      h("span", { class: "label" }, "조건부 · qualified")),
-    h("div", { class: "pb" }, h("h3", {}, card.recommendation),
-      section("뒤집을 조건", card.overturnedBy), section("미해결·반례", card.unresolved),
-      section("다음 검사", card.nextChecks),
-      h("p", { class: "caption" }, `주장 구성: 미해결 ${card.coverage.unresolved} · 외부 사실 검증 없음 · 추가 모델 호출 0`)));
+// 1층: 권고와 뒤집을 조건. 2층: 미해결·다음 검사(펼쳐 둠). 합성자·검사 수는 맨 아래 한 줄.
+function decisionCard(result, run) {
+  const card = { overturnedBy: [], unresolved: [], nextChecks: [], ...result.card }, model = result.mode === "model";
+  const coverage = Object.entries(card.coverage || {}).filter(([, n]) => n > 0)
+    .map(([k, n]) => `${(DISPOSITION[k] || [k])[0]} ${n}`).join(" · ");
+  const unsupported = model && result.checks ? result.checks.unsupported_additions : 0;
+  const foot = model ? modelSynthesisLines(result).slice(0, 2).map(([, t]) => t)   // 합성자 줄과 인용 검사 줄
+    : [`주장 구성: ${coverage || "없음"} · 외부 사실 검증 없음 · 추가 모델 호출 ${result.additional_model_calls ?? 0}`];
+  const list = items => h("div", { class: "hero-list" }, items.map(x => h("div", { class: "hero-list-item sm" }, x)));
+  return h("section", { class: "hero-card", "aria-label": "결정 카드" },
+    h("div", { class: "row between" }, h("span", { class: "hero-chip" }, CARD_STATUS[card.status] || card.status),
+      h("span", { class: "cap hero-sub" }, model ? "실제 합성 · 사실 검증 아님" : "모의 대조 · 모델 호출 없음")),
+    h("p", { class: "hero-recommend" }, card.recommendation),
+    unsupported ? h("p", { class: "hero-chip hero-chip-dot" }, `원문에 없는 추가 주장 ${unsupported}개`) : null,
+    card.overturnedBy.length ? h("div", { class: "island-part" }, h("p", { class: "sm hero-label" }, "뒤집을 조건"), list(card.overturnedBy)) : null,
+    h("div", { class: "hero-divider" }),
+    collapsible(`unresolved-${run.run_id}`, [h("span", { class: "hero-count" }, (card.coverage || {}).unresolved ?? card.unresolved.length),
+      h("span", { class: "sm" }, "미해결 주장 · 남은 문제와 다음 검사")], [
+      list(card.unresolved),
+      card.nextChecks.length ? [h("p", { class: "sm hero-label island-part" }, "다음 검사"), list(card.nextChecks)] : null],
+      { open: true, cls: "hero-count-row" }),
+    h("div", { class: "island-part" }, foot.map(t => h("p", { class: "cap hero-sub" }, t))));
 }
-
 // 실제 합성 결과의 줄([class, 글]). DOM 없이 시험할 수 있게 그리기와 나눴다. 인용 일치는 사실 검증이 아니다.
 function modelSynthesisLines(result) {
   const s = result.synthesizer || {}, checks = result.checks || {};
@@ -456,138 +804,260 @@ function modelSynthesisLines(result) {
   for (const u of result.unresolved) lines.push(["caption", `미해결 · ${u}`]);
   return lines;
 }
-function modelSynthesisView(result) {
-  return h("div", { class: "panel decision", "data-section": "model-synthesis" },
-    h("div", { class: "ph" }, h("span", { class: "t" }, "실제 합성 · 조건부"), h("span", { class: "label" }, "qualified · 사실 검증 아님")),
-    h("div", { class: "pb" }, h("h3", {}, result.card.recommendation),
-      modelSynthesisLines(result).map(([cls, text]) => h(cls.startsWith("kv") ? "div" : "p", { class: cls }, text))));
+// 3층: 실제 합성의 주장·인용·갈리는 점. 합성자 줄과 검사 줄(앞 두 줄)은 결정 카드 아래에 있다.
+function modelSynthesisView(result, run) {
+  const lines = modelSynthesisLines(result).slice(2);
+  return collapsible(`evidence-${run.run_id}`, `주장과 인용 보기 (인용 ${(result.checks || {}).quotes ?? "?"}개)`, lines.map(([cls, text]) =>
+    cls === "claim" ? h("p", { class: "sm claim-line" }, text)
+    : cls === "claim st-unknown" ? h("p", { class: "sm cell cell-alert strong" }, text)
+    : cls === "kv st-unknown" ? h("p", { class: "sm quote" }, h("span", { class: "flag" }, "원문에 없음"), text.replace(/^원문에 없음/, ""))
+    : cls === "kv" ? h("p", { class: "sm quote muted" }, text)
+    : h("p", { class: "sm cell cell-alert" }, text)));
 }
 function modelControls(run) {
   // 같은 실행에 실제 합성을 여러 번 할 수 있다(부를 때마다 호출 1회). 끝났는지 모르는 시도가 있을 때만 새로 부르지 않는다.
   const state = run.model_synthesis;
-  if (state && state.status === "running") return h("p", { class: "caption" }, "실제 합성 중… 끝나면 이 자리에 결과가 보입니다.");
-  if (state && state.status === "unknown") return h("div", { class: "pb" },
-    h("p", { class: "warn" }, state.message || ""),
-    (state.attempts || []).map(attempt => h("button", { class: "quiet", onclick: () => {
+  if (state && state.status === "running") return h("p", { class: "sm muted" }, "실제 합성 중… 끝나면 이 자리에 결과가 보입니다.");
+  if (state && state.status === "unknown") return h("div", { class: "stack" },
+    h("p", { class: "sm cell cell-alert strong" }, state.message || ""),
+    (state.attempts || []).map(attempt => h("div", {}, h("button", { class: "btn btn-danger", type: "button", onclick: () => {
       if (window.confirm("해당 합성 시도의 모든 자손이 종료됐음을 직접 확인했습니까? 호출 예산은 환불하지 않습니다."))
         return act(`/api/runs/${run.run_id}/acknowledge-synthesis`, { attempt });
-    } }, `종료 직접 확인 · ${attempt.slice(0, 12)}`)),
-    h("p", { class: "caption" }, "끝났는지 모르는 합성이 있어 새로 부르지 않습니다. 종료를 확인하면 다시 부를 수 있습니다."));
-  const failed = state && state.status === "failed" ? h("div", {},
-    h("p", { class: "warn" }, `${state.message || ""}${state.reason ? ` (${state.reason})` : ""}`),
-    state.raw ? failedReplyView(run, state.raw) : "") : "";
+    } }, `종료 직접 확인 · ${attempt.slice(0, 12)}`))),
+    h("p", { class: "cap muted" }, "끝났는지 모르는 합성이 있어 새로 부르지 않습니다. 종료를 확인하면 다시 부를 수 있습니다."));
+  const failed = state && state.status === "failed" ? h("div", { class: "stack" },
+    h("p", { class: "sm cell cell-alert strong" }, `${state.message || ""}${state.reason ? ` (${state.reason})` : ""}`),
+    state.raw ? failedReplyView(run, state.raw) : null) : null;
   const history = modelHistory(run);
   const providers = synthesizers.length ? synthesizers : [...new Map(run.participants
     .filter(p => p.transport === "cli" && p.adapter_id).map(p => [p.adapter_id, p])).values()];
-  if (!liveMode || !providers.length) return h("div", { class: "pb" }, failed, history);
-  const select = h("select", { "aria-label": "합성자" }, providers.map(p => h("option", { value: p.adapter_id }, `${p.label} (${p.adapter_id})`)));
+  if (!liveMode || !providers.length) return h("div", { class: "stack" }, failed, history);
+  const select = h("select", { "aria-label": "합성자", onchange: e => { synthChoice = e.target.value; } },
+    providers.map(p => h("option", { value: p.adapter_id, selected: p.adapter_id === synthChoice }, `${p.label} (${p.adapter_id})`)));
   const again = (run.model_syntheses || []).length > 0;
-  return h("div", { class: "pb" }, failed, history,
-    h("div", { class: "row" }, select,
-      h("button", { onclick: () => act(`/api/runs/${run.run_id}/synthesize`, { mode: "model", adapter_id: select.value }) },
+  return h("div", { class: "stack" }, failed, history,
+    h("div", { class: "row" }, h("div", { class: "form-field", style: "flex:1 1 180px" }, select),
+      h("button", { class: "btn btn-primary", type: "button", onclick: () => act(`/api/runs/${run.run_id}/synthesize`, { mode: "model", adapter_id: select.value }) },
         again ? "한 번 더 합성(호출 1회)" : "실제 합성(호출 1회)")),
-    h("p", { class: "caption" }, "공개된 초안을 고른 CLI에 보내 합칩니다. 같은 실행에서 합성자를 바꿔 여러 번 부를 수 있고, 부를 때마다 구독 사용량 1회를 같은 원장의 호출 상한에서 예약합니다(환불 없음). 같은 실행의 합성은 같은 이름표 순서를 봅니다. 인용은 원문과 글자 그대로 대조하고, 사실 검증은 하지 않습니다."));
+    collapsible(`synth-note-${run.run_id}`, "실제 합성은 무엇을 하나요", h("p", { class: "sm muted" },
+      "공개된 초안을 고른 CLI에 보내 합칩니다. 같은 실행에서 합성자를 바꿔 여러 번 부를 수 있고, 부를 때마다 구독 사용량 1회를 같은 원장의 호출 상한에서 예약합니다(환불 없음). 같은 실행의 합성은 같은 이름표 순서를 봅니다. 인용은 원문과 글자 그대로 대조하고, 사실 검증은 하지 않습니다.")));
 }
-// 둘 이상 부른 실행의 합성 시도 목록. 가장 최근에 끝난 합성은 위 결과 자리에, 전부는 결정 보고의 model_syntheses에 있다.
+// 둘 이상 부른 실행의 합성 시도 목록. 가장 최근에 끝난 합성은 결정 카드 자리에, 전부는 결정 보고의 model_syntheses에 있다.
 function modelHistory(run) {
   const attempts = run.model_syntheses || [];
-  if (attempts.length < 2) return "";
-  return h("details", {}, h("summary", {}, `실제 합성 시도 ${attempts.length}번`),
+  if (attempts.length < 2) return null;
+  return collapsible(`history-${run.run_id}`, `실제 합성 시도 ${attempts.length}번`, h("div", { class: "info-list" },
     attempts.map((a, i) => {
       const r = a.result || {}, s = r.synthesizer || {}, c = r.checks || {};
       const detail = r.status === "completed"
         ? ` · 인용 ${c.exact_matches}/${c.quotes} 원문 일치 · 권고: ${(r.card || {}).recommendation || ""}`
         : (r.reason ? ` · ${r.reason}` : "");
-      return h("div", { class: "kv" }, `${i + 1}. ${s.adapter_id || "?"} · ${a.status}${detail}`);
-    }));
+      return h("p", {}, `${i + 1}. ${s.adapter_id || "?"} · ${a.status}${detail}`);
+    })));
 }
 // 형식 검사에 실패한 합성 답의 원문. 결과가 아니므로 결과 자리와 나눠 접어 둔다. 저장은 결정 보고의 model_syntheses.
 function failedReplyView(run, raw) {
   const size = raw.truncated ? `전체 ${raw.chars}자 중 앞 ${raw.stored_chars}자 저장` : `${raw.chars}자`;
-  return h("details", {}, h("summary", {}, `검사 실패한 원문 · ${size}`),
-    h("p", { class: "caption" }, "합성자의 답이 형식 검사를 통과하지 못했습니다. 합성 결과로 쓰지 않으며, 인용 대조와 사실 검증을 하지 않았습니다." +
+  return collapsible(`raw-${run.run_id}`, `검사 실패한 원문 · ${size}`, [
+    h("p", { class: "cap muted" }, "합성자의 답이 형식 검사를 통과하지 못했습니다. 합성 결과로 쓰지 않으며, 인용 대조와 사실 검증을 하지 않았습니다." +
       (raw.escaped ? " 저장할 수 없는 문자는 \\u 표기로 바꿨습니다." : "")),
-    h("div", { class: "draft" }, raw.text),
-    h("button", { class: "quiet", onclick: () => downloadReport(run.run_id, true) }, "검사 실패한 원문과 원문 보고 저장(JSON)"));
+    h("div", { class: "draft-text" }, raw.text),
+    h("div", {}, h("button", { class: "btn", type: "button", onclick: () => downloadReport(run.run_id, true) }, "검사 실패한 원문과 원문 보고 저장(JSON)"))]);
 }
-
+// 공개된 실행의 본문 단: 결정 카드(와 대조표) → 실제 합성 → 저장. 섬의 배열을 돌려준다.
 function synthesisPanel(run) {
   const result = run.synthesis;
-  if (!result) return h("div", {}, h("div", { class: "pb" },
-    h("button", { onclick: () => act(`/api/runs/${run.run_id}/synthesize`) }, "모의 합성 · 주장 대조 만들기"),
-    h("p", { class: "caption" }, "공개된 원문을 발췌하고 원문 위치를 검사합니다. 모델 호출과 사실 검증은 하지 않습니다.")),
-    modelControls(run));
-  if (result.status !== "completed") return h("div", { class: "foot" },
-    h("p", { class: "warn" }, result.message), h("p", { class: "caption" }, "합성 완료가 아닙니다. 아래 원문 보고서를 저장할 수 있습니다."),
-    modelControls(run));
-  if (result.mode === "model") return h("section", { "aria-label": "실제 합성 결과" }, modelSynthesisView(result),
-    modelControls(run),
-    h("div", { class: "pb" }, h("button", { onclick: () => downloadReport(run.run_id, true) }, "합성 결과와 원문 저장(JSON)")));
-  const controls = h("div", { class: "layout-controls", role: "group", "aria-label": "Q4 첫 화면 비교" },
-    [ ["decision", "A · 결정 우선"], ["comparison", "B · 대조표 우선"] ].map(([key, label]) =>
-      h("button", { class: "quiet", "aria-pressed": String(firstView === key), onclick: () => { firstView = key; render(); } }, label)));
-  const card = decisionCard(result), table = claimComparison(result, run);
-  return h("section", { "aria-label": "모의 합성 결과" }, controls,
-    h("p", { class: "caption" }, "Q4 미결정 · 같은 결과의 순서만 바꾸어 비교합니다. 선택은 이 탭의 미리보기입니다."),
-    ...(firstView === "decision" ? [card, table] : [table, card]),
-    h("div", { class: "pb" }, h("button", { onclick: () => downloadReport(run.run_id, true) }, "결정 카드와 원문 저장(JSON)")),
-    modelControls(run));
+  const modelIsland = () => island("실제 합성", modelControls(run));
+  const wantsModel = liveMode || !!run.model_synthesis || (run.model_syntheses || []).length > 0;
+  if (!result) return [island("결과 정리", [
+    h("p", { class: "sm muted" }, "공개된 답에서 주장을 발췌해 원문과 대조하고 결정 카드로 정리합니다."),
+    h("div", { class: "island-part row" }, h("button", { class: "btn btn-primary", type: "button", onclick: () => act(`/api/runs/${run.run_id}/synthesize`) },
+      "모의 합성 · 주장 대조 만들기")),
+    h("p", { class: "cap muted island-part" }, "모델 호출과 사실 검증은 하지 않습니다.")]),
+    wantsModel ? modelIsland() : null];
+  if (result.status !== "completed") return [island("결과 정리", [
+    h("p", { class: "sm cell cell-alert strong" }, result.message || "합성을 완료하지 못했습니다."),
+    h("p", { class: "cap muted island-part" }, "합성 완료가 아닙니다. 아래에서 원문 보고서를 저장할 수 있습니다.")]),
+    wantsModel ? modelIsland() : null];
+  if (result.mode === "model") {
+    return [decisionCard(result, run), island("실제 합성", [modelSynthesisView(result, run), h("div", { class: "island-part" }, modelControls(run))])];
+  } else {
+    const card = decisionCard(result, run), table = island(null, claimComparison(result, run));
+    return [...(firstView === "decision" ? [card, table] : [table, card]), wantsModel ? modelIsland() : null];
+  }
+}
+function saveIsland(run) {
+  const hasSynthesis = !!run.synthesis && run.synthesis.status === "completed";
+  return island("저장", [
+    h("div", { class: "row" },
+      hasSynthesis ? h("button", { class: "btn btn-primary", type: "button", onclick: () => downloadReport(run.run_id, true) },
+        run.synthesis.mode === "model" ? "합성 결과와 원문 저장(JSON)" : "결정 카드와 원문 저장(JSON)") : null,
+      h("button", { class: "btn", type: "button", onclick: () => downloadReport(run.run_id) }, "합성 없는 보고 저장(JSON · 원문 포함)")),
+    h("p", { class: "cap muted island-part" }, "파일로만 저장합니다. 원문이 들어 있으니 공개 저장소에 올리지 마세요. 사실 검증과 추가 모델 호출은 없습니다.")]);
 }
 
-function render() {
-  if (!state) return;
-  document.getElementById("status").textContent =
-    `실행기 ${state.executor} · 실행 자리 ${state.slots.used}/${state.slots.cap} · 정리 안 된 시도 ${state.unsettled.count}/${state.unsettled.limit}` +
-    (state.live_call_budget && state.live_call_budget.cap !== null
-      ? ` · 실제 호출 예약 ${state.live_call_budget.used}/${state.live_call_budget.cap}` : "");
-  // 다시 시작한 뒤에도 명시적으로 이어서 시작한다. 취소된 실행은 이 동작으로 되살리지 않는다.
-  document.getElementById("resume").replaceChildren(state.paused
-    ? h("button", { onclick: () => act("/api/resume"), title: "다시 시작하기 전에 시작하지 못한 시도를 이제 시작한다" }, "대기 중인 시도 이어서 시작")
-    : "");
-  const list = document.getElementById("runs"); list.replaceChildren();
-  for (const run of state.runs) list.append(h("button", { "aria-current": run.run_id === selected, onclick: () => { selected = run.run_id; render(); } },
-    h("span", { class: "meta" }, `${run.run_id} · ${run.cancel_requested ? "취소 요청됨" : (PHASE_LABEL[run.phase] || run.phase)}`), h("span", { class: "q" }, run.question)));
-  const run = state.runs.find(r => r.run_id === selected) || state.runs[0];
-  const detail = document.getElementById("detail");
-  if (!run) return;
-  selected = run.run_id;
-  if (detail.contains(document.activeElement) && document.activeElement.tagName === "TEXTAREA") return; // 입력 중에는 다시 그리지 않는다
+// ---- 화면 그리기 -----------------------------------------------------------------------------------
+function runStatus(run) {
+  const gate = run.gate || {}, ps = run.participants;
+  if (run.cancel_requested) return ["취소 요청됨", "badge-missing"];
+  if (gate.revealed) return ["공개됨", "badge-qualified"];
+  if (ps.some(p => p.state === "unknown")) return ["종료 미확인", "badge-unresolved"];
+  if (gate.status === "reduction_required") return ["승인 필요", "badge-unresolved"];
+  if (gate.status === "quorum_blocked") return ["정족수 부족", "badge-missing"];
+  if (ps.some(p => p.state === "running" || p.state === "queued")) return ["답 받는 중", "badge-neutral"];
+  if (ps.some(p => p.state === "awaiting_user")) return ["붙여넣기 대기", "badge-neutral"];
+  return [PHASE_LABEL[run.phase] || run.phase, "badge-neutral"];
+}
+function pressAll(root) { root.querySelectorAll("button").forEach(el => attachPress(el)); }
+function modeLabel() {
+  if (!optionsLoaded) return "모드 확인 중";
+  return liveMode ? "실제 CLI · 구독 사용량 소비" + (contextUnverified ? " · 문맥 미확인" : "") : "모의 모드 · 모델 호출 없음";
+}
+const THEMES = [["light", "밝게"], ["glass", "유리"], ["dusk", "노을"]];
+function setTheme(key, button) {
+  document.documentElement.dataset.theme = key;
+  try { localStorage.setItem("ledger-theme", key); } catch (e) {}
+  placeIndicator($("themeSeg"), button);
+}
+// 머리줄: 모드는 늘 보이고, 나머지 상태는 쓸 때만 보인다(실행기 이름은 모드 알약의 설명에).
+function renderHeader() {
+  const sig = JSON.stringify([optionsLoaded, liveMode, contextUnverified, connection, state && [state.executor, state.slots, state.unsettled,
+    state.paused, state.live_call_budget, state.provider_call_budgets]]);
+  if (sig === headerSig) return;
+  headerSig = sig;
+  const pills = [];
+  if (state) {
+    const b = state.live_call_budget, per = Object.entries(state.provider_call_budgets || {});
+    if (b && b.cap !== null) pills.push(h("span", { class: "pill", title: "이 원장에서 예약한 실제 CLI 호출 / 상한. 실패·취소해도 돌려받지 않습니다." +
+      (per.length ? " " + per.map(([id, x]) => `${id} ${x.used}/${x.cap}`).join(" · ") : "") }, `실제 호출 ${b.used}/${b.cap}`));
+    if (state.slots.used > 0) pills.push(h("span", { class: "pill" }, `실행 중 ${state.slots.used}/${state.slots.cap}`));
+    if (state.unsettled.count > 0) pills.push(h("span", { class: "pill pill-warn", title: "끝났는지 모르는 시도입니다. 상한에 닿으면 새 실행을 막습니다." },
+      `정리 안 된 시도 ${state.unsettled.count}/${state.unsettled.limit}`));
+    // 다시 시작한 뒤에도 명시적으로 이어서 시작한다. 취소된 실행은 이 동작으로 되살리지 않는다.
+    if (state.paused) pills.push(h("button", { class: "btn btn-primary", type: "button", onclick: () => act("/api/resume"),
+      title: "다시 시작하기 전에 시작하지 못한 시도를 이제 시작한다" }, "대기 중인 시도 이어서 시작"));
+  }
+  if (connection) pills.push(h("span", { class: "pill pill-warn", title: connection }, "서버 연결 안 됨"));
+  const theme = document.documentElement.dataset.theme;
+  $("header").replaceChildren(
+    h("div", { class: "header-top" }, h("h1", { class: "brand-name" }, "Ledger"),
+      h("span", { class: "pill " + (!optionsLoaded ? "" : liveMode ? "pill-live" : "pill-mode"), title: state ? `실행기 ${state.executor}` : null }, modeLabel())),
+    h("div", { class: "status-row" }, pills),
+    h("div", { class: "seg", id: "themeSeg", role: "tablist", "aria-label": "테마", style: "margin-left:auto" },
+      h("span", { class: "seg-indicator" }),
+      THEMES.map(([key, label]) => h("button", { type: "button", role: "tab", "aria-selected": String(theme === key),
+        onclick: e => setTheme(key, e.currentTarget) }, label))));
+  placeIndicator($("themeSeg"));
+  pressAll($("header"));
+}
+function pick(runId) { selected = runId; firstPick = false; render(); }
+function renderRunList(run) {
+  const runs = state.runs;
+  const sig = JSON.stringify([selected, runs.map(r => [r.run_id, r.question, r.created_at, runStatus(r)])]);
+  if (sig === listSig) return;
+  listSig = sig;
+  $("runListIsland").replaceChildren(h("div", { class: "block-head" }, h("h2", { class: "block-title" }, "실행"),
+      runs.length ? h("span", { class: "cap muted" }, `${runs.length}개`) : null),
+    runs.length ? h("div", {}, runs.map(r => {
+      const [label, cls] = runStatus(r);
+      return h("button", { class: "run-row", type: "button", "aria-current": String(r.run_id === selected), onclick: () => pick(r.run_id) },
+        h("span", { class: "row between" }, badge(label, cls), h("span", { class: "cap muted" }, fmtTime(r.created_at))),
+        h("span", { class: "sm run-q" }, r.question));
+    })) : h("p", { class: "sm muted" }, "아직 실행이 없습니다."));
+  $("runTabs").replaceChildren(...runs.map(r => h("button", { type: "button", "aria-current": String(r.run_id === selected),
+    title: r.question, onclick: () => pick(r.run_id) }, `${runStatus(r)[0]} · ${r.question}`)));
+  pressAll($("runListIsland")); pressAll($("runTabs"));
+}
+function welcome() {
+  const steps = ["질문을 적고 참여할 AI를 고릅니다.", "AI들이 서로의 답을 보지 않고 각자 답합니다(봉인).",
+                 "모두 끝나면 한꺼번에 공개하고, 권고·뒤집을 조건·미해결을 결정 카드로 정리합니다."];
+  return island("여러 AI에게 따로 묻고, 한꺼번에 비교합니다", [
+    h("div", { class: "stack" }, steps.map((s, i) => h("div", { class: "step" }, h("span", { class: "step-num" }, i + 1), h("p", { class: "sm" }, s)))),
+    h("div", { class: "island-part" }, h("button", { class: "btn btn-brand", type: "button", onclick: () => openNewRun() }, "첫 질문 시작하기"))]);
+}
+// 질문 섬: 질문 · 한 줄 요약 · 해야 할 일(승인·취소) · 공개 뒤 정족수와 보기 순서. 해시·사건 기록은 '실행 정보'에 접어 둔다.
+function questionIsland(run) {
+  const gate = run.gate || {}, revealed = run.phase === "revealed";
+  const [label, cls] = runStatus(run);
+  const sources = run.sources || [];
+  const parts = [
+    h("div", { class: "row between" }, badge(label, cls), h("span", { class: "cap muted" }, fmtTime(run.created_at))),
+    h("h2", { class: "run-question", style: "margin-top:var(--s-3)" }, run.question),
+    h("p", { class: "meta-line" }, `참여자 ${run.participants.length}명` + (sources.length ? ` · 공통 자료 ${sources.length}개` : "") +
+      ` · 최소 정족수 ${run.min_independent}명`)];
+  if (run.cancel_requested) {
+    parts.push(h("div", { class: "cell island-part stack" }, h("p", { class: "sm strong" }, run.note || "취소를 요청했습니다."),
+      h("p", { class: "cap muted" }, run.participants.some(p => p.state === "running" || p.state === "unknown")
+        ? "취소 요청 저장됨 · 종료 대기/미확인 작업이 있습니다. 실행 자리는 종료 확인 뒤에만 풀립니다."
+        : "취소 요청 저장됨 · controller에 종료 대기/미확인 시도는 없습니다. 초안은 계속 봉인됩니다. 원본 앱의 작업 종료는 별도입니다.")));
+  } else if (!revealed) {
+    if (gate.status === "waiting")
+      parts.push(h("p", { class: "sm muted island-part" }, "모두 끝나면 한꺼번에 공개합니다. 그 전에는 누구의 답도 보이지 않습니다(봉인)."));
+    if (run.note) parts.push(h("div", { class: "cell cell-alert island-part stack" }, h("p", { class: "sm strong" }, run.note),
+      gate.can_approve_reduction ? h("div", {}, h("button", { class: "btn btn-primary", type: "button", onclick: () => {
+        if (window.confirm("빠진 참여자 없이 남은 답으로 공개를 진행합니다. 되돌릴 수 없습니다.")) act(`/api/runs/${run.run_id}/approve-reduction`);
+      } }, "축소 승인")) : null));
+  }
+  if (revealed && run.quorum && run.quorum.label) parts.push(h("p", { class: "sm strong island-part" }, run.quorum.label));
+  if (revealed && run.synthesis && run.synthesis.status === "completed" && run.synthesis.mode !== "model") {
+    parts.push(h("div", { class: "island-part row" },
+      h("div", { class: "seg", id: "orderSeg", role: "tablist", "aria-label": "보기 순서" }, h("span", { class: "seg-indicator" }),
+        [["decision", "A · 결정 우선"], ["comparison", "B · 대조표 우선"]].map(([key, text]) =>
+          h("button", { type: "button", role: "tab", "aria-selected": String(firstView === key), onclick: e => {
+            if (firstView === key) return;
+            placeIndicator($("orderSeg"), e.currentTarget); firstView = key; render();
+          } }, text))),
+      h("span", { class: "cap muted" }, "Q4 미결정 · 같은 결과의 순서만 바꿉니다")));
+  }
+  const info = [
+    h("p", {}, "실행 ID ", h("span", { class: "mono hash" }, run.run_id)),
+    h("p", {}, "입력 sha256 ", h("span", { class: "mono hash" }, run.input_sha256), ` · ${run.input_bytes}바이트`),
+    h("p", {}, `정족수 정책: ${run.quorum && run.quorum.policy === "include_unverified" ? "미확인 답도 셈" : "독립성이 확인된 참여자만"}`),
+    sources.length ? h("p", {}, "공통 자료(읽기 전용, 시도마다 해시 확인)") : null,
+    sources.map(s => h("p", {}, h("span", { class: "mono" }, s.name), ` · ${s.bytes}바이트 · sha256 `, h("span", { class: "mono hash" }, s.sha256.slice(0, 12) + "…"))),
+    revealed ? h("p", {}, "controller가 공개했다. 공개 전 초안은 서로 보지 않은 상태에서 받았다(수동 참여자는 blind 미확인).") : null,
+    h("p", {}, "사건: " + run.events.join(" → "))];
+  parts.push(h("div", { class: "island-part" }, collapsible(`info-${run.run_id}`, "실행 정보 · 사건 기록", h("div", { class: "info-list" }, info))));
+  if (gate.can_cancel) parts.push(h("div", { class: "island-part" }, h("button", { class: "btn btn-danger", type: "button", onclick: () => {
+    if (window.confirm("이 실행을 되돌릴 수 없게 취소합니다. 받은 초안도 공개하지 않으며 이미 예약한 예산은 돌려받지 않습니다. 원본 앱 작업은 따로 중단해야 합니다."))
+      act(`/api/runs/${run.run_id}/cancel`);
+  } }, "이 실행 취소")));
+  return island(null, parts);
+}
+function renderRun(run) {
+  const sig = JSON.stringify([run, firstView, liveMode, synthesizers.length]);
+  if (sig === runSig) return;
+  // 입력 중에는 다시 그리지 않는다(글자·커서가 사라진다). 다음 새로고침에 그린다.
+  const active = document.activeElement;
+  if (active && /^(TEXTAREA|INPUT|SELECT)$/.test(active.tagName) && ($("mainCol").contains(active) || $("asideCol").contains(active))) return;
+  runSig = sig;
+  if (!run) { $("mainCol").replaceChildren(welcome()); $("asideCol").replaceChildren(); pressAll($("mainCol")); return; }
   const revealed = run.phase === "revealed";
-  const done = run.participants.filter(p => p.state === "accepted").length;
-  const panel = h("div", { class: "panel" + (revealed ? " revealed" : "") },
-    h("div", { class: "ph" }, h("span", { class: "t" }, revealed ? "P1 · 독립 초안 · 공개됨" : "P1 · 독립 초안"),
-      h("span", { class: "label", style: `color:var(${revealed ? "--ink-100" : "--sealed"})` },
-        revealed ? `공개 ${done} / ${run.participants.length}` : `sealed ${done} / ${run.participants.length}`)),
-    budget(run),
-    run.participants.map(p => participantRow(run, p)),
-    run.note ? h("div", { class: "foot" }, h("div", { class: "warn" }, run.note),
-      run.gate.can_approve_reduction
-        ? h("div", { style: "margin-top:8px" }, h("button", { onclick: () => act(`/api/runs/${run.run_id}/approve-reduction`) }, "축소 승인")) : null) : null);
-  detail.replaceChildren(
-    h("h2", {}, run.question),
-    h("div", { class: "meta" }, `입력 sha256 ${run.input_sha256.slice(0, 16)}… · ${run.input_bytes} bytes · 최소 정족수 ${run.min_independent}명 · ${PHASE_LABEL[run.phase] || run.phase}`),
-    (run.sources || []).length
-      ? h("div", { class: "meta" }, "공통 자료(읽기 전용, 시도마다 해시 확인): " +
-          run.sources.map(s => `${s.name} ${s.bytes} bytes · sha256 ${s.sha256.slice(0, 12)}…`).join(" / "))
-      : "",
-    h("p", { class: "caption" }, revealed
-      ? "controller가 공개했다. 공개 전 초안은 서로 보지 않은 상태에서 받았다(수동 참여자는 blind 미확인)."
-      : "공개 전에는 초안의 내용·길이·토큰 수를 화면에 넘기지 않는다. 공개는 controller가 정한다."),
-    revealed && run.quorum && run.quorum.label ? h("p", { class: "caption" }, run.quorum.label) : "",  // replaceChildren은 null을 "null" 글자로 쓴다
-    revealed ? synthesisPanel(run) : "",
-    panel,
-    run.gate.can_cancel ? h("div", { class: "pb" },
-      h("button", { onclick: () => {
-        if (confirm("이 실행을 되돌릴 수 없게 취소합니다. 받은 초안도 공개하지 않으며 이미 예약한 예산은 돌려받지 않습니다. 원본 앱 작업은 따로 중단해야 합니다."))
-          act(`/api/runs/${run.run_id}/cancel`);
-      } }, "이 실행 취소")) : "",
-    run.cancel_requested ? h("p", { class: "caption" }, run.participants.some(p => p.state === "running" || p.state === "unknown")
-      ? "취소 요청 저장됨 · 종료 대기/미확인 작업이 있습니다. 실행 자리는 종료 확인 뒤에만 풀립니다."
-      : "취소 요청 저장됨 · controller에 종료 대기/미확인 시도는 없습니다. 초안은 계속 봉인됩니다. 원본 앱의 작업 종료는 별도입니다.") : "",
-    revealed ? h("div", { class: "pb" },
-      h("button", { onclick: () => downloadReport(run.run_id) }, "합성 없는 보고 저장(JSON · 원문 포함)"),
-      h("p", { class: "caption" }, "이 원문 보고에는 합성 결과를 넣지 않습니다. 결정 카드 저장은 위에서 별도로 선택합니다. 사실 검증과 추가 모델 호출은 없습니다.")) : "",
-    h("p", { class: "trail" }, "사건: " + run.events.join(" → ")));
+  $("mainCol").replaceChildren(questionIsland(run), ...(revealed ? [...synthesisPanel(run), saveIsland(run)] : []).filter(Boolean));
+  $("asideCol").replaceChildren(participantsIsland(run));
+  pressAll($("mainCol")); pressAll($("asideCol"));
+  placeIndicator($("orderSeg"));
+}
+function render() {
+  renderHeader();
+  if (!state) return;
+  if (firstPick && state.runs.length) { selected = (state.runs.find(r => r.phase === "revealed") || state.runs[0]).run_id; firstPick = false; }
+  const run = state.runs.find(r => r.run_id === selected) || state.runs[0] || null;
+  if (run) selected = run.run_id;
+  renderRunList(run);
+  renderRun(run);
+}
+
+// ---- 동작 ------------------------------------------------------------------------------------------
+let toastSpring = null, toastTimer = 0;
+function toast(text, error = false) {
+  const el = $("toast");
+  el.textContent = text; el.classList.toggle("is-error", error); el.hidden = false;
+  const paint = v => { el.style.transform = `translate(-50%, ${(1 - v) * 24}px)`; el.style.opacity = String(Math.max(0, Math.min(1, v))); };
+  toastSpring = toastSpring || createSpring(0, paint);
+  toastSpring.to(1, FEEL.rare);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastSpring.to(0, { response: FEEL.rare.response, damping: 1, onRest: () => { el.hidden = true; } }), error ? 7000 : 4000);
 }
 async function downloadReport(runId, decision = false) {
   try {
@@ -596,23 +1066,55 @@ async function downloadReport(runId, decision = false) {
     const link = h("a", { href: url, download: `${runId}-${decision ? "decision" : "without-synthesis"}.json` });
     document.body.append(link);
     try { link.click(); } finally { link.remove(); setTimeout(() => URL.revokeObjectURL(url), 0); }
-  } catch (e) { alert(e.message); }
+  } catch (e) { toast(e.message, true); }
 }
 async function act(path, body) {
   try { await api(path, body || {}); await refresh(); return true; }
-  catch (e) { alert(e.message); return false; }
+  catch (e) { toast(e.message, true); return false; }
 }
 async function refresh() {
   try {
     const [next, quota] = await Promise.all([api("/api/state"), api("/api/account-quota")]);
-    state = next; render(); renderQuota(quota);
-  }
-  catch (e) { document.getElementById("status").textContent = "연결 안 됨: " + e.message; }
+    connection = ""; state = next; render(); renderQuota(quota);
+  } catch (e) { connection = String(e.message); renderHeader(); }
 }
+async function loadOptions() {
+  const opt = await api("/api/options");
+  liveMode = !!opt.live;
+  contextUnverified = !!opt.context_unverified;
+  synthesizers = [...new Map((opt.participants || []).filter(p => p.transport === "cli" && p.adapter_id)
+    .map(p => [p.adapter_id, p])).values()];
+  optionsLoaded = true;
+  document.title = opt.live ? "Ledger 실제 CLI" : "Ledger 모의 모드";
+  initNewRun(opt);
+}
+function openNewRun() { morph.open(); setTimeout(() => $("question").focus({ preventScroll: true }), 80); }
+
+morph = createMorph($("newRunBtn"), $("newRunPanel"));
+$("newRunBtn").addEventListener("click", openNewRun);
+$("newRunClose").addEventListener("click", () => { morph.close(); $("newRunBtn").focus(); });
+$("startBtn").addEventListener("click", startRun);
+$("filePick").addEventListener("click", () => $("fileInput").click());
+$("fileInput").addEventListener("change", e => { addFiles([...e.target.files]); e.target.value = ""; });
+const drop = $("fileDrop");
+drop.addEventListener("dragover", e => { e.preventDefault(); drop.classList.add("is-over"); });
+drop.addEventListener("dragleave", e => { if (!drop.contains(e.relatedTarget)) drop.classList.remove("is-over"); });
+drop.addEventListener("drop", e => { e.preventDefault(); drop.classList.remove("is-over"); addFiles([...e.dataTransfer.files]); });
+pressAll($("newRunIsland"));
+stickyColumn($("sideCol"));
+// 글꼴이 늦게 오거나 창 폭이 바뀌면 글자 폭이 달라지므로 선택 표시를 다시 놓는다
+const placeIndicators = () => { placeIndicator($("themeSeg")); placeIndicator($("orderSeg")); };
+addEventListener("resize", placeIndicators);
+if (document.fonts) document.fonts.ready.then(placeIndicators);
+
 if (!TOKEN) {
-  document.getElementById("detail").replaceChildren(h("p", { class: "err" }, "토큰이 없습니다. 서버가 출력한 주소(#token=…)로 여세요."));
+  $("mainCol").replaceChildren(island("연결 정보가 없습니다", [
+    h("p", { class: "sm" }, "바탕 화면의 Decision Lab 아이콘으로 다시 열어 주세요."),
+    h("p", { class: "cap muted island-part" }, "직접 띄웠다면 서버가 출력한 주소(#token=…)로 엽니다.")]));
+  renderHeader();
 } else {
-  loadOptions().then(refresh);
+  renderHeader();
+  loadOptions().then(refresh).catch(e => { connection = String(e.message); renderHeader(); });
   setInterval(refresh, 1000);
 }
 </script>
