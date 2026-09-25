@@ -58,9 +58,10 @@
 
 ## 3. 진행 중인 작업
 
-**진행 중: `claude/long-sources-20260925` — 최종 head의 CI 녹색을 확인한 뒤 claude 세션이 병합한다(2절 8). 병합 직전에 이 문단을 지운다.** 코드 변경 없는 실험 PR: 긴 자료·파일 수 상한을 [사전 등록](docs/experiments/2026-09-25-long-sources/README.md)하고 strict 실행 한 번으로 봤다. 두 참여자 모두 20개 파일의 모든 값을 찾았다. 모델 호출 2회(Codex 1·Claude 1). [결과](docs/experiments/2026-09-25-long-sources/RESULTS.md). 실제 상태는 0절대로 GitHub에서 확인한다.
+**진행 중인 작업 없음.** 실제 상태는 0절대로 GitHub에서 확인한다. 다음은 4절의 순서대로다.
 
-- **마지막 병합:** [PR #53](https://github.com/inlight37-design/decision-model_lab/pull/53)(`claude/merge-52-20260925`) — 아래 #52의 검토·병합 기록, 종료 시험 보강. 모델 호출 0회. claude 세션이 병합했다(2절 8).
+- **마지막 병합:** [PR #54](https://github.com/inlight37-design/decision-model_lab/pull/54)(`claude/long-sources-20260925`) — 코드 변경 없는 실험 PR: 긴 자료·파일 수 상한을 [사전 등록](docs/experiments/2026-09-25-long-sources/README.md)하고 strict 실행 한 번으로 봤다. 두 참여자 모두 20개 파일의 모든 값(긴 파일의 끝·아주 긴 한 줄 속 값 포함)을 찾았다. 모델 호출 2회(Codex 1·Claude 1). claude 세션이 병합했다(2절 8). [결과](docs/experiments/2026-09-25-long-sources/RESULTS.md).
+- **그 앞:** [PR #53](https://github.com/inlight37-design/decision-model_lab/pull/53)(`claude/merge-52-20260925`) — 아래 #52의 검토·병합 기록, 종료 시험 보강. 모델 호출 0회. claude 세션이 병합했다(2절 8).
 - **그 앞:** [PR #52](https://github.com/inlight37-design/decision-model_lab/pull/52)(`chatgpt/deep-review-20260925`) — ChatGPT 웹 세션의 전체 코드 재검토: 합성 인용 원문 보존·잘못된 Unicode·중복 JSON 키 거절, 저장된 호출 상한 재검사, 사건 종류 인덱스, 서버 정상 종료(새 호출 차단 → 취소 알림 → HTTP 처리 회수 → 결과 저장 대기 → 원장 닫기). 모델 호출 0회. claude 세션이 정확한 head `797c4d3`의 CI 녹색과 Windows·WSL 전체 시험을 보고 병합했다(2절 8). WSL 모의 서버로 종료 전후를 비교했다 — 이전 main은 서버를 끄면 돌던 시도가 `unknown`으로 남았고, 병합 뒤에는 `cancelled`·자손 종료 확인으로 기록된다. 종료 관문을 못 잡던 시험을 보강했다. [검토 기록](docs/reviews/2026-09-25-deep-review/README.md), [병합 기록](docs/reviews/2026-09-25-merge-52/README.md).
 - **그 앞:** [PR #51](https://github.com/inlight37-design/decision-model_lab/pull/51)(`claude/source-injection-20260925`) — 코드 변경 없는 실험 PR: 공통 자료 속 지시문(숨긴 지시·`AGENTS.md`·`CLAUDE.md` 이름의 자료)을 [사전 등록](docs/experiments/2026-09-25-source-injection/README.md)하고 strict 실행 한 번으로 봤다. 두 참여자 모두 따르지 않았다. 모델 호출 2회(Codex 1·Claude 1). claude 세션이 병합했다(2절 8). [결과](docs/experiments/2026-09-25-source-injection/RESULTS.md).
 - **그 앞:** [PR #50](https://github.com/inlight37-design/decision-model_lab/pull/50)(`claude/strict-live-run-20260925`) — 코드 변경 없는 기록 PR: strict 첫 실제 두 참여자 실행(독립 정족수 충족), 첫 Codex 실제 합성, 실제 CLI 중도 취소(V04-03의 마지막 조건). 모델 호출 4회(Codex 3·Claude 1). claude 세션이 병합했다(2절 8). [기록](docs/reviews/2026-09-25-strict-live-run/README.md).
