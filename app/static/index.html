@@ -116,6 +116,7 @@
         <label class="row">공통 자료(텍스트 파일, 선택) <input id="sources" type="file" multiple
           accept=".txt,.md,.csv,.json,.log,.yaml,.yml,.py,.js,.ts,.html,.xml"></label>
         <p class="caption">모든 CLI 참여자가 같은 파일을 읽기 전용으로 받습니다. 원본 앱 참여자는 같은 파일을 직접 첨부해야 하며, 첨부했는지는 확인하지 못합니다. 파일 이름의 한글·공백은 _로 바뀝니다.</p>
+        <p class="caption" id="sources-note" aria-live="polite"></p>
         <div id="choices" style="margin-top:8px"></div>
         <label class="row">최소 정족수 인원 <input id="min" type="number" min="1" value="2" style="width:56px"></label>
         <label class="row policy">정족수에 셀 참여자
@@ -314,6 +315,24 @@ async function sourceFiles(files) {
   const taken = new Set();
   return Promise.all(files.map(async f => ({ name: sourceName(f.name, taken), text: await f.text() })));
 }
+// 붙인 자료의 합계와, 실제 Claude 참여자가 있으면 두 번의 관측값(카드 #61·#90). 시작을 막거나 한도를 바꾸지 않고,
+// 경고할 크기를 정하지 않는다 — 두 표본뿐이라 관측을 그대로 적는다. sizes는 파일별 바이트 수.
+function sourceNote(sizes, claudeLive) {
+  if (!sizes.length) return "";
+  const total = sizes.reduce((sum, n) => sum + n, 0);
+  const shown = total < 1000 ? `${total}바이트` : `${Math.round(total / 1000).toLocaleString("ko-KR")} KB`;
+  return `자료 ${sizes.length}개 · 합계 ${shown}` + (claudeLive
+    ? " · Claude 참여자는 자료를 처음부터 읽습니다. 관측(2026-09-25, 한 번씩): 합계 약 490 KB에 104초, " +
+      "약 1,043 KB에서는 제한 시간 180초를 넘겨 답을 받지 못했습니다. Codex는 둘 다 35초 안이었습니다."
+    : "");
+}
+function updateSourceNote() {
+  const claude = document.getElementById("p-claude");
+  document.getElementById("sources-note").textContent = sourceNote(
+    [...document.getElementById("sources").files].map(f => f.size), liveMode && !!claude && claude.checked);
+}
+document.getElementById("sources").addEventListener("change", updateSourceNote);
+document.getElementById("choices").addEventListener("change", updateSourceNote);
 
 function budget(run) {
   const b = run.budget, cells = [];
