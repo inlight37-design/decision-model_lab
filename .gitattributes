@@ -12,3 +12,6 @@
 # 라이선스 원문은 받은 그대로 둔다.
 LICENSE      -text
 LICENSE-DOCS -text
+
+# 화면 글꼴(app/static/fonts). 받은 그대로 둔다.
+*.woff2 binary

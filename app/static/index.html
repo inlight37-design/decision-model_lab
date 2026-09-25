@@ -8,14 +8,14 @@
   // 테마는 이 창에만 기억한다(편의). 첫 그리기 전에 정해 번쩍임을 막는다.
   try { const t = localStorage.getItem("ledger-theme"); if (["light", "glass", "dusk"].includes(t)) document.documentElement.dataset.theme = t; } catch (e) {}
 </script>
-<!-- 글꼴: Pretendard 1.3.9 원본 파일(GitHub 태그와 같은 내용)을 고정 해시로만 받는다. 못 받으면 시스템 글꼴로 그린다 -->
-<link rel="stylesheet" crossorigin="anonymous"
-  href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css"
-  integrity="sha384-2nNKoOPayicGa+aRguOQuiZP+RqQ4G3jalfDeOgftkKD7zBM2gJXTwcFqCZltdv0">
+<!-- 글꼴: Pretendard 1.3.9 가변 글꼴을 저장소에 넣었다(fonts/LICENSE, SIL OFL). 인터넷 없이도 어느 PC에서나 같은 글꼴로 그린다 -->
+<link rel="preload" href="/fonts/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin>
 <!-- island-ui(ai_unslop 저장소의 스킬)를 그대로 쓴다. 이 두 파일과 motion.js는 여기서 고치지 않는다 — island-ui/README.md -->
 <link rel="stylesheet" href="/island-ui/themes.css">
 <link rel="stylesheet" href="/island-ui/base.css">
 <style>
+@font-face { font-family: "Pretendard Variable"; font-style: normal; font-weight: 45 920; font-display: swap;
+  src: url("/fonts/PretendardVariable.woff2") format("woff2"); }
 /* ===== 화면 전용 스타일. 크기·간격·색은 island-ui 토큰만 쓴다 ===== */
 * { box-sizing: border-box; }
 button { border: none; background: none; }
@@ -424,6 +424,9 @@ function fmtTime(sec) {
   return sec == null ? "시각 미확인" : new Date(sec * 1000).toLocaleString("ko-KR",
     { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
 }
+function fmtNumber(v) {   // CLI가 준 숫자는 그대로 두되 긴 소수는 네 자리까지
+  return typeof v === "number" && !Number.isInteger(v) ? String(Math.round(v * 1e4) / 1e4) : String(v);
+}
 function fmtSize(n) { return n < 1000 ? `${n}바이트` : `${Math.round(n / 1000).toLocaleString("ko-KR")} KB`; }
 
 // ---- 계정 한도 -------------------------------------------------------------------------------------
@@ -662,7 +665,7 @@ function draftInfo(p) {
   return [p.independence === "confirmed" ? "독립성 확인(controller가 고정 입력만 주고 실행)" : "문맥 미확인 · 독립 정족수에 세지 않음",
     `모델: 요청 ${r.requested_model || "?"} → ${reported}${r.model_match === false ? " (불일치)" : ""}`,
     `걸린 시간: ${typeof r.duration_ms === "number" ? (r.duration_ms / 1000).toFixed(1) + "초" : "미확인"}`,
-    `사용량: ${r.usage && Object.keys(r.usage).length ? Object.entries(r.usage).map(([k, v]) => `${k} ${v}`).join(" · ") : "관측 안 됨"}`,
+    `사용량: ${r.usage && Object.keys(r.usage).length ? Object.entries(r.usage).map(([k, v]) => `${k} ${fmtNumber(v)}`).join(" · ") : "관측 안 됨"}`,
     `종료: ${r.containment || "?"} · 자손 종료 ${r.tree_confirmed_empty ? "확인" : "미확인"} · 입력 전달 ${r.input_delivery || "미확인"} · 상태 ${r.state}`];
 }
 function participantRow(run, p) {
