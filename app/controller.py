@@ -63,6 +63,28 @@ WINDOWS_DEVICES = re.compile(r"(?i)(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?")
 MAX_SOURCES, MAX_SOURCE_BYTES, MAX_SOURCES_TOTAL = 20, 256 * 1024, 1024 * 1024
 
 
+def storable(text: str) -> bool:
+    """UTF-8로 저장·해시할 수 있는 글인가. JSON의 올바른 이스케이프(예: "\\ud800")로 들어온 고립 surrogate는
+    원장 쓰기·sha256·HTTP 출력에서 모두 실패한다(카드 #70). 정상 보충 평면 문자와 글자 그대로의 \\ud800은 된다."""
+    try:
+        text.encode("utf-8")
+    except UnicodeEncodeError:
+        return False
+    return True
+
+
+def _storable_meta(value):
+    """진단 메타데이터(오류 설명·메모·보고 모델 등)의 고립 surrogate를 \\uXXXX 표기로 바꾼다. 봉인하는 초안이
+    아니라서 표기를 바꿔도 digest 계약과 무관하다(외부 검토 R05). 바꿨는지는 호출한 쪽이 표시한다."""
+    if isinstance(value, str):
+        return value if storable(value) else value.encode("utf-8", "backslashreplace").decode("utf-8")
+    if isinstance(value, dict):
+        return {_storable_meta(k): _storable_meta(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_storable_meta(v) for v in value]
+    return value
+
+
 def _checked_sources(items) -> list[tuple[str, bytes]]:
     """(이름, 글) 목록을 검사한다. 경로 구분자·숨김 이름·장치 이름·중복(대소문자 무시)·크기 초과·NUL을 거절한다."""
     if items is None:
@@ -77,8 +99,8 @@ def _checked_sources(items) -> list[tuple[str, bytes]]:
         if (not isinstance(name, str) or SOURCE_NAME.fullmatch(name) is None or WINDOWS_DEVICES.fullmatch(name)
                 or name.endswith(".") or name.lower() in seen):
             raise ControllerError("source names use letters, digits, dot, dash or underscore and must be unique")
-        if not isinstance(text, str) or "\x00" in text:
-            raise ControllerError(f"source {name!r} must be text")
+        if not isinstance(text, str) or "\x00" in text or not storable(text):
+            raise ControllerError(f"source {name!r} must be valid Unicode text")
         data = text.encode("utf-8")
         total += len(data)
         if len(data) > MAX_SOURCE_BYTES or total > MAX_SOURCES_TOTAL:
@@ -291,6 +313,8 @@ class Controller:
         question = question.strip()
         if not question:
             raise ControllerError("question is empty")
+        if not storable(question):
+            raise ControllerError("the question contains text that is not valid Unicode")
         checked_sources = _checked_sources(sources)
         if len({p.pid for p in participants}) != len(participants) or not participants:
             raise ControllerError("participants must be unique and non-empty")
@@ -522,13 +546,29 @@ class Controller:
                 result, outcome, detail = None, None, f"executor error: {type(exc).__name__}"
             else:
                 detail = None
-            self._finish(run_id, spec.pid, attempt, result, outcome, detail)
+            try:
+                self._finish(run_id, spec.pid, attempt, result, outcome, detail)
+            except Exception as exc:  # 결과를 저장하지 못했다 — 시도를 RUNNING으로 남기지 않는다(카드 #70)
+                self._finish_unstored(run_id, spec.pid, attempt, result, exc)
         finally:
             with self.lock:
                 self._workers.pop(attempt, None)
                 self.pump()
 
     # ---- 결과 수용 관문 ------------------------------------------------------------------------
+    def _finish_unstored(self, run_id, pid, attempt, result, exc) -> None:
+        """결과 저장이 예외로 끝난 시도를 닫는다. 자손 종료가 확인됐을 때만 rejected, 아니면 unknown이다.
+        호출은 이미 시작했으므로 예산을 되돌리지 않고 자동으로 다시 부르지 않는다(외부 검토 R05)."""
+        state = REJECTED if result is not None and result.tree_confirmed_empty is True else UNKNOWN
+        detail = f"the result could not be stored ({type(exc).__name__}); the answer was discarded"
+        with self.lock, self.store.tx() as tx:
+            expected = {"run_id": run_id, "pid": pid, "state": RUNNING, "attempt": attempt}
+            if self._transition(tx, expected, state, status="result_not_stored", detail=detail):
+                tx.event(run_id, "attempt_result_not_stored", pid=pid, attempt=attempt, error=type(exc).__name__)
+                if state == UNKNOWN:
+                    tx.event(run_id, "attempt_unknown", pid=pid, attempt=attempt, result=None, detail=detail)
+                self._maybe_reveal(run_id, tx)
+
     def _finish(self, run_id, pid, attempt, result, outcome, detail=None) -> None:
         with self.lock:
             summary = None if result is None else {
@@ -540,6 +580,16 @@ class Controller:
                 "model_match": outcome.model_match, "rate_limit": outcome.rate_limit}
             state, status, why = acceptance(result, outcome)
             detail = detail or why or (outcome.detail if outcome else None)
+            if state == ACCEPTED and not storable(outcome.text):
+                # 봉인할 초안은 원문 그대로여야 한다 — 표기를 바꾸지 않고 형식 오류로 받지 않는다(카드 #70).
+                state, status = REJECTED, "format_error"
+                detail = "the answer contains text that is not valid Unicode (a lone surrogate); it was not sealed"
+            if summary is not None:
+                stored = _storable_meta(summary)
+                if stored != summary:
+                    stored["escaped_text"] = True   # 진단 메타데이터의 표기를 바꿨다
+                summary = stored
+            detail = _storable_meta(detail)
             with self.store.tx() as tx:
                 current_gate = self._gate(run_id)
                 if not current_gate.accepting:
@@ -630,6 +680,8 @@ class Controller:
                     reason = "different participant: the answer carries the marker of another participant"
                 elif not body.strip():
                     reason = "empty answer"
+                elif not storable(body):
+                    reason = "the answer contains text that is not valid Unicode"
                 result = {"source": MANUAL, "marker_echo": echo, "user_confirmed": bool(user_confirmed),
                           "independence": "unverified"}
                 if reason is None and not self._transition(tx, part, ACCEPTED, status="manual", result=json.dumps(result)):
