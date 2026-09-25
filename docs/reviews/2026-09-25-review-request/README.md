@@ -29,7 +29,7 @@
 | 합성 | 공개 뒤 실행마다 켜는 실제 합성 1회, 인용은 원문과 글자 그대로 대조. 형식 실패 답의 원문 보존·이름표 순서 섞기(#68, 합성 실행기로만 시험) | [C](../2026-09-24-model-synthesis/README.md), [app 안내](../../../app/README.md) |
 | 비교 실험 | 단독·병렬·합성 비교 둘 — 합성의 이득은 불분명, 틀린 설명 전이를 두 번 봄 | [D](../../experiments/2026-09-24-comparison-pilot/RESULTS.md), [D 후속](../../experiments/2026-09-25-d-followup/RESULTS.md) |
 | 협업 방식 | GitHub 이슈 카드 보드 시범 — 카드와 인계만으로 이어받기 두 번 성공 | [시범 기록](../../experiments/2026-09-25-card-pilot/README.md) |
-| 새 컴퓨터 | 설치 스크립트 둘과 확인 도구(이 PR). aux-pc에서 확인 모드만 돌렸다 | [SETUP](../../SETUP.md) |
+| 새 컴퓨터 | PowerShell 한 줄의 원터치 설치(`tools/setup/setup.ps1`)와 확인 도구(이 PR). aux-pc에서 확인 모드로 끝까지만 돌렸다 | [SETUP](../../SETUP.md) |
 
 오프라인 시험 통과는 모델 품질·인용의 진실·실제 권한·격리 안전·예산 집행을 증명하지 않는다([AGENTS.md](../../../AGENTS.md)).
 
@@ -90,7 +90,7 @@
 
 ## 이 PR에서 한 일
 
-- [docs/SETUP.md](../../SETUP.md)와 [tools/setup/](../../../tools/setup/README.md): Windows·WSL 설치 스크립트, 확인 도구(설치·변경·모델 호출 없음, 계정 식별 값 비출력), 시험. aux-pc·aux-pc-wsl에서 확인 모드만 돌렸다. **빈 컴퓨터에서 처음부터 설치해 보지 않았다.**
+- [docs/SETUP.md](../../SETUP.md)와 [tools/setup/](../../../tools/setup/README.md): 원터치 설치 `setup.ps1`(winget 도구 → clone → WSL·Ubuntu, 재부팅 뒤 이어가기 → Linux 사용자 → Ubuntu의 apt·CLI → 로그인 셋 → 확인), Ubuntu 쪽 `setup-wsl.sh`, 확인 도구(설치·변경·모델 호출 없음, 계정 식별 값 비출력), 시험. aux-pc·aux-pc-wsl에서 확인 모드로만 돌렸다. **빈 컴퓨터에서 설치 경로를 돌려 보지 않았다** — WSL 판에 따라 Ubuntu 첫 실행의 모양이 달라 4단계(사용자 만들기)가 가장 불확실하다.
 - 카드 [#70](https://github.com/inlight37-design/decision-model_lab/issues/70)(고립 surrogate), [#71](https://github.com/inlight37-design/decision-model_lab/issues/71)(기기와 묶기), [#72](https://github.com/inlight37-design/decision-model_lab/issues/72)(L1)과 이 리뷰의 [카드 #73](https://github.com/inlight37-design/decision-model_lab/issues/73).
 - 모델 호출 없음.
 
@@ -106,7 +106,7 @@
 각 질문에 "동의 / 부분 동의 / 반대"와 근거를 적는다. 근거가 없으면 "판단 보류"라고 쓴다.
 
 1. **분류.** A(못 고침)에 실제로 고칠 수 있는 것이 있는가. B·C에 빠진 중요한 일이 있는가. 반대로 필요 없는 일이 있는가.
-2. **새 컴퓨터 준비 도구.** 빈 Windows PC에서 이 순서로 끝까지 갈 수 있는가. 설치 스크립트를 판 고정·SHA-256 비교로 멈추게 한 방식, winget 약관을 자동 동의하지 않은 것, 확인 도구가 로그인 여부만 읽고 계정 값을 출력하지 않는 것이 충분히 안전한가. 빠진 도구·함정이 있는가.
+2. **새 컴퓨터 준비 도구.** 빈 Windows PC에서 `setup.ps1` 한 번으로 끝까지 갈 수 있는가. 특히 WSL 설치 뒤 재부팅 이어가기(RunOnce)와 Ubuntu 첫 실행의 사용자 만들기(첫 실행이 묻지 않으면 root로 만드는 대체 경로)가 WSL 판마다 맞게 도는가. 설치 스크립트를 판 고정·SHA-256 비교로 멈추게 한 방식, winget 약관을 자동 동의하지 않은 것, 확인 도구가 로그인 여부만 읽고 계정 값을 출력하지 않는 것이 충분히 안전한가. 빠진 도구·함정이 있는가.
 3. **카드 #71의 설계.** (a) 사람이 적는 기기 이름표 대조와 (b) 기기 식별 값 해시 대조 가운데 무엇이 맞는가. 공개 저장소에 기기 식별 값의 해시를 남겨도 되는가. 다른 방법이 있는가.
 4. **카드 #70의 처분.** 고립 surrogate가 든 참여자 답을 형식 오류로 거절하는 것이 맞는가, 아니면 표기를 바꿔 받아야 하는가. 같은 위험이 있는 다른 경로가 있는가.
 5. **우선순위.** B의 순서에 동의하는가. 특히 E2 재관측(B4)과 L1(B6)의 순서.
@@ -140,6 +140,6 @@
 
 - 모든 기기 관측은 보조 PC 한 대와 그 안의 WSL 배포판 하나, 2026-09-23–25의 것이다(K35).
 - 원장·초안·계정 원시 응답은 PC에만 있고 저장소에는 가린 요약만 있다.
-- 새 컴퓨터 준비 스크립트는 확인 모드만 실행했다. winget 패키지 넷은 `winget show`로 있는 것만 확인했다.
+- 새 컴퓨터 준비 스크립트는 확인 모드만 실행했다. winget 패키지는 `winget show`로 있는 것만 확인했다.
 - 이 PC에는 Node가 없어 화면 JavaScript 시험은 CI에서만 돈다.
 - #68의 Codex 검토는 추론 강도 none이었다.

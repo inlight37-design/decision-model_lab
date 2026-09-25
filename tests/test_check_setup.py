@@ -107,6 +107,24 @@ class CheckSetupTests(unittest.TestCase):
         run, which, _ = fake({"wsl --list": (0, "docker-desktop\n")})
         self.assertEqual({r.name: r for r in cs.windows_rows(run, which, {})}["WSL"].status, "warn")
 
+    def test_setup_scripts_are_ascii_and_parse(self):
+        """Windows PowerShell 5.1은 BOM 없는 UTF-8 .ps1을 ANSI로 읽는다 — 한 글자만 섞여도 원터치가 깨진다."""
+        ps1, sh = ROOT / "tools/setup/setup.ps1", ROOT / "tools/setup/setup-wsl.sh"
+        ps1.read_bytes().decode("ascii")
+        self.assertNotIn(b"\r", sh.read_bytes())   # bash는 CRLF 줄을 명령의 일부로 읽는다
+        import shutil
+        import subprocess
+        powershell = shutil.which("powershell") or shutil.which("pwsh")
+        if powershell:
+            check = ("$e=$null; [void][System.Management.Automation.Language.Parser]::ParseFile("
+                     f"'{ps1}', [ref]$null, [ref]$e); if ($e) {{ $e | % {{ $_.Message }}; exit 1 }}")
+            done = subprocess.run([powershell, "-NoProfile", "-Command", check], capture_output=True, text=True, timeout=60)
+            self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        bash = shutil.which("bash")
+        if bash and not bash.lower().startswith(("c:\\windows", "c:/windows")):   # WSL 실행 스텁은 건너뛴다
+            done = subprocess.run([bash, "-n", str(sh)], capture_output=True, text=True, timeout=60)
+            self.assertEqual(done.returncode, 0, done.stderr)
+
     def test_observed_versions_come_from_the_current_record(self):
         versions = cs.observed_versions()
         self.assertEqual(set(versions), {"codex", "claude-code"})

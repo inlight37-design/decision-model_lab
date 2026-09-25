@@ -6,7 +6,7 @@ Windows에서는 저장소 검사와 협업에 필요한 도구(Python·jsonsche
 출력하지 않는다. 과금 경로를 바꾸는 환경변수는 이름만 본다(core.env.ENV_VARS — 값은 읽지 않는다).
 
 종료 코드: 필수 항목이 모두 ok면 0, 필수 항목이 하나라도 missing이면 1. warn·info는 종료 코드와 무관하다.
-설치는 setup.ps1(원터치)·setup-wsl.sh가, 순서와 사람이 할 일은 docs/SETUP.md가 맡는다.
+설치는 setup-windows.ps1·setup-wsl.sh가, 순서와 사람이 할 일은 docs/SETUP.md가 맡는다.
 """
 from __future__ import annotations
 
@@ -100,7 +100,7 @@ def common_rows(run: Run, which: Which, *, windows: bool) -> list[Row]:
         fix = ("python -m pip install -r requirements-design.txt" if windows
                else "sudo apt-get install -y python3-jsonschema")
         rows.append(Row("jsonschema", "missing", "없으면 스키마 시험이 skip된다(skip은 통과가 아니다)", fix))
-    rows.append(tool_row(run, which, "Git", "git", ("--version",), "Git을 설치한다(tools/setup/setup.ps1 또는 apt)"))
+    rows.append(tool_row(run, which, "Git", "git", ("--version",), "Git을 설치한다(setup-windows.ps1 또는 apt)"))
     hooks = run(("git", "-C", str(ROOT), "config", "core.hooksPath")) if which("git") else None
     if hooks and hooks[0] == 0 and hooks[1].strip().replace("\\", "/").rstrip("/").endswith(".githooks"):
         rows.append(Row("commit hook", "ok", "core.hooksPath = .githooks", required=False))
