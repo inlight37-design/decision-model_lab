@@ -34,6 +34,7 @@ LIVING_DOCS = (
     "AGENTS.md",
     "NEXT-SESSION.md",
     "docs/COLLABORATION.md",
+    "docs/SETUP.md",
     "docs/architecture/README.md",
     "docs/architecture/v0.4/README.md",
     "docs/reviews/README.md",
