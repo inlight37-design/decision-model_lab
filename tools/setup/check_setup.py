@@ -27,8 +27,8 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from core.env import ENV_VARS  # noqa: E402
 
-# 지금 참여자 계획을 관측한 기록(E2). 설치판 버전의 기준이며, 이 기록은 aux-pc-wsl 한 곳에서 만들었다.
-OBSERVED = ROOT / "docs" / "reviews" / "2026-09-25-context-independence" / "manifest.v2.json"
+# 지금 참여자 계획을 관측한 기록(재관측, 카드 #82). 설치판 버전의 기준이며, 이 기록은 aux-pc-wsl 한 곳에서 만들었다.
+OBSERVED = ROOT / "docs" / "reviews" / "2026-09-25-reobserve" / "manifest.v2.json"
 # CI와 같은 최소 bubblewrap 실행. 실패하면 격리 시험과 실제 참여자 실행을 할 수 없다.
 BWRAP_PROBE = ("--unshare-all", "--share-net", "--die-with-parent", "--ro-bind", "/usr", "/usr",
                "--symlink", "usr/bin", "/bin", "--symlink", "usr/lib", "/lib", "--symlink", "usr/lib64", "/lib64",
@@ -192,8 +192,8 @@ def linux_rows(run: Run, which: Which, env: Mapping[str, str], home: Path, *,
         rows.append(Row("과금 환경변수", "warn", "있음: " + ", ".join(present) + " — 구독 대신 API 과금으로 갈 수 있다",
                         "이 셸에서 빼고 실행한다(앱의 자식 환경은 이미 뺀다)", required=False))
     rows.append(Row("관측 기록", "info",
-                    f"지금 참여자 계획의 관측(E2)은 '{host or '?'}'에서 만들었다. 실제 모드는 이 기기에 등록된 기록만 쓴다 — "
-                    "다른 기기에서는 V04-01·E2 관측을 새로 하고 그 기기에서 등록한다(python3 -m app.registration)", required=False))
+                    f"지금 참여자 계획의 관측 기록은 '{host or '?'}'에서 만들었다. 실제 모드는 이 기기에 등록된 기록만 쓴다 — "
+                    "다른 기기에서는 docs/SETUP.md의 '관측 기록을 새로 만드는 법'대로 관측하고 그 기기에서 등록한다", required=False))
     return rows
 
 
@@ -213,7 +213,7 @@ def cli_row(run: Run, which: Which, adapter_id: str, exe: str, name: str, record
         return Row(name, "missing", f"판을 읽지 못했다: {text[:80]}", fix)
     if recorded and found.group(1) != recorded:
         return Row(name, "info", f"{found.group(1)} — 관측 기록의 판은 {recorded}. 준비 조회가 다시 관측하기 전까지 거절한다",
-                   f"같은 판을 원하면 setup-wsl.sh(기본이 관측 판 고정), 새 판이면 V04-01·E2 관측을 다시 한다", required=False)
+                   f"같은 판을 원하면 setup-wsl.sh(기본이 관측 판 고정), 새 판이면 SETUP의 절차로 다시 관측한다", required=False)
     return Row(name, "ok", text)
 
 

@@ -51,6 +51,7 @@
 | [`2026-09-25-review-request/`](2026-09-25-review-request/README.md) | claude의 검토 요청서. 새 컴퓨터 준비 도구([SETUP](../SETUP.md)), 못 고치는 것(A1–A7), 해야 할 일의 우선순위(PR #69, 카드 #70–#72 포함), 더 조사할 것(C1–C10), 사용자가 정할 것과 검토 질문 일곱. 결과는 `<YYYY-MM-DD>-review/` 또는 [카드 #73](https://github.com/inlight37-design/decision-model_lab/issues/73) 댓글로 받는다 |
 | [`2026-09-25-review/`](2026-09-25-review/README.md) | 위 요청서에 대한 ChatGPT 웹 세션의 외부 검토([PR #75](https://github.com/inlight37-design/decision-model_lab/pull/75), 카드 #73). 기준은 PR #74의 `2f76a1a`, 검토 중 병합된 새 설치판과의 차이는 [UPSTREAM-UPDATE](2026-09-25-review/UPSTREAM-UPDATE.md). 설치기의 실패 전파·관측 판 고정·검토한 설치 파일 승인(R01–R04, 무해한 대역으로 재현 — [probe.py](2026-09-25-review/probe.py)), #70의 메타데이터 경계(R05), #71의 로컬 환경 등록안(R06), 문구 정정(R07), 질문 1–7의 판정과 L1·C6·C8 방법 |
 | [`2026-09-25-codex-plugins-off/`](2026-09-25-codex-plugins-off/README.md) | claude의 카드 #64. Linux Codex 참여자에 `features.plugins=false`. 합성 HOME의 표식 스킬 플러그인이 연결 앱 끄기·원격 목록 끄기로는 모델 입력에 실리고 이 값으로만 빠짐([대조](2026-09-25-codex-plugins-off/control.sh)). 실제 로그인 폴더: 플러그인 넷→0, 모델 입력은 E2와 같음. 판 `codex@5bed42d05320` — 재관측 전까지 Codex strict 거절. 모델 호출 0 |
+| [`2026-09-25-reobserve/`](2026-09-25-reobserve/README.md) | claude의 카드 #82. 플러그인 끄기 뒤의 두 참여자 계획을 E2와 같은 대조로 다시 관측(Claude 2·Codex 3, 모두 기대대로)하고, 기록을 새 도구 `tools/w2/assemble.py`로 조립했다(판정은 요약의 칸으로만). aux-pc-wsl 등록, 준비 조회가 두 provider를 strict로 허가 — 2026-10-26부터 만료. 재관측 절차는 SETUP 4절로 옮김 |
 
 ## 읽는 순서
 

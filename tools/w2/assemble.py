@@ -127,11 +127,12 @@ def decide(results: dict, auth: dict, installed: dict, revisions: dict) -> tuple
         # transport_observed
         s = carrier["summary"]
         if clean(s):
-            model = s.get("reported_models") or ["unreported (K32)"]
+            reported = s.get("reported_models")
+            served = f"reported {', '.join(reported)}" if reported else "serving model unreported (K32)"
             row["transport_observed"] = _field(
                 "observed", carrier["day"], f"{carrier['file']}: the exact participant plan, argv_changes empty; stdin "
                 f"complete, exit 0, {s.get('containment')} with tree_confirmed_empty true, gate ok; requested "
-                f"{(s.get('spec') or {}).get('model')}, reported {', '.join(model)}.", revision)
+                f"{(s.get('spec') or {}).get('model')}, {served}.", revision)
         else:
             problems.append(f"{adapter_id}: {carrier['file']} did not finish cleanly")
 
