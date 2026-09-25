@@ -1,9 +1,10 @@
 """쌓임 방지(docs/COLLABORATION.md 7절). 크기 상한과 도구의 사용처만 본다 — 내용이 옳은지는 보지 않는다.
 
 2026-09-25 정리에서 본 쌓임은 모두 더하는 사람은 있고 빼는 사람은 없는 모양이었다. 인계 문서는
-세션마다 한 일을 덧붙여 다섯 번 불었고, 끝난 일회성 도구는 그 도구만 시험하는 테스트 때문에 쓰이는
+세션마다 한 일을 덧붙여 되풀이해 불었고, 끝난 일회성 도구는 그 도구만 시험하는 테스트 때문에 쓰이는
 것처럼 보였다. 상한에 걸리면 상한을 올리지 말고 이력·끝난 일·다른 곳에 있는 사실을 뺀다.
 """
+from datetime import date
 from pathlib import Path
 import re
 import unittest
@@ -12,7 +13,7 @@ from test_research_integrity import LIVING_DOCS
 
 ROOT = Path(__file__).resolve().parents[1]
 
-# 문서마다 글자 수 상한. 도입할 때(2026-09-25) 크기의 약 1.3배다. 올려야 하면 PR 본문에 이유를 적는다.
+# 문서마다 글자 수 상한. 이 검사를 들인 PR #84가 줄인 뒤 크기의 약 1.3배다. 올려야 하면 PR 본문에 이유를 적는다.
 # 목록 README(docs/reviews 등)는 기록마다 한 줄씩 느는 것이 정상이라 넣지 않는다.
 BUDGETS = {
     "NEXT-SESSION.md": 18000,
@@ -30,16 +31,22 @@ USER_DOCS = LIVING_DOCS
 NOT_USERS = ("tools/print_code_hashes.py", "docs/reviews/README.md", "docs/handoff/README.md")
 TEXT = (".py", ".md", ".ps1", ".sh", ".yml", ".yaml", ".json", ".html", ".js")
 
+# 두 예외 목록은 유예이지 보관이 아니다. 항목마다 (결정 날짜, 이유와 정할 카드)를 적고, 날짜가 지나면 실패한다.
+# 미루려면 새 날짜와 이유를 PR에 적는다.
+
 # 날짜 기록 폴더에 있지만 지금도 따라 하는 절차. 다시 따라 할 절차는 살아 있는 문서로 옮기는 것이 원칙이다
 # (7절) — 옮기기 전까지만 여기에 적고, 옮기면 뺀다.
 PROCEDURES = {
-    "docs/experiments/v04-01-inventory/README.md": "AGENTS.md가 설치·권한 재조사 절차로 지정한다",
-    "docs/reviews/2026-09-25-context-independence/README.md": "E2 재관측(카드 #82)이 이 명령을 다시 쓴다",
+    "docs/experiments/v04-01-inventory/README.md":
+        ("2026-10-25", "AGENTS.md가 설치·권한 재조사 절차로 지정한다 — 카드 #82에서 살아 있는 문서로 옮긴다"),
+    "docs/reviews/2026-09-25-context-independence/README.md":
+        ("2026-10-25", "E2 재관측 명령이 여기 있다 — 카드 #82에서 살아 있는 문서로 옮긴다"),
 }
 
-# 쓰는 곳은 없지만 지우지 않고 남기는 도구. 남기는 이유와 정할 곳(카드)을 적는다.
+# 쓰는 곳은 없지만 지우지 않고 남기는 도구.
 KEPT = {
-    "tools/w2/claude_preflight.py": "Claude 재관측 결과의 판정(assess) — 카드 #82가 기록 조립에 쓸지 정한다",
+    "tools/w2/claude_preflight.py":
+        ("2026-10-25", "Claude 재관측 결과의 판정(assess) — 카드 #82가 기록 조립에 쓸지 정한다"),
 }
 
 
@@ -129,10 +136,16 @@ class AccumulationTests(unittest.TestCase):
     def test_the_exception_lists_do_not_outlive_their_reason(self):
         users, _ = alive_tools()
         texts = user_texts()
-        for tool, reason in KEPT.items():
+        for name, (deadline, reason) in (*KEPT.items(), *PROCEDURES.items()):
+            with self.subTest(exception=name):
+                self.assertTrue(re.search(r"#\d+", reason), f"{name}: name the card that decides it")
+                self.assertGreaterEqual(
+                    date.fromisoformat(deadline), date.today(),
+                    f"{name} was to be decided by {deadline} ({reason}). Delete or move it now, or give a new date "
+                    "and the reason in the pull request.")
+        for tool in KEPT:
             with self.subTest(kept=tool):
                 self.assertIn(tool, users, f"{tool} no longer exists; remove it from KEPT")
-                self.assertTrue(re.search(r"#\d+", reason), "a kept tool names the card that decides it")
                 others = {u for u in users[tool] if not u.startswith("tools/") or u.endswith("/README.md")}
                 self.assertFalse(others, f"{tool} is used by {sorted(others)} now; remove it from KEPT")
         for doc in PROCEDURES:
