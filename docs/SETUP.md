@@ -1,82 +1,56 @@
 # 새 컴퓨터에서 시작하기
 
-이 저장소를 다른 컴퓨터에서 처음 열 때 한 번 하는 준비다. **스크립트 둘이 설치를 맡고, 로그인 셋과 WSL 설치만 사람이 한다.** 끝나면 확인 도구가 "필수 항목 모두 준비됨"을 출력한다. 준비가 끝나면 [NEXT-SESSION.md](../NEXT-SESSION.md)부터 읽는다.
+이 저장소를 다른 컴퓨터에서 처음 열 때 한 번 하는 준비다. **명령 한 줄로 끝까지 순서대로 진행한다.** 사람이 손대는 곳은 관리자 승인(UAC) 한 번, WSL을 처음 켜는 PC의 재부팅 한 번(재부팅 뒤 저절로 이어진다), Ubuntu의 사용자 이름·비밀번호, 브라우저에서 승인하는 로그인 셋(GitHub·Claude·Codex)뿐이다. 준비가 끝나면 [NEXT-SESSION.md](../NEXT-SESSION.md)부터 읽는다.
 
-| 무엇 | 파일 | 하는 일 |
+## 1. 한 줄로 시작
+
+새 PC의 **일반 PowerShell 창**(관리자 아님)에 붙여 넣는다.
+
+```powershell
+irm https://raw.githubusercontent.com/inlight37-design/decision-model_lab/main/tools/setup/setup.ps1 -OutFile "$env:TEMP\dml-setup.ps1"; powershell -NoProfile -ExecutionPolicy Bypass -File "$env:TEMP\dml-setup.ps1"
+```
+
+이미 clone한 PC에서는 저장소 루트에서 `powershell -NoProfile -ExecutionPolicy Bypass -File tools\setup\setup.ps1`. 몇 번을 다시 돌려도 안전하다 — 단계마다 먼저 확인하고 된 것은 건너뛴다. 중간에 멈추면 원인을 고치고 같은 명령을 다시 실행한다. 진행 기록은 `%USERPROFILE%\dml-setup.log`에 남는다.
+
+| 선택 | 뜻 |
+|---|---|
+| `-CheckOnly` | 아무것도 바꾸지 않고 단계마다 무엇을 할지 보인다 |
+| `-SkipLogin` | 로그인 단계를 건너뛴다 |
+| `-Apps` | Claude 데스크톱 앱(`Anthropic.Claude`)도 설치한다. ChatGPT 데스크톱 앱은 winget에 없어 Microsoft Store에서 직접 설치한다 |
+| `-RepoDir <폴더>` | clone 위치(기본 `C:\ai\decision-model_lab`). AppData 아래는 거절한다(함정 1) |
+
+## 2. 스크립트가 하는 일 — 순서대로
+
+| 단계 | 하는 일 | 사람이 할 것 |
 |---|---|---|
-| Windows 준비 | [`tools/setup/setup-windows.ps1`](../tools/setup/setup-windows.ps1) | winget으로 Git·GitHub CLI·Python·Node를 설치하고, 검사 의존성과 commit hook을 켜고, WSL을 확인한다. `-Wsl`이면 아래 WSL 준비까지 부른다 |
-| WSL 준비 | [`tools/setup/setup-wsl.sh`](../tools/setup/setup-wsl.sh) | apt 패키지(bubblewrap 등)와 공식 Codex·Claude Code CLI를 관측 기록과 같은 판으로 설치한다 |
-| 확인 | [`tools/setup/check_setup.py`](../tools/setup/check_setup.py) | 무엇이 준비됐고 무엇이 빠졌는지, 고치는 명령과 함께 보인다. 설치·변경·모델 호출을 하지 않는다 |
+| 1 | winget으로 Git·GitHub CLI·Python 3.13·Node.js LTS 설치. 이미 있으면 건너뛴다 | 없음 — 이 명령을 실행하는 것이 패키지 약관 동의다 |
+| 2 | 저장소 clone, 검사 의존성(`requirements-design.txt`), 인코딩 hook | 없음 |
+| 3 | WSL과 Ubuntu 24.04 설치 | 관리자 승인(UAC). WSL을 처음 켜는 PC는 재부팅 — 스크립트가 로그인 뒤 저절로 이어지게 등록한다(RunOnce, 한 번 돌면 사라진다) |
+| 4 | Linux 사용자 | Ubuntu가 묻는 사용자 이름·비밀번호. Ubuntu 프롬프트(`$`)가 보이면 `exit` |
+| 5 | Ubuntu 안에서 apt 패키지(root로 — sudo 비밀번호 없음), 공식 Codex·Claude Code를 관측 판으로 고정 설치([`setup-wsl.sh`](../tools/setup/setup-wsl.sh)) | 없음. 공식 설치 스크립트가 2026-09-25에 읽은 것과 다르면 멈춘다(아래 3절) |
+| 6 | 로그인을 하나씩: GitHub → Claude → Codex. GitHub 계정의 이름과 no-reply 주소로 git 커밋 이름을 정한다(비어 있을 때만) | 브라우저에서 승인 셋. Claude는 구독(claude.ai)으로, API 키가 아니다 |
+| 7 | Windows와 Ubuntu 양쪽에서 [`check_setup.py`](../tools/setup/check_setup.py) — 준비된 것·빠진 것·고치는 명령 | 없음. "All required items are ready"면 끝 |
 
-세 파일 모두 다시 돌려도 안전하다. `-CheckOnly`(Windows)·`--check`(WSL)는 아무것도 바꾸지 않고 보고만 한다.
+스크립트는 비밀번호·토큰을 읽거나 저장하지 않고 모델을 부르지 않는다. 필요한 것의 전체 목록:
 
-## 1. 필요한 것
+| 어디 | 무엇 | 왜 |
+|---|---|---|
+| Windows | Git, GitHub CLI + 로그인 | 저장소, PR·작업 카드 보드 |
+| Windows | Python 3.12 이상 + `jsonschema` | 오프라인 검사 전체 |
+| Windows | Node LTS | 화면 JavaScript 시험(없으면 그 시험만 skip, CI는 돈다) |
+| Windows | WSL2 Ubuntu 24.04 | 실제 CLI 실행은 WSL에서만 한다(인계 2절 15) |
+| Ubuntu | bubblewrap, python3, python3-jsonschema, git, curl | 참여자 격리와 시험 |
+| Ubuntu | Codex CLI, Claude Code + 구독 로그인 | 실제 참여자(유료 API 아님) |
+| — | Antigravity `agy` | 기본 꺼짐(인계 2절 14) — 설치하지 않는다 |
 
-| 어디 | 무엇 | 왜 | 누가 설치 |
-|---|---|---|---|
-| Windows | Git | 저장소 | 스크립트(winget `Git.Git`) — 처음 clone 전에는 직접 |
-| Windows | GitHub CLI + 로그인 | PR·작업 카드 보드 | 스크립트(`GitHub.cli`) + 로그인은 사람 |
-| Windows | Python 3.12 이상 + `jsonschema` | 오프라인 검사 전체 | 스크립트(`Python.Python.3.13`, `requirements-design.txt`) |
-| Windows | Node LTS (선택) | 화면 JavaScript 시험. 없으면 그 시험은 skip되고 CI만 돈다 | 스크립트(`OpenJS.NodeJS.LTS`) |
-| Windows | WSL2 Ubuntu 24.04 | 실제 CLI 실행은 WSL에서만 한다(인계 2절 15) | **사람**(관리자 창, 재부팅) |
-| WSL | bubblewrap, python3, python3-jsonschema, git, curl | 참여자 격리와 시험 | 스크립트(apt, sudo 비밀번호는 사람) |
-| WSL | Codex CLI, Claude Code | 실제 참여자 | 스크립트(공식 설치 스크립트, 관측 판 고정) |
-| WSL | Codex·Claude 구독 로그인 | 구독 사용(유료 API 아님) | **사람** |
-| — | Antigravity `agy` | 기본 꺼짐(인계 2절 14) | 설치하지 않는다 |
-
-## 2. 순서
-
-1. **Git과 clone.** Git이 없으면 PowerShell에서 `winget install --id Git.Git -e`를 먼저 한다. clone은 **AppData 밖**에 둔다(아래 함정 1).
-
-   ```powershell
-   git clone https://github.com/inlight37-design/decision-model_lab.git C:\ai\decision-model_lab
-   cd C:\ai\decision-model_lab
-   ```
-
-2. **Windows 준비.** 일반 PowerShell 창에서 실행한다. 새로 설치한 것이 있으면 스크립트가 멈추고 새 창을 열라고 한다 — 새 창에서 같은 명령을 다시 실행한다.
-
-   ```powershell
-   powershell -NoProfile -ExecutionPolicy Bypass -File tools\setup\setup-windows.ps1
-   ```
-
-3. **WSL이 없으면** 관리자 PowerShell에서 설치하고 재부팅한 뒤, 시작 메뉴의 Ubuntu를 한 번 열어 Linux 사용자를 만든다.
-
-   ```powershell
-   wsl --install -d Ubuntu-24.04
-   ```
-
-4. **WSL 준비.** 아래 둘 중 하나. sudo가 Linux 비밀번호를 묻는다.
-
-   ```powershell
-   powershell -NoProfile -ExecutionPolicy Bypass -File tools\setup\setup-windows.ps1 -Wsl
-   ```
-
-   ```bash
-   cd /mnt/c/ai/decision-model_lab && bash tools/setup/setup-wsl.sh
-   ```
-
-5. **로그인(사람).** 스크립트는 로그인하지 않고 인증 파일을 읽지 않는다.
-   - Windows: `gh auth login`
-   - Ubuntu 터미널: `claude auth login`(Claude 구독 — API 키가 아님), `codex login`(ChatGPT 로그인)
-
-6. **확인.** 둘 다 "필수 항목 모두 준비됨"이면 끝이다. 빠진 항목은 고치는 명령이 함께 나온다.
-
-   ```powershell
-   python tools\setup\check_setup.py
-   ```
-
-   ```bash
-   bash -lc 'cd /mnt/c/ai/decision-model_lab && python3 tools/setup/check_setup.py'
-   ```
-
-7. **오프라인 검사.** Windows에서 `python -m unittest discover -s tests`, WSL에서 `DML_REQUIRE_BWRAP=1 python3 -m unittest discover -s tests`. 종료 코드를 직접 본다(출력을 `tail`로 거르면 실패를 놓친다). skip은 통과가 아니다. 나머지 검증 도구는 [인계 6절](../NEXT-SESSION.md)에 있다.
+**끝난 뒤 오프라인 검사:** Windows에서 `python -m unittest discover -s tests`, Ubuntu에서 `DML_REQUIRE_BWRAP=1 python3 -m unittest discover -s tests`. 종료 코드를 직접 본다(출력을 `tail`로 거르면 실패를 놓친다). skip은 통과가 아니다. 나머지 검증 도구는 [인계 6절](../NEXT-SESSION.md)에 있다. Ubuntu 쪽만 따로 준비하거나 확인하려면 `bash tools/setup/setup-wsl.sh [--check]`, 확인만 하려면 `python tools\setup\check_setup.py`(Ubuntu에서는 `python3`).
 
 ## 3. 사람만 하는 것과 이유
 
 | 일 | 이유 |
 |---|---|
-| WSL 설치 | 관리자 권한과 재부팅이 필요하다 |
-| sudo 비밀번호, winget 약관 동의 | 스크립트가 대신 입력하거나 동의하지 않는다 |
+| 관리자 승인(UAC)과 재부팅 | Windows가 WSL 설치에 요구한다. 스크립트는 관리자 권한으로 통째로 돌지 않고 그 한 단계만 승인을 받는다 |
+| Ubuntu 사용자 이름·비밀번호 | Ubuntu 자신이 묻는다. 비밀번호는 Ubuntu 안에만 있다 |
 | 로그인 셋(GitHub·Claude·Codex) | 인증 값을 AI 세션이나 저장소가 다루지 않는다. 인증 폴더를 다른 PC에서 복사하지 않는다 |
 | 설치 스크립트가 바뀌었을 때 읽기 | `setup-wsl.sh`는 2026-09-25에 읽은 공식 설치 스크립트의 SHA-256과 비교하고, 다르면 멈추고 파일을 남긴다. 읽고 괜찮으면 `--accept-installer-change`로 다시 실행한다 |
 | bubblewrap이 막힐 때의 보안 설정 | 일반 Ubuntu는 AppArmor가 권한 없는 user namespace를 막을 수 있다(K13, aux-pc-wsl은 해당 없음). 그 제한을 풀지는 사용자가 판단한다 — 스크립트는 바꾸지 않는다 |
@@ -98,11 +72,11 @@
 4. **Git Bash에서 `wsl.exe`를 부를 때** `/mnt/c/…` 인자가 `C:/Program Files/Git/mnt/c/…`로 바뀐다 — `MSYS_NO_PATHCONV=1`을 붙인다. 작은따옴표 안의 `$변수`도 바깥 셸이 먼저 풀 수 있어 경로를 직접 적는다(인계 6절).
 5. **`codex exec`는 stdin을 기다릴 수 있다** — `< /dev/null`로 부른다.
 6. **Claude 앱이 만든 git worktree**는 `.git` 파일이 Windows 경로를 가리켜 WSL의 git이 읽지 못한다. WSL에서는 시험만 돌리고 git은 Windows 쪽에서 쓴다. 보통 clone은 해당 없다.
-7. **Microsoft Store의 `python` 별칭**은 찾아지지만 실행되지 않는다. `setup-windows.ps1`은 실제로 실행해 본다.
+7. **Microsoft Store의 `python` 별칭**은 찾아지지만 실행되지 않는다. `setup.ps1`은 실제로 실행해 보고, 설치 직후 PATH에 없으면 `py` 실행기를 쓴다.
 8. **AI 도구 안의 오래된 PATH.** 설치 직후 AI 세션의 셸은 새 PATH를 모른다. `tools\v04-01\fresh-shell.ps1`로 레지스트리의 PATH를 다시 읽는다.
 
 ## 6. 이 문서의 근거와 한계
 
-- 2026-09-25 `aux-pc`(Windows)와 `aux-pc-wsl`에서 두 스크립트의 확인 모드와 `check_setup.py`를 돌렸다. 이 PC에는 Node만 없었고, WSL은 모든 필수 항목이 준비돼 있었다.
-- **빈 컴퓨터에서 처음부터 설치해 본 것은 아니다.** winget 패키지 네 개는 `winget show`로 있는 것만 확인했고, 설치 경로는 실행하지 않았다. 새 PC에서 처음 쓴 세션은 막힌 곳을 이 문서에 고쳐 적는다.
+- 2026-09-25 `aux-pc`(Windows)와 `aux-pc-wsl`에서 `setup.ps1 -CheckOnly`, `setup-wsl.sh --check`, `check_setup.py`를 돌렸다. 이 PC에는 Node만 없었고 나머지 단계는 모두 "이미 됨"으로 건너뛰었다.
+- **빈 컴퓨터에서 처음부터 돌려 본 것은 아니다.** 설치 경로 — winget 설치, WSL 설치와 재부팅 뒤 이어가기, Ubuntu 첫 실행의 사용자 만들기(첫 실행이 묻지 않으면 root로 만드는 대체 경로), root의 apt, CLI 설치, 로그인 셋 — 는 이 PC에서 실행되지 않았다. winget 패키지는 `winget show`로 있는 것만 확인했다. WSL 판에 따라 Ubuntu 첫 실행의 모양이 달라서 4단계가 가장 불확실하다. 새 PC에서 처음 쓴 세션은 막힌 곳을 이 문서와 스크립트에 고쳐 적는다.
 - 설치 스크립트의 SHA-256은 2026-09-25에 받은 공식 파일의 값이다(2026-09-23 V04-01 기록과 같다). 공식 스크립트는 예고 없이 바뀔 수 있다.

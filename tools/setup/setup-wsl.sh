@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # Prepare an Ubuntu (WSL2) distribution for live CLI runs of this repository. Safe to run again.
 #   bash tools/setup/setup-wsl.sh [--check] [--latest] [--with-node] [--accept-installer-change]
+#                                 [--apt-only] [--no-final]
+# tools/setup/setup.ps1 (Windows, one touch) calls it twice: as root with --apt-only (no sudo
+# password), then as your user with --no-final. Run alone, it does everything with sudo.
 #
 # 1. apt packages (sudo asks for your Linux password): bubblewrap python3 python3-jsonschema git curl
 #    ca-certificates, and nodejs with --with-node (only for the screen JavaScript tests).
@@ -10,19 +13,21 @@
 #    script stops and keeps the file so you can read it; rerun with --accept-installer-change.
 # 3. Prints the login commands (you run them; this script never logs in) and runs check_setup.py.
 #
-# --check changes nothing and only reports. No model call. The installers write under your home
+# --apt-only stops after step 1; --no-final skips step 3. --check changes nothing and only reports. No model call. The installers write under your home
 # directory (~/.local/bin, ~/.codex, ~/.claude); Codex adds a PATH line to ~/.bashrc.
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-check=0 latest=0 node=0 accept=0
+check=0 latest=0 node=0 accept=0 apt_only=0 final=1
 for arg in "$@"; do
   case "$arg" in
     --check) check=1 ;;
     --latest) latest=1 ;;
     --with-node) node=1 ;;
     --accept-installer-change) accept=1 ;;
-    -h|--help) sed -n '2,15p' "$0"; exit 0 ;;
+    --apt-only) apt_only=1 ;;
+    --no-final) final=0 ;;
+    -h|--help) sed -n '2,18p' "$0"; exit 0 ;;
     *) echo "unknown option: $arg" >&2; exit 2 ;;
   esac
 done
@@ -44,9 +49,16 @@ if [ ${#missing[@]} -eq 0 ]; then
 elif [ "$check" = 1 ]; then
   echo "missing  apt packages: ${missing[*]}  -> sudo apt-get install -y ${missing[*]}"
 else
-  echo "install  apt packages: ${missing[*]} (sudo)"
-  sudo apt-get update -qq
-  sudo apt-get install -y --no-install-recommends "${missing[@]}"
+  as_root=(sudo)
+  [ "$(id -u)" = 0 ] && as_root=()
+  echo "install  apt packages: ${missing[*]}${as_root:+ (sudo)}"
+  "${as_root[@]}" apt-get update -qq
+  "${as_root[@]}" apt-get install -y --no-install-recommends "${missing[@]}"
+fi
+if [ "$apt_only" = 1 ]; then exit 0; fi
+if [ "$(id -u)" = 0 ]; then
+  echo "STOP: the CLIs install into a user's home; run this as your Linux user, not root." >&2
+  exit 2
 fi
 
 declare -A want=([codex]=latest [claude-code]=latest)
@@ -84,6 +96,7 @@ install_cli() {  # name exe url sha target
 install_cli "Codex CLI" codex "$CODEX_URL" "$CODEX_SHA" "${want[codex]}"
 install_cli "Claude Code" claude "$CLAUDE_URL" "$CLAUDE_SHA" "${want[claude-code]}"
 
+[ "$final" = 1 ] || exit 0
 cat <<'EOF'
 
 Logins are yours to do, in an Ubuntu terminal (the script never logs in or reads credentials):
