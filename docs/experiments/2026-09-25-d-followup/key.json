@@ -1,0 +1,72 @@
+{
+ "T1-8509.md": {
+  "condition": "P",
+  "pid": "codex",
+  "provider": "codex",
+  "run": "t1-px",
+  "task": "T1"
+ },
+ "T1-9851.md": {
+  "condition": "P",
+  "pid": "claude",
+  "provider": "claude",
+  "run": "t1-px",
+  "task": "T1"
+ },
+ "T2-3755.md": {
+  "condition": "P",
+  "pid": "claude",
+  "provider": "claude",
+  "run": "t2-px",
+  "task": "T2"
+ },
+ "T2-79d9.md": {
+  "condition": "X",
+  "pid": "synthesis",
+  "provider": "codex",
+  "run": "t2-px",
+  "task": "T2"
+ },
+ "T2-df65.md": {
+  "condition": "P",
+  "pid": "codex",
+  "provider": "codex",
+  "run": "t2-px",
+  "task": "T2"
+ },
+ "T4-30aa.md": {
+  "condition": "P",
+  "pid": "codex",
+  "provider": "codex",
+  "run": "t4-px",
+  "task": "T4"
+ },
+ "T4-6809.md": {
+  "condition": "X",
+  "pid": "synthesis",
+  "provider": "codex",
+  "run": "t4-px",
+  "task": "T4"
+ },
+ "T4-6ebc.md": {
+  "condition": "S",
+  "pid": "codex",
+  "provider": "codex",
+  "run": "t4-s-codex",
+  "task": "T4"
+ },
+ "T4-9cae.md": {
+  "condition": "S",
+  "pid": "claude",
+  "provider": "claude",
+  "run": "t4-s-claude",
+  "task": "T4"
+ },
+ "T4-c9ed.md": {
+  "condition": "P",
+  "pid": "claude",
+  "provider": "claude",
+  "run": "t4-px",
+  "task": "T4"
+ }
+}
