@@ -11,10 +11,12 @@ from app import cli_executor
 from app.controller import CLI, ParticipantSpec
 from core import eligibility, isolation, runner
 from tools.w2 import claude_preflight
+from registration_support import assume_registered
 
 
 class Pr31SafetyReviewTests(unittest.TestCase):
     def setUp(self):
+        assume_registered(self)  # 기록의 다른 성질을 본다 — 이 기기 등록은 test_registration.py가 따로 본다
         temp = tempfile.TemporaryDirectory(prefix="dml-pr31-review-")
         self.addCleanup(temp.cleanup)
         self.root = Path(temp.name)

@@ -11,9 +11,13 @@ from unittest import mock
 
 from app import readiness, server
 from core import eligibility
+from registration_support import assume_registered
 
 
 class ReadinessTests(unittest.TestCase):
+    def setUp(self):
+        assume_registered(self)  # 기록의 다른 성질을 본다 — 이 기기 등록은 test_registration.py가 따로 본다
+
     def test_checks_current_revision_without_starting_any_process(self):
         revision = "claude-code@test"
         row = {"adapter_id": "claude-code"}

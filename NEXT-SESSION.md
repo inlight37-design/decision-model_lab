@@ -18,7 +18,7 @@
 | 항목 | 지금 | 근거 |
 |---|---|---|
 | 기기 | `aux-pc`(Windows)와 그 안의 `aux-pc-wsl`(Ubuntu 24.04). WSL의 Codex 0.156.1·Claude Code 2.1.280, 구독 로그인. 다른 기기의 관측은 없다(K35) | [V04-01 기록](docs/experiments/v04-01-inventory/hosts/aux-pc-wsl/RESULTS.md) |
-| 참여자 계획·허가 | Codex `codex@bba3751a36f3`·Claude `claude-code@a35129c5a1dc`(입력 폴더 하나). E2 관측으로 strict 허가 — **2026-10-25부터 만료**(가장 이른 칸이 2026-09-24 관측). 준비 조회는 기기를 비교하지 않는다(카드 #71) | [E2](docs/reviews/2026-09-25-context-independence/README.md) |
+| 참여자 계획·허가 | Codex `codex@bba3751a36f3`·Claude `claude-code@a35129c5a1dc`(입력 폴더 하나). E2 관측으로 strict 허가 — **2026-10-25부터 만료**(가장 이른 칸이 2026-09-24 관측). 실제 모드는 **이 기기에 등록된 기록만** 쓴다 — aux-pc-wsl에는 E2 기록을 등록했다(카드 #71, `python3 -m app.registration status <기록>`) | [E2](docs/reviews/2026-09-25-context-independence/README.md) |
 | 실제 실행 | 병렬·봉인·공개, 공통 자료, strict 독립 정족수, 실제 중도 취소와 자손 종료 확인, 실제 합성(실행마다 켬, 형식 실패 원문 보존, 이름표 순서는 실행마다 섞음) | [병렬](docs/reviews/2026-09-24-windows-live-completion/README.md) · [자료](docs/reviews/2026-09-24-source-snapshot/README.md) · [strict·취소](docs/reviews/2026-09-25-strict-live-run/README.md) · [합성](docs/reviews/2026-09-24-model-synthesis/README.md) |
 | 계정 한도 | Codex는 화면의 명시적 조회(가용 모델 포함, 추론 없음), Claude는 마지막으로 끝난 실제 실행의 `rate_limit_event`. 봉인 중·모의 값은 쓰지 않는다 | [A·F](docs/reviews/2026-09-24-account-limits/README.md) |
 | 원장 | aux-pc-wsl의 `~/.local/state/dml-*`. 지금까지 만든 실제 호출 원장은 모두 상한까지 썼다 — 새 실행은 새 원장 | 각 기록 |

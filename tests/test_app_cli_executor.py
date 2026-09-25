@@ -19,6 +19,7 @@ from unittest import mock
 from app import cli_executor, controller as c
 from app.cli_executor import CliExecutor
 from app.store import Store, events
+from registration_support import assume_registered
 from core import adapters, isolation, runner
 
 
@@ -100,6 +101,7 @@ def codex(pid="codex"):
 
 class Base(unittest.TestCase):
     def setUp(self):
+        assume_registered(self)  # 기록의 다른 성질을 본다 — 이 기기 등록은 test_registration.py가 따로 본다
         self.root = Path(tempfile.mkdtemp(prefix="dml-n1-"))
         self.addCleanup(shutil.rmtree, self.root, True)
         self.home = self.root / "home"

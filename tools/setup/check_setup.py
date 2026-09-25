@@ -192,8 +192,8 @@ def linux_rows(run: Run, which: Which, env: Mapping[str, str], home: Path, *,
         rows.append(Row("과금 환경변수", "warn", "있음: " + ", ".join(present) + " — 구독 대신 API 과금으로 갈 수 있다",
                         "이 셸에서 빼고 실행한다(앱의 자식 환경은 이미 뺀다)", required=False))
     rows.append(Row("관측 기록", "info",
-                    f"지금 참여자 계획의 관측(E2)은 '{host or '?'}'에서 만들었다. 다른 기기에서는 V04-01·E2 관측을 새로 한 뒤에만 "
-                    "strict로 실행한다 — 준비 조회는 기기를 비교하지 않는다", required=False))
+                    f"지금 참여자 계획의 관측(E2)은 '{host or '?'}'에서 만들었다. 실제 모드는 이 기기에 등록된 기록만 쓴다 — "
+                    "다른 기기에서는 V04-01·E2 관측을 새로 하고 그 기기에서 등록한다(python3 -m app.registration)", required=False))
     return rows
 
 

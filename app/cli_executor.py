@@ -34,6 +34,7 @@ from pathlib import Path
 import re
 from typing import Callable, Mapping, Sequence
 
+from app import registration
 from core import adapters, contract, eligibility, env as core_env, isolation, runner
 
 SUPPORTED = ("claude-code", "codex")
@@ -110,6 +111,9 @@ class CliExecutor:
                                           allow_context_unverified=self.allow_context_unverified)
         if not verdict.eligible:
             raise adapters.AdapterError("not eligible to run: " + "; ".join(verdict.reasons))
+        unregistered = registration.problem(inventory)   # 실행 직전에도 이 기기의 등록을 다시 본다(카드 #71)
+        if unregistered:
+            raise adapters.AdapterError("not eligible to run: " + unregistered)
 
     def plan(self, spec, prompt: str, work_dir: str, *, inputs: Sequence[str] | None = None,
              variant: Callable[[list[str]], tuple[list[str], list[str]]] | None = None) -> contract.Plan:

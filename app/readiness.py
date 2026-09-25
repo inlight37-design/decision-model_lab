@@ -6,6 +6,7 @@ from pathlib import Path
 import sys
 import tempfile
 
+from app import registration
 from app.cli_executor import CliExecutor, installed_version, REFUSED_BEFORE_START
 from app.controller import CLI, ParticipantSpec
 from core import eligibility, isolation
@@ -53,5 +54,8 @@ def check(adapter_id: str, model: str, inventory: Path, data_dir: Path, *,
         # 로컬 경로·환경 값을 출력하지 않는다. 상세 진단은 별도 관측 도구의 가림 정책을 쓴다.
         result["reasons"] = [f"cannot prepare the isolated participant plan ({type(exc).__name__})"]
         return result
-    result.update(eligible=verdict.eligible, reasons=list(verdict.reasons))
+    # 다른 기기의 관측을 빌리지 않는다(카드 #71). 다른 이유도 함께 보이도록 거절만 더한다.
+    unregistered = registration.problem(inventory)
+    result.update(eligible=verdict.eligible and unregistered is None,
+                  reasons=list(verdict.reasons) + ([unregistered] if unregistered else []))
     return result

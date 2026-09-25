@@ -13,6 +13,7 @@ from app.cli_executor import CliExecutor, installed_version
 from core import adapters, eligibility
 from test_core_contract import k46_revision, participant_plan, participant_revision
 from tools import runtime_inventory
+from registration_support import assume_registered
 
 ROOT = Path(__file__).resolve().parents[1]
 WSL_V2 = ROOT / "docs/experiments/v04-01-inventory/hosts/aux-pc-wsl/manifest.v2.json"
@@ -208,6 +209,7 @@ class ExecutorGateTests(unittest.TestCase):
     """실제 실행기는 기록 없이 만들 수 없고, 시도마다 기록을 다시 읽어 허가를 계산한다."""
 
     def setUp(self):
+        assume_registered(self)  # 기록의 다른 성질을 본다 — 이 기기 등록은 test_registration.py가 따로 본다
         self.root = Path(tempfile.mkdtemp(prefix="dml-n4-"))
         self.addCleanup(shutil.rmtree, self.root, True)
 
