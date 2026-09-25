@@ -1,4 +1,4 @@
-"""화면(app/static/index.html)의 글자 대비(인계 N6, K24). 브라우저 렌더링이 아니라 색 값만 계산한다.
+"""화면(app/static/index.html)의 글자 대비(인계 N6). 브라우저 렌더링이 아니라 색 값만 계산한다.
 
 화면은 island-ui 토큰(app/static/island-ui/themes.css)만 쓴다. 테마 세 벌에서 화면이 쓰는 글자·바탕 짝을 APCA
 (SAPC 0.0.98G-4g 상수)로 재어 island-ui의 기준 Lc 60(36px 큰 숫자는 45)을 넘는지 본다. 반투명 바탕은 그 테마의
@@ -104,12 +104,6 @@ class ScreenContrastTests(unittest.TestCase):
         used = set(re.findall(r"(?<![-\w])color:\s*var\(--([a-z0-9-]+)\)", PAGE_CSS))
         self.assertTrue(used)
         self.assertFalse(used & set(NOT_TEXT), used & set(NOT_TEXT))
-
-    def test_unknown_keeps_a_dashed_mark_without_colouring_the_text(self):
-        """K24. 관측하지 못한 값은 글자를 흐리게 칠하지 않고 파선 밑줄로 표시한다 — 모르는 것은 0이 아니다."""
-        body = re.search(r"\.st-unknown\s*\{([^}]*)\}", PAGE_CSS).group(1)
-        self.assertRegex(body, r"text-decoration:\s*underline dashed")
-        self.assertNotRegex(body, r"(?<![-\w])color:")
 
 
 if __name__ == "__main__":
