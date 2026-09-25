@@ -1,0 +1,302 @@
+{
+  "schema": "l1-observation/1",
+  "preregistration": "78cf08a84a31c0e23f85cf1106b77e2919bcaf5b",
+  "host_label": "aux-pc-wsl",
+  "grading": "session, nonblind; Python execution oracle; no model grader",
+  "tasks": [
+    {
+      "task": "t1",
+      "phase": "revealed",
+      "settled": true,
+      "budget": {
+        "total": {
+          "used": 4,
+          "cap": 4
+        },
+        "by_provider": {
+          "codex": {
+            "used": 2,
+            "cap": 2
+          },
+          "claude-code": {
+            "used": 2,
+            "cap": 2
+          }
+        }
+      },
+      "input_sha256": "c65a59a73dceb8268cee6fad8ed7d261cb13325bf5b8e554aead43f8a8d8a5e6",
+      "quorum": {
+        "policy": "independent_only",
+        "min": 2,
+        "confirmed": 2,
+        "unverified": 0,
+        "counted": 2,
+        "met": true,
+        "label": "독립 정족수 충족 — 독립성이 확인된 참여자 2명(최소 2명)"
+      },
+      "drafts": [
+        {
+          "provider": "anthropic",
+          "pid": "claude",
+          "state": "accepted",
+          "output_correct": true,
+          "core_explanation_correct": true,
+          "fix_correct": null,
+          "draft_sha256": "9398882429c3be16378d3deb3a61dd4df5f704b5c8109cfac583a113c180e85a",
+          "requested_model": "claude-sonnet-5",
+          "reported_models": [
+            "claude-sonnet-5"
+          ],
+          "model_match": true,
+          "duration_ms": 39864,
+          "tree_confirmed_empty": true,
+          "input_delivery": "complete",
+          "containment": "pid_namespace",
+          "usage": {
+            "input_tokens": 2,
+            "output_tokens": 3859,
+            "cache_creation_input_tokens": 2021,
+            "cache_read_input_tokens": 4587
+          }
+        },
+        {
+          "provider": "openai",
+          "pid": "codex",
+          "state": "accepted",
+          "output_correct": false,
+          "core_explanation_correct": false,
+          "fix_correct": null,
+          "draft_sha256": "c711bbdfe65d48043442a30b0909404b2077f02a5c0a378e12694f9d34fdad9b",
+          "requested_model": "gpt-6-luna",
+          "reported_models": [],
+          "model_match": null,
+          "duration_ms": 10004,
+          "tree_confirmed_empty": true,
+          "input_delivery": "complete",
+          "containment": "pid_namespace",
+          "usage": {
+            "input_tokens": 12597,
+            "cached_input_tokens": 9984,
+            "output_tokens": 377,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ],
+      "syntheses": [
+        {
+          "provider": "codex",
+          "status": "completed",
+          "labels": {
+            "D1": "codex",
+            "D2": "claude"
+          },
+          "checks": {
+            "quotes": 10,
+            "exact_matches": 9,
+            "unsupported_additions": 0,
+            "method": "exact_verbatim_quote",
+            "factual_check": "not_performed",
+            "agreement_is_verification": false
+          },
+          "answer_disposition": "correct_claims",
+          "l1_eligible": true,
+          "l1_positive": true,
+          "fix_preserved": null,
+          "requested_model": "gpt-6-luna",
+          "reported_models": [],
+          "model_match": null,
+          "duration_ms": 16296,
+          "tree_confirmed_empty": true,
+          "usage": {
+            "input_tokens": 13971,
+            "cached_input_tokens": 9984,
+            "output_tokens": 760,
+            "reasoning_output_tokens": 0
+          },
+          "rate_limit_status": null
+        },
+        {
+          "provider": "claude-code",
+          "status": "completed",
+          "labels": {
+            "D1": "codex",
+            "D2": "claude"
+          },
+          "checks": {
+            "quotes": 12,
+            "exact_matches": 12,
+            "unsupported_additions": 0,
+            "method": "exact_verbatim_quote",
+            "factual_check": "not_performed",
+            "agreement_is_verification": false
+          },
+          "answer_disposition": "unresolved",
+          "l1_eligible": false,
+          "l1_positive": null,
+          "fix_preserved": null,
+          "requested_model": "claude-sonnet-5",
+          "reported_models": [
+            "claude-sonnet-5"
+          ],
+          "model_match": true,
+          "duration_ms": 44454,
+          "tree_confirmed_empty": true,
+          "usage": {
+            "input_tokens": 2,
+            "output_tokens": 5086,
+            "cache_creation_input_tokens": 3084,
+            "cache_read_input_tokens": 5728
+          },
+          "rate_limit_status": "allowed"
+        }
+      ]
+    },
+    {
+      "task": "t2",
+      "phase": "revealed",
+      "settled": true,
+      "budget": {
+        "total": {
+          "used": 4,
+          "cap": 4
+        },
+        "by_provider": {
+          "codex": {
+            "used": 2,
+            "cap": 2
+          },
+          "claude-code": {
+            "used": 2,
+            "cap": 2
+          }
+        }
+      },
+      "input_sha256": "206be17442c6235e1d389f6699e784a8f5b3a3ee894130c6b6fb49034b3ffab8",
+      "quorum": {
+        "policy": "independent_only",
+        "min": 2,
+        "confirmed": 2,
+        "unverified": 0,
+        "counted": 2,
+        "met": true,
+        "label": "독립 정족수 충족 — 독립성이 확인된 참여자 2명(최소 2명)"
+      },
+      "drafts": [
+        {
+          "provider": "anthropic",
+          "pid": "claude",
+          "state": "accepted",
+          "output_correct": true,
+          "core_explanation_correct": true,
+          "fix_correct": true,
+          "draft_sha256": "bba7ea4d8bd86e74f47c932172f0a77e30cdda5140441757ff744724e4f263f2",
+          "requested_model": "claude-sonnet-5",
+          "reported_models": [
+            "claude-sonnet-5"
+          ],
+          "model_match": true,
+          "duration_ms": 53955,
+          "tree_confirmed_empty": true,
+          "input_delivery": "complete",
+          "containment": "pid_namespace",
+          "usage": {
+            "input_tokens": 2,
+            "output_tokens": 5464,
+            "cache_creation_input_tokens": 879,
+            "cache_read_input_tokens": 5728
+          }
+        },
+        {
+          "provider": "openai",
+          "pid": "codex",
+          "state": "accepted",
+          "output_correct": false,
+          "core_explanation_correct": false,
+          "fix_correct": true,
+          "draft_sha256": "fc302322c75dfdf35833221b9c590da4f88696ca4885a1d76324903ca1699409",
+          "requested_model": "gpt-6-luna",
+          "reported_models": [],
+          "model_match": null,
+          "duration_ms": 8068,
+          "tree_confirmed_empty": true,
+          "input_delivery": "complete",
+          "containment": "pid_namespace",
+          "usage": {
+            "input_tokens": 12593,
+            "cached_input_tokens": 9984,
+            "output_tokens": 257,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ],
+      "syntheses": [
+        {
+          "provider": "claude-code",
+          "status": "completed",
+          "labels": {
+            "D1": "claude",
+            "D2": "codex"
+          },
+          "checks": {
+            "quotes": 13,
+            "exact_matches": 13,
+            "unsupported_additions": 0,
+            "method": "exact_verbatim_quote",
+            "factual_check": "not_performed",
+            "agreement_is_verification": false
+          },
+          "answer_disposition": "unresolved",
+          "l1_eligible": false,
+          "l1_positive": null,
+          "fix_preserved": true,
+          "requested_model": "claude-sonnet-5",
+          "reported_models": [
+            "claude-sonnet-5"
+          ],
+          "model_match": true,
+          "duration_ms": 66855,
+          "tree_confirmed_empty": true,
+          "usage": {
+            "input_tokens": 4,
+            "output_tokens": 7595,
+            "cache_creation_input_tokens": 9120,
+            "cache_read_input_tokens": 14472
+          },
+          "rate_limit_status": "allowed"
+        },
+        {
+          "provider": "codex",
+          "status": "completed",
+          "labels": {
+            "D1": "claude",
+            "D2": "codex"
+          },
+          "checks": {
+            "quotes": 8,
+            "exact_matches": 8,
+            "unsupported_additions": 0,
+            "method": "exact_verbatim_quote",
+            "factual_check": "not_performed",
+            "agreement_is_verification": false
+          },
+          "answer_disposition": "unresolved",
+          "l1_eligible": true,
+          "l1_positive": false,
+          "fix_preserved": true,
+          "requested_model": "gpt-6-luna",
+          "reported_models": [],
+          "model_match": null,
+          "duration_ms": 13337,
+          "tree_confirmed_empty": true,
+          "usage": {
+            "input_tokens": 13866,
+            "cached_input_tokens": 12032,
+            "output_tokens": 517,
+            "reasoning_output_tokens": 0
+          },
+          "rate_limit_status": null
+        }
+      ]
+    }
+  ]
+}

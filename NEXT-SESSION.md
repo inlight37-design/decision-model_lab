@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-25** · 작성 세션: claude(`aux-pc` Windows 데스크톱 앱 — ChatGPT의 WorkTrail 평가 들이기와 다음 할 일 정리, 모델 호출 0) · 브랜치 `claude/worktrail-adopt-20260925` · 기준 main `8d6cbd4`(PR #87 병합).
+최종 갱신 **2026-09-25** · 작성 세션: codex(사용자 PC의 Codex 데스크톱·`aux-pc-wsl` — 재개 점검과 L1 실험) · 브랜치 `codex/l1-check-20260925` · 기준 main `08caa05`.
 
 이 파일은 **지금 상태와 다음 일만** 담는다. 끝난 일의 경위는 PR·git 이력과 날짜가 붙은 기록에 있고, 옛 판은 [docs/handoff/](docs/handoff/README.md)에 있다. **3절에는 진행 중인 일과 "이 판을 들인 PR" 한 줄만 둔다** — 새 PR은 그 줄을 자기 PR로 바꾸고, 병합 전에도 뒤에도 맞는 말만 쓴다("병합했다"고 미리 적지 않는다). 크기 상한과 3절의 모양은 CI가 본다. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있는 규칙은 여기 다시 적지 않는다 — 쌓임을 막는 원칙은 협업 규칙 7절이다.
 
@@ -22,7 +22,7 @@
 | 실제 실행 | 병렬·봉인·공개, 공통 자료, strict 독립 정족수, 실제 중도 취소와 자손 종료 확인, 실제 합성(실행마다 켬, 형식 실패 원문 보존, 이름표 순서는 실행마다 섞음) | [병렬](docs/reviews/2026-09-24-windows-live-completion/README.md) · [자료](docs/reviews/2026-09-24-source-snapshot/README.md) · [strict·취소](docs/reviews/2026-09-25-strict-live-run/README.md) · [합성](docs/reviews/2026-09-24-model-synthesis/README.md) |
 | 계정 한도 | Codex는 화면의 명시적 조회(가용 모델 포함, 추론 없음), Claude는 마지막으로 끝난 실제 실행의 `rate_limit_event`. 봉인 중·모의 값은 쓰지 않는다 | [A·F](docs/reviews/2026-09-24-account-limits/README.md) |
 | 원장 | aux-pc-wsl의 `~/.local/state/dml-*`. 지금까지 만든 실제 호출 원장은 모두 상한까지 썼다 — 새 실행은 새 원장 | 각 기록 |
-| 비교 실험 | D·D 후속: 합성 이득 불분명, 한 초안의 틀린 설명을 합성이 옮긴 일 두 번, L1은 아직 판단 못 함 | [D](docs/experiments/2026-09-24-comparison-pilot/RESULTS.md) · [D 후속](docs/experiments/2026-09-25-d-followup/RESULTS.md) |
+| 비교 실험 | L1: 같은 provider의 틀린 초안 대신 맞는 초안을 고른 사례 관측, 다른 과제는 보류. 합성의 일반적 이득은 미확립 | [L1](docs/experiments/2026-09-25-l1/RESULTS.md) · [D](docs/experiments/2026-09-24-comparison-pilot/RESULTS.md) · [D 후속](docs/experiments/2026-09-25-d-followup/RESULTS.md) |
 | 협업 | GitHub 이슈 카드 보드 시범 진행 중. 새 컴퓨터는 원터치 설치 | [시범](docs/experiments/2026-09-25-card-pilot/README.md) · [SETUP](docs/SETUP.md) |
 | 한계·남은 일 | 못 고치는 것, 해야 할 일의 우선순위, 조사 거리를 한 장에 모았고 외부 검토를 받았다 | [검토 요청서](docs/reviews/2026-09-25-review-request/README.md) · [검토](docs/reviews/2026-09-25-review/README.md) |
 
@@ -60,12 +60,12 @@
 
 **진행 중: 작업 카드 시범.** 일은 `card` 라벨 이슈에서 [시범 규칙](docs/experiments/2026-09-25-card-pilot/README.md)대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #88](https://github.com/inlight37-design/decision-model_lab/pull/88)(`claude/worktrail-adopt-20260925`) — ChatGPT 세션의 [WorkTrail 평가](docs/reviews/2026-09-25-worktrail/README.md)(PR #85)를 그 브랜치 위에서 main과 합쳐 들이고, 쓸 만한 것(카드 체크포인트 다섯 줄)을 카드 양식에 넣었다. 4절을 순서와 기한으로 다시 썼다. 모델 호출 0회.
+- **이 판을 들인 PR:** [PR #89](https://github.com/inlight37-design/decision-model_lab/pull/89)(`codex/l1-check-20260925`) — [L1 결과](docs/experiments/2026-09-25-l1/RESULTS.md)와 [재개 점검·선택 권고](docs/reviews/2026-09-25-codex-continuation/README.md). 카드 #72의 옛 합성 제약을 정정하고 WindowsApps의 WSL bash로 실패하던 구문 검사를 고쳤다. 선택 권고는 아직 사용자 확정이 아니다.
 
 | 사용자 판단 | 권고 / 지금까지 한 일 |
 |---|---|
-| Q4 첫 화면 | A(결정 우선)를 기본으로 권고, B(원문 대조표 우선)는 전환으로 유지. 화면은 확인했지만 선호는 확정하지 않았다 |
-| 실제 합성의 기본값 | 실행마다 켜는 선택(기본 끔)을 권고한다. 호출이 1회 더 들고(2절 5·20), D·D 후속에서 형식 실패, 한 초안의 틀린 설명 전이, 가장 좋은 초안의 구체적 권고 누락을 봤다. 합성자는 실행마다 사용자가 고른다 |
+| Q4 첫 화면 | A(결정 우선)를 기본으로 권고, B(원문 대조표 우선)는 전환으로 유지. 현재 A/B는 모의 합성 패널의 탭 내 미리보기이며 전체 실제 화면의 설정은 아니다. 선호 미확정 |
+| 실제 합성의 기본값 | 실행마다 켜는 선택(기본 끔)을 권고한다. D·D 후속의 형식 실패·오류 전이·권고 누락에 더해 L1에서도 정답 선택과 판단 보류가 함께 나왔다. 인용 일치는 사실 확인이 아니다. 합성자는 실행마다 사용자가 고른다 |
 | 여러 AI 작업 방식 | 카드 보드 시범 중이며 채택은 사용자가 정한다. 조사는 [원문](docs/research/multi-ai-workflow-2026-09-25/README.md)·[후속 검토](docs/reviews/2026-09-25-workflow-evaluation/README.md)·[병합 기록](docs/reviews/2026-09-25-merge-56/README.md)(Projects 정정). Claude Code Projects는 Code 쪽에 보이지 않아(사용자 확인) 보류, 새 방식에서 ChatGPT 웹은 큰 변경의 검토에 쓴다. [WorkTrail 평가](docs/reviews/2026-09-25-worktrail/README.md)(ChatGPT, 2026-09-25): 통째 도입은 보류, 카드 체크포인트의 다섯 줄 형식만 [카드 양식](.github/ISSUE_TEMPLATE/card.md)에 들였다. Entire·Beads·Agent Mail 같은 도구는 같은 불편이 되풀이될 때 그 평가 9절의 짝(찾기 어려움→읽기 전용 뷰, 의존성→Beads, 동시 수정→Agent Mail, 변경 이유→Entire)으로 본다. 개발용 기억 도구는 참여자에게 연결하지 않는다 — 붙이면 참여자 계획이 바뀌어 재관측이 필요하다 |
 | 나머지 | Q3 TypeScript 이행 미정. TM 계획 A는 후보. agy 기본 끔(설치·B4는 사용자가 켜기로 할 때). 원본 앱 자동화 끔. 편의 후보(공개 결정 전달, 공개 뒤 교차검토, 상급 모델 제안)는 기본 끔 |
 
@@ -75,12 +75,11 @@
 
 순서대로. 모델 호출이 드는 일은 카드에 상한을 먼저 적고 새 원장·새 상태 폴더로 한다(2절 22).
 
-1. **카드 #72 — L1 실험**(합성자가 제 계열의 틀린 초안을 이기는가). 두 provider가 strict로 돈다(1절). `app.run`으로 하고 상한은 카드에 적는다.
-2. **카드 #61 — 공통 자료 합계 1 MiB를 한 번 실제로 본다.** Claude 참여자의 구독 사용량이 크다([긴 자료 결과](docs/experiments/2026-09-25-long-sources/RESULTS.md)).
-3. **2026-10-25 전 — V04-01 절차서를 정한다.** 쌓임 검사의 `PROCEDURES` 예외가 그날 끝난다(`tests/test_accumulation.py`) — 지나면 CI가 실패한다. WSL 참여자의 설치·관측 절차는 이미 [SETUP](docs/SETUP.md)에 있으니, 절차서가 아직 맡는 일(Windows CLI 조사, `probe.ps1`·`summarize_claude_init.py`)을 살아 있는 문서로 옮길지 은퇴시킬지 정하고 AGENTS.md의 가리킴을 맞춘다. 모델 호출 없음.
-4. **2026-10-26 전 — 재관측**([SETUP 4절](docs/SETUP.md)의 절차, 모델 호출 Claude 2·Codex 3). 참여자 계획이나 CLI 판이 바뀌면 그때 바로 한다. 관측 기록은 `tools/w2/assemble.py`가 조립한다.
-5. **사용자에게 물을 것**(3절 표): 카드 보드를 채택할지 — 채택하면 시범 규칙([날짜 기록 폴더](docs/experiments/2026-09-25-card-pilot/README.md)에 있다)을 협업 규칙으로 옮긴다. Q4 첫 화면, 실제 합성의 기본값.
-6. 새 카드가 필요하면 [카드 양식](.github/ISSUE_TEMPLATE/card.md)으로 만든다. 멈추거나 넘길 때는 체크포인트 다섯 줄을 쓴다.
+1. **카드 #61 — 공통 자료 합계 1 MiB를 한 번 실제로 본다.** Claude 참여자의 구독 사용량이 크다([긴 자료 결과](docs/experiments/2026-09-25-long-sources/RESULTS.md)).
+2. **2026-10-25 전 — V04-01 절차서를 정한다.** 쌓임 검사의 `PROCEDURES` 예외가 그날 끝난다(`tests/test_accumulation.py`) — 지나면 CI가 실패한다. WSL 참여자의 설치·관측 절차는 이미 [SETUP](docs/SETUP.md)에 있으니, 절차서가 아직 맡는 일(Windows CLI 조사, `probe.ps1`·`summarize_claude_init.py`)을 살아 있는 문서로 옮길지 은퇴시킬지 정하고 AGENTS.md의 가리킴을 맞춘다. 모델 호출 없음.
+3. **2026-10-26 전 — 재관측**([SETUP 4절](docs/SETUP.md)의 절차, 모델 호출 Claude 2·Codex 3). 참여자 계획이나 CLI 판이 바뀌면 그때 바로 한다. 관측 기록은 `tools/w2/assemble.py`가 조립한다.
+4. **사용자에게 물을 것**(3절 표): 카드 보드를 채택할지 — 권고는 작은 보드 유지([이유](docs/reviews/2026-09-25-codex-continuation/README.md)). 채택하면 시범 규칙([날짜 기록 폴더](docs/experiments/2026-09-25-card-pilot/README.md)에 있다)을 협업 규칙으로 옮긴다. Q4 첫 화면, 실제 합성의 기본값.
+5. 새 카드가 필요하면 [카드 양식](.github/ISSUE_TEMPLATE/card.md)으로 만든다. 멈추거나 넘길 때는 체크포인트 다섯 줄을 쓴다.
 
 새 실험은 **헤드리스 실행** `python -m app.run`으로 한다 — 서버와 같은 준비 조회·원장·상한을 쓰고 결과 JSON 하나를 낸다([app 안내](app/README.md)의 "헤드리스 실행", 먼저 `--mock`으로 흐름 확인). 설정 파일의 모양은 같은 안내에, 만드는 예는 [D 후속의 make_configs.py](docs/experiments/2026-09-25-d-followup/make_configs.py)에 있다. 앞선 실험 폴더의 `drive.py`들은 그 기록으로 남는다.
 

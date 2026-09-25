@@ -146,9 +146,12 @@ class CheckSetupTests(unittest.TestCase):
             done = subprocess.run([powershell, "-NoProfile", "-Command", check], capture_output=True, text=True, timeout=60)
             self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
         bash = shutil.which("bash")
-        if bash and not bash.lower().startswith(("c:\\windows", "c:/windows")):   # WSL 실행 스텁은 건너뛴다
-            done = subprocess.run([bash, "-n", str(sh)], capture_output=True, text=True, timeout=60)
-            self.assertEqual(done.returncode, 0, done.stderr)
+        if bash:
+            # Windows PATH의 bash가 WSL 실행기일 수도 있다. 경로 대신 입력을 넘기면
+            # Git Bash·WSL·Linux 모두 같은 스크립트를 검사한다(설치 스크립트는 실행하지 않음).
+            done = subprocess.run([bash, "-n"], input=sh.read_bytes(),
+                                  capture_output=True, timeout=60)
+            self.assertEqual(done.returncode, 0, done.stderr.decode("utf-8", errors="replace"))
 
     def test_observed_versions_come_from_the_current_record(self):
         versions = cs.observed_versions()
