@@ -49,6 +49,21 @@ class ConfigTests(unittest.TestCase):
                 self.assertEqual(check.call_args_list[0].kwargs["input_dir"], (Path(tmp) / "empty").resolve())
                 self.assertIsNone(check.call_args_list[1].kwargs["input_dir"])
 
+    def test_check_config_exits_0_only_when_every_provider_is_eligible(self):
+        """--check-config의 거절도 --check-cli와 같은 코드다. 인자 오류(2)와 가른다(카드 #58 교차검토)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "live.json"
+            path.write_text(json.dumps({"providers": [
+                {"adapter_id": "codex", "model": "m1", "inventory": "c.json", "call_budget": 1},
+                {"adapter_id": "claude-code", "model": "m2", "inventory": "a.json", "call_budget": 1}
+            ]}), encoding="utf-8")
+            argv = ["app.server", "--check-config", str(path), "--data-dir", str(Path(tmp) / "state")]
+            for verdicts, expected in (((True, True), 0), ((True, False), 3), ((False, False), 3)):
+                with self.subTest(verdicts=verdicts), mock.patch.object(sys, "argv", argv), \
+                        mock.patch.object(readiness, "check", side_effect=[{"eligible": v} for v in verdicts]), \
+                        mock.patch.object(server, "serve", side_effect=AssertionError("must not serve")):
+                    self.assertEqual(server.main(), expected)
+
     @unittest.skipUnless(sys.platform == "linux", "live server is Linux-only")
     def test_live_server_wires_two_slots_and_caps_without_launching_models(self):
         with tempfile.TemporaryDirectory() as tmp:
