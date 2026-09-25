@@ -17,7 +17,7 @@
 | 상태 | 라벨은 하나만: `status: ready`(누구든), `status: in-progress`(한 세션이 잡음), `status: needs-user`(사용자의 선택·전달 필요), `status: review`(PR 열림) |
 | 담당 | 모든 세션이 같은 GitHub 계정을 쓰므로 담당자 칸 대신 `agent: claude`·`agent: codex`·`agent: chatgpt` 라벨 |
 | 가져가기 | `status: in-progress`가 없는지 먼저 본다. 상태·담당 라벨을 바꾸고 세션·기기·브랜치를 댓글로 남긴다. 두 세션이 겹치면 먼저 댓글을 단 쪽이 갖고 다른 쪽은 물러나며 겹친 일을 기록한다 |
-| 멈추거나 넘길 때 | 커밋을 먼저 push한다. 체크포인트 댓글(마지막 원격 커밋, 한 일, 다음 행동, 근거, 남은 질문)을 남기고 `status: ready`나 `status: needs-user`로 되돌린다 |
+| 멈추거나 넘길 때 | 커밋을 먼저 push한다. 체크포인트 댓글(형식은 [카드 양식](../../../.github/ISSUE_TEMPLATE/card.md)의 체크포인트 칸)을 남기고 `status: ready`나 `status: needs-user`로 되돌린다 |
 | 끝낼 때 | PR 본문에 `Closes #번호`. 병합되면 이슈가 닫힌다. 닫힌 이슈에 근거(PR·CI) 댓글 |
 | 세션이 바뀌면 | 같은 카드·브랜치·PR을 이어 간다. 세션마다 새 카드나 PR을 만들지 않는다 |
 | 보기 | `gh issue list --label card`. 상태를 확인하려고 모델을 부르지 않는다 |
