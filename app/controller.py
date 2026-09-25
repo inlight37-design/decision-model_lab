@@ -32,6 +32,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, replace
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import re
@@ -273,6 +274,7 @@ class Controller:
         self.work_root = work_root or os.path.join(tempfile.gettempdir(), "dml-work")
         self.max_real_calls, self.provider_call_caps = store.bind_call_budget(max_real_calls, provider_call_caps)
         self.lock = threading.RLock()
+        self._closing = False   # 종료 중인 controller는 resume으로 되돌리지 않는다. 원장의 실행 상태와는 별개다.
         # 진행 중인 시도의 신호만 보관한다. 끝난 스레드/질문/작업 경로를 계속 쌓지 않는다.
         self._workers: dict[str, tuple[threading.Thread, threading.Event]] = {}
         self._synthesis: dict[str, tuple[threading.Thread, threading.Event, str]] = {}   # run_id → 진행 중인 실제 합성
@@ -316,6 +318,8 @@ class Controller:
                 for name, data in checked_sources])
         data = prompt.encode("utf-8")
         with self.lock, self.store.tx() as tx:
+            if self._closing:
+                raise ControllerError("controller is shutting down")
             for name, content in checked_sources:
                 tx.execute("INSERT INTO sources (run_id, name, sha256, bytes, content) VALUES (?, ?, ?, ?, ?)",
                            run_id, name, hashlib.sha256(content).hexdigest(), len(content), content)
@@ -446,7 +450,7 @@ class Controller:
         controller 둘이 같은 참여자를 두 번 부르던 문제, A1 리뷰 반영).
         """
         with self.lock:
-            if self.paused or self.unsettled() >= self.unsettled_limit:
+            if self._closing or self.paused or self.unsettled() >= self.unsettled_limit:
                 return
             queued = self.store.rows("SELECT p.run_id, p.pid, p.spec FROM participants p JOIN runs r USING (run_id) "
                                      "WHERE p.state = ? AND NOT r.cancel_requested ORDER BY r.created_at, p.rowid", QUEUED)
@@ -504,6 +508,8 @@ class Controller:
     def resume(self) -> None:
         """다시 시작한 뒤 멈춰 둔 대기 시도를 사용자가 이어서 시작하라고 했다."""
         with self.lock:
+            if self._closing:
+                raise ControllerError("controller is shutting down")
             self.paused = False
         self.pump()
 
@@ -706,6 +712,8 @@ class Controller:
         시작 전 거절(공개 전·진행 중·provider 아님·계획 거절·상한 소진)은 아무것도 예약하지 않는다.
         """
         with self.lock:
+            if self._closing:
+                raise ControllerError("controller is shutting down")
             if not self._gate(run_id).public()["can_synthesize"]:
                 raise ControllerError("model synthesis requires controller-revealed drafts")
             if run_id in self._synthesis:
@@ -932,12 +940,34 @@ class Controller:
             raise ControllerError(f"no participant {pid!r} in {run_id!r}")
         return part
 
+    def shutdown(self, timeout: float = runner.CLEANUP_LIMIT + 1.0) -> bool:
+        """새 호출을 영구히 막고 소유한 초안·합성 실행기에 취소를 알린 뒤 결과 저장을 기다린다.
+
+        실행 자체의 cancel_run과 다르다. 대기 시도·이미 공개한 답·예약은 보존한다. 다시 연 controller는 대기를
+        사용자 resume 전까지 시작하지 않는다. True는 worker가 모두 반환했다는 뜻이지 자손 종료의 증거가 아니다.
+        종료 미확인은 원장과 unsettled()에 남는다. False이면 호출자는 살아 있는 writer의 Store를 닫지 않는다.
+        """
+        if not math.isfinite(timeout) or timeout < 0:
+            raise ValueError("shutdown timeout must be finite and non-negative")
+        with self.lock:
+            self._closing, self.paused = True, True
+            for _, cancel in self._workers.values():
+                cancel.set()
+            for _, cancel, _ in self._synthesis.values():
+                cancel.set()
+        # _finish와 finally가 같은 lock을 필요로 하므로 기다리는 동안 잡고 있지 않는다.
+        return self.wait_idle(timeout)
+
     def wait_idle(self, timeout: float = 30.0) -> bool:
-        """시험용: 시작한 시도가 모두 돌아올 때까지 기다린다."""
+        """시작한 시도가 모두 반환했는지 본다. timeout=0은 기다리지 않고 현재 상태만 검사한다."""
+        if not math.isfinite(timeout) or timeout < 0:
+            raise ValueError("idle timeout must be finite and non-negative")
         deadline = time.monotonic() + timeout
-        while time.monotonic() < deadline:
+        while True:
             with self.lock:
                 if not self._workers and not self._synthesis:
                     return True
-            time.sleep(0.05)
-        return False
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                return False
+            time.sleep(min(0.05, remaining))

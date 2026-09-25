@@ -139,6 +139,16 @@ def model_prompt(report: dict) -> tuple[str, dict[str, str]]:
     return MODEL_PROMPT.format(question=report["input"]["question"], drafts=drafts), labels
 
 
+def _unique_object(pairs: list[tuple[str, Any]]) -> dict:
+    """중복 키의 마지막 값만 남기면 반례·인용이 조용히 사라진다. 중첩 객체도 같은 관문을 쓴다."""
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise SynthesisError("duplicate JSON object key in synthesis")
+        result[key] = value
+    return result
+
+
 def _json_object(text: str) -> dict:
     """답에서 JSON 객체 하나를 찾는다. 통째로, 코드 울타리 안, 첫 { 부터 마지막 } 까지 순서로 본다."""
     candidates = [text.strip()]
@@ -150,7 +160,9 @@ def _json_object(text: str) -> dict:
         candidates.append(text[start:end + 1])
     for candidate in candidates:
         try:
-            value = json.loads(candidate)
+            value = json.loads(candidate, object_pairs_hook=_unique_object)
+        except SynthesisError:
+            raise   # 모호한 객체에서 다른 후보를 골라 근거를 조용히 버리지 않는다.
         except (ValueError, RecursionError):
             continue
         if isinstance(value, dict):
@@ -163,6 +175,11 @@ def _text(value: Any, what: str, *, optional: bool = False) -> str | None:
         return None
     if not isinstance(value, str) or not value.strip() or len(value) > MAX_TEXT:
         raise SynthesisError(f"{what} must be non-empty text of at most {MAX_TEXT} characters")
+    try:
+        value.encode("utf-8")
+    except UnicodeEncodeError:
+        # JSON의 고립 surrogate를 원장/HTTP 출력 단계까지 보내면 결과 저장 자체가 실패한다.
+        raise SynthesisError(f"{what} must be valid UTF-8 text") from None
     return value.strip()
 
 
@@ -191,7 +208,9 @@ def check_model_synthesis(text: str, report: dict, labels: dict[str, str], synth
         for item in _items(value, "quotes"):
             if not isinstance(item, dict) or not isinstance(item.get("draft"), str):
                 raise SynthesisError("each quote needs a draft label and a text")
-            quote = _text(item.get("text"), "quote text")
+            _text(item["draft"], "draft label")
+            _text(item.get("text"), "quote text")
+            quote = item["text"]   # 검사만 하고 공백·개행을 지우지 않는다. 원문 일치는 원래 인용 그대로다.
             pid = labels.get(item["draft"])
             counts["quotes"] += 1
             start = sources[pid]["draft"].find(quote) if pid in sources else -1

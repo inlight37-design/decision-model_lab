@@ -7,7 +7,7 @@ Host 머리글이 우리 주소가 아니면 거절한다(DNS rebinding).
 
 시작 순서(A1 리뷰 A1-03): 원장 잠금 → 포트 → 복구 → 토큰. 같은 데이터 폴더로 서버를 하나 더 띄우면 원장
 잠금에서 멈추므로 돌던 서버의 원장과 토큰 파일을 건드리지 않는다. 포트를 먼저 잡는 것에 기대지 않는다 —
-다른 포트로 띄우면 막지 못하고, Windows에서는 SO_REUSEADDR 때문에 같은 포트에도 서버가 둘 떴다.
+다른 포트로 띄우면 막지 못하고, Windows에서는 SO_REUSEADDR 때문에 같은 포트에 서버가 둘 떴다.
 
   python -m app.server [--port 8765] [--data-dir ~/.decision-model-lab/mock]
 """
@@ -254,6 +254,8 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
 
 
 class _Server(ThreadingHTTPServer):
+    # server_close가 HTTP writer까지 회수한 뒤에만 원장을 닫는다. 연결 수·I/O 기한 상한은 그대로 둔다.
+    daemon_threads = False
     # Windows의 SO_REUSEADDR은 이미 듣고 있는 포트에도 bind를 허락해서 같은 포트에 서버가 둘 떴다(A1 리뷰 반영
     # 중 관측). Windows에서는 끈다. POSIX에서는 TIME_WAIT 포트를 다시 쓰게 할 뿐이므로 둔다.
     allow_reuse_address = os.name != "nt"
@@ -272,6 +274,10 @@ class _Server(ThreadingHTTPServer):
         try:
             super().process_request(request, client_address)
         except BaseException:
+            # CPython 3.12/3.13 ThreadingMixIn은 start 전에 스레드를 등록한다. 시작 실패를 남기면
+            # server_close의 join이 실패한다. 기존 목록에서 죽은 항목만 회수하고 살아 있는 handler는 보존한다.
+            if self.block_on_close:
+                self._threads.reap()
             self._connections.release()
             raise
 
@@ -446,7 +452,20 @@ def main() -> int:
         server.serve_forever()
     except KeyboardInterrupt:
         pass
-    return 0
+    finally:
+        # 같은 serve_forever 스레드에서 server.shutdown()을 호출하면 교착된다. 새 호출부터 막고 소켓을 닫는다.
+        controller.shutdown(timeout=0)
+        try:
+            server.server_close()
+        finally:
+            idle = controller.shutdown()
+            clean = idle and controller.unsettled() == 0
+            if idle:
+                controller.store.close()
+            if not clean:
+                print("종료를 확인하지 못한 작업이 남았습니다. 원장은 보존되며 재호출·예산 환불은 하지 않습니다.",
+                      file=sys.stderr, flush=True)
+    return 0 if clean else 1
 
 
 if __name__ == "__main__":
