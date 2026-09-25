@@ -13,6 +13,7 @@
 | [state.py](state.py) | 참여자 행에서 정족수·축소 승인·공개 가능 여부 계산, 합성 사건을 시도별 상태로 투영해 자리·복구·화면이 함께 사용 |
 | [cli_executor.py](cli_executor.py) | provider별 입력·inventory로 최종 계획을 만들고 같은 계획을 기존 격리 경계에서 실행 |
 | [live_config.py](live_config.py) | 명시적 provider 설정 파싱·검사. 새 실행 엔진이 아님 |
+| [registration.py](registration.py) | 관측 기록의 로컬 기기 등록(저장소 밖). 실제 모드의 준비 조회·실행 직전 재검사가 확인한다 |
 | [codex_account.py](codex_account.py), [account_quota.py](account_quota.py) | 격리된 무모델 계정 조회·명시적 갱신·캐시/오래된 관측 표시 |
 | [server.py](server.py) | localhost API·인증·전체 준비 조회·화면 연결, 서버와 헤드리스 실행이 같이 쓰는 실행기·controller 구성(`live_setup`·`new_controller`) |
 | [run.py](run.py) | 헤드리스 실행: 화면 없이 질문 하나를 끝까지 돌리고 결과 JSON 하나를 쓴다 |
@@ -41,6 +42,8 @@ python -m app.server --live-cli codex --model <전체-요청-모델> --inventory
 ```
 
 위 모델/경로는 자리표시자이며 실제 관측값을 쓴다. 지금 계획은 입력 폴더 하나의 `codex@bba3751a36f3`·`claude-code@a35129c5a1dc`(E2)이고, 그 [관측 manifest](../docs/reviews/2026-09-25-context-independence/manifest.v2.json)로 aux-pc-wsl에서는 `--allow-context-unverified` 없이도(strict) 준비 조회가 허가됐다. 옛 계획 `codex@8a0128d4c791`(K46)·`codex@5a77e0b7dc7f`(연결 앱 끄기)·`claude-code@126be128bed7`(#39)의 기록으로는 지금 계획이 거절된다. 자료 없음/복수 폴더는 다른 판이다. 과거 [첫 실측](../docs/reviews/2026-09-24-live-cli-pilot/README.md)과 [재현](../docs/reviews/2026-09-24-live-pilot-replication/README.md)은 그대로 보존하며 소진 원장을 다시 쓸 목적으로 상한을 바꾸지 않는다.
+
+**관측 기록은 이 기기에 등록돼 있어야 한다**([registration.py](registration.py), 카드 #71). 준비 조회와 실행 직전 재검사가 사용자 상태 폴더의 로컬 등록(기록 파일의 sha256 ↔ 이 기기의 지문: `/etc/machine-id`를 앱 전용 키로 HMAC한 값·호스트 이름·배포판·사용자)을 본다. 등록이 없거나 다른 기기의 것이면 거절하며 `--allow-context-unverified`도 건너뛰지 않는다. 등록은 그 기기에서 관측한 사람이 `python3 -m app.registration register <기록> --host-label <이름표>`로 한다. 우발적인 다른 PC 재사용을 막는 것이지 VM 통째 복제까지 막는 원격 증명은 아니다.
 
 준비 조회의 종료 코드는 허가 0, 거절 3이다. 명령줄 인자 오류는 argparse의 2라서 스크립트가 거절과 가를 수 있다. 실제 모드(`--live-cli`·`--live-config`)도 시작 전 준비 조회가 거절하면 3으로 끝나고 서버를 띄우지 않는다.
 
