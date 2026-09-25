@@ -1,0 +1,30 @@
+== marketplace add
+Added marketplace `dml-local` from /tmp/dml-plugin-control-am78ij/market.
+Installed marketplace root: /tmp/dml-plugin-control-am78ij/market
+== plugin add
+Added plugin `dml-probe` from marketplace `dml-local`.
+Installed plugin root: /tmp/dml-plugin-control-am78ij/.codex/plugins/cache/dml-local/dml-probe/0.1.0
+== plugin list
+Marketplace `dml-local`
+/tmp/dml-plugin-control-am78ij/market/.agents/plugins/marketplace.json
+dml-probe@dml-local  installed, enabled  0.1.0    /tmp/dml-plugin-control-am78ij/market/plugins/dml-probe
+== config sections
+1:[marketplaces.dml-local]
+5:[plugins."dml-probe@dml-local"]
+== cache
+~/.codex/plugins
+~/.codex/plugins/cache
+~/.codex/plugins/cache/dml-local
+~/.codex/plugins/cache/dml-local/dml-probe
+~/.codex/plugins/cache/dml-local/dml-probe/0.1.0
+~/.codex/plugins/cache/dml-local/dml-probe/0.1.0/skills
+== renders
+default                                      exit=0 marker_hits=3 json_chars=24117
+features.apps=false                          exit=0 marker_hits=3 json_chars=24115
+features.remote_plugin=false                 exit=0 marker_hits=3 json_chars=24115
+features.plugins=false                       exit=0 marker_hits=0 json_chars=23850
+apps off + plugins off                       exit=0 marker_hits=0 json_chars=23853
+plugin disabled by key                       exit=0 marker_hits=3 json_chars=24114
+== exec-style: config.toml hidden (stand-in for --ignore-user-config)
+no config.toml                               exit=0 marker_hits=0 json_chars=23852
+cleaned yes

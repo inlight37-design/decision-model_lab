@@ -1,0 +1,307 @@
+{
+ "codex_release": "0.156.1-x86_64-unknown-linux-musl",
+ "synthetic_controls": {
+  "default": {
+   "state": "exited",
+   "exit": 0,
+   "tree_confirmed_empty": true,
+   "json": true,
+   "items": [
+    {
+     "role": "developer",
+     "chars": 7748,
+     "tags": [
+      "collaboration_mode",
+      "permissions instructions",
+      "skills_instructions"
+     ]
+    },
+    {
+     "role": "developer",
+     "chars": 2439,
+     "tags": [
+      "author",
+      "multi_agent_role",
+      "payload text",
+      "recipient"
+     ]
+    },
+    {
+     "role": "developer",
+     "chars": 281,
+     "tags": [
+      "multi_agent_mode"
+     ]
+    },
+    {
+     "role": "user",
+     "chars": 698,
+     "tags": [
+      "INSTRUCTIONS",
+      "current_date",
+      "cwd",
+      "environment_context",
+      "filesystem",
+      "root",
+      "shell",
+      "special",
+      "timezone",
+      "workspace_roots"
+     ]
+    },
+    {
+     "role": "user",
+     "chars": 17,
+     "tags": []
+    }
+   ],
+   "instructions_block": true,
+   "global_marker": true,
+   "project_marker": true
+  },
+  "project_doc_max_bytes=0": {
+   "state": "exited",
+   "exit": 0,
+   "tree_confirmed_empty": true,
+   "json": true,
+   "items": [
+    {
+     "role": "developer",
+     "chars": 7748,
+     "tags": [
+      "collaboration_mode",
+      "permissions instructions",
+      "skills_instructions"
+     ]
+    },
+    {
+     "role": "developer",
+     "chars": 2439,
+     "tags": [
+      "author",
+      "multi_agent_role",
+      "payload text",
+      "recipient"
+     ]
+    },
+    {
+     "role": "developer",
+     "chars": 281,
+     "tags": [
+      "multi_agent_mode"
+     ]
+    },
+    {
+     "role": "user",
+     "chars": 584,
+     "tags": [
+      "INSTRUCTIONS",
+      "current_date",
+      "cwd",
+      "environment_context",
+      "filesystem",
+      "root",
+      "shell",
+      "special",
+      "timezone",
+      "workspace_roots"
+     ]
+    },
+    {
+     "role": "user",
+     "chars": 17,
+     "tags": []
+    }
+   ],
+   "instructions_block": true,
+   "global_marker": true,
+   "project_marker": false
+  },
+  "empty global file": {
+   "state": "exited",
+   "exit": 0,
+   "tree_confirmed_empty": true,
+   "json": true,
+   "items": [
+    {
+     "role": "developer",
+     "chars": 7748,
+     "tags": [
+      "collaboration_mode",
+      "permissions instructions",
+      "skills_instructions"
+     ]
+    },
+    {
+     "role": "developer",
+     "chars": 2439,
+     "tags": [
+      "author",
+      "multi_agent_role",
+      "payload text",
+      "recipient"
+     ]
+    },
+    {
+     "role": "developer",
+     "chars": 281,
+     "tags": [
+      "multi_agent_mode"
+     ]
+    },
+    {
+     "role": "user",
+     "chars": 630,
+     "tags": [
+      "INSTRUCTIONS",
+      "current_date",
+      "cwd",
+      "environment_context",
+      "filesystem",
+      "root",
+      "shell",
+      "special",
+      "timezone",
+      "workspace_roots"
+     ]
+    },
+    {
+     "role": "user",
+     "chars": 17,
+     "tags": []
+    }
+   ],
+   "instructions_block": true,
+   "global_marker": false,
+   "project_marker": true
+  }
+ },
+ "participant_values": {
+  "synthetic_home": {
+   "state": "exited",
+   "exit": 0,
+   "tree_confirmed_empty": true,
+   "json": true,
+   "items": [
+    {
+     "role": "developer",
+     "chars": 7991,
+     "tags": [
+      "collaboration_mode",
+      "permissions instructions",
+      "skills_instructions"
+     ]
+    },
+    {
+     "role": "developer",
+     "chars": 2439,
+     "tags": [
+      "author",
+      "multi_agent_role",
+      "payload text",
+      "recipient"
+     ]
+    },
+    {
+     "role": "developer",
+     "chars": 281,
+     "tags": [
+      "multi_agent_mode"
+     ]
+    },
+    {
+     "role": "user",
+     "chars": 567,
+     "tags": [
+      "current_date",
+      "cwd",
+      "environment_context",
+      "filesystem",
+      "path",
+      "root",
+      "shell",
+      "special",
+      "timezone",
+      "workspace_roots"
+     ]
+    },
+    {
+     "role": "user",
+     "chars": 17,
+     "tags": []
+    }
+   ],
+   "instructions_block": false
+  },
+  "real_home": {
+   "state": "exited",
+   "exit": 0,
+   "tree_confirmed_empty": true,
+   "json": true,
+   "items": [
+    {
+     "role": "developer",
+     "chars": 7535,
+     "tags": [
+      "collaboration_mode",
+      "permissions instructions",
+      "skills_instructions"
+     ]
+    },
+    {
+     "role": "developer",
+     "chars": 2439,
+     "tags": [
+      "author",
+      "multi_agent_role",
+      "payload text",
+      "recipient"
+     ]
+    },
+    {
+     "role": "developer",
+     "chars": 281,
+     "tags": [
+      "multi_agent_mode"
+     ]
+    },
+    {
+     "role": "user",
+     "chars": 628,
+     "tags": [
+      "current_date",
+      "cwd",
+      "environment_context",
+      "filesystem",
+      "path",
+      "root",
+      "shell",
+      "special",
+      "timezone",
+      "workspace_roots"
+     ]
+    },
+    {
+     "role": "user",
+     "chars": 17,
+     "tags": []
+    }
+   ],
+   "instructions_block": false
+  },
+  "line_differences": {
+   "message id": {
+    "only_real": 5,
+    "only_synthetic": 5
+   },
+   "other": {
+    "only_real": 1,
+    "only_synthetic": 2
+   },
+   "path": {
+    "only_real": 1,
+    "only_synthetic": 1
+   }
+  }
+ }
+}

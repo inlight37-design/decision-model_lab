@@ -50,6 +50,7 @@
 | [`2026-09-25-plugin-surface/`](2026-09-25-plugin-surface/README.md) | claude의 ChatGPT·Codex 플러그인 점검. ChatGPT에 GitHub 플러그인을 붙이면 카드 이슈를 읽고 댓글을 단다(카드 #59). 계정에 켜진 원격 플러그인이 Codex 참여자에게 닿는지 모델 없이 조회했다 — 참여자 계획에서는 MCP 항목 0·호출 가능한 앱 0·기본 스킬 6, 연결 앱 끄기만 뺀 대조에서는 앱 9개·MCP 항목 371. 모델 입력 렌더링도 E2와 같았다. 보강은 카드 #64. 조회 스크립트 `probe.py` |
 | [`2026-09-25-review-request/`](2026-09-25-review-request/README.md) | claude의 검토 요청서. 새 컴퓨터 준비 도구([SETUP](../SETUP.md)), 못 고치는 것(A1–A7), 해야 할 일의 우선순위(PR #69, 카드 #70–#72 포함), 더 조사할 것(C1–C10), 사용자가 정할 것과 검토 질문 일곱. 결과는 `<YYYY-MM-DD>-review/` 또는 [카드 #73](https://github.com/inlight37-design/decision-model_lab/issues/73) 댓글로 받는다 |
 | [`2026-09-25-review/`](2026-09-25-review/README.md) | 위 요청서에 대한 ChatGPT 웹 세션의 외부 검토([PR #75](https://github.com/inlight37-design/decision-model_lab/pull/75), 카드 #73). 기준은 PR #74의 `2f76a1a`, 검토 중 병합된 새 설치판과의 차이는 [UPSTREAM-UPDATE](2026-09-25-review/UPSTREAM-UPDATE.md). 설치기의 실패 전파·관측 판 고정·검토한 설치 파일 승인(R01–R04, 무해한 대역으로 재현 — [probe.py](2026-09-25-review/probe.py)), #70의 메타데이터 경계(R05), #71의 로컬 환경 등록안(R06), 문구 정정(R07), 질문 1–7의 판정과 L1·C6·C8 방법 |
+| [`2026-09-25-codex-plugins-off/`](2026-09-25-codex-plugins-off/README.md) | claude의 카드 #64. Linux Codex 참여자에 `features.plugins=false`. 합성 HOME의 표식 스킬 플러그인이 연결 앱 끄기·원격 목록 끄기로는 모델 입력에 실리고 이 값으로만 빠짐([대조](2026-09-25-codex-plugins-off/control.sh)). 실제 로그인 폴더: 플러그인 넷→0, 모델 입력은 E2와 같음. 판 `codex@5bed42d05320` — 재관측 전까지 Codex strict 거절. 모델 호출 0 |
 
 ## 읽는 순서
 

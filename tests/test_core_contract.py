@@ -37,12 +37,18 @@ def participant_revision(adapter_id, **kwargs):
     return participant_plan(adapter_id, **kwargs)[0]
 
 
+def e2_revision(plan):
+    """E2(2026-09-25)가 관측한 Codex 계획의 판: 지금 계획에서 플러그인 끄기(카드 #64)만 뺀 것."""
+    _, tmpl = plan
+    return contract.revision({**tmpl, "argv": _without_config(tmpl["argv"], adapters.CODEX_PLUGINS_OFF)})
+
+
 def apps_off_revision(plan):
-    """E 첫 단계(2026-09-24)가 관측한 Codex 계획의 판: 지금 계획에서 E2의 세 변경을 되돌린 것 — 프로젝트 지시문을 막는
+    """E 첫 단계(2026-09-24)가 관측한 Codex 계획의 판: E2 계획에서 E2의 세 변경을 되돌린 것 — 프로젝트 지시문을 막는
     값이 없고, profile은 로그인 파일 하나만 막고, 실행 버전 폴더는 제자리(`ro:cli`)에 보였다. 시험이 옛 판 문자열과
     같은지로 되돌림을 확인한다."""
     _, tmpl = plan
-    argv = _without_config(tmpl["argv"], adapters.CODEX_NO_PROJECT_DOCS)
+    argv = _without_config(_without_config(tmpl["argv"], adapters.CODEX_PLUGINS_OFF), adapters.CODEX_NO_PROJECT_DOCS)
     argv = [a.replace('"<home>/.codex" = "deny"', '"<home>/.codex/auth.json" = "deny"') for a in argv]
     mounts = sorted("ro:cli" if m == f"ro:cli@{isolation.CODEX_RELEASE_AT}" else m for m in tmpl["mounts"])
     return contract.revision({**tmpl, "argv": argv, "mounts": mounts})
@@ -60,7 +66,9 @@ def k46_revision(plan):
 
     그 뒤 참여자 계획이 두 번 바뀌었으므로 K46 기록은 지금 계획을 뒷받침하지 않는다 — 다시 관측해야 한다."""
     _, tmpl = plan
-    argv = _without_config(_without_config(tmpl["argv"], adapters.CODEX_NO_PROJECT_DOCS), adapters.CODEX_APPS_OFF)
+    argv = tmpl["argv"]
+    for value in (adapters.CODEX_PLUGINS_OFF, adapters.CODEX_NO_PROJECT_DOCS, adapters.CODEX_APPS_OFF):
+        argv = _without_config(argv, value)
     argv = [a.replace('"<home>/.codex" = "deny"', '"<home>/.codex/auth.json" = "deny"') for a in argv]
     mounts = sorted("ro:cli" if m == f"ro:cli@{isolation.CODEX_RELEASE_AT}" else m for m in tmpl["mounts"])
     return contract.revision({**tmpl, "argv": argv, "mounts": mounts})
@@ -142,8 +150,9 @@ class LegacyTests(unittest.TestCase):
         claude = participant_plan("claude-code", inputs=("/tmp/in",))
         self.assertEqual(k46_revision(codex), "codex@8a0128d4c791")
         self.assertEqual(apps_off_revision(codex), "codex@5a77e0b7dc7f")
+        self.assertEqual(e2_revision(codex), "codex@bba3751a36f3")
         self.assertEqual(restricted_only_revision(claude), "claude-code@126be128bed7")
-        self.assertNotIn(codex[0], ("codex@8a0128d4c791", "codex@5a77e0b7dc7f"))
+        self.assertNotIn(codex[0], ("codex@8a0128d4c791", "codex@5a77e0b7dc7f", "codex@bba3751a36f3"))
         self.assertNotEqual(claude[0], "claude-code@126be128bed7")
 
     def test_claude_discussant_1_covers_no_participant_plan(self):
