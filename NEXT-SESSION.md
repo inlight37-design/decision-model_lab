@@ -58,11 +58,11 @@
 
 ## 3. 진행 중인 작업
 
-**진행 중: 정리(2절 23).** 순서 — ① 인계·규칙 문서 줄이기, CI 실행 방식, 외부 검토 들이기(#76, 끝남) ② 쓸모없는 도구 은퇴와 로컬 정리(#77, 끝남) ③ 설치기의 실패 경계(외부 검토 R01–R04, #78, 끝남) ④ 합성 제약 제거(이 PR) ⑤ 고립 surrogate와 메타데이터 경계(카드 #70, 검토 R05) ⑥ 헤드리스 실행 명령 ⑦ 재관측 자동화와 환경 등록(카드 #71, 검토 R06, 2026-10-25 전) ⑧ 쌓임 방지 원칙(검토를 받고 정한다). 근거는 [검토 요청서](docs/reviews/2026-09-25-review-request/README.md) B·C절과 그에 대한 [외부 검토](docs/reviews/2026-09-25-review/README.md)다. 외부 검토는 ③·⑤를 먼저 권했다 — 사용자가 고른 순서를 따르되 ③을 ④보다 앞에 두었다.
+**진행 중: 정리(2절 23).** 순서 — ① 인계·규칙 문서 줄이기, CI 실행 방식, 외부 검토 들이기(#76, 끝남) ② 쓸모없는 도구 은퇴와 로컬 정리(#77, 끝남) ③ 설치기의 실패 경계(외부 검토 R01–R04, #78, 끝남) ④ 합성 제약 제거(#79, 끝남) ⑤ 고립 surrogate와 메타데이터 경계(카드 #70, 검토 R05, 이 PR) ⑥ 헤드리스 실행 명령 ⑦ 재관측 자동화와 환경 등록(카드 #71, 검토 R06, 2026-10-25 전) ⑧ 쌓임 방지 원칙(검토를 받고 정한다). 근거는 [검토 요청서](docs/reviews/2026-09-25-review-request/README.md) B·C절과 그에 대한 [외부 검토](docs/reviews/2026-09-25-review/README.md)다. 외부 검토는 ③·⑤를 먼저 권했다 — 사용자가 고른 순서를 따르되 ③을 ④보다 앞에 두었다.
 
 **진행 중: 작업 카드 시범.** 일은 `card` 라벨 이슈에서 [시범 규칙](docs/experiments/2026-09-25-card-pilot/README.md)대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #79](https://github.com/inlight37-design/decision-model_lab/pull/79)(`claude/synthesis-any-provider-20260925`) — 정리 ④(2절 23): 합성 제약을 없앴다. 한 실행에 실제 합성을 여러 번 부를 수 있고(부를 때마다 호출 하나를 같은 상한에서 새로 예약, 환불 없음), 합성자는 서버에 설정된 CLI provider면 된다. 한 실행에 동시에 하나, 끝났는지 모르는 시도가 있으면 확인 전까지 새 호출 거절, 이름표 순서는 실행마다 하나(같은 실행의 합성은 같은 D1·D2). 결정 보고는 `a1-decision-report/4`(`model_syntheses`에 모든 시도). 이로써 같은 초안에 두 합성자를 붙이는 L1(카드 #72)을 앱으로 할 수 있다. 앞 단계: ③ [PR #78](https://github.com/inlight37-design/decision-model_lab/pull/78)(설치기 실패 경계), ② #77, ① #76. 모델 호출 0회.
+- **이 판을 들인 PR:** [PR #80](https://github.com/inlight37-design/decision-model_lab/pull/80)(`claude/invalid-text-20260925`) — 정리 ⑤: [카드 #70](https://github.com/inlight37-design/decision-model_lab/issues/70)과 외부 검토 R05. 참여자 답의 고립 surrogate가 실행을 멈추게 하던 것을 고쳤다 — 그런 초안은 원문을 바꾸지 않고 `format_error`로 거절, 진단 메타데이터는 `\uXXXX`로 바꿔 `escaped_text` 표시, 결과 저장이 그래도 실패하면 `result_not_stored`로 닫음(자손 종료 확인 시 rejected, 아니면 unknown, 환불·재호출 없음), 질문·자료·수동 답은 저장 전에 거절. 앞 단계: ④ [PR #79](https://github.com/inlight37-design/decision-model_lab/pull/79)(합성 제약 제거), ③ #78, ② #77, ① #76. 모델 호출 0회.
 
 | 사용자 판단 | 권고 / 지금까지 한 일 |
 |---|---|
@@ -76,7 +76,7 @@
 ## 4. 다음 작업
 
 1. 3절 정리 순서의 다음 단계.
-2. 보드의 `status: ready` 카드. 상태는 보드가 기준이고 우선순위 제안은 [검토 요청서](docs/reviews/2026-09-25-review-request/README.md) B절이다 — 지금 준비된 것은 #70(고립 surrogate로 실행이 멈춤), #71(관측 기록을 기기와 묶기), #64(Codex 참여자의 계정 플러그인), #72(L1 실험), #61(자료 합계 1 MiB), #73(외부 검토).
+2. 보드의 `status: ready` 카드. 상태는 보드가 기준이고 우선순위 제안은 [검토 요청서](docs/reviews/2026-09-25-review-request/README.md) B절이다 — 지금 준비된 것은 #71(관측 기록을 기기와 묶기), #64(Codex 참여자의 계정 플러그인), #72(L1 실험), #61(자료 합계 1 MiB), #73(외부 검토).
 3. **E2 재관측을 2026-10-25 전에 한다.** 모델 호출이 든다(E2 때 Codex 4·Claude 2). 3절 ⑤와 함께 한다.
 
 새 실제 실행의 설정 모양은 [app 안내](app/README.md), 만드는 예는 [D 후속의 make_configs.py](docs/experiments/2026-09-25-d-followup/make_configs.py), strict 실행·취소의 재현은 [strict 기록의 drive.py](docs/reviews/2026-09-25-strict-live-run/drive.py)다(새 원장, 먼저 `--mock`). 3절 ④가 끝나면 이 문단을 그 명령으로 바꾼다.
