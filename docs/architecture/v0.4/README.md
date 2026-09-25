@@ -26,7 +26,7 @@
 | [03 평가·구현 순서](03-evaluation-and-roadmap.md) | compute-aware 대조군, 오류 전이·합성 손실, 8가지 적용 recipe, V04-01–06 ticket |
 | [근거 원장](sources.json) | F01–F31의 원문·날짜/버전·확인 범위·한계·설계 결정 연결 |
 | [검증 범위](VALIDATION.md) | 실제 실행한 합성 검사와 하지 않은 검증 |
-| [다음 세션 인계](HANDOFF.md) | 완료 결과, 중간 commit, 다음 작업과 금지할 가정 |
+| [v0.4 인계(2026-09-22 판)](HANDOFF.md) | 그때의 완료 결과·중간 commit·다음 작업. 지금 상태는 [NEXT-SESSION.md](../../../NEXT-SESSION.md) |
 
 짧게 이어갈 때는 HANDOFF와 필요한 설계 절만 읽는다. 모델마다 모든 논문·이전 문서를 반복 투입하지 않는다.
 

@@ -36,7 +36,6 @@ LIVING_DOCS = (
     "docs/COLLABORATION.md",
     "docs/architecture/README.md",
     "docs/architecture/v0.4/README.md",
-    "docs/architecture/v0.4/HANDOFF.md",
     "docs/reviews/README.md",
     "docs/handoff/README.md",
     "design/README.md",

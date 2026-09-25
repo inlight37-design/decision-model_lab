@@ -27,7 +27,7 @@ Jev류 판단 모델은 교체 가능한 선택 부품이며, 전체 시스템�
 
 ## 지금 읽을 문서
 
-**[v0.4 개요](docs/architecture/v0.4/README.md)**에서 시작합니다. 다른 세션에서 이어갈 때는 **[v0.4 HANDOFF](docs/architecture/v0.4/HANDOFF.md)**를 먼저 읽습니다.
+**[v0.4 개요](docs/architecture/v0.4/README.md)**에서 시작합니다. 지금 상태와 다음 일은 **[NEXT-SESSION.md](NEXT-SESSION.md)**에 있습니다([v0.4 HANDOFF](docs/architecture/v0.4/HANDOFF.md)는 2026-09-22 판).
 
 | 문서 | 내용 |
 |---|---|
