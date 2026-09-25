@@ -49,6 +49,7 @@
 | [`2026-09-25-merge-56/`](2026-09-25-merge-56/README.md) | claude의 #56 검토·병합. 코드 주장과 외부 출처 재확인, Projects 정정(N1), App Server가 실험 기능이라는 점(N2)·Vibe Kanban 서비스 종료 예고(N3)·Symphony 소개 글 미열람(N4), 원문 조사와의 실제 차이(N5) |
 | [`2026-09-25-plugin-surface/`](2026-09-25-plugin-surface/README.md) | claude의 ChatGPT·Codex 플러그인 점검. ChatGPT에 GitHub 플러그인을 붙이면 카드 이슈를 읽고 댓글을 단다(카드 #59). 계정에 켜진 원격 플러그인이 Codex 참여자에게 닿는지 모델 없이 조회했다 — 참여자 계획에서는 MCP 항목 0·호출 가능한 앱 0·기본 스킬 6, 연결 앱 끄기만 뺀 대조에서는 앱 9개·MCP 항목 371. 모델 입력 렌더링도 E2와 같았다. 보강은 카드 #64. 조회 스크립트 `probe.py` |
 | [`2026-09-25-review-request/`](2026-09-25-review-request/README.md) | claude의 검토 요청서. 새 컴퓨터 준비 도구([SETUP](../SETUP.md)), 못 고치는 것(A1–A7), 해야 할 일의 우선순위(PR #69, 카드 #70–#72 포함), 더 조사할 것(C1–C10), 사용자가 정할 것과 검토 질문 일곱. 결과는 `<YYYY-MM-DD>-review/` 또는 [카드 #73](https://github.com/inlight37-design/decision-model_lab/issues/73) 댓글로 받는다 |
+| [`2026-09-25-review/`](2026-09-25-review/README.md) | 위 요청서에 대한 ChatGPT 웹 세션의 외부 검토([PR #75](https://github.com/inlight37-design/decision-model_lab/pull/75), 카드 #73). 기준은 PR #74의 `2f76a1a`, 검토 중 병합된 새 설치판과의 차이는 [UPSTREAM-UPDATE](2026-09-25-review/UPSTREAM-UPDATE.md). 설치기의 실패 전파·관측 판 고정·검토한 설치 파일 승인(R01–R04, 무해한 대역으로 재현 — [probe.py](2026-09-25-review/probe.py)), #70의 메타데이터 경계(R05), #71의 로컬 환경 등록안(R06), 문구 정정(R07), 질문 1–7의 판정과 L1·C6·C8 방법 |
 
 ## 읽는 순서
 
@@ -59,6 +60,7 @@
 - 기록에 적힌 완료 상태를 지금 head의 CI로 읽지 않는다.
 - [#38 기록](2026-09-24-cli-unblock/README.md)의 Windows 패치 미적용·계정/병렬 응답 미관측은 당시 상태다. [#39](2026-09-24-windows-live-completion/README.md)에서 관측됐고, 문맥 독립성은 그 뒤 [E2](2026-09-25-context-independence/README.md)에서 이 PC·판·30일 범위로 관측됐다.
 - [Codex 연결 앱 끄기](2026-09-24-codex-apps-off/README.md)의 "C3 미확인"은 그 당시 계획에 대한 것이다.
+- [초기 D 결과](../experiments/2026-09-24-comparison-pilot/RESULTS.md) "읽는 법과 한계"의 T2 "인용은 모두 진짜였지만"은 같은 파일의 원문 일치 표(T2 9/10)와 다르다 — 표가 맞다. 맞게 인용된 틀린 설명이 옮겨졌다는 결론은 그대로다([외부 검토](2026-09-25-review/README.md) R07).
 
 아래 번호 목록(1–38)은 2026-09-24까지의 기록을 시간순으로 적은 것이다. 뒤의 '단서' 절이 그 번호로 가리키므로 **고치지 않고 남긴다.** 그 뒤의 기록은 위 표에만 있다. 뒤로 갈수록 최신이며, 앞의 것은 그 시점의 기록으로 남긴다.
 

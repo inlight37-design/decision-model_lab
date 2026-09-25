@@ -1,0 +1,48 @@
+{
+  "reviewed_commit": "2f76a1a6fdd6b4ca8edf5111460f7ae806c8977b",
+  "source_blobs": {
+    "tools/setup/setup-wsl.sh": "cde5228921fd44b1c16d73c3a18c1b1e9669b666",
+    "tools/setup/check_setup.py": "40f14f97bcf3a48a6c6b5afdc6108e570b2fbc39"
+  },
+  "environment": {
+    "python": "3.13.5",
+    "system": "Linux",
+    "scope": "ChatGPT isolated web container; not user PC"
+  },
+  "extra_model_calls": 0,
+  "api_auth_not_a_required_failure": {
+    "exit": 0,
+    "row_statuses": ["warn", "warn"],
+    "summary": "결과: 필수 항목 모두 준비됨",
+    "scope": "other required rows omitted; assume they are ok"
+  },
+  "claude_failed_status_accepted": {"command_exit": 1, "status": "ok"},
+  "version_substring_collision": {"recorded": "0.156.1", "installed": "0.156.10", "status": "ok"},
+  "malformed_observation_record": {"missing": {}, "root_array": "AttributeError"},
+  "surrogate_utf8_boundary": "UnicodeEncodeError after valid JSON escape was decoded",
+  "surrogate_metadata_sqlite_boundary": "UnicodeEncodeError for JSON metadata too; draft text alone is not enough",
+  "unicode_positive_controls": ["valid supplementary character encodes", "literal six-character escape encodes"],
+  "shell": {
+    "missing_pin_fallback": {
+      "executed": true,
+      "mode": "whole original shell script with inert command fixtures",
+      "observation_reader_exit": 7,
+      "script_exit": 0,
+      "selection": [
+        "missing  Codex CLI -> wants latest: bash tools/setup/setup-wsl.sh",
+        "missing  Claude Code -> wants latest: bash tools/setup/setup-wsl.sh"
+      ]
+    },
+    "approval_not_bound_to_reviewed_bytes": {
+      "executed": true,
+      "initial_exit": 3,
+      "retained_reviewed_sha256": "1a97e714ff180e67477ec4fe0e1b574299011fe12ea34954795ad3828d559a01",
+      "reviewed_fixture": "A",
+      "executed_fixture": "B",
+      "accepted_script_exit": 0,
+      "note": "B only prints a marker; no actual installer or network request was executed"
+    }
+  },
+  "not_executed": ["PowerShell/winget/WSL install", "real auth/CLI calls", "full repository tests", "end-to-end controller #70 reproduction"],
+  "checkpoint_next": "Commit probe.py; finish #53/#63/#68/#69 and E2/D/card-pilot document review; answer questions 1-7; update NEXT-SESSION.md section 3; open PR against main without merging."
+}
