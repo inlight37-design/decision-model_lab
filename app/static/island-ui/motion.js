@@ -156,9 +156,10 @@ function createMorph(button, panel) {
       isOpen = true;
       if (!button.hidden) { lastBr = button.getBoundingClientRect(); veil.style.background = getComputedStyle(button).backgroundColor; }
       button.hidden = true; panel.hidden = false; button.setAttribute('aria-expanded', 'true');
+      // 제자리 양식은 여는 동안만 바깥을 자르고 다 열리면 되돌린다. 계속 자르면 안의 포커스 테두리가 가장자리에서 잘린다
       if (!['fixed', 'absolute'].includes(getComputedStyle(panel).position)) panel.style.overflow = 'hidden';
       measure(); paint(s.value);
-      s.to(1, { ...FEEL.rare, onRest: () => { reset(); if (!geo.float) panel.style.height = ''; } });
+      s.to(1, { ...FEEL.rare, onRest: () => { reset(); if (!geo.float) { panel.style.height = ''; panel.style.overflow = ''; } } });
       MORPHS.push(api);
     },
     close() {

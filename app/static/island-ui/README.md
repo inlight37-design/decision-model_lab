@@ -1,6 +1,6 @@
 # island-ui — 화면의 모양·움직임 부품
 
-사용자가 [ai_unslop](https://github.com/inlight37-design/ai_unslop) 저장소에서 실험을 거쳐 고른 화면 스타일(둥근 섬, 알약, 테마 세 벌, 애플식 움직임)의 부품이다. 그 저장소의 `skills/island-ui/`에서 **고치지 않고 그대로** 옮겼다(커밋 `edb1f05`, 후보 v4가 쓴 판과 같다).
+사용자가 [ai_unslop](https://github.com/inlight37-design/ai_unslop) 저장소에서 실험을 거쳐 고른 화면 스타일(둥근 섬, 알약, 테마 세 벌, 애플식 움직임)의 부품이다. 그 저장소의 `skills/island-ui/`에서 **고치지 않고 그대로** 옮겼다(커밋 `4d90cb2` — 펼친 양식이 포커스 테두리를 자르던 것을 그쪽에서 고친 판).
 
 | 파일 | 무엇 |
 |---|---|
