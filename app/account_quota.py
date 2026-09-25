@@ -1,6 +1,8 @@
 """Explicit metadata refresh, cached for UI reads. Never starts a model turn.
 
-Codex: the user's explicit refresh runs the isolated app-server probe (limits and the account's model list).
+Codex: a refresh request runs the isolated app-server probe (limits and the account's model list). The screen
+sends one when the user presses its button, and on its own while the window is in view and the value is old;
+refresh() still allows one probe a minute.
 Claude: no probe exists; the panel shows the limits the last finished real Claude attempt reported in its
 stream (`claude` callable, normally Controller.claude_account_limit). Neither path adds a model call.
 """

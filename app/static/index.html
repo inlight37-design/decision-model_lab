@@ -59,8 +59,6 @@ ul { padding: 0; list-style: none; }
 .lg { font-size: var(--t-lg-size); line-height: var(--t-lg-lh); }
 .strong { font-weight: 700; }
 .hash { word-break: break-all; }
-/* 모르는 값은 0이 아니다: 글자는 그대로 두고 파선 밑줄로 '관측하지 못함'을 표시한다 */
-.st-unknown { text-decoration: underline dashed; text-decoration-color: var(--text-2); text-underline-offset: 3px; }
 
 /* 머리줄: Ledger · 모드 · 상태 알약(필요할 때만) · 테마 */
 .header-island { border-radius: var(--r-island); padding: var(--s-4) var(--s-5); margin-bottom: var(--s-5);
@@ -252,8 +250,29 @@ input[type="checkbox"] { width: 20px; height: 20px; margin: 0; flex: none; accen
 .stat-box { background: var(--surface); border-radius: var(--r-cell); padding: var(--s-3); text-align: center; }
 .stat-num { font-size: var(--t-title-size); font-weight: 700; font-variant-numeric: tabular-nums; }
 
-/* 계정 한도 */
-.quota-kv { background: var(--surface-2); border-radius: var(--r-cell); padding: var(--s-2) var(--s-3); font-size: var(--t-sm-size); }
+/* 계정 한도: provider마다 카드 하나, 창마다 게이지 한 줄(쓴 비율). 지난 값은 회색, 모르는 값은 막대 없이 '미확인' */
+.quota-card { background: var(--surface-2); border-radius: var(--r-cell); padding: var(--s-4); display: flex; flex-direction: column; gap: var(--s-3); }
+.quota-head { display: flex; align-items: baseline; gap: var(--s-2); flex-wrap: wrap; }
+.quota-head .lg { font-weight: 700; margin-right: auto; }
+.pill-quiet { background: var(--surface); color: var(--text-2); padding: 0 var(--s-2); }
+.quota-alert { background: var(--tint-orange); color: var(--on-tint-orange); border-radius: var(--r-cell); padding: var(--s-2) var(--s-3);
+  display: flex; gap: var(--s-2); align-items: baseline; font-weight: 600; max-inline-size: none; }
+.quota-alert::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--unresolved); flex: none; transform: translateY(-1px); }
+.quota-alert.fail::before { background: var(--failed); }
+.gauges { display: flex; flex-direction: column; gap: var(--s-3); }
+.gauge-row { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; grid-template-areas: "label bar num" ". reset reset";
+  align-items: center; column-gap: var(--s-3); row-gap: 2px; }
+.gauge-label { grid-area: label; color: var(--text-2); font-weight: 600; }
+.gauge, .gauge-unknown { grid-area: bar; }
+.gauge { height: 10px; border-radius: var(--r-pill); background: var(--surface); overflow: hidden; }
+.gauge-fill { display: block; height: 100%; border-radius: var(--r-pill); background: var(--primary); }
+.is-mid .gauge-fill { background: var(--unresolved); }
+.is-high .gauge-fill { background: var(--failed); }
+.is-stale .gauge-fill { background: var(--text-2); opacity: .45; }
+.gauge-num { grid-area: num; min-width: 48px; text-align: right; font-size: var(--t-lg-size); line-height: var(--t-lg-lh); font-weight: 700; font-variant-numeric: tabular-nums; }
+.is-stale .gauge-num { color: var(--text-2); }
+.gauge-reset { grid-area: reset; color: var(--text-2); }
+.gauge-unknown { justify-self: start; background: var(--surface); color: var(--text-2); border-radius: var(--r-pill); padding: 0 var(--s-2); font-weight: 600; }
 
 /* 처음 여는 화면 */
 .step { display: flex; gap: var(--s-3); align-items: flex-start; background: var(--surface-2); border-radius: var(--r-cell); padding: var(--s-3) var(--s-4); }
@@ -433,87 +452,134 @@ function fmtSize(n) { return n < 1000 ? `${n}바이트` : `${Math.round(n / 1000
 function quotaPeriod(row) {
   const minutes = row.window_minutes;
   if (minutes != null) return minutes % 1440 === 0 ? `${minutes / 1440}일` : minutes % 60 === 0 ? `${minutes / 60}시간` : `${minutes}분`;
-  const named = { primary: "기본 한도", secondary: "추가 한도", five_hour: "5시간 창", seven_day: "7일 창", current: "현재 창" };
+  const named = { primary: "기본", secondary: "추가", five_hour: "5시간", seven_day: "7일", current: "현재" };
   return named[row.window] || String(row.window);
 }
-function quotaRows(quota, staleNote) {
-  const lines = [];
-  for (const row of quota.limits) {
-    const known = typeof row.used_percent === "number" && Number.isFinite(row.used_percent);
-    const left = known ? Math.max(0, Math.round((100 - row.used_percent) * 10) / 10) : null;
-    const text = known ? `잔여 ${left}% · 사용 ${row.used_percent}%` : "미확인";
-    lines.push([row.status === "observed" ? "kv" : "kv st-unknown",
-      `${row.limit_id} · ${quotaPeriod(row)}: ${text}${row.status === "stale" ? ` (과거 관측값 · ${staleNote})` : ""}`]);
-    if (row.resets_at != null) lines.push(["caption", `초기화 ${new Date(row.resets_at * 1000).toLocaleString()}`]);
-  }
-  return lines;
+function fmtAgo(sec, now) {
+  const d = Math.max(0, now - sec);
+  return d < 60 ? "방금" : d < 3600 ? `${Math.floor(d / 60)}분 전` : d < 86400 ? `${Math.floor(d / 3600)}시간 전` : `${Math.floor(d / 86400)}일 전`;
 }
-// 계정 패널의 줄([class, 글]). DOM 없이 시험할 수 있게 그리기와 나눴다. 모의 모드에는 계정 사용량이 없다.
-// note는 숫자의 범위를 설명하는 줄이라 화면에서는 접어 둔다.
-function quotaLines(data) {
+function fmtUntil(sec, now) {
+  const d = sec - now;
+  if (d <= 0) return "초기화 시각 지남";
+  if (d < 3600) return `${Math.ceil(d / 60)}분 뒤 초기화`;
+  if (d < 86400) { const m = Math.floor((d % 3600) / 60); return `${Math.floor(d / 3600)}시간${m ? ` ${m}분` : ""} 뒤 초기화`; }
+  const t = new Date(sec * 1000), hour = t.getHours();
+  return `${t.getMonth() + 1}월 ${t.getDate()}일 ${hour < 12 ? "오전" : "오후"} ${hour % 12 || 12}시 초기화`;
+}
+// 계정 패널의 카드(provider마다 하나). DOM 없이 시험할 수 있게 그리기와 나눴다. 두 계정을 더하지 않고, 모르는 값은
+// 0으로 그리지 않는다(used: null). Codex 응답의 빈 칸(비율·길이·초기화가 모두 없는 창)은 한도가 아니라서 뺀다.
+// notes는 숫자의 뜻을 설명하는 줄이라 화면에서는 접어 둔다.
+function quotaCards(data, now) {
   const claude = data.claude || { configured: false, quota: null };
-  if (!data.enabled && !claude.configured) return [["caption", "실제 CLI 연결에서 보입니다. 모의 모드에는 계정 사용량이 없습니다."]];
-  const lines = [];
+  if (!data.enabled && !claude.configured)
+    return { empty: "실제 CLI 연결에서 보입니다. 모의 모드에는 계정 사용량이 없습니다.", cards: [], notes: [] };
+  const known = v => typeof v === "number" && Number.isFinite(v);
+  const gauges = (quota, dropEmpty) => quota.limits
+    .filter(r => !dropEmpty || r.used_percent != null || r.window_minutes != null || r.resets_at != null)
+    .map(r => ({ label: quotaPeriod(r), used: known(r.used_percent) ? r.used_percent : null,
+                 state: !known(r.used_percent) ? "unknown" : r.status === "observed" ? "observed" : "stale",
+                 reset: r.resets_at != null ? fmtUntil(r.resets_at, now) : null }));
+  const cards = [], notes = [];
   if (data.enabled) {
-    lines.push(["note", "Codex 계정 전체 · 이 앱 밖에서 쓴 사용량도 포함합니다. 조회는 모델을 호출하지 않습니다."]);
-    if (data.refresh_failed) lines.push(["st-unknown", "현재 조회하지 못했습니다. 이전 값이 있다면 과거 관측값입니다."]);
-    const quota = data.quota;
-    if (!quota) lines.push(["st-unknown", "Codex 잔여 한도 미확인"]);
-    else {
-      lines.push(["caption", `Codex 조회 시각 ${new Date(quota.observed_at * 1000).toLocaleString()}`]);
-      lines.push(...quotaRows(quota, "다시 조회 필요"));
-    }
+    const quota = data.quota, alerts = [];
+    if (data.refresh_failed) alerts.push(["warn", "지금은 조회하지 못했어요. 보이는 값은 지난 값입니다."]);
     if (data.requested_model) {
       const models = data.models;
       const listed = !!models && models.status === "observed" && Array.isArray(models.ids);
       const found = listed && models.ids.includes(data.requested_model);
-      const verdict = !listed ? "미확인" : found ? "있음" : models.truncated ? "목록 일부만 받아 미확인" : "없음";
-      lines.push([found ? "kv" : "kv st-unknown", `요청 모델 ${data.requested_model}: 이 계정의 가용 목록에 ${verdict}`]);
-      if (listed) lines.push(["note", "가용 목록일 뿐 실제로 답한 모델의 보고가 아닙니다."]);
+      if (found) notes.push(`요청 모델(${data.requested_model})은 이 계정의 가용 목록에 있습니다. 가용 목록일 뿐 실제로 답한 모델의 보고가 아닙니다.`);
+      else alerts.push(["warn", `설정한 모델(${data.requested_model})이 이 계정의 가용 목록에 ` +
+        (!listed ? "있는지 확인하지 못했어요." : models.truncated ? "있는지 모릅니다(목록 일부만 받음)." : "없어요.")]);
     }
+    const rows = quota ? gauges(quota, true) : [];
+    cards.push({ id: "codex", name: "Codex", source: quota ? `${fmtAgo(quota.observed_at, now)} 조회` : "아직 조회하지 못함",
+      stale: rows.some(g => g.state === "stale"), alerts, gauges: rows,
+      empty: !quota ? "Codex 한도 미확인" : rows.length ? null : "창별 사용 비율을 받지 못했어요." });
+    notes.push("Codex는 계정 전체 값이라 이 앱 밖에서 쓴 사용량도 들어 있습니다. 조회는 모델을 부르지 않고, 이 창을 보고 있는 동안 값이 오래되면 저절로 다시 조회합니다.");
   }
   if (claude.configured) {
-    const quota = claude.quota;
-    lines.push(["note", "Claude 계정 전체 · 마지막으로 끝난 실제 Claude 실행이 받은 값입니다. 따로 조회하지 않습니다."]);
-    if (!quota || quota.observed_at == null) lines.push(["st-unknown", "Claude 한도 미확인 — 실제 Claude 실행이 끝나면 보입니다"]);
-    else {
-      lines.push(["caption", `Claude 관측 시각 ${new Date(quota.observed_at * 1000).toLocaleString()}`]);
-      if (quota.limit_state === "rejected") lines.push(["st-unknown", "그 실행 때 Claude가 한도 도달(rejected)을 알렸습니다."]);
-      else if (quota.limit_state === "allowed_warning") lines.push(["st-unknown", "그 실행 때 Claude가 한도 경고(allowed_warning)를 알렸습니다."]);
-      if (!quota.limits.length) lines.push(["st-unknown", "창별 사용 비율은 받지 못했습니다."]);
-      lines.push(...quotaRows(quota, "다음 실제 실행 때 갱신"));
-    }
+    const quota = claude.quota, alerts = [], seen = !!quota && quota.observed_at != null;
+    if (seen && quota.limit_state === "rejected") alerts.push(["fail", "그 실행 때 Claude가 한도 도달(rejected)을 알렸어요."]);
+    else if (seen && quota.limit_state === "allowed_warning") alerts.push(["warn", "그 실행 때 Claude가 한도 경고(allowed_warning)를 알렸어요."]);
+    const rows = seen ? gauges(quota, false) : [];
+    cards.push({ id: "claude", name: "Claude", source: seen ? `마지막 실제 실행 때 · ${fmtAgo(quota.observed_at, now)}` : "실제 실행 전",
+      stale: rows.some(g => g.state === "stale"), alerts, gauges: rows,
+      empty: !seen ? "Claude 한도 미확인 — 실제 Claude 실행이 끝나면 보입니다." : rows.length ? null : "창별 사용 비율은 받지 못했어요." });
+    notes.push("Claude는 모델을 부르지 않고 사용량만 묻는 통로가 없어서, 마지막으로 끝난 실제 Claude 실행이 받은 값을 보입니다. 실제 실행이 없으면 바뀌지 않습니다.");
   }
-  lines.push(["note", "남은 질문 횟수나 토큰 수를 뜻하지 않습니다."]);
-  return lines;
+  notes.push("비율은 한도 창마다 쓴 몫입니다. 남은 질문 횟수나 토큰 수를 뜻하지 않고, 두 계정을 더하지 않습니다.");
+  return { empty: null, cards, notes };
 }
+const GAUGES = new Map();   // 게이지 채움의 스프링(카드·창마다 하나). 값이 바뀌면 지난 값에서 이어 움직인다
+function gaugeRow(card, g) {
+  const key = `${card.id}-${g.label}`;
+  const tone = g.state !== "observed" ? " is-stale" : g.used >= 90 ? " is-high" : g.used >= 70 ? " is-mid" : "";
+  const bar = g.used == null ? h("span", { class: "gauge-unknown cap" }, "미확인")
+    : h("div", { class: "gauge", role: "meter", "aria-valuemin": "0", "aria-valuemax": "100", "aria-valuenow": String(g.used),
+        "aria-label": `${card.name} ${g.label} 사용 ${g.used}%${g.state === "stale" ? " (지난 값)" : ""}` },
+      h("span", { class: "gauge-fill", "data-gauge": key, style: `width:${GAUGES.has(key) ? GAUGES.get(key).value : 0}%` }));
+  return h("div", { class: "gauge-row" + tone },
+    h("span", { class: "gauge-label sm" }, g.label), bar,
+    g.used == null ? null : h("span", { class: "gauge-num" }, `${Math.round(g.used * 10) / 10}%`),
+    g.reset ? h("span", { class: "gauge-reset cap" }, g.reset) : null);
+}
+function animateGauges(box) {
+  for (const fill of box.querySelectorAll("[data-gauge]")) {
+    const key = fill.dataset.gauge, target = Math.min(100, Number(fill.parentElement.getAttribute("aria-valuenow")));
+    if (!GAUGES.has(key)) GAUGES.set(key, createSpring(0, v => {
+      const el = document.querySelector(`[data-gauge="${key}"]`);
+      if (el) el.style.width = Math.max(0, v) + "%";
+    }));
+    GAUGES.get(key).to(target, { response: 0.6, damping: 1 });
+  }
+}
+let quotaData = null, quotaAutoAt = 0, settledSeen = null;
 function renderQuota(data) {
+  quotaData = data;
   const box = $("accountQuota"), button = $("quotaRefresh");
   button.disabled = !data.enabled || data.refreshing || data.retry_after_seconds > 0;
   button.textContent = data.refreshing ? "조회 중…" : data.retry_after_seconds > 0 ? `${data.retry_after_seconds}초 후 조회` : "조회";
-  const signature = JSON.stringify([data.enabled, data.refresh_failed, data.quota, data.models, data.claude]);
+  const now = Math.floor(Date.now() / 1000);
+  const view = quotaCards(data, now);
+  const signature = JSON.stringify(view);   // 상대 시각("3분 전")이 바뀔 때도 다시 그린다
   if (signature === quotaSignature) return;
   quotaSignature = signature;
-  const shown = [], notes = [];
-  for (const [cls, text] of quotaLines(data)) {
-    if (cls === "note") notes.push(h("p", { class: "sm muted" }, text));
-    else if (cls.startsWith("kv")) shown.push(h("div", { class: "quota-kv " + cls }, text));
-    else if (cls === "st-unknown") shown.push(h("p", { class: "sm st-unknown" }, text));
-    else shown.push(h("p", { class: "cap muted" }, text));
-  }
-  box.replaceChildren(h("div", { class: "stack" }, shown),
-    notes.length ? h("div", { class: "island-part" }, collapsible("quotaNotes", "이 숫자의 뜻", notes)) : "");
+  if (view.empty) { box.replaceChildren(h("p", { class: "sm muted" }, view.empty)); return; }
+  box.replaceChildren(h("div", { class: "stack" }, view.cards.map(card => h("div", { class: "quota-card" },
+      h("div", { class: "quota-head" }, h("strong", { class: "lg" }, card.name),
+        h("span", { class: "cap muted" }, card.source), card.stale ? h("span", { class: "pill pill-quiet cap" }, "지난 값") : null),
+      card.alerts.map(([tone, text]) => h("p", { class: "sm quota-alert " + tone }, text)),
+      card.empty ? h("p", { class: "sm muted" }, card.empty) : null,
+      card.gauges.length ? h("div", { class: "gauges" }, card.gauges.map(g => gaugeRow(card, g))) : null))),
+    h("div", { class: "island-part" }, collapsible("quotaNotes", "이 숫자의 뜻", view.notes.map(t => h("p", { class: "sm muted" }, t)))));
   pressAll(box);
+  animateGauges(box);
 }
-$("quotaRefresh").onclick = async () => {
+async function refreshQuota() {
   const button = $("quotaRefresh");
   button.disabled = true; button.textContent = "조회 중…";
   try { renderQuota(await api("/api/account-quota/refresh", {})); }
   catch (e) {
-    quotaSignature = null; $("accountQuota").replaceChildren(h("p", { class: "sm st-unknown" }, "계정 한도를 조회하지 못했습니다."));
+    quotaSignature = null; $("accountQuota").replaceChildren(h("p", { class: "sm muted" }, "계정 한도를 조회하지 못했습니다."));
     button.disabled = false; button.textContent = "조회";
   }
-};
+}
+$("quotaRefresh").onclick = refreshQuota;
+// Codex 값은 모델을 부르지 않는 조회라 이 창을 보고 있을 때 저절로 새로 받는다: 창으로 돌아왔는데 2분이 지났거나,
+// 보고 있는 동안 5분이 지났거나, 실행이 끝나 사용량이 바뀌었을 때. 서버가 1분에 한 번으로 막고, 실패한 뒤에는 5분 쉰다.
+function autoQuota(reason) {
+  const q = quotaData;
+  if (!q || !q.enabled || q.refreshing || q.retry_after_seconds > 0 || document.hidden) return;
+  const now = Date.now() / 1000, age = q.quota ? now - q.quota.observed_at : Infinity;
+  if (q.refresh_failed && now - quotaAutoAt < 300) return;
+  if (reason !== "run" && age < (reason === "look" ? 120 : 300)) return;
+  quotaAutoAt = now;
+  refreshQuota();
+}
+document.addEventListener("visibilitychange", () => autoQuota("look"));
+addEventListener("focus", () => autoQuota("look"));
+setInterval(() => autoQuota("timer"), 60000);
 
 // ---- 새 실행 ---------------------------------------------------------------------------------------
 const SOURCE_LIMITS = { count: 20, each: 256 * 1024, total: 1024 * 1024 };   // 서버의 자료 한도와 같은 값
@@ -1079,6 +1145,11 @@ async function refresh() {
   try {
     const [next, quota] = await Promise.all([api("/api/state"), api("/api/account-quota")]);
     connection = ""; state = next; render(); renderQuota(quota);
+    // 실제 CLI 시도가 끝나면 계정 사용량이 바뀌었으니 Codex 값을 새로 받는다
+    const settled = next.runs.reduce((n, r) => n + r.participants.filter(p => p.execution === "real" &&
+      ["accepted", "rejected"].includes(p.state)).length, 0);
+    if (settledSeen !== null && settled > settledSeen) autoQuota("run");
+    settledSeen = settled;
   } catch (e) { connection = String(e.message); renderHeader(); }
 }
 async function loadOptions() {

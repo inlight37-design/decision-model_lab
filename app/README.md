@@ -14,7 +14,7 @@
 | [cli_executor.py](cli_executor.py) | provider별 입력·inventory로 최종 계획을 만들고 같은 계획을 기존 격리 경계에서 실행 |
 | [live_config.py](live_config.py) | 명시적 provider 설정 파싱·검사. 새 실행 엔진이 아님 |
 | [registration.py](registration.py) | 관측 기록의 로컬 기기 등록(저장소 밖). 실제 모드의 준비 조회·실행 직전 재검사가 확인한다 |
-| [codex_account.py](codex_account.py), [account_quota.py](account_quota.py) | 격리된 무모델 계정 조회·명시적 갱신·캐시/오래된 관측 표시 |
+| [codex_account.py](codex_account.py), [account_quota.py](account_quota.py) | 격리된 무모델 계정 조회·갱신 요청(조회 버튼, 또는 화면을 보는 동안 값이 오래됐을 때 화면이 보냄)·캐시/오래된 관측 표시 |
 | [server.py](server.py) | localhost API·인증·전체 준비 조회·화면 연결, 서버와 헤드리스 실행이 같이 쓰는 실행기·controller 구성(`live_setup`·`new_controller`) |
 | [run.py](run.py) | 헤드리스 실행: 화면 없이 질문 하나를 끝까지 돌리고 결과 JSON 하나를 쓴다 |
 | [start.ps1](start.ps1), [launch.py](launch.py) | 바탕 화면 아이콘의 입구: Windows 쪽이 WSL 쪽을 불러 관측 기록·모델·원장을 고르고 서버를 띄운 뒤 앱 창으로 연다. 창을 닫으면 끈다 |
