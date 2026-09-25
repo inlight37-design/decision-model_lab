@@ -91,7 +91,7 @@
 ## 이 PR에서 한 일
 
 - [docs/SETUP.md](../../SETUP.md)와 [tools/setup/](../../../tools/setup/README.md): Windows·WSL 설치 스크립트, 확인 도구(설치·변경·모델 호출 없음, 계정 식별 값 비출력), 시험. aux-pc·aux-pc-wsl에서 확인 모드만 돌렸다. **빈 컴퓨터에서 처음부터 설치해 보지 않았다.**
-- 카드 [#70](https://github.com/inlight37-design/decision-model_lab/issues/70)(고립 surrogate), [#71](https://github.com/inlight37-design/decision-model_lab/issues/71)(기기와 묶기), [#72](https://github.com/inlight37-design/decision-model_lab/issues/72)(L1)과 이 리뷰의 카드.
+- 카드 [#70](https://github.com/inlight37-design/decision-model_lab/issues/70)(고립 surrogate), [#71](https://github.com/inlight37-design/decision-model_lab/issues/71)(기기와 묶기), [#72](https://github.com/inlight37-design/decision-model_lab/issues/72)(L1)과 이 리뷰의 [카드 #73](https://github.com/inlight37-design/decision-model_lab/issues/73).
 - 모델 호출 없음.
 
 ## 읽는 순서
@@ -119,7 +119,7 @@
 
 - 새 브랜치 `<에이전트>/review-<YYYYMMDD>`를 만든다(예: `chatgpt/review-20260926`). 이 요청서가 main에 없으면 `claude/new-pc-setup-20260925`를 base로 하되, PR은 main을 향해 연다.
 - 리뷰는 `docs/reviews/<YYYY-MM-DD>-review/README.md`에 쓰고 PR을 연다. [PR 템플릿](../../../.github/pull_request_template.md)을 채우고 접근 범위(사용자 PC / 웹 컨테이너 / GitHub만, 플러그인)를 적는다.
-- GitHub에 브랜치를 올릴 수 없으면(예: GitHub 플러그인으로 읽기·댓글만 되는 ChatGPT) 이 리뷰의 카드 이슈에 결과 전문을 댓글로 남긴다.
+- GitHub에 브랜치를 올릴 수 없으면(예: GitHub 플러그인으로 읽기·댓글만 되는 ChatGPT) 이 리뷰의 [카드 #73](https://github.com/inlight37-design/decision-model_lab/issues/73)에 결과 전문을 댓글로 남긴다.
 - 재현 코드를 돌렸다면 같은 폴더에 스크립트와 결과를 두고 어디서 돌렸는지 적는다.
 - 리뷰 문서의 형식:
 
