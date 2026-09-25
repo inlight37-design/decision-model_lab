@@ -1,11 +1,18 @@
 # 오프라인 검사만 실행한다. 모델·구독·네트워크·sandbox를 검증하지 않는다.
 name: offline-checks
 
+# PR(main과 합친 결과)과 main에서만 돈다. 예전에는 브랜치 push에서도 돌아 PR의 같은 커밋을 두 번씩 검사했다.
+# 병합 판단에 쓰는 것은 PR 실행이고, main 실행은 병합 뒤 확인이다. PR을 열기 전에는 Actions 탭에서 손으로 돌린다.
 on:
   push:
-    branches: ["**"]
+    branches: [main]
   pull_request:
   workflow_dispatch:
+
+# 같은 PR에 새 커밋이 오면 앞 실행을 멈춘다. main은 병합마다 끝까지 돈다.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
