@@ -10,6 +10,9 @@ Host 머리글이 우리 주소가 아니면 거절한다(DNS rebinding).
 다른 포트로 띄우면 막지 못하고, Windows에서는 SO_REUSEADDR 때문에 같은 포트에 서버가 둘 떴다.
 
   python -m app.server [--port 8765] [--data-dir ~/.decision-model-lab/mock]
+
+종료 코드: 0 정상 종료·준비 조회 허가, 1 원장 사용 중·원장 정책 거절·종료 미확인(처리하지 못한 예외도 1),
+2 명령줄 인자 오류(argparse), 3 준비 조회가 허가하지 않음(`--check-*`, 그리고 실제 모드가 시작 전에 거절될 때).
 """
 from __future__ import annotations
 
@@ -45,6 +48,8 @@ PARTICIPANTS = {
 }
 BEHAVIORS = ("ok", "slow", "fail", "partial_input", "hang")
 MAX_BODY = 2 * 1024 * 1024
+# 준비 조회가 허가하지 않았다. argparse의 인자 오류가 2라서 같은 값을 쓰면 스크립트가 둘을 가르지 못한다(병합 검증 N3).
+EXIT_NOT_ELIGIBLE = 3
 
 
 class RequestError(ValueError):
@@ -377,10 +382,11 @@ def main() -> int:
     ap.add_argument("--data-dir", type=Path, default=Path.home() / ".decision-model-lab" / "mock")
     ap.add_argument("--timeout", type=float, default=20.0, help="CLI 한 번의 제한 시간(초); 실측은 최대 180초")
     ap.add_argument("--check-cli", choices=("claude-code", "codex"),
-                    help="현재 실제 CLI 계획의 허가만 조회하고 종료; 서버·모델을 시작하지 않음")
+                    help="현재 실제 CLI 계획의 허가만 조회하고 종료(허가 0, 거절 3); 서버·모델을 시작하지 않음")
     ap.add_argument("--live-cli", choices=("claude-code", "codex"), help="명시한 실제 CLI 하나를 화면에 연결")
     ap.add_argument("--live-config", type=Path, help="provider별 모델·관측 기록·입력 폴더·호출 상한 JSON")
-    ap.add_argument("--check-config", type=Path, help="live-config와 동일한 계획을 모두 조회한 뒤 종료; 모델 호출 없음")
+    ap.add_argument("--check-config", type=Path,
+                    help="live-config와 동일한 계획을 모두 조회한 뒤 종료(허가 0, 거절 3); 모델 호출 없음")
     ap.add_argument("--inventory", type=Path, help="이 기기의 runtime-inventory/2 기록")
     ap.add_argument("--model", help="전체 요청 모델 이름; 기본값·대체 모델 없음")
     ap.add_argument("--call-budget", type=int, help="이 원장 전체에서 예약할 실제 CLI 호출 상한(1..10); 재시작은 환불 아님")
@@ -429,7 +435,7 @@ def main() -> int:
                            allow_context_unverified=args.allow_context_unverified, input_dir=args.input_dir)
         print(json.dumps(result, ensure_ascii=False, indent=2))
         if args.check_cli or args.check_config or not result["eligible"]:
-            return 0 if result["eligible"] else 2
+            return 0 if result["eligible"] else EXIT_NOT_ELIGIBLE
     try:
         server, token, controller = serve(args.data_dir, args.port, timeout=args.timeout,
                                            live_cli=args.live_cli, inventory=args.inventory, model=args.model,
