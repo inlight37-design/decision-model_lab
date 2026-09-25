@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-25** · 작성 세션: claude(사용자 PC `aux-pc`의 Claude 데스크톱 앱·`aux-pc-wsl` — 1 MiB 자료 실험과 바탕 화면 아이콘) · 브랜치 `claude/app-visible-20260925` · 기준 main `fc0733c`.
+최종 갱신 **2026-09-25** · 작성 세션: claude(사용자 PC `aux-pc`의 Claude 데스크톱 앱·`aux-pc-wsl` — 1 MiB 자료 실험과 바탕 화면 아이콘) · 브랜치 `claude/sources-warning-20260925` · 기준 main `9cde0bd`.
 
 이 파일은 **지금 상태와 다음 일만** 담는다. 끝난 일의 경위는 PR·git 이력과 날짜가 붙은 기록에 있고, 옛 판은 [docs/handoff/](docs/handoff/README.md)에 있다. **3절에는 진행 중인 일과 "이 판을 들인 PR" 한 줄만 둔다** — 새 PR은 그 줄을 자기 PR로 바꾸고, 병합 전에도 뒤에도 맞는 말만 쓴다("병합했다"고 미리 적지 않는다). 크기 상한과 3절의 모양은 CI가 본다. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있는 규칙은 여기 다시 적지 않는다 — 쌓임을 막는 원칙은 협업 규칙 7절이다.
 
@@ -61,7 +61,7 @@
 
 **진행 중: 작업 카드 시범.** 일은 `card` 라벨 이슈에서 [시범 규칙](docs/experiments/2026-09-25-card-pilot/README.md)대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #91](https://github.com/inlight37-design/decision-model_lab/pull/91)(`claude/app-visible-20260925`) — 카드 #61의 [1 MiB 결과](docs/experiments/2026-09-25-1mib-sources/RESULTS.md)와 바탕 화면 아이콘(`app/start.ps1`·`app/launch.py`). 아래 선택 권고(PR #89의 [재개 점검](docs/reviews/2026-09-25-codex-continuation/README.md))는 아직 사용자 확정이 아니다 — 이제 사용자가 앱을 직접 열어 보고 정할 수 있다.
+- **이 판을 들인 PR:** [PR #92](https://github.com/inlight37-design/decision-model_lab/pull/92)(`claude/sources-warning-20260925`) — 카드 #90: 화면이 붙인 자료의 합계와, 실제 Claude 참여자가 있으면 [1 MiB 결과](docs/experiments/2026-09-25-1mib-sources/RESULTS.md)의 관측을 보인다. 앞선 PR #91이 바탕 화면 아이콘(`app/start.ps1`·`app/launch.py`)을 들였다. 아래 선택 권고(PR #89의 [재개 점검](docs/reviews/2026-09-25-codex-continuation/README.md))는 아직 사용자 확정이 아니다 — 이제 사용자가 앱을 직접 열어 보고 정할 수 있다.
 
 | 사용자 판단 | 권고 / 지금까지 한 일 |
 |---|---|
@@ -76,11 +76,10 @@
 
 순서대로. 모델 호출이 드는 일은 카드에 상한을 먼저 적고 새 원장·새 상태 폴더로 한다(2절 22).
 
-1. **카드 [#90](https://github.com/inlight37-design/decision-model_lab/issues/90) — 큰 공통 자료에서 Claude 참여자의 시간 초과를 시작 전에 화면에서 알린다.** #61의 결정 규칙이 올린 후보다. 한도는 바꾸지 않는다. 모델 호출 없음.
-2. **2026-10-25 전 — V04-01 절차서를 정한다.** 쌓임 검사의 `PROCEDURES` 예외가 그날 끝난다(`tests/test_accumulation.py`) — 지나면 CI가 실패한다. WSL 참여자의 설치·관측 절차는 이미 [SETUP](docs/SETUP.md)에 있으니, 절차서가 아직 맡는 일(Windows CLI 조사, `probe.ps1`·`summarize_claude_init.py`)을 살아 있는 문서로 옮길지 은퇴시킬지 정하고 AGENTS.md의 가리킴을 맞춘다. 모델 호출 없음.
-3. **2026-10-26 전 — 재관측**([SETUP 4절](docs/SETUP.md)의 절차, 모델 호출 Claude 2·Codex 3). 참여자 계획이나 CLI 판이 바뀌면 그때 바로 한다. 관측 기록은 `tools/w2/assemble.py`가 조립한다.
-4. **사용자에게 물을 것**(3절 표): 카드 보드를 채택할지 — 권고는 작은 보드 유지([이유](docs/reviews/2026-09-25-codex-continuation/README.md)). 채택하면 시범 규칙([날짜 기록 폴더](docs/experiments/2026-09-25-card-pilot/README.md)에 있다)을 협업 규칙으로 옮긴다. Q4 첫 화면, 실제 합성의 기본값.
-5. 새 카드가 필요하면 [카드 양식](.github/ISSUE_TEMPLATE/card.md)으로 만든다. 멈추거나 넘길 때는 체크포인트 다섯 줄을 쓴다.
+1. **2026-10-25 전 — V04-01 절차서를 정한다.** 쌓임 검사의 `PROCEDURES` 예외가 그날 끝난다(`tests/test_accumulation.py`) — 지나면 CI가 실패한다. WSL 참여자의 설치·관측 절차는 이미 [SETUP](docs/SETUP.md)에 있으니, 절차서가 아직 맡는 일(Windows CLI 조사, `probe.ps1`·`summarize_claude_init.py`)을 살아 있는 문서로 옮길지 은퇴시킬지 정하고 AGENTS.md의 가리킴을 맞춘다. 모델 호출 없음.
+2. **2026-10-26 전 — 재관측**([SETUP 4절](docs/SETUP.md)의 절차, 모델 호출 Claude 2·Codex 3). 참여자 계획이나 CLI 판이 바뀌면 그때 바로 한다. 관측 기록은 `tools/w2/assemble.py`가 조립한다.
+3. **사용자에게 물을 것**(3절 표): 카드 보드를 채택할지 — 권고는 작은 보드 유지([이유](docs/reviews/2026-09-25-codex-continuation/README.md)). 채택하면 시범 규칙([날짜 기록 폴더](docs/experiments/2026-09-25-card-pilot/README.md)에 있다)을 협업 규칙으로 옮긴다. Q4 첫 화면, 실제 합성의 기본값.
+4. 새 카드가 필요하면 [카드 양식](.github/ISSUE_TEMPLATE/card.md)으로 만든다. 멈추거나 넘길 때는 체크포인트 다섯 줄을 쓴다.
 
 새 실험은 **헤드리스 실행** `python -m app.run`으로 한다 — 서버와 같은 준비 조회·원장·상한을 쓰고 결과 JSON 하나를 낸다([app 안내](app/README.md)의 "헤드리스 실행", 먼저 `--mock`으로 흐름 확인). 설정 파일의 모양은 같은 안내에, 만드는 예는 [D 후속의 make_configs.py](docs/experiments/2026-09-25-d-followup/make_configs.py)에 있다. 앞선 실험 폴더의 `drive.py`들은 그 기록으로 남는다.
 
