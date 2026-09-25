@@ -89,6 +89,8 @@
 5. 병합은 사용자가 하거나, CI 녹색을 확인한 claude 세션이 한다(`NEXT-SESSION.md` 2절 8).
 6. **병합한 쪽이 그 브랜치를 원격에서 지운다**(`git push origin --delete <브랜치>`). 병합된 브랜치가 남으면 목록만 보고 진행 중인 일을 알 수 없다 — 2026-09-24에는 병합된 브랜치가 지워지지 않고 쌓여 있었다. 자기 브랜치에만 push할 수 있는 세션(웹 컨테이너 등)은 직접 지우지 못한다. 병합한 뒤 [`prune-merged-branches`](../.github/workflows/prune-merged-branches.yml) 작업을 실행한다(Actions, 손으로만 돈다) — 아래와 같은 명령을 GitHub의 토큰으로 돌린다. `dry_run`을 켜면 지울 목록만 보인다. 실행할 수단이 없으면 PR과 인계 3절에 적고, 사용자가 휴대폰이나 PC의 GitHub 웹에서 그 작업을 실행하거나(Actions 탭 → prune-merged-branches → Run workflow) PC에서 아래 명령을 돌린다(Git Bash나 WSL, 저장소 루트). 어느 쪽이든 main에 모두 들어간 브랜치만 지운다. 목록을 가져온 뒤 누가 push한 브랜치는 `--force-with-lease`가 거절한다(stale info) — 다시 돌리면 새로 판정한다. 진행 중인 세션이 막 만든, 아직 커밋이 없는 브랜치도 지워지지만 그 세션이 다시 push하면 되살아난다.
 
+   **다른 세션의 PR을 병합할 때는 `gh pr merge --delete-branch`를 쓰지 않는다.** 그 브랜치가 이 PC의 다른 worktree에 checkout돼 있으면 gh(2.101)가 원격 브랜치와 함께 **그 worktree를 지우려 한다** — 2026-09-25 PR #69 병합에서 다른 claude 세션의 worktree 파일이 지워졌다(그 세션의 커밋은 모두 main에 있었고 세션은 이미 보관돼 잃은 것은 없었다). 병합은 `--delete-branch` 없이 하고 원격 브랜치는 `git push origin --delete <브랜치>`로 지운다. 자기 worktree에 checkout된 자기 브랜치라면 gh가 로컬 삭제를 건너뛰므로 괜찮다.
+
    ```bash
    git fetch --all --prune
    git branch -r --merged origin/main | sed 's/^ *//' | grep -v -e '^origin/main$' -e '^origin/HEAD' | sed 's#^origin/##' | xargs -r git push --force-with-lease origin --delete

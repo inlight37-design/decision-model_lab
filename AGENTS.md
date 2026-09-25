@@ -17,7 +17,7 @@ The user works with several AI sessions (Claude, Codex, ChatGPT and others) that
 
 ## Project rules
 
-- **Start with [NEXT-SESSION.md](NEXT-SESSION.md).** It carries the current state, what the user has settled, work in progress and the next task. The per-version [v0.4 HANDOFF](docs/architecture/v0.4/HANDOFF.md) is the next stop.
+- **Start with [NEXT-SESSION.md](NEXT-SESSION.md).** It carries the current state, what the user has settled, work in progress and the next task. The per-version [v0.4 HANDOFF](docs/architecture/v0.4/HANDOFF.md) is the next stop. On a computer that has not run this repository before, follow [docs/SETUP.md](docs/SETUP.md) first; observation records from another machine do not make this one eligible for strict runs.
 - Current architecture: [v0.4](docs/architecture/v0.4/README.md). It adds frontier-model independent reasoning, bounded cross-review and evidence-based synthesis alongside economy routing. Difficult planning and evaluation may also use strong models.
 - Preserve [v0.3](docs/architecture/v0.3/README.md) native-harness/accounting foundations and [v0.2](contracts/v0.2/README.md) contracts. Architecture v0.4 is not a production wire-schema upgrade.
 - Official native subscription CLIs first; paid API/extra-credit fallback requires opt-in. Antigravity agy is not Gemini CLI. Jev-like components remain optional.

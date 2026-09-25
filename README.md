@@ -13,7 +13,7 @@ Jev류 판단 모델은 교체 가능한 선택 부품이며, 전체 시스템�
 
 ## 이어서 작업한다면
 
-**[NEXT-SESSION.md](NEXT-SESSION.md)부터 읽습니다.** 환경, 확정된 방침, 열린 결정, 다음 작업이 한 장에 있습니다. 다른 기기에서 clone 한 경우에도 그 문서 하나로 이어갈 수 있습니다.
+**[NEXT-SESSION.md](NEXT-SESSION.md)부터 읽습니다.** 환경, 확정된 방침, 열린 결정, 다음 작업이 한 장에 있습니다. **새 컴퓨터에서 처음 연다면 [docs/SETUP.md](docs/SETUP.md)를 먼저 합니다** — PowerShell 명령 한 줄이 도구·clone·WSL·Ubuntu·CLI·로그인·확인을 순서대로 진행하고, 사람은 관리자 승인·Ubuntu 사용자·브라우저 로그인 승인만 합니다. 남은 일·못 고치는 것·조사 거리는 [검토 요청서](docs/reviews/2026-09-25-review-request/README.md)에 모았습니다.
 
 | 갈래 | 위치 |
 |---|---|
