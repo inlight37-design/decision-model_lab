@@ -26,11 +26,12 @@ class ShutdownTests(support.Base):
         signal = next(iter(ctl._workers.values()))[1]
         self.assertFalse(ctl.shutdown(timeout=0))
         self.assertTrue(signal.is_set())
-        with self.assertRaises(c.ControllerError):
+        # 공개 전 실행의 합성도 거절되므로 거절 이유까지 본다(종료 관문이 아니어도 통과하던 검사).
+        with self.assertRaisesRegex(c.ControllerError, "shutting down"):
             ctl.resume()
-        with self.assertRaises(c.ControllerError):
+        with self.assertRaisesRegex(c.ControllerError, "shutting down"):
             ctl.create_run("new", [support.cli("c")], min_independent=1)
-        with self.assertRaises(c.ControllerError):
+        with self.assertRaisesRegex(c.ControllerError, "shutting down"):
             ctl.synthesize_with_model(rid, "claude-code")
         ex.release("a")
         self.assertTrue(ctl.wait_idle())
