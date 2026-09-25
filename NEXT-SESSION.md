@@ -61,7 +61,7 @@
 
 **진행 중: 작업 카드 시범.** 일은 `card` 라벨 이슈에서 [시범 규칙](docs/experiments/2026-09-25-card-pilot/README.md)대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #94](https://github.com/inlight37-design/decision-model_lab/pull/94)(`claude/local-font-20260926`) — 화면 글꼴 Pretendard를 저장소에 넣어 밖에서 받는 파일이 없게 했다(어느 PC든 clone만으로 같은 화면, 인터넷 없이도). 앞선 PR #93이 ai_unslop 후보 v4(island-ui) 화면을 들였고, 2026-09-26 aux-pc에서 바탕 화면 아이콘과 같은 방법으로 실제 모드 창을 열어 지난 실제 실행이 새 화면에 보였다(모델 호출 없음). 아래 선택 권고(PR #89의 [재개 점검](docs/reviews/2026-09-25-codex-continuation/README.md))는 아직 사용자 확정이 아니다 — 이제 사용자가 앱을 직접 열어 보고 정할 수 있다.
+- **이 판을 들인 PR:** [PR #95](https://github.com/inlight37-design/decision-model_lab/pull/95)(`claude/quota-gauges-20260926`) — 사용자 요청으로 계정 한도를 provider 카드와 게이지로 바꾸고 파선을 뺐다(ai_unslop `ledger.md` 7번 "진행률 막대로 그리지 않는다"와 어긋나지만 사용자가 골랐다). 앞선 PR #93이 ai_unslop 후보 v4(island-ui) 화면을, #94가 글꼴을 저장소에 넣어 clone만으로 같은 화면을 들였고, 2026-09-26 aux-pc에서 바탕 화면 아이콘과 같은 방법으로 실제 모드 창을 열어 지난 실제 실행이 새 화면에 보였다(모델 호출 없음). 아래 선택 권고(PR #89의 [재개 점검](docs/reviews/2026-09-25-codex-continuation/README.md))는 아직 사용자 확정이 아니다 — 이제 사용자가 앱을 직접 열어 보고 정할 수 있다.
 
 | 사용자 판단 | 권고 / 지금까지 한 일 |
 |---|---|
