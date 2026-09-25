@@ -33,7 +33,7 @@ if __package__ in (None, ""):  # `python app/server.py`로 실행해도 저장�
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.controller import CLI, MANUAL, Controller, ControllerError, MockExecutor, ParticipantSpec
-from app.report import ReportError, build_report
+from app.report import ReportError, build_report, decision_report
 from app.store import LedgerBusy, Store, StoreError
 from app.live_config import Provider, load as load_live_config, validate as validate_providers
 from app.account_quota import AccountQuota
@@ -168,17 +168,10 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
             elif len(parts) == 4 and parts[:2] == ["api", "runs"] and parts[3] == "decision-report":
                 try:
                     view = controller.view(parts[2])
-                    report = build_report(view, parts[2])
-                    synthesis = view["runs"][0].get("synthesis")
-                    attempts = view["runs"][0].get("model_syntheses") or []
-                    if synthesis is None and not attempts:
+                    result = decision_report(view["runs"][0], build_report(view, parts[2]))
+                    if result is None:
                         raise ReportError("synthesis has not been requested")
-                    # 2: synthesis는 모의(a1-mock-synthesis/1) 또는 실제(a1-model-synthesis/1)다. 그 schema로 가른다.
-                    # 3: 실패한 실제 합성을 failed_model_synthesis로 따로 실었다.
-                    # 4: 실행마다 실제 합성을 여러 번 할 수 있어 model_syntheses에 모든 시도를 순서대로 싣는다
-                    #    (시도 ID·상태·결과, 실패면 이유와 검사 실패한 원문 raw). synthesis는 가장 최근에 끝난 합성이다.
-                    self._json(200, {"schema": "a1-decision-report/4", "draft_report": report,
-                                     "synthesis": synthesis, "model_syntheses": attempts})
+                    self._json(200, result)   # 판의 변천은 app.report.DECISION_SCHEMA 주석
                 except ReportError as exc:
                     self._json(409, {"error": str(exc)})
             else:
@@ -322,11 +315,13 @@ def _write_token(path: Path, token: str) -> None:
     os.replace(staging, path)
 
 
-def serve(data_dir: Path, port: int, *, timeout: float = 20.0, live_cli: str | None = None,
-          inventory: Path | None = None, model: str | None = None, call_budget: int | None = None,
-          allow_context_unverified: bool = False,
-          input_dir: Path | None = None,
-          live_providers: tuple[Provider, ...] | None = None) -> tuple[ThreadingHTTPServer, str, Controller]:
+def live_setup(data_dir: Path, *, timeout: float, live_cli: str | None = None, inventory: Path | None = None,
+               model: str | None = None, call_budget: int | None = None, allow_context_unverified: bool = False,
+               input_dir: Path | None = None, live_providers: tuple[Provider, ...] | None = None):
+    """실행기·참여자 명단·provider·전체 상한을 만든다. 원장과 포트는 열지 않는다.
+
+    서버와 헤드리스 실행(app.run)이 같은 실행 경로를 쓰도록 둘이 함께 부른다. 실제 옵션 없이 부르면 모의 실행기다.
+    """
     if live_providers is not None and any(value is not None for value in (live_cli, inventory, model, call_budget, input_dir)):
         raise ValueError("do not mix live_providers with single-provider options")
     providers = validate_providers(tuple(live_providers)) if live_providers is not None else ()
@@ -352,6 +347,25 @@ def serve(data_dir: Path, port: int, *, timeout: float = 20.0, live_cli: str | N
                 or allow_context_unverified or input_dir is not None):
             raise ValueError("real options require live_cli; refusing a silent mock fallback")
         executor, roster = MockExecutor(never=(str(data_dir.resolve()),)), PARTICIPANTS
+    return executor, roster, providers, call_budget
+
+
+def new_controller(store: Store, executor, providers, call_budget, *, timeout: float, per_provider: bool) -> Controller:
+    """원장 위에 controller를 만든다(재시작 복구 포함). provider별 상한은 설정 파일(--live-config)에서만 온다."""
+    return Controller(store, executor, timeout=timeout, max_real_calls=call_budget,
+                      provider_call_caps=({p.adapter_id: p.call_budget for p in providers} if per_provider else None),
+                      max_parallel=len(providers) if providers else 2,
+                      unsettled_limit=len(providers) if providers else 2)
+
+
+def serve(data_dir: Path, port: int, *, timeout: float = 20.0, live_cli: str | None = None,
+          inventory: Path | None = None, model: str | None = None, call_budget: int | None = None,
+          allow_context_unverified: bool = False,
+          input_dir: Path | None = None,
+          live_providers: tuple[Provider, ...] | None = None) -> tuple[ThreadingHTTPServer, str, Controller]:
+    executor, roster, providers, call_budget = live_setup(
+        data_dir, timeout=timeout, live_cli=live_cli, inventory=inventory, model=model, call_budget=call_budget,
+        allow_context_unverified=allow_context_unverified, input_dir=input_dir, live_providers=live_providers)
     data_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
     if os.name != "nt":
         data_dir.chmod(0o700)
@@ -362,11 +376,8 @@ def serve(data_dir: Path, port: int, *, timeout: float = 20.0, live_cli: str | N
         store.close()
         raise
     try:
-        controller = Controller(store, executor, timeout=timeout, max_real_calls=call_budget,
-                                provider_call_caps=({p.adapter_id: p.call_budget for p in providers}
-                                                    if live_providers is not None else None),
-                                max_parallel=len(providers) if providers else 2,
-                                unsettled_limit=len(providers) if providers else 2)
+        controller = new_controller(store, executor, providers, call_budget, timeout=timeout,
+                                    per_provider=live_providers is not None)
         token = secrets.token_urlsafe(32)
         _write_token(data_dir / "control-token", token)
     except BaseException:

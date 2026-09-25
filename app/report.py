@@ -22,6 +22,12 @@ OBSERVATION_FIELDS = ("state", "exit_code", "containment", "tree_confirmed_empty
 QUORUM_FIELDS = ("policy", "min", "confirmed", "unverified", "counted", "met", "label")
 
 
+# 결정 보고의 판. 2: synthesis는 모의(a1-mock-synthesis/1) 또는 실제(a1-model-synthesis/1)이고 그 schema로 가른다.
+# 3: 실패한 실제 합성을 failed_model_synthesis로 따로 실었다. 4: 실행마다 실제 합성을 여러 번 할 수 있어
+# model_syntheses에 모든 시도를 순서대로 싣는다(시도 ID·상태·결과, 실패면 이유와 검사 실패한 원문 raw).
+DECISION_SCHEMA = "a1-decision-report/4"
+
+
 class ReportError(ValueError):
     """아직 보고할 수 없거나 공개 자료가 불완전하다. 봉인 자료를 대신 읽지 않는다."""
 
@@ -71,3 +77,17 @@ def build_report(view: dict[str, Any], run_id: str) -> dict[str, Any]:
                         "Manual-app context, independence and account-wide remaining usage are not observed.",
                         "Mock/synthetic execution is not evidence of real model quality or entitlement."],
     }
+
+
+def decision_report(run: dict[str, Any], draft_report: dict[str, Any]) -> dict[str, Any] | None:
+    """결정 보고. 합성이 하나도 없으면 None이다. 서버(`/decision-report`)와 헤드리스 실행(`app.run`)이 같이 쓴다.
+
+    synthesis는 가장 최근에 끝난 합성(모의 또는 실제)이고, model_syntheses는 실제 합성 시도 전부다.
+    결과는 사실 검증이 아니며 원문(draft_report)을 함께 싣는다.
+    """
+    synthesis = run.get("synthesis")
+    attempts = run.get("model_syntheses") or []
+    if synthesis is None and not attempts:
+        return None
+    return {"schema": DECISION_SCHEMA, "draft_report": draft_report, "synthesis": synthesis,
+            "model_syntheses": attempts}

@@ -79,7 +79,7 @@
 2. 보드의 `status: ready` 카드. 상태는 보드가 기준이고 우선순위 제안은 [검토 요청서](docs/reviews/2026-09-25-review-request/README.md) B절이다 — 지금 준비된 것은 #71(관측 기록을 기기와 묶기), #64(Codex 참여자의 계정 플러그인), #72(L1 실험), #61(자료 합계 1 MiB), #73(외부 검토).
 3. **E2 재관측을 2026-10-25 전에 한다.** 모델 호출이 든다(E2 때 Codex 4·Claude 2). 3절 ⑤와 함께 한다.
 
-새 실제 실행의 설정 모양은 [app 안내](app/README.md), 만드는 예는 [D 후속의 make_configs.py](docs/experiments/2026-09-25-d-followup/make_configs.py), strict 실행·취소의 재현은 [strict 기록의 drive.py](docs/reviews/2026-09-25-strict-live-run/drive.py)다(새 원장, 먼저 `--mock`). 3절 ④가 끝나면 이 문단을 그 명령으로 바꾼다.
+새 실험은 **헤드리스 실행** `python -m app.run`으로 한다 — 서버와 같은 준비 조회·원장·상한을 쓰고 결과 JSON 하나를 낸다([app 안내](app/README.md)의 "헤드리스 실행", 먼저 `--mock`으로 흐름 확인). 설정 파일의 모양은 같은 안내에, 만드는 예는 [D 후속의 make_configs.py](docs/experiments/2026-09-25-d-followup/make_configs.py)에 있다. 앞선 실험 폴더의 `drive.py`들은 그 기록으로 남는다.
 
 ### 남은 범위 — 닫지 않은 것
 
