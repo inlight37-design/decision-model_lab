@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-25** · 작성 세션: claude(사용자 PC `aux-pc`의 Claude 데스크톱 앱 — ai_unslop의 island-ui 화면 적용, 모델 호출 없음) · 브랜치 `claude/quota-gauges-20260926` · 기준 main `7f43e50`.
+최종 갱신 **2026-09-25** · 작성 세션: claude(사용자 PC `aux-pc`의 Claude 데스크톱 앱 — ai_unslop의 island-ui 화면 적용, 모델 호출 없음) · 브랜치 `claude/focus-ring-20260926` · 기준 main `2f0b0fe`.
 
 이 파일은 **지금 상태와 다음 일만** 담는다. 끝난 일의 경위는 PR·git 이력과 날짜가 붙은 기록에 있고, 옛 판은 [docs/handoff/](docs/handoff/README.md)에 있다. **3절에는 진행 중인 일과 "이 판을 들인 PR" 한 줄만 둔다** — 새 PR은 그 줄을 자기 PR로 바꾸고, 병합 전에도 뒤에도 맞는 말만 쓴다("병합했다"고 미리 적지 않는다). 크기 상한과 3절의 모양은 CI가 본다. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있는 규칙은 여기 다시 적지 않는다 — 쌓임을 막는 원칙은 협업 규칙 7절이다.
 
@@ -61,7 +61,7 @@
 
 **진행 중: 작업 카드 시범.** 일은 `card` 라벨 이슈에서 [시범 규칙](docs/experiments/2026-09-25-card-pilot/README.md)대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #95](https://github.com/inlight37-design/decision-model_lab/pull/95)(`claude/quota-gauges-20260926`) — 사용자 요청으로 계정 한도를 provider 카드와 게이지로 바꾸고 파선을 뺐다(ai_unslop `ledger.md` 7번 "진행률 막대로 그리지 않는다"와 어긋나지만 사용자가 골랐다). 앞선 PR #93이 ai_unslop 후보 v4(island-ui) 화면을, #94가 글꼴을 저장소에 넣어 clone만으로 같은 화면을 들였고, 2026-09-26 aux-pc에서 바탕 화면 아이콘과 같은 방법으로 실제 모드 창을 열어 지난 실제 실행이 새 화면에 보였다(모델 호출 없음). 아래 선택 권고(PR #89의 [재개 점검](docs/reviews/2026-09-25-codex-continuation/README.md))는 아직 사용자 확정이 아니다 — 이제 사용자가 앱을 직접 열어 보고 정할 수 있다.
+- **이 판을 들인 PR:** [PR #96](https://github.com/inlight37-design/decision-model_lab/pull/96)(`claude/focus-ring-20260926`) — 새 실행 양식을 연 뒤 질문 칸의 포커스 테두리 양옆이 잘리던 것(사용자 보고)을 부품의 원본 ai_unslop(`4d90cb2`)에서 고쳐 `motion.js`를 다시 복사했다. 앞선 PR #93이 ai_unslop 후보 v4(island-ui) 화면을, #94가 글꼴을, #95가 계정 한도 게이지(ai_unslop `ledger.md` 7번도 게이지 허용으로 고침)를 들였고, 2026-09-26 aux-pc에서 바탕 화면 아이콘과 같은 방법으로 실제 모드 창을 열어 지난 실제 실행이 새 화면에 보였다(모델 호출 없음). 아래 선택 권고(PR #89의 [재개 점검](docs/reviews/2026-09-25-codex-continuation/README.md))는 아직 사용자 확정이 아니다 — 이제 사용자가 앱을 직접 열어 보고 정할 수 있다.
 
 | 사용자 판단 | 권고 / 지금까지 한 일 |
 |---|---|
