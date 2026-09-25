@@ -2,6 +2,12 @@
 
 앱 1층(데스크톱 셸)의 토큰과 컴포넌트. 브랜드북은 [`project/README.md`](project/README.md)부터 읽는다.
 
+## 화면이 쓰는 모양은 island-ui다
+
+앱 화면(`app/static/index.html`)은 2026-09-25부터 사용자가 [ai_unslop](https://github.com/inlight37-design/ai_unslop)의 실험(exp-002~010)을 거쳐 고른 **island-ui**(둥근 섬·알약·테마 세 벌·애플식 움직임)를 쓴다. 부품은 [`app/static/island-ui/`](../app/static/island-ui/README.md)에 그대로 옮겼다. 사용자는 이 브랜드북의 첫 모양(괘선·2–3px 모서리)을 "네모네모하고 색이 우중충하다"며 기각했다.
+
+그래서 이 폴더의 **의미 규칙**(아래 1·2 — 미검증이 검증처럼 보이면 안 된다, 전부 보여주지 않는다)은 그대로 화면의 규칙이고, **모양 규칙**(3 괘선)과 `tokens.json`의 값은 화면에 쓰지 않는다. 브랜드북과 아티팩트를 island-ui로 옮길지는 사용자가 정하지 않았다([인계](../NEXT-SESSION.md) 3절).
+
 ## 이 폴더와 아티팩트의 관계
 
 시스템은 claude.ai 아티팩트로 **발행**되고(미리보기가 실제로 렌더링된다), 이 폴더는 그 **소스 미러**다.

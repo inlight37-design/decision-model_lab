@@ -1,0 +1,27 @@
+/* island-ui base.css — themes.css 다음에 그대로 붙여 쓴다. 크기·간격은 이 토큰만 쓴다(값을 새로 만들지 않는다). */
+:root {
+  /* 글자 7단계: 크기 / 줄간격. 자간 0(한글은 좁히지 않는다), 36px 숫자만 -0.02em */
+  --t-cap-size: 12px;   --t-cap-lh: 1.5;    /* 캡션, 해시·ID(고정폭) */
+  --t-sm-size: 13px;    --t-sm-lh: 1.6;     /* 보조 설명, 칩, 버튼 */
+  --t-body-size: 14px;  --t-body-lh: 1.6;   /* 본문 */
+  --t-lg-size: 16px;    --t-lg-lh: 1.5;     /* 섬 안 소제목 */
+  --t-title-size: 18px; --t-title-lh: 1.4;  /* 섬 제목 */
+  --t-hero-size: 26px;  --t-hero-lh: 1.35;  /* 가장 중요한 문장 하나 */
+  --t-num-size: 36px;   --t-num-lh: 1.1;    /* 큰 숫자 */
+  /* 간격 8단계(4의 배수). 묶음 안 간격 < 묶음 사이 간격 */
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 20px; --s-6: 24px; --s-7: 32px; --s-8: 40px;
+  /* 모양: 섬 28, 섬 안 칸 16, 알약 999 */
+  --r-island: 28px; --r-cell: 16px; --r-pill: 999px;
+  --font: "Pretendard Variable", Pretendard, -apple-system, sans-serif;
+  --mono: "Roboto Mono", ui-monospace, monospace;
+}
+body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font);
+       font-size: var(--t-body-size); line-height: var(--t-body-lh); letter-spacing: 0;
+       overflow-x: hidden; transition: background-color .2s ease, color .2s ease;
+       word-break: keep-all; overflow-wrap: anywhere; }   /* 한글은 어절 단위로 줄바꿈, 긴 해시·경로는 어디서든 */
+p { max-inline-size: 40em; }   /* 글줄 40자 안팎(WCAG 1.4.8, 한글). 창이 넓어도 글줄은 늘어지지 않는다 */
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; letter-spacing: 0; }
+:focus-visible { outline: 2px solid var(--focus, var(--primary)); outline-offset: 2px; }
+button { font: inherit; color: inherit; cursor: pointer; }
+.press { will-change: transform; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: .001ms !important; animation-duration: .001ms !important; } }

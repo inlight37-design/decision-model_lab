@@ -94,10 +94,10 @@ class BudgetTests(support.Base):
 class RenderTests(unittest.TestCase):
     def test_independence_and_prestart_budget_use_recorded_evidence(self):
         html = (Path(__file__).resolve().parents[1] / "app/static/index.html").read_text(encoding="utf-8")
+        parts = html[html.index("// ---- 부품"):html.index("// ---- 계정 한도")]   # 이름표·접기·배지(h만 쓴다)
         functions = html[html.index("function budget(run)"):html.index("function claimComparison(")]
         script = r'''
 const assert = require("node:assert/strict");
-const STATE_LABEL = {}, EXECUTION_LABEL = {}, BEHAVIOR_LABEL = {};
 function h(tag, attrs, ...children) {
   return {tag, attrs, children, append(...items) {this.children.push(...items);}};
 }
@@ -106,7 +106,7 @@ function text(node) {
   if (Array.isArray(node)) return node.map(text).join(" ");
   return typeof node === "object" ? text(node.children) : String(node);
 }
-'''+functions+r'''
+'''+parts+functions+r'''
 const p = {pid:"a", label:"A", provider:"test", transport:"cli", execution:"real",
   state:"accepted", contamination:[], draft:"PRIVATE DRAFT", result:{state:"exited", usage:{}}};
 for (const independence of ["unverified", undefined, null, "confirmed"]) {

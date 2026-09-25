@@ -39,6 +39,14 @@ from app.live_config import Provider, load as load_live_config, validate as vali
 from app.account_quota import AccountQuota
 
 STATIC = Path(__file__).with_name("static")
+# 화면이 받아 가는 파일은 이 목록뿐이다(경로를 조립하지 않는다). island-ui는 static/island-ui/README.md.
+ASSETS = {"/island-ui/themes.css": ("island-ui/themes.css", "text/css; charset=utf-8"),
+          "/island-ui/base.css": ("island-ui/base.css", "text/css; charset=utf-8"),
+          "/island-ui/motion.js": ("island-ui/motion.js", "text/javascript; charset=utf-8")}
+# 페이지는 우리 서버와 고정 해시의 글꼴 CSS(jsDelivr)만 불러온다. 스크립트는 우리 것만, 요청은 우리 서버로만 보낸다.
+PAGE_CSP = ("default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+            "font-src https://cdn.jsdelivr.net; connect-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'; "
+            "frame-ancestors 'none'")
 PARTICIPANTS = {
     "claude": ParticipantSpec("claude", "Claude Code", "anthropic", CLI, "claude-code", "mock-claude"),
     "codex": ParticipantSpec("codex", "Codex", "openai", CLI, "codex", "mock-codex"),
@@ -85,7 +93,8 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
         def log_message(self, fmt, *args):  # 요청 줄에 토큰이 없으므로 그대로 두되, 조용히
             pass
 
-        def _send(self, code: int, body: bytes, kind: str = "application/json; charset=utf-8") -> None:
+        def _send(self, code: int, body: bytes, kind: str = "application/json; charset=utf-8",
+                  csp: str = "frame-ancestors 'none'") -> None:
             self.send_response(code)
             self.send_header("Content-Type", kind)
             self.send_header("Content-Length", str(len(body)))
@@ -93,7 +102,7 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
             self.send_header("X-Content-Type-Options", "nosniff")
             self.send_header("Referrer-Policy", "no-referrer")
             self.send_header("X-Frame-Options", "DENY")
-            self.send_header("Content-Security-Policy", "frame-ancestors 'none'")
+            self.send_header("Content-Security-Policy", csp)
             self.send_header("Connection", "close")
             self.close_connection = True  # 거절한 본문을 다음 요청으로 해석하지 않는다.
             self.end_headers()
@@ -150,7 +159,10 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
             path = urlsplit(self.path).path
             parts = path.strip("/").split("/")
             if path == "/":
-                self._send(200, (STATIC / "index.html").read_bytes(), "text/html; charset=utf-8")
+                self._send(200, (STATIC / "index.html").read_bytes(), "text/html; charset=utf-8", csp=PAGE_CSP)
+            elif path in ASSETS:
+                name, kind = ASSETS[path]
+                self._send(200, (STATIC / name).read_bytes(), kind)
             elif path == "/api/state":
                 self._json(200, controller.view())
             elif path == "/api/account-quota":

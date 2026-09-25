@@ -39,10 +39,11 @@ assert.ok(!text.includes("모델 불일치"));
     def test_controls_offer_a_new_call_except_while_running_or_unconfirmed(self):
         # 사용자 결정(2026-09-25): 같은 실행에 합성자를 바꿔 여러 번 부를 수 있다. 끝났는지 모르는 시도가 있을 때만 막는다.
         html = (Path(__file__).resolve().parents[1] / "app/static/index.html").read_text(encoding="utf-8")
+        parts = html[html.index("// ---- 부품"):html.index("// ---- 계정 한도")]   # 접기·배지(h만 쓴다)
         functions = html[html.index("function modelControls("):html.index("function synthesisPanel(")]
         script = r"""
 const assert = require("node:assert/strict");
-let liveMode = true, confirmed = false, synthesizers = [];
+let liveMode = true, confirmed = false, synthesizers = [], synthChoice = null;
 const calls = [];
 const window = {confirm: () => confirmed};
 const act = (...args) => calls.push(args);
@@ -51,8 +52,10 @@ const downloadReport = (...args) => downloaded.push(args);
 const h = (tag, attrs, ...children) => ({tag, attrs, children: children.flat(Infinity)});
 const walk = node => node && typeof node === "object" ? [node, ...node.children.flatMap(walk)] : [];
 const label = node => node.children.filter(c => typeof c === "string").join("");
-""" + functions + r"""
-const buttonsOf = run => walk(modelControls(run)).filter(n => n.tag === "button");
+""" + parts + functions + r"""
+// 접기의 머리 버튼은 동작이 아니라 펼치기다
+const buttonsOf = run => walk(modelControls(run)).filter(n => n.tag === "button" && !/collapse-toggle/.test(n.attrs.class));
+const folded = node => walk(node).some(n => /(^| )collapse( |$)/.test((n.attrs || {}).class || ""));
 const run = {run_id: "r1", participants: [{transport: "cli", adapter_id: "claude-code", label: "C"}]};
 assert.deepEqual(buttonsOf(run).map(label), ["실제 합성(호출 1회)"]);
 for (const status of ["completed", "failed", "acknowledged"]) {
@@ -75,11 +78,11 @@ assert.equal(calls.length, 0);
 confirmed = true;
 ack.attrs.onclick();
 assert.deepEqual(calls, [["/api/runs/r1/acknowledge-synthesis", {attempt: "exact-attempt"}]]);
-// A reply that failed the format check is shown apart from results; it can be saved, and a new call is offered.
+// A reply that failed the format check is shown apart from results, folded; it can be saved, and a new call is offered.
 const raw = {check: "failed_format_check", text: "JSON이 아닌 답", chars: 9, stored_chars: 9, truncated: false, escaped: false};
 run.model_synthesis = {status: "failed", message: "m", reason: "r", raw};
 run.model_syntheses = [{attempt: "a1", status: "failed", result: {raw}}];
-assert.ok(walk(modelControls(run)).some(n => n.tag === "details"));
+assert.ok(folded(modelControls(run)));
 const shown = JSON.stringify(modelControls(run));
 assert.ok(shown.includes("JSON이 아닌 답") && shown.includes("검사 실패한 원문 · 9자"));
 assert.deepEqual(buttonsOf(run).map(label), ["검사 실패한 원문과 원문 보고 저장(JSON)", "한 번 더 합성(호출 1회)"]);
@@ -109,9 +112,10 @@ assert.ok(listed.includes("2. codex · failed · bad json"));
 """
         result = subprocess.run([shutil.which("node"), "-e", script], capture_output=True, text=True, timeout=15)
         self.assertEqual(result.returncode, 0, result.stderr)
+        # 실제 합성 결과를 보일 때도 새 호출·종료 확인 조작이 함께 있다
         panel = html[html.index("function synthesisPanel("):]
         start = panel.index('if (result.mode === "model")')
-        self.assertIn("modelControls(run)", panel[start:panel.index("const controls", start)])
+        self.assertIn("modelControls(run)", panel[start:panel.index("} else {", start)])
 
 
 if __name__ == "__main__":
