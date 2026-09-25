@@ -1,0 +1,30 @@
+{
+ "codex_release": "0.156.1-x86_64-unknown-linux-musl",
+ "participant_config": [
+  "default_permissions=\"dml-discussant\"",
+  "features.apps=false",
+  "features.plugins=false",
+  "project_doc_max_bytes=0"
+ ],
+ "state": "exited",
+ "exit": 0,
+ "tree_confirmed_empty": true,
+ "surface": {
+  "inference_requests_sent": 0,
+  "skills": [
+   "imagegen",
+   "openai-docs",
+   "plugin-creator",
+   "review-agent",
+   "skill-creator",
+   "skill-installer"
+  ],
+  "mcp_named_entries": 0,
+  "apps": {
+   "installed": 9,
+   "enabled": 0,
+   "callable": 0
+  },
+  "plugins_installed": []
+ }
+}

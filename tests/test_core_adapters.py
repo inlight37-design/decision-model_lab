@@ -104,8 +104,10 @@ class ArgvTests(unittest.TestCase):
         self.assertNotIn("--sandbox", argv)
         self.assertNotIn("-P", argv)
         self.assertEqual([argv[i + 1] for i, a in enumerate(argv) if a == "-c"],
-                         [define, select, adapters.CODEX_APPS_OFF, adapters.CODEX_NO_PROJECT_DOCS])
+                         [define, select, adapters.CODEX_APPS_OFF, adapters.CODEX_PLUGINS_OFF,
+                          adapters.CODEX_NO_PROJECT_DOCS])
         self.assertEqual(adapters.CODEX_APPS_OFF, "features.apps=false")   # 연결 앱(codex_apps) 도구를 참여자에게서 뺀다
+        self.assertEqual(adapters.CODEX_PLUGINS_OFF, "features.plugins=false")   # 플러그인의 스킬·MCP도 뺀다(카드 #64)
         self.assertEqual(adapters.CODEX_NO_PROJECT_DOCS, "project_doc_max_bytes=0")   # 작업 폴더 AGENTS.md를 싣지 않는다
         self.assertEqual(select, 'default_permissions="dml-discussant"')
         key, value = define.split("=", 1)
@@ -164,7 +166,8 @@ class ArgvTests(unittest.TestCase):
             ("codex", "discussant-2"): (
                 ["exec", "--json", "--skip-git-repo-check", "--ephemeral", "--ignore-user-config", "--ignore-rules",
                  "-c", *adapters.codex_permissions("/home/u")[:1], "-c", adapters.codex_permissions("/home/u")[1],
-                 "-c", adapters.CODEX_APPS_OFF, "-c", adapters.CODEX_NO_PROJECT_DOCS, "--model", "m", "-"],
+                 "-c", adapters.CODEX_APPS_OFF, "-c", adapters.CODEX_PLUGINS_OFF, "-c", adapters.CODEX_NO_PROJECT_DOCS,
+                 "--model", "m", "-"],
                 {"codex_user_home": "/home/u"}),
         }
         for (adapter_id, revision), (expected, extra) in pinned.items():

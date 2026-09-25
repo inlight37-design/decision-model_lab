@@ -48,8 +48,8 @@ home = os.environ["HOME"]
 deny = '"' + os.path.join(home, ".codex") + '" = "deny"'
 if FLAVOR == "codex" and ("--sandbox" in argv or 'default_permissions="dml-discussant"' not in argv
                           or not any(deny in a for a in argv) or "features.apps=false" not in argv
-                          or "project_doc_max_bytes=0" not in argv):
-    sys.exit(4)   # 연결 앱(codex_apps)과 프로젝트 지시문을 끈 계획만 받는다
+                          or "features.plugins=false" not in argv or "project_doc_max_bytes=0" not in argv):
+    sys.exit(4)   # 연결 앱(codex_apps)·플러그인·프로젝트 지시문을 끈 계획만 받는다
 if FLAVOR == "codex" and not sys.argv[0].startswith("/opt/dml-codex/"):
     sys.exit(5)   # E2: 막힌 ~/.codex 밖으로 옮겨 보인 실행 버전 폴더에서 돈다
 with open(os.path.join(home, OWN, "fake-was-here"), "w") as f:
@@ -205,10 +205,10 @@ class RealPathTests(Base):
             self.assertEqual((record["input_via"], record["input_sha256"]), (adapters.STDIN, view["input_sha256"]))
             self.assertNotIn(question, json.dumps(record, ensure_ascii=False))  # 기록에 질문 본문이 없다
         codex_argv = next(r["argv"] for r in records if r["adapter_id"] == "codex")
-        # K46·E2 profile, 연결 앱 끄기, 프로젝트 지시문 끄기가 기록에도 남는다
+        # K46·E2 profile, 연결 앱 끄기, 플러그인 끄기(#64), 프로젝트 지시문 끄기가 기록에도 남는다
         self.assertEqual([codex_argv[i + 1] for i, a in enumerate(codex_argv) if a == "-c"],
                          [*adapters.codex_permissions(os.path.realpath(self.home)), adapters.CODEX_APPS_OFF,
-                          adapters.CODEX_NO_PROJECT_DOCS])
+                          adapters.CODEX_PLUGINS_OFF, adapters.CODEX_NO_PROJECT_DOCS])
 
     def test_codex_rejections_are_counted_past_the_output_cap(self):
         """K02. 보관 상한을 넘긴 stderr 뒤쪽의 거절 표식도 센다. 표식이 없으면 잘렸어도 받는다."""
