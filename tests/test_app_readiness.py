@@ -61,8 +61,26 @@ class ReadinessTests(unittest.TestCase):
              mock.patch.object(readiness, "check", return_value={"eligible": False, "model_calls": 0}), \
              mock.patch.object(server, "serve", side_effect=AssertionError("must not serve")), \
              redirect_stdout(io.StringIO()) as output:
-            self.assertEqual(server.main(), 2)
+            self.assertEqual(server.main(), server.EXIT_NOT_ELIGIBLE)
             self.assertEqual(json.loads(output.getvalue())["model_calls"], 0)
+
+    def test_refusal_permission_and_usage_errors_have_distinct_exit_codes(self):
+        """스크립트가 종료 코드만으로 거절과 인자 오류를 가른다(병합 검증 N3). 실제 모드의 시작 전 거절도 같은 코드다."""
+        check_cli = ["server", "--check-cli", "codex", "--inventory", "absent.json", "--model", "full-test-model"]
+        live_cli = ["server", "--live-cli", "codex", "--inventory", "absent.json", "--model", "full-test-model",
+                    "--call-budget", "1", "--data-dir", "separate-ledger"]
+        for argv, eligible, expected in ((check_cli, True, 0), (check_cli, False, 3), (live_cli, False, 3)):
+            with self.subTest(mode=argv[1], eligible=eligible), mock.patch("sys.argv", argv), \
+                 mock.patch.object(readiness, "check", return_value={"eligible": eligible, "model_calls": 0}), \
+                 mock.patch.object(server, "serve", side_effect=AssertionError("must not serve")), \
+                 redirect_stdout(io.StringIO()):
+                self.assertEqual(server.main(), expected)
+        with mock.patch("sys.argv", ["server", "--check-cli", "codex", "--inventory", "absent.json"]), \
+             mock.patch.object(readiness, "check", side_effect=AssertionError("must not check")), \
+             mock.patch("sys.stderr", io.StringIO()), self.assertRaises(SystemExit) as usage:
+            server.main()
+        self.assertEqual(usage.exception.code, 2)
+        self.assertNotEqual(usage.exception.code, server.EXIT_NOT_ELIGIBLE)
 
     def test_real_options_cannot_silently_start_mock_server(self):
         with mock.patch("sys.argv", ["server", "--inventory", "record.json", "--model", "test"]), \

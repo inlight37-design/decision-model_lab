@@ -41,6 +41,8 @@ python -m app.server --live-cli codex --model <전체-요청-모델> --inventory
 
 위 모델/경로는 자리표시자이며 실제 관측값을 쓴다. 지금 계획은 입력 폴더 하나의 `codex@bba3751a36f3`·`claude-code@a35129c5a1dc`(E2)이고, 그 [관측 manifest](../docs/reviews/2026-09-25-context-independence/manifest.v2.json)로 aux-pc-wsl에서는 `--allow-context-unverified` 없이도(strict) 준비 조회가 허가됐다. 옛 계획 `codex@8a0128d4c791`(K46)·`codex@5a77e0b7dc7f`(연결 앱 끄기)·`claude-code@126be128bed7`(#39)의 기록으로는 지금 계획이 거절된다. 자료 없음/복수 폴더는 다른 판이다. 과거 [첫 실측](../docs/reviews/2026-09-24-live-cli-pilot/README.md)과 [재현](../docs/reviews/2026-09-24-live-pilot-replication/README.md)은 그대로 보존하며 소진 원장을 다시 쓸 목적으로 상한을 바꾸지 않는다.
 
+준비 조회의 종료 코드는 허가 0, 거절 3이다. 명령줄 인자 오류는 argparse의 2라서 스크립트가 거절과 가를 수 있다. 실제 모드(`--live-cli`·`--live-config`)도 시작 전 준비 조회가 거절하면 3으로 끝나고 서버를 띄우지 않는다.
+
 서버 기동 자체는 질문을 시작하지 않는다. 화면에서 시작하면 실제 구독 사용량을 쓴다. 준비 조회는 실행 승인/계정 잔여나 현재 namespace 생성 가능성의 증명이 아니다. 실행기는 시작 직전에 같은 최종 계획의 허가를 다시 계산한다.
 
 `--allow-context-unverified`는 문맥 기록(C3)이 없거나 판이 맞지 않는 기기에서 쓰는 명시적 예외다. C3 의미상 합격만 실행 필수 조건에서 제외한다. 설치·구독·전송·권한·판/버전/날짜 검사는 유지하고 결과를 독립 정족수에 세지 않는다. 관련 옵션만 주고 실제 모드를 생략하면 모의 모드로 조용히 대체하지 않고 거절한다. 실제 실행은 별도 명시적 원장을 사용한다.
