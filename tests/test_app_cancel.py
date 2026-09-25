@@ -133,7 +133,8 @@ class CancellationTests(support.Base):
         ctl = self.controller(support.SyntheticExecutor())
         for _ in range(30):
             ctl.create_run("q", [support.cli("a"), support.cli("b")], min_independent=2)
-        self.assertTrue(ctl.wait_idle())
+        # 자리 둘로 시도 60개를 차례로 넘긴다. 느린 Windows 러너에서는 기본 30초를 넘긴 적이 있다.
+        self.assertTrue(ctl.wait_idle(support.SLOW_RUNNER_TIMEOUT))
         self.assertEqual(ctl._workers, {})
         self.assertEqual(ctl.view()["slots"]["used"], 0)
         self.assertTrue(all(r["phase"] == "revealed" for r in ctl.view()["runs"]))
