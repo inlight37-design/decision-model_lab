@@ -58,11 +58,11 @@
 
 ## 3. 진행 중인 작업
 
-**진행 중: 정리(2절 23).** 순서 — ① 인계·규칙 문서 줄이기, CI 실행 방식, 외부 검토 들이기(#76, 끝남) ② 쓸모없는 도구 은퇴와 로컬 정리(#77, 끝남) ③ 설치기의 실패 경계(외부 검토 R01–R04, #78, 끝남) ④ 합성 제약 제거(#79, 끝남) ⑤ 고립 surrogate와 메타데이터 경계(카드 #70, 검토 R05, #80, 끝남) ⑥ 헤드리스 실행 명령(이 PR) ⑦ 재관측 자동화와 환경 등록(카드 #71, 검토 R06, 2026-10-25 전) ⑧ 쌓임 방지 원칙(검토를 받고 정한다). 근거는 [검토 요청서](docs/reviews/2026-09-25-review-request/README.md) B·C절과 그에 대한 [외부 검토](docs/reviews/2026-09-25-review/README.md)다. 외부 검토는 ③·⑤를 먼저 권했다 — 사용자가 고른 순서를 따르되 ③을 ④보다 앞에 두었다.
+**진행 중: 정리(2절 23).** 순서 — ① 인계·규칙 문서 줄이기, CI 실행 방식, 외부 검토 들이기(#76, 끝남) ② 쓸모없는 도구 은퇴와 로컬 정리(#77, 끝남) ③ 설치기의 실패 경계(외부 검토 R01–R04, #78, 끝남) ④ 합성 제약 제거(#79, 끝남) ⑤ 고립 surrogate와 메타데이터 경계(카드 #70, 검토 R05, #80, 끝남) ⑥ 헤드리스 실행 명령(#81, 끝남) ⑦ 환경 등록(카드 #71, 검토 R06, 이 PR)과 재관측·기록 조립 도구(카드 #82, 2026-10-25 전) ⑧ 쌓임 방지 원칙(검토를 받고 정한다). 근거는 [검토 요청서](docs/reviews/2026-09-25-review-request/README.md) B·C절과 그에 대한 [외부 검토](docs/reviews/2026-09-25-review/README.md)다. 외부 검토는 ③·⑤를 먼저 권했다 — 사용자가 고른 순서를 따르되 ③을 ④보다 앞에 두었다.
 
 **진행 중: 작업 카드 시범.** 일은 `card` 라벨 이슈에서 [시범 규칙](docs/experiments/2026-09-25-card-pilot/README.md)대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #81](https://github.com/inlight37-design/decision-model_lab/pull/81)(`claude/headless-run-20260925`) — 정리 ⑥: 헤드리스 실행 명령 `python -m app.run`. 서버와 같은 준비 조회·원장·상한으로 질문 하나를 끝까지 돌리고 결과 JSON 하나를 낸다 (`--synthesize mock,claude-code,codex`로 공개 뒤 합성을 차례로 — L1용, `--mock`으로 모델 없이 흐름 확인). 서버의 구성은 `live_setup()`·`new_controller()`로, 결정 보고는 `app.report.decision_report()`로 나눠 둘이 같은 경로를 쓴다. 실제 모드는 아직 돌려 보지 않았다. 앞 단계: ⑤ [PR #80](https://github.com/inlight37-design/decision-model_lab/pull/80)(카드 #70), ④ #79, ③ #78, ② #77, ① #76. 모델 호출 0회.
+- **이 판을 들인 PR:** [PR #83](https://github.com/inlight37-design/decision-model_lab/pull/83)(`claude/host-registration-20260925`) — 정리 ⑦의 앞부분: [카드 #71](https://github.com/inlight37-design/decision-model_lab/issues/71)과 외부 검토 R06. 실제 모드(문맥 미확인 허용 포함)의 준비 조회와 실행 직전 재검사가 **이 기기에 등록된 관측 기록만** 쓴다(`app/registration.py` — 저장소 밖 로컬 등록, 기록 sha256 ↔ 기기 지문, 원래 machine-id 비저장). aux-pc-wsl에는 E2 기록을 등록했고 모델 없는 준비 조회로 두 provider의 strict 허가를 확인했다. ⑦의 나머지(E2 재관측과 기록 조립 도구)는 [카드 #82](https://github.com/inlight37-design/decision-model_lab/issues/82)로 남겼다 — 기한 2026-10-25. 앞 단계: ⑥ [PR #81](https://github.com/inlight37-design/decision-model_lab/pull/81)(헤드리스 실행), ⑤ #80, ④ #79, ③ #78, ② #77, ① #76. 모델 호출 0회.
 
 | 사용자 판단 | 권고 / 지금까지 한 일 |
 |---|---|
@@ -76,8 +76,8 @@
 ## 4. 다음 작업
 
 1. 3절 정리 순서의 다음 단계.
-2. 보드의 `status: ready` 카드. 상태는 보드가 기준이고 우선순위 제안은 [검토 요청서](docs/reviews/2026-09-25-review-request/README.md) B절이다 — 지금 준비된 것은 #71(관측 기록을 기기와 묶기), #64(Codex 참여자의 계정 플러그인), #72(L1 실험), #61(자료 합계 1 MiB), #73(외부 검토).
-3. **E2 재관측을 2026-10-25 전에 한다.** 모델 호출이 든다(E2 때 Codex 4·Claude 2). 3절 ⑤와 함께 한다.
+2. 보드의 `status: ready` 카드. 상태는 보드가 기준이고 우선순위 제안은 [검토 요청서](docs/reviews/2026-09-25-review-request/README.md) B절이다 — 지금 준비된 것은 #82(E2 재관측과 기록 조립 도구, 기한 2026-10-25), #64(Codex 참여자의 계정 플러그인), #72(L1 실험 — 이제 `app.run`으로), #61(자료 합계 1 MiB).
+3. **E2 재관측을 2026-10-25 전에 한다**(카드 #82). 모델 호출이 든다(E2 때 Codex 4·Claude 2). #64처럼 참여자 계획을 바꾸는 일이 있으면 먼저 하고 최종 계획을 한 번만 관측한다.
 
 새 실험은 **헤드리스 실행** `python -m app.run`으로 한다 — 서버와 같은 준비 조회·원장·상한을 쓰고 결과 JSON 하나를 낸다([app 안내](app/README.md)의 "헤드리스 실행", 먼저 `--mock`으로 흐름 확인). 설정 파일의 모양은 같은 안내에, 만드는 예는 [D 후속의 make_configs.py](docs/experiments/2026-09-25-d-followup/make_configs.py)에 있다. 앞선 실험 폴더의 `drive.py`들은 그 기록으로 남는다.
 
