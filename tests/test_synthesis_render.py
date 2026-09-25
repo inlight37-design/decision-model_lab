@@ -45,6 +45,8 @@ let liveMode = true, confirmed = false;
 const calls = [];
 const window = {confirm: () => confirmed};
 const act = (...args) => calls.push(args);
+const downloaded = [];
+const downloadReport = (...args) => downloaded.push(args);
 const h = (tag, attrs, ...children) => ({tag, attrs, children: children.flat(Infinity)});
 const walk = node => node && typeof node === "object" ? [node, ...node.children.flatMap(walk)] : [];
 """ + functions + r"""
@@ -63,6 +65,21 @@ assert.equal(calls.length, 0);
 confirmed = true;
 buttons[0].attrs.onclick();
 assert.deepEqual(calls, [["/api/runs/r1/acknowledge-synthesis", {attempt: "exact-attempt"}]]);
+// A reply that failed the format check is shown apart from results and can only be saved, never retried.
+const raw = {check: "failed_format_check", text: "JSON이 아닌 답", chars: 9, stored_chars: 9, truncated: false, escaped: false};
+run.model_synthesis = {status: "failed", message: "m", reason: "r", raw};
+const failed = walk(modelControls(run));
+const saves = failed.filter(n => n.tag === "button");
+assert.equal(saves.length, 1);
+assert.ok(failed.some(n => n.tag === "details"));
+const shown = JSON.stringify(modelControls(run));
+assert.ok(shown.includes("JSON이 아닌 답") && shown.includes("검사 실패한 원문 · 9자"));
+saves[0].attrs.onclick();
+assert.deepEqual(downloaded, [["r1", true]]);
+assert.equal(calls.length, 1);
+run.model_synthesis.raw = {...raw, chars: 70000, stored_chars: 65536, truncated: true, escaped: true};
+const cut = JSON.stringify(modelControls(run));
+assert.ok(cut.includes("전체 70000자 중 앞 65536자 저장") && cut.includes("\\\\u 표기"));
 """
         result = subprocess.run([shutil.which("node"), "-e", script], capture_output=True, text=True, timeout=15)
         self.assertEqual(result.returncode, 0, result.stderr)

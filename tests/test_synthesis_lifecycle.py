@@ -114,6 +114,25 @@ class SynthesisLifecycleTests(support.Base):
             restarted.synthesize_with_model(rid, "claude-code")
         self.assertEqual(ex.started.count("synthesis"), 0)
 
+    def test_a_legacy_failure_without_raw_or_label_order_still_reads_and_blocks_a_new_call(self):
+        ex = SynthExecutor()
+        ctl, rid = self.revealed(ex, cap=8)
+        with self.store.tx() as tx:   # 카드 #66 전의 사건 모양: 원문 칸·label_order 없음, 참여자 ID 순 이름표
+            tx.event(rid, "synthesis_started", attempt="old", adapter_id="claude-code", execution="real",
+                     labels={"D1": "claude", "D2": "codex"})
+            tx.event(rid, "synthesis_failed", attempt="old", result={
+                "schema": "a1-model-synthesis/1", "status": "unavailable", "mode": "model",
+                "additional_model_calls": 1, "source_run_id": rid,
+                "synthesizer": {"adapter_id": "claude-code", "started": True, "tree_confirmed_empty": True},
+                "disposition": "report_without_synthesis", "reason": "the synthesizer did not return one JSON object",
+                "message": "실제 합성을 완료하지 못했습니다."})
+        state = self.run_view(ctl, rid)["model_synthesis"]
+        self.assertEqual((state["status"], state["reason"]), ("failed", "the synthesizer did not return one JSON object"))
+        self.assertNotIn("raw", state)
+        with self.assertRaises(c.ControllerError):
+            ctl.synthesize_with_model(rid, "claude-code")
+        self.assertEqual(ex.started.count("synthesis"), 0)
+
     def test_wait_idle_includes_synthesis_workers(self):
         ex = SynthExecutor(hold=("synthesis",))
         ctl, rid = self.revealed(ex)
