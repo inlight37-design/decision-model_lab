@@ -18,6 +18,9 @@ irm https://raw.githubusercontent.com/inlight37-design/decision-model_lab/main/t
 | `-SkipLogin` | 로그인 단계를 건너뛴다 |
 | `-Apps` | Claude 데스크톱 앱(`Anthropic.Claude`)도 설치한다. ChatGPT 데스크톱 앱은 winget에 없어 Microsoft Store에서 직접 설치한다 |
 | `-RepoDir <폴더>` | clone 위치(기본 `C:\ai\decision-model_lab`). AppData 아래는 거절한다(함정 1) |
+| `-AcceptInstallerSha <이름>=<sha256>` | 바뀐 공식 설치 파일을 읽은 뒤 그 파일을 승인한다(3절) |
+
+**종료 코드:** 0 준비됨, 1 어느 단계가 실패함, 2 아직 끝나지 않음(Windows 재시작이나 새 창이 필요 — 같은 명령을 다시 실행). 실패를 성공으로 보고하지 않는다. 관측 기록의 판을 읽지 못하면 최신판으로 넘어가지 않고 멈춘다(최신판은 Ubuntu에서 `--latest`로만 고른다).
 
 ## 2. 스크립트가 하는 일 — 순서대로
 
@@ -29,7 +32,7 @@ irm https://raw.githubusercontent.com/inlight37-design/decision-model_lab/main/t
 | 4 | Linux 사용자 | Ubuntu가 묻는 사용자 이름·비밀번호. Ubuntu 프롬프트(`$`)가 보이면 `exit` |
 | 5 | Ubuntu 안에서 apt 패키지(root로 — sudo 비밀번호 없음), 공식 Codex·Claude Code를 관측 판으로 고정 설치([`setup-wsl.sh`](../tools/setup/setup-wsl.sh)) | 없음. 공식 설치 스크립트가 2026-09-25에 읽은 것과 다르면 멈춘다(아래 3절) |
 | 6 | 로그인을 하나씩: GitHub → Claude → Codex. GitHub 계정의 이름과 no-reply 주소로 git 커밋 이름을 정한다(비어 있을 때만) | 브라우저에서 승인 셋. Claude는 구독(claude.ai)으로, API 키가 아니다 |
-| 7 | Windows와 Ubuntu 양쪽에서 [`check_setup.py`](../tools/setup/check_setup.py) — 준비된 것·빠진 것·고치는 명령 | 없음. "All required items are ready"면 끝 |
+| 7 | Windows와 Ubuntu 양쪽에서 [`check_setup.py`](../tools/setup/check_setup.py) — 준비된 것·빠진 것·고치는 명령 | 없음. "Setup is complete"(종료 코드 0)면 끝. 이것은 **도구 설치와 구독 로그인까지**다 — strict 실행 허가는 이 기기의 관측과 준비 조회가 따로 정한다(4절) |
 
 스크립트는 비밀번호·토큰을 읽거나 저장하지 않고 모델을 부르지 않는다. 필요한 것의 전체 목록:
 
@@ -52,7 +55,7 @@ irm https://raw.githubusercontent.com/inlight37-design/decision-model_lab/main/t
 | 관리자 승인(UAC)과 재부팅 | Windows가 WSL 설치에 요구한다. 스크립트는 관리자 권한으로 통째로 돌지 않고 그 한 단계만 승인을 받는다 |
 | Ubuntu 사용자 이름·비밀번호 | Ubuntu 자신이 묻는다. 비밀번호는 Ubuntu 안에만 있다 |
 | 로그인 셋(GitHub·Claude·Codex) | 인증 값을 AI 세션이나 저장소가 다루지 않는다. 인증 폴더를 다른 PC에서 복사하지 않는다 |
-| 설치 스크립트가 바뀌었을 때 읽기 | `setup-wsl.sh`는 2026-09-25에 읽은 공식 설치 스크립트의 SHA-256과 비교하고, 다르면 멈추고 파일을 남긴다. 읽고 괜찮으면 `--accept-installer-change`로 다시 실행한다 |
+| 설치 스크립트가 바뀌었을 때 읽기 | `setup-wsl.sh`는 승인한 SHA-256의 설치 파일만 실행한다(기본은 2026-09-25에 읽은 공식 파일). 받은 파일이 다르면 멈추고 그 파일을 `~/.cache/dml-setup/`에 남기며 SHA-256을 알려 준다. 읽고 괜찮으면 `-AcceptInstallerSha codex=<그 값>`(또는 `claude=`, Ubuntu에서 직접 돌릴 때는 `--accept-installer-sha`)으로 다시 실행한다 — **남겨 둔 바로 그 파일**이 실행되고, 그 사이 새로 받은 다른 파일은 실행되지 않는다(2026-09-25 외부 검토 R03) |
 | bubblewrap이 막힐 때의 보안 설정 | 일반 Ubuntu는 AppArmor가 권한 없는 user namespace를 막을 수 있다(K13, aux-pc-wsl은 해당 없음). 그 제한을 풀지는 사용자가 판단한다 — 스크립트는 바꾸지 않는다 |
 | Codex 전역 `~/.codex/AGENTS.md` 처리 | 있으면 Codex 참여자 계획이 거절된다(E2). 옮길지는 사용자가 정한다 |
 

@@ -6,6 +6,7 @@ Windows에서는 저장소 검사와 협업에 필요한 도구(Python·jsonsche
 출력하지 않는다. 과금 경로를 바꾸는 환경변수는 이름만 본다(core.env.ENV_VARS — 값은 읽지 않는다).
 
 종료 코드: 필수 항목이 모두 ok면 0, 필수 항목이 하나라도 missing이면 1. warn·info는 종료 코드와 무관하다.
+"준비됨"은 도구 설치와 구독 로그인까지다 — 이 기기의 관측과 strict 허가는 준비 조회(--check-config)가 따로 정한다.
 설치는 setup.ps1(원터치)·setup-wsl.sh가, 순서와 사람이 할 일은 docs/SETUP.md가 맡는다.
 """
 from __future__ import annotations
@@ -14,6 +15,7 @@ import argparse
 from dataclasses import dataclass
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -32,6 +34,10 @@ BWRAP_PROBE = ("--unshare-all", "--share-net", "--die-with-parent", "--ro-bind",
                "--symlink", "usr/bin", "/bin", "--symlink", "usr/lib", "/lib", "--symlink", "usr/lib64", "/lib64",
                "--proc", "/proc", "--", "/usr/bin/true")
 CLAUDE_STORE = ("Packages", "Claude_pzs8sxrjxfjjc", "LocalCache", "Local")
+# CLI가 보고하는 판. 부분 문자열로 비교하면 0.156.10이 0.156.1과 같아 보인다(2026-09-25 외부 검토 R04).
+VERSION_TEXT = r"\d+\.\d+\.\d+(?:-[0-9A-Za-z.]+)?"
+VERSION = re.compile(r"\b(" + VERSION_TEXT + r")\b")
+REQUIRED_ADAPTERS = ("codex", "claude-code")
 
 Run = Callable[[Sequence[str]], "tuple[int, str] | None"]
 Which = Callable[[str], "str | None"]
@@ -202,8 +208,11 @@ def cli_row(run: Run, which: Which, adapter_id: str, exe: str, name: str, record
     if out is None or out[0] != 0:
         return Row(name, "missing", f"{path} --version 실패", fix)
     text = first_line(out[1])
-    if recorded and recorded not in text:
-        return Row(name, "info", f"{text} — 관측 기록의 판은 {recorded}. 준비 조회가 다시 관측하기 전까지 거절한다",
+    found = VERSION.search(text)
+    if not found:
+        return Row(name, "missing", f"판을 읽지 못했다: {text[:80]}", fix)
+    if recorded and found.group(1) != recorded:
+        return Row(name, "info", f"{found.group(1)} — 관측 기록의 판은 {recorded}. 준비 조회가 다시 관측하기 전까지 거절한다",
                    f"같은 판을 원하면 setup-wsl.sh(기본이 관측 판 고정), 새 판이면 V04-01·E2 관측을 다시 한다", required=False)
     return Row(name, "ok", text)
 
@@ -214,8 +223,8 @@ def codex_login_row(run: Run, which: Which) -> Row:
     text = out[1] if out else ""
     if out and out[0] == 0 and "ChatGPT" in text:
         return Row("Codex 로그인", "ok", "ChatGPT 로그인(구독)")
-    if out and out[0] == 0 and "API key" in text:
-        return Row("Codex 로그인", "warn", "API 키 로그인 — 구독이 아니라 API 과금이다", "codex logout 뒤 codex login")
+    if out and out[0] == 0 and "API key" in text:   # 이 저장소는 구독 CLI만 쓴다 — 준비되지 않은 것으로 센다(R04)
+        return Row("Codex 로그인", "missing", "API 키 로그인 — 구독이 아니라 API 과금이다", "codex logout 뒤 codex login")
     return Row("Codex 로그인", "missing", "로그인 안 됨", "codex login (배포판 터미널에서 직접)")
 
 
@@ -227,12 +236,14 @@ def claude_login_row(run: Run, which: Which) -> Row:
         status = json.loads(out[1]) if out else {}
     except ValueError:
         status = {}
-    if not isinstance(status, dict) or status.get("loggedIn") is not True:
-        return Row("Claude 로그인", "missing", "로그인 안 됨", "claude auth login (배포판 터미널에서 직접)")
+    # 상태 명령이 실패했으면 출력이 로그인을 말해도 믿지 않는다(R04).
+    if not out or out[0] != 0 or not isinstance(status, dict) or status.get("loggedIn") is not True:
+        return Row("Claude 로그인", "missing", "로그인 안 됨(또는 상태 조회 실패)", "claude auth login (배포판 터미널에서 직접)")
     method, provider = status.get("authMethod"), status.get("apiProvider")
     if method == "claude.ai" and provider in (None, "firstParty"):
         return Row("Claude 로그인", "ok", "claude.ai 구독 로그인")
-    return Row("Claude 로그인", "warn", f"구독이 아닌 방식({method}, {provider})", "claude auth logout 뒤 claude auth login")
+    return Row("Claude 로그인", "missing", f"구독이 아닌 방식({method}, {provider}) — 이 저장소는 구독만 쓴다",
+               "claude auth logout 뒤 claude auth login")
 
 
 # ---- 출력 --------------------------------------------------------------------------------------
@@ -254,7 +265,8 @@ def render(rows: Sequence[Row], where: str) -> tuple[str, int]:
         mark = "warn" if row.status == "missing" and not row.required else row.status   # 선택 항목은 막지 않는다
         lines.append(f"  {mark:<8} {row.name}: {row.detail}" + (f"\n           → {row.fix}" if row.fix and row.status != "ok" else ""))
     missing = [row.name for row in rows if row.required and row.status == "missing"]
-    lines.append("결과: 필수 항목 모두 준비됨" if not missing else f"결과: 필수 항목 {len(missing)}개 준비 안 됨 — " + ", ".join(missing))
+    lines.append("결과: 필수 항목 모두 준비됨(설치·구독 로그인까지 — strict 실행 허가는 이 기기의 관측과 준비 조회가 따로 정한다)"
+                 if not missing else f"결과: 필수 항목 {len(missing)}개 준비 안 됨 — " + ", ".join(missing))
     return "\n".join(lines), (1 if missing else 0)
 
 
@@ -266,8 +278,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     if args.observed_versions:
-        for adapter_id, version in sorted(observed_versions().items()):
-            print(adapter_id, version)
+        versions = observed_versions()
+        bad = [a for a in REQUIRED_ADAPTERS if not re.fullmatch(VERSION_TEXT, versions.get(a) or "")]
+        if bad:   # 빈 출력이나 일부만 내면 설치 스크립트가 최신판으로 오해할 수 있다(R02)
+            print(f"관측 기록에 쓸 수 있는 판이 없다: {', '.join(bad)} ({OBSERVED})", file=sys.stderr)
+            return 1
+        for adapter_id in REQUIRED_ADAPTERS:
+            print(adapter_id, versions[adapter_id])
         return 0
     windows = os.name == "nt"
     text, code = render(collect(windows=windows), "Windows" if windows else "Linux·WSL")
