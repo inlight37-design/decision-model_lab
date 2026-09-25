@@ -4,7 +4,7 @@
 
 ## 작성·접근 범위
 
-- claude 세션(Claude 데스크톱 앱, Opus 5.5). 사용자 PC `aux-pc`의 WSL `aux-pc-wsl`에서 앱 서버를 실행마다 띄워 [drive.py](drive.py)로 몰았다. Codex 0.156.1(`gpt-6-luna`), Claude Code 2.1.280(`claude-sonnet-5`), 계획 `codex@bba3751a36f3`·`claude-code@a35129c5a1dc`. 준비 조회(모델 호출 없음)가 여섯 원장 모두 strict로 허가했다.
+- claude 세션(Claude 데스크톱 앱, Opus 5.5). 사용자 PC `aux-pc`의 WSL `aux-pc-wsl`에서 앱 서버를 실행마다 띄워 [drive.py](drive.py)로 몰았다. Codex 0.156.1(`gpt-6-luna`), Claude Code 2.1.280(`claude-sonnet-5`), 계획 `codex@bba3751a36f3`·`claude-code@a35129c5a1dc`. 준비 조회(모델 호출 없음)가 여섯 원장 모두 strict로 허가했다. 실행 설정 넷(provider·모델·manifest·빈 입력 폴더·상한)을 만든 방법은 실행 뒤 [make_configs.py](make_configs.py)로 기록했다.
 - **모델 호출 13회(Codex 8·Claude 5)** — 사전 등록의 상한 그대로이고 여섯 원장이 모두 상한까지 찼다: `t1-px` 3/3, `t2-px` 3/3, `t4-s-codex` 1/1, `t4-s-claude` 1/1, `t4-px` 3/3, `grade` 2/2. 구독 CLI만 썼다.
 - 멈춤 조건은 걸리지 않았다. Codex 계정 조회(추론 없음)는 시작 전·끝난 뒤 모두 80% 미만이었고 `gpt-6-luna`가 가용 목록에 있었다. Claude 시도의 한도 상태는 모두 `allowed`, 80% 이상인 창은 없었다. T1·T2의 입력 digest가 D와 같았다(`7340b3f4…`, `237f3ebb…`). 모든 참여자·합성·채점 시도의 자손 종료가 확인됐다(종료 미확인 없음).
 - 처음 한 준비 조회와 계정 조회는 WSL 로그인 셸 밖에서 불러 거절됐다(모델 호출 없음). 로그인 셸이 아니면 `~/.local/bin`이 PATH에 없어 `codex`·`claude`를 찾지 못한다(`codex is not on the child PATH`). `bash -lc`로 다시 했다. #58의 첫 시도와 같은 함정이다.
