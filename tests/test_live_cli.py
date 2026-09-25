@@ -18,7 +18,8 @@ from core import adapters, contract, eligibility, runner
 import test_app_controller as support
 import test_app_cli_executor as cli_support
 import test_core_eligibility as evidence
-from test_core_contract import apps_off_revision, k46_revision, participant_plan, restricted_only_revision
+from test_core_contract import (apps_off_revision, e2_revision, k46_revision, participant_plan,
+                                restricted_only_revision)
 from tools import runtime_inventory
 
 
@@ -92,17 +93,20 @@ class ContextGateTests(unittest.TestCase):
         self.assertEqual(record["adapters"][1]["context_conformance"]["status"], "failed")
 
 
-    def test_the_e2_record_backs_the_current_one_input_plans_in_strict_mode(self):
-        """E2(2026-09-25): 두 지금 계획의 전송·권한·문맥을 관측한 기록. strict에서 허가하고, 자료 없음·둘 이상·옛 계획·
-        다른 설치판·30일 뒤는 허가하지 않는다. 판 문자열을 고정해 계획이 바뀌면 이 기록도 다시 보게 한다."""
+    def test_the_e2_record_backs_exactly_the_one_input_plans_it_observed(self):
+        """E2(2026-09-25): 그때 두 계획의 전송·권한·문맥을 관측한 기록. 그 계획들을 strict에서 허가하고, 자료 없음·둘 이상·
+        옛 계획·다른 설치판·30일 뒤는 허가하지 않는다. 판 문자열을 고정해 계획이 바뀌면 이 기록도 다시 보게 한다.
+        Codex 계획은 그 뒤 플러그인 끄기(카드 #64)로 바뀌었다 — 지금 Codex 계획은 E2로 허가되지 않고 재관측(카드 #82)을
+        기다린다. Claude 계획은 그대로다."""
         record = json.loads(evidence.E2_MANIFEST.read_text(encoding="utf-8"))
         before = copy.deepcopy(record)
         self.assertEqual(runtime_inventory.validate_manifest_v2(record), [])
         codex = participant_plan("codex", inputs=("/tmp/public-input",))
         claude = participant_plan("claude-code", inputs=("/tmp/public-input",))
-        self.assertEqual((codex[0], claude[0]), ("codex@bba3751a36f3", "claude-code@a35129c5a1dc"))
+        self.assertEqual((e2_revision(codex), claude[0]), ("codex@bba3751a36f3", "claude-code@a35129c5a1dc"))
         today = date(2026, 9, 25)
-        for adapter_id, revision, version in (("codex", codex[0], "0.156.1"), ("claude-code", claude[0], "2.1.280")):
+        for adapter_id, revision, version in (("codex", e2_revision(codex), "0.156.1"),
+                                              ("claude-code", claude[0], "2.1.280")):
             with self.subTest(adapter=adapter_id):
                 verdict = eligibility.eligibility(record, adapter_id, enabled=True, today=today,
                                                   current_version=version, spec_revision=revision)
@@ -111,6 +115,7 @@ class ContextGateTests(unittest.TestCase):
                     self.assertFalse(eligibility.eligibility(record, adapter_id, enabled=True, **{
                         "today": today, "current_version": version, "spec_revision": revision, **options}).eligible)
         for adapter_id, version, revision in (
+                ("codex", "0.156.1", codex[0]),   # 지금 계획(플러그인 끄기)은 아직 관측하지 않았다
                 ("codex", "0.156.1", participant_plan("codex")[0]),
                 ("codex", "0.156.1", participant_plan("codex", inputs=("/tmp/one", "/tmp/two"))[0]),
                 ("codex", "0.156.1", apps_off_revision(codex)), ("codex", "0.156.1", k46_revision(codex)),
@@ -123,6 +128,28 @@ class ContextGateTests(unittest.TestCase):
         self.assertEqual([row["context_conformance"]["status"] for row in record["adapters"][:2]],
                          ["observed", "observed"])
 
+
+    def test_the_reobserved_record_backs_the_current_one_input_plans_in_strict_mode(self):
+        """재관측(카드 #82, 2026-09-25): tools/w2/assemble.py가 조립한 기록. 두 지금 계획을 strict에서 허가하고, 자료
+        없음·옛 계획·다른 설치판·31일째는 허가하지 않는다. 판 문자열을 고정해 계획이 바뀌면 다시 관측하게 한다."""
+        record = json.loads(evidence.REOBSERVE_MANIFEST.read_text(encoding="utf-8"))
+        self.assertEqual(runtime_inventory.validate_manifest_v2(record), [])
+        codex = participant_plan("codex", inputs=("/tmp/public-input",))
+        claude = participant_plan("claude-code", inputs=("/tmp/public-input",))
+        self.assertEqual((codex[0], claude[0]), ("codex@5bed42d05320", "claude-code@a35129c5a1dc"))
+        for adapter_id, revision, version in (("codex", codex[0], "0.156.1"), ("claude-code", claude[0], "2.1.280")):
+            with self.subTest(adapter=adapter_id):
+                def allowed(**options):
+                    return eligibility.eligibility(record, adapter_id, enabled=True, **{
+                        "today": date(2026, 10, 25), "current_version": version, "spec_revision": revision,
+                        **options}).eligible
+                self.assertTrue(allowed())
+                for options in ({"today": date(2026, 10, 26)}, {"current_version": version + ".1"},
+                                {"spec_revision": participant_plan(adapter_id)[0]}):
+                    self.assertFalse(allowed(**options), options)
+        self.assertFalse(eligibility.eligibility(record, "codex", enabled=True, today=date(2026, 9, 26),
+                                                 current_version="0.156.1",
+                                                 spec_revision=e2_revision(codex)).eligible)
 
 class UnverifiedSynthetic(support.SyntheticExecutor):
     """Pretends to be live only to exercise classification and reservations; no process/model."""
