@@ -44,7 +44,7 @@ class ConfigTests(unittest.TestCase):
             with mock.patch.object(sys, "argv", argv), mock.patch.object(readiness, "check",
                     side_effect=[{"eligible": True}, {"eligible": False}]) as check, \
                     mock.patch.object(server, "serve", side_effect=AssertionError("must not serve")):
-                self.assertEqual(server.main(), 2)
+                self.assertEqual(server.main(), server.EXIT_NOT_ELIGIBLE)
                 self.assertEqual(check.call_count, 2)
                 self.assertEqual(check.call_args_list[0].kwargs["input_dir"], (Path(tmp) / "empty").resolve())
                 self.assertIsNone(check.call_args_list[1].kwargs["input_dir"])
