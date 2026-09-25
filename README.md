@@ -22,6 +22,7 @@ Jev류 판단 모델은 교체 가능한 선택 부품이며, 전체 시스템�
 | 외부 검토 원문 | [docs/reviews/](docs/reviews/README.md) |
 | Hermes 패턴 선별 조사 (2026-09-23) | [요약·상세 분석·적용 시험·고정 근거](docs/research/hermes-2026-09-23/README.md) · [Claude 교차 확인](docs/research/hermes-2026-09-23/CROSSCHECK.md) |
 | tmux 설계 패턴 조사 (2026-09-23) | [요약·상세 분석·적용 계획·출처](docs/research/tmux-2026-09-23/README.md) (ChatGPT, [PR #8](https://github.com/inlight37-design/decision-model_lab/pull/8)) |
+| 여러 AI 작업 방식·도구 조사 (2026-09-25) | [사용자 요구, 수퍼바이저·작업판·컨텍스트 인계, 다른 도구의 편의 기능과 이유](docs/research/multi-ai-workflow-2026-09-25/README.md) (claude, 후보이지 채택된 운영 방식이 아님) |
 | 첫 cross_check 실험 기록 | [docs/experiments/2026-09-22-cross-check/](docs/experiments/2026-09-22-cross-check/README.md) |
 
 ## 지금 읽을 문서

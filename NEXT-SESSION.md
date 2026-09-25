@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-25** · 작성 세션: claude(`aux-pc` Windows·WSL `aux-pc-wsl`, 긴 자료 실험의 모델 호출 2회) · 브랜치 `claude/long-sources-20260925` · 기준 main `e9e3781`(PR #53 병합). 같은 세션이 #52를 검토·병합하고 #53을 썼다. #52의 앞 판은 ChatGPT 웹 세션이, 그 앞은 claude 세션이 #48–#51에서 썼다.
+최종 갱신 **2026-09-25** · 작성 세션: claude(`aux-pc` Windows, 모델 CLI 호출 없음) · 브랜치 `claude/workflow-research-20260925`([PR #55](https://github.com/inlight37-design/decision-model_lab/pull/55)) · 기준 main `9ca0054`(PR #54 병합). 같은 세션이 #52를 검토·병합하고 #53·#54를 썼다. #52의 앞 판은 ChatGPT 웹 세션이, 그 앞은 claude 세션이 #48–#51에서 썼다.
 
 현재 인계는 이 파일 하나다. 3절은 진행 중인 작업과 병합 이력, 4절은 A–F의 기존 결과와 남은 순서다. PR마다 해당 절만 고친다(부분 갱신은 Git 이력이 보관한다). 크게 다시 쓰기 전 판은 [보관본](docs/handoff/2026-09-24-before-merge-39-next-steps.md)이고 **2절·5절은 그대로다.** 다음 작업의 근거는 [병합 기록](docs/reviews/2026-09-24-merge-39/README.md), 진행 결과는 [A·F 기록](docs/reviews/2026-09-24-account-limits/README.md), [B 기록](docs/reviews/2026-09-24-source-snapshot/README.md), [C 기록](docs/reviews/2026-09-24-model-synthesis/README.md), [D 결과](docs/experiments/2026-09-24-comparison-pilot/RESULTS.md), [E 첫 단계 기록](docs/reviews/2026-09-24-codex-apps-off/README.md), [E2 기록](docs/reviews/2026-09-25-context-independence/README.md), 실제 병렬 실행은 [Windows·계정 한도·병렬 실행 기록](docs/reviews/2026-09-24-windows-live-completion/README.md)에 있다.
 
@@ -60,7 +60,8 @@
 
 **진행 중인 작업 없음.** 실제 상태는 0절대로 GitHub에서 확인한다. 다음은 4절의 순서대로다.
 
-- **마지막 병합:** [PR #54](https://github.com/inlight37-design/decision-model_lab/pull/54)(`claude/long-sources-20260925`) — 코드 변경 없는 실험 PR: 긴 자료·파일 수 상한을 [사전 등록](docs/experiments/2026-09-25-long-sources/README.md)하고 strict 실행 한 번으로 봤다. 두 참여자 모두 20개 파일의 모든 값(긴 파일의 끝·아주 긴 한 줄 속 값 포함)을 찾았다. 모델 호출 2회(Codex 1·Claude 1). claude 세션이 병합했다(2절 8). [결과](docs/experiments/2026-09-25-long-sources/RESULTS.md).
+- **마지막 병합:** [PR #55](https://github.com/inlight37-design/decision-model_lab/pull/55)(`claude/workflow-research-20260925`) — 코드 변경 없는 조사 문서: 사용자와 claude.ai 문서로 정리한 [여러 AI 작업 방식·도구 조사](docs/research/multi-ai-workflow-2026-09-25/README.md)의 사본. 사용자가 원하는 것(수퍼바이저 AI, 파일에 저장, 컨텍스트 인계), Claude Code·Codex의 관련 기능, 다른 도구의 편의 기능과 이유, 우리에게 맞는 것. 후보이지 채택된 운영 방식이 아니다(아래 표). 모델 CLI 호출 0회. claude 세션이 병합했다(2절 8).
+- **그 앞:** [PR #54](https://github.com/inlight37-design/decision-model_lab/pull/54)(`claude/long-sources-20260925`) — 코드 변경 없는 실험 PR: 긴 자료·파일 수 상한을 [사전 등록](docs/experiments/2026-09-25-long-sources/README.md)하고 strict 실행 한 번으로 봤다. 두 참여자 모두 20개 파일의 모든 값(긴 파일의 끝·아주 긴 한 줄 속 값 포함)을 찾았다. 모델 호출 2회(Codex 1·Claude 1). claude 세션이 병합했다(2절 8). [결과](docs/experiments/2026-09-25-long-sources/RESULTS.md).
 - **그 앞:** [PR #53](https://github.com/inlight37-design/decision-model_lab/pull/53)(`claude/merge-52-20260925`) — 아래 #52의 검토·병합 기록, 종료 시험 보강. 모델 호출 0회. claude 세션이 병합했다(2절 8).
 - **그 앞:** [PR #52](https://github.com/inlight37-design/decision-model_lab/pull/52)(`chatgpt/deep-review-20260925`) — ChatGPT 웹 세션의 전체 코드 재검토: 합성 인용 원문 보존·잘못된 Unicode·중복 JSON 키 거절, 저장된 호출 상한 재검사, 사건 종류 인덱스, 서버 정상 종료(새 호출 차단 → 취소 알림 → HTTP 처리 회수 → 결과 저장 대기 → 원장 닫기). 모델 호출 0회. claude 세션이 정확한 head `797c4d3`의 CI 녹색과 Windows·WSL 전체 시험을 보고 병합했다(2절 8). WSL 모의 서버로 종료 전후를 비교했다 — 이전 main은 서버를 끄면 돌던 시도가 `unknown`으로 남았고, 병합 뒤에는 `cancelled`·자손 종료 확인으로 기록된다. 종료 관문을 못 잡던 시험을 보강했다. [검토 기록](docs/reviews/2026-09-25-deep-review/README.md), [병합 기록](docs/reviews/2026-09-25-merge-52/README.md).
 - **그 앞:** [PR #51](https://github.com/inlight37-design/decision-model_lab/pull/51)(`claude/source-injection-20260925`) — 코드 변경 없는 실험 PR: 공통 자료 속 지시문(숨긴 지시·`AGENTS.md`·`CLAUDE.md` 이름의 자료)을 [사전 등록](docs/experiments/2026-09-25-source-injection/README.md)하고 strict 실행 한 번으로 봤다. 두 참여자 모두 따르지 않았다. 모델 호출 2회(Codex 1·Claude 1). claude 세션이 병합했다(2절 8). [결과](docs/experiments/2026-09-25-source-injection/RESULTS.md).
@@ -82,6 +83,7 @@
 |---|---|
 | Q4 첫 화면 | A(결정 우선)를 기본으로 권고, B(원문 대조표 우선)는 전환으로 유지. 화면은 확인했지만 선호는 확정하지 않았다 |
 | 실제 합성(4절 C)의 기본값 | 실행마다 켜는 선택(기본 끔)을 권고한다. 호출이 1회 더 들고(2절 5·20), 켜지 않으면 지금처럼 원문 대조표만 낸다. 합성자 모델은 실행마다 사용자가 고른다 |
+| 여러 AI 작업 방식(수퍼바이저·작업판) | [조사 문서](docs/research/multi-ai-workflow-2026-09-25/README.md)의 권고는 작업판 카드 파일 + 수퍼바이저 세션 하나 + "작업 하나 = 세션 하나 = PR 하나"다. 사용자는 구조를 바로 바꾸지 않고 먼저 조사를 더 하기로 했고, 새 방식을 쓰게 되면 ChatGPT 웹은 큰 변경의 검토에만 쓰기로 했다(2026-09-25). 지금 운영 방식은 그대로다 |
 | 나머지 | Q3 TypeScript 이행은 미정. TM 계획 A는 후보 유지. agy 기본 끔(설치·B4는 사용자가 켜기로 할 때). 원본 앱 자동화는 끔. 편의 후보(공개 결정 전달, 공개 뒤 교차검토, 상급 모델 제안)는 기본 끔 |
 
 미확인 실제 답을 독립 비교로 격상하지 않는다.
