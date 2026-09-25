@@ -20,7 +20,7 @@
 
 ### R01 · 높음 · Windows 설치 실패를 최종 성공으로 덮을 수 있음
 
-**위치:** [setup-windows.ps1](../../../tools/setup/setup-windows.ps1)의 winget 루프, pip/hook 설정, 마지막 `-Wsl` 분기와 `$LASTEXITCODE` 반환. **근거: 관측(코드), 문서(S1), 추론. Windows 재현 아님.**
+**위치:** [setup-windows.ps1](https://github.com/inlight37-design/decision-model_lab/blob/2f76a1a6fdd6b4ca8edf5111460f7ae806c8977b/tools/setup/setup-windows.ps1)의 winget 루프, pip/hook 설정, 마지막 `-Wsl` 분기와 `$LASTEXITCODE` 반환. **근거: 관측(코드), 문서(S1), 추론. Windows 재현 아님.**
 
 winget 실패는 경고만 쓰고 설치 시도 수를 올린다. 그 뒤 설치 완료·새 셸 안내와 종료 0으로 끝날 수 있다. WSL 쪽 설치 스크립트가 실패해도 곧바로 Windows의 `check_setup.py`를 실행하여 그 종료 코드로 끝낸다. Windows 필수 항목이 준비되어 있으면 WSL 실패가 전체 성공처럼 보인다. pip와 git 설정 실패도 해당 명령 직후 검사하지 않는다. PowerShell의 `$LASTEXITCODE`는 마지막 네이티브 명령의 값이지 앞 단계 실패의 누적값이 아니다.
 
