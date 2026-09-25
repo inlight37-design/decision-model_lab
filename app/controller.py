@@ -45,8 +45,8 @@ from typing import Any, Protocol
 
 from app.store import Store
 from app.report import build_report
-from app.synthesis import (SynthesisError, check_model_synthesis, mock_synthesize, model_prompt, model_unavailable,
-                           unavailable)
+from app.synthesis import (LABEL_ORDER, SynthesisError, check_model_synthesis, mock_synthesize, model_prompt,
+                           model_unavailable, unavailable)
 from app.state import (CLI, MANUAL, QUEUED, RUNNING, AWAITING_USER, ACCEPTED, REJECTED, UNKNOWN,
                        DONE, INDEPENDENT_ONLY, INCLUDE_UNVERIFIED, QUORUM_POLICIES, RunGate, gate, confirmed, synthesis_attempts)
 from core import adapters, contract, env as core_env, isolation, membership as m, runner
@@ -750,7 +750,7 @@ class Controller:
                     tx.event(run_id, "live_call_reserved", pid="synthesis", attempt=attempt, adapter_id=adapter_id,
                              cap=self.max_real_calls, purpose="synthesis")
                 tx.event(run_id, "synthesis_started", attempt=attempt, adapter_id=adapter_id, execution=plan.kind,
-                         labels=labels, spec=plan.record())
+                         labels=labels, label_order=LABEL_ORDER, spec=plan.record())
             cancel = threading.Event()
             thread = threading.Thread(target=self._synthesis_attempt,
                                       args=(run_id, attempt, plan, report, labels, cancel), daemon=True)
@@ -783,8 +783,8 @@ class Controller:
             if state == ACCEPTED:
                 try:
                     record = check_model_synthesis(outcome.text, report, labels, synthesizer)
-                except SynthesisError as exc:
-                    record = model_unavailable(report, synthesizer, str(exc))
+                except SynthesisError as exc:   # 공개 뒤의 답이다 — 원인을 볼 수 있게 원문을 이유와 함께 남긴다
+                    record = model_unavailable(report, synthesizer, str(exc), raw=outcome.text)
             else:
                 record = model_unavailable(report, synthesizer, why or status)
             with self.lock, self.store.tx() as tx:
@@ -891,7 +891,11 @@ class Controller:
         if latest["status"] == "acknowledged":
             return {"status": "acknowledged", "message": "사용자가 종료를 확인했습니다. 재호출·환불하지 않습니다."}
         result = latest["result"]
-        return {"status": "failed", "message": result.get("message"), "reason": result.get("reason")}
+        state = {"status": "failed", "message": result.get("message"), "reason": result.get("reason"),
+                 "synthesizer": result.get("synthesizer")}
+        if result.get("raw"):   # 형식 검사에 실패한 원문. 옛 사건에는 이 칸이 없다
+            state["raw"] = result["raw"]
+        return state
 
     def acknowledge_synthesis_unknown(self, run_id: str, attempt: str) -> None:
         """사용자가 특정 합성 시도의 자손 종료를 직접 확인했다. 자리만 풀고 재호출·환불하지 않는다."""
