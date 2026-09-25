@@ -58,11 +58,11 @@
 
 ## 3. 진행 중인 작업
 
-**진행 중: 정리(2절 23).** 순서 — ① 인계·규칙 문서 줄이기, CI 실행 방식, 외부 검토 들이기(#76, 끝남) ② 쓸모없는 도구 은퇴와 로컬 정리(이 PR) ③ 설치기의 실패 경계(외부 검토 R01–R04) ④ 합성 제약 제거 ⑤ 고립 surrogate와 메타데이터 경계(카드 #70, 검토 R05) ⑥ 헤드리스 실행 명령 ⑦ 재관측 자동화와 환경 등록(카드 #71, 검토 R06, 2026-10-25 전) ⑧ 쌓임 방지 원칙(검토를 받고 정한다). 근거는 [검토 요청서](docs/reviews/2026-09-25-review-request/README.md) B·C절과 그에 대한 [외부 검토](docs/reviews/2026-09-25-review/README.md)다. 외부 검토는 ③·⑤를 먼저 권했다 — 사용자가 고른 순서를 따르되 ③을 ④보다 앞에 두었다.
+**진행 중: 정리(2절 23).** 순서 — ① 인계·규칙 문서 줄이기, CI 실행 방식, 외부 검토 들이기(#76, 끝남) ② 쓸모없는 도구 은퇴와 로컬 정리(#77, 끝남) ③ 설치기의 실패 경계(외부 검토 R01–R04, 이 PR) ④ 합성 제약 제거 ⑤ 고립 surrogate와 메타데이터 경계(카드 #70, 검토 R05) ⑥ 헤드리스 실행 명령 ⑦ 재관측 자동화와 환경 등록(카드 #71, 검토 R06, 2026-10-25 전) ⑧ 쌓임 방지 원칙(검토를 받고 정한다). 근거는 [검토 요청서](docs/reviews/2026-09-25-review-request/README.md) B·C절과 그에 대한 [외부 검토](docs/reviews/2026-09-25-review/README.md)다. 외부 검토는 ③·⑤를 먼저 권했다 — 사용자가 고른 순서를 따르되 ③을 ④보다 앞에 두었다.
 
 **진행 중: 작업 카드 시범.** 일은 `card` 라벨 이슈에서 [시범 규칙](docs/experiments/2026-09-25-card-pilot/README.md)대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #77](https://github.com/inlight37-design/decision-model_lab/pull/77)(`claude/retire-tools-20260925`) — 정리 ②: 끝난 일회성 도구를 뺐다(`tools/smoke_review_preview.py`, `tools/v04-03/`, `tools/review_boundary.py`, `tools/w2/`의 `cli_boundary.py`·`auth_mounts.py`·`codex_sandbox.py`·`codex_account.py`, 딸린 시험). 지우기 전에 쓰는 곳을 확인했고, `test_account_quota`가 실제 `core.quota` 대신 도구의 사본을 시험하던 것을 바로잡았다. 앞의 기록에서 그 파일로 가던 링크는 main `01cedd3`으로 고정했다. ①(인계·규칙 줄이기, CI 방식, ChatGPT 외부 검토 들이기)은 [PR #76](https://github.com/inlight37-design/decision-model_lab/pull/76)으로 들어갔다. 모델 호출 0회.
+- **이 판을 들인 PR:** [PR #78](https://github.com/inlight37-design/decision-model_lab/pull/78)(`claude/setup-boundaries-20260925`) — 정리 ③: 외부 검토 R01–R04. 설치 실패는 종료 1로 멈추고 재시작·새 창 필요는 종료 2(끝나지 않음), 관측 판을 못 읽으면 최신판으로 넘어가지 않고 멈추며, 바뀐 공식 설치 파일은 `-AcceptInstallerSha codex=<sha256>`으로 승인한 **그 파일만** 실행하고, API 키 로그인·상태 조회 실패는 준비 안 됨이다(판은 정확히 비교). 이 PR에서 다시 쓴 `setup.ps1`이 "준비 안 됨"에 종료 0을 내던 것도 실제 확인 모드로 찾아 고쳤다. 대역 명령 시험(`tests/test_setup_scripts.py`)으로 고정. 앞 단계: ② [PR #77](https://github.com/inlight37-design/decision-model_lab/pull/77)(도구 은퇴), ① [PR #76](https://github.com/inlight37-design/decision-model_lab/pull/76). 모델 호출 0회.
 
 | 사용자 판단 | 권고 / 지금까지 한 일 |
 |---|---|
