@@ -1,0 +1,1488 @@
+{
+ "note": "analyze.py output, 2026-09-25, aux-pc-wsl. 'primary' is the pre-registered path (grades from the grading run's app report; the report was held, so only the session's grades). 'supplementary_sealed_codex' adds the Codex grader's sealed draft read directly from the ledger — outside the pre-registration. Scores and metadata only; no answer or grader text.",
+ "primary": {
+  "measures": {
+   "T1": {
+    "p_correct": {
+     "codex": true,
+     "claude": true
+    },
+    "oracle": true,
+    "x_missing": true,
+    "x_conclusion": null,
+    "x_correct": null,
+    "loss": null,
+    "l1": "no_synthesis"
+   },
+   "T2": {
+    "p": {
+     "claude": {
+      "defect_ok": true,
+      "fix_ok": true,
+      "explanation_ok": true
+     },
+     "codex": {
+      "defect_ok": true,
+      "fix_ok": true,
+      "explanation_ok": false
+     }
+    },
+    "x_missing": false,
+    "x": {
+     "defect_ok": true,
+     "fix_ok": null,
+     "explanation_ok": false
+    },
+    "defect_loss": false,
+    "x_explanation_flaw": true,
+    "p_explanation_flaw": [
+     "codex"
+    ]
+   },
+   "T4": {
+    "answers": {
+     "S-codex": {
+      "C1": 1,
+      "C2": 1,
+      "C3": 1,
+      "C4": 0,
+      "C5": 1,
+      "total": 4,
+      "splits": [],
+      "relaxed": {
+       "session": []
+      }
+     },
+     "S-claude": {
+      "C1": 1,
+      "C2": 1,
+      "C3": 1,
+      "C4": 1,
+      "C5": 1,
+      "total": 5,
+      "splits": [],
+      "relaxed": {
+       "session": [
+        2,
+        6
+       ]
+      }
+     },
+     "P-codex": {
+      "C1": 1,
+      "C2": 1,
+      "C3": 1,
+      "C4": 0,
+      "C5": 1,
+      "total": 4,
+      "splits": [],
+      "relaxed": {
+       "session": []
+      }
+     },
+     "P-claude": {
+      "C1": 1,
+      "C2": 1,
+      "C3": 1,
+      "C4": 1,
+      "C5": 1,
+      "total": 5,
+      "splits": [],
+      "relaxed": {
+       "session": [
+        2
+       ]
+      }
+     },
+     "X-codex": {
+      "C1": 1,
+      "C2": 1,
+      "C3": 1,
+      "C4": 0,
+      "C5": 1,
+      "total": 4,
+      "splits": [],
+      "relaxed": {
+       "session": []
+      }
+     }
+    },
+    "diverged_on_objective": {
+     "C1": false,
+     "C2": false,
+     "C3": false
+    },
+    "x_missing": false,
+    "x_item_loss": [],
+    "x_total": 4,
+    "best_draft_total": 5
+   },
+   "L3": {
+    "graders_read": [
+     "session"
+    ],
+    "grader_status": {
+     "session": {
+      "status": "read",
+      "errors": []
+     }
+    },
+    "all_agree": {
+     "T1.correct": "0/0",
+     "T2.defect_ok": "0/0",
+     "T2.fix_ok": "0/0",
+     "T2.explanation_ok": "0/0",
+     "T4.C1": "0/0",
+     "T4.C2": "0/0",
+     "T4.C3": "0/0",
+     "T4.C4": "0/0",
+     "T4.C5": "0/0"
+    },
+    "differs_from_majority": {
+     "session": 0
+    },
+    "t4_mean_total_by_author": {
+     "session": {
+      "codex": 4.0,
+      "claude": 5.0
+     }
+    },
+    "own_family_signal": null
+   }
+  },
+  "verdicts": {
+   "T1-8509.md": {
+    "condition": "P",
+    "pid": "codex",
+    "provider": "codex",
+    "run": "t1-px",
+    "task": "T1",
+    "correct": true,
+    "conclusion": "2"
+   },
+   "T1-9851.md": {
+    "condition": "P",
+    "pid": "claude",
+    "provider": "claude",
+    "run": "t1-px",
+    "task": "T1",
+    "correct": true,
+    "conclusion": "2"
+   },
+   "T2-3755.md": {
+    "condition": "P",
+    "pid": "claude",
+    "provider": "claude",
+    "run": "t2-px",
+    "task": "T2",
+    "defect_ok": true,
+    "fix_ok": true,
+    "explanation_ok": true
+   },
+   "T2-79d9.md": {
+    "condition": "X",
+    "pid": "synthesis",
+    "provider": "codex",
+    "run": "t2-px",
+    "task": "T2",
+    "defect_ok": true,
+    "fix_ok": null,
+    "explanation_ok": false
+   },
+   "T2-df65.md": {
+    "condition": "P",
+    "pid": "codex",
+    "provider": "codex",
+    "run": "t2-px",
+    "task": "T2",
+    "defect_ok": true,
+    "fix_ok": true,
+    "explanation_ok": false
+   },
+   "T4-30aa.md": {
+    "condition": "P",
+    "pid": "codex",
+    "provider": "codex",
+    "run": "t4-px",
+    "task": "T4",
+    "C1": 1,
+    "C2": 1,
+    "C3": 1,
+    "C4": 0,
+    "C5": 1,
+    "total": 4,
+    "splits": [],
+    "relaxed": {
+     "session": []
+    }
+   },
+   "T4-6809.md": {
+    "condition": "X",
+    "pid": "synthesis",
+    "provider": "codex",
+    "run": "t4-px",
+    "task": "T4",
+    "C1": 1,
+    "C2": 1,
+    "C3": 1,
+    "C4": 0,
+    "C5": 1,
+    "total": 4,
+    "splits": [],
+    "relaxed": {
+     "session": []
+    }
+   },
+   "T4-6ebc.md": {
+    "condition": "S",
+    "pid": "codex",
+    "provider": "codex",
+    "run": "t4-s-codex",
+    "task": "T4",
+    "C1": 1,
+    "C2": 1,
+    "C3": 1,
+    "C4": 0,
+    "C5": 1,
+    "total": 4,
+    "splits": [],
+    "relaxed": {
+     "session": []
+    }
+   },
+   "T4-9cae.md": {
+    "condition": "S",
+    "pid": "claude",
+    "provider": "claude",
+    "run": "t4-s-claude",
+    "task": "T4",
+    "C1": 1,
+    "C2": 1,
+    "C3": 1,
+    "C4": 1,
+    "C5": 1,
+    "total": 5,
+    "splits": [],
+    "relaxed": {
+     "session": [
+      2,
+      6
+     ]
+    }
+   },
+   "T4-c9ed.md": {
+    "condition": "P",
+    "pid": "claude",
+    "provider": "claude",
+    "run": "t4-px",
+    "task": "T4",
+    "C1": 1,
+    "C2": 1,
+    "C3": 1,
+    "C4": 1,
+    "C5": 1,
+    "total": 5,
+    "splits": [],
+    "relaxed": {
+     "session": [
+      2
+     ]
+    }
+   }
+  },
+  "per_grader": {
+   "T1-8509.md": {
+    "session": {
+     "conclusion": "2",
+     "correct": true
+    }
+   },
+   "T1-9851.md": {
+    "session": {
+     "conclusion": "2",
+     "correct": true
+    }
+   },
+   "T2-3755.md": {
+    "session": {
+     "defect_ok": true,
+     "explanation_ok": true,
+     "fix_ok": true
+    }
+   },
+   "T2-79d9.md": {
+    "session": {
+     "defect_ok": true,
+     "explanation_ok": false,
+     "fix_ok": null
+    }
+   },
+   "T2-df65.md": {
+    "session": {
+     "defect_ok": true,
+     "explanation_ok": false,
+     "fix_ok": true
+    }
+   },
+   "T4-30aa.md": {
+    "session": {
+     "C1": 1,
+     "C2": 1,
+     "C3": 1,
+     "C4": 0,
+     "C5": 1,
+     "relaxed": []
+    }
+   },
+   "T4-6809.md": {
+    "session": {
+     "C1": 1,
+     "C2": 1,
+     "C3": 1,
+     "C4": 0,
+     "C5": 1,
+     "relaxed": []
+    }
+   },
+   "T4-6ebc.md": {
+    "session": {
+     "C1": 1,
+     "C2": 1,
+     "C3": 1,
+     "C4": 0,
+     "C5": 1,
+     "relaxed": []
+    }
+   },
+   "T4-9cae.md": {
+    "session": {
+     "C1": 1,
+     "C2": 1,
+     "C3": 1,
+     "C4": 1,
+     "C5": 1,
+     "relaxed": [
+      2,
+      6
+     ]
+    }
+   },
+   "T4-c9ed.md": {
+    "session": {
+     "C1": 1,
+     "C2": 1,
+     "C3": 1,
+     "C4": 1,
+     "C5": 1,
+     "relaxed": [
+      2
+     ]
+    }
+   }
+  }
+ },
+ "supplementary_sealed_codex": {
+  "measures": {
+   "T1": {
+    "p_correct": {
+     "codex": true,
+     "claude": true
+    },
+    "oracle": true,
+    "x_missing": true,
+    "x_conclusion": null,
+    "x_correct": null,
+    "loss": null,
+    "l1": "no_synthesis"
+   },
+   "T2": {
+    "p": {
+     "claude": {
+      "defect_ok": true,
+      "fix_ok": true,
+      "explanation_ok": "split"
+     },
+     "codex": {
+      "defect_ok": true,
+      "fix_ok": true,
+      "explanation_ok": false
+     }
+    },
+    "x_missing": false,
+    "x": {
+     "defect_ok": true,
+     "fix_ok": "split",
+     "explanation_ok": false
+    },
+    "defect_loss": false,
+    "x_explanation_flaw": true,
+    "p_explanation_flaw": [
+     "codex"
+    ]
+   },
+   "T4": {
+    "answers": {
+     "S-codex": {
+      "C1": 1,
+      "C2": 1,
+      "C3": 1,
+      "C4": "split",
+      "C5": 1,
+      "total": 4,
+      "splits": [
+       "C4"
+      ],
+      "relaxed": {
+       "session": [],
+       "codex": [
+        2,
+        4,
+        5,
+        6
+       ]
+      }
+     },
+     "S-claude": {
+      "C1": 1,
+      "C2": 1,
+      "C3": 1,
+      "C4": 1,
+      "C5": 1,
+      "total": 5,
+      "splits": [],
+      "relaxed": {
+       "session": [
+        2,
+        6
+       ],
+       "codex": [
+        2
+       ]
+      }
+     },
+     "P-codex": {
+      "C1": 1,
+      "C2": 1,
+      "C3": 1,
+      "C4": "split",
+      "C5": 1,
+      "total": 4,
+      "splits": [
+       "C4"
+      ],
+      "relaxed": {
+       "session": [],
+       "codex": [
+        2,
+        6
+       ]
+      }
+     },
+     "P-claude": {
+      "C1": 1,
+      "C2": 1,
+      "C3": 1,
+      "C4": 1,
+      "C5": 1,
+      "total": 5,
+      "splits": [],
+      "relaxed": {
+       "session": [
+        2
+       ],
+       "codex": [
+        2,
+        4,
+        5,
+        6
+       ]
+      }
+     },
+     "X-codex": {
+      "C1": 1,
+      "C2": 1,
+      "C3": 1,
+      "C4": "split",
+      "C5": 1,
+      "total": 4,
+      "splits": [
+       "C4"
+      ],
+      "relaxed": {
+       "session": [],
+       "codex": [
+        2,
+        4,
+        5
+       ]
+      }
+     }
+    },
+    "diverged_on_objective": {
+     "C1": false,
+     "C2": false,
+     "C3": false
+    },
+    "x_missing": false,
+    "x_item_loss": [],
+    "x_total": 4,
+    "best_draft_total": 5
+   },
+   "L3": {
+    "graders_read": [
+     "session",
+     "codex"
+    ],
+    "grader_status": {
+     "session": {
+      "status": "read",
+      "errors": []
+     },
+     "codex": {
+      "status": "read",
+      "errors": []
+     },
+     "claude": {
+      "status": "not accepted (process_timed_out)",
+      "errors": []
+     }
+    },
+    "all_agree": {
+     "T1.correct": "2/2",
+     "T2.defect_ok": "3/3",
+     "T2.fix_ok": "2/3",
+     "T2.explanation_ok": "2/3",
+     "T4.C1": "5/5",
+     "T4.C2": "5/5",
+     "T4.C3": "5/5",
+     "T4.C4": "2/5",
+     "T4.C5": "5/5"
+    },
+    "differs_from_majority": {
+     "session": 0,
+     "codex": 0
+    },
+    "t4_mean_total_by_author": {
+     "session": {
+      "codex": 4.0,
+      "claude": 5.0
+     },
+     "codex": {
+      "codex": 5.0,
+      "claude": 5.0
+     }
+    },
+    "own_family_signal": null
+   }
+  },
+  "verdicts": {
+   "T1-8509.md": {
+    "condition": "P",
+    "pid": "codex",
+    "provider": "codex",
+    "run": "t1-px",
+    "task": "T1",
+    "correct": true,
+    "conclusion": "2"
+   },
+   "T1-9851.md": {
+    "condition": "P",
+    "pid": "claude",
+    "provider": "claude",
+    "run": "t1-px",
+    "task": "T1",
+    "correct": true,
+    "conclusion": "2"
+   },
+   "T2-3755.md": {
+    "condition": "P",
+    "pid": "claude",
+    "provider": "claude",
+    "run": "t2-px",
+    "task": "T2",
+    "defect_ok": true,
+    "fix_ok": true,
+    "explanation_ok": "split"
+   },
+   "T2-79d9.md": {
+    "condition": "X",
+    "pid": "synthesis",
+    "provider": "codex",
+    "run": "t2-px",
+    "task": "T2",
+    "defect_ok": true,
+    "fix_ok": "split",
+    "explanation_ok": false
+   },
+   "T2-df65.md": {
+    "condition": "P",
+    "pid": "codex",
+    "provider": "codex",
+    "run": "t2-px",
+    "task": "T2",
+    "defect_ok": true,
+    "fix_ok": true,
+    "explanation_ok": false
+   },
+   "T4-30aa.md": {
+    "condition": "P",
+    "pid": "codex",
+    "provider": "codex",
+    "run": "t4-px",
+    "task": "T4",
+    "C1": 1,
+    "C2": 1,
+    "C3": 1,
+    "C4": "split",
+    "C5": 1,
+    "total": 4,
+    "splits": [
+     "C4"
+    ],
+    "relaxed": {
+     "session": [],
+     "codex": [
+      2,
+      6
+     ]
+    }
+   },
+   "T4-6809.md": {
+    "condition": "X",
+    "pid": "synthesis",
+    "provider": "codex",
+    "run": "t4-px",
+    "task": "T4",
+    "C1": 1,
+    "C2": 1,
+    "C3": 1,
+    "C4": "split",
+    "C5": 1,
+    "total": 4,
+    "splits": [
+     "C4"
+    ],
+    "relaxed": {
+     "session": [],
+     "codex": [
+      2,
+      4,
+      5
+     ]
+    }
+   },
+   "T4-6ebc.md": {
+    "condition": "S",
+    "pid": "codex",
+    "provider": "codex",
+    "run": "t4-s-codex",
+    "task": "T4",
+    "C1": 1,
+    "C2": 1,
+    "C3": 1,
+    "C4": "split",
+    "C5": 1,
+    "total": 4,
+    "splits": [
+     "C4"
+    ],
+    "relaxed": {
+     "session": [],
+     "codex": [
+      2,
+      4,
+      5,
+      6
+     ]
+    }
+   },
+   "T4-9cae.md": {
+    "condition": "S",
+    "pid": "claude",
+    "provider": "claude",
+    "run": "t4-s-claude",
+    "task": "T4",
+    "C1": 1,
+    "C2": 1,
+    "C3": 1,
+    "C4": 1,
+    "C5": 1,
+    "total": 5,
+    "splits": [],
+    "relaxed": {
+     "session": [
+      2,
+      6
+     ],
+     "codex": [
+      2
+     ]
+    }
+   },
+   "T4-c9ed.md": {
+    "condition": "P",
+    "pid": "claude",
+    "provider": "claude",
+    "run": "t4-px",
+    "task": "T4",
+    "C1": 1,
+    "C2": 1,
+    "C3": 1,
+    "C4": 1,
+    "C5": 1,
+    "total": 5,
+    "splits": [],
+    "relaxed": {
+     "session": [
+      2
+     ],
+     "codex": [
+      2,
+      4,
+      5,
+      6
+     ]
+    }
+   }
+  },
+  "per_grader": {
+   "T1-8509.md": {
+    "session": {
+     "conclusion": "2",
+     "correct": true
+    },
+    "codex": {
+     "conclusion": "2",
+     "correct": true
+    }
+   },
+   "T1-9851.md": {
+    "session": {
+     "conclusion": "2",
+     "correct": true
+    },
+    "codex": {
+     "conclusion": "2",
+     "correct": true
+    }
+   },
+   "T2-3755.md": {
+    "session": {
+     "defect_ok": true,
+     "explanation_ok": true,
+     "fix_ok": true
+    },
+    "codex": {
+     "defect_ok": true,
+     "explanation_ok": false,
+     "fix_ok": true
+    }
+   },
+   "T2-79d9.md": {
+    "session": {
+     "defect_ok": true,
+     "explanation_ok": false,
+     "fix_ok": null
+    },
+    "codex": {
+     "defect_ok": true,
+     "explanation_ok": false,
+     "fix_ok": true
+    }
+   },
+   "T2-df65.md": {
+    "session": {
+     "defect_ok": true,
+     "explanation_ok": false,
+     "fix_ok": true
+    },
+    "codex": {
+     "defect_ok": true,
+     "explanation_ok": false,
+     "fix_ok": true
+    }
+   },
+   "T4-30aa.md": {
+    "session": {
+     "C1": 1,
+     "C2": 1,
+     "C3": 1,
+     "C4": 0,
+     "C5": 1,
+     "relaxed": []
+    },
+    "codex": {
+     "C1": 1,
+     "C2": 1,
+     "C3": 1,
+     "C4": 1,
+     "C5": 1,
+     "relaxed": [
+      2,
+      6
+     ]
+    }
+   },
+   "T4-6809.md": {
+    "session": {
+     "C1": 1,
+     "C2": 1,
+     "C3": 1,
+     "C4": 0,
+     "C5": 1,
+     "relaxed": []
+    },
+    "codex": {
+     "C1": 1,
+     "C2": 1,
+     "C3": 1,
+     "C4": 1,
+     "C5": 1,
+     "relaxed": [
+      2,
+      4,
+      5
+     ]
+    }
+   },
+   "T4-6ebc.md": {
+    "session": {
+     "C1": 1,
+     "C2": 1,
+     "C3": 1,
+     "C4": 0,
+     "C5": 1,
+     "relaxed": []
+    },
+    "codex": {
+     "C1": 1,
+     "C2": 1,
+     "C3": 1,
+     "C4": 1,
+     "C5": 1,
+     "relaxed": [
+      2,
+      4,
+      5,
+      6
+     ]
+    }
+   },
+   "T4-9cae.md": {
+    "session": {
+     "C1": 1,
+     "C2": 1,
+     "C3": 1,
+     "C4": 1,
+     "C5": 1,
+     "relaxed": [
+      2,
+      6
+     ]
+    },
+    "codex": {
+     "C1": 1,
+     "C2": 1,
+     "C3": 1,
+     "C4": 1,
+     "C5": 1,
+     "relaxed": [
+      2
+     ]
+    }
+   },
+   "T4-c9ed.md": {
+    "session": {
+     "C1": 1,
+     "C2": 1,
+     "C3": 1,
+     "C4": 1,
+     "C5": 1,
+     "relaxed": [
+      2
+     ]
+    },
+    "codex": {
+     "C1": 1,
+     "C2": 1,
+     "C3": 1,
+     "C4": 1,
+     "C5": 1,
+     "relaxed": [
+      2,
+      4,
+      5,
+      6
+     ]
+    }
+   }
+  }
+ },
+ "runs": {
+  "t1-px": {
+   "input_sha256": "7340b3f47023a7414905e972bdef16e1a06d79ca8e5a91f34c58d0e9f76815e3",
+   "input_bytes": 303,
+   "run_phase": "revealed",
+   "quorum": {
+    "policy": "independent_only",
+    "min": 2,
+    "confirmed": 2,
+    "unverified": 0,
+    "counted": 2,
+    "met": true,
+    "label": "독립 정족수 충족 — 독립성이 확인된 참여자 2명(최소 2명)"
+   },
+   "participants": [
+    {
+     "pid": "codex",
+     "state": "accepted",
+     "status": "ok",
+     "independence": "confirmed",
+     "execution": "real",
+     "adapter_id": "codex",
+     "result": {
+      "state": "exited",
+      "exit_code": 0,
+      "containment": "pid_namespace",
+      "tree_confirmed_empty": true,
+      "input_delivery": "complete",
+      "status": "ok",
+      "ok": true,
+      "model_match": null,
+      "reported_models": [],
+      "duration_ms": 12872,
+      "usage": {
+       "input_tokens": 12509,
+       "cached_input_tokens": 9984,
+       "output_tokens": 450,
+       "reasoning_output_tokens": 0
+      },
+      "rate_limit": null
+     }
+    },
+    {
+     "pid": "claude",
+     "state": "accepted",
+     "status": "ok",
+     "independence": "confirmed",
+     "execution": "real",
+     "adapter_id": "claude-code",
+     "result": {
+      "state": "exited",
+      "exit_code": 0,
+      "containment": "pid_namespace",
+      "tree_confirmed_empty": true,
+      "input_delivery": "complete",
+      "status": "ok",
+      "ok": true,
+      "model_match": true,
+      "reported_models": [
+       "claude-sonnet-5"
+      ],
+      "duration_ms": 31186,
+      "usage": {
+       "input_tokens": 2,
+       "output_tokens": 3152,
+       "cache_creation_input_tokens": 1858,
+       "cache_read_input_tokens": 4587
+      },
+      "rate_limit": {
+       "status": "allowed",
+       "any_window_at_or_above_80": false
+      }
+     }
+    }
+   ],
+   "synthesis_status": null,
+   "synthesis_checks": null,
+   "synthesizer": null,
+   "live_call_budget": {
+    "used": 3,
+    "cap": 3
+   },
+   "server": {
+    "exit": 0,
+    "port_still_open": false
+   }
+  },
+  "t2-px": {
+   "input_sha256": "237f3ebb881683f572ae4292947dc7b26ca87470940b80a662ed72042e321f6b",
+   "input_bytes": 668,
+   "run_phase": "revealed",
+   "quorum": {
+    "policy": "independent_only",
+    "min": 2,
+    "confirmed": 2,
+    "unverified": 0,
+    "counted": 2,
+    "met": true,
+    "label": "독립 정족수 충족 — 독립성이 확인된 참여자 2명(최소 2명)"
+   },
+   "participants": [
+    {
+     "pid": "codex",
+     "state": "accepted",
+     "status": "ok",
+     "independence": "confirmed",
+     "execution": "real",
+     "adapter_id": "codex",
+     "result": {
+      "state": "exited",
+      "exit_code": 0,
+      "containment": "pid_namespace",
+      "tree_confirmed_empty": true,
+      "input_delivery": "complete",
+      "status": "ok",
+      "ok": true,
+      "model_match": null,
+      "reported_models": [],
+      "duration_ms": 12903,
+      "usage": {
+       "input_tokens": 12594,
+       "cached_input_tokens": 9984,
+       "output_tokens": 411,
+       "reasoning_output_tokens": 0
+      },
+      "rate_limit": null
+     }
+    },
+    {
+     "pid": "claude",
+     "state": "accepted",
+     "status": "ok",
+     "independence": "confirmed",
+     "execution": "real",
+     "adapter_id": "claude-code",
+     "result": {
+      "state": "exited",
+      "exit_code": 0,
+      "containment": "pid_namespace",
+      "tree_confirmed_empty": true,
+      "input_delivery": "complete",
+      "status": "ok",
+      "ok": true,
+      "model_match": true,
+      "reported_models": [
+       "claude-sonnet-5"
+      ],
+      "duration_ms": 42291,
+      "usage": {
+       "input_tokens": 2,
+       "output_tokens": 4415,
+       "cache_creation_input_tokens": 845,
+       "cache_read_input_tokens": 5728
+      },
+      "rate_limit": {
+       "status": "allowed",
+       "any_window_at_or_above_80": false
+      }
+     }
+    }
+   ],
+   "synthesis_status": "completed",
+   "synthesis_checks": {
+    "quotes": 10,
+    "exact_matches": 9,
+    "unsupported_additions": 0,
+    "method": "exact_verbatim_quote",
+    "factual_check": "not_performed",
+    "agreement_is_verification": false
+   },
+   "synthesizer": {
+    "adapter_id": "codex",
+    "execution": "real",
+    "started": true,
+    "state": "accepted",
+    "status": "ok",
+    "revision": "codex@bba3751a36f3",
+    "duration_ms": 13171,
+    "tree_confirmed_empty": true,
+    "reported_models": [],
+    "model_match": null,
+    "usage": {
+     "input_tokens": 14237,
+     "cached_input_tokens": 9984,
+     "output_tokens": 556,
+     "reasoning_output_tokens": 0
+    },
+    "rate_limit": null
+   },
+   "live_call_budget": {
+    "used": 3,
+    "cap": 3
+   },
+   "server": {
+    "exit": 0,
+    "port_still_open": false
+   }
+  },
+  "t4-s-codex": {
+   "input_sha256": "12810b4fe9eb54c912283b9b8cf86bc3b048c57f6b4c1fde5b916691095a18de",
+   "input_bytes": 1021,
+   "run_phase": "revealed",
+   "quorum": {
+    "policy": "independent_only",
+    "min": 1,
+    "confirmed": 1,
+    "unverified": 0,
+    "counted": 1,
+    "met": true,
+    "label": "독립 정족수 충족 — 독립성이 확인된 참여자 1명(최소 1명)"
+   },
+   "participants": [
+    {
+     "pid": "codex",
+     "state": "accepted",
+     "status": "ok",
+     "independence": "confirmed",
+     "execution": "real",
+     "adapter_id": "codex",
+     "result": {
+      "state": "exited",
+      "exit_code": 0,
+      "containment": "pid_namespace",
+      "tree_confirmed_empty": true,
+      "input_delivery": "complete",
+      "status": "ok",
+      "ok": true,
+      "model_match": null,
+      "reported_models": [],
+      "duration_ms": 18388,
+      "usage": {
+       "input_tokens": 12698,
+       "cached_input_tokens": 9984,
+       "output_tokens": 783,
+       "reasoning_output_tokens": 378
+      },
+      "rate_limit": null
+     }
+    }
+   ],
+   "synthesis_status": null,
+   "synthesis_checks": null,
+   "synthesizer": null,
+   "live_call_budget": {
+    "used": 1,
+    "cap": 1
+   },
+   "server": {
+    "exit": 0,
+    "port_still_open": false
+   }
+  },
+  "t4-s-claude": {
+   "input_sha256": "12810b4fe9eb54c912283b9b8cf86bc3b048c57f6b4c1fde5b916691095a18de",
+   "input_bytes": 1021,
+   "run_phase": "revealed",
+   "quorum": {
+    "policy": "independent_only",
+    "min": 1,
+    "confirmed": 1,
+    "unverified": 0,
+    "counted": 1,
+    "met": true,
+    "label": "독립 정족수 충족 — 독립성이 확인된 참여자 1명(최소 1명)"
+   },
+   "participants": [
+    {
+     "pid": "claude",
+     "state": "accepted",
+     "status": "ok",
+     "independence": "confirmed",
+     "execution": "real",
+     "adapter_id": "claude-code",
+     "result": {
+      "state": "exited",
+      "exit_code": 0,
+      "containment": "pid_namespace",
+      "tree_confirmed_empty": true,
+      "input_delivery": "complete",
+      "status": "ok",
+      "ok": true,
+      "model_match": true,
+      "reported_models": [
+       "claude-sonnet-5"
+      ],
+      "duration_ms": 107313,
+      "usage": {
+       "input_tokens": 2,
+       "output_tokens": 9019,
+       "cache_creation_input_tokens": 1050,
+       "cache_read_input_tokens": 5728
+      },
+      "rate_limit": {
+       "status": "allowed",
+       "any_window_at_or_above_80": false
+      }
+     }
+    }
+   ],
+   "synthesis_status": null,
+   "synthesis_checks": null,
+   "synthesizer": null,
+   "live_call_budget": {
+    "used": 1,
+    "cap": 1
+   },
+   "server": {
+    "exit": 0,
+    "port_still_open": false
+   }
+  },
+  "t4-px": {
+   "input_sha256": "12810b4fe9eb54c912283b9b8cf86bc3b048c57f6b4c1fde5b916691095a18de",
+   "input_bytes": 1021,
+   "run_phase": "revealed",
+   "quorum": {
+    "policy": "independent_only",
+    "min": 2,
+    "confirmed": 2,
+    "unverified": 0,
+    "counted": 2,
+    "met": true,
+    "label": "독립 정족수 충족 — 독립성이 확인된 참여자 2명(최소 2명)"
+   },
+   "participants": [
+    {
+     "pid": "codex",
+     "state": "accepted",
+     "status": "ok",
+     "independence": "confirmed",
+     "execution": "real",
+     "adapter_id": "codex",
+     "result": {
+      "state": "exited",
+      "exit_code": 0,
+      "containment": "pid_namespace",
+      "tree_confirmed_empty": true,
+      "input_delivery": "complete",
+      "status": "ok",
+      "ok": true,
+      "model_match": null,
+      "reported_models": [],
+      "duration_ms": 18101,
+      "usage": {
+       "input_tokens": 12707,
+       "cached_input_tokens": 9984,
+       "output_tokens": 828,
+       "reasoning_output_tokens": 453
+      },
+      "rate_limit": null
+     }
+    },
+    {
+     "pid": "claude",
+     "state": "accepted",
+     "status": "ok",
+     "independence": "confirmed",
+     "execution": "real",
+     "adapter_id": "claude-code",
+     "result": {
+      "state": "exited",
+      "exit_code": 0,
+      "containment": "pid_namespace",
+      "tree_confirmed_empty": true,
+      "input_delivery": "complete",
+      "status": "ok",
+      "ok": true,
+      "model_match": true,
+      "reported_models": [
+       "claude-sonnet-5"
+      ],
+      "duration_ms": 72699,
+      "usage": {
+       "input_tokens": 2,
+       "output_tokens": 6446,
+       "cache_creation_input_tokens": 1048,
+       "cache_read_input_tokens": 5728
+      },
+      "rate_limit": {
+       "status": "allowed",
+       "any_window_at_or_above_80": false
+      }
+     }
+    }
+   ],
+   "synthesis_status": "completed",
+   "synthesis_checks": {
+    "quotes": 8,
+    "exact_matches": 8,
+    "unsupported_additions": 0,
+    "method": "exact_verbatim_quote",
+    "factual_check": "not_performed",
+    "agreement_is_verification": false
+   },
+   "synthesizer": {
+    "adapter_id": "codex",
+    "execution": "real",
+    "started": true,
+    "state": "accepted",
+    "status": "ok",
+    "revision": "codex@bba3751a36f3",
+    "duration_ms": 16236,
+    "tree_confirmed_empty": true,
+    "reported_models": [],
+    "model_match": null,
+    "usage": {
+     "input_tokens": 14280,
+     "cached_input_tokens": 9984,
+     "output_tokens": 720,
+     "reasoning_output_tokens": 0
+    },
+    "rate_limit": null
+   },
+   "live_call_budget": {
+    "used": 3,
+    "cap": 3
+   },
+   "server": {
+    "exit": 0,
+    "port_still_open": false
+   }
+  },
+  "grade": {
+   "input_sha256": "104484cb262fb6a21f2c30890e1d26e7c09f9f5647a7a51996662fa342d43845",
+   "input_bytes": 1950,
+   "run_phase": "drafting",
+   "quorum": {
+    "policy": "independent_only",
+    "min": 2,
+    "confirmed": 1,
+    "unverified": 0,
+    "counted": 1,
+    "met": false,
+    "label": null
+   },
+   "participants": [
+    {
+     "pid": "codex",
+     "state": "accepted",
+     "status": "ok",
+     "independence": "confirmed",
+     "execution": "real",
+     "adapter_id": "codex",
+     "result": {
+      "state": "exited",
+      "exit_code": 0,
+      "containment": "pid_namespace",
+      "tree_confirmed_empty": true,
+      "input_delivery": "complete",
+      "status": "ok",
+      "ok": true,
+      "model_match": null,
+      "reported_models": null,
+      "duration_ms": null,
+      "usage": null,
+      "rate_limit": null
+     }
+    },
+    {
+     "pid": "claude",
+     "state": "rejected",
+     "status": "process_timed_out",
+     "independence": "confirmed",
+     "execution": "real",
+     "adapter_id": "claude-code",
+     "result": {
+      "state": "timed_out",
+      "exit_code": -15,
+      "containment": "pid_namespace",
+      "tree_confirmed_empty": true,
+      "input_delivery": "complete",
+      "status": "process_timed_out",
+      "ok": false,
+      "model_match": null,
+      "reported_models": null,
+      "duration_ms": null,
+      "usage": null,
+      "rate_limit": null
+     }
+    }
+   ],
+   "synthesis_status": null,
+   "synthesis_checks": null,
+   "synthesizer": null,
+   "live_call_budget": {
+    "used": 2,
+    "cap": 2
+   },
+   "server": {
+    "exit": 0,
+    "port_still_open": false
+   }
+  }
+ },
+ "extra": {
+  "t1_synthesis_failed": {
+   "reason": "the synthesizer did not return one JSON object",
+   "synthesizer": {
+    "adapter_id": "codex",
+    "requested_model": "gpt-6-luna",
+    "execution": "real",
+    "started": true,
+    "state": "accepted",
+    "status": "ok",
+    "revision": "codex@bba3751a36f3",
+    "reported_models": [],
+    "model_match": null,
+    "duration_ms": 30626,
+    "tree_confirmed_empty": true,
+    "usage": {
+     "input_tokens": 13977,
+     "cached_input_tokens": 9984,
+     "output_tokens": 418,
+     "reasoning_output_tokens": 0
+    },
+    "rate_limit": null
+   }
+  },
+  "grade_attempts": {
+   "codex": {
+    "state": "exited",
+    "status": "ok",
+    "exit_code": 0,
+    "duration_ms": 36649,
+    "tree_confirmed_empty": true,
+    "input_delivery": "complete",
+    "usage": {
+     "input_tokens": 34847,
+     "cached_input_tokens": 25088,
+     "output_tokens": 1761,
+     "reasoning_output_tokens": 616
+    }
+   },
+   "claude": {
+    "state": "timed_out",
+    "status": "process_timed_out",
+    "exit_code": -15,
+    "duration_ms": 180065,
+    "tree_confirmed_empty": true,
+    "input_delivery": "complete",
+    "usage": {}
+   }
+  },
+  "grade_events": [
+   "run_created",
+   "drafting_started",
+   "live_call_reserved",
+   "attempt_started",
+   "live_call_reserved",
+   "attempt_started",
+   "draft_sealed",
+   "attempt_rejected",
+   "reveal_held"
+  ],
+  "codex_account_before": {
+   "inference_requests_sent": 0,
+   "status": "observed",
+   "any_window_at_or_above_80": false,
+   "requested_model_listed": true
+  },
+  "codex_account_after": {
+   "inference_requests_sent": 0,
+   "status": "observed",
+   "any_window_at_or_above_80": false,
+   "requested_model_listed": true
+  }
+ }
+}
