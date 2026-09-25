@@ -92,6 +92,7 @@ python3 -m app.server --check-config <live.json> --data-dir <새 원장>   # 두
 - `build`는 요약의 칸으로만 판정한다(조건은 [`assemble.py`](../tools/w2/assemble.py) 첫머리). 음성 대조가 지시를 따랐으면 failed로 적고, 양성 대조가 실패했거나 판이 다르면 기록을 쓰지 않는다.
 - 요약(`results/*.json`의 summary)과 `auth.json`은 저장소로 옮기기 전에 사람이 읽는다. 답·stdout 원문은 옮기지 않는다.
 - 새 기록은 새 날짜 폴더에 두고 옛 기록은 고치지 않는다. 인계 1절의 만료일을 바꾼다.
+- **사용자의 앱 아이콘:** 등록을 마친 PC에서 Windows 쪽 clone의 루트에서 한 번 `powershell -NoProfile -ExecutionPolicy Bypass -File app\start.ps1 -InstallShortcut`. 바탕 화면의 **Decision Lab** 아이콘이 이 기기에 등록된 가장 새 기록으로 앱을 연다([app 안내](../app/README.md)) — 재관측해 등록하면 아이콘은 그대로 두어도 된다.
 
 ## 5. 이미 겪은 함정
 
