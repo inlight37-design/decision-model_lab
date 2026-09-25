@@ -14,7 +14,8 @@
 | [cli_executor.py](cli_executor.py) | provider별 입력·inventory로 최종 계획을 만들고 같은 계획을 기존 격리 경계에서 실행 |
 | [live_config.py](live_config.py) | 명시적 provider 설정 파싱·검사. 새 실행 엔진이 아님 |
 | [codex_account.py](codex_account.py), [account_quota.py](account_quota.py) | 격리된 무모델 계정 조회·명시적 갱신·캐시/오래된 관측 표시 |
-| [server.py](server.py) | localhost API·인증·전체 준비 조회·화면 연결 |
+| [server.py](server.py) | localhost API·인증·전체 준비 조회·화면 연결, 서버와 헤드리스 실행이 같이 쓰는 실행기·controller 구성(`live_setup`·`new_controller`) |
+| [run.py](run.py) | 헤드리스 실행: 화면 없이 질문 하나를 끝까지 돌리고 결과 JSON 하나를 쓴다 |
 | [report.py](report.py), [synthesis.py](synthesis.py) | 공개 원문의 허용 목록 투영, 모의 발췌/참조 검사, 실제 합성의 질문 만들기와 인용 대조(이 파일들은 모델을 부르지 않는다) |
 | [fake_cli.py](fake_cli.py), [static/index.html](static/index.html) | 가짜 CLI와 빌드 없는 HTML/JS 화면 |
 
@@ -70,6 +71,23 @@ python -m app.server --live-config /path/live.json --data-dir /path/new-ledger -
 **실제 Codex·Claude 동시 응답을 별도 상한 원장에서 수용·공개했다.** 현재 Claude는 stream-json/verbose로 init과 최종 결과를 함께 검사한다. 한 입력 폴더의 `claude-code@126be128bed7`에서 Read만 노출, MCP 없음, dontAsk와 금지된 합성 peer 파일의 Read 거절을 새로 관측했다. no-input/다른 옵션 판의 권한까지 입증한 것은 아니다. Codex 참여자는 계정의 연결 앱(`-c features.apps=false`)을 끈 계획이며, 그 판 `codex@5a77e0b7dc7f`의 K46을 다시 관측했다([연결 앱 끄기 기록](../docs/reviews/2026-09-24-codex-apps-off/README.md)). 지금 쓰는 [관측 manifest](../docs/reviews/2026-09-24-codex-apps-off/manifest.v2.json)를 두 설정에 쓰되 각자 빈 입력 폴더 하나가 필요하고, 설치판·관측일·계획이 바뀌면 준비 조회를 다시 한다. 연결 앱을 켠 옛 계획의 [#39 manifest](../docs/reviews/2026-09-24-windows-live-completion/manifest.v2.json)로는 지금 Codex 계획이 거절된다. 그때는 문맥 독립성이 미확인이라 실제 실험이 명시적 `include_unverified` 정책을 썼다.
 
 **E2(2026-09-25)에서 두 참여자 계획의 문맥 통로를 좁히고 문맥 기록(C3)을 관측했다**([기록](../docs/reviews/2026-09-25-context-independence/README.md)). Claude는 `--restricted --safe-mode`, Codex는 모델의 명령에게 `~/.codex` 전체를 막고 실행 파일을 격리 안 `/opt/dml-codex`에서 돌리며 `-c project_doc_max_bytes=0`으로 작업 폴더 AGENTS.md를 싣지 않는다. `~/.codex`에 비어 있지 않은 AGENTS.md·AGENTS.override.md가 있으면 실행기가 시작 전에 거절한다. 작업 폴더의 지시문 파일로 한 양성·음성 행동 대조와 모델 없는 입력 렌더링을 근거로 [새 manifest](../docs/reviews/2026-09-25-context-independence/manifest.v2.json)는 두 provider의 C3를 observed로 적었고, 앱의 준비 조회가 strict에서 두 provider를 허가했다(모델 호출 없음). 이 판정은 그 PC·판·설치판·30일에 묶이고, 최종 요청 전체를 본 것은 아니다. 같은 날 앱에서 strict 정책으로 두 참여자를 부른 [첫 실제 실행](../docs/reviews/2026-09-25-strict-live-run/README.md)이 독립 정족수를 채웠고(Codex 합성 포함), 실제 CLI 중도 취소도 자손 종료 확인과 함께 끝났다.
+
+## 헤드리스 실행 — 화면 없이 한 번에
+
+실험처럼 같은 흐름을 정해진 설정으로 돌릴 때는 서버를 띄우고 HTTP로 조작하는 드라이버를 만들지 않고 [`run.py`](run.py)를 쓴다. 서버와 같은 준비 조회·실행기·원장·호출 상한·봉인/공개 규칙을 쓰는 다른 입구다(`server.live_setup`·`new_controller`를 같이 부른다).
+
+```bash
+# 흐름 확인 — 모델 호출 없음
+python -m app.run --mock --data-dir /tmp/dml-mock --question "..." --participants claude,codex \
+    --policy include-unverified --synthesize mock --out result.json
+# 실제 — 준비 조회가 모두 허가해야 시작한다(거절이면 종료 3, 원장을 만들지 않음)
+python -m app.run --live-config live.json --data-dir <새 원장> --question-file q.txt --sources-dir <자료> \
+    --participants claude,codex --synthesize claude-code,codex --out result.json
+```
+
+`--synthesize`는 공개 뒤 차례로 부른다: `mock`은 모델 없는 발췌 대조, provider 이름은 실제 합성 한 번씩(같은 초안에 합성자를 바꿔 붙이는 L1). 참여자가 빠지면 `--approve-reduction`을 준 경우에만 줄어든 구성으로 공개한다(정족수는 그대로). 모의에서는 `--mock-behavior codex=fail`처럼 동작을 고를 수 있다. 결과 JSON(`a1-headless-run/1`)에는 참여자 상태, 합성 요청, 원장의 호출 사용량, 원문 보고(`a1-draft-report/4`), 결정 보고(`a1-decision-report/4`, 합성이 있을 때)가 들어간다. 종료 코드는 0 공개까지 끝남, 1 공개되지 않음·원장 문제·끝났는지 모르는 작업, 2 인자 오류, 3 준비 조회 거절이다. 수동(원본 앱) 참여자는 화면에서만 받는다.
+
+앞선 실험 폴더의 `drive.py`들은 그 실험의 기록으로 남는다. 새 실험은 이 명령을 쓰고, 실험에만 필요한 것(과제 목록·채점·분석)만 실험 폴더에 둔다.
 
 ## 공통 자료
 
