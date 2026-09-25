@@ -149,7 +149,8 @@ class HttpBoundaryTests(HttpServerCase):
         status, page, headers = self.get("/")
         self.assertEqual(status, 200)
         policy = headers["Content-Security-Policy"]
-        for part in ("default-src 'none'", "script-src 'self' 'unsafe-inline'", "connect-src 'self'", "frame-ancestors 'none'"):
+        for part in ("default-src 'none'", "script-src 'self' 'unsafe-inline'", "font-src 'self'", "connect-src 'self'",
+                     "frame-ancestors 'none'"):
             self.assertIn(part, policy)
         text = page.decode("utf-8")
         for path, (name, kind) in s.ASSETS.items():
@@ -160,11 +161,9 @@ class HttpBoundaryTests(HttpServerCase):
                 self.assertEqual(body, (Path(s.__file__).with_name("static") / name).read_bytes())
         for path in ("/island-ui/README.md", "/island-ui/../server.py", "/index.html"):
             self.assertEqual(self.get(path)[0], 404, path)
-        # 밖에서 받는 것은 고정 해시를 단 글꼴 CSS 하나뿐이다
-        outside = re.findall(r'(?:href|src)="(https?://[^"]+)"', text)
-        self.assertEqual(len(outside), 1)
-        self.assertTrue(outside[0].startswith("https://cdn.jsdelivr.net/"))
-        self.assertRegex(text, r'integrity="sha384-[A-Za-z0-9+/=]+"')
+        # 밖에서 받는 것이 없다 — 저장소만 있으면 인터넷 없이도 같은 화면이다
+        self.assertEqual(re.findall(r'(?:href|src|url)\(?=?"(https?://[^"]+)"', text), [])
+        self.assertNotIn("https:", policy)
 
     def test_valid_korean_request_keeps_its_original_input(self):
         status, _, _ = self.request({"question": "한글 질문", "participants": [{"pid": "claude"}],

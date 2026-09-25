@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-25** · 작성 세션: claude(사용자 PC `aux-pc`의 Claude 데스크톱 앱 — ai_unslop의 island-ui 화면 적용, 모델 호출 없음) · 브랜치 `claude/island-ui-screen-20260925` · 기준 main `3e971bc`.
+최종 갱신 **2026-09-25** · 작성 세션: claude(사용자 PC `aux-pc`의 Claude 데스크톱 앱 — ai_unslop의 island-ui 화면 적용, 모델 호출 없음) · 브랜치 `claude/local-font-20260926` · 기준 main `26fe134`.
 
 이 파일은 **지금 상태와 다음 일만** 담는다. 끝난 일의 경위는 PR·git 이력과 날짜가 붙은 기록에 있고, 옛 판은 [docs/handoff/](docs/handoff/README.md)에 있다. **3절에는 진행 중인 일과 "이 판을 들인 PR" 한 줄만 둔다** — 새 PR은 그 줄을 자기 PR로 바꾸고, 병합 전에도 뒤에도 맞는 말만 쓴다("병합했다"고 미리 적지 않는다). 크기 상한과 3절의 모양은 CI가 본다. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있는 규칙은 여기 다시 적지 않는다 — 쌓임을 막는 원칙은 협업 규칙 7절이다.
 
@@ -61,7 +61,7 @@
 
 **진행 중: 작업 카드 시범.** 일은 `card` 라벨 이슈에서 [시범 규칙](docs/experiments/2026-09-25-card-pilot/README.md)대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #93](https://github.com/inlight37-design/decision-model_lab/pull/93)(`claude/island-ui-screen-20260925`) — 사용자 요청으로 ai_unslop 후보 v4(island-ui)를 실제 화면에 붙이고, 결정·권고·뒤집을 조건·미해결·호출 버튼만 늘 보이게 하고 해시·사건 기록 같은 기술 정보는 접었다. 실제 모드와 바탕 화면 아이콘으로는 아직 열어 보지 않았다(모의 서버에서만 확인). 아래 선택 권고(PR #89의 [재개 점검](docs/reviews/2026-09-25-codex-continuation/README.md))는 아직 사용자 확정이 아니다 — 이제 사용자가 앱을 직접 열어 보고 정할 수 있다.
+- **이 판을 들인 PR:** [PR #94](https://github.com/inlight37-design/decision-model_lab/pull/94)(`claude/local-font-20260926`) — 화면 글꼴 Pretendard를 저장소에 넣어 밖에서 받는 파일이 없게 했다(어느 PC든 clone만으로 같은 화면, 인터넷 없이도). 앞선 PR #93이 ai_unslop 후보 v4(island-ui) 화면을 들였고, 2026-09-26 aux-pc에서 바탕 화면 아이콘과 같은 방법으로 실제 모드 창을 열어 지난 실제 실행이 새 화면에 보였다(모델 호출 없음). 아래 선택 권고(PR #89의 [재개 점검](docs/reviews/2026-09-25-codex-continuation/README.md))는 아직 사용자 확정이 아니다 — 이제 사용자가 앱을 직접 열어 보고 정할 수 있다.
 
 | 사용자 판단 | 권고 / 지금까지 한 일 |
 |---|---|

@@ -42,11 +42,11 @@ STATIC = Path(__file__).with_name("static")
 # 화면이 받아 가는 파일은 이 목록뿐이다(경로를 조립하지 않는다). island-ui는 static/island-ui/README.md.
 ASSETS = {"/island-ui/themes.css": ("island-ui/themes.css", "text/css; charset=utf-8"),
           "/island-ui/base.css": ("island-ui/base.css", "text/css; charset=utf-8"),
-          "/island-ui/motion.js": ("island-ui/motion.js", "text/javascript; charset=utf-8")}
-# 페이지는 우리 서버와 고정 해시의 글꼴 CSS(jsDelivr)만 불러온다. 스크립트는 우리 것만, 요청은 우리 서버로만 보낸다.
-PAGE_CSP = ("default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
-            "font-src https://cdn.jsdelivr.net; connect-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'; "
-            "frame-ancestors 'none'")
+          "/island-ui/motion.js": ("island-ui/motion.js", "text/javascript; charset=utf-8"),
+          "/fonts/PretendardVariable.woff2": ("fonts/PretendardVariable.woff2", "font/woff2")}
+# 페이지는 이 서버의 것만 불러오고 요청도 이 서버로만 보낸다 — 밖에서 받는 파일이 없어 인터넷 없이도 같게 그린다.
+PAGE_CSP = ("default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; "
+            "connect-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
 PARTICIPANTS = {
     "claude": ParticipantSpec("claude", "Claude Code", "anthropic", CLI, "claude-code", "mock-claude"),
     "codex": ParticipantSpec("codex", "Codex", "openai", CLI, "codex", "mock-codex"),
