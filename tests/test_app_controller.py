@@ -85,6 +85,11 @@ def manual(pid):
     return c.ParticipantSpec(pid, pid.upper(), "test", c.MANUAL)
 
 
+# 느린 CI 러너용 여유. Windows 러너에서 시도 60개가 보통 7-10초, 한 번은 약 38초 걸려 wait_idle 기본값 30초를
+# 넘겼다(run 36106867174). 정상이면 idle이 되는 즉시 돌아오므로 늘려도 통과하는 시험은 느려지지 않는다.
+SLOW_RUNNER_TIMEOUT = 120.0
+
+
 class Base(unittest.TestCase):
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp(prefix="dml-app-"))
@@ -94,7 +99,15 @@ class Base(unittest.TestCase):
 
     def controller(self, executor, **kwargs):
         kwargs.setdefault("work_root", str(self.tmp / "work"))
-        return c.Controller(self.store, executor, **kwargs)
+        ctl = c.Controller(self.store, executor, **kwargs)
+        # Store보다 늦게 등록하므로 먼저 돈다. 단언이 중간에 실패해도 새 시도를 막고 진행 중인 worker가 돌아온 뒤에
+        # Store를 닫는다 — 닫힌 DB에 쓰는 worker의 traceback이 다음 시험의 출력에 섞이지 않는다. 기다리는 한도는
+        # shutdown 자신의 기본값이다. 대기 시도는 새로 시작하지 않으므로 진행 중인 시도만 기다리면 된다.
+        self.addCleanup(self._stop, ctl)
+        return ctl
+
+    def _stop(self, ctl):
+        self.assertTrue(ctl.shutdown(), "controller worker still running at teardown")
 
     def run_view(self, ctl, run_id):
         return next(r for r in ctl.view()["runs"] if r["run_id"] == run_id)
