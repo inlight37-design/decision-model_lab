@@ -170,15 +170,15 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                     view = controller.view(parts[2])
                     report = build_report(view, parts[2])
                     synthesis = view["runs"][0].get("synthesis")
-                    model = view["runs"][0].get("model_synthesis")
-                    failed = model if model and model["status"] == "failed" else None
-                    if synthesis is None and failed is None:
+                    attempts = view["runs"][0].get("model_syntheses") or []
+                    if synthesis is None and not attempts:
                         raise ReportError("synthesis has not been requested")
                     # 2: synthesis는 모의(a1-mock-synthesis/1) 또는 실제(a1-model-synthesis/1)다. 그 schema로 가른다.
-                    # 3: 실패한 실제 합성(이유, 형식 검사에 실패한 원문 raw)을 failed_model_synthesis로 따로 싣는다.
-                    #    결과가 아니므로 synthesis에 넣지 않는다. 실패만 있으면 synthesis는 null이다.
-                    self._json(200, {"schema": "a1-decision-report/3", "draft_report": report,
-                                     "synthesis": synthesis, "failed_model_synthesis": failed})
+                    # 3: 실패한 실제 합성을 failed_model_synthesis로 따로 실었다.
+                    # 4: 실행마다 실제 합성을 여러 번 할 수 있어 model_syntheses에 모든 시도를 순서대로 싣는다
+                    #    (시도 ID·상태·결과, 실패면 이유와 검사 실패한 원문 raw). synthesis는 가장 최근에 끝난 합성이다.
+                    self._json(200, {"schema": "a1-decision-report/4", "draft_report": report,
+                                     "synthesis": synthesis, "model_syntheses": attempts})
                 except ReportError as exc:
                     self._json(409, {"error": str(exc)})
             else:
@@ -243,7 +243,9 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                     if mode == "model":   # 실제 합성: 호출 1회, 실제 CLI 연결에서만
                         if not live:
                             raise ControllerError("model synthesis needs an explicit live CLI connection")
-                        controller.synthesize_with_model(parts[2], _text(body, "adapter_id"))
+                        adapter_id = _text(body, "adapter_id")
+                        spec = next((s for s in roster.values() if s.transport == CLI and s.adapter_id == adapter_id), None)
+                        controller.synthesize_with_model(parts[2], adapter_id, spec=spec)
                     elif mode == "mock":
                         controller.synthesize(parts[2])
                     else:

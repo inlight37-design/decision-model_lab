@@ -705,11 +705,14 @@ class Controller:
                 result = unavailable(report)
             tx.event(run_id, "synthesis_completed", result=result)
 
-    def synthesize_with_model(self, run_id: str, adapter_id: str) -> None:
-        """공개 뒤 사용자가 켠 실제 합성 1회(P5, K18). 같은 계획·같은 격리로 그 실행의 CLI provider 하나를 부른다.
+    def synthesize_with_model(self, run_id: str, adapter_id: str, spec: ParticipantSpec | None = None) -> None:
+        """공개 뒤 사용자가 켠 실제 합성 한 번(P5, K18). 같은 실행에 여러 번 할 수 있다 — 부를 때마다 호출 하나다.
 
-        같은 원장의 전체·provider 상한 안에서 예약하고, 예약과 시작 사건을 한 거래로 쓴 뒤 백그라운드로 돈다.
-        시작 전 거절(공개 전·진행 중·provider 아님·계획 거절·상한 소진)은 아무것도 예약하지 않는다.
+        합성자는 그 실행의 CLI 참여자 provider이거나, 서버가 넘긴 설정된 CLI provider(spec)다. 참여자와 같은 계획·
+        같은 격리로 부른다. 같은 초안에 합성자를 바꿔 붙일 수 있어야 합성자 계열의 영향(L1)을 볼 수 있다(사용자 결정
+        2026-09-25, 인계 2절 23). 같은 원장의 전체·provider 상한 안에서 매번 예약하고, 예약과 시작 사건을 한 거래로
+        쓴 뒤 백그라운드로 돈다. 시작 전 거절(공개 전·진행 중·종료 미확인 합성이 남음·설정되지 않은 provider·계획
+        거절·상한 소진)은 아무것도 예약하지 않는다. 이름표 순서는 실행마다 하나라서 같은 실행의 합성은 같은 D1·D2를 본다.
         """
         with self.lock:
             if self._closing:
@@ -718,8 +721,10 @@ class Controller:
                 raise ControllerError("model synthesis requires controller-revealed drafts")
             if run_id in self._synthesis:
                 raise ControllerError("a model synthesis is already running for this run")
-            if self._synthesis_attempts(run_id):
-                raise ControllerError("model synthesis was already attempted; no new call was started")
+            if any(item["status"] == UNKNOWN for item in self._synthesis_attempts(run_id).values()):
+                # 끝났는지 모르는 합성이 남아 있으면 새로 부르지 않는다. 사용자가 종료를 확인하면 다시 부를 수 있다.
+                raise ControllerError("an earlier synthesis attempt has unconfirmed termination; acknowledge it first; "
+                                      "no new call was started")
             if self.paused or self.unsettled() >= self.unsettled_limit:
                 raise ControllerError("execution is paused or has unsettled attempts; no call was started")
             if self._slots_used() >= self.max_parallel:
@@ -727,8 +732,10 @@ class Controller:
             chosen = next((spec for spec in (ParticipantSpec(**json.loads(row["spec"])) for row in self.store.rows(
                 "SELECT spec FROM participants WHERE run_id = ? ORDER BY rowid", run_id))
                 if spec.transport == CLI and spec.adapter_id == adapter_id), None)
+            if chosen is None and spec is not None and spec.transport == CLI and spec.adapter_id == adapter_id:
+                chosen = spec   # 이 실행의 참여자가 아니어도 서버에 설정된 CLI provider면 합성자가 될 수 있다
             if chosen is None or adapter_id not in self.executor.adapter_ids:
-                raise ControllerError("the synthesizer must be one of this run's CLI providers")
+                raise ControllerError("the synthesizer must be a configured CLI provider")
             report = build_report(self.view(run_id), run_id)
             try:
                 prompt, labels = model_prompt(report)
@@ -867,6 +874,9 @@ class Controller:
                     if artifact:
                         runs[-1]["synthesis"] = json.loads(artifact["payload"])["result"]
                     runs[-1]["model_synthesis"] = self._model_synthesis_state(run["run_id"])
+                    runs[-1]["model_syntheses"] = [
+                        {"attempt": attempt, "status": item["status"], "result": item["result"] or None}
+                        for (_, attempt), item in self._synthesis_attempts(run["run_id"]).items()]
             return {"executor": self.executor.name, "live_call_budget": self.call_budget(),
                     "provider_call_budgets": {aid: self.call_budget(aid) for aid in self.provider_call_caps},
                     "slots": {"used": self._slots_used(), "cap": self.max_parallel},

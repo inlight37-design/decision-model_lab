@@ -153,6 +153,7 @@ window.addEventListener("hashchange", () => location.reload());   // 열린 탭�
 let selected = null, state = null;
 let quotaSignature = null;
 let liveMode = false;       // 실제 CLI 연결일 때만 실제 합성 버튼을 보인다
+let synthesizers = [];      // 설정된 CLI provider. 합성자는 그 실행의 참여자가 아니어도 된다
 let firstView = "decision"; // Q4 comparison only; no project preference is saved.
 const drafts = {};   // 수동 답 입력칸의 임시 내용(참여자별). 다시 그려도 지우지 않는다
 const confirms = {}; // 수동 답의 "원본 앱에 이 질문을 넣었다" 확인(참여자별). 다시 그려도 지우지 않는다
@@ -259,6 +260,8 @@ const EXECUTION_LABEL = { mock: "CLI 모의", real: "실제 CLI", synthetic: "CL
 async function loadOptions() {
   const opt = await api("/api/options");
   liveMode = !!opt.live;
+  synthesizers = [...new Map((opt.participants || []).filter(p => p.transport === "cli" && p.adapter_id)
+    .map(p => [p.adapter_id, p])).values()];
   document.title = opt.live ? "Ledger 실제 CLI" : "Ledger 모의 모드";
   document.getElementById("mode").textContent = opt.live
     ? "실제 CLI · 구독 사용량 소비" + (opt.context_unverified ? " · 문맥 미확인" : "")
@@ -441,30 +444,45 @@ function modelSynthesisView(result) {
       modelSynthesisLines(result).map(([cls, text]) => h(cls.startsWith("kv") ? "div" : "p", { class: cls }, text))));
 }
 function modelControls(run) {
+  // 같은 실행에 실제 합성을 여러 번 할 수 있다(부를 때마다 호출 1회). 끝났는지 모르는 시도가 있을 때만 새로 부르지 않는다.
   const state = run.model_synthesis;
   if (state && state.status === "running") return h("p", { class: "caption" }, "실제 합성 중… 끝나면 이 자리에 결과가 보입니다.");
-  if (state) {
-    if (state.status === "completed") return "";
-    return h("div", { class: "pb" },
-      h("p", { class: "warn" }, `${state.message || ""}${state.reason ? ` (${state.reason})` : ""}`),
-      state.raw ? failedReplyView(run, state.raw) : "",
-      (state.attempts || []).map(attempt => h("button", { class: "quiet", onclick: () => {
-        if (window.confirm("해당 합성 시도의 모든 자손이 종료됐음을 직접 확인했습니까? 호출 예산은 환불하지 않습니다."))
-          return act(`/api/runs/${run.run_id}/acknowledge-synthesis`, { attempt });
-      } }, `종료 직접 확인 · ${attempt.slice(0, 12)}`)),
-      h("p", { class: "caption" }, "이 실행의 실제 합성은 이미 시도했습니다. 재호출하지 않습니다."));
-  }
-  if (!liveMode) return "";
-  const providers = [...new Map(run.participants.filter(p => p.transport === "cli" && p.adapter_id)
-    .map(p => [p.adapter_id, p])).values()];
-  if (!providers.length) return "";
+  if (state && state.status === "unknown") return h("div", { class: "pb" },
+    h("p", { class: "warn" }, state.message || ""),
+    (state.attempts || []).map(attempt => h("button", { class: "quiet", onclick: () => {
+      if (window.confirm("해당 합성 시도의 모든 자손이 종료됐음을 직접 확인했습니까? 호출 예산은 환불하지 않습니다."))
+        return act(`/api/runs/${run.run_id}/acknowledge-synthesis`, { attempt });
+    } }, `종료 직접 확인 · ${attempt.slice(0, 12)}`)),
+    h("p", { class: "caption" }, "끝났는지 모르는 합성이 있어 새로 부르지 않습니다. 종료를 확인하면 다시 부를 수 있습니다."));
+  const failed = state && state.status === "failed" ? h("div", {},
+    h("p", { class: "warn" }, `${state.message || ""}${state.reason ? ` (${state.reason})` : ""}`),
+    state.raw ? failedReplyView(run, state.raw) : "") : "";
+  const history = modelHistory(run);
+  const providers = synthesizers.length ? synthesizers : [...new Map(run.participants
+    .filter(p => p.transport === "cli" && p.adapter_id).map(p => [p.adapter_id, p])).values()];
+  if (!liveMode || !providers.length) return h("div", { class: "pb" }, failed, history);
   const select = h("select", { "aria-label": "합성자" }, providers.map(p => h("option", { value: p.adapter_id }, `${p.label} (${p.adapter_id})`)));
-  return h("div", { class: "pb" },
+  const again = (run.model_syntheses || []).length > 0;
+  return h("div", { class: "pb" }, failed, history,
     h("div", { class: "row" }, select,
-      h("button", { onclick: () => act(`/api/runs/${run.run_id}/synthesize`, { mode: "model", adapter_id: select.value }) }, "실제 합성(호출 1회)")),
-    h("p", { class: "caption" }, "공개된 초안을 고른 CLI에 한 번 보내 합칩니다. 구독 사용량을 쓰며 같은 원장의 호출 상한에서 예약하고 환불하지 않습니다. 인용은 원문과 글자 그대로 대조하고, 사실 검증은 하지 않습니다."));
+      h("button", { onclick: () => act(`/api/runs/${run.run_id}/synthesize`, { mode: "model", adapter_id: select.value }) },
+        again ? "한 번 더 합성(호출 1회)" : "실제 합성(호출 1회)")),
+    h("p", { class: "caption" }, "공개된 초안을 고른 CLI에 보내 합칩니다. 같은 실행에서 합성자를 바꿔 여러 번 부를 수 있고, 부를 때마다 구독 사용량 1회를 같은 원장의 호출 상한에서 예약합니다(환불 없음). 같은 실행의 합성은 같은 이름표 순서를 봅니다. 인용은 원문과 글자 그대로 대조하고, 사실 검증은 하지 않습니다."));
 }
-// 형식 검사에 실패한 합성 답의 원문. 결과가 아니므로 결과 자리와 나눠 접어 둔다. 저장은 결정 보고의 failed_model_synthesis.
+// 둘 이상 부른 실행의 합성 시도 목록. 가장 최근에 끝난 합성은 위 결과 자리에, 전부는 결정 보고의 model_syntheses에 있다.
+function modelHistory(run) {
+  const attempts = run.model_syntheses || [];
+  if (attempts.length < 2) return "";
+  return h("details", {}, h("summary", {}, `실제 합성 시도 ${attempts.length}번`),
+    attempts.map((a, i) => {
+      const r = a.result || {}, s = r.synthesizer || {}, c = r.checks || {};
+      const detail = r.status === "completed"
+        ? ` · 인용 ${c.exact_matches}/${c.quotes} 원문 일치 · 권고: ${(r.card || {}).recommendation || ""}`
+        : (r.reason ? ` · ${r.reason}` : "");
+      return h("div", { class: "kv" }, `${i + 1}. ${s.adapter_id || "?"} · ${a.status}${detail}`);
+    }));
+}
+// 형식 검사에 실패한 합성 답의 원문. 결과가 아니므로 결과 자리와 나눠 접어 둔다. 저장은 결정 보고의 model_syntheses.
 function failedReplyView(run, raw) {
   const size = raw.truncated ? `전체 ${raw.chars}자 중 앞 ${raw.stored_chars}자 저장` : `${raw.chars}자`;
   return h("details", {}, h("summary", {}, `검사 실패한 원문 · ${size}`),
