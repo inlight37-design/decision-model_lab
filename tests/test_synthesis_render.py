@@ -36,12 +36,13 @@ assert.ok(!text.includes("모델 불일치"));
         result = subprocess.run([shutil.which("node"), "-e", script], capture_output=True, text=True, timeout=15)
         self.assertEqual(result.returncode, 0, result.stderr)
 
-    def test_controls_never_retry_and_acknowledge_the_exact_unknown_attempt(self):
+    def test_controls_offer_a_new_call_except_while_running_or_unconfirmed(self):
+        # 사용자 결정(2026-09-25): 같은 실행에 합성자를 바꿔 여러 번 부를 수 있다. 끝났는지 모르는 시도가 있을 때만 막는다.
         html = (Path(__file__).resolve().parents[1] / "app/static/index.html").read_text(encoding="utf-8")
         functions = html[html.index("function modelControls("):html.index("function synthesisPanel(")]
         script = r"""
 const assert = require("node:assert/strict");
-let liveMode = true, confirmed = false;
+let liveMode = true, confirmed = false, synthesizers = [];
 const calls = [];
 const window = {confirm: () => confirmed};
 const act = (...args) => calls.push(args);
@@ -49,37 +50,62 @@ const downloaded = [];
 const downloadReport = (...args) => downloaded.push(args);
 const h = (tag, attrs, ...children) => ({tag, attrs, children: children.flat(Infinity)});
 const walk = node => node && typeof node === "object" ? [node, ...node.children.flatMap(walk)] : [];
+const label = node => node.children.filter(c => typeof c === "string").join("");
 """ + functions + r"""
+const buttonsOf = run => walk(modelControls(run)).filter(n => n.tag === "button");
 const run = {run_id: "r1", participants: [{transport: "cli", adapter_id: "claude-code", label: "C"}]};
-assert.equal(walk(modelControls(run)).filter(n => n.tag === "button").length, 1);
-for (const status of ["failed", "completed", "acknowledged", "running"]) {
+assert.deepEqual(buttonsOf(run).map(label), ["실제 합성(호출 1회)"]);
+for (const status of ["completed", "failed", "acknowledged"]) {
   run.model_synthesis = {status, message: "state"};
-  assert.equal(walk(modelControls(run)).filter(n => n.tag === "button").length, 0);
+  run.model_syntheses = [{attempt: "a1", status, result: null}];
+  assert.deepEqual(buttonsOf(run).map(label), ["한 번 더 합성(호출 1회)"], status);
 }
+run.model_synthesis = {status: "running"};
+assert.equal(buttonsOf(run).length, 0);
+// Unknown termination blocks new calls; only the exact acknowledgement is offered, live or not.
 run.model_synthesis = {status: "unknown", attempts: ["exact-attempt"], message: "unknown"};
-liveMode = false; // Saved unresolved attempts still need an explicit acknowledgement.
-const buttons = walk(modelControls(run)).filter(n => n.tag === "button");
-assert.equal(buttons.length, 1);
-buttons[0].attrs.onclick();
+for (const live of [false, true]) {
+  liveMode = live;
+  assert.equal(buttonsOf(run).length, 1);
+  assert.ok(label(buttonsOf(run)[0]).startsWith("종료 직접 확인"));
+}
+const ack = buttonsOf(run)[0];
+ack.attrs.onclick();
 assert.equal(calls.length, 0);
 confirmed = true;
-buttons[0].attrs.onclick();
+ack.attrs.onclick();
 assert.deepEqual(calls, [["/api/runs/r1/acknowledge-synthesis", {attempt: "exact-attempt"}]]);
-// A reply that failed the format check is shown apart from results and can only be saved, never retried.
+// A reply that failed the format check is shown apart from results; it can be saved, and a new call is offered.
 const raw = {check: "failed_format_check", text: "JSON이 아닌 답", chars: 9, stored_chars: 9, truncated: false, escaped: false};
 run.model_synthesis = {status: "failed", message: "m", reason: "r", raw};
-const failed = walk(modelControls(run));
-const saves = failed.filter(n => n.tag === "button");
-assert.equal(saves.length, 1);
-assert.ok(failed.some(n => n.tag === "details"));
+run.model_syntheses = [{attempt: "a1", status: "failed", result: {raw}}];
+assert.ok(walk(modelControls(run)).some(n => n.tag === "details"));
 const shown = JSON.stringify(modelControls(run));
 assert.ok(shown.includes("JSON이 아닌 답") && shown.includes("검사 실패한 원문 · 9자"));
-saves[0].attrs.onclick();
+assert.deepEqual(buttonsOf(run).map(label), ["검사 실패한 원문과 원문 보고 저장(JSON)", "한 번 더 합성(호출 1회)"]);
+buttonsOf(run)[0].attrs.onclick();
 assert.deepEqual(downloaded, [["r1", true]]);
 assert.equal(calls.length, 1);
+liveMode = false;   // without a live connection only saving remains
+assert.deepEqual(buttonsOf(run).map(label), ["검사 실패한 원문과 원문 보고 저장(JSON)"]);
+liveMode = true;
 run.model_synthesis.raw = {...raw, chars: 70000, stored_chars: 65536, truncated: true, escaped: true};
 const cut = JSON.stringify(modelControls(run));
 assert.ok(cut.includes("전체 70000자 중 앞 65536자 저장") && cut.includes("\\\\u 표기"));
+// Configured providers are offered even when they are not participants of this run.
+synthesizers = [{adapter_id: "claude-code", label: "Claude Code"}, {adapter_id: "codex", label: "Codex"}];
+run.model_synthesis = null;
+run.model_syntheses = [];
+assert.deepEqual(walk(modelControls(run)).filter(n => n.tag === "option").map(n => n.attrs.value), ["claude-code", "codex"]);
+// Two or more attempts are listed with the synthesizer and the quote check.
+run.model_syntheses = [
+  {attempt: "a1", status: "completed", result: {status: "completed", synthesizer: {adapter_id: "claude-code"},
+   checks: {exact_matches: 4, quotes: 5}, card: {recommendation: "A"}}},
+  {attempt: "a2", status: "failed", result: {status: "unavailable", synthesizer: {adapter_id: "codex"}, reason: "bad json"}}];
+const listed = JSON.stringify(modelControls(run));
+assert.ok(listed.includes("실제 합성 시도 2번"));
+assert.ok(listed.includes("1. claude-code · completed · 인용 4/5 원문 일치 · 권고: A"));
+assert.ok(listed.includes("2. codex · failed · bad json"));
 """
         result = subprocess.run([shutil.which("node"), "-e", script], capture_output=True, text=True, timeout=15)
         self.assertEqual(result.returncode, 0, result.stderr)

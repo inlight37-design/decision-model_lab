@@ -137,9 +137,7 @@ class ShutdownTests(support.Base):
         kinds = [e["kind"] for e in events(self.store, rid)]
         self.assertEqual(kinds.count("synthesis_started"), 1)
         self.assertEqual(kinds.count("synthesis_failed"), 1)
-        with self.assertRaises(c.ControllerError):
-            ctl.synthesize_with_model(rid, "claude-code")
-        self.assertEqual(ex.started, ["a", "synthesis"])
+        self.assertEqual(ex.started, ["a", "synthesis"])   # 끝난 실패라 멈춘 시도로 남지 않는다(자리·미정리 0)
 
 
 class ServerShutdownTests(unittest.TestCase):

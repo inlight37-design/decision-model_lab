@@ -36,26 +36,48 @@ class SynthesisLifecycleTests(support.Base):
         self.addCleanup(cleanup)
         return ctl
 
-    def test_a_completed_synthesis_cannot_be_called_again(self):
+    def test_the_same_drafts_can_be_synthesized_again_by_another_provider(self):
+        # 사용자 결정(2026-09-25, 인계 2절 23): 실행마다 합성 한 번·참여자 provider만이라는 제약을 없앴다.
+        # 부를 때마다 새 호출 하나를 같은 상한에서 예약하고, 같은 실행은 같은 이름표 순서를 본다.
         ex = SynthExecutor()
         ctl, rid = self.revealed(ex, cap=8)
         ctl.synthesize_with_model(rid, "claude-code")
         self.finish(ctl, rid)
-        with self.assertRaises(c.ControllerError):
-            ctl.synthesize_with_model(rid, "claude-code")
-        self.assertEqual(ctl.call_budget()["used"], 3)
-        self.assertEqual(ex.started.count("synthesis"), 1)
+        ctl.synthesize_with_model(rid, "codex", spec=c.ParticipantSpec("codex", "Codex", "openai", c.CLI, "codex", "m"))   # 이 실행의 참여자가 아닌 설정된 provider
+        self.finish(ctl, rid)
+        self.assertEqual(ctl.call_budget()["used"], 4)
+        self.assertEqual(ex.started.count("synthesis"), 2)
+        attempts = self.run_view(ctl, rid)["model_syntheses"]
+        self.assertEqual([a["status"] for a in attempts], ["completed", "completed"])
+        self.assertEqual([a["result"]["synthesizer"]["adapter_id"] for a in attempts], ["claude-code", "codex"])
+        started = [e for e in events(self.store, rid) if e["kind"] == "synthesis_started"]
+        self.assertEqual(started[0]["labels"], started[1]["labels"])
+        reserved = [e for e in events(self.store, rid) if e.get("purpose") == "synthesis"]
+        self.assertEqual([e["adapter_id"] for e in reserved], ["claude-code", "codex"])
+        self.assertEqual(self.run_view(ctl, rid)["synthesis"]["synthesizer"]["adapter_id"], "codex")   # 가장 최근
 
-    def test_a_failed_synthesis_cannot_be_retried_or_reset_by_mock(self):
+    def test_an_unconfigured_synthesizer_is_refused_before_anything_is_reserved(self):
+        ex = SynthExecutor()
+        ctl, rid = self.revealed(ex, cap=8)
+        for adapter, spec in (("codex", None), ("codex", support.cli("x")), ("gemini", None)):
+            with self.subTest(adapter=adapter), self.assertRaisesRegex(c.ControllerError, "configured CLI provider"):
+                ctl.synthesize_with_model(rid, adapter, spec=spec)
+        self.assertEqual(ctl.call_budget()["used"], 2)
+        self.assertNotIn("synthesis", ex.started)
+
+    def test_a_failed_synthesis_can_be_tried_again_and_mock_resets_nothing(self):
         ex = SynthExecutor(answer=lambda: "not JSON")
         ctl, rid = self.revealed(ex, cap=8)
         ctl.synthesize_with_model(rid, "claude-code")
         self.finish(ctl, rid)
         ctl.synthesize(rid)
         restarted = self.controller(ex, max_real_calls=8)
-        with self.assertRaises(c.ControllerError):
-            restarted.synthesize_with_model(rid, "claude-code")
-        self.assertEqual(restarted.call_budget()["used"], 3)
+        self.assertEqual(len(self.run_view(restarted, rid)["model_syntheses"]), 1)
+        self.assertEqual(restarted.call_budget()["used"], 3)   # 실패한 호출은 환불하지 않는다
+        restarted.synthesize_with_model(rid, "claude-code")
+        self.finish(restarted, rid)
+        self.assertEqual(restarted.call_budget()["used"], 4)   # 다시 부르면 새 호출 하나
+        self.assertEqual([a["status"] for a in self.run_view(restarted, rid)["model_syntheses"]], ["failed", "failed"])
 
     def test_synthesis_obeys_the_global_parallel_cap(self):
         ex = SynthExecutor(hold=("synthesis",))
@@ -114,7 +136,7 @@ class SynthesisLifecycleTests(support.Base):
             restarted.synthesize_with_model(rid, "claude-code")
         self.assertEqual(ex.started.count("synthesis"), 0)
 
-    def test_a_legacy_failure_without_raw_or_label_order_still_reads_and_blocks_a_new_call(self):
+    def test_a_legacy_failure_without_raw_or_label_order_still_reads(self):
         ex = SynthExecutor()
         ctl, rid = self.revealed(ex, cap=8)
         with self.store.tx() as tx:   # 카드 #66 전의 사건 모양: 원문 칸·label_order 없음, 참여자 ID 순 이름표
@@ -129,9 +151,10 @@ class SynthesisLifecycleTests(support.Base):
         state = self.run_view(ctl, rid)["model_synthesis"]
         self.assertEqual((state["status"], state["reason"]), ("failed", "the synthesizer did not return one JSON object"))
         self.assertNotIn("raw", state)
-        with self.assertRaises(c.ControllerError):
-            ctl.synthesize_with_model(rid, "claude-code")
-        self.assertEqual(ex.started.count("synthesis"), 0)
+        self.assertEqual([a["attempt"] for a in self.run_view(ctl, rid)["model_syntheses"]], ["old"])
+        ctl.synthesize_with_model(rid, "claude-code")   # 끝난 옛 시도는 새 호출을 막지 않는다
+        self.finish(ctl, rid)
+        self.assertEqual(ex.started.count("synthesis"), 1)
 
     def test_wait_idle_includes_synthesis_workers(self):
         ex = SynthExecutor(hold=("synthesis",))
@@ -150,6 +173,8 @@ class SynthesisLifecycleTests(support.Base):
         ctl.synthesize_with_model(rid, "claude-code")
         self.finish(ctl, rid)
         attempt = self.run_view(ctl, rid)["model_synthesis"]["attempts"][0]
+        with self.assertRaisesRegex(c.ControllerError, "unconfirmed"):   # 끝났는지 모르는 합성이 새 호출을 막는다
+            ctl.synthesize_with_model(rid, "claude-code")
         with self.assertRaises(c.ControllerError):
             ctl.acknowledge_synthesis_unknown(rid, "wrong-attempt")
         self.assertEqual(ctl.unsettled(), 1)
@@ -160,8 +185,9 @@ class SynthesisLifecycleTests(support.Base):
         restarted = self.controller(ex, max_real_calls=8)
         self.assertEqual(self.run_view(restarted, rid)["model_synthesis"]["status"], "acknowledged")
         self.assertEqual((restarted.view()["slots"]["used"], restarted.call_budget()["used"]), (0, 3))
-        with self.assertRaises(c.ControllerError):
-            restarted.synthesize_with_model(rid, "claude-code")
+        restarted.synthesize_with_model(rid, "claude-code")   # 확인한 뒤에는 새 호출 하나를 예약해 다시 부를 수 있다
+        self.finish(restarted, rid)
+        self.assertEqual(restarted.call_budget()["used"], 4)
 
     def test_running_synthesis_cannot_be_acknowledged(self):
         ex = SynthExecutor(hold=("synthesis",))
@@ -193,9 +219,10 @@ class SynthesisLifecycleTests(support.Base):
         self.assertEqual((ctl.view()["slots"]["used"], ctl.unsettled()), (0, 0))
         self.assertEqual(ctl.call_budget()["used"], 3)
         self.assertEqual(self.run_view(ctl, rid)["model_synthesis"]["status"], "failed")
-        with self.assertRaises(c.ControllerError):
-            ctl.synthesize_with_model(rid, "claude-code")
         self.assertNotIn("synthesis", ex.started)
+        ctl.synthesize_with_model(rid, "claude-code")   # 시작하지 못한 시도는 끝난 시도다 — 다시 부르면 새 예약
+        self.finish(ctl, rid)
+        self.assertEqual((ctl.call_budget()["used"], ex.started.count("synthesis")), (4, 1))
 
     def test_legacy_repeated_attempts_cannot_be_hidden_by_a_later_result(self):
         ctl, rid = self.revealed(SynthExecutor(), cap=8)
@@ -216,8 +243,10 @@ class SynthesisLifecycleTests(support.Base):
         self.assertEqual(ctl.unsettled(), 1)
         ctl.acknowledge_synthesis_unknown(rid, "lost2")
         self.assertEqual(ctl.unsettled(), 0)
-        with self.assertRaises(c.ControllerError):
-            ctl.synthesize_with_model(rid, "claude-code")
+        self.assertEqual([a["attempt"] for a in self.run_view(ctl, rid)["model_syntheses"]], ["lost1", "lost2", "done"])
+        ctl.synthesize_with_model(rid, "claude-code")   # 옛 시도는 모두 보존되고, 모두 끝났으니 새 호출이 된다
+        self.finish(ctl, rid)
+        self.assertEqual(len(self.run_view(ctl, rid)["model_syntheses"]), 4)
 
     def test_competing_requests_reserve_only_one_attempt(self):
         ex = SynthExecutor(hold=("synthesis",))

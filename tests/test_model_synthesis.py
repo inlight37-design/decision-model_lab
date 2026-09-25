@@ -15,7 +15,7 @@ from unittest.mock import Mock
 
 from app import controller as c, synthesis as s
 from app.report import SCHEMA as DRAFT_SCHEMA, build_report
-from app.server import _Server, make_handler
+from app.server import PARTICIPANTS, _Server, make_handler
 from app.store import events
 from core import adapters, runner
 import test_app_controller as support
@@ -205,7 +205,7 @@ class ControllerTests(support.Base):
             ctl.synthesize_with_model(rid, "claude-code")
         ex.release("codex")
         self.assertTrue(ctl.wait_idle())
-        for adapter, reason in (("codex", "providers"), ("claude-code", "budget exhausted")):
+        for adapter, reason in (("codex", "configured CLI provider"), ("claude-code", "budget exhausted")):
             with self.assertRaisesRegex(c.ControllerError, reason):
                 ctl.synthesize_with_model(rid, adapter)
         self.assertEqual(ctl.call_budget(), {"used": 2, "cap": 2})
@@ -247,14 +247,16 @@ class ControllerTests(support.Base):
         self.finish(ctl, rid)
         status, body = self.decision_report(ctl, rid)
         self.assertEqual(status, 200)
-        self.assertEqual((body["schema"], body["synthesis"]), ("a1-decision-report/3", None))
-        self.assertEqual(body["failed_model_synthesis"]["raw"]["text"], "JSON이 아닌 답")
-        self.assertEqual(body["failed_model_synthesis"]["reason"], "the synthesizer did not return one JSON object")
+        self.assertEqual((body["schema"], body["synthesis"]), ("a1-decision-report/4", None))
+        [failed] = body["model_syntheses"]
+        self.assertEqual(failed["status"], "failed")
+        self.assertEqual(failed["result"]["raw"]["text"], "JSON이 아닌 답")
+        self.assertEqual(failed["result"]["reason"], "the synthesizer did not return one JSON object")
         self.assertEqual(body["draft_report"]["synthesis"]["status"], "not_included")
         ctl.synthesize(rid)   # 모의 대조표를 만들면 결과 자리에 모의가, 실패 자리에 실제 합성 실패가 따로 실린다
         status, body = self.decision_report(ctl, rid)
-        self.assertEqual((body["synthesis"]["mode"], body["failed_model_synthesis"]["status"]),
-                         ("mock_extractive", "failed"))
+        self.assertEqual((body["synthesis"]["mode"], [a["status"] for a in body["model_syntheses"]]),
+                         ("mock_extractive", ["failed"]))
 
     def test_one_synthesis_at_a_time_and_its_slot_is_counted(self):
         ex = SynthExecutor(hold=("synthesis",))
@@ -314,7 +316,8 @@ class HttpTests(unittest.TestCase):
     def test_model_mode_needs_a_live_connection_and_names_the_provider(self):
         status, controller = self.post("real", {"mode": "model", "adapter_id": "claude-code"})
         self.assertEqual(status, 200)
-        controller.synthesize_with_model.assert_called_once_with("r1", "claude-code")
+        # 합성자는 그 실행의 참여자가 아니어도 된다 — 서버가 설정된 provider의 명세를 함께 넘긴다.
+        controller.synthesize_with_model.assert_called_once_with("r1", "claude-code", spec=PARTICIPANTS["claude"])
         status, controller = self.post("mock", {"mode": "model", "adapter_id": "claude-code"})
         self.assertEqual(status, 400)
         controller.synthesize_with_model.assert_not_called()
