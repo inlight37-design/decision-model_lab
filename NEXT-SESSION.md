@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-25** · 작성 세션: claude(`aux-pc` Windows 데스크톱 앱 — 정리 ⑧: 쌓임 방지 원칙과 CI 검사, 모델 호출: Codex 읽기 전용 검토 1회(새 폴더, 상한 1)) · 브랜치 `claude/anti-accumulation-20260925` · 기준 main `c3c2241`(PR #83 병합).
+최종 갱신 **2026-09-25** · 작성 세션: chatgpt(웹·GitHub, WorkTrail 평가; 사용자 PC 재관측 없음) · 브랜치 `chatgpt/worktrail-evaluation-20260925` · 기준 main `2bcdd20dd95209e96ff5a2c540540584754bd57a`.
 
 이 파일은 **지금 상태와 다음 일만** 담는다. 끝난 일의 경위는 PR·git 이력과 날짜가 붙은 기록에 있고, 옛 판은 [docs/handoff/](docs/handoff/README.md)에 있다. **3절에는 진행 중인 일과 "이 판을 들인 PR" 한 줄만 둔다** — 새 PR은 그 줄을 자기 PR로 바꾸고, 병합 전에도 뒤에도 맞는 말만 쓴다("병합했다"고 미리 적지 않는다). 크기 상한과 3절의 모양은 CI가 본다. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있는 규칙은 여기 다시 적지 않는다 — 쌓임을 막는 원칙은 협업 규칙 7절이다.
 
@@ -60,7 +60,7 @@
 
 **진행 중: 작업 카드 시범.** 일은 `card` 라벨 이슈에서 [시범 규칙](docs/experiments/2026-09-25-card-pilot/README.md)대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #84](https://github.com/inlight37-design/decision-model_lab/pull/84)(`claude/anti-accumulation-20260925`) — 정리의 마지막 ⑧: 쌓임을 막는 원칙([협업 규칙 7절](docs/COLLABORATION.md))과 CI 검사([`tests/test_accumulation.py`](tests/test_accumulation.py) — 인계·AGENTS·협업 규칙의 크기 상한, 이 줄의 모양, 도구마다 지금 쓰는 곳). 원칙을 들이며 겹친 규칙(이 파일 5절과 AGENTS.md)과 낡은 줄을 걷어냈다. 날짜 기록에 있는 현재 절차 둘(V04-01, E2 재관측)은 검사의 예외 목록에 두고 옮기는 일은 카드 #82에 붙였다. 모델 호출: Codex 읽기 전용 검토 1회(새 폴더, 상한 1).
+- **이 판을 들인 PR:** [PR #85](https://github.com/inlight37-design/decision-model_lab/pull/85)(`chatgpt/worktrail-evaluation-20260925`) — [WorkTrail 평가](docs/reviews/2026-09-25-worktrail/README.md)와 근거 대조. 기존 카드의 최소 인계 개선을 먼저 시험하는 제안이며, 실행 코드·운영 규칙·MCP·CLI 설정과 아래 우선순위는 바꾸지 않는다. 외부 도구 설치·모델 호출 없음.
 
 | 사용자 판단 | 권고 / 지금까지 한 일 |
 |---|---|
