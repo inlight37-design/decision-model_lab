@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-26** · 작성 세션: codex(현재 Windows PC의 별도 clone·GitHub — 구조 검토·오프라인 재현, 실제 모델 CLI·WSL 관측 없음) · 브랜치 `codex/architecture-health-review-20260926` · 기준 main `435ba02`, 검토 head `a232de7`.
+최종 갱신 **2026-09-26** · 작성 세션: chatgpt(GitHub·웹 컨테이너 — 리뷰·코드 대조, 사용자 PC·실제 CLI 미관측) · 브랜치 `chatgpt/review-consolidation-20260926` · 기준 main `435ba02`, 시작 head `8281b4f`.
 
 이 파일은 **지금 상태와 다음 일만** 담는다. 끝난 일의 경위는 PR·git 이력과 날짜가 붙은 기록에 있고, 옛 판은 [docs/handoff/](docs/handoff/README.md)에 있다. **3절에는 진행 중인 일과 "이 판을 들인 PR" 한 줄만 둔다** — 새 PR은 그 줄을 자기 PR로 바꾸고, 병합 전에도 뒤에도 맞는 말만 쓴다("병합했다"고 미리 적지 않는다). 크기 상한과 3절의 모양은 CI가 본다. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있는 규칙은 여기 다시 적지 않는다 — 쌓임을 막는 원칙은 협업 규칙 7절이다.
 
@@ -63,8 +63,8 @@
 
 **진행 중: 작업 카드 시범.** 일은 `card` 라벨 이슈에서 [시범 규칙](docs/experiments/2026-09-25-card-pilot/README.md)대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **진행 중인 선행 작업:** 역할판 [PR #101](https://github.com/inlight37-design/decision-model_lab/pull/101), Peek 검토 [PR #102](https://github.com/inlight37-design/decision-model_lab/pull/102), 두 리뷰 비교 [PR #103](https://github.com/inlight37-design/decision-model_lab/pull/103). 이 구조 검토는 #103의 고정 head에서 분기했으며 실제 병합 여부는 GitHub에서 확인한다.
-- **이 판을 들인 PR:** [PR #104](https://github.com/inlight37-design/decision-model_lab/pull/104)(`codex/architecture-health-review-20260926`) — [아키텍처 건강성 검토](docs/reviews/2026-09-26-architecture-health/README.md)에 실행 경로·누적 부채·조회 측정·수정 순서를 남긴다. 다음 확장 전 수명 정리·결과 판·화면 전달을 먼저 검토하자는 권고이며, 제품 수정·실제 모델 호출·병합은 하지 않는다.
+- **진행 중인 선행 작업:** 역할판·Peek·구조 검토의 쌓임과 별도 Claude 리뷰는 [통합 기록 2절](docs/reviews/2026-09-26-review-consolidation/README.md)에 고정했다. 실제 열린 PR·병합 상태를 확인하고 다른 가지의 인계를 덮어쓰지 않는다.
+- **이 판을 들인 PR:** [PR #106](https://github.com/inlight37-design/decision-model_lab/pull/106)(`chatgpt/review-consolidation-20260926`) — [리뷰 통합](docs/reviews/2026-09-26-review-consolidation/README.md). 지적별 처분·작은 수정 순서·완료 조건이며 제품 수정·모델 호출·병합 기록이 아니다.
 
 | 사용자 판단 | 권고 / 지금까지 한 일 |
 |---|---|
@@ -75,15 +75,15 @@
 | 새 화면(역할판) | 사용자 결정은 2절 24, A 구현은 카드 #99. 다음 B 실제 모델 선택(추가 크레딧 경로를 막는 허용 목록 포함, [검토 근거 O14](docs/reviews/2026-09-26-role-board-review/EVIDENCE.md)) → C 사람이 나누는 일반 팀원 작업 → D 슈퍼바이저 모델·다듬기 모드 → E 섞어 쓰기·최적화. 검토의 기본안(상위 모델 끔, 같은 모델 두 번 보류, 문서는 앱 안에서, 격리 팀원 자료는 원문 우선)은 사용자 미확정 |
 | 나머지 | Q3 TypeScript 이행 미정. TM 계획 A는 후보. agy 기본 끔(설치·B4는 사용자가 켜기로 할 때). 원본 앱 자동화 끔. 편의 후보(공개 결정 전달, 공개 뒤 교차검토, 상급 모델 제안)는 기본 끔 |
 
-미확인 실제 답을 독립 비교로 격상하지 않는다.
+미확인 실제 답을 독립 비교로 격상하지 않는다. 권고가 있다는 이유로 미확정 제품 선호를 자동 확정하지 않는다. 필요한 기술 작업의 위임은 2절 22 그대로다.
 
 ## 4. 다음 작업
 
 순서대로. 모델 호출이 드는 일은 카드에 상한을 먼저 적고 새 원장·새 상태 폴더로 한다(2절 22).
 
 1. **2026-10-25 전 — V04-01 절차서를 정한다.** 쌓임 검사의 `PROCEDURES` 예외가 그날 끝난다(`tests/test_accumulation.py`) — 지나면 CI가 실패한다. WSL 참여자의 설치·관측 절차는 이미 [SETUP](docs/SETUP.md)에 있으니, 절차서가 아직 맡는 일(Windows CLI 조사, `probe.ps1`·`summarize_claude_init.py`)을 살아 있는 문서로 옮길지 은퇴시킬지 정하고 AGENTS.md의 가리킴을 맞춘다. 모델 호출 없음.
-2. **2026-10-26 전 — 재관측**([SETUP 4절](docs/SETUP.md)의 절차, 모델 호출 Claude 2·Codex 3). 참여자 계획이나 CLI 판이 바뀌면 그때 바로 한다. 관측 기록은 `tools/w2/assemble.py`가 조립한다. 추론 강도를 연결하는 PR은 그 계획으로 바로 관측한다 — 이 날짜를 기다리지 않는다([역할판 검토](docs/reviews/2026-09-26-role-board-review/README.md) RB-01).
-3. **새 화면 — [카드 #99](https://github.com/inlight37-design/decision-model_lab/issues/99) PR을 검토한다.** 모의 A 흐름과 원장 이전을 구현했다. [구조 검토](docs/reviews/2026-09-26-architecture-health/README.md)의 수명·결과 판·화면 전달 지적을 먼저 수용/반박하고, 다음 B 실제 모델 선택과 관측된 경로를 연결할 것을 권고한다. 이 세션은 병합하지 않는다.
+2. **2026-10-26 전 — 재관측**([SETUP 4절](docs/SETUP.md)의 절차, 모델 호출 Claude 2·Codex 3). 참여자 계획이나 CLI 판이 바뀌면 그때 바로 한다. 관측 기록은 `tools/w2/assemble.py`가 조립한다. 추론 강도를 연결하는 PR은 그 계획으로 바로 관측한다 — 이 날짜를 기다리지 않는다([역할판 검토](docs/reviews/2026-09-26-role-board-review/README.md) RB-01). 그 전에 [통합 검토](docs/reviews/2026-09-26-review-consolidation/README.md)의 S4 훅 경계를 확인한다. 파일 하나 검사로 전체 문맥 검증을 대신하지 않는다.
+3. **새 화면 — [카드 #99](https://github.com/inlight37-design/decision-model_lab/issues/99) PR과 정확성 보완을 검토한다.** 모의 A 흐름과 원장 이전을 구현했다. [통합 검토](docs/reviews/2026-09-26-review-consolidation/README.md)의 S1–S3(실행 수명·결과 판/상태·화면 전달)를 작은 수정으로 수용/반박한 뒤 B 실제 모델 선택을 연결할 것을 권고한다. 최적화·편의 후보 전체를 B의 선행 조건으로 만들지 않는다. 이 세션은 병합하지 않는다.
 4. **사용자에게 물을 것**(3절 표): 카드 보드를 채택할지 — 권고는 작은 보드 유지([이유](docs/reviews/2026-09-25-codex-continuation/README.md)). 채택하면 시범 규칙([날짜 기록 폴더](docs/experiments/2026-09-25-card-pilot/README.md)에 있다)을 협업 규칙으로 옮긴다. Q4 첫 화면, 실제 합성의 기본값, 새 화면을 실제로 써 본 소감(고칠 곳), 브랜드북을 island-ui로 옮길지, 역할판 검토의 기본안(3절 표).
 5. 새 카드가 필요하면 [카드 양식](.github/ISSUE_TEMPLATE/card.md)으로 만든다. 멈추거나 넘길 때는 체크포인트 다섯 줄을 쓴다.
 
