@@ -41,6 +41,8 @@ from app.account_quota import AccountQuota
 STATIC = Path(__file__).with_name("static")
 # 화면이 받아 가는 파일은 이 목록뿐이다(경로를 조립하지 않는다). island-ui는 static/island-ui/README.md.
 ASSETS = {"/island-ui/themes.css": ("island-ui/themes.css", "text/css; charset=utf-8"),
+          "/role-board.js": ("role-board.js", "text/javascript; charset=utf-8"),
+          "/role-board.css": ("role-board.css", "text/css; charset=utf-8"),
           "/island-ui/base.css": ("island-ui/base.css", "text/css; charset=utf-8"),
           "/island-ui/motion.js": ("island-ui/motion.js", "text/javascript; charset=utf-8"),
           "/fonts/PretendardVariable.woff2": ("fonts/PretendardVariable.woff2", "font/woff2")}

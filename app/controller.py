@@ -959,7 +959,7 @@ class Controller:
                 quorum["label"] = _quorum_label(quorum) if revealed else None
                 runs.append({"run_id": run["run_id"], "created_at": run["created_at"], "question": run["question"],
                              "task_id": run["task_id"], "role_config": json.loads(run["role_config"]),
-                             "reviewed": self.store.row("SELECT 1 FROM events WHERE run_id = ? AND kind = 'human_reviewed'",
+                             "reviewed": self.store.row("SELECT 1 FROM events WHERE run_id = ? AND kind = 'human_reviewed' LIMIT 1",
                                                         run["run_id"]) is not None,
                              "prompt": run["prompt"], "input_sha256": run["input_sha256"],
                              "input_bytes": run["input_bytes"], "sources": self.sources(run["run_id"]),
@@ -1015,7 +1015,7 @@ class Controller:
                 raise ControllerError("공개된 답을 확인한 뒤에만 판단 완료로 표시할 수 있습니다.")
             if any(item["status"] in (RUNNING, UNKNOWN) for item in self._synthesis_attempts(run_id).values()):
                 raise ControllerError("합성의 종료를 먼저 확인하세요.")
-            if not self.store.row("SELECT 1 FROM events WHERE run_id = ? AND kind = 'human_reviewed'", run_id):
+            if not self.store.row("SELECT 1 FROM events WHERE run_id = ? AND kind = 'human_reviewed' LIMIT 1", run_id):
                 tx.event(run_id, "human_reviewed")
 
     def _model_synthesis_state(self, run_id: str) -> dict[str, Any] | None:

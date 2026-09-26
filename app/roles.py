@@ -62,8 +62,11 @@ def task_projection(tasks, runs):
             timeline.append({"run_id": run["run_id"], "question": run["question"],
                              "created_at": run["created_at"], "role_config": run["role_config"],
                              "status": status, "action": action,
-                             "calls_used": max(run["budget"]["used"], run["budget"]["reserved"])})
+                             "calls_used": max(run["budget"]["used"] + len(run.get("model_syntheses", [])),
+                                               run["budget"]["reserved"])})
         latest = timeline[-1] if timeline else None
+        if latest is None:
+            continue  # 단일 실행 보고에는 그 실행의 작업만 싣는다.
         status = next((s for s in ("problem", "my_turn", "working")
                        if any(r["status"] == s for r in timeline)), "done")
         projected.append({"task_id": task["task_id"], "title": task["title"], "created_at": task["created_at"],
