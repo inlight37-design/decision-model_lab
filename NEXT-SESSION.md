@@ -62,7 +62,7 @@
 
 **진행 중: 작업 카드 시범.** 일은 `card` 라벨 이슈에서 [시범 규칙](docs/experiments/2026-09-25-card-pilot/README.md)대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** `claude/codex-peek-review-20260926` — codex-peek(Claude Code↔Codex 하네스)의 claude 독립 검토 [기록](docs/reviews/2026-09-26-codex-peek-claude/README.md)을 더했다. 사용자는 설치하지 않고 좋은 것만 가져오기로 했고, 검토는 다른 세션이 한다. 코드 변경·모델 호출 없음.
+- **이 판을 들인 PR:** [PR #105](https://github.com/inlight37-design/decision-model_lab/pull/105)(`claude/codex-peek-review-20260926`) — codex-peek(Claude Code↔Codex 하네스)의 claude 독립 검토 [기록](docs/reviews/2026-09-26-codex-peek-claude/README.md)을 더했다. 사용자는 설치하지 않고 좋은 것만 가져오기로 했고, 검토는 다른 세션이 한다. 코드 변경·모델 호출 없음.
 
 | 사용자 판단 | 권고 / 지금까지 한 일 |
 |---|---|
