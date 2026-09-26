@@ -197,7 +197,7 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                 parts = urlsplit(self.path).path.strip("/").split("/")
                 if parts == ["api", "account-quota", "refresh"]:
                     self._json(200, account_quota.refresh())
-                elif parts == ["api", "runs"]:
+                elif parts in (["api", "runs"], ["api", "runs", "preview"]):
                     chosen = []
                     items = body.get("participants", [])
                     if not isinstance(items, list) or any(not isinstance(item, dict) for item in items):
@@ -215,11 +215,20 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                     if not isinstance(sources, list) or any(not isinstance(item, dict) or set(item) != {"name", "text"}
                                                             for item in sources):
                         raise ControllerError("sources must be an array of {name, text} objects")
-                    run_id = controller.create_run(_text(body, "question"), chosen,
-                                                   min_independent=minimum,
-                                                   quorum_policy=_text(body, "quorum_policy", "independent_only"),
-                                                   sources=[(item["name"], item["text"]) for item in sources])
-                    self._json(200, {"run_id": run_id})
+                    kwargs = dict(min_independent=minimum,
+                                  quorum_policy=_text(body, "quorum_policy", "independent_only"),
+                                  sources=[(item["name"], item["text"]) for item in sources],
+                                  task_id=body.get("task_id"), task_title=body.get("task_title"),
+                                  role_board=body.get("role_board"), roster=roster, run_id=body.get("run_id"))
+                    if parts[-1] == "preview":
+                        self._json(200, controller.prepare_run(_text(body, "question"), chosen, **kwargs))
+                    else:
+                        run_id = controller.create_run(_text(body, "question"), chosen,
+                                                       confirmation=body.get("confirmation"), **kwargs)
+                        self._json(200, {"run_id": run_id})
+                elif len(parts) == 4 and parts[:2] == ["api", "runs"] and parts[3] == "reviewed":
+                    controller.mark_reviewed(parts[2])
+                    self._json(200, {"ok": True})
                 elif len(parts) == 5 and parts[:2] == ["api", "runs"] and parts[3] == "manual":
                     controller.submit_manual(parts[2], parts[4], _text(body, "text"),
                                              _text(body, "input_sha256"),
