@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-26** · 작성 세션: claude(웹 컨테이너 — 새 화면의 사용자 결정 기록과 A 단계 카드, 사용자 PC·CLI는 보지 않음, 모델 호출 없음) · 브랜치 `claude/model-role-assignment-brainstorm-v8jbea` · 기준 main `f722ee1`.
+최종 갱신 **2026-09-26** · 작성 세션: claude(사용자 Windows PC — codex-peek 독립 검토 기록, WSL·CLI는 보지 않음, 모델 호출 없음) · 브랜치 `claude/codex-peek-review-20260926` · 기준 main `435ba02`.
 
 이 파일은 **지금 상태와 다음 일만** 담는다. 끝난 일의 경위는 PR·git 이력과 날짜가 붙은 기록에 있고, 옛 판은 [docs/handoff/](docs/handoff/README.md)에 있다. **3절에는 진행 중인 일과 "이 판을 들인 PR" 한 줄만 둔다** — 새 PR은 그 줄을 자기 PR로 바꾸고, 병합 전에도 뒤에도 맞는 말만 쓴다("병합했다"고 미리 적지 않는다). 크기 상한과 3절의 모양은 CI가 본다. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있는 규칙은 여기 다시 적지 않는다 — 쌓임을 막는 원칙은 협업 규칙 7절이다.
 
@@ -62,7 +62,7 @@
 
 **진행 중: 작업 카드 시범.** 일은 `card` 라벨 이슈에서 [시범 규칙](docs/experiments/2026-09-25-card-pilot/README.md)대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #100](https://github.com/inlight37-design/decision-model_lab/pull/100)(`claude/model-role-assignment-brainstorm-v8jbea`) — 새 화면의 사용자 결정(2절 24, 질문의 원문·다듬기 두 모드)을 적고 다음 구현 A 단계를 [카드 #99](https://github.com/inlight37-design/decision-model_lab/issues/99)로 만들었다(사용자가 Codex에 맡김). 검토는 [역할판 검토](docs/reviews/2026-09-26-role-board-review/README.md)와 [원문 대조](docs/reviews/2026-09-26-role-board-review/EVIDENCE.md). 코드 변경·모델 호출 없음.
+- **이 판을 들인 PR:** `claude/codex-peek-review-20260926` — codex-peek(Claude Code↔Codex 하네스)의 claude 독립 검토 [기록](docs/reviews/2026-09-26-codex-peek-claude/README.md)을 더했다. 사용자는 설치하지 않고 좋은 것만 가져오기로 했고, 검토는 다른 세션이 한다. 코드 변경·모델 호출 없음.
 
 | 사용자 판단 | 권고 / 지금까지 한 일 |
 |---|---|
@@ -71,6 +71,7 @@
 | 여러 AI 작업 방식 | 카드 보드 시범 중이며 채택은 사용자가 정한다. 조사는 [원문](docs/research/multi-ai-workflow-2026-09-25/README.md)·[후속 검토](docs/reviews/2026-09-25-workflow-evaluation/README.md)·[병합 기록](docs/reviews/2026-09-25-merge-56/README.md)(Projects 정정). Claude Code Projects는 Code 쪽에 보이지 않아(사용자 확인) 보류, 새 방식에서 ChatGPT 웹은 큰 변경의 검토에 쓴다. [WorkTrail 평가](docs/reviews/2026-09-25-worktrail/README.md)(ChatGPT, 2026-09-25): 통째 도입은 보류, 카드 체크포인트의 다섯 줄 형식만 [카드 양식](.github/ISSUE_TEMPLATE/card.md)에 들였다. Entire·Beads·Agent Mail 같은 도구는 같은 불편이 되풀이될 때 그 평가 9절의 짝(찾기 어려움→읽기 전용 뷰, 의존성→Beads, 동시 수정→Agent Mail, 변경 이유→Entire)으로 본다. 개발용 기억 도구는 참여자에게 연결하지 않는다 — 붙이면 참여자 계획이 바뀌어 재관측이 필요하다 |
 | 디자인 브랜드북 | 화면은 island-ui를 쓰고 `design/`(Ledger)은 의미 규칙만 화면 규칙으로 남는다([design 안내](design/README.md)). 브랜드북·아티팩트를 island-ui로 옮길지 미정 |
 | 새 화면(역할판) | 사용자 결정은 2절 24. 다음은 A 단계 [카드 #99](https://github.com/inlight37-design/decision-model_lab/issues/99)(모의 흐름, Codex). 그 뒤 B 실제 모델 선택(추가 크레딧 경로를 막는 허용 목록 포함, [검토 근거 O14](docs/reviews/2026-09-26-role-board-review/EVIDENCE.md)) → C 사람이 나누는 일반 팀원 작업 → D 슈퍼바이저 모델·다듬기 모드 → E 섞어 쓰기·최적화. 검토의 기본안(상위 모델 끔, 같은 모델 두 번 보류, 문서는 앱 안에서, 격리 팀원 자료는 원문 우선)은 사용자 미확정 |
+| codex-peek 가져오기 | 사용자: 설치하지 않고 좋은 것만(2026-09-26). claude [독립 검토](docs/reviews/2026-09-26-codex-peek-claude/README.md)는 지금 넣을 작은 것 넷(Codex 참여자 `hooks.json` 거절, 교차검토 절차 몇 줄, 작업 상태의 미지 상태를 사람 몫으로, 로컬 검사 한 명령)과 B–E 단계 완료 조건을 권고한다. 같은 대상의 ChatGPT·Codex PR과 함께 다른 세션이 검토한 뒤 적용한다. 사용자 판단: 권고가 있는 판단 항목을 세션이 권고대로 진행하고 보고만 해도 되는지 |
 | 나머지 | Q3 TypeScript 이행 미정. TM 계획 A는 후보. agy 기본 끔(설치·B4는 사용자가 켜기로 할 때). 원본 앱 자동화 끔. 편의 후보(공개 결정 전달, 공개 뒤 교차검토, 상급 모델 제안)는 기본 끔 |
 
 미확인 실제 답을 독립 비교로 격상하지 않는다.

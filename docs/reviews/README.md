@@ -56,6 +56,7 @@
 | [`2026-09-25-codex-continuation/`](2026-09-25-codex-continuation/README.md) | Codex의 재개 점검. 이전 병합·main CI 확인, 카드 #72의 낡은 합성 제약 정정, WindowsApps WSL bash 구문 검사 실패 수정, 같은 초안의 L1 실험과 카드 보드·Q4·합성 기본값 권고. [PR #89](https://github.com/inlight37-design/decision-model_lab/pull/89) |
 | [`2026-09-26-role-board-request/`](2026-09-26-role-board-request/README.md) | claude(웹 컨테이너)의 검토 요청서. 사용자의 새 화면 구상(모델·추론 고르기, 역할판에 모델 끌어다 놓기, 격리 칸·일반 칸, 홈·작업·문서함)을 1부 사용자가 원하는 것, 2부 Claude 제안, 3부 조사(일반 오케스트레이션의 중복 읽기를 줄이는 방법, 우리 기록의 캐시 수치)로 나눴다. 결과는 `<YYYY-MM-DD>-role-board-review/`로 받는다. 코드 변경·모델 호출 없음 |
 | [`2026-09-26-role-board-review/`](2026-09-26-role-board-review/README.md) | ChatGPT의 [PR #98](https://github.com/inlight37-design/decision-model_lab/pull/98). W1–W10을 전제로 질문별 검토, 역할·공통 요약·봉인·추론·예산 경계와 작은 구현 순서. [원문 대조](2026-09-26-role-board-review/EVIDENCE.md)는 코드·공식 문서·논문의 확인 수준, 캐시 해석과 모델별 추가 과금 경계(O14)를 구분한다. 코드·관측 허가 변경·모델 CLI 호출 없음 |
+| [`2026-09-26-codex-peek-claude/`](2026-09-26-codex-peek-claude/README.md) | claude(사용자 PC)의 codex-peek 독립 해체분석. 게시글·문서와 코드의 차이, 벤치 해석, DML이 이미 더 단단한 곳, 지금 넣을 작은 것과 역할판 단계별 흡수, 가져오지 말 것과 실패 기록의 교훈. 같은 대상의 ChatGPT 리뷰(PR #102)와는 독립으로 썼다. [근거·후보별 판정](2026-09-26-codex-peek-claude/EVIDENCE.md). 코드 변경·모델 CLI 호출 없음 |
 
 ## 읽는 순서
 
