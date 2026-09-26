@@ -62,7 +62,7 @@
 
 **진행 중: 작업 카드 시범.** 일은 `card` 라벨 이슈에서 [시범 규칙](docs/experiments/2026-09-25-card-pilot/README.md)대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #98](https://github.com/inlight37-design/decision-model_lab/pull/98)(`chatgpt/role-board-review-20260926`) — [역할판 검토](docs/reviews/2026-09-26-role-board-review/README.md)와 [원문 대조](docs/reviews/2026-09-26-role-board-review/EVIDENCE.md). 1부 요구는 유지하고 2·3부의 보완·작은 구현 순서를 제안했다. 코드·관측 허가 변경과 모델 CLI 호출 없음. 검토 의견은 사용자 확정이 아니다.
+- **이 판을 들인 PR:** [PR #100](https://github.com/inlight37-design/decision-model_lab/pull/100)(`claude/model-role-assignment-brainstorm-v8jbea`) — 새 화면의 사용자 결정(2절 24, 질문의 원문·다듬기 두 모드)을 적고 다음 구현 A 단계를 [카드 #99](https://github.com/inlight37-design/decision-model_lab/issues/99)로 만들었다(사용자가 Codex에 맡김). 검토는 [역할판 검토](docs/reviews/2026-09-26-role-board-review/README.md)와 [원문 대조](docs/reviews/2026-09-26-role-board-review/EVIDENCE.md). 코드 변경·모델 호출 없음.
 
 | 사용자 판단 | 권고 / 지금까지 한 일 |
 |---|---|
