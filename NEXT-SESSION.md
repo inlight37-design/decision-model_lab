@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-26** · 작성 세션: chatgpt(GitHub·웹 컨테이너 — 리뷰·코드 대조, 사용자 PC·실제 CLI 미관측) · 브랜치 `chatgpt/review-consolidation-20260926` · 기준 main `435ba02`, 시작 head `8281b4f`.
+최종 갱신 **2026-09-27** · 작성 세션: claude(사용자 PC `DESKTOP-T0UDE01` — 모의 서버·앱 안 브라우저로 새 화면 확인, WSL·참여자 CLI는 보지 않음, 모델 호출 없음) · 브랜치 `claude/task-nav-render-20260927` · 기준 main `ef7a01b`.
 
 이 파일은 **지금 상태와 다음 일만** 담는다. 끝난 일의 경위는 PR·git 이력과 날짜가 붙은 기록에 있고, 옛 판은 [docs/handoff/](docs/handoff/README.md)에 있다. **3절에는 진행 중인 일과 "이 판을 들인 PR" 한 줄만 둔다** — 새 PR은 그 줄을 자기 PR로 바꾸고, 병합 전에도 뒤에도 맞는 말만 쓴다("병합했다"고 미리 적지 않는다). 크기 상한과 3절의 모양은 CI가 본다. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있는 규칙은 여기 다시 적지 않는다 — 쌓임을 막는 원칙은 협업 규칙 7절이다.
 
@@ -64,7 +64,7 @@
 **진행 중: 작업 카드 시범.** 일은 `card` 라벨 이슈에서 [시범 규칙](docs/experiments/2026-09-25-card-pilot/README.md)대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
 - **진행 중인 선행 작업:** 역할판·Peek·구조 검토의 쌓임과 별도 Claude 리뷰는 [통합 기록 2절](docs/reviews/2026-09-26-review-consolidation/README.md)에 고정했다. 실제 열린 PR·병합 상태를 확인하고 다른 가지의 인계를 덮어쓰지 않는다.
-- **이 판을 들인 PR:** [PR #106](https://github.com/inlight37-design/decision-model_lab/pull/106)(`chatgpt/review-consolidation-20260926`) — [리뷰 통합](docs/reviews/2026-09-26-review-consolidation/README.md). 지적별 처분·작은 수정 순서·완료 조건이며 제품 수정·모델 호출·병합 기록이 아니다.
+- **이 판을 들인 PR:** [PR #107](https://github.com/inlight37-design/decision-model_lab/pull/107)(`claude/task-nav-render-20260927`) — 새 화면을 모의 모드로 끝까지 눌러 보고, 홈 경로의 `nullnull`·작업 목록의 `[object HTMLButtonElement]`·자료 안내의 `null` 글자를 고쳤다. 화면 시험의 가짜 DOM이 실제 DOM처럼 굴게 했다. 모델 호출 없음.
 
 | 사용자 판단 | 권고 / 지금까지 한 일 |
 |---|---|

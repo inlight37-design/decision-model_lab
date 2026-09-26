@@ -28,6 +28,30 @@ assert.equal(noClaude, "자료 5개 · 합계 1,043 KB");
                                 encoding="utf-8")
         self.assertEqual(result.returncode, 0, result.stderr)
 
+    def test_help_under_the_chips_holds_only_elements(self):
+        """바뀌는 파일 이름이 없을 때 안내 아래에 "null" 글자가 붙던 것(replaceChildren은 null을 거르지 않는다)."""
+        html = (Path(__file__).resolve().parents[1] / "app/static/index.html").read_text(encoding="utf-8")
+        functions = (html[html.index("function sourceName("):html.index("async function sourceFiles(")]
+                     + html[html.index("function renderPicked("):html.index("function advancedSummary(")])
+        script = r'''
+const assert = require("node:assert/strict");
+const nodes = {};
+const isNode = x => x !== null && typeof x === "object" && !Array.isArray(x) && "tag" in x;
+const $ = id => nodes[id] ||= {hidden:false, textContent:"", replaceChildren(...kids) {this.kids=kids.map(k => isNode(k) ? k : String(k));}};
+function h(tag,attrs,...kids) {return {tag,attrs:attrs||{},kids:kids.flat(Infinity).filter(x=>x!==null && x!==false && x!==undefined)};}
+const invalidatePreview=()=>{}, updateSourceNote=()=>{}, pressAll=()=>{}, fmtSize=n=>String(n);
+let picked;
+''' + functions + r'''
+picked = [{name: "notes.md", size: 10}]; renderPicked("");
+assert.ok(nodes.sourcesHelp.kids.every(isNode), JSON.stringify(nodes.sourcesHelp.kids));
+assert.equal(nodes.sourcesHelp.kids.length, 1);
+picked = [{name: "회의록.md", size: 10}]; renderPicked("");
+assert.ok(nodes.sourcesHelp.kids.every(isNode)); assert.equal(nodes.sourcesHelp.kids.length, 2);
+'''
+        result = subprocess.run([shutil.which("node"), "-e", script], capture_output=True, text=True, timeout=15,
+                                encoding="utf-8")
+        self.assertEqual(result.returncode, 0, result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()
