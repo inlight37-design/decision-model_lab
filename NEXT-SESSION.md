@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-26** · 작성 세션: claude(웹 컨테이너 — 새 화면의 사용자 결정 기록과 A 단계 카드, 사용자 PC·CLI는 보지 않음, 모델 호출 없음) · 브랜치 `claude/model-role-assignment-brainstorm-v8jbea` · 기준 main `f722ee1`.
+최종 갱신 **2026-09-26** · 작성 세션: codex(웹 컨테이너 — 카드 #99 모의 작업·역할판 구현, 사용자 PC·실제 CLI는 보지 않음, 모델 호출 없음) · 브랜치 `codex/role-board-a-20260926` · 기준 main `435ba02`.
 
 이 파일은 **지금 상태와 다음 일만** 담는다. 끝난 일의 경위는 PR·git 이력과 날짜가 붙은 기록에 있고, 옛 판은 [docs/handoff/](docs/handoff/README.md)에 있다. **3절에는 진행 중인 일과 "이 판을 들인 PR" 한 줄만 둔다** — 새 PR은 그 줄을 자기 PR로 바꾸고, 병합 전에도 뒤에도 맞는 말만 쓴다("병합했다"고 미리 적지 않는다). 크기 상한과 3절의 모양은 CI가 본다. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있는 규칙은 여기 다시 적지 않는다 — 쌓임을 막는 원칙은 협업 규칙 7절이다.
 
@@ -9,7 +9,7 @@
 1. **이 저장소를 처음 여는 컴퓨터라면 [docs/SETUP.md](docs/SETUP.md)부터 한다**(PowerShell 한 줄의 원터치 설치). 다른 기기의 관측 기록으로는 strict로 실행하지 않는다.
 2. 열린 PR·현재 main·미병합 브랜치와 카드 보드를 본다(`git fetch --all --prune`, `git branch -r --no-merged origin/main`, `gh pr list`, `gh issue list --label card`). 실제 GitHub 상태가 이 인계보다 우선이다.
 3. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)을 따른다. 자기 브랜치에서 작업하고 바로 push한다. 병합은 사용자 또는 PR의 CI 녹색을 확인한 claude 세션이 한다(2절 8).
-4. 실측한 같은 질문을 반복하지 않는다. 새 실제 호출은 새 원장·provider별 상한·멈춤 조건으로 하고 결과를 기록한다. 기존 원장을 지우거나 상한을 늘리지 않고, 새 코드로 열기 전에 백업한다(지금 스키마 7). 호출 이력은 각 실험·검토 기록에 있다.
+4. 실측한 같은 질문을 반복하지 않는다. 새 실제 호출은 새 원장·provider별 상한·멈춤 조건으로 하고 결과를 기록한다. 기존 원장을 지우거나 상한을 늘리지 않는다. 지금 스키마는 8이며, 구형 원장은 이전 거래 전에 자동 백업한다([원장 안내](app/README.md#회계와-원장)). 호출 이력은 각 실험·검토 기록에 있다.
 
 ## 1. 지금 상태
 
@@ -23,6 +23,7 @@
 | 실제 실행 | 병렬·봉인·공개, 공통 자료, strict 독립 정족수, 실제 중도 취소와 자손 종료 확인, 실제 합성(실행마다 켬, 형식 실패 원문 보존, 이름표 순서는 실행마다 섞음). 자료 합계 약 490 KB는 둘 다 시간 안, **약 1 MiB는 Claude가 180초를 넘겼다**(Codex 24초) | [병렬](docs/reviews/2026-09-24-windows-live-completion/README.md) · [자료](docs/reviews/2026-09-24-source-snapshot/README.md) · [strict·취소](docs/reviews/2026-09-25-strict-live-run/README.md) · [합성](docs/reviews/2026-09-24-model-synthesis/README.md) · [1 MiB](docs/experiments/2026-09-25-1mib-sources/RESULTS.md) |
 | 계정 한도 | provider별 카드에 한도 창마다 쓴 비율의 게이지. Codex는 모델 없는 조회(버튼, 그리고 창을 보는 동안 값이 2~5분 지나면 화면이 저절로 — 서버는 1분에 한 번), Claude는 모델 없이 묻는 통로가 없어 마지막으로 끝난 실제 실행의 `rate_limit_event`(Claude Code 2.1.280 `--help`에 사용량 명령 없음, 2026-09-26 확인). 봉인 중·모의 값은 쓰지 않는다 | [A·F](docs/reviews/2026-09-24-account-limits/README.md) |
 | 원장 | 실험은 aux-pc-wsl의 `~/.local/state/dml-*` — 모두 상한까지 썼고 새 실험은 새 원장. 앱 아이콘은 `~/.local/state/decision-model-lab/app/live/`의 원장을 호출이 남은 동안 이어 쓴다(원장당 Codex 5·Claude 5) | 각 기록 · [app 안내](app/README.md) |
+| 작업·역할판 A | 홈·내 차례 → 작업 타임라인 → 역할판·입력 확인 → 기존 결과. 빈 상위 칸은 나, 미지원 배치는 시작 전 거절. 기존 실행은 각각 작업 하나. 작업·역할 구성은 서버 원장에 고정 | [화면·원장 안내](app/README.md) · [카드 #99](https://github.com/inlight37-design/decision-model_lab/issues/99). 실제 CLI 화면은 PC 세션 확인 필요 |
 | 비교 실험 | L1: 같은 provider의 틀린 초안 대신 맞는 초안을 고른 사례 관측, 다른 과제는 보류. 합성의 일반적 이득은 미확립 | [L1](docs/experiments/2026-09-25-l1/RESULTS.md) · [D](docs/experiments/2026-09-24-comparison-pilot/RESULTS.md) · [D 후속](docs/experiments/2026-09-25-d-followup/RESULTS.md) |
 | 협업 | GitHub 이슈 카드 보드 시범 진행 중. 새 컴퓨터는 원터치 설치 | [시범](docs/experiments/2026-09-25-card-pilot/README.md) · [SETUP](docs/SETUP.md) |
 | 한계·남은 일 | 못 고치는 것, 해야 할 일의 우선순위, 조사 거리를 한 장에 모았고 외부 검토를 받았다 | [검토 요청서](docs/reviews/2026-09-25-review-request/README.md) · [검토](docs/reviews/2026-09-25-review/README.md) |
@@ -62,7 +63,7 @@
 
 **진행 중: 작업 카드 시범.** 일은 `card` 라벨 이슈에서 [시범 규칙](docs/experiments/2026-09-25-card-pilot/README.md)대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #100](https://github.com/inlight37-design/decision-model_lab/pull/100)(`claude/model-role-assignment-brainstorm-v8jbea`) — 새 화면의 사용자 결정(2절 24, 질문의 원문·다듬기 두 모드)을 적고 다음 구현 A 단계를 [카드 #99](https://github.com/inlight37-design/decision-model_lab/issues/99)로 만들었다(사용자가 Codex에 맡김). 검토는 [역할판 검토](docs/reviews/2026-09-26-role-board-review/README.md)와 [원문 대조](docs/reviews/2026-09-26-role-board-review/EVIDENCE.md). 코드 변경·모델 호출 없음.
+- **이 판을 들인 PR:** [PR #101](https://github.com/inlight37-design/decision-model_lab/pull/101)(`codex/role-board-a-20260926`) — [카드 #99](https://github.com/inlight37-design/decision-model_lab/issues/99)의 홈·작업·역할판·입력 확인을 기존 결과에 연결하고 원장을 스키마 8로 올린다. 모의·합성 시험만, 모델 호출 없음. 정확한 검증 결과·환경 제약은 PR 본문에 있다. 사용자 지시로 이 세션은 병합하지 않는다.
 
 | 사용자 판단 | 권고 / 지금까지 한 일 |
 |---|---|
@@ -70,7 +71,7 @@
 | 실제 합성의 기본값 | 실행마다 켜는 선택(기본 끔)을 권고한다. D·D 후속의 형식 실패·오류 전이·권고 누락에 더해 L1에서도 정답 선택과 판단 보류가 함께 나왔다. 인용 일치는 사실 확인이 아니다. 합성자는 실행마다 사용자가 고른다 |
 | 여러 AI 작업 방식 | 카드 보드 시범 중이며 채택은 사용자가 정한다. 조사는 [원문](docs/research/multi-ai-workflow-2026-09-25/README.md)·[후속 검토](docs/reviews/2026-09-25-workflow-evaluation/README.md)·[병합 기록](docs/reviews/2026-09-25-merge-56/README.md)(Projects 정정). Claude Code Projects는 Code 쪽에 보이지 않아(사용자 확인) 보류, 새 방식에서 ChatGPT 웹은 큰 변경의 검토에 쓴다. [WorkTrail 평가](docs/reviews/2026-09-25-worktrail/README.md)(ChatGPT, 2026-09-25): 통째 도입은 보류, 카드 체크포인트의 다섯 줄 형식만 [카드 양식](.github/ISSUE_TEMPLATE/card.md)에 들였다. Entire·Beads·Agent Mail 같은 도구는 같은 불편이 되풀이될 때 그 평가 9절의 짝(찾기 어려움→읽기 전용 뷰, 의존성→Beads, 동시 수정→Agent Mail, 변경 이유→Entire)으로 본다. 개발용 기억 도구는 참여자에게 연결하지 않는다 — 붙이면 참여자 계획이 바뀌어 재관측이 필요하다 |
 | 디자인 브랜드북 | 화면은 island-ui를 쓰고 `design/`(Ledger)은 의미 규칙만 화면 규칙으로 남는다([design 안내](design/README.md)). 브랜드북·아티팩트를 island-ui로 옮길지 미정 |
-| 새 화면(역할판) | 사용자 결정은 2절 24. 다음은 A 단계 [카드 #99](https://github.com/inlight37-design/decision-model_lab/issues/99)(모의 흐름, Codex). 그 뒤 B 실제 모델 선택(추가 크레딧 경로를 막는 허용 목록 포함, [검토 근거 O14](docs/reviews/2026-09-26-role-board-review/EVIDENCE.md)) → C 사람이 나누는 일반 팀원 작업 → D 슈퍼바이저 모델·다듬기 모드 → E 섞어 쓰기·최적화. 검토의 기본안(상위 모델 끔, 같은 모델 두 번 보류, 문서는 앱 안에서, 격리 팀원 자료는 원문 우선)은 사용자 미확정 |
+| 새 화면(역할판) | 사용자 결정은 2절 24, A 구현은 카드 #99. 다음 B 실제 모델 선택(추가 크레딧 경로를 막는 허용 목록 포함, [검토 근거 O14](docs/reviews/2026-09-26-role-board-review/EVIDENCE.md)) → C 사람이 나누는 일반 팀원 작업 → D 슈퍼바이저 모델·다듬기 모드 → E 섞어 쓰기·최적화. 검토의 기본안(상위 모델 끔, 같은 모델 두 번 보류, 문서는 앱 안에서, 격리 팀원 자료는 원문 우선)은 사용자 미확정 |
 | 나머지 | Q3 TypeScript 이행 미정. TM 계획 A는 후보. agy 기본 끔(설치·B4는 사용자가 켜기로 할 때). 원본 앱 자동화 끔. 편의 후보(공개 결정 전달, 공개 뒤 교차검토, 상급 모델 제안)는 기본 끔 |
 
 미확인 실제 답을 독립 비교로 격상하지 않는다.
@@ -81,7 +82,7 @@
 
 1. **2026-10-25 전 — V04-01 절차서를 정한다.** 쌓임 검사의 `PROCEDURES` 예외가 그날 끝난다(`tests/test_accumulation.py`) — 지나면 CI가 실패한다. WSL 참여자의 설치·관측 절차는 이미 [SETUP](docs/SETUP.md)에 있으니, 절차서가 아직 맡는 일(Windows CLI 조사, `probe.ps1`·`summarize_claude_init.py`)을 살아 있는 문서로 옮길지 은퇴시킬지 정하고 AGENTS.md의 가리킴을 맞춘다. 모델 호출 없음.
 2. **2026-10-26 전 — 재관측**([SETUP 4절](docs/SETUP.md)의 절차, 모델 호출 Claude 2·Codex 3). 참여자 계획이나 CLI 판이 바뀌면 그때 바로 한다. 관측 기록은 `tools/w2/assemble.py`가 조립한다. 추론 강도를 연결하는 PR은 그 계획으로 바로 관측한다 — 이 날짜를 기다리지 않는다([역할판 검토](docs/reviews/2026-09-26-role-board-review/README.md) RB-01).
-3. **새 화면 A 단계 — [카드 #99](https://github.com/inlight37-design/decision-model_lab/issues/99).** 사용자가 Codex에 맡겼다. 모의 모드만, 모델 호출 0. 범위·완료 조건은 카드에 있다.
+3. **새 화면 — [카드 #99](https://github.com/inlight37-design/decision-model_lab/issues/99) PR을 검토한다.** 모의 A 흐름과 원장 이전을 구현했다. 다음 B는 실제 모델 선택과 관측된 경로 연결이다. 이 세션은 병합하지 않는다.
 4. **사용자에게 물을 것**(3절 표): 카드 보드를 채택할지 — 권고는 작은 보드 유지([이유](docs/reviews/2026-09-25-codex-continuation/README.md)). 채택하면 시범 규칙([날짜 기록 폴더](docs/experiments/2026-09-25-card-pilot/README.md)에 있다)을 협업 규칙으로 옮긴다. Q4 첫 화면, 실제 합성의 기본값, 새 화면을 실제로 써 본 소감(고칠 곳), 브랜드북을 island-ui로 옮길지, 역할판 검토의 기본안(3절 표).
 5. 새 카드가 필요하면 [카드 양식](.github/ISSUE_TEMPLATE/card.md)으로 만든다. 멈추거나 넘길 때는 체크포인트 다섯 줄을 쓴다.
 

@@ -44,6 +44,7 @@ import uuid
 from typing import Any, Protocol
 
 from app.store import Store
+from app.roles import freeze as freeze_roles, task_projection
 from app.report import build_report
 from app.synthesis import (LABEL_ORDER, SynthesisError, check_model_synthesis, mock_synthesize, model_prompt,
                            model_unavailable, unavailable)
@@ -306,8 +307,9 @@ class Controller:
                                      "WHERE state = ? AND NOT cancel_requested", QUEUED)["n"] > 0
 
     # ---- 만들기와 예약 -------------------------------------------------------------------------
-    def create_run(self, question: str, participants: list[ParticipantSpec], *, min_independent: int,
-                   quorum_policy: str = INDEPENDENT_ONLY, sources=None) -> str:
+    def prepare_run(self, question: str, participants: list[ParticipantSpec], *, min_independent: int,
+                    quorum_policy: str = INDEPENDENT_ONLY, sources=None, task_id=None, task_title=None,
+                    role_board=None, roster=None, run_id=None) -> dict[str, Any]:
         """sources: (이름, 글) 목록. 원장에 내용·해시를 고정하고, CLI 참여자에게는 그 사본 폴더 하나를 읽기
         전용 입력으로 준다(provider별 빈 입력 폴더 대신). 입력 폴더가 하나인 것은 같으므로 계획의 판은 그대로다."""
         question = question.strip()
@@ -321,11 +323,16 @@ class Controller:
         for p in participants:
             if p.transport not in (CLI, MANUAL) or (p.transport == CLI and p.adapter_id not in self.executor.adapter_ids):
                 raise ControllerError(f"unsupported participant {p.pid!r}")
+        try:
+            roles = freeze_roles(role_board, participants, roster or {p.pid: p for p in participants})
+        except ValueError as exc:
+            raise ControllerError(str(exc)) from None
         if quorum_policy not in QUORUM_POLICIES:
             raise ControllerError(f"quorum_policy must be one of {', '.join(QUORUM_POLICIES)}")
         # 프런트엔드가 false를 보내도 실행기의 opt-in 등급을 올려 주지 않는다. 더 낮은 등급은 보존한다.
         if getattr(self.executor, "allow_context_unverified", False):
             participants = [replace(p, context_unverified=True) if p.transport == CLI else p for p in participants]
+            roles["isolated"] = [asdict(p) for p in participants]
         confirmable = sum(confirmed(asdict(p)) for p in participants)
         if quorum_policy == INDEPENDENT_ONLY and min_independent > confirmable:
             raise ControllerError(f"only {confirmable} participant(s) can be confirmed independent (CLI); lower "
@@ -334,23 +341,69 @@ class Controller:
             m.start(tuple(p.pid for p in participants), min_independent=min_independent)
         except m.MembershipError as exc:
             raise ControllerError(str(exc)) from None
-        run_id = f"r{time.strftime('%m%d-%H%M%S')}-{uuid.uuid4().hex}"
+        if run_id is None:
+            run_id = f"r{time.strftime('%m%d-%H%M%S')}-{uuid.uuid4().hex}"
+        elif not isinstance(run_id, str) or not re.fullmatch(r"r[0-9]{4}-[0-9]{6}-[0-9a-f]{32}", run_id):
+            raise ControllerError("invalid preview run ID")
+        if task_id is not None:
+            if not isinstance(task_id, str) or not self.store.row("SELECT 1 FROM tasks WHERE task_id = ?", task_id):
+                raise ControllerError("작업을 찾을 수 없습니다.")
+            if task_title is not None:
+                raise ControllerError("기존 작업의 제목은 실행 생성으로 바꿀 수 없습니다.")
+        elif task_title is not None and (not isinstance(task_title, str) or not task_title.strip()
+                                         or len(task_title.strip()) > 120 or not storable(task_title)):
+            raise ControllerError("작업 제목은 1~120자의 올바른 글이어야 합니다.")
         prompt = PROMPT.format(question=question)
         if checked_sources:
             prompt += _source_footer(self._source_root(run_id), [
                 {"name": name, "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()}
                 for name, data in checked_sources])
         data = prompt.encode("utf-8")
+        manifest = {"run_id": run_id, "task_id": task_id, "task_title": task_title.strip() if task_title else question[:120],
+                    "question": question, "prompt": prompt, "input_sha256": hashlib.sha256(data).hexdigest(),
+                    "input_bytes": len(data), "role_config": roles,
+                    "min_independent": min_independent, "quorum_policy": quorum_policy,
+                    "sources": [{"name": name, "bytes": len(content), "sha256": hashlib.sha256(content).hexdigest()}
+                                for name, content in checked_sources],
+                    "calls": {"draft_cli": sum(p.transport == CLI for p in participants),
+                              "model_calls": 0 if self.executor.kind != contract.REAL else None,
+                              "live_cap": self.max_real_calls, "provider_caps": dict(self.provider_call_caps)},
+                    "manual_packets": {p.pid: packet(run_id, p.pid, hashlib.sha256(data).hexdigest(), prompt)
+                                       for p in participants if p.transport == MANUAL}}
+        manifest["confirmation"] = hashlib.sha256(json.dumps(manifest, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+        return manifest
+
+    def create_run(self, question: str, participants: list[ParticipantSpec], *, min_independent: int,
+                   quorum_policy: str = INDEPENDENT_ONLY, sources=None, task_id=None, task_title=None,
+                   role_board=None, roster=None, run_id=None, confirmation=None) -> str:
+        prepared = self.prepare_run(question, participants, min_independent=min_independent,
+                                    quorum_policy=quorum_policy, sources=sources, task_id=task_id, task_title=task_title,
+                                    role_board=role_board, roster=roster, run_id=run_id)
+        if confirmation is not None and confirmation != prepared["confirmation"]:
+            raise ControllerError("확인한 입력에서 바뀌었습니다. 보낼 입력을 다시 확인하세요.")
+        run_id, question, prompt = prepared["run_id"], prepared["question"], prepared["prompt"]
+        data = prompt.encode("utf-8")
+        participants = [ParticipantSpec(**p) for p in prepared["role_config"]["isolated"]]
+        checked_sources = _checked_sources(sources)
         with self.lock, self.store.tx() as tx:
             if self._closing:
                 raise ControllerError("controller is shutting down")
+            if self.store.row("SELECT 1 FROM runs WHERE run_id = ?", run_id):
+                raise ControllerError("이미 시작한 실행입니다. 같은 확인으로 다시 부르지 않습니다.")
+            if role_board is not None and (self.store.row(
+                    "SELECT 1 FROM runs WHERE phase = 'drafting' AND NOT cancel_requested")
+                    or self._slots_used() or self.unsettled()):
+                raise ControllerError("진행 중이거나 종료 미확인인 실행을 먼저 정리하세요. A 단계는 동시 작업을 시작하지 않습니다.")
+            if task_id is None:
+                task_id = "t-" + run_id
+                tx.execute("INSERT INTO tasks VALUES (?, ?, ?)", task_id, prepared["task_title"], time.time())
             for name, content in checked_sources:
                 tx.execute("INSERT INTO sources (run_id, name, sha256, bytes, content) VALUES (?, ?, ?, ?, ?)",
                            run_id, name, hashlib.sha256(content).hexdigest(), len(content), content)
             tx.execute("INSERT INTO runs (run_id, created_at, question, prompt, input_sha256, input_bytes, "
-                       "min_independent, roster, quorum_policy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                       "min_independent, roster, quorum_policy, task_id, role_config) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                        run_id, time.time(), question, prompt, hashlib.sha256(data).hexdigest(), len(data),
-                       min_independent, "{}", quorum_policy)
+                       min_independent, "{}", quorum_policy, task_id, json.dumps(prepared["role_config"], ensure_ascii=False))
             for p in participants:
                 tx.execute("INSERT INTO participants (run_id, pid, spec, state) VALUES (?, ?, ?, ?)", run_id, p.pid,
                            json.dumps(asdict(p), ensure_ascii=False), QUEUED if p.transport == CLI else AWAITING_USER)
@@ -746,6 +799,7 @@ class Controller:
     def synthesize(self, run_id: str) -> None:
         """One offline post-reveal transition. Persist once; failure keeps the draft report."""
         with self.lock, self.store.tx() as tx:
+            self._check_role_synthesizer(run_id)
             if not self._gate(run_id).public()["can_synthesize"]:
                 raise ControllerError("mock synthesis requires controller-revealed drafts")
             if self.store.row("SELECT 1 FROM events WHERE run_id = ? AND kind = 'synthesis_completed'", run_id):
@@ -767,6 +821,9 @@ class Controller:
         거절·상한 소진)은 아무것도 예약하지 않는다. 이름표 순서는 실행마다 하나라서 같은 실행의 합성은 같은 D1·D2를 본다.
         """
         with self.lock:
+            fixed = self._check_role_synthesizer(run_id, adapter_id)
+            if fixed is not None:
+                spec = ParticipantSpec(**fixed)
             if self._closing:
                 raise ControllerError("controller is shutting down")
             if not self._gate(run_id).public()["can_synthesize"]:
@@ -901,6 +958,9 @@ class Controller:
                 quorum = dict(current_gate.quorum)
                 quorum["label"] = _quorum_label(quorum) if revealed else None
                 runs.append({"run_id": run["run_id"], "created_at": run["created_at"], "question": run["question"],
+                             "task_id": run["task_id"], "role_config": json.loads(run["role_config"]),
+                             "reviewed": self.store.row("SELECT 1 FROM events WHERE run_id = ? AND kind = 'human_reviewed' LIMIT 1",
+                                                        run["run_id"]) is not None,
                              "prompt": run["prompt"], "input_sha256": run["input_sha256"],
                              "input_bytes": run["input_bytes"], "sources": self.sources(run["run_id"]),
                              "phase": run["phase"],
@@ -929,13 +989,35 @@ class Controller:
                     runs[-1]["model_syntheses"] = [
                         {"attempt": attempt, "status": item["status"], "result": item["result"] or None}
                         for (_, attempt), item in self._synthesis_attempts(run["run_id"]).items()]
-            return {"executor": self.executor.name, "live_call_budget": self.call_budget(),
+            tasks = task_projection(self.store.rows("SELECT * FROM tasks ORDER BY created_at DESC"), runs)
+            return {"executor": self.executor.name, "live_call_budget": self.call_budget(), "tasks": tasks,
                     "provider_call_budgets": {aid: self.call_budget(aid) for aid in self.provider_call_caps},
                     "slots": {"used": self._slots_used(), "cap": self.max_parallel},
                     "unsettled": {"count": self.unsettled(), "limit": self.unsettled_limit},
                     "paused": self.paused, "runs": runs}
 
     # ---- 내부 ---------------------------------------------------------------------------------
+    def _check_role_synthesizer(self, run_id, adapter_id=None):
+        roles = json.loads(self._run(run_id)["role_config"])
+        if roles["source"] != "board":
+            return None  # 이전 실행의 수동 합성 선택은 그대로 둔다.
+        spec = roles["orchestrator"]
+        if spec is None:
+            raise ControllerError("오케스트레이터는 나입니다. 원문 대조표를 직접 판단하세요. 합성은 부르지 않습니다.")
+        if adapter_id is not None and spec["adapter_id"] != adapter_id:
+            raise ControllerError("시작할 때 고정한 오케스트레이터와 다릅니다. 바꾸려면 새 실행을 만드세요.")
+        return spec
+
+    def mark_reviewed(self, run_id: str) -> None:
+        """사람이 공개된 답을 판단했다. 모델 호출 없이 내 차례를 끝내며 재시작에도 남는다."""
+        with self.lock, self.store.tx() as tx:
+            if not self._gate(run_id).revealed:
+                raise ControllerError("공개된 답을 확인한 뒤에만 판단 완료로 표시할 수 있습니다.")
+            if any(item["status"] in (RUNNING, UNKNOWN) for item in self._synthesis_attempts(run_id).values()):
+                raise ControllerError("합성의 종료를 먼저 확인하세요.")
+            if not self.store.row("SELECT 1 FROM events WHERE run_id = ? AND kind = 'human_reviewed' LIMIT 1", run_id):
+                tx.event(run_id, "human_reviewed")
+
     def _model_synthesis_state(self, run_id: str) -> dict[str, Any] | None:
         """같은 사건 투영으로 진행·실패·종료 미확인을 보인다. 과거 미확인 시도도 숨기지 않는다."""
         attempts = self._synthesis_attempts(run_id)

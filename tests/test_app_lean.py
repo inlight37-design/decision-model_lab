@@ -36,7 +36,11 @@ class ProjectionTests(unittest.TestCase):
         tail = [q for q in queries if q.startswith('SELECT KIND ')]
         self.assertEqual(len(tail), 1)
         self.assertIn('LIMIT 12', tail[0])
-        lifecycle = [q for q in queries if q not in tail]
+        review = [q for q in queries if "KIND = 'HUMAN_REVIEWED'" in q]
+        self.assertEqual(len(review), 1)
+        self.assertTrue(review[0].startswith("SELECT 1 "))
+        self.assertIn("LIMIT 1", review[0])
+        lifecycle = [q for q in queries if q not in tail and q not in review]
         for query in lifecycle:
             self.assertIn("WHERE KIND IN ('SYNTHESIS_STARTED', 'SYNTHESIS_FAILED', 'SYNTHESIS_COMPLETED', "
                           "'SYNTHESIS_UNKNOWN_ACKNOWLEDGED')", query)

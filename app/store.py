@@ -17,6 +17,7 @@ import os
 import sqlite3
 import threading
 import time
+import uuid
 from pathlib import Path
 from typing import Any, Iterator
 
@@ -25,7 +26,8 @@ from typing import Any, Iterator
 # 5: participants.kind — 시도의 실행 종류(mock/real/synthetic, core.contract). 화면·보고는 이것을 읽는다(G6).
 # 6: live_budget — 첫 실제 호출 상한은 원장에 고정한다. 재기동으로 늘리거나 없애지 못한다.
 # 7: sources — 실행을 만들 때 고정한 공통 자료(이름·sha256·크기·내용). 옛 코드가 자료를 모른 채 이어 부르지 않게 올린다.
-SCHEMA_VERSION = 7
+# 8: tasks·runs.task_id·role_config — 실행과 같은 거래에서 고정하는 작업/역할판.
+SCHEMA_VERSION = 8
 # 스키마 5 이전 시도의 종류는 시작 사건에 남은 실행기 이름에서만 복원한다. 모의 실행기의 이름은 격리 방식이었다.
 # 근거가 없으면 NULL로 두고, 화면은 "실행 종류 기록 없음"으로 보인다.
 LEGACY_EXECUTORS = {"bubblewrap": "mock", "job_object": "mock", "process_group": "mock", "cli": "real"}
@@ -36,7 +38,10 @@ CREATE TABLE IF NOT EXISTS runs (
   roster TEXT NOT NULL, reduction_approved INTEGER NOT NULL DEFAULT 0, note TEXT,
   quorum_policy TEXT NOT NULL,
   cancel_requested INTEGER NOT NULL DEFAULT 0,
-  phase TEXT NOT NULL DEFAULT 'drafting'
+  phase TEXT NOT NULL DEFAULT 'drafting', task_id TEXT, role_config TEXT
+);
+CREATE TABLE IF NOT EXISTS tasks (
+  task_id TEXT PRIMARY KEY, title TEXT NOT NULL, created_at REAL NOT NULL
 );
 CREATE TABLE IF NOT EXISTS participants (
   run_id TEXT NOT NULL, pid TEXT NOT NULL, spec TEXT NOT NULL, state TEXT NOT NULL,
@@ -115,6 +120,20 @@ class Store:
 
     def _migrate(self) -> None:
         with self._lock:
+            version = self._db.execute("PRAGMA user_version").fetchone()[0]
+            if version > SCHEMA_VERSION:
+                raise StoreError(f"journal schema {version} is newer than this code ({SCHEMA_VERSION})")
+            if version < SCHEMA_VERSION and self._db.execute(
+                    "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'runs'").fetchone():
+                # 잠금을 잡은 채 쓰기 거래보다 먼저 사본을 완성한다. 실패하면 이전을 시작하지 않는다.
+                backup = self.path.with_name(f"{self.path.name}.v{version}-{uuid.uuid4().hex}.bak")
+                fd = os.open(backup, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+                os.close(fd)
+                target = sqlite3.connect(backup)
+                try:
+                    self._db.backup(target)
+                finally:
+                    target.close()
             self._db.execute("BEGIN IMMEDIATE")
             try:
                 version = self._db.execute("PRAGMA user_version").fetchone()[0]
@@ -165,6 +184,22 @@ class Store:
                             if kind:
                                 self._db.execute("UPDATE participants SET kind = ? WHERE run_id = ? AND pid = ? "
                                                  "AND attempt = ?", (kind, run_id, event.get("pid"), event.get("attempt")))
+                if version < 8:
+                    columns = {row[1] for row in self._db.execute("PRAGMA table_info(runs)")}
+                    for name in ("task_id", "role_config"):
+                        if name not in columns:
+                            self._db.execute(f"ALTER TABLE runs ADD COLUMN {name} TEXT")
+                    for run in self._db.execute("SELECT * FROM runs WHERE task_id IS NULL").fetchall():
+                        task_id = "t-" + run["run_id"]
+                        roles = {"source": "legacy", "input_mode": "original", "supervisor": None,
+                                 "orchestrator": None, "general": [], "isolated": [json.loads(p[0]) for p in
+                                     self._db.execute("SELECT spec FROM participants WHERE run_id = ? ORDER BY rowid",
+                                                      (run["run_id"],))]}
+                        self._db.execute("INSERT INTO tasks VALUES (?, ?, ?)",
+                                         (task_id, run["question"][:120], run["created_at"]))
+                        self._db.execute("UPDATE runs SET task_id = ?, role_config = ? "
+                                         "WHERE run_id = ? AND task_id IS NULL",
+                                         (task_id, json.dumps(roles, ensure_ascii=False), run["run_id"]))
                 if version != SCHEMA_VERSION:
                     self._db.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
                 self._db.execute("COMMIT")

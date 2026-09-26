@@ -1,0 +1,24 @@
+/* 앱 전용 판. 복사한 island-ui는 고치지 않고 그 색·간격·모서리를 사용한다. */
+.task-nav { display: flex; align-items: center; flex-wrap: wrap; gap: var(--s-2); margin-bottom: var(--s-5); }
+.task-grid, .role-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-4); }
+.task-card { display: flex; flex-direction: column; gap: var(--s-3); width: 100%; text-align: left; color: var(--text); overflow-wrap: anywhere; cursor: pointer; }
+.task-timeline { padding-left: var(--s-5); }
+.task-card:hover, .role-target:hover { box-shadow: inset 0 0 0 2px var(--line); }
+.role-roster { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: var(--s-2); }
+.role-card { padding: var(--s-2); }
+.role-pick { display: flex; flex-direction: column; gap: var(--s-2); text-align: left; width: 100%; padding: var(--s-3); color: var(--text); border-radius: var(--r-cell); cursor: grab; }
+.role-pick[aria-pressed="true"] { background: var(--primary); color: var(--on-primary); }
+.role-pick[aria-pressed="true"] .muted { color: inherit; }
+.role-slot { padding: var(--s-3); }
+.role-target { display: flex; flex-direction: column; gap: var(--s-2); width: 100%; min-height: 76px; color: var(--text); text-align: left; border-radius: var(--r-cell); padding: var(--s-2); cursor: pointer; }
+.role-assignment { margin-top: var(--s-2); border-top: 1px solid var(--line); padding-top: var(--s-2); }
+.input-full { font: inherit; font-size: var(--t-sm-size); white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; line-height: 1.6; }
+.compose-dialog { width: min(1080px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: var(--s-5); border: 1px solid var(--line); border-radius: var(--r-island); background: var(--surface); color: var(--text); box-shadow: var(--shadow-float); }
+.compose-dialog::backdrop { background: #0008; }
+#newRunPanel { position: relative; inset: auto; max-height: none; padding: 0; overflow: visible; background: none; box-shadow: none; backdrop-filter: none; }
+#newRunPanel .close-x { top: 0; right: 0; }
+#taskTitle { font: inherit; border: 1px solid var(--line); border-radius: var(--r-cell); background: var(--surface-2); color: var(--text); padding: var(--s-3); }
+#inputPreview { margin-top: var(--s-5); border-top: 1px solid var(--line); padding-top: var(--s-5); }
+#inputPreview[hidden], #taskTitleField[hidden] { display: none; }
+#newRunPanel fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+@media (max-width: 600px) { .task-grid, .role-grid { grid-template-columns: 1fr; } .compose-dialog { padding: var(--s-4); } }
