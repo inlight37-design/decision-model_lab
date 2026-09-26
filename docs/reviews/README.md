@@ -61,6 +61,7 @@
 | [`2026-09-26-architecture-health/`](2026-09-26-architecture-health/README.md) | Codex의 [PR #104](https://github.com/inlight37-design/decision-model_lab/pull/104). 아키텍처·실행 파이프라인·누적 코드·효율 검토. main과 역할판 변경을 구분한 상태·정리·조회 반례, 고정 소스 재현, 필요한 복잡도와 작은 정리 순서. 제품 수정 없음 |
 | [`2026-09-26-codex-peek-claude/`](2026-09-26-codex-peek-claude/README.md) | claude(사용자 PC)의 [PR #105](https://github.com/inlight37-design/decision-model_lab/pull/105). codex-peek 독립 해체분석. 게시글·문서와 코드의 차이, 벤치 해석, DML이 이미 더 단단한 곳, 지금 넣을 작은 것과 역할판 단계별 흡수, 가져오지 말 것과 실패 기록의 교훈. 같은 대상의 ChatGPT 리뷰(PR #102)와는 독립으로 썼다. [근거·후보별 판정](2026-09-26-codex-peek-claude/EVIDENCE.md). 코드 변경·모델 CLI 호출 없음 |
 | [`2026-09-26-review-consolidation/`](2026-09-26-review-consolidation/README.md) | ChatGPT의 [PR #106](https://github.com/inlight37-design/decision-model_lab/pull/106). 구조 검토와 Claude의 [별도 Peek 검토](https://github.com/inlight37-design/decision-model_lab/blob/6d6fdb9debc07ef835dd3d3f0b224f372a918c01/docs/reviews/2026-09-26-codex-peek-claude/README.md)를 기존 적용안·역할판 코드와 통합. 중복·해결 범위·수정 순서·완료 조건, N1 훅 검사·N3 상태 입력·폴링 우선순위 보완. 제품 수정·설치·모델 호출·병합 없음 |
+| [`2026-09-27-review-closeout/`](2026-09-27-review-closeout/README.md) | claude(사용자 PC)의 리뷰 마감. 위 다섯 기록과 역할판 A(PR #101)를 병합한 결과, AI들이 합의한 것·애매한 것·사용자가 고를 것·아쉬웠던 것, 다음 카드 S1–S4. 병합 전 모의 화면을 브라우저로 눌러 본 결과와 글자 버그 수정(PR #107). 모델 호출 없음 |
 
 ## 읽는 순서
 
@@ -118,6 +119,7 @@
 ## 구조·Peek 통합에 대한 단서
 
 - [통합 검토](2026-09-26-review-consolidation/README.md)는 AH 지적과 Claude N1–N4의 중복·우선순위를 구분한다. N1의 hooks.json 목록 추가에는 빈 파일 예외 보완이 필요하고 전체 훅 격리를 증명하지 않는다. N3는 paused 전달과 결과 판 확인을 함께 다뤄야 한다. AH-05의 응답 순서·시작 영수증은 TM 최적화까지 미룰 항목이 아니다. [직접 확인과 한계](2026-09-26-review-consolidation/EVIDENCE.md)를 함께 읽으며, 원래 날짜 리뷰는 수정하지 않았다.
+- [리뷰 마감](2026-09-27-review-closeout/README.md)이 위 세 보완을 코드에서 다시 확인했고, S1–S4를 카드 #108–#111로 옮겼다. [claude 검토](2026-09-26-codex-peek-claude/README.md)의 N1·N3·폴링 우선순위를 읽을 때는 이 두 기록을 함께 본다.
 
 ## 역할판 요청서에 대한 단서
 
