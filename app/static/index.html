@@ -694,12 +694,16 @@ async function startRun() {
   });
   if (!participants.length) { err.textContent = "참여자를 한 명 이상 고르세요."; return; }
   button.disabled = true;
+  invalidatePreview();
+  const generation = previewGeneration;
+  const body = { question: $("question").value, participants, role_board: roleBoard,
+                 min_independent: +$("min").value, quorum_policy: $("policy").value,
+                 ...(composeTask ? { task_id: composeTask } : { task_title: $("taskTitle").value.trim() || $("question").value.trim().slice(0, 120) }) };
+  const files = [...picked];
   try {
-    const sources = await sourceFiles(picked);
-    const body = { question: $("question").value, participants, role_board: roleBoard,
-                   min_independent: +$("min").value, quorum_policy: $("policy").value, sources,
-                   ...(composeTask ? { task_id: composeTask } : { task_title: $("taskTitle").value.trim() || $("question").value.trim().slice(0, 120) }) };
-    showInputPreview(await api("/api/runs/preview", body), body);
+    body.sources = await sourceFiles(files);
+    const preview = await api("/api/runs/preview", body);
+    if (generation === previewGeneration) showInputPreview(preview, body);
   } catch (e) { err.textContent = e.message; }
   finally { button.disabled = false; }
 }

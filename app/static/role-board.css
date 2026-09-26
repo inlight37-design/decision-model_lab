@@ -19,4 +19,6 @@
 #newRunPanel .close-x { top: 0; right: 0; }
 #taskTitle { font: inherit; border: 1px solid var(--line); border-radius: var(--r-cell); background: var(--surface-2); color: var(--text); padding: var(--s-3); }
 #inputPreview { margin-top: var(--s-5); border-top: 1px solid var(--line); padding-top: var(--s-5); }
+#inputPreview[hidden], #taskTitleField[hidden] { display: none; }
+#newRunPanel fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 @media (max-width: 600px) { .task-grid, .role-grid { grid-template-columns: 1fr; } .compose-dialog { padding: var(--s-4); } }

@@ -3,6 +3,7 @@
 const ROLE_LABELS = { supervisor: "슈퍼바이저", orchestrator: "오케스트레이터", isolated: "팀원(격리)", general: "팀원(일반)" };
 const TASK_LABELS = { working: "작업 중", my_turn: "내 차례", done: "끝남", problem: "문제" };
 let roleOptions = null, roleBoard = null, chosenCard = null, previewRequest = null, composeTask = null;
+let previewGeneration = 0;
 let taskSelected = new URLSearchParams(location.search).get("task"), taskPageSig = null;
 
 function emptyBoard() { return { supervisor: [], orchestrator: [], isolated: [], general: [], input_mode: "original" }; }
@@ -31,6 +32,7 @@ function boardWarnings(board, roster) {
   return warnings;
 }
 function invalidatePreview() {
+  previewGeneration += 1;
   previewRequest = null;
   $("inputPreview").replaceChildren(); $("inputPreview").hidden = true;
 }
@@ -146,6 +148,7 @@ function renderTaskNavigation() {
     tasks.length ? tasks.map(t => h("button", { type: "button", class: "run-row", "aria-current": String(t.task_id === taskSelected),
       onclick: () => navigateTask(t.task_id) }, h("span", { class: "sm strong" }, t.title), h("span", { class: "cap muted" }, TASK_LABELS[t.status]))) :
       h("p", { class: "sm muted" }, "새 작업에서 첫 질문을 시작하세요."));
+  pressAll($("runTabs")); pressAll($("runListIsland"));
 }
 function renderTaskPage() {
   const tasks = state.tasks || [], task = tasks.find(t => t.task_id === taskSelected);

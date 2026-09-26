@@ -40,9 +40,12 @@ def freeze(board, participants, roster):
 def task_projection(tasks, runs):
     """controller.view의 공개 투영만 받는다. 초안·결과·진행 시간은 목록으로 복사하지 않는다."""
     projected = []
+    grouped = {}
+    for run in sorted(runs, key=lambda r: r["created_at"]):
+        grouped.setdefault(run["task_id"], []).append(run)
     for task in tasks:
         timeline = []
-        for run in sorted((r for r in runs if r["task_id"] == task["task_id"]), key=lambda r: r["created_at"]):
+        for run in grouped.get(task["task_id"], []):
             gate, parts = run["gate"], run["participants"]
             synth = run.get("model_synthesis") or {}
             if any(p["state"] == "unknown" for p in parts) or synth.get("status") in ("unknown", "failed"):

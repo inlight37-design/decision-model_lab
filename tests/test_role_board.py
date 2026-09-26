@@ -3,6 +3,7 @@ import copy
 import json
 from pathlib import Path
 import sqlite3
+import threading
 from unittest import mock
 
 from app import controller as c, server
@@ -173,6 +174,55 @@ class RoleBoardTests(Base):
 
 
 class RoleBoardHttpTests(HttpServerCase):
+    def get_state(self):
+        import http.client
+        conn = http.client.HTTPConnection("127.0.0.1", self.port, timeout=2)
+        try:
+            conn.request("GET", "/api/state", headers={"Authorization": f"Bearer {self.token}"})
+            reply = conn.getresponse()
+            self.assertEqual(reply.status, 200)
+            return json.loads(reply.read())
+        finally:
+            conn.close()
+
+    def test_manual_mock_flow_reopens_the_same_task_after_server_restart(self):
+        # 원본 앱을 실제로 부르지 않고 모의 답을 넣는다. 실제 서버 라우트를 끝까지 거친다.
+        body = {"question": "화면 흐름 확인용 질문", "participants": [{"pid": "antigravity-app"}],
+                "min_independent": 1, "quorum_policy": "include_unverified",
+                "role_board": board("antigravity-app"), "task_title": "모의 작업"}
+        status, raw, _ = self.request(body, path="/api/runs/preview")
+        self.assertEqual(status, 200)
+        preview = json.loads(raw)
+        body.update(run_id=preview["run_id"], confirmation=preview["confirmation"])
+        self.assertEqual(self.request(body)[0], 200)
+        rid = preview["run_id"]
+        before = self.get_state()
+        self.assertEqual(before["tasks"][0]["status"], "my_turn")
+        self.assertEqual(self.request({"text": "이것은 외부 모델을 부르지 않고 작성한 모의 답입니다.",
+                                       "input_sha256": preview["input_sha256"], "user_confirmed": True},
+                                      path=f"/api/runs/{rid}/manual/antigravity-app")[0], 200)
+        opened = self.get_state()
+        self.assertTrue(opened["runs"][0]["gate"]["revealed"])
+        self.assertEqual(opened["tasks"][0]["runs"][0]["action"], "공개된 답 판단")
+        self.assertEqual(self.request({}, path=f"/api/runs/{rid}/reviewed")[0], 200)
+        saved = self.get_state()
+        self.assertEqual(saved["tasks"][0]["status"], "done")
+        self.httpd.shutdown(); self.httpd.server_close(); self.thread.join(2)
+        self.assertFalse(self.thread.is_alive())
+        self.assertTrue(self.ctl.shutdown()); self.store.close()
+        restarted = Store(Path(self.tmp.name) / "journal.db")
+        self.addCleanup(restarted.close)
+        self.ctl = c.Controller(restarted, c.MockExecutor(), max_parallel=0)
+        self.addCleanup(self.ctl.shutdown)
+        self.httpd = server._Server(("127.0.0.1", 0), server.BaseHTTPRequestHandler)
+        self.port = self.httpd.server_address[1]
+        self.httpd.RequestHandlerClass = server.make_handler(self.ctl, self.token, self.port)
+        self.thread = threading.Thread(target=self.httpd.serve_forever, kwargs={"poll_interval": 0.01}, daemon=True)
+        self.thread.start()
+        self.addCleanup(self.httpd.server_close); self.addCleanup(self.httpd.shutdown)
+        self.assertEqual(self.get_state()["tasks"], saved["tasks"])
+        self.assertEqual(self.get_state()["runs"][0]["role_config"], saved["runs"][0]["role_config"])
+
     def test_preview_then_start_preserves_roles_and_unsupported_posts_create_nothing(self):
         body = {"question": "서버 입력", "participants": [{"pid": "codex"}], "min_independent": 1,
                 "role_board": board("codex"), "task_title": "HTTP 작업"}
@@ -191,4 +241,3 @@ class RoleBoardHttpTests(HttpServerCase):
         self.assertEqual(saved["role_config"], preview["role_config"])
         self.assertEqual(saved["prompt"], preview["prompt"])
         self.assertEqual(self.request({}, path=f"/api/runs/{saved['run_id']}/reviewed")[0], 400)
-
