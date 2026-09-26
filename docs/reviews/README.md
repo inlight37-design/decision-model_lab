@@ -62,6 +62,7 @@
 | [`2026-09-26-codex-peek-claude/`](2026-09-26-codex-peek-claude/README.md) | claude(사용자 PC)의 [PR #105](https://github.com/inlight37-design/decision-model_lab/pull/105). codex-peek 독립 해체분석. 게시글·문서와 코드의 차이, 벤치 해석, DML이 이미 더 단단한 곳, 지금 넣을 작은 것과 역할판 단계별 흡수, 가져오지 말 것과 실패 기록의 교훈. 같은 대상의 ChatGPT 리뷰(PR #102)와는 독립으로 썼다. [근거·후보별 판정](2026-09-26-codex-peek-claude/EVIDENCE.md). 코드 변경·모델 CLI 호출 없음 |
 | [`2026-09-26-review-consolidation/`](2026-09-26-review-consolidation/README.md) | ChatGPT의 [PR #106](https://github.com/inlight37-design/decision-model_lab/pull/106). 구조 검토와 Claude의 [별도 Peek 검토](https://github.com/inlight37-design/decision-model_lab/blob/6d6fdb9debc07ef835dd3d3f0b224f372a918c01/docs/reviews/2026-09-26-codex-peek-claude/README.md)를 기존 적용안·역할판 코드와 통합. 중복·해결 범위·수정 순서·완료 조건, N1 훅 검사·N3 상태 입력·폴링 우선순위 보완. 제품 수정·설치·모델 호출·병합 없음 |
 | [`2026-09-27-review-closeout/`](2026-09-27-review-closeout/README.md) | claude(사용자 PC)의 리뷰 마감. 위 다섯 기록과 역할판 A(PR #101)를 병합한 결과, AI들이 합의한 것·애매한 것·사용자가 고를 것·아쉬웠던 것, 다음 카드 S1–S4. 병합 전 모의 화면을 브라우저로 눌러 본 결과와 글자 버그 수정(PR #107). 모델 호출 없음 |
+| [`2026-09-26-main-pc-observe/`](2026-09-26-main-pc-observe/README.md) | 주 PC `DESKTOP-T0UDE01`의 WSL(`main-pc-wsl`)에서 두 참여자 계획을 SETUP 4절로 관측한 기록(Claude 2·Codex 3, 모두 기대대로) — 2026-10-27부터 만료. 만든 세션은 올리지 않았고, 사용자가 판단을 맡긴 뒤 2026-09-27 claude가 원자료로 다시 조립해 대조하고 바이트 그대로 올렸다 |
 
 ## 읽는 순서
 
@@ -115,6 +116,10 @@
 36. [`2026-09-24-account-limits/`](2026-09-24-account-limits/README.md) — 35가 정한 다음 작업 중 A·F. 봉인·실제 실행 규칙을 지키는 Claude 한도 표시, Codex 가용 모델의 실제 조회
 37. [`2026-09-24-source-snapshot/`](2026-09-24-source-snapshot/README.md) — 다음 작업 B와 A·F의 실제 확인. 공통 자료를 입력 digest에 묶고 시도마다 확인, 두 답이 같은 자료를 인용한 실제 실행
 38. [`2026-09-24-model-synthesis/`](2026-09-24-model-synthesis/README.md) — 다음 작업 C. 37의 공개된 실행에 실제 합성 1회, 인용 대조와 추가 주장 표시
+
+## 리뷰 마감에 대한 단서
+
+- [리뷰 마감](2026-09-27-review-closeout/README.md) 4절 "사용자가 골라야 하는 것"은 2026-09-27에 닫혔다. 사용자가 권고가 붙은 판단을 AI에 맡겼고([인계](../../NEXT-SESSION.md) 2절 25) 세션이 정했다 — 카드 보드는 채택해 규칙을 [협업 규칙](../COLLABORATION.md) 3절로 옮겼고, 브랜드북은 옮기지 않으며, 이 PC 관측 기록은 [올렸다](2026-09-26-main-pc-observe/README.md). 4절 표의 "두면 이 PC 앱은 그대로 돌지만"은 맞았다 — 그 기록은 그 PC의 배포판 `Ubuntu-24.04`에 등록돼 있었다.
 
 ## 구조·Peek 통합에 대한 단서
 

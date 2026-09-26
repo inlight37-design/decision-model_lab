@@ -71,6 +71,24 @@
 
 **인코딩.** Windows PowerShell 5.1의 `Get-Content`/`Set-Content`로 문서를 일괄 치환하지 않는다. [`AGENTS.md`](../AGENTS.md)의 경고를 따른다.
 
+### 작업 카드
+
+일은 GitHub 이슈의 카드로 주고받는다. 2026-09-25 시범의 네 카드가 모두 닫혀 2026-09-27에 채택했다([시범 기록](experiments/2026-09-25-card-pilot/README.md)). 보드는 작게 둔다.
+
+| 무엇 | 어떻게 |
+|---|---|
+| 카드 | `card` 라벨이 붙은 이슈 하나. 새 카드는 [카드 양식](../.github/ISSUE_TEMPLATE/card.md)으로 만든다 — 목표, 범위(하지 않는 것도), 완료 조건, 입력, 모델 호출 상한, 체크포인트 |
+| 상태 | 라벨은 하나만: `status: ready`(누구든), `status: in-progress`(한 세션이 잡음), `status: needs-user`(사용자만 할 수 있는 일), `status: review`(PR 열림) |
+| 담당 | 모든 세션이 같은 GitHub 계정을 쓰므로 담당자 칸 대신 `agent: claude`·`agent: codex`·`agent: chatgpt` 라벨 |
+| 가져가기 | `status: in-progress`가 없는지 먼저 본다. 상태·담당 라벨을 바꾸고 세션·기기·브랜치를 댓글로 남긴다. 두 세션이 겹치면 먼저 댓글을 단 쪽이 갖고 다른 쪽은 물러나며 겹친 일을 기록한다. 이슈는 CI를 받지 않으니 카드가 가리키는 코드를 지금 main과 대조한다 |
+| 멈추거나 넘길 때 | 커밋을 먼저 push한다. 체크포인트 댓글(형식은 카드 양식의 체크포인트 칸)을 남기고 `status: ready`나 `status: needs-user`로 되돌린다 |
+| 끝낼 때 | PR 본문에 `Closes #번호`. 병합되면 이슈가 닫힌다. 닫힌 이슈에 근거(PR·CI) 댓글 |
+| 세션이 바뀌면 | 같은 카드·브랜치·PR을 이어 간다. 세션마다 새 카드나 PR을 만들지 않는다 |
+| 보기 | `gh issue list --label card`. 상태를 확인하려고 모델을 부르지 않는다 |
+| 공개 저장소 | 인증 값, 원장 원문, 계정 식별자, 개인 정보를 이슈에 적지 않는다 |
+
+인계에는 카드와 같은 현황을 다시 적지 않는다. 보드로 모자란 불편이 되풀이되면 새 도구를 들이기 전에 [WorkTrail 평가](reviews/2026-09-25-worktrail/README.md) 9절의 짝부터 본다.
+
 ## 4. 문서의 두 종류
 
 | 종류 | 파일 | 규칙 |

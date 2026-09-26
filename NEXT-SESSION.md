@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-27** · 작성 세션: claude(사용자 PC `DESKTOP-T0UDE01` — 리뷰 마감·병합, 모의 화면 확인, WSL·참여자 CLI는 보지 않음, 모델 호출 없음) · 브랜치 `claude/review-closeout-20260927` · 기준 main `be25daa`.
+최종 갱신 **2026-09-27** · 작성 세션: claude(사용자 PC `DESKTOP-T0UDE01` — 사용자 판단 정리, 이 PC WSL의 등록·CLI 판 확인, 모델 호출 없음) · 브랜치 `claude/user-decisions-20260927` · 기준 main `688809d`.
 
 이 파일은 **지금 상태와 다음 일만** 담는다. 끝난 일의 경위는 PR·git 이력과 날짜가 붙은 기록에 있고, 옛 판은 [docs/handoff/](docs/handoff/README.md)에 있다. **3절에는 진행 중인 일과 "이 판을 들인 PR" 한 줄만 둔다** — 새 PR은 그 줄을 자기 PR로 바꾸고, 병합 전에도 뒤에도 맞는 말만 쓴다("병합했다"고 미리 적지 않는다). 크기 상한과 3절의 모양은 CI가 본다. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있는 규칙은 여기 다시 적지 않는다 — 쌓임을 막는 원칙은 협업 규칙 7절이다.
 
@@ -17,15 +17,15 @@
 
 | 항목 | 지금 | 근거 |
 |---|---|---|
-| 기기 | `aux-pc`(Windows)와 그 안의 `aux-pc-wsl`(Ubuntu 24.04). WSL의 Codex 0.156.1·Claude Code 2.1.280, 구독 로그인. 저장소에 다른 기기의 관측은 없다(K35) — `DESKTOP-T0UDE01`에 올리지 않은 기록이 하나 있다(3절) | [V04-01 기록](docs/experiments/v04-01-inventory/hosts/aux-pc-wsl/RESULTS.md) |
-| 참여자 계획·허가 | Codex `codex@5bed42d05320`(연결 앱·플러그인 끔)·Claude `claude-code@a35129c5a1dc`(입력 폴더 하나). [재관측 기록](docs/reviews/2026-09-25-reobserve/manifest.v2.json)으로 두 provider 모두 strict 허가 — **2026-10-26부터 만료**(모든 칸이 2026-09-25 관측). 실제 모드는 **이 기기에 등록된 기록만** 쓴다 — aux-pc-wsl에 등록했다(`python3 -m app.registration status <기록>`). 다시 관측하는 법은 [SETUP 4절](docs/SETUP.md) | [재관측](docs/reviews/2026-09-25-reobserve/README.md) · [E2](docs/reviews/2026-09-25-context-independence/README.md) |
+| 기기 | 보조 PC `aux-pc`의 `aux-pc-wsl`, 주 PC `DESKTOP-T0UDE01`의 `main-pc-wsl`. 둘 다 WSL Ubuntu 24.04에 Codex 0.156.1·Claude Code 2.1.280, 구독 로그인. 주 PC의 앱은 배포판 `Ubuntu-24.04`를 쓴다 — 기본 배포판 `Ubuntu`(26.04)에는 CLI도 등록도 없으니 `wsl.exe -d Ubuntu-24.04`로 부른다(2026-09-27 확인) | [V04-01 기록](docs/experiments/v04-01-inventory/hosts/aux-pc-wsl/RESULTS.md) · [주 PC 관측](docs/reviews/2026-09-26-main-pc-observe/README.md) |
+| 참여자 계획·허가 | Codex `codex@5bed42d05320`(연결 앱·플러그인 끔)·Claude `claude-code@a35129c5a1dc`(입력 폴더 하나). 두 provider 모두 strict 허가. 실제 모드는 **이 기기에 등록된 기록만** 쓴다(`python3 -m app.registration status <기록>`): aux-pc-wsl은 [2026-09-25 기록](docs/reviews/2026-09-25-reobserve/manifest.v2.json)으로 **2026-10-26부터 만료**, main-pc-wsl은 [2026-09-26 기록](docs/reviews/2026-09-26-main-pc-observe/manifest.v2.json)으로 **2026-10-27부터 만료**. 다시 관측하는 법은 [SETUP 4절](docs/SETUP.md) | [재관측](docs/reviews/2026-09-25-reobserve/README.md) · [주 PC 관측](docs/reviews/2026-09-26-main-pc-observe/README.md) · [E2](docs/reviews/2026-09-25-context-independence/README.md) |
 | 사용자 입구 | 바탕 화면 **Decision Lab** 아이콘(`app\start.ps1`) → WSL에서 준비 조회·원장 고르기·서버 → Edge 앱 창. 창을 닫으면 돌던 호출이 끝난 뒤 서버가 꺼진다. 화면 모양은 사용자가 [ai_unslop](https://github.com/inlight37-design/ai_unslop)에서 고른 island-ui다([부품](app/static/island-ui/README.md)). 아이콘은 사용자의 clone(main)을 쓴다 — aux-pc는 `C:\ai\decision-model_lab`, `DESKTOP-T0UDE01`은 `C:\AI\Projects\decision-model_lab`. **병합한 세션은 그 폴더에서 `git pull --ff-only`** 해야 앱에 반영된다. 2026-09-25 aux-pc에서 모의·실제 모드를 열고 닫았고 실제 두 참여자 실행이 공개됐다 | [app 안내](app/README.md) "바탕 화면 아이콘으로 열기" |
 | 실제 실행 | 병렬·봉인·공개, 공통 자료, strict 독립 정족수, 실제 중도 취소와 자손 종료 확인, 실제 합성(실행마다 켬, 형식 실패 원문 보존, 이름표 순서는 실행마다 섞음). 자료 합계 약 490 KB는 둘 다 시간 안, **약 1 MiB는 Claude가 180초를 넘겼다**(Codex 24초) | [병렬](docs/reviews/2026-09-24-windows-live-completion/README.md) · [자료](docs/reviews/2026-09-24-source-snapshot/README.md) · [strict·취소](docs/reviews/2026-09-25-strict-live-run/README.md) · [합성](docs/reviews/2026-09-24-model-synthesis/README.md) · [1 MiB](docs/experiments/2026-09-25-1mib-sources/RESULTS.md) |
 | 계정 한도 | provider별 카드에 한도 창마다 쓴 비율의 게이지. Codex는 모델 없는 조회(버튼, 그리고 창을 보는 동안 값이 2~5분 지나면 화면이 저절로 — 서버는 1분에 한 번), Claude는 모델 없이 묻는 통로가 없어 마지막으로 끝난 실제 실행의 `rate_limit_event`(Claude Code 2.1.280 `--help`에 사용량 명령 없음, 2026-09-26 확인). 봉인 중·모의 값은 쓰지 않는다 | [A·F](docs/reviews/2026-09-24-account-limits/README.md) |
 | 원장 | 실험은 aux-pc-wsl의 `~/.local/state/dml-*` — 모두 상한까지 썼고 새 실험은 새 원장. 앱 아이콘은 `~/.local/state/decision-model-lab/app/live/`의 원장을 호출이 남은 동안 이어 쓴다(원장당 Codex 5·Claude 5) | 각 기록 · [app 안내](app/README.md) |
 | 작업·역할판 A | 홈·내 차례 → 작업 타임라인 → 역할판·입력 확인 → 기존 결과. 빈 상위 칸은 나, 미지원 배치는 시작 전 거절. 기존 실행은 각각 작업 하나. 작업·역할 구성은 서버 원장에 고정 | [화면·원장 안내](app/README.md) · [카드 #99](https://github.com/inlight37-design/decision-model_lab/issues/99). 모의 흐름은 2026-09-27 브라우저로 확인, 실제 CLI 화면은 미확인 |
 | 비교 실험 | L1: 같은 provider의 틀린 초안 대신 맞는 초안을 고른 사례 관측, 다른 과제는 보류. 합성의 일반적 이득은 미확립 | [L1](docs/experiments/2026-09-25-l1/RESULTS.md) · [D](docs/experiments/2026-09-24-comparison-pilot/RESULTS.md) · [D 후속](docs/experiments/2026-09-25-d-followup/RESULTS.md) |
-| 협업 | GitHub 이슈 카드 보드 시범 진행 중. 새 컴퓨터는 원터치 설치 | [시범](docs/experiments/2026-09-25-card-pilot/README.md) · [SETUP](docs/SETUP.md) |
+| 협업 | GitHub 이슈 카드 보드(시범 뒤 2026-09-27 채택, 규칙은 [협업 규칙](docs/COLLABORATION.md) 3절). 새 컴퓨터는 원터치 설치 | [시범 기록](docs/experiments/2026-09-25-card-pilot/README.md) · [SETUP](docs/SETUP.md) |
 | 한계·남은 일 | 못 고치는 것, 해야 할 일의 우선순위, 조사 거리를 한 장에 모았고 외부 검토를 받았다 | [검토 요청서](docs/reviews/2026-09-25-review-request/README.md) · [검토](docs/reviews/2026-09-25-review/README.md) |
 
 주인 모듈: [core](core/README.md)는 실행·격리·허가·한도 응답 투영, [app](app/README.md)은 controller·원장·계정 조회·화면, [tools/w2](tools/w2/README.md)는 관측이다.
@@ -58,34 +58,30 @@
 22. **해야 할 일은 모두 승인된 것으로 본다.** 사용자는 바이브코딩으로 만들며 기술 세부를 직접 판단하지 않는다. 권한을 모두 주고 진행하는 것은 계속 해 온 방식이다. 그래서 작업에 필요한 모델 호출·설치·코드 수정과 CI 녹색 병합(8번의 범위 그대로)은 따로 묻지 않고 진행한다. 21번의 권한 위임도 사용자가 이렇게 확인했다. 지키는 것은 그대로다: 구독 CLI만 쓴다(6·13, 유료 API·추가 크레딧 없음). 인증 값을 읽거나 적지 않는다. 호출마다 새 원장·상한·결과를 기록하고, 사용량이 막히면 멈추고 알린다. 비밀번호 입력(`sudo` 등)과 로그인은 사용자가 한다. 사용자는 터미널·WSL을 보지 않으므로 **띄운 서버·프로세스는 세션이 직접 끈다**. 설명은 전문 용어 없이 쉽게 한다. (사용자, 2026-09-24)
 23. **정리하고, 쓸모없는 것이 다시 쌓이지 않게 한다.** 제안한 순서대로 정리한다. 쓸모없는 도구는 지워도 된다. 합성 제약 — 실행마다 실제 합성 한 번, 합성자는 그 실행의 참여자 provider만 — 은 없앤다. 호출 상한·동시 하나·종료 미확인 규칙은 그대로 둔다. CI 실행 방식은 claude 세션에 판단을 맡겼다. 정리한 뒤 쌓임을 막는 원칙과 규칙을 정하되, 정하기 전에 충분히 고민한다 — 원칙은 [협업 규칙 7절](docs/COLLABORATION.md). (사용자, 2026-09-25)
 24. **새 화면(역할판)의 요구는 [요청서](docs/reviews/2026-09-26-role-board-request/README.md) 1부 W1–W10 그대로다.** 모델·추론 고르기, 역할 칸(슈퍼바이저·오케스트레이터·팀원·팀원(격리))에 모델 끌어다 놓기, 빈 상위 칸은 사람, 격리 칸은 지금 방식·일반 칸은 보통 오케스트레이션, 홈·작업·문서함. **질문은 두 모드에서 고른다.** 원문(기본 — 내 말 그대로)과 다듬기(슈퍼바이저 칸에 모델이 있을 때만 — 사용자와 몇 번 대화하며 다듬고 사용자가 승인한 문장만 격리 팀원에게 간다). 다듬기의 세부(차례마다 원문·다듬은 문장·바뀐 점 목록, 답을 흘리지 않음, 대화는 보내지 않고 원문·대화·승인본을 기록, 대화 횟수 상한)는 Claude 제안을 사용자가 인계에 적게 했다. 다음 구현은 [역할판 검토](docs/reviews/2026-09-26-role-board-review/README.md) §6의 A 단계이며 Codex에 맡긴다. (사용자, 2026-09-26)
+25. **권고가 붙은 판단은 AI가 정하고 알린다.** 사용자는 기술 세부뿐 아니라 화면·기본값처럼 권고가 있는 판단도 세션에 맡긴다("권고나 이런건 ai의 판단에 맡길거임"). 세션은 근거를 보고 정해 여기나 카드에 적고, 사용자에게는 한 줄로 알린다. 사용자에게는 사용자만 할 수 있는 것(써 본 소감, 로그인·비밀번호, 22의 경계를 넘는 일)만 묻는다. 이 위임으로 2026-09-27에 닫은 것: Q4 첫 화면은 A(결정 우선)가 기본, B는 전환. 실제 합성은 기본 끔·실행마다 켬. 카드 보드 채택(작게 둔다, 규칙은 [협업 규칙](docs/COLLABORATION.md) 3절). 역할판 검토의 기본안(상위 모델 끔, 같은 모델 두 번 보류, 문서는 앱 안에서, 격리 팀원 자료는 원문 우선). 브랜드북은 island-ui로 옮기지 않는다([design 안내](design/README.md)). Q3 TypeScript는 지금 하지 않는다 — 화면이 여러 페이지로 커져 시험이 못 잡는 오류가 되풀이되면 다시 본다. TM 계획 A는 따로 들이지 않는다 — 응답 순서·진행 중 요청은 S3, 조회 줄이기는 S6가 맡는다. 개발 교차검토(N2)는 새 규칙 없이 PR의 검증 칸에 요청한 추론 강도·보고 값·범위를 적는다. 사람이 고른 기억 자료 실험은 B 뒤에 세션이 카드로 연다. 주 PC의 2026-09-26 관측 기록을 저장소에 올린다. (사용자, 2026-09-27)
 
 ## 3. 진행 중인 작업
 
-**진행 중: 작업 카드 시범.** 일은 `card` 라벨 이슈에서 [시범 규칙](docs/experiments/2026-09-25-card-pilot/README.md)대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
+일은 `card` 라벨 이슈에서 [협업 규칙](docs/COLLABORATION.md) 3절의 보드 규칙대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #112](https://github.com/inlight37-design/decision-model_lab/pull/112)(`claude/review-closeout-20260927`) — 역할판·구조·codex-peek 리뷰를 [마감](docs/reviews/2026-09-27-review-closeout/README.md)했다: 병합 결과, AI들이 합의한 것·애매한 것·사용자가 고를 것·아쉬웠던 것, 다음 카드 S1–S4. claude 검토(#105)를 함께 들인다. 모델 호출 없음.
+- **이 판을 들인 PR:** [PR #113](https://github.com/inlight37-design/decision-model_lab/pull/113)(`claude/user-decisions-20260927`) — 사용자가 권고가 붙은 판단을 AI에 맡긴 것(2절 25)을 적고 남은 판단을 닫는다: 카드 보드 채택과 규칙 이동, 화면의 "Q4 미결정" 문구, 주 PC 관측 기록 공개. 모델 호출 없음.
 
-| 사용자 판단 | 권고 / 지금까지 한 일 |
+| 사용자만 할 수 있는 것 | 지금 |
 |---|---|
-| Q4 첫 화면 | A(결정 우선)를 기본으로 권고, B(원문 대조표 우선)는 전환으로 유지. 현재 A/B는 모의 합성 패널의 탭 내 미리보기이며 전체 실제 화면의 설정은 아니다. 선호 미확정 |
-| 실제 합성의 기본값 | 실행마다 켜는 선택(기본 끔)을 권고한다. D·D 후속의 형식 실패·오류 전이·권고 누락에 더해 L1에서도 정답 선택과 판단 보류가 함께 나왔다. 인용 일치는 사실 확인이 아니다. 합성자는 실행마다 사용자가 고른다 |
-| 여러 AI 작업 방식 | 카드 보드 시범 중이며 채택은 사용자가 정한다. 조사는 [원문](docs/research/multi-ai-workflow-2026-09-25/README.md)·[후속 검토](docs/reviews/2026-09-25-workflow-evaluation/README.md)·[병합 기록](docs/reviews/2026-09-25-merge-56/README.md)(Projects 정정). Claude Code Projects는 Code 쪽에 보이지 않아(사용자 확인) 보류, 새 방식에서 ChatGPT 웹은 큰 변경의 검토에 쓴다. [WorkTrail 평가](docs/reviews/2026-09-25-worktrail/README.md)(ChatGPT, 2026-09-25): 통째 도입은 보류, 카드 체크포인트의 다섯 줄 형식만 [카드 양식](.github/ISSUE_TEMPLATE/card.md)에 들였다. Entire·Beads·Agent Mail 같은 도구는 같은 불편이 되풀이될 때 그 평가 9절의 짝(찾기 어려움→읽기 전용 뷰, 의존성→Beads, 동시 수정→Agent Mail, 변경 이유→Entire)으로 본다. 개발용 기억 도구는 참여자에게 연결하지 않는다 — 붙이면 참여자 계획이 바뀌어 재관측이 필요하다 |
-| 디자인 브랜드북 | 화면은 island-ui를 쓰고 `design/`(Ledger)은 의미 규칙만 화면 규칙으로 남는다([design 안내](design/README.md)). 브랜드북·아티팩트를 island-ui로 옮길지 미정 |
-| 새 화면(역할판) | 사용자 결정은 2절 24. A는 main에 있다(카드 #99). 다음은 정확성 보완 S1–S3(카드 #108–#110) → B 실제 모델 선택(추가 크레딧 경로를 막는 허용 목록 포함, [검토 근거 O14](docs/reviews/2026-09-26-role-board-review/EVIDENCE.md)) → C 사람이 나누는 일반 팀원 작업 → D 슈퍼바이저 모델·다듬기 모드 → E 섞어 쓰기·최적화. 검토의 기본안(상위 모델 끔, 같은 모델 두 번 보류, 문서는 앱 안에서, 격리 팀원 자료는 원문 우선)은 사용자 미확정 |
-| 리뷰 마감의 새 질문 | ① 권고가 붙은 판단을 세션이 권고대로 닫고 보고만 해도 되는가(#105) — 답이 오기 전에는 아래 문단대로 한다. ② 이 PC(`DESKTOP-T0UDE01`)의 2026-09-26 관측 기록 `main-pc-wsl`을 공개 저장소에 올릴지 — 올리지 않은 채 이 PC의 clone에만 있다. 권고와 이유는 [마감 기록](docs/reviews/2026-09-27-review-closeout/README.md) 4절 |
-| 나머지 | Q3 TypeScript 이행 미정. TM 계획 A는 후보. agy 기본 끔(설치·B4는 사용자가 켜기로 할 때). 원본 앱 자동화 끔. 편의 후보(공개 결정 전달, 공개 뒤 교차검토, 상급 모델 제안)는 기본 끔 |
+| 새 화면을 실제로 써 보고 고칠 곳 말하기 | 실제 CLI 모드의 새 화면은 아직 아무도 보지 않았다. 주 PC에는 main-pc-wsl 기록이 등록돼 있다(2026-09-27 확인) |
+| 재관측할 PC에서 세션 열기 | 관측·등록은 그 PC에서만 한다(4절 2). 보조 PC를 계속 쓰면 그 PC에서도 |
+| 로그인·`sudo` 비밀번호, 유료 전환, agy 켜기 | 필요할 때만(2절 9·13·14·22) |
 
-미확인 실제 답을 독립 비교로 격상하지 않는다. 권고가 있다는 이유로 미확정 제품 선호를 자동 확정하지 않는다. 필요한 기술 작업의 위임은 2절 22 그대로다.
+그 밖의 판단은 세션이 정하고 알린다(2절 25).
 
 ## 4. 다음 작업
 
 순서대로. 모델 호출이 드는 일은 카드에 상한을 먼저 적고 새 원장·새 상태 폴더로 한다(2절 22).
 
 1. **2026-10-25 전 — V04-01 절차서를 정한다.** 쌓임 검사의 `PROCEDURES` 예외가 그날 끝난다(`tests/test_accumulation.py`) — 지나면 CI가 실패한다. WSL 참여자의 설치·관측 절차는 이미 [SETUP](docs/SETUP.md)에 있으니, 절차서가 아직 맡는 일(Windows CLI 조사, `probe.ps1`·`summarize_claude_init.py`)을 살아 있는 문서로 옮길지 은퇴시킬지 정하고 AGENTS.md의 가리킴을 맞춘다. 모델 호출 없음.
-2. **2026-10-26 전 — 재관측**([SETUP 4절](docs/SETUP.md)의 절차, 모델 호출 Claude 2·Codex 3). 참여자 계획이나 CLI 판이 바뀌면 그때 바로 한다. 관측 기록은 `tools/w2/assemble.py`가 조립한다. 추론 강도를 연결하는 PR은 그 계획으로 바로 관측한다 — 이 날짜를 기다리지 않는다([역할판 검토](docs/reviews/2026-09-26-role-board-review/README.md) RB-01). 그 전에 [카드 #111](https://github.com/inlight37-design/decision-model_lab/issues/111)(S4 Codex 사용자 훅 방어)을 끝낸다. 파일 하나 검사로 전체 문맥 검증을 대신하지 않는다.
-3. **정확성 보완 S1 → S2 → S3(카드 #108·#109·#110), 그 뒤 B.** 실행 시작 실패의 정리 → 결과 판에 묶인 판단 완료·작업 상태 → 시작 영수증·화면 갱신 순서. 같은 파일을 만지므로 차례로 한다. 모델 호출 0. S5(launcher 소유권)·S6(조회 줄이기)는 그 뒤 카드로 만든다([마감 기록](docs/reviews/2026-09-27-review-closeout/README.md) 6절). 편의·최적화 후보 전체를 B의 선행 조건으로 만들지 않는다.
-4. **사용자에게 물을 것**(3절 표): 카드 보드를 채택할지 — 권고는 작은 보드 유지([이유](docs/reviews/2026-09-25-codex-continuation/README.md)). 채택하면 시범 규칙([날짜 기록 폴더](docs/experiments/2026-09-25-card-pilot/README.md)에 있다)을 협업 규칙으로 옮긴다. Q4 첫 화면, 실제 합성의 기본값, 새 화면을 실제로 써 본 소감(고칠 곳), 브랜드북을 island-ui로 옮길지, 역할판 검토의 기본안, 리뷰 마감의 새 질문 둘(3절 표).
-5. 새 카드가 필요하면 [카드 양식](.github/ISSUE_TEMPLATE/card.md)으로 만든다. 멈추거나 넘길 때는 체크포인트 다섯 줄을 쓴다.
+2. **2026-10-26 전 — 재관측**([SETUP 4절](docs/SETUP.md)의 절차, PC마다 모델 호출 Claude 2·Codex 3). aux-pc-wsl은 10월 26일, main-pc-wsl은 10월 27일부터 만료이고, 그 PC의 세션만 관측·등록할 수 있다. 참여자 계획이나 CLI 판이 바뀌면 그때 바로 한다. 관측 기록은 `tools/w2/assemble.py`가 조립한다. 추론 강도를 연결하는 PR은 그 계획으로 바로 관측한다 — 이 날짜를 기다리지 않는다([역할판 검토](docs/reviews/2026-09-26-role-board-review/README.md) RB-01). 그 전에 [카드 #111](https://github.com/inlight37-design/decision-model_lab/issues/111)(S4 Codex 사용자 훅 방어)을 끝낸다. 파일 하나 검사로 전체 문맥 검증을 대신하지 않는다.
+3. **정확성 보완 S1 → S2 → S3(카드 #108·#109·#110), 그 뒤 B.** 실행 시작 실패의 정리 → 결과 판에 묶인 판단 완료·작업 상태 → 시작 영수증·화면 갱신 순서. 같은 파일을 만지므로 한 세션이 차례로 한다. 모델 호출 0. S5(launcher 소유권)·S6(조회 줄이기)는 그 뒤 카드로 만든다([마감 기록](docs/reviews/2026-09-27-review-closeout/README.md) 6절). 편의·최적화 후보 전체를 B의 선행 조건으로 만들지 않는다. B는 추가 크레딧 경로를 막는 허용 목록을 포함하고([검토 근거 O14](docs/reviews/2026-09-26-role-board-review/EVIDENCE.md)), 그 뒤는 C 사람이 나누는 일반 팀원 작업 → D 슈퍼바이저 모델·다듬기 모드 → E 섞어 쓰기·최적화다([역할판 검토](docs/reviews/2026-09-26-role-board-review/README.md) §6).
+4. 새 카드가 필요하면 [카드 양식](.github/ISSUE_TEMPLATE/card.md)으로 만든다. 멈추거나 넘길 때는 체크포인트 다섯 줄을 쓴다.
 
 새 실험은 **헤드리스 실행** `python -m app.run`으로 한다 — 서버와 같은 준비 조회·원장·상한을 쓰고 결과 JSON 하나를 낸다([app 안내](app/README.md)의 "헤드리스 실행", 먼저 `--mock`으로 흐름 확인). 설정 파일의 모양은 같은 안내에, 만드는 예는 [D 후속의 make_configs.py](docs/experiments/2026-09-25-d-followup/make_configs.py)에 있다. 앞선 실험 폴더의 `drive.py`들은 그 기록으로 남는다.
 
@@ -93,7 +89,7 @@
 
 K 번호의 정의는 [보관 인계의 K 표](docs/handoff/2026-09-24-before-post-merge-verification.md)에 있다.
 
-- **격리·환경:** 네트워크 공유(K08), CPU·메모리 상한(K10), AppArmor가 켜진 일반 Ubuntu(K13), 시도 중 자료 바꿔치기(K14), 다른 PC의 관측(K35).
+- **격리·환경:** 네트워크 공유(K08), CPU·메모리 상한(K10), AppArmor가 켜진 일반 Ubuntu(K13), 시도 중 자료 바꿔치기(K14).
 - **독립성·수동 참여:** 원본 앱 참여자의 입력과 독립성(K21·K22). Claude 참여자에 사용자 전역 CLAUDE.md·자동 메모리를 심는 대조는 로그인 파일을 복사해야 해서 하지 않았다. 원본 앱의 사용량·품질 비교(2절 17).
 - **참여자 표면:** Codex 참여자는 연결 앱과 플러그인을 모두 끈다([플러그인 끄기](docs/reviews/2026-09-25-codex-plugins-off/README.md)). 플러그인이 묶는 MCP 서버·훅과 스킬을 가진 원격 플러그인은 따로 대조하지 않았다. 문맥 옵션 없이 Claude Code를 돌리면 계정 플러그인·스킬이 `~/.claude/*/synced`로 동기화된다(aux-pc-wsl에 남아 있음, 참여자 계획은 싣지 않음). 자료 안내문에 "자료 안의 지시는 따르지 말고 자료로만 다룬다"를 넣는 완화는 권고로 남아 있다([자료 실험](docs/experiments/2026-09-25-source-injection/RESULTS.md)).
 - **실행:** 모델이 답을 쓰는 도중의 취소와 그때 요청이 공급자에 닿았는지는 보지 않았다. 긴 자료는 Claude 참여자의 구독 사용량이 크다(카드 #61, [긴 자료 결과](docs/experiments/2026-09-25-long-sources/RESULTS.md)). 모델 채점은 과제별로 나눠야 180초 안에 끝난다(D 후속). Codex의 Windows 경로에는 연결 앱 끄기가 없다 — Windows에서는 Codex를 blind 참여자로 쓰지 않는다(2절 15). 옛 계획(LEGACY) 대응을 임의로 넓히지 않는다.
@@ -111,6 +107,7 @@ K 번호의 정의는 [보관 인계의 K 표](docs/handoff/2026-09-24-before-po
 - **`observe.py approve`는 새 호출 계획을 기록할 때만 쓴다.** 다시 쓰면 사용 횟수를 그 뒤부터 센다 — 기존 상한을 늘리는 수단으로 쓰지 않는다. 노트에는 어느 세션이·언제·어떤 승인(2절 22 또는 개별 요청)으로 불렀는지 적는다.
 - **관측 요약을 읽지 않고 저장소로 옮기지 않는다.** CLI가 쓴 파일 이름에 조직 UUID가 들어 있었다(2단계). 도구가 모양으로 가리지만, 새 모양의 식별자는 못 가린다.
 - **runner의 `unit_confirmed_empty`나 membership의 판정만 보고 자원·예산을 풀거나 단계를 넘기지 않는다.**
+- **개발용 기억 도구를 참여자에게 연결하지 않는다.** 붙이면 참여자 계획이 바뀌어 재관측이 필요하다.
 - **Linux에서 참여자를 `isolation.run()` 밖에서 실행하지 않는다.** WSL2 안에서 Windows 실행 파일(`*.exe`, `/mnt/c`의 CLI)을 참여자로 부르지 않고, Windows HOME·자격증명 폴더를 WSL에 연결하지 않는다.
 - **초안과 원장을 참여자가 읽을 수 있는 곳에 두지 않는다.** controller 데이터 폴더는 `never`에 넣는다.
 - **controller의 상태 전이를 조건 없는 UPDATE로 쓰지 않는다.** 기대한 상태와 시도 ID를 조건에 넣고 바뀐 행 수를 본다(A1 리뷰 A1-03).
