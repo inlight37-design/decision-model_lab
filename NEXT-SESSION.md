@@ -63,7 +63,7 @@
 
 **진행 중: 작업 카드 시범.** 일은 `card` 라벨 이슈에서 [시범 규칙](docs/experiments/2026-09-25-card-pilot/README.md)대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #102](https://github.com/inlight37-design/decision-model_lab/pull/102)(`chatgpt/codex-peek-review-20260926`) — [codex-peek 검토](docs/reviews/2026-09-26-codex-peek/README.md)의 소스 해체·오프라인 재현·최소 적용안을 남긴다. 선행 [PR #101](https://github.com/inlight37-design/decision-model_lab/pull/101)의 고정 head 위에서 문서만 더했으며 역할판 구현·다음 순서는 유지한다. 설치·모델 호출·병합 없음. 후보 도입은 [적용안](docs/reviews/2026-09-26-codex-peek/ADOPTION.md)부터 검토한다.
+- **이 판을 들인 PR:** [PR #102](https://github.com/inlight37-design/decision-model_lab/pull/102)(`chatgpt/codex-peek-review-20260926`) — [codex-peek 검토](docs/reviews/2026-09-26-codex-peek/README.md)의 소스 해체·오프라인 재현·최소 적용안을 남긴다. 진행 중인 역할판 구현과 다음 순서는 유지한다. 설치·모델 호출·병합 없음. 후보 도입은 [적용안](docs/reviews/2026-09-26-codex-peek/ADOPTION.md)부터 검토한다.
 
 | 사용자 판단 | 권고 / 지금까지 한 일 |
 |---|---|
