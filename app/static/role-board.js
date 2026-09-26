@@ -141,13 +141,14 @@ function renderTaskNavigation() {
   const sig = JSON.stringify([taskSelected, selected, tasks]);
   if (sig === listSig) return;
   listSig = sig;
-  $("runTabs").replaceChildren(h("button", { type: "button", class: "btn", onclick: () => navigateTask() }, "홈"),
+  // replaceChildren은 h()와 달리 null·배열을 거르지 않고 글자("null", "[object HTMLButtonElement]")로 넣는다.
+  $("runTabs").replaceChildren(...[h("button", { type: "button", class: "btn", onclick: () => navigateTask() }, "홈"),
     task ? h("button", { type: "button", class: "btn", onclick: () => navigateTask(task.task_id) }, task.title) : null,
-    selected ? h("span", { class: "cap muted" }, "실행 결과") : null);
+    selected ? h("span", { class: "cap muted" }, "실행 결과") : null].filter(Boolean));
   $("runListIsland").replaceChildren(h("h2", { class: "block-title" }, "작업"),
-    tasks.length ? tasks.map(t => h("button", { type: "button", class: "run-row", "aria-current": String(t.task_id === taskSelected),
+    ...(tasks.length ? tasks.map(t => h("button", { type: "button", class: "run-row", "aria-current": String(t.task_id === taskSelected),
       onclick: () => navigateTask(t.task_id) }, h("span", { class: "sm strong" }, t.title), h("span", { class: "cap muted" }, TASK_LABELS[t.status]))) :
-      h("p", { class: "sm muted" }, "새 작업에서 첫 질문을 시작하세요."));
+      [h("p", { class: "sm muted" }, "새 작업에서 첫 질문을 시작하세요.")]));
   pressAll($("runTabs")); pressAll($("runListIsland"));
 }
 function renderTaskPage() {

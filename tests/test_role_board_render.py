@@ -15,7 +15,9 @@ class RoleBoardRenderTests(unittest.TestCase):
 const assert = require("node:assert/strict");
 const location = {search: ""};
 const nodes = {};
-const $ = id => nodes[id] ||= {hidden:false, textContent:"", replaceChildren(...kids) {this.kids=kids;},
+const isNode = x => x !== null && typeof x === "object" && !Array.isArray(x) && "tag" in x;
+// 실제 DOM처럼 노드가 아닌 인자(null·배열)는 글자로 바꿔 넣는다. 걸러 주는 것은 h()뿐이다.
+const $ = id => nodes[id] ||= {hidden:false, textContent:"", replaceChildren(...kids) {this.kids=kids.map(k => isNode(k) ? k : String(k));},
   setAttribute(k,v) {this[k]=v;}, focus() {this.focused=true;}};
 function h(tag,attrs,...kids) {return {tag,attrs:attrs||{},kids:kids.flat(Infinity).filter(x=>x!==null && x!==false && x!==undefined)};}
 const pressAll=()=>{}, updateSourceNote=()=>{}, fmtSize=n=>String(n), fmtTime=n=>String(n);
@@ -63,6 +65,13 @@ taskSelected="t"; taskPageSig=null; renderTaskPage();
 assert.ok(nodes.mainCol.kids.map(text).join(" ").includes("실행 타임라인"));
 assert.ok(nodes.mainCol.kids.map(text).join(" ").includes("원본 앱 답 붙여넣기"));
 assert.ok(!all(taskCard(task)).some(x=>"innerHTML" in x.attrs));
+// 경로와 작업 목록에는 노드만 들어간다 — 홈에서 "홈 nullnull", 목록에서 "[object HTMLButtonElement]"가 보였다.
+const onlyNodes = id => nodes[id].kids.every(isNode);
+for (const [tasks, pickTask, pickRun, tabs, list] of [[[task], null, null, 1, 2], [[task], "t", "r", 3, 2], [[], null, null, 1, 2]]) {
+  state={tasks,runs:[]}; taskSelected=pickTask; selected=pickRun; listSig=null; renderTaskNavigation();
+  assert.ok(onlyNodes("runTabs") && onlyNodes("runListIsland"), JSON.stringify([nodes.runTabs.kids, nodes.runListIsland.kids]));
+  assert.equal(nodes.runTabs.kids.length, tabs); assert.equal(nodes.runListIsland.kids.length, list);
+}
 const compared=humanComparison({participants:[{label:"A",draft:"원문 그대로",independence:"unverified"}]});
 assert.ok(text(compared).includes("원문 그대로") && text(compared).includes("독립 미확인"));
 assert.equal(all(compared).filter(x=>x.tag==="button").length,0);
