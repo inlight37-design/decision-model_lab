@@ -61,7 +61,7 @@
 
 **진행 중: 작업 카드 시범.** 일은 `card` 라벨 이슈에서 [시범 규칙](docs/experiments/2026-09-25-card-pilot/README.md)대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #96](https://github.com/inlight37-design/decision-model_lab/pull/96)(`claude/focus-ring-20260926`) — 새 실행 양식을 연 뒤 질문 칸의 포커스 테두리 양옆이 잘리던 것(사용자 보고)을 부품의 원본 ai_unslop(`4d90cb2`)에서 고쳐 `motion.js`를 다시 복사했다. 앞선 PR #93이 ai_unslop 후보 v4(island-ui) 화면을, #94가 글꼴을, #95가 계정 한도 게이지(ai_unslop `ledger.md` 7번도 게이지 허용으로 고침)를 들였고, 2026-09-26 aux-pc에서 바탕 화면 아이콘과 같은 방법으로 실제 모드 창을 열어 지난 실제 실행이 새 화면에 보였다(모델 호출 없음). 아래 선택 권고(PR #89의 [재개 점검](docs/reviews/2026-09-25-codex-continuation/README.md))는 아직 사용자 확정이 아니다 — 이제 사용자가 앱을 직접 열어 보고 정할 수 있다.
+- **이 판을 들인 PR:** [PR #97](https://github.com/inlight37-design/decision-model_lab/pull/97)(`claude/model-role-assignment-brainstorm-v8jbea`) — 웹 컨테이너 세션, 코드 변경·모델 호출 없음. 사용자가 새 화면 구상을 말했고, 사용자가 원하는 것·Claude 제안·조사를 나눠 [역할판 요청서](docs/reviews/2026-09-26-role-board-request/README.md)에 적었다. 사용자가 ChatGPT에 검토를 받는다 — 제안은 사용자 확정이 아니다. 앞 판의 화면(island-ui, 계정 한도 게이지)은 그대로이고, 아래 선택 권고(PR #89의 [재개 점검](docs/reviews/2026-09-25-codex-continuation/README.md))도 아직 사용자 확정이 아니다.
 
 | 사용자 판단 | 권고 / 지금까지 한 일 |
 |---|---|
