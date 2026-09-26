@@ -77,3 +77,11 @@ node verification/run-pr102-probes.cjs <기존-102-probes.cjs> <고정-Peek-sour
 실제 Codex/Claude/DeepSeek provider 호출, 설치기·VSIX 활성화, 사용자 로그인 폴더를 연결한 진단, 실제 WSL 격리/계정 한도 관측, 원시 벤치 trial 재판정, 새 UI 실사용과 품질 비교는 하지 않았다. 제품 코드·운영 원장·관측 허가를 바꾸지 않았다. 분석에서 제시한 TaskSpec·receipt·기억·교차검토 확장은 모두 후보이며 이번 문서의 실행 결과가 아니다.
 
 다른 작업의 원본 clone과 outputs는 읽기만 했다. 재현은 이번 작업의 별도 임시 폴더에서 실행했고, fixture의 home 경로는 합성 경로로 지정했다. 이를 OS 보안 격리 검증이라고 주장하지 않는다. PR은 main을 대상으로 올리되 다른 세션 브랜치와 main에는 직접 쓰지 않는다.
+
+## 6. 이번 문서 변경의 저장소 검사
+
+Windows Python 3.12.10에서 인코딩, 디자인 토큰, frontier 프로토콜, runtime inventory dry-run, v0.1/v0.2 계약, 근거 원장, 전체 unittest discovery, compileall을 실행했다. 최종 로컬 실행은 모두 exit 0이었다. 전체 discovery는 597개 중 538개 성공·59개 skip·실패/오류 0이다. skip은 Linux/bubblewrap·플랫폼 전용 조건이며 성공으로 세지 않는다. 명령별 결과와 skip 사유는 [repository-checks.json](verification/repository-checks.json)에 있다.
+
+첫 실행에서는 system Python에 `jsonschema`가 없어 계약 도구가 실패했다. 별도 작업용 venv에 저장소 `requirements-design.txt`를 설치한 뒤 해당 도구와 전체 시험을 다시 실행했다. 제품 결함이나 시험 삭제로 해결한 것이 아니며 사용자 CLI 설정은 바꾸지 않았다.
+
+입수한 본문·ZIP·manifest의 Git 저장 blob도 `import-manifest.json`의 저장본 해시와 대조했다. Markdown 상대 링크·인계 형식은 저장소 검사 대상이다. 최종 PR head의 Linux/Windows CI와 현재 상태는 [PR #103 Checks](https://github.com/inlight37-design/decision-model_lab/pull/103/checks) 및 PR 본문을 기준으로 한다. 앞선 #102의 CI 성공을 이 PR의 결과로 대신하지 않는다.

@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-26** · 작성 세션: chatgpt(웹 컨테이너·GitHub — codex-peek 소스·자료 검토, 사용자 PC·실제 CLI는 보지 않음, 설치·모델 호출 없음) · 브랜치 `chatgpt/codex-peek-review-20260926` · 기준 main `435ba02`, 선행 #101 head `8fc945d`.
+최종 갱신 **2026-09-26** · 작성 세션: codex(현재 Windows PC의 지정 리뷰·별도 clone·GitHub — 두 리뷰 비교와 오프라인 재현, 실제 모델 CLI·WSL 관측 없음) · 브랜치 `codex/codex-peek-comparison-20260926` · 기준 main `435ba02`, 선행 검토 head `173715a`.
 
 이 파일은 **지금 상태와 다음 일만** 담는다. 끝난 일의 경위는 PR·git 이력과 날짜가 붙은 기록에 있고, 옛 판은 [docs/handoff/](docs/handoff/README.md)에 있다. **3절에는 진행 중인 일과 "이 판을 들인 PR" 한 줄만 둔다** — 새 PR은 그 줄을 자기 PR로 바꾸고, 병합 전에도 뒤에도 맞는 말만 쓴다("병합했다"고 미리 적지 않는다). 크기 상한과 3절의 모양은 CI가 본다. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있는 규칙은 여기 다시 적지 않는다 — 쌓임을 막는 원칙은 협업 규칙 7절이다.
 
@@ -63,7 +63,8 @@
 
 **진행 중: 작업 카드 시범.** 일은 `card` 라벨 이슈에서 [시범 규칙](docs/experiments/2026-09-25-card-pilot/README.md)대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #102](https://github.com/inlight37-design/decision-model_lab/pull/102)(`chatgpt/codex-peek-review-20260926`) — [codex-peek 검토](docs/reviews/2026-09-26-codex-peek/README.md)의 소스 해체·오프라인 재현·최소 적용안을 남긴다. 진행 중인 역할판 구현과 다음 순서는 유지한다. 설치·모델 호출·병합 없음. 후보 도입은 [적용안](docs/reviews/2026-09-26-codex-peek/ADOPTION.md)부터 검토한다.
+- **진행 중인 선행 작업:** 역할판 [PR #101](https://github.com/inlight37-design/decision-model_lab/pull/101)(`codex/role-board-a-20260926`), 기존 Peek 검토 [PR #102](https://github.com/inlight37-design/decision-model_lab/pull/102)(`chatgpt/codex-peek-review-20260926`). 이 비교는 그 고정 head 위에서 분기했으며 실제 병합 여부는 GitHub에서 확인한다.
+- **이 판을 들인 PR:** [PR #103](https://github.com/inlight37-design/decision-model_lab/pull/103)(`codex/codex-peek-comparison-20260926`) — [두 리뷰 비교](docs/reviews/2026-09-26-codex-peek-comparison/README.md)에 타당성·추가 반례·적용 순서 의견과 독립 원문을 보존한다. 기존 역할판 순서는 유지하고 필요한 기록 표시부터 검토한다. 이번 고유 변경은 문서·재현 자료이며 제품 기능 채택·실제 모델 호출·병합은 하지 않는다.
 
 | 사용자 판단 | 권고 / 지금까지 한 일 |
 |---|---|
