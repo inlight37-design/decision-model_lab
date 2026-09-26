@@ -1,0 +1,761 @@
+{
+  "source_sha": "a232de7d4ae7de097dd014be5a791348b7881ea3",
+  "scope": "app/core top-level Python modules; AST imports include function-local imports. No dynamic reachability proof.",
+  "files": [
+    {
+      "path": "app/controller.py",
+      "lines": 1121,
+      "functions": 54,
+      "largest_functions": [
+        {
+          "name": "view",
+          "line": 915,
+          "lines": 83
+        },
+        {
+          "name": "synthesize_with_model",
+          "line": 814,
+          "lines": 67
+        },
+        {
+          "name": "prepare_run",
+          "line": 310,
+          "lines": 65
+        }
+      ]
+    },
+    {
+      "path": "app/server.py",
+      "lines": 526,
+      "functions": 21,
+      "largest_functions": [
+        {
+          "name": "make_handler",
+          "line": 78,
+          "lines": 203
+        },
+        {
+          "name": "do_POST",
+          "line": 194,
+          "lines": 85
+        },
+        {
+          "name": "main",
+          "line": 419,
+          "lines": 79
+        }
+      ]
+    },
+    {
+      "path": "core/runner.py",
+      "lines": 522,
+      "functions": 23,
+      "largest_functions": [
+        {
+          "name": "_execute",
+          "line": 334,
+          "lines": 107
+        },
+        {
+          "name": "kill",
+          "line": 268,
+          "lines": 22
+        },
+        {
+          "name": "run",
+          "line": 158,
+          "lines": 20
+        }
+      ]
+    },
+    {
+      "path": "core/adapters.py",
+      "lines": 494,
+      "functions": 17,
+      "largest_functions": [
+        {
+          "name": "_parse",
+          "line": 416,
+          "lines": 79
+        },
+        {
+          "name": "build_spec",
+          "line": 204,
+          "lines": 70
+        },
+        {
+          "name": "interpret",
+          "line": 315,
+          "lines": 32
+        }
+      ]
+    },
+    {
+      "path": "app/launch.py",
+      "lines": 336,
+      "functions": 18,
+      "largest_functions": [
+        {
+          "name": "serve",
+          "line": 173,
+          "lines": 63
+        },
+        {
+          "name": "main",
+          "line": 302,
+          "lines": 31
+        },
+        {
+          "name": "url",
+          "line": 238,
+          "lines": 26
+        }
+      ]
+    },
+    {
+      "path": "app/store.py",
+      "lines": 319,
+      "functions": 15,
+      "largest_functions": [
+        {
+          "name": "_migrate",
+          "line": 121,
+          "lines": 88
+        },
+        {
+          "name": "bind_call_budget",
+          "line": 221,
+          "lines": 44
+        },
+        {
+          "name": "_lock",
+          "line": 78,
+          "lines": 14
+        }
+      ]
+    },
+    {
+      "path": "app/synthesis.py",
+      "lines": 300,
+      "functions": 15,
+      "largest_functions": [
+        {
+          "name": "check_model_synthesis",
+          "line": 203,
+          "lines": 70
+        },
+        {
+          "name": "mock_synthesize",
+          "line": 87,
+          "lines": 41
+        },
+        {
+          "name": "compare_claims",
+          "line": 64,
+          "lines": 21
+        }
+      ]
+    },
+    {
+      "path": "core/isolation.py",
+      "lines": 243,
+      "functions": 11,
+      "largest_functions": [
+        {
+          "name": "plan",
+          "line": 185,
+          "lines": 36
+        },
+        {
+          "name": "_mount_plan",
+          "line": 140,
+          "lines": 22
+        },
+        {
+          "name": "_validate_mounts",
+          "line": 164,
+          "lines": 19
+        }
+      ]
+    },
+    {
+      "path": "app/codex_account.py",
+      "lines": 191,
+      "functions": 6,
+      "largest_functions": [
+        {
+          "name": "query",
+          "line": 49,
+          "lines": 93
+        },
+        {
+          "name": "receive",
+          "line": 71,
+          "lines": 32
+        },
+        {
+          "name": "probe",
+          "line": 144,
+          "lines": 28
+        }
+      ]
+    },
+    {
+      "path": "app/run.py",
+      "lines": 188,
+      "functions": 4,
+      "largest_functions": [
+        {
+          "name": "_run",
+          "line": 139,
+          "lines": 46
+        },
+        {
+          "name": "main",
+          "line": 93,
+          "lines": 44
+        },
+        {
+          "name": "parse",
+          "line": 48,
+          "lines": 43
+        }
+      ]
+    },
+    {
+      "path": "app/cli_executor.py",
+      "lines": 170,
+      "functions": 6,
+      "largest_functions": [
+        {
+          "name": "plan",
+          "line": 118,
+          "lines": 33
+        },
+        {
+          "name": "__init__",
+          "line": 64,
+          "lines": 25
+        },
+        {
+          "name": "run",
+          "line": 152,
+          "lines": 19
+        }
+      ]
+    },
+    {
+      "path": "app/registration.py",
+      "lines": 146,
+      "functions": 7,
+      "largest_functions": [
+        {
+          "name": "register",
+          "line": 94,
+          "lines": 24
+        },
+        {
+          "name": "main",
+          "line": 120,
+          "lines": 23
+        },
+        {
+          "name": "problem",
+          "line": 75,
+          "lines": 17
+        }
+      ]
+    },
+    {
+      "path": "core/membership.py",
+      "lines": 144,
+      "functions": 7,
+      "largest_functions": [
+        {
+          "name": "decide",
+          "line": 111,
+          "lines": 34
+        },
+        {
+          "name": "_drop",
+          "line": 96,
+          "lines": 13
+        },
+        {
+          "name": "advance",
+          "line": 67,
+          "lines": 9
+        }
+      ]
+    },
+    {
+      "path": "core/env.py",
+      "lines": 142,
+      "functions": 5,
+      "largest_functions": [
+        {
+          "name": "fresh_environment",
+          "line": 65,
+          "lines": 24
+        },
+        {
+          "name": "child_env",
+          "line": 96,
+          "lines": 18
+        },
+        {
+          "name": "resolve",
+          "line": 125,
+          "lines": 18
+        }
+      ]
+    },
+    {
+      "path": "core/eligibility.py",
+      "lines": 141,
+      "functions": 5,
+      "largest_functions": [
+        {
+          "name": "eligibility",
+          "line": 87,
+          "lines": 55
+        },
+        {
+          "name": "row_problems",
+          "line": 66,
+          "lines": 19
+        },
+        {
+          "name": "observed_on",
+          "line": 51,
+          "lines": 9
+        }
+      ]
+    },
+    {
+      "path": "core/quota.py",
+      "lines": 140,
+      "functions": 5,
+      "largest_functions": [
+        {
+          "name": "quota_projection",
+          "line": 17,
+          "lines": 46
+        },
+        {
+          "name": "claude_limit",
+          "line": 65,
+          "lines": 35
+        },
+        {
+          "name": "claude_limit_projection",
+          "line": 102,
+          "lines": 25
+        }
+      ]
+    },
+    {
+      "path": "app/state.py",
+      "lines": 119,
+      "functions": 6,
+      "largest_functions": [
+        {
+          "name": "gate",
+          "line": 54,
+          "lines": 35
+        },
+        {
+          "name": "synthesis_attempts",
+          "line": 91,
+          "lines": 29
+        },
+        {
+          "name": "public",
+          "line": 46,
+          "lines": 6
+        }
+      ]
+    },
+    {
+      "path": "core/contract.py",
+      "lines": 96,
+      "functions": 5,
+      "largest_functions": [
+        {
+          "name": "template",
+          "line": 56,
+          "lines": 30
+        },
+        {
+          "name": "record",
+          "line": 49,
+          "lines": 5
+        },
+        {
+          "name": "covers",
+          "line": 93,
+          "lines": 4
+        }
+      ]
+    },
+    {
+      "path": "app/report.py",
+      "lines": 93,
+      "functions": 2,
+      "largest_functions": [
+        {
+          "name": "build_report",
+          "line": 35,
+          "lines": 45
+        },
+        {
+          "name": "decision_report",
+          "line": 82,
+          "lines": 12
+        }
+      ]
+    },
+    {
+      "path": "app/account_quota.py",
+      "lines": 78,
+      "functions": 3,
+      "largest_functions": [
+        {
+          "name": "refresh",
+          "line": 55,
+          "lines": 24
+        },
+        {
+          "name": "view",
+          "line": 31,
+          "lines": 23
+        },
+        {
+          "name": "__init__",
+          "line": 20,
+          "lines": 10
+        }
+      ]
+    },
+    {
+      "path": "app/roles.py",
+      "lines": 78,
+      "functions": 2,
+      "largest_functions": [
+        {
+          "name": "task_projection",
+          "line": 40,
+          "lines": 39
+        },
+        {
+          "name": "freeze",
+          "line": 5,
+          "lines": 33
+        }
+      ]
+    },
+    {
+      "path": "app/fake_cli.py",
+      "lines": 61,
+      "functions": 2,
+      "largest_functions": [
+        {
+          "name": "main",
+          "line": 28,
+          "lines": 30
+        },
+        {
+          "name": "answer",
+          "line": 18,
+          "lines": 8
+        }
+      ]
+    },
+    {
+      "path": "app/readiness.py",
+      "lines": 61,
+      "functions": 1,
+      "largest_functions": [
+        {
+          "name": "check",
+          "line": 15,
+          "lines": 47
+        }
+      ]
+    },
+    {
+      "path": "app/live_config.py",
+      "lines": 54,
+      "functions": 3,
+      "largest_functions": [
+        {
+          "name": "load",
+          "line": 34,
+          "lines": 21
+        },
+        {
+          "name": "validate",
+          "line": 25,
+          "lines": 7
+        },
+        {
+          "name": "__post_init__",
+          "line": 17,
+          "lines": 6
+        }
+      ]
+    },
+    {
+      "path": "core/__init__.py",
+      "lines": 9,
+      "functions": 0,
+      "largest_functions": []
+    },
+    {
+      "path": "app/__init__.py",
+      "lines": 1,
+      "functions": 0,
+      "largest_functions": []
+    }
+  ],
+  "internal_import_edges": [
+    [
+      "app.account_quota",
+      "app.codex_account"
+    ],
+    [
+      "app.account_quota",
+      "core.quota"
+    ],
+    [
+      "app.cli_executor",
+      "app.registration"
+    ],
+    [
+      "app.cli_executor",
+      "core.adapters"
+    ],
+    [
+      "app.cli_executor",
+      "core.contract"
+    ],
+    [
+      "app.cli_executor",
+      "core.eligibility"
+    ],
+    [
+      "app.cli_executor",
+      "core.env"
+    ],
+    [
+      "app.cli_executor",
+      "core.isolation"
+    ],
+    [
+      "app.cli_executor",
+      "core.runner"
+    ],
+    [
+      "app.codex_account",
+      "app.cli_executor"
+    ],
+    [
+      "app.codex_account",
+      "core.env"
+    ],
+    [
+      "app.codex_account",
+      "core.isolation"
+    ],
+    [
+      "app.codex_account",
+      "core.quota"
+    ],
+    [
+      "app.codex_account",
+      "core.runner"
+    ],
+    [
+      "app.controller",
+      "app.report"
+    ],
+    [
+      "app.controller",
+      "app.roles"
+    ],
+    [
+      "app.controller",
+      "app.state"
+    ],
+    [
+      "app.controller",
+      "app.store"
+    ],
+    [
+      "app.controller",
+      "app.synthesis"
+    ],
+    [
+      "app.controller",
+      "core.adapters"
+    ],
+    [
+      "app.controller",
+      "core.contract"
+    ],
+    [
+      "app.controller",
+      "core.env"
+    ],
+    [
+      "app.controller",
+      "core.isolation"
+    ],
+    [
+      "app.controller",
+      "core.membership"
+    ],
+    [
+      "app.controller",
+      "core.runner"
+    ],
+    [
+      "app.launch",
+      "app.live_config"
+    ],
+    [
+      "app.launch",
+      "app.readiness"
+    ],
+    [
+      "app.launch",
+      "app.registration"
+    ],
+    [
+      "app.launch",
+      "app.server"
+    ],
+    [
+      "app.launch",
+      "app.store"
+    ],
+    [
+      "app.readiness",
+      "app.cli_executor"
+    ],
+    [
+      "app.readiness",
+      "app.controller"
+    ],
+    [
+      "app.readiness",
+      "app.registration"
+    ],
+    [
+      "app.readiness",
+      "core.eligibility"
+    ],
+    [
+      "app.readiness",
+      "core.isolation"
+    ],
+    [
+      "app.run",
+      "app.controller"
+    ],
+    [
+      "app.run",
+      "app.live_config"
+    ],
+    [
+      "app.run",
+      "app.readiness"
+    ],
+    [
+      "app.run",
+      "app.report"
+    ],
+    [
+      "app.run",
+      "app.server"
+    ],
+    [
+      "app.run",
+      "app.store"
+    ],
+    [
+      "app.server",
+      "app.account_quota"
+    ],
+    [
+      "app.server",
+      "app.cli_executor"
+    ],
+    [
+      "app.server",
+      "app.controller"
+    ],
+    [
+      "app.server",
+      "app.live_config"
+    ],
+    [
+      "app.server",
+      "app.readiness"
+    ],
+    [
+      "app.server",
+      "app.report"
+    ],
+    [
+      "app.server",
+      "app.store"
+    ],
+    [
+      "app.synthesis",
+      "app.report"
+    ],
+    [
+      "core.adapters",
+      "core.env"
+    ],
+    [
+      "core.adapters",
+      "core.quota"
+    ],
+    [
+      "core.adapters",
+      "core.runner"
+    ],
+    [
+      "core.contract",
+      "core.adapters"
+    ],
+    [
+      "core.contract",
+      "core.isolation"
+    ],
+    [
+      "core.eligibility",
+      "core.contract"
+    ],
+    [
+      "core.isolation",
+      "core.env"
+    ],
+    [
+      "core.isolation",
+      "core.runner"
+    ]
+  ],
+  "static_ui": [
+    {
+      "path": "app/static/index.html",
+      "lines": 1200
+    },
+    {
+      "path": "app/static/role-board.js",
+      "lines": 183
+    }
+  ]
+}

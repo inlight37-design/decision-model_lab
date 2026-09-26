@@ -1,0 +1,249 @@
+{
+  "source_sha": "a232de7d4ae7de097dd014be5a791348b7881ea3",
+  "python": "3.12.10",
+  "platform": "win32",
+  "method": "Synthetic manual accepted drafts plus synthetic terminal synthesis events; no providers, subprocess executor, server or sockets. Seven warm in-process samples; excludes network, DOM and actual model latency.",
+  "limits": "Fixtures explore structural growth, not observed user workload. Default live ledger caps and rotation limit typical real-call history. Manual/mock history can still grow; no claim of measured production slowdown.",
+  "cases": [
+    {
+      "runs_in_ledger": 1,
+      "syntheses_per_run": 1,
+      "draft_chars_each": 8192,
+      "requested": "all",
+      "returned_runs": 1,
+      "select_queries": 15,
+      "lifecycle_query_calls": 4,
+      "global_lifecycle_calls": 2,
+      "identical_repeated_selects": [
+        {
+          "sql": "SELECT run_id, kind, payload FROM events WHERE kind IN ('synthesis_started', 'synthesis_failed', 'synthesis_completed', 'synthesis_unknown_acknowledged') AND run_id = 'r-fixture-0' ORDER BY run_id, seq",
+          "count": 2
+        },
+        {
+          "sql": "SELECT run_id, kind, payload FROM events WHERE kind IN ('synthesis_started', 'synthesis_failed', 'synthesis_completed', 'synthesis_unknown_acknowledged') ORDER BY run_id, seq",
+          "count": 2
+        }
+      ],
+      "response_bytes": 37270,
+      "median_view_ms": 0.483,
+      "median_json_ms": 0.086,
+      "timing_samples": 7
+    },
+    {
+      "runs_in_ledger": 1,
+      "syntheses_per_run": 1,
+      "draft_chars_each": 8192,
+      "requested": "one",
+      "returned_runs": 1,
+      "select_queries": 15,
+      "lifecycle_query_calls": 4,
+      "global_lifecycle_calls": 2,
+      "identical_repeated_selects": [
+        {
+          "sql": "SELECT run_id, kind, payload FROM events WHERE kind IN ('synthesis_started', 'synthesis_failed', 'synthesis_completed', 'synthesis_unknown_acknowledged') AND run_id = 'r-fixture-0' ORDER BY run_id, seq",
+          "count": 2
+        },
+        {
+          "sql": "SELECT run_id, kind, payload FROM events WHERE kind IN ('synthesis_started', 'synthesis_failed', 'synthesis_completed', 'synthesis_unknown_acknowledged') ORDER BY run_id, seq",
+          "count": 2
+        }
+      ],
+      "response_bytes": 37270,
+      "median_view_ms": 0.466,
+      "median_json_ms": 0.087,
+      "timing_samples": 7
+    },
+    {
+      "runs_in_ledger": 30,
+      "syntheses_per_run": 1,
+      "draft_chars_each": 8192,
+      "requested": "all",
+      "returned_runs": 30,
+      "select_queries": 276,
+      "lifecycle_query_calls": 62,
+      "global_lifecycle_calls": 2,
+      "identical_repeated_selects": [
+        {
+          "sql": "SELECT run_id, kind, payload FROM events WHERE kind IN ('synthesis_started', 'synthesis_failed', 'synthesis_completed', 'synthesis_unknown_acknowledged') AND run_id = 'r-fixture-29' ORDER BY run_id, seq",
+          "count": 2
+        },
+        {
+          "sql": "SELECT run_id, kind, payload FROM events WHERE kind IN ('synthesis_started', 'synthesis_failed', 'synthesis_completed', 'synthesis_unknown_acknowledged') AND run_id = 'r-fixture-28' ORDER BY run_id, seq",
+          "count": 2
+        },
+        {
+          "sql": "SELECT run_id, kind, payload FROM events WHERE kind IN ('synthesis_started', 'synthesis_failed', 'synthesis_completed', 'synthesis_unknown_acknowledged') AND run_id = 'r-fixture-27' ORDER BY run_id, seq",
+          "count": 2
+        },
+        {
+          "sql": "SELECT run_id, kind, payload FROM events WHERE kind IN ('synthesis_started', 'synthesis_failed', 'synthesis_completed', 'synthesis_unknown_acknowledged') AND run_id = 'r-fixture-26' ORDER BY run_id, seq",
+          "count": 2
+        },
+        {
+          "sql": "SELECT run_id, kind, payload FROM events WHERE kind IN ('synthesis_started', 'synthesis_failed', 'synthesis_completed', 'synthesis_unknown_acknowledged') AND run_id = 'r-fixture-25' ORDER BY run_id, seq",
+          "count": 2
+        },
+        {
+          "sql": "SELECT run_id, kind, payload FROM events WHERE kind IN ('synthesis_started', 'synthesis_failed', 'synthesis_completed', 'synthesis_unknown_acknowledged') AND run_id = 'r-fixture-24' ORDER BY run_id, seq",
+          "count": 2
+        },
+        {
+          "sql": "SELECT run_id, kind, payload FROM events WHERE kind IN ('synthesis_started', 'synthesis_failed', 'synthesis_completed', 'synthesis_unknown_acknowledged') AND run_id = 'r-fixture-23' ORDER BY run_id, seq",
+          "count": 2
+        },
+        {
+          "sql": "SELECT run_id, kind, payload FROM events WHERE kind IN ('synthesis_started', 'synthesis_failed', 'synthesis_completed', 'synthesis_unknown_acknowledged') AND run_id = 'r-fixture-22' ORDER BY run_id, seq",
+          "count": 2
+        }
+      ],
+      "response_bytes": 1112150,
+      "median_view_ms": 11.526,
+      "median_json_ms": 3.147,
+      "timing_samples": 7
+    },
+    {
+      "runs_in_ledger": 30,
+      "syntheses_per_run": 1,
+      "draft_chars_each": 8192,
+      "requested": "one",
+      "returned_runs": 1,
+      "select_queries": 15,
+      "lifecycle_query_calls": 4,
+      "global_lifecycle_calls": 2,
+      "identical_repeated_selects": [
+        {
+          "sql": "SELECT run_id, kind, payload FROM events WHERE kind IN ('synthesis_started', 'synthesis_failed', 'synthesis_completed', 'synthesis_unknown_acknowledged') AND run_id = 'r-fixture-0' ORDER BY run_id, seq",
+          "count": 2
+        },
+        {
+          "sql": "SELECT run_id, kind, payload FROM events WHERE kind IN ('synthesis_started', 'synthesis_failed', 'synthesis_completed', 'synthesis_unknown_acknowledged') ORDER BY run_id, seq",
+          "count": 2
+        }
+      ],
+      "response_bytes": 37270,
+      "median_view_ms": 1.572,
+      "median_json_ms": 0.128,
+      "timing_samples": 7
+    },
+    {
+      "runs_in_ledger": 100,
+      "syntheses_per_run": 1,
+      "draft_chars_each": 8192,
+      "requested": "all",
+      "returned_runs": 100,
+      "select_queries": 906,
+      "lifecycle_query_calls": 202,
+      "global_lifecycle_calls": 2,
+      "identical_repeated_selects": [
+        {
+          "sql": "SELECT run_id, kind, payload FROM events WHERE kind IN ('synthesis_started', 'synthesis_failed', 'synthesis_completed', 'synthesis_unknown_acknowledged') AND run_id = 'r-fixture-99' ORDER BY run_id, seq",
+          "count": 2
+        },
+        {
+          "sql": "SELECT run_id, kind, payload FROM events WHERE kind IN ('synthesis_started', 'synthesis_failed', 'synthesis_completed', 'synthesis_unknown_acknowledged') AND run_id = 'r-fixture-98' ORDER BY run_id, seq",
+          "count": 2
+        },
+        {
+          "sql": "SELECT run_id, kind, payload FROM events WHERE kind IN ('synthesis_started', 'synthesis_failed', 'synthesis_completed', 'synthesis_unknown_acknowledged') AND run_id = 'r-fixture-97' ORDER BY run_id, seq",
+          "count": 2
+        },
+        {
+          "sql": "SELECT run_id, kind, payload FROM events WHERE kind IN ('synthesis_started', 'synthesis_failed', 'synthesis_completed', 'synthesis_unknown_acknowledged') AND run_id = 'r-fixture-96' ORDER BY run_id, seq",
+          "count": 2
+        },
+        {
+          "sql": "SELECT run_id, kind, payload FROM events WHERE kind IN ('synthesis_started', 'synthesis_failed', 'synthesis_completed', 'synthesis_unknown_acknowledged') AND run_id = 'r-fixture-95' ORDER BY run_id, seq",
+          "count": 2
+        },
+        {
+          "sql": "SELECT run_id, kind, payload FROM events WHERE kind IN ('synthesis_started', 'synthesis_failed', 'synthesis_completed', 'synthesis_unknown_acknowledged') AND run_id = 'r-fixture-94' ORDER BY run_id, seq",
+          "count": 2
+        },
+        {
+          "sql": "SELECT run_id, kind, payload FROM events WHERE kind IN ('synthesis_started', 'synthesis_failed', 'synthesis_completed', 'synthesis_unknown_acknowledged') AND run_id = 'r-fixture-93' ORDER BY run_id, seq",
+          "count": 2
+        },
+        {
+          "sql": "SELECT run_id, kind, payload FROM events WHERE kind IN ('synthesis_started', 'synthesis_failed', 'synthesis_completed', 'synthesis_unknown_acknowledged') AND run_id = 'r-fixture-92' ORDER BY run_id, seq",
+          "count": 2
+        }
+      ],
+      "response_bytes": 3706840,
+      "median_view_ms": 34.551,
+      "median_json_ms": 10.475,
+      "timing_samples": 7
+    },
+    {
+      "runs_in_ledger": 100,
+      "syntheses_per_run": 1,
+      "draft_chars_each": 8192,
+      "requested": "one",
+      "returned_runs": 1,
+      "select_queries": 15,
+      "lifecycle_query_calls": 4,
+      "global_lifecycle_calls": 2,
+      "identical_repeated_selects": [
+        {
+          "sql": "SELECT run_id, kind, payload FROM events WHERE kind IN ('synthesis_started', 'synthesis_failed', 'synthesis_completed', 'synthesis_unknown_acknowledged') AND run_id = 'r-fixture-0' ORDER BY run_id, seq",
+          "count": 2
+        },
+        {
+          "sql": "SELECT run_id, kind, payload FROM events WHERE kind IN ('synthesis_started', 'synthesis_failed', 'synthesis_completed', 'synthesis_unknown_acknowledged') ORDER BY run_id, seq",
+          "count": 2
+        }
+      ],
+      "response_bytes": 37270,
+      "median_view_ms": 4.359,
+      "median_json_ms": 0.147,
+      "timing_samples": 7
+    },
+    {
+      "runs_in_ledger": 1,
+      "syntheses_per_run": 50,
+      "draft_chars_each": 8192,
+      "requested": "all",
+      "returned_runs": 1,
+      "select_queries": 15,
+      "lifecycle_query_calls": 4,
+      "global_lifecycle_calls": 2,
+      "identical_repeated_selects": [
+        {
+          "sql": "SELECT run_id, kind, payload FROM events WHERE kind IN ('synthesis_started', 'synthesis_failed', 'synthesis_completed', 'synthesis_unknown_acknowledged') AND run_id = 'r-fixture-0' ORDER BY run_id, seq",
+          "count": 2
+        },
+        {
+          "sql": "SELECT run_id, kind, payload FROM events WHERE kind IN ('synthesis_started', 'synthesis_failed', 'synthesis_completed', 'synthesis_unknown_acknowledged') ORDER BY run_id, seq",
+          "count": 2
+        }
+      ],
+      "response_bytes": 449065,
+      "median_view_ms": 3.245,
+      "median_json_ms": 1.237,
+      "timing_samples": 7
+    },
+    {
+      "runs_in_ledger": 1,
+      "syntheses_per_run": 50,
+      "draft_chars_each": 8192,
+      "requested": "one",
+      "returned_runs": 1,
+      "select_queries": 15,
+      "lifecycle_query_calls": 4,
+      "global_lifecycle_calls": 2,
+      "identical_repeated_selects": [
+        {
+          "sql": "SELECT run_id, kind, payload FROM events WHERE kind IN ('synthesis_started', 'synthesis_failed', 'synthesis_completed', 'synthesis_unknown_acknowledged') AND run_id = 'r-fixture-0' ORDER BY run_id, seq",
+          "count": 2
+        },
+        {
+          "sql": "SELECT run_id, kind, payload FROM events WHERE kind IN ('synthesis_started', 'synthesis_failed', 'synthesis_completed', 'synthesis_unknown_acknowledged') ORDER BY run_id, seq",
+          "count": 2
+        }
+      ],
+      "response_bytes": 449065,
+      "median_view_ms": 3.184,
+      "median_json_ms": 1.115,
+      "timing_samples": 7
+    }
+  ]
+}

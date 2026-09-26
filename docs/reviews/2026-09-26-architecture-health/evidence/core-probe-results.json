@@ -1,0 +1,39 @@
+{
+  "reviewedHead": "a232de7d4ae7de097dd014be5a791348b7881ea3",
+  "python": "3.12.10",
+  "results": [
+    {
+      "id": "R1-post-spawn-thread-failure",
+      "exception": "can't start new thread (synthetic)",
+      "mockPopen": 1,
+      "treeKill": 0,
+      "treeClose": 0,
+      "actualProcesses": 0
+    },
+    {
+      "id": "R2-split-manifest-snapshot",
+      "firstBytesRegistered": false,
+      "secondBytesEligible": false,
+      "combinedCheckAccepted": true,
+      "actualProcesses": 0
+    },
+    {
+      "id": "R3-plan-shallow-freeze",
+      "environmentMutationKeepsRevision": true,
+      "recordMutationChangesPlanTemplate": true,
+      "actualProcesses": 0,
+      "scope": "Public core Plan/Sandbox contract; no current UI exploit demonstrated"
+    },
+    {
+      "id": "R4-plan-defers-isolation-validation",
+      "planReturnedForMissingInput": true,
+      "isolationPlanCalls": 0,
+      "actualProcesses": 0,
+      "controllerLiveReservations": 1,
+      "finalState": "rejected",
+      "finalStatus": "process_failed_to_start",
+      "note": "Isolation execution was mocked to refuse before process creation; no refunds proposed."
+    }
+  ],
+  "limits": "Synthetic/mocked probes only. No model CLI, auth, real home, Linux isolation or process execution."
+}

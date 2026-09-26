@@ -1,0 +1,18 @@
+{
+  "refresh_out_of_order": {
+    "requests": 4,
+    "state_before_old_response": "new",
+    "state_after_old_response": "old"
+  },
+  "optional_quota_failure": {
+    "state": "old",
+    "connection": "quota endpoint unavailable"
+  },
+  "created_then_refresh_failure": {
+    "server_creation_succeeded": true,
+    "dialog_closed": true,
+    "preview_receipt_retained": false,
+    "navigated": false,
+    "error_in_closed_dialog": "Cannot read properties of undefined (reading 'task_id')"
+  }
+}

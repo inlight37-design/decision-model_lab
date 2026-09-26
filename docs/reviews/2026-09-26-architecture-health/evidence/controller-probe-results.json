@@ -1,0 +1,119 @@
+{
+  "scope": "synthetic in-process execution only; no real process/model/CLI/install/network",
+  "source_sha": "a232de7d4ae7de097dd014be5a791348b7881ea3",
+  "python": "3.12.10",
+  "source_digests": {
+    "app/controller.py": "98a73bd2d7ff35df89d06eb828e73220d3ccc3ae990623264fd9c1ac3e2e4cdf",
+    "app/store.py": "f5c65729aac114e804d4cf6bc1a799ad8fc5ab396135140e338e60c88c9ad629",
+    "app/state.py": "e17741a48da67bc72896d19b546d05d3ecc808cf781f913d160648a12465f119",
+    "app/roles.py": "d7f4574a8f0fbee416c8f936d50c0f88a1cec2c55fe4616fc6c67ed7f627627e",
+    "app/synthesis.py": "f6e40f787e550b331063cdf8f1c88610b79581ef1edf4ef6576351da0b234348",
+    "core/adapters.py": "ff1ad12cfd5cf71e10c08f23f1074c1f86b9ac2bad9a40b07b45387843ef9947"
+  },
+  "human_review_after_new_synthesis": {
+    "before_task_status": "done",
+    "after_task_status": "done",
+    "after_reviewed": true,
+    "new_claim": "synthesis 2",
+    "review_seq": [
+      8
+    ],
+    "completed_seq": [
+      7,
+      10
+    ],
+    "temporary_ledger_cleaned": true
+  },
+  "synthesis_surrogate_metadata": {
+    "draft_state": "accepted",
+    "draft_metadata_escaped": true,
+    "execution_results": [
+      {
+        "pid": "draft",
+        "acceptance": [
+          "accepted",
+          "ok",
+          null
+        ],
+        "tree_confirmed_empty": true,
+        "model_match": true
+      },
+      {
+        "pid": "synthesis",
+        "acceptance": [
+          "accepted",
+          "ok",
+          null
+        ],
+        "tree_confirmed_empty": true,
+        "model_match": true
+      }
+    ],
+    "synthesis_state": {
+      "status": "unknown",
+      "attempts": [
+        "e44560fc566c43f8a526d96ad0986c42"
+      ],
+      "message": "\ud569\uc131 \uc790\uc190\uc758 \uc885\ub8cc\ub97c \ud655\uc778\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4. \uc790\ub9ac\ub294 \uc720\uc9c0\ud558\uba70 \uc7ac\ud638\ucd9c\u00b7\ud658\ubd88\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4."
+    },
+    "slots_used": 1,
+    "unsettled": 1,
+    "synthesis_events": [
+      "synthesis_started"
+    ],
+    "thread_errors": [
+      {
+        "type": "UnicodeEncodeError",
+        "message": "'utf-8' codec can't encode character '\\ud800' in position 507: surrogates not allowed"
+      }
+    ],
+    "temporary_ledger_cleaned": true
+  },
+  "filesystem_head_of_line": {
+    "errors": [
+      {
+        "request": "first",
+        "type": "FileExistsError"
+      },
+      {
+        "request": "second",
+        "type": "FileExistsError"
+      }
+    ],
+    "started": [],
+    "runs": [
+      {
+        "question": "first",
+        "phase": "drafting"
+      },
+      {
+        "question": "second",
+        "phase": "drafting"
+      }
+    ],
+    "participants": [
+      {
+        "state": "queued",
+        "status": null
+      },
+      {
+        "state": "queued",
+        "status": null
+      }
+    ],
+    "event_kinds": [
+      "run_created",
+      "drafting_started",
+      "run_created",
+      "drafting_started"
+    ],
+    "temporary_ledger_cleaned": true
+  },
+  "failed_synthesis_reviewed": {
+    "reviewed": true,
+    "task_status": "problem",
+    "action": "\uc885\ub8cc\u00b7\uc2e4\ud328 \ud655\uc778",
+    "synthesis_state": "failed",
+    "temporary_ledger_cleaned": true
+  }
+}
