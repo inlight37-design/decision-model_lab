@@ -14,7 +14,7 @@
 | [`2026-09-23-wsl2-boundary/`](2026-09-23-wsl2-boundary/README.md) | WSL2 채택과 실행 경계. runner 종료 확인·정리 상한, 정족수, 출력 파서의 재현과 WSL2가 해결하는 것·하지 않는 것. 원문은 [`REVIEW.md`](2026-09-23-wsl2-boundary/REVIEW.md), 반영 결과는 [`RESPONSE.md`](2026-09-23-wsl2-boundary/RESPONSE.md) |
 | [`2026-09-23-wsl2-migration-request/`](2026-09-23-wsl2-migration-request/README.md) | 경계 리뷰 반영, WSL2 이전, bubblewrap 격리에 대한 검토 요청서. 한 일, 잘 안 된 것, 아직 모르는 것, 다음 계획과 검토 질문. 결과는 `2026-09-23-wsl2-migration-review/`로 받는다 |
 | [`2026-09-23-wsl2-migration-review/`](2026-09-23-wsl2-migration-review/README.md) | 위 요청에 대한 ChatGPT 리뷰([PR #6](https://github.com/inlight37-design/decision-model_lab/pull/6)). 입력 전달 실패, 토큰의 argv 경로, namespace 보장 부여, 마운트 충돌, 빈 PATH, 파서 경계, 잔류 입출력(WM-01–WM-07)과 고정된 재현 자료. 반영 결과는 같은 폴더의 [`RESPONSE.md`](2026-09-23-wsl2-migration-review/RESPONSE.md) |
-| [`2026-09-23-a1-handoff-request/`](2026-09-23-a1-handoff-request/README.md) | WSL2 리뷰 반영, A1 모의 앱, 새 인계의 한계 표(K 번호)와 다음 계획에 대한 검토 요청서. 결과는 아래 리뷰와 재개 검증·정정으로 연결한다 |
+| [`2026-09-23-a1-handoff-request/`](2026-09-23-a1-handoff-request/README.md) | WSL2 리뷰 반영, A1 모의 앱, 새 인계의 한계 표(K 번호)와 계획에 대한 검토 요청서. 결과는 아래 리뷰와 재개 검증·정정으로 연결한다 |
 | [`2026-09-23-a1-handoff-review/`](2026-09-23-a1-handoff-review/README.md) | [PR #7](https://github.com/inlight37-design/decision-model_lab/pull/7). A1 봉인·수용·복구·마운트, K 표·계획·수동 원본 앱 참여와 인계 비교. 중단 전 리뷰·재현 코드·관측을 보존했으며, [재개 검증·WM-07 정정](2026-09-23-a1-handoff-review/VERIFICATION-20260923.md)을 함께 읽는다. 제품 실행 코드는 이 리뷰에서 수정하지 않음. 반영 결과는 같은 폴더의 [`RESPONSE.md`](2026-09-23-a1-handoff-review/RESPONSE.md) |
 | [`2026-09-23-stage2-request/`](2026-09-23-stage2-request/README.md) | 2단계(승인된 모델 호출 다섯 번)의 판정, 관측 도구 수정, 그 과정의 실패·실수·시행착오(S01–S21)에 대한 검토 요청서. 결과는 `2026-09-23-stage2-review/`(또는 리뷰한 날짜)로 받는다 |
 | [`2026-09-24-review-request/`](2026-09-24-review-request/README.md) | 위 요청서를 이어받는 검토 요청서. 지금까지의 흐름(연표), 2단계 뒤의 PR #8–#12, K46 방어, 새 실패·시행착오(S22–S33)와 S01–S21의 현재 상태. PC에만 있던 관측 요약을 가려서 함께 옮겼다. 결과는 `<YYYY-MM-DD>-review/`로 받는다 |
@@ -55,6 +55,7 @@
 | [`2026-09-25-worktrail/`](2026-09-25-worktrail/README.md) | ChatGPT 웹 세션의 [PR #85](https://github.com/inlight37-design/decision-model_lab/pull/85). WorkTrail 고정 소스와 기존 카드·실행 원장 비교, 인계·보안·독립성·라이선스·운영 비용 평가, Entire·Beads·MCP Agent Mail 보충, 최소 적용과 시범/중단 기준. [근거와 한계](2026-09-25-worktrail/EVIDENCE.md). 설치·실행 코드 변경·모델 호출 없음 |
 | [`2026-09-25-codex-continuation/`](2026-09-25-codex-continuation/README.md) | Codex의 재개 점검. 이전 병합·main CI 확인, 카드 #72의 낡은 합성 제약 정정, WindowsApps WSL bash 구문 검사 실패 수정, 같은 초안의 L1 실험과 카드 보드·Q4·합성 기본값 권고. [PR #89](https://github.com/inlight37-design/decision-model_lab/pull/89) |
 | [`2026-09-26-role-board-request/`](2026-09-26-role-board-request/README.md) | claude(웹 컨테이너)의 검토 요청서. 사용자의 새 화면 구상(모델·추론 고르기, 역할판에 모델 끌어다 놓기, 격리 칸·일반 칸, 홈·작업·문서함)을 1부 사용자가 원하는 것, 2부 Claude 제안, 3부 조사(일반 오케스트레이션의 중복 읽기를 줄이는 방법, 우리 기록의 캐시 수치)로 나눴다. 결과는 `<YYYY-MM-DD>-role-board-review/`로 받는다. 코드 변경·모델 호출 없음 |
+| [`2026-09-26-role-board-review/`](2026-09-26-role-board-review/README.md) | ChatGPT의 [PR #98](https://github.com/inlight37-design/decision-model_lab/pull/98). W1–W10을 전제로 질문별 검토, 역할·공통 요약·봉인·추론·예산 경계와 작은 구현 순서. [원문 대조](2026-09-26-role-board-review/EVIDENCE.md)는 코드·공식 문서·논문의 확인 수준, 캐시 해석과 모델별 추가 과금 경계(O14)를 구분한다. 코드·관측 허가 변경·모델 CLI 호출 없음 |
 
 ## 읽는 순서
 
@@ -108,6 +109,10 @@
 36. [`2026-09-24-account-limits/`](2026-09-24-account-limits/README.md) — 35가 정한 다음 작업 중 A·F. 봉인·실제 실행 규칙을 지키는 Claude 한도 표시, Codex 가용 모델의 실제 조회
 37. [`2026-09-24-source-snapshot/`](2026-09-24-source-snapshot/README.md) — 다음 작업 B와 A·F의 실제 확인. 공통 자료를 입력 digest에 묶고 시도마다 확인, 두 답이 같은 자료를 인용한 실제 실행
 38. [`2026-09-24-model-synthesis/`](2026-09-24-model-synthesis/README.md) — 다음 작업 C. 37의 공개된 실행에 실제 합성 1회, 인용 대조와 추가 주장 표시
+
+## 역할판 요청서에 대한 단서
+
+- [2026-09-26 요청서](2026-09-26-role-board-request/README.md) G1의 실제 CLI HOME 설명은 모의 실행과 다르다. 실제 HOME은 `CliExecutor.self.home`이며, 작업 폴더만 실행/참여자별이다. G2의 세 행 수치는 원장과 일치하지만 그 합계만으로 질문·자료 전체의 캐시 미적중이나 effort 기본값을 확정할 수 없다. 논문의 최대/평균·상대 성능과 포함 구독 사용량의 해석도 [검토 RB-08·09와 근거표](2026-09-26-role-board-review/EVIDENCE.md)로 보충한다. 날짜 기록인 요청서는 고치지 않았다.
 
 ## 28번 기록에 대한 단서
 
