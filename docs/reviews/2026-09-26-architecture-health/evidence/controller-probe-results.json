@@ -1,6 +1,6 @@
 {
   "scope": "synthetic in-process execution only; no real process/model/CLI/install/network",
-  "source_sha": "a232de7d4ae7de097dd014be5a791348b7881ea3",
+  "source_sha": "2fb95eadeb35b158107742cbe35f326e69043c25",
   "python": "3.12.10",
   "source_digests": {
     "app/controller.py": "98a73bd2d7ff35df89d06eb828e73220d3ccc3ae990623264fd9c1ac3e2e4cdf",
@@ -52,7 +52,7 @@
     "synthesis_state": {
       "status": "unknown",
       "attempts": [
-        "e44560fc566c43f8a526d96ad0986c42"
+        "000a9691f82245568844a7b1b7f09d31"
       ],
       "message": "\ud569\uc131 \uc790\uc190\uc758 \uc885\ub8cc\ub97c \ud655\uc778\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4. \uc790\ub9ac\ub294 \uc720\uc9c0\ud558\uba70 \uc7ac\ud638\ucd9c\u00b7\ud658\ubd88\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4."
     },

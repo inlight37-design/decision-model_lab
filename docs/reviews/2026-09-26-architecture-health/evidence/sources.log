@@ -1,0 +1,4 @@
+PASS docs/architecture/v0.3/sources.json (31 sources)
+PASS docs/architecture/v0.4/sources.json (31 sources)
+
+범위: 원장의 구조와 필수 필드만. 원문 진실성·URL 가용성·인용 적합성은 미검증.

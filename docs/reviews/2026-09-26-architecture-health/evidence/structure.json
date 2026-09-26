@@ -1,5 +1,5 @@
 {
-  "source_sha": "a232de7d4ae7de097dd014be5a791348b7881ea3",
+  "source_sha": "2fb95eadeb35b158107742cbe35f326e69043c25",
   "scope": "app/core top-level Python modules; AST imports include function-local imports. No dynamic reachability proof.",
   "files": [
     {

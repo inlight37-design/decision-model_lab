@@ -67,6 +67,8 @@ SQL trace 한 번과 별개로, 예열된 view·JSON 직렬화를 7회 측정해
 
 ## 저장소 검사
 
-로컬 결과와 전체 suite 로그는 `evidence/local-check-results.json`, `evidence/full-tests.log`에 보존한다. Windows에서 적용할 수 없는 Linux 격리 시험은 skip으로 구분하며 jsonschema 의존성을 설치한 전용 venv를 사용한다. 인코딩·디자인 토큰·frontier·runtime inventory dry-run·v0.1/v0.2 계약·source registry·전체 unittest·compile을 실행한다.
+로컬 결과와 전체 suite 로그는 [local-check-results.json](evidence/local-check-results.json), [full-tests.log](evidence/full-tests.log)에 보존한다. Python 3.12.10, jsonschema 의존성을 설치한 전용 venv에서 인코딩·디자인 토큰·frontier·runtime inventory dry-run·v0.1/v0.2 계약·source registry·전체 unittest·compile이 모두 종료 코드 0이었다. 전체 597개 중 538개 통과, 플랫폼 조건의 59개 skip, 실패 0이다. Windows에서 적용할 수 없는 Linux 격리 시험 등을 통과로 세지 않는다. Node는 로컬 v24.19.0이며 PR CI의 Node 22와 구분한다.
 
-최종 문서/인계 변경은 PR의 정확한 마지막 head에 연결된 `offline-checks`에서 다시 확인한다. PR 본문에 그 head와 CI 링크를 기록한다. 이 리뷰의 오프라인 반례 성공, 기존 suite의 성공, 제품 결함 수정 완료는 서로 다른 주장이다.
+문서를 조립하는 도중 시작한 첫 전체 검사는 아직 복사하지 않은 근거 파일의 링크 검사에서 실패했다. 자료와 인계 연결을 마친 뒤 다시 실행한 최종 로컬 결과를 위 파일에 보존한다. 제품 코드 변경으로 해결한 실패는 아니다.
+
+최종 문서/인계 변경은 [PR #104](https://github.com/inlight37-design/decision-model_lab/pull/104)의 정확한 마지막 head에 연결된 `offline-checks`에서 다시 확인한다. PR 본문에 그 head와 CI 링크를 기록한다. 이 리뷰의 오프라인 반례 성공, 기존 suite의 성공, 제품 결함 수정 완료는 서로 다른 주장이다.

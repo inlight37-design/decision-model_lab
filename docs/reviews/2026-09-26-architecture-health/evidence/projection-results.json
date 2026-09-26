@@ -1,5 +1,5 @@
 {
-  "source_sha": "a232de7d4ae7de097dd014be5a791348b7881ea3",
+  "source_sha": "2fb95eadeb35b158107742cbe35f326e69043c25",
   "python": "3.12.10",
   "platform": "win32",
   "method": "Synthetic manual accepted drafts plus synthetic terminal synthesis events; no providers, subprocess executor, server or sockets. Seven warm in-process samples; excludes network, DOM and actual model latency.",
@@ -25,8 +25,8 @@
         }
       ],
       "response_bytes": 37270,
-      "median_view_ms": 0.483,
-      "median_json_ms": 0.086,
+      "median_view_ms": 0.554,
+      "median_json_ms": 0.1,
       "timing_samples": 7
     },
     {
@@ -50,7 +50,7 @@
       ],
       "response_bytes": 37270,
       "median_view_ms": 0.466,
-      "median_json_ms": 0.087,
+      "median_json_ms": 0.083,
       "timing_samples": 7
     },
     {
@@ -97,8 +97,8 @@
         }
       ],
       "response_bytes": 1112150,
-      "median_view_ms": 11.526,
-      "median_json_ms": 3.147,
+      "median_view_ms": 9.786,
+      "median_json_ms": 2.98,
       "timing_samples": 7
     },
     {
@@ -121,8 +121,8 @@
         }
       ],
       "response_bytes": 37270,
-      "median_view_ms": 1.572,
-      "median_json_ms": 0.128,
+      "median_view_ms": 1.538,
+      "median_json_ms": 0.123,
       "timing_samples": 7
     },
     {
@@ -169,8 +169,8 @@
         }
       ],
       "response_bytes": 3706840,
-      "median_view_ms": 34.551,
-      "median_json_ms": 10.475,
+      "median_view_ms": 33.447,
+      "median_json_ms": 10.536,
       "timing_samples": 7
     },
     {
@@ -193,8 +193,8 @@
         }
       ],
       "response_bytes": 37270,
-      "median_view_ms": 4.359,
-      "median_json_ms": 0.147,
+      "median_view_ms": 3.94,
+      "median_json_ms": 0.134,
       "timing_samples": 7
     },
     {
@@ -217,8 +217,8 @@
         }
       ],
       "response_bytes": 449065,
-      "median_view_ms": 3.245,
-      "median_json_ms": 1.237,
+      "median_view_ms": 2.895,
+      "median_json_ms": 1.146,
       "timing_samples": 7
     },
     {
@@ -241,8 +241,8 @@
         }
       ],
       "response_bytes": 449065,
-      "median_view_ms": 3.184,
-      "median_json_ms": 1.115,
+      "median_view_ms": 3.055,
+      "median_json_ms": 1.095,
       "timing_samples": 7
     }
   ]

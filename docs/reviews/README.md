@@ -58,7 +58,7 @@
 | [`2026-09-26-role-board-review/`](2026-09-26-role-board-review/README.md) | ChatGPT의 [PR #98](https://github.com/inlight37-design/decision-model_lab/pull/98). W1–W10을 전제로 질문별 검토, 역할·공통 요약·봉인·추론·예산 경계와 작은 구현 순서. [원문 대조](2026-09-26-role-board-review/EVIDENCE.md)는 코드·공식 문서·논문의 확인 수준, 캐시 해석과 모델별 추가 과금 경계(O14)를 구분한다. 코드·관측 허가 변경·모델 CLI 호출 없음 |
 | [`2026-09-26-codex-peek/`](2026-09-26-codex-peek/README.md) | ChatGPT의 [PR #102](https://github.com/inlight37-design/decision-model_lab/pull/102). Codex Bridge 고정 소스·첨부 PDF·CI 배포물 대조, 검증 영수증·기억/수칙·설치/격리 경계 해체와 기존 controller에 맞춘 최소 적용안. 오프라인 재현과 한계 보존. 제품 코드 변경·설치·모델 호출 없음 |
 | [`2026-09-26-codex-peek-comparison/`](2026-09-26-codex-peek-comparison/README.md) | Codex의 [PR #103](https://github.com/inlight37-design/decision-model_lab/pull/103). 기존 PR #102·사용자 제공 독립 리뷰의 공통 결론·추가 반례·타당성·적용 순서 판단, 독립 원문과 증거 보존, 핵심 오프라인 재실행. 기존 기록의 보충이며 제품 기능 채택·변경은 없음 |
-| [`2026-09-26-architecture-health/`](2026-09-26-architecture-health/README.md) | Codex의 아키텍처·실행 파이프라인·누적 코드·효율 검토. main과 역할판 변경을 구분한 상태·정리·조회 반례, 고정 소스 재현, 필요한 복잡도와 작은 정리 순서. 제품 수정 없음 |
+| [`2026-09-26-architecture-health/`](2026-09-26-architecture-health/README.md) | Codex의 [PR #104](https://github.com/inlight37-design/decision-model_lab/pull/104). 아키텍처·실행 파이프라인·누적 코드·효율 검토. main과 역할판 변경을 구분한 상태·정리·조회 반례, 고정 소스 재현, 필요한 복잡도와 작은 정리 순서. 제품 수정 없음 |
 
 ## 읽는 순서
 

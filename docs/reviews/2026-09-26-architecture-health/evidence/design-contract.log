@@ -1,0 +1,28 @@
+PASS valid_task
+PASS valid_decision
+PASS valid_worker_result
+PASS unexpected_permission_field
+PASS path_traversal
+PASS absolute_path
+PASS windows_drive
+PASS self_dependency
+PASS invalid_state_version
+PASS bad_probability_sum
+PASS out_of_range_probability
+PASS nan_confidence
+PASS unknown_advice
+PASS explicit_abstain
+PASS inconsistent_abstain
+PASS worker_self_acceptance
+PASS missing_candidate_artifact
+PASS cached_exceeds_total
+PASS unknown_usage_is_not_zero
+PASS infinite_cost
+PASS empty_goal
+PASS confidence_differs_from_max_probability
+PASS read_only_task
+PASS duplicate_json_key
+PASS nonstandard_json_nan
+
+25/25 offline checks passed.
+범위: schema와 일부 순수 데이터 불변 조건. 실제 모델/복구/권한/성능 검증 아님.
