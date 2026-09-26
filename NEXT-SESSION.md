@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-26** · 작성 세션: claude(웹 컨테이너 — 새 화면 구상의 정리·조사와 검토 요청서, 사용자 PC·CLI는 보지 않음, 모델 호출 없음) · 브랜치 `claude/model-role-assignment-brainstorm-v8jbea` · 기준 main `a4d9a26`.
+최종 갱신 **2026-09-26** · 작성 세션: chatgpt(웹 — 역할판 요청서 검토, 사용자 PC·CLI는 보지 않음, 모델 CLI 호출 없음) · 브랜치 `chatgpt/role-board-review-20260926` · 기준 main `9526bbe`.
 
 이 파일은 **지금 상태와 다음 일만** 담는다. 끝난 일의 경위는 PR·git 이력과 날짜가 붙은 기록에 있고, 옛 판은 [docs/handoff/](docs/handoff/README.md)에 있다. **3절에는 진행 중인 일과 "이 판을 들인 PR" 한 줄만 둔다** — 새 PR은 그 줄을 자기 PR로 바꾸고, 병합 전에도 뒤에도 맞는 말만 쓴다("병합했다"고 미리 적지 않는다). 크기 상한과 3절의 모양은 CI가 본다. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있는 규칙은 여기 다시 적지 않는다 — 쌓임을 막는 원칙은 협업 규칙 7절이다.
 
@@ -61,7 +61,7 @@
 
 **진행 중: 작업 카드 시범.** 일은 `card` 라벨 이슈에서 [시범 규칙](docs/experiments/2026-09-25-card-pilot/README.md)대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #97](https://github.com/inlight37-design/decision-model_lab/pull/97)(`claude/model-role-assignment-brainstorm-v8jbea`) — 웹 컨테이너 세션, 코드 변경·모델 호출 없음. 사용자가 새 화면 구상을 말했고, 사용자가 원하는 것·Claude 제안·조사를 나눠 [역할판 요청서](docs/reviews/2026-09-26-role-board-request/README.md)에 적었다. 사용자가 ChatGPT에 검토를 받는다 — 제안은 사용자 확정이 아니다. 앞 판의 화면(island-ui, 계정 한도 게이지)은 그대로이고, 아래 선택 권고(PR #89의 [재개 점검](docs/reviews/2026-09-25-codex-continuation/README.md))도 아직 사용자 확정이 아니다.
+- **이 판을 들인 PR:** [PR #98](https://github.com/inlight37-design/decision-model_lab/pull/98)(`chatgpt/role-board-review-20260926`) — [역할판 검토](docs/reviews/2026-09-26-role-board-review/README.md)와 [원문 대조](docs/reviews/2026-09-26-role-board-review/EVIDENCE.md). 1부 요구는 유지하고 2·3부의 보완·작은 구현 순서를 제안했다. 코드·관측 허가 변경과 모델 CLI 호출 없음. 검토 의견은 사용자 확정이 아니다.
 
 | 사용자 판단 | 권고 / 지금까지 한 일 |
 |---|---|
@@ -69,7 +69,7 @@
 | 실제 합성의 기본값 | 실행마다 켜는 선택(기본 끔)을 권고한다. D·D 후속의 형식 실패·오류 전이·권고 누락에 더해 L1에서도 정답 선택과 판단 보류가 함께 나왔다. 인용 일치는 사실 확인이 아니다. 합성자는 실행마다 사용자가 고른다 |
 | 여러 AI 작업 방식 | 카드 보드 시범 중이며 채택은 사용자가 정한다. 조사는 [원문](docs/research/multi-ai-workflow-2026-09-25/README.md)·[후속 검토](docs/reviews/2026-09-25-workflow-evaluation/README.md)·[병합 기록](docs/reviews/2026-09-25-merge-56/README.md)(Projects 정정). Claude Code Projects는 Code 쪽에 보이지 않아(사용자 확인) 보류, 새 방식에서 ChatGPT 웹은 큰 변경의 검토에 쓴다. [WorkTrail 평가](docs/reviews/2026-09-25-worktrail/README.md)(ChatGPT, 2026-09-25): 통째 도입은 보류, 카드 체크포인트의 다섯 줄 형식만 [카드 양식](.github/ISSUE_TEMPLATE/card.md)에 들였다. Entire·Beads·Agent Mail 같은 도구는 같은 불편이 되풀이될 때 그 평가 9절의 짝(찾기 어려움→읽기 전용 뷰, 의존성→Beads, 동시 수정→Agent Mail, 변경 이유→Entire)으로 본다. 개발용 기억 도구는 참여자에게 연결하지 않는다 — 붙이면 참여자 계획이 바뀌어 재관측이 필요하다 |
 | 디자인 브랜드북 | 화면은 island-ui를 쓰고 `design/`(Ledger)은 의미 규칙만 화면 규칙으로 남는다([design 안내](design/README.md)). 브랜드북·아티팩트를 island-ui로 옮길지 미정 |
-| 새 화면 구상(역할판) | 사용자가 원하는 것은 [역할판 요청서](docs/reviews/2026-09-26-role-board-request/README.md) 1부 — 모델·추론 고르기, 역할 칸(슈퍼바이저·오케스트레이터·팀원·팀원(격리))에 모델 끌어다 놓기, 빈 상위 칸은 사람, 격리 칸은 지금 방식·일반 칸은 보통 오케스트레이션, 홈·작업·문서함. 2부 제안은 ChatGPT 리뷰 뒤 사용자가 정한다. 제안한 순서: 모델 선택 → 추론 선택(재관측과 함께) → 역할판 → 홈·작업·문서함 → 일반 칸 → 슈퍼바이저 모델 |
+| 새 화면 구상(역할판) | [요청서](docs/reviews/2026-09-26-role-board-request/README.md) 1부는 사용자 요구로 유지한다. [검토](docs/reviews/2026-09-26-role-board-review/README.md) §6은 홈→작업→역할판→기존 결과의 모의 흐름부터 실제 모델 선택·사람 주도 일반 작업으로 잇는 순서를 권고한다. 구현 전 보강은 역할별 설정/공유 한도, effort와 과금 조건, 요약 입력의 독립성 표시, 모든 화면의 봉인 관문이다. 모델 목록에 있다고 포함 구독인 것은 아니다([근거 O14](docs/reviews/2026-09-26-role-board-review/EVIDENCE.md)). 아직 구현하거나 사용자 결정으로 확정하지 않았다 |
 | 나머지 | Q3 TypeScript 이행 미정. TM 계획 A는 후보. agy 기본 끔(설치·B4는 사용자가 켜기로 할 때). 원본 앱 자동화 끔. 편의 후보(공개 결정 전달, 공개 뒤 교차검토, 상급 모델 제안)는 기본 끔 |
 
 미확인 실제 답을 독립 비교로 격상하지 않는다.
