@@ -1,0 +1,80 @@
+{
+  "startedAt": "2026-09-26T07:16:53.939Z",
+  "finishedAt": "2026-09-26T07:16:56.868Z",
+  "upstream": "eb7cec1da0b13d2765eaab770c58d177024f423e",
+  "node": "v24.19.0",
+  "engineCases": 5,
+  "engine": [
+    {
+      "case": "explicit-fail-answer",
+      "stop": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "machineEffective": "fail",
+      "proofStatus": "success",
+      "judgmentPending": []
+    },
+    {
+      "case": "non-git-modified-after-proof",
+      "stop": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "case": "git-untracked-child-modified-after-proof",
+      "stop": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "gitStatus": "?? newcode/",
+      "directoryMtimeUnchanged": true
+    },
+    {
+      "case": "positive-control-git-tracked-modified-after-proof",
+      "stop": {
+        "exit": 0,
+        "stdout": "{\"decision\":\"block\",\"reason\":\"검증이 필요한 최종 상태인데 이번 턴에 결속된 통과 증명이 없습니다(실제 검증 회차 무제한 · 판정: proof-stale). queued/running 내구 검증은 동시에 최대 1개만 두세요. `node \\\"C:\\\\Users\\\\user\\\\Documents\\\\Codex\\\\2026-09-26\\\\c-users-user-documents-codex-2026-2\\\\work\\\\verification-results\\\\engine-sandbox-1790407013938\\\\bridge\\\\codex-bridge.js\\\" ask-start --allow-new \\\"<검증 요청>\\\"`으로 시작하고, 반환된 job id로 `ask-wait <job-id>`를 pending 동안 반복하세요. 완료된 실패 또는 이후 수정이 있으면 앞 작업을 끝낸 뒤 다음 회차를 순차적으로 시작하고, 통과하면 멈추세요.\"}",
+        "stderr": ""
+      },
+      "gitStatus": "M tracked.txt"
+    },
+    {
+      "case": "full-ask-start-worker-provider-ask-wait-stop-fail",
+      "stop": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "judgmentPending": [],
+      "jobState": "succeeded",
+      "jobExit": 0,
+      "waitExit": 0,
+      "waitContainsFailVerdict": true
+    }
+  ],
+  "citation": {
+    "falseSemanticClaim": "ok",
+    "clearedByEmptyParsedFindings": "recheck-clean"
+  },
+  "adaptation": {
+    "originalSha256": "12dc76d578e5dfdfb80b37f7a40891fc69715af5ca087d2fc8219a948326f28c",
+    "adaptedSha256": "cee686f27484a8bc35c061b11d98a6fafc364526b474dfb55f5e8115e09f43e3",
+    "changes": [
+      "source path is supplied by argument",
+      "sandbox created under output directory",
+      "inherited preload restricts filesystem, subprocesses, and network modules; no product source changes"
+    ],
+    "fixtureEnvironment": "Historical fixture redirects bridge/Codex/Claude paths in its child Node process only; no parent environment or installed configuration is changed."
+  },
+  "limits": [
+    "Fake provider output; no real model evaluation",
+    "C-C lifecycle/core profile/no approval envelope",
+    "Freshness fixture uses real proof/receipt writers and hooks; full-fail additionally runs ask-start/worker/ask/ask-wait",
+    "Preload is defense in depth for audited code, not an OS security sandbox"
+  ]
+}

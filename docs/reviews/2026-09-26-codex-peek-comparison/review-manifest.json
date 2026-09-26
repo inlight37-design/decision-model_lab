@@ -1,0 +1,41 @@
+{
+  "review_date": "2026-09-26",
+  "review_type": "fresh independent source review",
+  "prior_reviews_consulted": false,
+  "scope": "main snapshots; no real provider runs, no product installation",
+  "environment": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python": "3.12.10",
+    "node": "v24.19.0"
+  },
+  "repos": {
+    "codex-peek": {
+      "sha": "eb7cec1da0b13d2765eaab770c58d177024f423e",
+      "commit": "2026-09-22T00:15:37+09:00 chore(release): v0.1.103",
+      "tracked_changes": ""
+    },
+    "decision-model_lab": {
+      "sha": "435ba02f50d287f62dce7512a0ceae9b9c2f164b",
+      "commit": "2026-09-26T13:47:59+09:00 Merge PR #100 claude/model-role-assignment-brainstorm-v8jbea: record the new-screen decisions and hand step A to Codex",
+      "tracked_changes": ""
+    }
+  },
+  "checks": {
+    "peek_passed_scripts": 15,
+    "target_tests_run": 80,
+    "target_passed": 79,
+    "target_skipped": 1,
+    "target_failed": 0,
+    "full_suite_run": false
+  },
+  "artifacts": {
+    "codex-peek-independent-review-ko.md": {
+      "sha256": "af800ff9519fa2084f49921431d95ca0998391ecb1cb0d0d8caa1515f3b0c2cb",
+      "bytes": 45255
+    },
+    "review-evidence.zip": {
+      "sha256": "8e5ca7ee2fa9498ab9971f44a59d4badee0ad2197644f5380d420bf397668daa",
+      "bytes": 66973
+    }
+  }
+}

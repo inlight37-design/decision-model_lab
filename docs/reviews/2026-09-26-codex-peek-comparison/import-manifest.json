@@ -1,0 +1,35 @@
+{
+  "date": "2026-09-26",
+  "purpose": "Comparison of existing PR #102 and supplied independent review; not a new blind review",
+  "upstream_sha": "eb7cec1da0b13d2765eaab770c58d177024f423e",
+  "existing_review_sha": "173715a5813ac4a8d946e2e78afc90d5fcd2db0d",
+  "independent_review_target_sha": "435ba02f50d287f62dce7512a0ceae9b9c2f164b",
+  "role_board_sha": "8fc945d410bec31d7f104199a684e9aab4f5b9a3",
+  "original_manifest_is_historical": true,
+  "artifacts": [
+    {
+      "file": "codex-peek-independent-review-ko.md",
+      "original_sha256": "af800ff9519fa2084f49921431d95ca0998391ecb1cb0d0d8caa1515f3b0c2cb",
+      "original_bytes": 45255,
+      "stored_sha256": "af800ff9519fa2084f49921431d95ca0998391ecb1cb0d0d8caa1515f3b0c2cb",
+      "stored_bytes": 45255,
+      "transformation": "CRLF to LF only"
+    },
+    {
+      "file": "review-evidence.zip",
+      "original_sha256": "8e5ca7ee2fa9498ab9971f44a59d4badee0ad2197644f5380d420bf397668daa",
+      "original_bytes": 66973,
+      "stored_sha256": "8e5ca7ee2fa9498ab9971f44a59d4badee0ad2197644f5380d420bf397668daa",
+      "stored_bytes": 66973,
+      "transformation": "none"
+    },
+    {
+      "file": "review-manifest.json",
+      "original_sha256": "6bf39d3f4364389241112fd2de4df63b9550727dea716c29dc0ddad84a555086",
+      "original_bytes": 1337,
+      "stored_sha256": "6006965b56e1967df5bc6f054a828105ec86096126aca771bedee6cc7975f68b",
+      "stored_bytes": 1297,
+      "transformation": "CRLF to LF only"
+    }
+  ]
+}

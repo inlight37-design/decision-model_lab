@@ -1,0 +1,116 @@
+{
+  "date": "2026-09-26",
+  "python": "3.12.10",
+  "platform": "Windows",
+  "checks": [
+    {
+      "name": "encoding",
+      "command": [
+        "tools/check_encoding.py"
+      ],
+      "exit": 0,
+      "seconds": 0.22
+    },
+    {
+      "name": "design-tokens",
+      "command": [
+        "tools/validate_design_tokens.py"
+      ],
+      "exit": 0,
+      "seconds": 0.05
+    },
+    {
+      "name": "frontier",
+      "command": [
+        "tools/check_frontier_protocol.py"
+      ],
+      "exit": 0,
+      "seconds": 0.06
+    },
+    {
+      "name": "inventory-dry-run",
+      "command": [
+        "tools/runtime_inventory.py",
+        "--host-label",
+        "comparison-review-windows",
+        "--dry-run"
+      ],
+      "exit": 0,
+      "seconds": 0.14
+    },
+    {
+      "name": "design-contract",
+      "command": [
+        "tools/validate_design.py"
+      ],
+      "exit": 0,
+      "seconds": 0.25
+    },
+    {
+      "name": "v02",
+      "command": [
+        "tools/validate_v02.py"
+      ],
+      "exit": 0,
+      "seconds": 0.14
+    },
+    {
+      "name": "sources",
+      "command": [
+        "tools/validate_sources.py"
+      ],
+      "exit": 0,
+      "seconds": 0.19
+    },
+    {
+      "name": "full-tests",
+      "command": [
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-v"
+      ],
+      "exit": 0,
+      "seconds": 33.14
+    },
+    {
+      "name": "compile",
+      "command": [
+        "-m",
+        "compileall",
+        "-q",
+        "tools",
+        "tests",
+        "core",
+        "app"
+      ],
+      "exit": 0,
+      "seconds": 0.09
+    }
+  ],
+  "suite": {
+    "discovered": 597,
+    "passed": 538,
+    "skipped": 59,
+    "failures": 0,
+    "errors": 0,
+    "skip_reasons": {
+      "'bubblewrap을 쓸 수 있는 Linux에서만'": 24,
+      "'bubblewrap unavailable; native boundary not tested here'": 1,
+      "'stdio pipe selector and live probe are Linux-only'": 5,
+      "'WSL·Linux의 PATH 규칙'": 2,
+      "'Linux 경로 규칙'": 13,
+      "'installs a Linux fake CLI through a symlink; no bubblewrap needed'": 2,
+      "'requires usable Linux bubblewrap'": 1,
+      "'live server is Linux-only; no model/process in this test'": 1,
+      "'live server is Linux-only'": 1,
+      "'uses Linux fake-install symlinks'": 3,
+      "'setup-wsl.sh runs on Linux (CI) as a normal user only'": 4,
+      "'fcntl 잠금은 Linux에서만(관측 호출은 Linux·WSL에서만 한다)'": 2
+    }
+  },
+  "preparation": "Initial system Python lacked jsonschema; reran after installing repository requirements into a task-local venv. No app runtime dependency or user CLI configuration changed.",
+  "limits": "Offline repository regression only. Not real model, WSL isolation or quality verification. PR CI must be checked at its final head separately."
+}

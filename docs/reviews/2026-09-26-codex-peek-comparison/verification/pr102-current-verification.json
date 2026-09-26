@@ -1,0 +1,89 @@
+{
+  "observedAt": "2026-09-26T07:15:01.840Z",
+  "originalOnSourceCheckout": {
+    "exit": 1,
+    "error": "ENOENT: source checkout has no out/ directory; original fixture requires unpacked extension. Six blob pins and all ten assertions preceded this error, but no successful whole-run claim."
+  },
+  "adaptation": {
+    "originalSha256": "5115bfcb1105d9d28ee3151aa9c040eff128c22b4417f759606d25be027d89c6",
+    "adaptedSha256": "182038231e9790af66442fe3f6241173e94c40abdcb75fe5b9fbd0b714a88e3a",
+    "changes": [
+      "syntax sweep array changed from bridge/out to bridge only",
+      "limits string changed to disclose narrower syntax sweep"
+    ],
+    "probeAssertionsChanged": false
+  },
+  "upstream": "eb7cec1da0b13d2765eaab770c58d177024f423e",
+  "node": "v24.19.0",
+  "sourceGitBlobs": {
+    "bridge/codex-guard.js": "0365afaa7a31154bf6c1b338b20998f75cd32e16",
+    "bridge/rules-flow.js": "49fd145e85def9b7f6eb07acd901b0217b13f5b5",
+    "bridge/map-provenance.js": "13cc5a8ff420a7c6a2ac3fe9855125a17df1483a",
+    "bridge/map-retrieval.js": "8e22c521f006b04e78efc9594ce7f7a18ad10d61",
+    "bridge/contract-lib.js": "a08a1972d2ca3d94d31437c492eb7658912d3cb6",
+    "bridge/codex-bridge.js": "481801fa92fda2b7422b49d83656187c9184adc2"
+  },
+  "syntaxOnlyFiles": 53,
+  "results": [
+    {
+      "id": "P01-direct-guard-control",
+      "result": "pass",
+      "exit": 2
+    },
+    {
+      "id": "P02-marker-is-not-confinement",
+      "result": "pass",
+      "exit": 0,
+      "interpretation": "lexical guard bypass reproduced; command was data only, never executed"
+    },
+    {
+      "id": "P03-malformed-hook-input",
+      "result": "pass",
+      "exit": 0,
+      "interpretation": "fail-open parsing observed"
+    },
+    {
+      "id": "P04-actual-receipt-not-preview",
+      "result": "pass",
+      "receipt": {
+        "ts": "1",
+        "selectedCount": 1,
+        "askId": "ask-real"
+      }
+    },
+    {
+      "id": "P05-receipt-missing-scope",
+      "result": "pass",
+      "selection": null
+    },
+    {
+      "id": "P06-generation-order",
+      "result": "pass",
+      "selectedGeneration": 10
+    },
+    {
+      "id": "P07-revoke-and-reinstate",
+      "result": "pass",
+      "suppressed": 0,
+      "restoredGeneration": 10
+    },
+    {
+      "id": "P08-no-irrelevant-padding",
+      "result": "pass",
+      "selected": 0,
+      "fallback": true
+    },
+    {
+      "id": "P09-proof-schema-control",
+      "result": "pass",
+      "ok": true
+    },
+    {
+      "id": "P10-proof-missing-and-extra-keys",
+      "result": "pass",
+      "missingRejected": true,
+      "extraRejected": true
+    }
+  ],
+  "limits": "Source-checkout adaptation: ten probe assertions unchanged; syntax-only sweep covers bridge/ only, not packaged out/. Not the upstream suite; no models, installs, CLI or hook registration. VM used only on audited snippets, not a security sandbox."
+}
