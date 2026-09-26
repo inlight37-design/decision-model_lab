@@ -54,6 +54,7 @@
 | [`2026-09-25-reobserve/`](2026-09-25-reobserve/README.md) | claude의 카드 #82. 플러그인 끄기 뒤의 두 참여자 계획을 E2와 같은 대조로 다시 관측(Claude 2·Codex 3, 모두 기대대로)하고, 기록을 새 도구 `tools/w2/assemble.py`로 조립했다(판정은 요약의 칸으로만). aux-pc-wsl 등록, 준비 조회가 두 provider를 strict로 허가 — 2026-10-26부터 만료. 재관측 절차는 SETUP 4절로 옮김 |
 | [`2026-09-25-worktrail/`](2026-09-25-worktrail/README.md) | ChatGPT 웹 세션의 [PR #85](https://github.com/inlight37-design/decision-model_lab/pull/85). WorkTrail 고정 소스와 기존 카드·실행 원장 비교, 인계·보안·독립성·라이선스·운영 비용 평가, Entire·Beads·MCP Agent Mail 보충, 최소 적용과 시범/중단 기준. [근거와 한계](2026-09-25-worktrail/EVIDENCE.md). 설치·실행 코드 변경·모델 호출 없음 |
 | [`2026-09-25-codex-continuation/`](2026-09-25-codex-continuation/README.md) | Codex의 재개 점검. 이전 병합·main CI 확인, 카드 #72의 낡은 합성 제약 정정, WindowsApps WSL bash 구문 검사 실패 수정, 같은 초안의 L1 실험과 카드 보드·Q4·합성 기본값 권고. [PR #89](https://github.com/inlight37-design/decision-model_lab/pull/89) |
+| [`2026-09-26-role-board-request/`](2026-09-26-role-board-request/README.md) | claude(웹 컨테이너)의 검토 요청서. 사용자의 새 화면 구상(모델·추론 고르기, 역할판에 모델 끌어다 놓기, 격리 칸·일반 칸, 홈·작업·문서함)을 1부 사용자가 원하는 것, 2부 Claude 제안, 3부 조사(일반 오케스트레이션의 중복 읽기를 줄이는 방법, 우리 기록의 캐시 수치)로 나눴다. 결과는 `<YYYY-MM-DD>-role-board-review/`로 받는다. 코드 변경·모델 호출 없음 |
 
 ## 읽는 순서
 
