@@ -59,6 +59,7 @@
 | [`2026-09-26-codex-peek/`](2026-09-26-codex-peek/README.md) | ChatGPT의 [PR #102](https://github.com/inlight37-design/decision-model_lab/pull/102). Codex Bridge 고정 소스·첨부 PDF·CI 배포물 대조, 검증 영수증·기억/수칙·설치/격리 경계 해체와 기존 controller에 맞춘 최소 적용안. 오프라인 재현과 한계 보존. 제품 코드 변경·설치·모델 호출 없음 |
 | [`2026-09-26-codex-peek-comparison/`](2026-09-26-codex-peek-comparison/README.md) | Codex의 [PR #103](https://github.com/inlight37-design/decision-model_lab/pull/103). 기존 PR #102·사용자 제공 독립 리뷰의 공통 결론·추가 반례·타당성·적용 순서 판단, 독립 원문과 증거 보존, 핵심 오프라인 재실행. 기존 기록의 보충이며 제품 기능 채택·변경은 없음 |
 | [`2026-09-26-architecture-health/`](2026-09-26-architecture-health/README.md) | Codex의 [PR #104](https://github.com/inlight37-design/decision-model_lab/pull/104). 아키텍처·실행 파이프라인·누적 코드·효율 검토. main과 역할판 변경을 구분한 상태·정리·조회 반례, 고정 소스 재현, 필요한 복잡도와 작은 정리 순서. 제품 수정 없음 |
+| [`2026-09-26-review-consolidation/`](2026-09-26-review-consolidation/README.md) | ChatGPT의 [PR #106](https://github.com/inlight37-design/decision-model_lab/pull/106). 구조 검토와 Claude의 [별도 Peek 검토](https://github.com/inlight37-design/decision-model_lab/blob/6d6fdb9debc07ef835dd3d3f0b224f372a918c01/docs/reviews/2026-09-26-codex-peek-claude/README.md)를 기존 적용안·역할판 코드와 통합. 중복·해결 범위·수정 순서·완료 조건, N1 훅 검사·N3 상태 입력·폴링 우선순위 보완. 제품 수정·설치·모델 호출·병합 없음 |
 
 ## 읽는 순서
 
@@ -112,6 +113,10 @@
 36. [`2026-09-24-account-limits/`](2026-09-24-account-limits/README.md) — 35가 정한 다음 작업 중 A·F. 봉인·실제 실행 규칙을 지키는 Claude 한도 표시, Codex 가용 모델의 실제 조회
 37. [`2026-09-24-source-snapshot/`](2026-09-24-source-snapshot/README.md) — 다음 작업 B와 A·F의 실제 확인. 공통 자료를 입력 digest에 묶고 시도마다 확인, 두 답이 같은 자료를 인용한 실제 실행
 38. [`2026-09-24-model-synthesis/`](2026-09-24-model-synthesis/README.md) — 다음 작업 C. 37의 공개된 실행에 실제 합성 1회, 인용 대조와 추가 주장 표시
+
+## 구조·Peek 통합에 대한 단서
+
+- [통합 검토](2026-09-26-review-consolidation/README.md)는 AH 지적과 Claude N1–N4의 중복·우선순위를 구분한다. N1의 hooks.json 목록 추가에는 빈 파일 예외 보완이 필요하고 전체 훅 격리를 증명하지 않는다. N3는 paused 전달과 결과 판 확인을 함께 다뤄야 한다. AH-05의 응답 순서·시작 영수증은 TM 최적화까지 미룰 항목이 아니다. [직접 확인과 한계](2026-09-26-review-consolidation/EVIDENCE.md)를 함께 읽으며, 원래 날짜 리뷰는 수정하지 않았다.
 
 ## 역할판 요청서에 대한 단서
 
