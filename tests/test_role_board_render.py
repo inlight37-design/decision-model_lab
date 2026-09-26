@@ -76,4 +76,3 @@ assert.equal(all(compared).filter(x=>x.tag==="button").length,0);
                                 text=True, encoding="utf-8", timeout=15)
         self.assertEqual(parsed.returncode, 0, parsed.stderr)
         self.assertIn('disabled value="refine"', html)
-
