@@ -1,0 +1,7 @@
+{
+  "scope": "Only a temporary copy of product files was changed; actual repository unchanged.",
+  "exit_code": 1,
+  "status": "aborted",
+  "stages_run": 0,
+  "error": "ValueError: SOURCE CHANGED; probes were not authorized for this source: [{\"path\": \"app/controller.py\", \"reason\": \"SHA-256 differs from reviewed source\"}]"
+}

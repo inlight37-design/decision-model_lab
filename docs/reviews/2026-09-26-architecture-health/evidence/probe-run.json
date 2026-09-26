@@ -1,0 +1,128 @@
+{
+  "schema": "dml-architecture-probe-run/1",
+  "reviewed_sha": "a232de7d4ae7de097dd014be5a791348b7881ea3",
+  "started_at": "2026-09-26T07:50:51.104017+00:00",
+  "repo": "C:\\Users\\user\\Documents\\Codex\\2026-09-26\\c-users-user-documents-codex-2026-2\\work\\decision-model_lab",
+  "output_dir": "C:\\Users\\user\\Documents\\Codex\\2026-09-26\\c-users-user-documents-codex-2026-2\\work\\architecture-review\\packaged-run-lf",
+  "python": {
+    "version": "3.12.10",
+    "executable": "C:\\Users\\user\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "node": {
+    "executable": "C:/Users/user/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin\\node.EXE",
+    "version": "v24.19.0"
+  },
+  "status": "completed",
+  "source_check": {
+    "status": "verified",
+    "reviewed_sha": "a232de7d4ae7de097dd014be5a791348b7881ea3",
+    "files_checked": 38,
+    "checkout_head": "2fb95eadeb35b158107742cbe35f326e69043c25"
+  },
+  "stages": [
+    {
+      "name": "controller",
+      "script": "controller-probes.py",
+      "probe_sha256": "6c91e4004c11e51d655834b2e70077e5cd9440623ac5fd4d08f7d9f165237639",
+      "command": [
+        "C:\\Users\\user\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "-B",
+        "C:\\Users\\user\\Documents\\Codex\\2026-09-26\\c-users-user-documents-codex-2026-2\\work\\decision-model_lab\\docs\\reviews\\2026-09-26-architecture-health\\probes\\controller-probes.py",
+        "C:\\Users\\user\\Documents\\Codex\\2026-09-26\\c-users-user-documents-codex-2026-2\\work\\decision-model_lab",
+        "C:\\Users\\user\\Documents\\Codex\\2026-09-26\\c-users-user-documents-codex-2026-2\\work\\architecture-review\\packaged-run-lf"
+      ],
+      "status": "completed",
+      "returncode": 0,
+      "elapsed_seconds": 0.484,
+      "result_file": "controller-probe-results.json"
+    },
+    {
+      "name": "core",
+      "script": "core-probe.py",
+      "probe_sha256": "e2538331f96efb2c2f5a6f65eb7e992c2eecd7e1ccd285a12e070979959f3dc5",
+      "command": [
+        "C:\\Users\\user\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "-B",
+        "C:\\Users\\user\\Documents\\Codex\\2026-09-26\\c-users-user-documents-codex-2026-2\\work\\decision-model_lab\\docs\\reviews\\2026-09-26-architecture-health\\probes\\core-probe.py",
+        "C:\\Users\\user\\Documents\\Codex\\2026-09-26\\c-users-user-documents-codex-2026-2\\work\\decision-model_lab",
+        "C:\\Users\\user\\Documents\\Codex\\2026-09-26\\c-users-user-documents-codex-2026-2\\work\\architecture-review\\packaged-run-lf"
+      ],
+      "status": "completed",
+      "returncode": 0,
+      "elapsed_seconds": 0.188,
+      "result_file": "core-probe-results.json"
+    },
+    {
+      "name": "projection",
+      "script": "projection_probe.py",
+      "probe_sha256": "b00c7d36fcf1ffb0dc891a494c54fd026434e9106334fcedc1f69f16154a5d10",
+      "command": [
+        "C:\\Users\\user\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "-B",
+        "C:\\Users\\user\\Documents\\Codex\\2026-09-26\\c-users-user-documents-codex-2026-2\\work\\decision-model_lab\\docs\\reviews\\2026-09-26-architecture-health\\probes\\projection_probe.py",
+        "C:\\Users\\user\\Documents\\Codex\\2026-09-26\\c-users-user-documents-codex-2026-2\\work\\decision-model_lab",
+        "C:\\Users\\user\\Documents\\Codex\\2026-09-26\\c-users-user-documents-codex-2026-2\\work\\architecture-review\\packaged-run-lf\\projection-results.json"
+      ],
+      "status": "completed",
+      "returncode": 0,
+      "elapsed_seconds": 0.813,
+      "result_file": "projection-results.json"
+    },
+    {
+      "name": "structure",
+      "script": "measure_structure.py",
+      "probe_sha256": "ec67e55aa91025fb348aae6b2770d9cf8c6973d5137ae7be4a853e79a7396068",
+      "command": [
+        "C:\\Users\\user\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "-B",
+        "C:\\Users\\user\\Documents\\Codex\\2026-09-26\\c-users-user-documents-codex-2026-2\\work\\decision-model_lab\\docs\\reviews\\2026-09-26-architecture-health\\probes\\measure_structure.py",
+        "C:\\Users\\user\\Documents\\Codex\\2026-09-26\\c-users-user-documents-codex-2026-2\\work\\decision-model_lab",
+        "C:\\Users\\user\\Documents\\Codex\\2026-09-26\\c-users-user-documents-codex-2026-2\\work\\architecture-review\\packaged-run-lf\\structure.json"
+      ],
+      "status": "completed",
+      "returncode": 0,
+      "elapsed_seconds": 0.141,
+      "result_file": "structure.json"
+    },
+    {
+      "name": "surface_python",
+      "script": "surface_probe.py",
+      "probe_sha256": "50c61bd6f440687531f99bc113f4ad21cf491d8b665ad257f25344c8e3e074df",
+      "command": [
+        "C:\\Users\\user\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "-B",
+        "C:\\Users\\user\\Documents\\Codex\\2026-09-26\\c-users-user-documents-codex-2026-2\\work\\decision-model_lab\\docs\\reviews\\2026-09-26-architecture-health\\probes\\surface_probe.py",
+        "C:\\Users\\user\\Documents\\Codex\\2026-09-26\\c-users-user-documents-codex-2026-2\\work\\decision-model_lab"
+      ],
+      "status": "completed",
+      "returncode": 0,
+      "elapsed_seconds": 0.188,
+      "result_file": "surface_python-results.json"
+    },
+    {
+      "name": "surface_javascript",
+      "script": "surface_probe.cjs",
+      "probe_sha256": "a1c0c958bed0a1b6ef7466edd499166e59595210b961231ce658838ca4b9de13",
+      "command": [
+        "C:/Users/user/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin\\node.EXE",
+        "C:\\Users\\user\\Documents\\Codex\\2026-09-26\\c-users-user-documents-codex-2026-2\\work\\decision-model_lab\\docs\\reviews\\2026-09-26-architecture-health\\probes\\surface_probe.cjs",
+        "C:\\Users\\user\\Documents\\Codex\\2026-09-26\\c-users-user-documents-codex-2026-2\\work\\decision-model_lab"
+      ],
+      "status": "completed",
+      "returncode": 0,
+      "elapsed_seconds": 0.047,
+      "result_file": "surface_javascript-results.json"
+    }
+  ],
+  "meaning": "Successful counterexample reproduction and structural measurements; NOT fix verification or production safety/quality certification.",
+  "scope": "Synthetic/mocked offline probes only; no provider/model CLI execution, account query, network, browser, or app server. Local Python, Node and read-only Git commands run the evidence.",
+  "source_manifest_sha256": "28673c09c568bba41e0a95f886e543a1431ba8e73c131e7dccf958d7b328c1bb",
+  "source_check_after": {
+    "status": "verified",
+    "reviewed_sha": "a232de7d4ae7de097dd014be5a791348b7881ea3",
+    "files_checked": 38,
+    "checkout_head": "2fb95eadeb35b158107742cbe35f326e69043c25"
+  },
+  "finished_at": "2026-09-26T07:50:53.565968+00:00"
+}

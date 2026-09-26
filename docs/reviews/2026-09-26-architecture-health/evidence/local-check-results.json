@@ -1,0 +1,102 @@
+{
+  "source_sha": "2fb95eadeb35b158107742cbe35f326e69043c25",
+  "scope": "Product files unchanged from a232de7; documentation in progress. Final PR CI is reported in the PR body.",
+  "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+  "checks": [
+    {
+      "name": "encoding",
+      "command": [
+        "python",
+        "tools/check_encoding.py"
+      ],
+      "exit": 0,
+      "seconds": 0.28
+    },
+    {
+      "name": "design-tokens",
+      "command": [
+        "python",
+        "tools/validate_design_tokens.py"
+      ],
+      "exit": 0,
+      "seconds": 0.06
+    },
+    {
+      "name": "frontier",
+      "command": [
+        "python",
+        "tools/check_frontier_protocol.py"
+      ],
+      "exit": 0,
+      "seconds": 0.06
+    },
+    {
+      "name": "inventory-dry-run",
+      "command": [
+        "python",
+        "tools/runtime_inventory.py",
+        "--host-label",
+        "architecture-review-windows",
+        "--dry-run"
+      ],
+      "exit": 0,
+      "seconds": 0.12
+    },
+    {
+      "name": "design-contract",
+      "command": [
+        "python",
+        "tools/validate_design.py"
+      ],
+      "exit": 0,
+      "seconds": 0.16
+    },
+    {
+      "name": "v02",
+      "command": [
+        "python",
+        "tools/validate_v02.py"
+      ],
+      "exit": 0,
+      "seconds": 0.17
+    },
+    {
+      "name": "sources",
+      "command": [
+        "python",
+        "tools/validate_sources.py"
+      ],
+      "exit": 0,
+      "seconds": 0.17
+    },
+    {
+      "name": "full-tests",
+      "command": [
+        "python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-v"
+      ],
+      "exit": 0,
+      "seconds": 33.64
+    },
+    {
+      "name": "compile",
+      "command": [
+        "python",
+        "-m",
+        "compileall",
+        "-q",
+        "tools",
+        "tests",
+        "core",
+        "app"
+      ],
+      "exit": 0,
+      "seconds": 0.11
+    }
+  ]
+}

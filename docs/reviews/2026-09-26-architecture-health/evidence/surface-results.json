@@ -1,0 +1,58 @@
+{
+  "baseline": "a232de7d4ae7de097dd014be5a791348b7881ea3",
+  "scope": "Synthetic/mocked offline probes only; no provider/model CLI execution, account query, network, browser, or app server. Local Python, Node and read-only Git commands run the evidence.",
+  "meaning": "Successful counterexample reproduction and structural measurements; NOT fix verification or production safety/quality certification.",
+  "python": {
+    "launcher_race": {
+      "first_controller_still_owned": true,
+      "second_exit": 1,
+      "shared_launcher_status": "failed",
+      "shared_launcher_nonce": "second",
+      "status_writes_before_release": [
+        [
+          "first",
+          "starting"
+        ],
+        [
+          "second",
+          "starting"
+        ],
+        [
+          "first",
+          "running"
+        ],
+        [
+          "second",
+          "failed"
+        ]
+      ]
+    },
+    "missing_report": {
+      "report": {
+        "http_status": 409
+      },
+      "decision-report": {
+        "exception": "IndexError",
+        "message": "list index out of range"
+      }
+    }
+  },
+  "javascript": {
+    "refresh_out_of_order": {
+      "requests": 4,
+      "state_before_old_response": "new",
+      "state_after_old_response": "old"
+    },
+    "optional_quota_failure": {
+      "state": "old",
+      "connection": "quota endpoint unavailable"
+    },
+    "created_then_refresh_failure": {
+      "server_creation_succeeded": true,
+      "dialog_closed": true,
+      "preview_receipt_retained": false,
+      "navigated": false,
+      "error_in_closed_dialog": "Cannot read properties of undefined (reading 'task_id')"
+    }
+  }
+}

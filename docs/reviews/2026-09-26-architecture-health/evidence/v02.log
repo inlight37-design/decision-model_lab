@@ -1,0 +1,2 @@
+PASS: synthetic pilot and proof bindings are internally consistent.
+Not executed: models, commands, real tests, authentication, sandboxing, recovery.

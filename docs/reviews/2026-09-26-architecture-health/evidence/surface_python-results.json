@@ -1,0 +1,35 @@
+{
+  "launcher_race": {
+    "first_controller_still_owned": true,
+    "second_exit": 1,
+    "shared_launcher_status": "failed",
+    "shared_launcher_nonce": "second",
+    "status_writes_before_release": [
+      [
+        "first",
+        "starting"
+      ],
+      [
+        "second",
+        "starting"
+      ],
+      [
+        "first",
+        "running"
+      ],
+      [
+        "second",
+        "failed"
+      ]
+    ]
+  },
+  "missing_report": {
+    "report": {
+      "http_status": 409
+    },
+    "decision-report": {
+      "exception": "IndexError",
+      "message": "list index out of range"
+    }
+  }
+}
