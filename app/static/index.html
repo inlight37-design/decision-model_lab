@@ -388,7 +388,7 @@ let contextUnverified = false;
 let optionsLoaded = false;   // 모드를 서버에서 받기 전에는 모의라고 적지 않는다
 let synthesizers = [];       // 설정된 CLI provider. 합성자는 그 실행의 참여자가 아니어도 된다
 let synthChoice = null;      // 고른 합성자(다시 그려도 유지)
-let firstView = "decision";  // Q4 비교: A 결정 우선 / B 대조표 우선. 저장하지 않는다
+let firstView = "decision";  // Q4: A 결정 우선이 기본, B 대조표 우선은 전환. 저장하지 않는다
 let connection = "";         // 연결 오류 문구
 let headerSig = null, listSig = null, runSig = null, quotaSignature = null;
 let picked = [];             // 새 실행에 붙일 자료(File)
@@ -1066,7 +1066,7 @@ function questionIsland(run) {
             if (firstView === key) return;
             placeIndicator($("orderSeg"), e.currentTarget); firstView = key; render();
           } }, text))),
-      h("span", { class: "cap muted" }, "Q4 미결정 · 같은 결과의 순서만 바꿉니다")));
+      h("span", { class: "cap muted" }, "같은 결과의 순서만 바꿉니다")));
   }
   const info = [
     h("p", {}, roleSummary(run.role_config)),

@@ -1,0 +1,106 @@
+{
+ "schema": "runtime-inventory/2",
+ "host": {
+  "label": "main-pc-wsl"
+ },
+ "updated_at": "2026-09-26",
+ "meaning": "Each field is an observation record. Eligibility to run a participant is never stored here; core.eligibility computes it right before each run from these fields, the installed version and the date. observed means the condition was seen to hold; failed means it was seen not to hold; unknown means not observed yet. spec_revision names the participant spec (core.contract: final argv and mounts) a transport, context or permission observation was made with; a record made with another revision does not allow a run (2026-09-24 review R04). Assembled by tools/w2/assemble.py from the listed observations; the status of every field follows the rules in that tool, not a reviewer's reading.",
+ "derived_from": [
+  "observe.py results 001-c3-claude-pos.json, 002-c3-claude.json, 003-c3-codex-pos.json, 004-c3-codex.json, 005-k46-codex.json and auth.json in dml-observe-main-20260926 (aux state folder)",
+  "docs/reviews/2026-09-25-reobserve/manifest.v2.json (rows for antigravity carried unchanged)"
+ ],
+ "adapters": [
+  {
+   "adapter_id": "claude-code",
+   "installed": {
+    "status": "observed",
+    "observed_at": "2026-09-26",
+    "version": "2.1.280",
+    "evidence": "version 2.1.280 now installed and reported by the observation (002-c3-claude.json)."
+   },
+   "auth_observed": {
+    "status": "observed",
+    "observed_at": "2026-09-26",
+    "auth_mode": "subscription_oauth",
+    "funding_mode": "subscription",
+    "evidence": "auth.json: isolated `claude auth status` inside the participant boundary (claude_preflight --real-auth): logged in with claude.ai, first-party provider; identity fields discarded; no model call."
+   },
+   "transport_observed": {
+    "status": "observed",
+    "observed_at": "2026-09-26",
+    "spec_revision": "claude-code@a35129c5a1dc",
+    "evidence": "002-c3-claude.json: the exact participant plan, argv_changes empty; stdin complete, exit 0, pid_namespace with tree_confirmed_empty true, gate ok; requested claude-sonnet-5, reported claude-sonnet-5."
+   },
+   "context_conformance": {
+    "status": "observed",
+    "observed_at": "2026-09-26",
+    "spec_revision": "claude-code@a35129c5a1dc",
+    "evidence": "Behavioral control with a fresh marker per call, the question never mentioning it: a work-folder instruction file told the model to end every reply with the marker. Positive control 001-c3-claude-pos.json (- --restricted, - --safe-mode) ended its reply with the marker; the exact plan 002-c3-claude.json did not; neither opened the file. Limits: the final request text is not observable; one call per probe on one version and one PC; network is shared (K08); a model following an instruction in one control is not a guarantee for every model and question."
+   },
+   "permission_conformance": {
+    "status": "observed",
+    "observed_at": "2026-09-26",
+    "spec_revision": "claude-code@a35129c5a1dc",
+    "evidence": "002-c3-claude.json permission_evidence: forbidden peer-file Read denied by the CLI (1 denial), read-only tool surface, permissionMode dontAsk. No claim that an available write tool was denied."
+   }
+  },
+  {
+   "adapter_id": "codex",
+   "installed": {
+    "status": "observed",
+    "observed_at": "2026-09-26",
+    "version": "0.156.1",
+    "evidence": "version 0.156.1 now installed and reported by the observation (auth.json)."
+   },
+   "auth_observed": {
+    "status": "observed",
+    "observed_at": "2026-09-26",
+    "auth_mode": "chatgpt_login",
+    "funding_mode": "subscription",
+    "evidence": "auth.json: isolated account metadata probe (app.codex_account) required account/read type chatgpt before rate limits; identity discarded; no inference; complete namespace exit."
+   },
+   "transport_observed": {
+    "status": "observed",
+    "observed_at": "2026-09-26",
+    "spec_revision": "codex@5bed42d05320",
+    "evidence": "005-k46-codex.json: the exact participant plan, argv_changes empty; stdin complete, exit 0, pid_namespace with tree_confirmed_empty true, gate ok; requested gpt-6-luna, serving model unreported (K32)."
+   },
+   "context_conformance": {
+    "status": "observed",
+    "observed_at": "2026-09-26",
+    "spec_revision": "codex@5bed42d05320",
+    "evidence": "Behavioral control with a fresh marker per call, the question never mentioning it: a work-folder instruction file told the model to end every reply with the marker. Positive control 003-c3-codex-pos.json (- -c project_doc_max_bytes=0) ended its reply with the marker; the exact plan 004-c3-codex.json did not; neither opened the file. Limits: the final request text is not observable; one call per probe on one version and one PC; network is shared (K08); a model following an instruction in one control is not a guarantee for every model and question."
+   },
+   "permission_conformance": {
+    "status": "observed",
+    "observed_at": "2026-09-26",
+    "spec_revision": "codex@5bed42d05320",
+    "evidence": "005-k46-codex.json: k46.verified True with this attempt's nonce; write denied:EROFS, input ok, auth denied:EACCES, home (listing ~/.codex) denied:EACCES. Confirms this helper under the participant permission profile, not every possible access path."
+   }
+  },
+  {
+   "adapter_id": "antigravity",
+   "installed": {
+    "status": "failed",
+    "observed_at": "2026-09-23",
+    "evidence": "tier 1: agy is not on PATH in this distribution"
+   },
+   "auth_observed": {
+    "status": "unknown",
+    "next": "not installed; agy stays off (NEXT-SESSION 2절 19)"
+   },
+   "transport_observed": {
+    "status": "unknown",
+    "next": "not installed"
+   },
+   "context_conformance": {
+    "status": "unknown",
+    "next": "not installed"
+   },
+   "permission_conformance": {
+    "status": "unknown",
+    "next": "not installed"
+   }
+  }
+ ]
+}
