@@ -30,7 +30,7 @@ function boardWarnings(board, roster) {
   if (board.supervisor.some(id => find(id)?.transport === "manual")) warnings.push("슈퍼바이저에는 CLI 카드만 놓을 수 있습니다.");
   if (board.supervisor.length && general) warnings.push("일반 팀원 작업의 다듬기는 아직 지원하지 않습니다. 격리 칸을 쓰거나 슈퍼바이저 칸을 비우세요.");
   const leaning = board.supervisor.map(find).filter(Boolean).filter(s => board.isolated.some(id => find(id)?.provider === s.provider));
-  if (leaning.length) warnings.push(`주의: 슈퍼바이저(${leaning[0].label})와 같은 회사의 격리 팀원이 있습니다. 다듬은 질문이 그쪽으로 기울 수 있습니다 — 막지는 않습니다.`);
+  if (leaning.length) warnings.push(`주의: 슈퍼바이저(${leaning[0].label})와 같은 회사의 격리 팀원이 있습니다. 다듬은 질문이나 다음 단계 제안이 그쪽으로 기울 수 있습니다 — 막지는 않습니다.`);
   if (general && board.isolated.length) warnings.push("격리 칸과 일반 칸은 한 실행에 함께 쓰지 않습니다(E 단계). 한쪽만 채우세요.");
   if (general && board.orchestrator.length) warnings.push("일반 팀원 작업의 오케스트레이터 모델은 D 단계에서 지원합니다. 비우면 내가 나누고 모읍니다.");
   if (board.general.some(id => roster.find(p => p.pid === id)?.transport === "manual"))
