@@ -1005,8 +1005,12 @@ class Controller:
                         {"attempt": attempt, "status": item["status"], "result": item["result"] or None}
                         for (_, attempt), item in self._synthesis_attempts(run["run_id"]).items()]
             unsettled = self.unsettled()
-            # 대기 시도를 controller가 지금 시작하지 않는 이유. pump()가 멈추는 두 조건과 같다(N3).
-            held = "paused" if self.paused else ("unsettled" if unsettled >= self.unsettled_limit else None)
+            # 대기 시도를 controller가 지금 시작하지 않고, 사람이 무언가 해야 풀리는 이유(N3). pump()가 멈추는 두 조건에
+            # 더해, 종료 미확인 시도가 병렬 자리를 모두 쥔 경우도 같다 — 진행 중인 시도가 끝나서 풀리는 자리가 아니다.
+            unknown_slots = self.store.row("SELECT COUNT(*) AS n FROM participants WHERE state = ?", UNKNOWN)["n"] + sum(
+                item["status"] == UNKNOWN for item in self._synthesis_attempts().values())
+            held = "paused" if self.paused else ("unsettled" if unsettled >= self.unsettled_limit or (
+                unknown_slots and unknown_slots >= self.max_parallel) else None)
             tasks = task_projection(self.store.rows("SELECT * FROM tasks ORDER BY created_at DESC"), runs, held=held)
             return {"executor": self.executor.name, "live_call_budget": self.call_budget(), "tasks": tasks,
                     "provider_call_budgets": {aid: self.call_budget(aid) for aid in self.provider_call_caps},

@@ -119,6 +119,34 @@ class PausedTaskTests(support.Base):
         self.assertEqual(ex.started, ["a"])
         self.assertEqual(again.view()["tasks"][0]["runs"][0]["status"], "my_turn")   # 공개됐고 판단할 차례
 
+    def test_a_queue_behind_unknown_attempts_that_hold_every_slot_is_not_working(self):
+        # Codex 교차검토: 상한(unsettled_limit)에 닿지 않아도 종료 미확인이 병렬 자리를 모두 쥐면 대기는 스스로 풀리지 않는다.
+        ex = support.SyntheticExecutor({"a": "unknown"})
+        ctl = self.controller(ex, max_parallel=1, unsettled_limit=2)
+        first = ctl.create_run("첫 질문", [support.cli("a")], min_independent=1)
+        self.assertTrue(ctl.wait_idle())
+        second = ctl.create_run("둘째 질문", [support.cli("b")], min_independent=1)
+        self.assertEqual(ex.started, ["a"])                              # b는 자리가 없어 시작하지 않았다
+        runs = {r["run_id"]: r for t in ctl.view()["tasks"] for r in t["runs"]}
+        self.assertEqual(runs[first]["status"], "problem")
+        self.assertEqual((runs[second]["status"], runs[second]["action"]), ("problem", "종료 미확인 정리 뒤 시작"))
+        ctl.acknowledge_unknown(first, "a")                              # 사람이 종료를 확인하면 풀린다
+        ctl.pump()
+        self.assertTrue(ctl.wait_idle())
+        self.assertEqual(ex.started, ["a", "b"])
+
+
+class LegacyReviewTests(ReviewBase):
+    def test_a_review_event_without_a_revision_reads_by_event_order(self):
+        # 이 변경 전의 원장은 판 없이 human_reviewed만 남겼다. 사건 순서로 같은 규칙을 적용한다.
+        ctl, rid = self.revealed(synthesis.SynthExecutor())
+        with self.store.tx() as tx:
+            tx.event(rid, "human_reviewed")
+        self.assertTrue(self.run_view(ctl, rid)["reviewed"])
+        self.synthesize(ctl, rid)                                        # 그 뒤 새 합성
+        self.assertFalse(self.run_view(ctl, rid)["reviewed"])
+        self.assertEqual(self.timeline(ctl, rid)["status"], "my_turn")
+
 
 def projected(held=None, **run):
     """task_projection에 넣을 공개 투영 한 실행. 표의 각 줄은 필요한 칸만 바꾼다."""
@@ -191,6 +219,15 @@ class SynthesisMetadataTests(ReviewBase):
         self.assertIs(view["synthesis"]["escaped_text"], True)
         self.assertIn("\\ud800", view["synthesis"]["synthesizer"]["reported_models"])
         self.assertEqual(ctl.view()["slots"]["used"], 0)
+        self.assertEqual(ctl.unsettled(), 0)
+
+    def test_surrogate_metadata_on_a_failed_synthesis_is_stored_too(self):
+        ctl, rid = self.revealed(self.Surrogate(answer=lambda: "합성 형식이 아닌 답"))
+        self.synthesize(ctl, rid)
+        failed = next(e for e in events(self.store, rid) if e["kind"] == "synthesis_failed")
+        self.assertIs(failed["result"]["escaped_text"], True)
+        self.assertIn("\\ud800", failed["result"]["synthesizer"]["reported_models"])
+        self.assertEqual(self.run_view(ctl, rid)["model_synthesis"]["status"], "failed")   # 실패는 실패로 남는다
         self.assertEqual(ctl.unsettled(), 0)
 
     def test_a_real_ledger_write_failure_still_leaves_the_synthesis_unknown(self):
