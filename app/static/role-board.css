@@ -21,6 +21,9 @@
 #inputPreview { margin-top: var(--s-5); border-top: 1px solid var(--line); padding-top: var(--s-5); }
 #inputPreview[hidden], #taskTitleField[hidden] { display: none; }
 #newRunPanel fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
-#assignments[hidden], #advanced[hidden] { display: none; }
+#assignments[hidden], #advanced[hidden], #refinePanel[hidden] { display: none; }
+/* 슈퍼바이저가 나에게 묻는 말. 진행 상태(배지)와 섞이지 않게 왼쪽 줄로 구분한다 */
+.ask-cell { box-shadow: inset 3px 0 0 var(--primary); }
+#question[readonly] { opacity: .75; }
 .assignment textarea { width: 100%; }
 @media (max-width: 600px) { .task-grid, .role-grid { grid-template-columns: 1fr; } .compose-dialog { padding: var(--s-4); } }

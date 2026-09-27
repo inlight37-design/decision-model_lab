@@ -25,8 +25,12 @@ function roleSummary(config) {
 }
 function boardWarnings(board, roster) {
   // 서버(app/roles.py freeze)가 같은 배치를 다시 거절한다. 여기서는 시작 전에 이유를 먼저 보인다.
-  const warnings = [], general = board.general.length > 0;
-  if (board.supervisor.length) warnings.push("슈퍼바이저 모델은 D 단계에서 지원합니다.");
+  const warnings = [], general = board.general.length > 0, find = id => roster.find(p => p.pid === id);
+  if (board.supervisor.length > 1) warnings.push("슈퍼바이저는 한 장만 배치하세요.");
+  if (board.supervisor.some(id => find(id)?.transport === "manual")) warnings.push("슈퍼바이저에는 CLI 카드만 놓을 수 있습니다.");
+  if (board.supervisor.length && general) warnings.push("일반 팀원 작업의 다듬기는 아직 지원하지 않습니다. 격리 칸을 쓰거나 슈퍼바이저 칸을 비우세요.");
+  const leaning = board.supervisor.map(find).filter(Boolean).filter(s => board.isolated.some(id => find(id)?.provider === s.provider));
+  if (leaning.length) warnings.push(`주의: 슈퍼바이저(${leaning[0].label})와 같은 회사의 격리 팀원이 있습니다. 다듬은 질문이 그쪽으로 기울 수 있습니다 — 막지는 않습니다.`);
   if (general && board.isolated.length) warnings.push("격리 칸과 일반 칸은 한 실행에 함께 쓰지 않습니다(E 단계). 한쪽만 채우세요.");
   if (general && board.orchestrator.length) warnings.push("일반 팀원 작업의 오케스트레이터 모델은 D 단계에서 지원합니다. 비우면 내가 나누고 모읍니다.");
   if (board.general.some(id => roster.find(p => p.pid === id)?.transport === "manual"))
@@ -35,7 +39,8 @@ function boardWarnings(board, roster) {
   if (board.orchestrator.length > 1) warnings.push("오케스트레이터는 한 장만 배치하세요.");
   const assigned = Object.keys(ROLE_LABELS).flatMap(slot => board[slot]).map(id => roster.find(p => p.pid === id));
   if (assigned.some(p => !p)) warnings.push("현재 명단에 없는 카드가 있습니다.");
-  const known = assigned.filter(Boolean);
+  // 슈퍼바이저는 팀원과 같은 카드여도 된다(위의 주의). provider당 한 장 규칙은 팀원·오케스트레이터에만 적용한다.
+  const known = ["orchestrator", "isolated", "general"].flatMap(slot => board[slot]).map(find).filter(Boolean);
   if (new Set(known.map(p => p.provider)).size < known.length) warnings.push("같은 provider 두 장은 아직 지원하지 않습니다. provider당 한 장만 배치하세요.");
   if (board.orchestrator.some(id => roster.find(p => p.pid === id)?.transport === "manual"))
     warnings.push("A 단계 오케스트레이터는 CLI 합성자만 지원합니다. 원본 앱은 격리 칸에 놓으세요.");
@@ -79,7 +84,118 @@ function renderRoleBoard() {
   $("roleWarnings").textContent = boardWarnings(roleBoard, roster).join(" ");
   for (const p of roster) $("card-" + p.pid).setAttribute("aria-pressed", String(chosenCard === p.pid));
   pressAll($("roleSlots"));
+  syncInputMode();
   renderAssignments();
+  renderRefine();
+}
+// 다듬기는 슈퍼바이저 칸에 CLI 카드가 있을 때만 고를 수 있다. 조건이 사라지면 원문으로 돌아가고 진행 중인 다듬기를 놓는다.
+function syncInputMode() {
+  const ready = roleBoard.supervisor.length === 1 &&
+    roleOptions.participants.find(p => p.pid === roleBoard.supervisor[0])?.transport === "cli";
+  if (!ready && roleBoard.input_mode === "refine") { roleBoard = { ...roleBoard, input_mode: "original" }; resetRefine(); }
+  $("modeRefine").disabled = !ready;
+  $("modeRefine").checked = roleBoard.input_mode === "refine";
+  $("modeOriginal").checked = roleBoard.input_mode !== "refine";
+}
+function chooseInputMode(mode) {
+  if (mode !== "refine") resetRefine();
+  roleBoard = { ...roleBoard, input_mode: mode === "refine" ? "refine" : "original" };
+  invalidatePreview(); renderRoleBoard();
+}
+
+// ---- 다듬기(카드 #130) ------------------------------------------------------------------------------------------
+// 원장이 원문·차례·승인을 기록한다. 이 화면이 쥐는 것은 지금 다듬는 ID·승인하려고 고른 차례·쓰는 중인 말뿐이다.
+let refineCurrent = null, refineApproved = null, refineNote = "", refineSig = null;
+const REFINE_STATE = { running: "다듬는 중", accepted: "받음", unknown: "종료 미확인" };
+function currentRefinement() { return ((state && state.refinements) || []).find(r => r.refine_id === refineCurrent) || null; }
+function resetRefine() {
+  const ref = currentRefinement();
+  if (ref) $("question").value = ref.original;   // 승인한 문장 대신 원문을 되돌려 놓는다
+  refineCurrent = null; refineApproved = null; refineNote = ""; refineSig = null;
+  $("question").readOnly = false;
+}
+function supervisorChoice() {
+  const pid = roleBoard.supervisor[0], model = $("m-" + pid), behavior = $("b-" + pid);
+  return { supervisor: pid, ...(model ? { model: model.value } : {}), ...(behavior ? { behavior: behavior.value } : {}) };
+}
+async function refineTurn() {
+  $("formErr").textContent = "";
+  try {
+    if (!refineCurrent) {
+      const original = $("question").value.trim();
+      if (!original) throw new Error("다듬을 원문을 먼저 질문 칸에 적어 주세요.");
+      refineCurrent = (await api("/api/refinements", { ...supervisorChoice(), original })).refine_id;
+    } else {
+      await api(`/api/refinements/${refineCurrent}/turn`, { ...supervisorChoice(), note: refineNote });
+      refineNote = "";
+    }
+    refineApproved = null; invalidatePreview();
+    await refresh().catch(() => false);
+  } catch (e) { $("formErr").textContent = e.message; }
+  renderRefine(true);
+}
+function approveTurn(turn) {
+  refineApproved = turn.turn; $("question").value = turn.reply.refined;
+  invalidatePreview(); renderRefine(true);
+}
+// 차례 카드: 기계적 진행 상태는 배지로, 슈퍼바이저가 나에게 묻는 말은 따로 표시한 칸으로 보인다.
+function refineTurnCard(turn) {
+  const approved = refineApproved === turn.turn;
+  const label = turn.state === "rejected" ? (turn.status === "format_error" ? "형식 검사 실패" : "실패") : REFINE_STATE[turn.state] || turn.state;
+  const body = turn.reply ? [
+      h("p", { class: "cap muted" }, "다듬은 문장"), h("pre", { class: "input-full" }, turn.reply.refined),
+      turn.reply.changes.length ? [h("p", { class: "cap muted" }, "원문에서 바뀐 점"),
+        h("ul", { class: "stack" }, turn.reply.changes.map(item => h("li", { class: "sm" }, item)))] : null,
+      turn.reply.ask ? h("div", { class: "cell ask-cell stack" }, h("p", { class: "cap strong" }, "슈퍼바이저가 나에게 묻는 말"),
+        h("p", { class: "sm" }, turn.reply.ask)) : null,
+      approved ? h("p", { class: "sm strong" }, "승인함 — 이 문장만 격리 팀원에게 보냅니다.")
+        : h("button", { type: "button", class: "btn btn-brand", onclick: () => approveTurn(turn) }, "이 문장으로 승인")]
+    : turn.state === "unknown" ? [h("p", { class: "sm cell cell-alert" }, "끝났는지 확인하지 못했습니다. 자리를 차지하고 있어 다음 차례를 부르지 않습니다."),
+      h("button", { type: "button", class: "btn btn-danger", onclick: () => {
+        if (window.confirm("이 다듬기 차례의 프로세스가 모두 끝난 것을 직접 확인했습니까? 호출은 돌려받지 않습니다."))
+          act(`/api/refinements/${refineCurrent}/acknowledge`, { turn: turn.turn });
+      } }, "종료를 직접 확인했음(호출은 돌려받지 않음)")]
+    : turn.state === "rejected" ? [h("p", { class: "sm cell cell-alert" }, "이 차례는 승인할 수 없습니다 · " + (turn.reason || turn.status || "이유 미확인")),
+      turn.raw ? h("pre", { class: "input-full" }, turn.raw.text) : null]
+    : h("p", { class: "sm muted" }, "슈퍼바이저가 다듬는 중입니다.");
+  return h("section", { class: "cell stack" },
+    h("div", { class: "row between" }, h("span", { class: "sm strong" }, `차례 ${turn.turn}`), badge(label)),
+    turn.note ? h("p", { class: "cap muted" }, "내가 쓴 말: " + turn.note) : null, body);
+}
+function renderRefine(force = false) {
+  const box = $("refinePanel"), on = !!roleBoard && roleBoard.input_mode === "refine";
+  box.hidden = !on;
+  if (!on) { box.replaceChildren(); refineSig = null; return; }
+  const ref = currentRefinement();
+  const sig = JSON.stringify([refineCurrent, refineApproved, ref]);
+  if (!force && sig === refineSig) return;
+  refineSig = sig;
+  $("question").readOnly = !!refineCurrent;   // 다듬기를 시작하면 원문을 고정한다
+  const sup = roleOptions.participants.find(p => p.pid === roleBoard.supervisor[0]);
+  const parts = [h("span", { class: "form-label" }, `다듬기 · 슈퍼바이저 ${sup ? sup.label : ""}`),
+    h("p", { class: "sm muted" }, "슈퍼바이저가 원문을 다듬고 필요한 것을 묻습니다. 한 차례마다 호출 1회, 최대 3차례입니다. " +
+      "내가 승인한 문장만 격리 팀원에게 가고 이 대화는 가지 않습니다. 답을 흘리지 않았는지는 기계가 판정하지 않으니 읽고 승인하세요.")];
+  if (!refineCurrent) {
+    parts.push(h("div", {}, h("button", { type: "button", class: "btn btn-primary", id: "refineGo", onclick: refineTurn },
+      "질문 칸의 원문으로 다듬기 요청 · 호출 1회")));
+  } else if (!ref) {
+    parts.push(h("p", { class: "sm muted" }, "다듬기 상태를 받는 중입니다."));
+  } else {
+    parts.push(h("div", { class: "cell stack" }, h("p", { class: "cap muted" }, "원문(고정됨)"), h("p", { class: "sm" }, ref.original)),
+      ...ref.turns.map(refineTurnCard));
+    const busy = ref.turns.some(t => t.state === "running" || t.state === "unknown");
+    if (!busy && ref.turns.length < ref.max_turns) {
+      const note = h("textarea", { rows: 2, maxlength: "2000", "aria-label": "슈퍼바이저에게 쓰는 말",
+        placeholder: "물음에 대한 답이나 바라는 점(선택)", oninput: e => { refineNote = e.target.value; } });
+      note.value = refineNote;
+      parts.push(note, h("div", {}, h("button", { type: "button", class: "btn", id: "refineGo", onclick: refineTurn },
+        `한 번 더 다듬기 · 호출 1회 (${ref.turns.length + 1}/${ref.max_turns}차례)`)));
+    } else if (!busy) parts.push(h("p", { class: "cap muted" }, `${ref.max_turns}차례를 모두 썼습니다. 한 차례를 승인하거나 원문으로 돌아가세요.`));
+    parts.push(h("div", {}, h("button", { type: "button", class: "btn", onclick: () => { resetRefine(); invalidatePreview(); renderRefine(true); } },
+      "원문으로 돌아가기(이 다듬기는 쓰지 않음)")));
+  }
+  box.replaceChildren(...parts.flat());
+  pressAll(box);
 }
 // 일반 칸을 채우면 팀원마다 맡길 일과 받을 자료를 고른다. 정족수 설정은 격리 실행에만 보인다.
 function renderAssignments() {
@@ -199,7 +315,9 @@ function showInputPreview(preview, body) {
   $("inputPreview").replaceChildren(h("h3", { class: "block-title" }, "보낼 입력 확인"),
     h("p", { class: "sm strong" }, roleSummary(preview.role_config)),
     h("p", { class: "cap muted" }, MODEL_NOTE),
-    h("p", { class: "sm" }, `입력 모드: 원문 · ${preview.quorum_policy === "independent_only" ? "독립성이 확인된 참여자만" : "미확인 답도 포함"} · 최소 ${preview.min_independent}명`),
+    h("p", { class: "sm" }, `입력 모드: ${preview.refinement ? `다듬기(${preview.refinement.turn}차례를 승인 · 승인한 문장만 보냄)` : "원문"} · ` +
+      `${preview.quorum_policy === "independent_only" ? "독립성이 확인된 참여자만" : "미확인 답도 포함"} · 최소 ${preview.min_independent}명`),
+    preview.refinement ? refinementPair(preview.refinement.original, preview.question, true) : null,
     h("p", { class: "sm" }, `이번 실행: CLI 시작 최대 ${calls.draft_cli}회 · 수동 답 ${Object.keys(preview.manual_packets).length}개`),
     callLimitLine(calls),
     h("p", { class: "cap muted" }, orchestrator ? `${orchestrator.label}: 공개 뒤 기존 합성을 직접 눌러 실행합니다. ${calls.model_calls === 0 ? "모의 합성도 모델 호출 없음." : "누를 때마다 같은 원장 상한에서 1회 사용."}` :
@@ -266,9 +384,22 @@ function renderTaskNavigation() {
       [h("p", { class: "sm muted" }, "새 작업에서 첫 질문을 시작하세요.")]));
   pressAll($("runTabs")); pressAll($("runListIsland"));
 }
+// 창을 닫아도 남는, 끝났는지 모르는 다듬기 차례. 자리를 쥐고 있으므로 홈에서도 정리할 수 있게 한다.
+function stuckRefinements() {
+  const stuck = ((state && state.refinements) || []).flatMap(r => r.turns.filter(t => t.state === "unknown").map(t => [r, t]));
+  return stuck.length ? island("끝났는지 모르는 다듬기 차례", [h("p", { class: "sm muted" },
+      "슈퍼바이저 차례의 프로세스가 끝났는지 확인하지 못했습니다. 자리를 쥐고 있어 새 실행·다듬기를 막습니다."),
+    ...stuck.map(([r, t]) => h("div", { class: "row between island-part" },
+      h("span", { class: "sm" }, `${r.original.slice(0, 40)} · 차례 ${t.turn}`),
+      h("button", { type: "button", class: "btn btn-danger", onclick: () => {
+        if (window.confirm("이 다듬기 차례의 프로세스가 모두 끝난 것을 직접 확인했습니까? 호출은 돌려받지 않습니다."))
+          act(`/api/refinements/${r.refine_id}/acknowledge`, { turn: t.turn });
+      } }, "종료를 직접 확인했음")))]) : null;
+}
 function renderTaskPage() {
   const tasks = state.tasks || [], task = tasks.find(t => t.task_id === taskSelected);
-  const sig = JSON.stringify([taskSelected, tasks]);
+  const stuck = stuckRefinements();
+  const sig = JSON.stringify([taskSelected, tasks, ((state && state.refinements) || []).map(r => r.turns.map(t => t.state))]);
   if (sig === taskPageSig) return;
   taskPageSig = sig; runSig = null; $("asideCol").replaceChildren();
   if (!task) {
@@ -277,7 +408,8 @@ function renderTaskPage() {
       h("div", { class: "task-grid island-part" }, turns.length ? turns.map(taskCard) : h("p", { class: "sm muted" }, "지금 기다리는 일이 없습니다."))]),
     island("모든 작업", [h("div", { class: "row between" }, h("p", { class: "sm muted" }, "질문부터 결과까지, 한 작업에서 이어 갑니다."),
       h("button", { type: "button", class: "btn btn-brand", onclick: () => openNewRun() }, "새 작업")),
-      h("div", { class: "task-grid island-part" }, tasks.length ? tasks.map(taskCard) : h("p", { class: "sm muted" }, "아직 작업이 없습니다."))]));
+      h("div", { class: "task-grid island-part" }, tasks.length ? tasks.map(taskCard) : h("p", { class: "sm muted" }, "아직 작업이 없습니다."))]),
+    ...(stuck ? [stuck] : []));
   } else {
     $("mainCol").replaceChildren(island(task.title, [h("p", { class: "sm muted" }, roleSummary(task.role_config)),
       h("div", { class: "row island-part" }, badge(TASK_LABELS[task.status]), h("span", { class: "sm" }, `쓴 CLI 호출 ${task.calls_used}`),
@@ -290,6 +422,23 @@ function renderTaskPage() {
         run.action ? h("span", { class: "sm strong" }, run.action + " →") : null))))));
   }
   pressAll($("mainCol"));
+}
+// 원래 목표(원문)와 실제로 보낸 질문을 나란히(요청서 P9). 같은 쪽으로 끌려간 질문을 사람이 알아보게 한다.
+function refinementPair(original, sent, before = false) {
+  return h("div", { class: "task-grid" },
+    h("section", { class: "cell stack" }, h("p", { class: "cap muted" }, "원래 목표 · 내가 쓴 원문"), h("pre", { class: "input-full" }, original)),
+    h("section", { class: "cell stack" }, h("p", { class: "cap muted" }, before ? "보낼 질문 · 승인한 다듬기" : "실제로 보낸 질문 · 승인한 다듬기"),
+      h("pre", { class: "input-full" }, sent)));
+}
+// 실행에 쓴 다듬기의 기록: 차례마다 내가 쓴 말·다듬은 문장·바뀐 점·물은 말·상태. 원장의 기록을 그대로 보인다.
+function refinementLog(ref) {
+  return ref.turns.map(t => h("div", { class: "stack" },
+    h("p", { class: "sm strong" }, `차례 ${t.turn} · ${t.state === "accepted" ? "받음" : t.status || t.state}` +
+      (ref.approved_turn === t.turn ? " · 승인함" : "")),
+    t.note ? h("p", {}, "내가 쓴 말: " + t.note) : null,
+    t.reply ? [h("p", {}, "다듬은 문장: " + t.reply.refined),
+      t.reply.changes.length ? h("p", {}, "바뀐 점: " + t.reply.changes.join(" · ")) : null,
+      t.reply.ask ? h("p", {}, "물은 말: " + t.reply.ask) : null] : h("p", {}, "답 없음 · " + (t.reason || "이유 미확인"))));
 }
 // 일반 팀원 작업의 결과 모음. 끝난 팀원의 답은 바로 보인다(봉인 없음). 독립·정족수 라벨을 붙이지 않는다.
 function generalResults(run) {

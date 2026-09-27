@@ -29,7 +29,9 @@ from typing import Any, Iterator
 # 8: tasks·runs.task_id·role_config — 실행과 같은 거래에서 고정하는 작업/역할판.
 # 9: runs.mode·assignments — 일반 팀원 실행(카드 #125). 팀원마다 맡긴 일·입력 전문·받은 자료 목록을 고정한다.
 #    옛 코드가 일반 실행을 격리 실행으로 읽어 봉인·정족수 관문에 넣지 않게 올린다.
-SCHEMA_VERSION = 9
+# 10: refinements·refine_turns — 다듬기 모드(카드 #130). 원문·차례별 입출력·승인한 차례와 그것을 쓴 실행을 고정한다.
+#    옛 코드가 다듬기 차례의 호출 예약을 모른 채 자리·종료 미확인을 계산하지 않게 올린다.
+SCHEMA_VERSION = 10
 # 스키마 5 이전 시도의 종류는 시작 사건에 남은 실행기 이름에서만 복원한다. 모의 실행기의 이름은 격리 방식이었다.
 # 근거가 없으면 NULL로 두고, 화면은 "실행 종류 기록 없음"으로 보인다.
 LEGACY_EXECUTORS = {"bubblewrap": "mock", "job_object": "mock", "process_group": "mock", "cli": "real"}
@@ -42,6 +44,15 @@ CREATE TABLE IF NOT EXISTS runs (
   cancel_requested INTEGER NOT NULL DEFAULT 0,
   phase TEXT NOT NULL DEFAULT 'drafting', task_id TEXT, role_config TEXT,
   mode TEXT NOT NULL DEFAULT 'isolated'
+);
+CREATE TABLE IF NOT EXISTS refinements (
+  refine_id TEXT PRIMARY KEY, created_at REAL NOT NULL, original TEXT NOT NULL, supervisor TEXT NOT NULL,
+  run_id TEXT, approved_turn INTEGER
+);
+CREATE TABLE IF NOT EXISTS refine_turns (
+  refine_id TEXT NOT NULL, turn INTEGER NOT NULL, note TEXT NOT NULL, prompt TEXT NOT NULL,
+  input_sha256 TEXT NOT NULL, attempt TEXT NOT NULL, kind TEXT, state TEXT NOT NULL, status TEXT, result TEXT,
+  PRIMARY KEY (refine_id, turn)
 );
 CREATE TABLE IF NOT EXISTS assignments (
   run_id TEXT NOT NULL, pid TEXT NOT NULL, task TEXT NOT NULL, prompt TEXT NOT NULL,

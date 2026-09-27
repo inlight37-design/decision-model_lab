@@ -18,17 +18,26 @@ def freeze(board, participants, roster):
     if not isinstance(board, dict) or set(board) != {
             "supervisor", "orchestrator", "isolated", "general", "input_mode"}:
         raise ValueError("역할판에는 네 칸과 입력 모드가 필요합니다.")
-    if board["input_mode"] != "original":
-        raise ValueError("다듬기는 슈퍼바이저 모델을 연결하는 다음 단계(D)에서 지원합니다.")
+    if board["input_mode"] not in ("original", "refine"):
+        raise ValueError("질문 입력 모드는 원문 또는 다듬기입니다.")
     for slot in ("supervisor", "orchestrator", "isolated", "general"):
         if not isinstance(board[slot], list) or any(not isinstance(pid, str) or pid not in roster
                                                    for pid in board[slot]):
             raise ValueError(f"{slot}: 현재 명단에 있는 참여자만 배치할 수 있습니다.")
-    if board["supervisor"]:
-        raise ValueError("슈퍼바이저 모델은 D 단계에서 지원합니다. 이 칸을 비우면 내가 맡습니다.")
+    # 슈퍼바이저 모델은 D 첫 조각(카드 #130)에서 다듬기만 한다. 팀 구성·다음 실행 제안은 아직 없다.
+    if len(board["supervisor"]) > 1:
+        raise ValueError("슈퍼바이저는 한 장만 배치할 수 있습니다.")
+    if board["supervisor"] and roster[board["supervisor"][0]].transport != CLI:
+        raise ValueError("슈퍼바이저에는 CLI 카드만 놓을 수 있습니다. 원본 앱은 격리 칸에 놓으세요.")
+    if board["supervisor"] and board["input_mode"] != "refine":
+        raise ValueError("슈퍼바이저 모델은 지금 다듬기 모드에서만 일합니다. 다듬기를 고르거나 이 칸을 비우세요.")
+    if board["input_mode"] == "refine" and not board["supervisor"]:
+        raise ValueError("다듬기는 슈퍼바이저 칸에 모델이 있을 때만 고를 수 있습니다.")
     if len(board["orchestrator"]) > 1:
         raise ValueError("오케스트레이터는 한 장만 배치할 수 있습니다.")
     if board["general"]:
+        if board["supervisor"]:
+            raise ValueError("일반 팀원 작업의 다듬기는 아직 지원하지 않습니다. 격리 칸을 쓰거나 슈퍼바이저 칸을 비우세요.")
         return _freeze_general(board, participants, result)
     if board["isolated"] != [p.pid for p in participants]:
         raise ValueError("격리 칸과 실행 참여자가 다릅니다. 입력을 다시 확인하세요.")
@@ -40,6 +49,9 @@ def freeze(board, participants, roster):
         if spec.transport != "cli":
             raise ValueError("A 단계 오케스트레이터는 CLI 합성자만 지원합니다. 원본 앱은 격리 칸에 놓으세요.")
         result["orchestrator"] = asdict(spec)
+    if board["supervisor"]:
+        # 같은 provider의 격리 팀원은 막지 않는다 — 화면이 경고한다(RB-06). 예산은 provider 상한을 같이 쓴다.
+        result["supervisor"], result["input_mode"] = asdict(roster[board["supervisor"][0]]), "refine"
     return result
 
 
