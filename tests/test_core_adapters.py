@@ -163,8 +163,18 @@ class ArgvTests(unittest.TestCase):
                 os.remove(hooks)
             with mock.patch.object(adapters.os, "lstat", side_effect=PermissionError("denied")):
                 self.assertEqual(adapters.codex_user_hooks(home), (hooks,))       # 확인 불가
-            with mock.patch("builtins.open", side_effect=AssertionError("must not read")):
-                adapters.codex_user_hooks(home)
+            with open(hooks, "w", encoding="utf-8") as f:
+                f.write("{}")
+            with mock.patch("builtins.open", side_effect=AssertionError("must not read")):   # 파일이 있어도 읽지 않는다
+                self.assertEqual(adapters.codex_user_hooks(home), (hooks,))
+            target = os.path.join(home, "real-hooks.json")
+            os.replace(hooks, target)
+            try:
+                os.symlink(target, hooks)
+            except (OSError, NotImplementedError):
+                pass
+            else:
+                self.assertEqual(adapters.codex_user_hooks(home), (hooks,))       # 정상 링크도
 
     def test_codex_config_exception_is_only_the_values_of_this_run(self):
         define, select = adapters.codex_permissions("/home/u")

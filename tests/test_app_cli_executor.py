@@ -160,6 +160,19 @@ class RefusedBeforeStartTests(Base):
             with self.assertRaisesRegex(adapters.AdapterError, "hooks.json"):
                 self.executor().plan(codex(), "question", str(self.root))
 
+    def test_a_codex_user_hooks_file_leaves_no_reservation_in_the_ledger(self):
+        # 계획 거절은 예약 전이다 — 원장에 호출 예약이 남지 않는다(Codex 교차검토, PR #146)
+        (self.home / ".codex").mkdir()
+        (self.home / ".codex" / "hooks.json").write_text("{}", encoding="utf-8")
+        ctl = self.controller(self.executor(), max_real_calls=2)
+        run_id = ctl.create_run("질문", [codex()], min_independent=1)
+        self.assertTrue(ctl.wait_idle())
+        part = self.parts(ctl, run_id)["codex"]
+        self.assertEqual((part["state"], part["status"]), (c.REJECTED, "process_failed_to_start"))
+        self.assertIn("hooks.json", next(e for e in events(self.store, run_id) if e["kind"] == "attempt_started")["spec"]["refused"])
+        self.assertEqual([e for e in events(self.store, run_id) if e["kind"] == "live_call_reserved"], [])
+        self.assertEqual(ctl.call_budget(), {"used": 0, "cap": 2})
+
     @unittest.skipIf(sys.platform == "win32", "Codex 참여자 계획은 POSIX HOME에서만 만든다")
     def test_a_codex_user_hooks_file_that_appears_after_planning_starts_nothing(self):
         exe = str(self.root / "versions" / "9.9.9")

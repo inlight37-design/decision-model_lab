@@ -25,6 +25,7 @@ from typing import Callable, Mapping, Sequence
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+from core import adapters  # noqa: E402
 from core.env import ENV_VARS  # noqa: E402
 
 # 지금 참여자 계획을 관측한 기록(재관측, 카드 #82). 설치판 버전의 기준이며, 이 기록은 aux-pc-wsl 한 곳에서 만들었다.
@@ -187,10 +188,10 @@ def linux_rows(run: Run, which: Which, env: Mapping[str, str], home: Path, *,
     if (codex_home / "AGENTS.md").exists():
         rows.append(Row("Codex 전역 AGENTS.md", "warn", f"{codex_home / 'AGENTS.md'}가 있으면 Codex 참여자 계획이 거절된다(E2)",
                         "그 파일을 옮기거나 지운다(사용자 판단)", required=False))
-    # Codex는 참여자 옵션(--ignore-user-config)으로도 이 파일을 읽는다(2026-09-27 무모델 관측, 카드 #111). 빈 파일·링크도
-    # 참여자 계획이 거절한다. 존재만 보고 내용은 읽지 않는다
-    if os.path.lexists(codex_home / "hooks.json"):
-        rows.append(Row("Codex 사용자 훅", "warn", f"{codex_home / 'hooks.json'}가 있으면 Codex 참여자 계획이 거절된다(S4)",
+    # Codex는 참여자 옵션(--ignore-user-config)으로도 이 파일을 읽는다(2026-09-27 무모델 관측, 카드 #111). 참여자 계획과
+    # 같은 함수·같은 위치(참여자는 CODEX_HOME을 받지 않으므로 $HOME/.codex)로 본다 — 빈 파일·링크·확인 불가도 경고한다
+    for path in adapters.codex_user_hooks(str(home)):
+        rows.append(Row("Codex 사용자 훅", "warn", f"{path}가 있거나 확인할 수 없어 Codex 참여자 계획이 거절된다(S4)",
                         "그 파일을 Codex 홈 밖으로 옮긴다(사용자 판단)", required=False))
     present = [name for name, _, _ in ENV_VARS if name in env]
     if present:
