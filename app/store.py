@@ -33,7 +33,9 @@ from typing import Any, Iterator
 #    옛 코드가 다듬기 차례의 호출 예약을 모른 채 자리·종료 미확인을 계산하지 않게 올린다.
 # 11: proposals — 다음 단계 제안(카드 #133). 공개된 실행마다 슈퍼바이저의 제안·보낸 입력·이름표·결과·상태와,
 #    그 제안으로 사람이 시작한 실행(used_by)을 고정한다.
-SCHEMA_VERSION = 11
+# 12: splits — 일반 작업의 분담 제안(카드 #135). 목표·오케스트레이터·팀원 이름표·보낸 입력·결과·상태와, 그 제안으로
+#    시작한 실행·제안대로였는지(as_proposed)를 고정한다. 제안 때 붙인 자료는 sources 표에 분담 제안 ID로 둔다.
+SCHEMA_VERSION = 12
 # 스키마 5 이전 시도의 종류는 시작 사건에 남은 실행기 이름에서만 복원한다. 모의 실행기의 이름은 격리 방식이었다.
 # 근거가 없으면 NULL로 두고, 화면은 "실행 종류 기록 없음"으로 보인다.
 LEGACY_EXECUTORS = {"bubblewrap": "mock", "job_object": "mock", "process_group": "mock", "cli": "real"}
@@ -60,6 +62,11 @@ CREATE TABLE IF NOT EXISTS proposals (
   proposal_id TEXT PRIMARY KEY, run_id TEXT NOT NULL, created_at REAL NOT NULL, supervisor TEXT NOT NULL,
   prompt TEXT NOT NULL, input_sha256 TEXT NOT NULL, labels TEXT NOT NULL, attempt TEXT NOT NULL, kind TEXT,
   state TEXT NOT NULL, status TEXT, result TEXT, used_by TEXT
+);
+CREATE TABLE IF NOT EXISTS splits (
+  split_id TEXT PRIMARY KEY, task_id TEXT, created_at REAL NOT NULL, goal TEXT NOT NULL, orchestrator TEXT NOT NULL,
+  members TEXT NOT NULL, sources TEXT NOT NULL, prompt TEXT NOT NULL, input_sha256 TEXT NOT NULL,
+  attempt TEXT NOT NULL, kind TEXT, state TEXT NOT NULL, status TEXT, result TEXT, used_by TEXT, as_proposed INTEGER
 );
 CREATE TABLE IF NOT EXISTS assignments (
   run_id TEXT NOT NULL, pid TEXT NOT NULL, task TEXT NOT NULL, prompt TEXT NOT NULL,

@@ -127,16 +127,28 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
     choices = dict(choices if choices is not None else ({} if live else MOCK_MODEL_CHOICES))
     account_quota = account_quota or AccountQuota(Path("."), enabled=False)
 
-    def supervisor_spec(body: dict) -> ParticipantSpec:
-        """다듬기를 부를 슈퍼바이저 카드. 모델은 역할판과 같은 허용 목록으로 확인한다(막힌 모델은 부르지 않는다)."""
-        pid, model = _text(body, "supervisor"), body.get("model")
+    def supervisor_spec(body: dict, key: str = "supervisor") -> ParticipantSpec:
+        """다듬기·분담 제안을 부를 상위 칸 카드(key: supervisor 또는 orchestrator). 모델은 역할판과 같은 허용 목록으로
+        확인한다(막힌 모델은 부르지 않는다)."""
+        pid, model = _text(body, key), body.get("model")
         spec = chosen_models(roster, choices, {pid: model} if model is not None else None).get(pid)
         if spec is None or spec.transport != CLI:
-            raise ControllerError("슈퍼바이저는 명단의 CLI 카드여야 합니다.")
+            raise ControllerError("상위 칸 카드는 명단의 CLI 카드여야 합니다.")
         behavior = body.get("behavior", "ok")
         if behavior not in behaviors:
             raise ControllerError(f"unknown behavior {behavior!r}")
         return replace(spec, behavior=behavior)
+
+    def split_request(body: dict):
+        """분담 제안 요청의 팀원·자료. 팀원은 명단의 카드이고, 자료는 실행 요청과 같은 {name, text} 모양이다."""
+        members = body.get("members")
+        if not isinstance(members, list) or any(not isinstance(pid, str) or pid not in roster for pid in members):
+            raise ControllerError("members must list participant IDs from the roster")
+        sources = body.get("sources", [])
+        if not isinstance(sources, list) or any(not isinstance(item, dict) or set(item) != {"name", "text"}
+                                                for item in sources):
+            raise ControllerError("sources must be an array of {name, text} objects")
+        return [roster[pid] for pid in members], [(item["name"], item["text"]) for item in sources]
 
     class Handler(BaseHTTPRequestHandler):
         server_version = "ledger-mock"
@@ -285,7 +297,8 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                                   role_board=body.get("role_board"), roster=run_roster, run_id=body.get("run_id"),
                                   assignments=body.get("assignments"),   # 일반 팀원마다 맡길 일·받을 자료
                                   refinement=body.get("refinement"),     # 다듬기 모드에서 승인한 {id, turn}
-                                  proposal=body.get("proposal"))         # 다음 단계 제안에서 온 질문의 {id}
+                                  proposal=body.get("proposal"),         # 다음 단계 제안에서 온 질문의 {id}
+                                  split=body.get("split"))               # 일반 작업의 분담 제안 {id}
                     if parts[-1] == "preview":
                         self._json(200, controller.prepare_run(_text(body, "question"), chosen, **kwargs))
                     else:
@@ -341,6 +354,14 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                     self._json(200, {"ok": True})
                 elif len(parts) == 4 and parts[:2] == ["api", "runs"] and parts[3] == "propose":   # 호출 1회
                     self._json(200, {"proposal_id": controller.propose_next(parts[2])})
+                elif parts == ["api", "splits"]:   # 분담 제안: 호출 1회
+                    members, split_sources = split_request(body)
+                    self._json(200, {"split_id": controller.propose_split(
+                        _text(body, "goal"), supervisor_spec(body, "orchestrator"), members, split_sources,
+                        task_id=body.get("task_id"))})
+                elif len(parts) == 4 and parts[:2] == ["api", "splits"] and parts[3] == "acknowledge":
+                    controller.acknowledge_split_unknown(parts[2])
+                    self._json(200, {"ok": True})
                 elif len(parts) == 4 and parts[:2] == ["api", "proposals"] and parts[3] == "acknowledge":
                     controller.acknowledge_proposal_unknown(parts[2])
                     self._json(200, {"ok": True})

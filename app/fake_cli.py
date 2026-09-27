@@ -17,6 +17,18 @@ DELAY = {"ok": 1.2, "slow": 6.0, "fail": 0.8, "partial_input": 0.8, "hang": 3600
 
 REFINE_MARKER = "[다듬기 요청]"   # app/refine.py의 MARKER와 같은 줄. 이 가짜는 격리 안에서 app 패키지 없이 돈다
 NEXT_MARKER = "[다음 단계 제안 요청]"   # app/next_step.py의 MARKER와 같은 줄
+SPLIT_MARKER = "[분담 제안 요청]"   # app/split.py의 MARKER와 같은 줄
+
+
+def split_reply(question: str) -> str:
+    """분담 제안 지시문에 모의 JSON으로 답한다. 팀원 이름표와 자료 이름을 지시문에서 읽어 자료를 차례로 나눠 준다."""
+    members = [line[2:].split(":", 1)[0] for line in question.split("팀원:\n", 1)[-1].split("\n\n", 1)[0].splitlines()
+               if line.startswith("- M")]
+    files = [line[2:].rsplit(" (", 1)[0] for line in question.split("자료:\n", 1)[-1].splitlines() if line.startswith("- ")]
+    return json.dumps({"assignments": [{"member": label, "task": f"[모의 분담] {label}: 목표의 {index}번째 부분을 본다",
+                                        "sources": files[index - 1::len(members)]}
+                                       for index, label in enumerate(members, 1)],
+                       "reason": "모의: 자료를 차례로 나눴다(실제 판단 아님)"}, ensure_ascii=False)
 
 
 def next_reply(question: str) -> str:
@@ -41,6 +53,8 @@ def answer(flavor: str, question: str) -> str:
         return refine_reply(question)
     if question.startswith(NEXT_MARKER):
         return next_reply(question)
+    if question.startswith(SPLIT_MARKER):
+        return split_reply(question)
     digest = hashlib.sha256(question.encode("utf-8")).hexdigest()[:12]
     asked = question.split("질문:", 1)[-1].strip()
     first = asked.splitlines()[0][:80] if asked else "(빈 질문)"

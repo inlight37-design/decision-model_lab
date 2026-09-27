@@ -21,6 +21,7 @@ const $ = id => nodes[id] ||= {hidden:false, textContent:"", replaceChildren(...
   setAttribute(k,v) {this[k]=v;}, focus() {this.focused=true;}};
 function h(tag,attrs,...kids) {return {tag,attrs:attrs||{},kids:kids.flat(Infinity).filter(x=>x!==null && x!==false && x!==undefined)};}
 const pressAll=()=>{}, updateSourceNote=()=>{}, fmtSize=n=>String(n), fmtTime=n=>String(n);
+const sourceName=(n,taken)=>{taken.add(n.toLowerCase()); return n;};   // index.html의 이름 규칙(여기 파일 이름은 이미 맞다)
 const badge=text=>h("span",{},text), island=(title,kids)=>h("section",{},title,kids);
 const BEHAVIOR_LABEL={ok:"정상"};
 const text = node => typeof node==="object" ? (node.kids||[]).map(text).join(" ") : String(node);
@@ -188,6 +189,32 @@ nodes.question.value="다음 질문"; assert.deepEqual(proposalBody(),{proposal:
 nodes.question.value="내가 고친 질문"; assert.deepEqual(proposalBody(),{});
 nodes.question.value="다음 질문"; roleBoard.input_mode="refine"; assert.deepEqual(proposalBody(),{});
 proposalLink=null; roleBoard.input_mode="original";
+// 분담 제안(카드 #135): 오케스트레이터 칸에 CLI 카드가 있을 때만 버튼. 제안이 오면 팀원별 칸을 채우고,
+// 같은 목표·팀원·자료로 보낼 때만 제안을 붙인다.
+roleOptions={participants:sroster,live:false,behaviors:["ok"]};
+picked=[{name:"a.md",size:3},{name:"b.md",size:3}]; assignDraft={}; resetSplit();
+roleBoard={...emptyBoard(),general:["a","z"],orchestrator:["a"]}; nodes.question.value="목표"; state.splits=[];
+renderAssignments();
+let stext=nodes.assignments.kids.map(text).join(" ");
+assert.ok(stext.includes("분담 제안 받기") && stext.includes("(1/2)"), stext);
+splitCurrent="s1"; state.splits=[{split_id:"s1",state:"accepted",goal:"목표",members:{M1:"a",M2:"z"},
+  sources:[{name:"a.md"},{name:"b.md"}],orchestrator:{label:"CLI A"},
+  reply:{assignments:{a:{task:"A 보기",sources:["a.md"]},z:{task:"B 보기",sources:["b.md"]}},reason:"자료마다 한 명"}}];
+renderAssignments();
+assert.ok(nodes.assignments.kids.every(isNode));
+assert.equal(assignDraft.a.task,"A 보기"); assert.deepEqual([...assignDraft.a.off].map(f=>f.name),["b.md"]);
+stext=nodes.assignments.kids.map(text).join(" ");
+assert.ok(stext.includes("제안대로 채움") && stext.includes("나눈 이유: 자료마다 한 명"));
+assert.deepEqual(splitBody(),{split:{id:"s1"}});
+nodes.question.value="다른 목표"; assert.deepEqual(splitBody(),{});   // 목표를 바꾸면 내가 나눈 분담
+nodes.question.value="목표"; picked=[picked[0]]; assert.deepEqual(splitBody(),{});   // 자료를 바꿔도
+state.splits=[{...state.splits[0],state:"unknown"}]; picked=[{name:"a.md",size:3},{name:"b.md",size:3}]; renderAssignments();
+stext=nodes.assignments.kids.map(text).join(" ");
+assert.ok(stext.includes("종료 미확인") && stext.includes("종료를 직접 확인했음"));
+roleBoard={...roleBoard,orchestrator:[]}; renderAssignments();
+assert.ok(!nodes.assignments.kids.map(text).join(" ").includes("분담 제안 받기"));   // 오케스트레이터가 나면 버튼 없음
+assert.ok(generalPreview({...gpreview,split:{as_proposed:false}}).map(text).join(" ").includes("내가 고쳤습니다"));
+resetSplit(); state.splits=[]; picked=[]; roleBoard=emptyBoard(); assignDraft={};
 // 두 번 눌러도 요청은 하나이고, 응답 전에 원문으로 돌아가면(창을 새로 연 것과 같다) 늦은 응답을 붙이지 않는다
 let pending=[], apiCalls=0;
 function api(path, body) { apiCalls++; return new Promise(resolve => pending.push(() => resolve({refine_id:"late"}))); }

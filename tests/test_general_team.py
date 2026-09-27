@@ -156,7 +156,8 @@ class GeneralTeamTests(support.Base):
         one = {"claude": {"task": "A와 B를 본다", "sources": ["a.md", "b.md"]}}
         cases = [
             ("isolated+general", ["claude"], board("claude", isolated=("codex",)), one),
-            ("orchestrator model", ["claude"], board("claude", orchestrator=("codex",)), one),
+            # CLI 오케스트레이터는 분담 제안(카드 #135)으로 받는다. 원본 앱 카드는 여전히 거절한다
+            ("original-app orchestrator", ["claude"], board("claude", orchestrator=("claude-app",)), one),
             ("original app", ["antigravity-app"], board("antigravity-app"),
              {"antigravity-app": {"task": "t", "sources": ["a.md", "b.md"]}}),
             ("no assignment", ["claude"], board("claude"), None),

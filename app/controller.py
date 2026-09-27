@@ -44,7 +44,7 @@ import uuid
 from typing import Any, Protocol
 
 from app.store import Store
-from app import next_step, refine as refining
+from app import next_step, refine as refining, split as splitting
 from app.roles import freeze as freeze_roles, task_projection
 from app.report import build_report
 from app.synthesis import (LABEL_ORDER, SynthesisError, _sources as synthesis_sources, check_model_synthesis,
@@ -179,7 +179,7 @@ class _Seat:
     ignored: str
     not_stored: str
     acknowledged: str
-    check: Any
+    check: Any                       # (답 원문, 그 호출의 원장 행) → 검사한 답. 분담 제안은 행의 팀원·자료로 검사한다
 
     @property
     def match(self) -> str:
@@ -191,12 +191,18 @@ class _Seat:
 
 REFINE_SEAT = _Seat("refine_turns", ("refine_id", "turn"), ("turn",), "refine", "refine_turn_started",
                     {ACCEPTED: "refine_turn_completed", REJECTED: "refine_turn_failed", UNKNOWN: "refine_turn_unknown"},
-                    "refine_result_ignored", "refine_result_not_stored", "refine_unknown_acknowledged", refining.check)
+                    "refine_result_ignored", "refine_result_not_stored", "refine_unknown_acknowledged",
+                    lambda text, row: refining.check(text))
 # 제안 사건은 그 실행의 사건으로 남긴다(실행 화면의 사건 기록에 보인다)
 NEXT_SEAT = _Seat("proposals", ("proposal_id",), ("proposal_id",), "next_step", "proposal_started",
                   {ACCEPTED: "proposal_completed", REJECTED: "proposal_failed", UNKNOWN: "proposal_unknown"},
                   "proposal_result_ignored", "proposal_result_not_stored", "proposal_unknown_acknowledged",
-                  next_step.check)
+                  lambda text, row: next_step.check(text))
+SPLIT_SEAT = _Seat("splits", ("split_id",), (), "split", "split_started",
+                   {ACCEPTED: "split_completed", REJECTED: "split_failed", UNKNOWN: "split_unknown"},
+                   "split_result_ignored", "split_result_not_stored", "split_unknown_acknowledged",
+                   lambda text, row: splitting.check(text, json.loads(row["members"]),
+                                                     [s["name"] for s in json.loads(row["sources"])]))
 
 
 @dataclass(frozen=True)
@@ -371,7 +377,7 @@ class Controller:
     def prepare_run(self, question: str, participants: list[ParticipantSpec], *, min_independent: int,
                     quorum_policy: str = INDEPENDENT_ONLY, sources=None, task_id=None, task_title=None,
                     role_board=None, roster=None, run_id=None, assignments=None, refinement=None,
-                    proposal=None) -> dict[str, Any]:
+                    proposal=None, split=None) -> dict[str, Any]:
         """sources: (이름, 글) 목록. 원장에 내용·해시를 고정하고, CLI 참여자에게는 그 사본 폴더 하나를 읽기
         전용 입력으로 준다(provider별 빈 입력 폴더 대신). 입력 폴더가 하나인 것은 같으므로 계획의 판은 그대로다.
 
@@ -424,6 +430,8 @@ class Controller:
                 raise ControllerError(str(exc)) from None
         if proposal is not None and general:
             raise ControllerError("제안한 질문은 격리 실행으로 보냅니다.")
+        if split is not None and not general:
+            raise ControllerError("분담 제안은 일반 팀원 작업에만 씁니다.")
         if run_id is None:
             run_id = f"r{time.strftime('%m%d-%H%M%S')}-{uuid.uuid4().hex}"
         elif not isinstance(run_id, str) or not re.fullmatch(r"r[0-9]{4}-[0-9]{6}-[0-9a-f]{32}", run_id):
@@ -439,7 +447,7 @@ class Controller:
         suggested = self._approved_proposal(proposal, roles, question, task_id) if proposal is not None else None
         if general:
             return self._general_manifest(run_id, task_id, task_title, question, participants, roles,
-                                          checked_sources, assignments)
+                                          checked_sources, assignments, split)
         prompt = PROMPT.format(question=question)
         if checked_sources:
             prompt += _source_footer(self._source_root(run_id), [
@@ -465,7 +473,7 @@ class Controller:
         return manifest
 
     def _general_manifest(self, run_id, task_id, task_title, question, participants, roles, checked_sources,
-                          assignments) -> dict[str, Any]:
+                          assignments, split=None) -> dict[str, Any]:
         """일반 실행의 확인 명세. 팀원마다 맡긴 일·입력 전문·받은 자료(이름·해시·크기·종류·범위)를 고정한다. 아무
         팀원도 받지 않는 자료는 원장에 두지 않도록 거절한다. 실행의 입력 해시는 팀원별 입력 해시를 묶은 것이다."""
         if not isinstance(assignments, dict) or set(assignments) != {p.pid for p in participants}:
@@ -506,17 +514,20 @@ class Controller:
                               "model_calls": 0 if self.executor.kind != contract.REAL else None,
                               "live_cap": self.max_real_calls, "provider_caps": dict(self.provider_call_caps)},
                     "manual_packets": {}}
+        if split is not None:   # 맡길 일·자료를 검사한 뒤에 제안과 견준다(카드 #135)
+            manifest["split"] = self._approved_split(split, roles, question, participants, assignments,
+                                                     checked_sources, task_id)
         manifest["confirmation"] = hashlib.sha256(json.dumps(manifest, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
         return manifest
 
     def create_run(self, question: str, participants: list[ParticipantSpec], *, min_independent: int,
                    quorum_policy: str = INDEPENDENT_ONLY, sources=None, task_id=None, task_title=None,
                    role_board=None, roster=None, run_id=None, confirmation=None, assignments=None,
-                   refinement=None, proposal=None) -> str:
+                   refinement=None, proposal=None, split=None) -> str:
         prepared = self.prepare_run(question, participants, min_independent=min_independent,
                                     quorum_policy=quorum_policy, sources=sources, task_id=task_id, task_title=task_title,
                                     role_board=role_board, roster=roster, run_id=run_id, assignments=assignments,
-                                    refinement=refinement, proposal=proposal)
+                                    refinement=refinement, proposal=proposal, split=split)
         if confirmation is not None and confirmation != prepared["confirmation"]:
             raise ControllerError("확인한 입력에서 바뀌었습니다. 보낼 입력을 다시 확인하세요.")
         run_id, question, prompt = prepared["run_id"], prepared["question"], prepared["prompt"]
@@ -560,6 +571,13 @@ class Controller:
                                   run_id, chosen["proposal_id"]):
                     raise ControllerError("이미 실행에 쓴 제안입니다. 같은 제안으로 실행을 두 번 만들지 않습니다.")
                 tx.event(chosen["source_run"], "proposal_used", proposal_id=chosen["proposal_id"], used_by=run_id)
+            if prepared.get("split"):
+                # 분담 제안도 실행 하나에만 묶인다. 제안대로였는지(as_proposed)를 함께 남긴다.
+                chosen = prepared["split"]
+                if not tx.execute("UPDATE splits SET used_by = ?, as_proposed = ? WHERE split_id = ? AND used_by IS NULL",
+                                  run_id, int(chosen["as_proposed"]), chosen["split_id"]):
+                    raise ControllerError("이미 실행에 쓴 분담 제안입니다. 같은 제안으로 실행을 두 번 만들지 않습니다.")
+                tx.event(chosen["split_id"], "split_used", used_by=run_id, as_proposed=chosen["as_proposed"])
             for pid, item in (prepared.get("assignments") or {}).items():
                 tx.execute("INSERT INTO assignments VALUES (?, ?, ?, ?, ?, ?, ?)", run_id, pid, item["task"],
                            item["prompt"], item["input_sha256"], item["input_bytes"],
@@ -686,7 +704,9 @@ class Controller:
         return sum(item["status"] in (RUNNING, UNKNOWN) for item in self._synthesis_attempts().values()) + self.store.row(
             "SELECT COUNT(*) AS n FROM participants WHERE state IN (?, ?)", RUNNING, UNKNOWN)["n"] + self.store.row(
             "SELECT (SELECT COUNT(*) FROM refine_turns WHERE state IN (?, ?)) + "
-            "(SELECT COUNT(*) FROM proposals WHERE state IN (?, ?)) AS n", RUNNING, UNKNOWN, RUNNING, UNKNOWN)["n"]
+            "(SELECT COUNT(*) FROM proposals WHERE state IN (?, ?)) + "
+            "(SELECT COUNT(*) FROM splits WHERE state IN (?, ?)) AS n",
+            RUNNING, UNKNOWN, RUNNING, UNKNOWN, RUNNING, UNKNOWN)["n"]
 
     def _budget_exhausted(self, adapter_id: str) -> bool:
         """전체·provider 상한. 거래 안에서 읽고 같은 거래에서 예약한다 — 병렬 요청이 마지막 한 칸을 함께 쓰지 못한다."""
@@ -699,7 +719,8 @@ class Controller:
         return (self.store.row("SELECT COUNT(*) AS n FROM participants WHERE state = ?", UNKNOWN)["n"]
                 + sum(item["status"] == UNKNOWN for item in self._synthesis_attempts().values())
                 + self.store.row("SELECT (SELECT COUNT(*) FROM refine_turns WHERE state = ?) + "
-                                 "(SELECT COUNT(*) FROM proposals WHERE state = ?) AS n", UNKNOWN, UNKNOWN)["n"])
+                                 "(SELECT COUNT(*) FROM proposals WHERE state = ?) + "
+                                 "(SELECT COUNT(*) FROM splits WHERE state = ?) AS n", UNKNOWN, UNKNOWN, UNKNOWN)["n"])
 
     def unsettled(self) -> int:
         with self.lock:
@@ -1041,6 +1062,11 @@ class Controller:
                               "AND state = ? AND attempt = ?", UNKNOWN, row["proposal_id"], RUNNING, row["attempt"]):
                     tx.event(row["run_id"], "proposal_unknown", proposal_id=row["proposal_id"], attempt=row["attempt"],
                              detail="controller restarted")
+        for row in self.store.rows("SELECT split_id, attempt FROM splits WHERE state = ?", RUNNING):
+            with self.store.tx() as tx:   # 분담 제안도 같다
+                if tx.execute("UPDATE splits SET state = ?, status = 'controller_restarted' WHERE split_id = ? "
+                              "AND state = ? AND attempt = ?", UNKNOWN, row["split_id"], RUNNING, row["attempt"]):
+                    tx.event(row["split_id"], "split_unknown", attempt=row["attempt"], detail="controller restarted")
         for run in self.store.rows("SELECT run_id FROM runs WHERE phase = ?", m.DRAFTING):
             with self.store.tx() as tx:
                 self._maybe_reveal(run["run_id"], tx)
@@ -1242,14 +1268,16 @@ class Controller:
             return key
 
     def _start_seat(self, seat: "_Seat", event_key: str, where: dict, supervisor: ParticipantSpec, text: str,
-                    work: str, insert) -> None:
-        """슈퍼바이저 호출 하나를 시작한다 — 다듬기 차례와 다음 단계 제안이 같이 쓴다. 계획을 한 번 만들고, 같은 거래에서
-        상한을 보고 예약하고 행을 넣은 뒤(insert), 그 계획을 백그라운드로 돌린다. 시작 전 거절은 아무것도 예약하지 않는다.
-        호출하는 쪽이 self.lock을 쥐고 이미 관문(한 번에 하나·자리·종료 미확인)을 봤다."""
+                    work: str, insert, inputs: tuple[str, ...] = ()) -> None:
+        """상위 모델 호출 하나를 시작한다 — 다듬기 차례·다음 단계 제안·분담 제안이 같이 쓴다. 계획을 한 번 만들고, 같은
+        거래에서 상한을 보고 예약하고 행을 넣은 뒤(insert), 그 계획을 백그라운드로 돌린다. 시작 전 거절은 아무것도 예약하지
+        않는다. inputs는 읽기 전용 자료 폴더(분담 제안만 준다). 호출하는 쪽이 self.lock을 쥐고 이미 관문(한 번에 하나·
+        자리·종료 미확인)을 봤다."""
         attempt = uuid.uuid4().hex
         try:
             os.makedirs(work, exist_ok=True)
-            plan = self.executor.plan(replace(supervisor, pid="supervisor", label="슈퍼바이저"), text, work)
+            plan = self.executor.plan(replace(supervisor, pid="supervisor", label="슈퍼바이저"), text, work,
+                                      **({"inputs": inputs} if inputs else {}))
             _check(self.executor, plan)   # 예약 전에 격리 경로·연결을 본다(R4)
         except Exception as exc:   # 계획 거절: 아무것도 시작하지 않았다
             raise ControllerError(f"supervisor plan refused: {type(exc).__name__}: {exc}") from None
@@ -1306,8 +1334,9 @@ class Controller:
         record = {"observation": observation}
         if state == ACCEPTED:
             try:
-                record["reply"] = seat.check(outcome.text)
-            except ValueError as exc:   # RefineError·NextStepError
+                row = self.store.row(f"SELECT * FROM {seat.table} WHERE {seat.match}", *where.values())
+                record["reply"] = seat.check(outcome.text, row)
+            except ValueError as exc:   # RefineError·NextStepError·SplitError
                 state, status = REJECTED, "format_error"
                 record.update(reason=str(exc)[:300], raw=refining.rejected_reply(outcome.text))
         else:
@@ -1339,7 +1368,8 @@ class Controller:
         """슈퍼바이저 호출은 다듬기·제안을 통틀어 한 번에 하나다. 버튼을 두 번 누르거나 창 두 개에서 불러도 둘째를
         시작하지 않는다(Codex 교차검토, PR #131)."""
         return bool(self.store.row("SELECT 1 FROM refine_turns WHERE state = ? UNION ALL "
-                                   "SELECT 1 FROM proposals WHERE state = ?", RUNNING, RUNNING))
+                                   "SELECT 1 FROM proposals WHERE state = ? UNION ALL "
+                                   "SELECT 1 FROM splits WHERE state = ?", RUNNING, RUNNING, RUNNING))
 
     # ---- 다음 단계 제안(카드 #133) --------------------------------------------------------------
     def propose_next(self, run_id: str) -> str:
@@ -1430,6 +1460,108 @@ class Controller:
         if question != reply["question"]:
             raise ControllerError("보낼 질문이 제안한 질문과 다릅니다. 고쳐 쓴 질문은 제안 없이 보내세요.")
         return {"proposal_id": row["proposal_id"], "source_run": row["run_id"], "question": reply["question"]}
+
+    # ---- 분담 제안(카드 #135) ------------------------------------------------------------------
+    def propose_split(self, goal: str, orchestrator: ParticipantSpec, members: list[ParticipantSpec], sources=None,
+                      task_id=None) -> str:
+        """일반 팀원 작업의 오케스트레이터 모델이 팀원마다 맡길 일과 받을 자료를 제안한다 — 호출 1회.
+
+        오케스트레이터는 전체 목표·팀원 목록·붙인 자료 전부(읽기 전용 사본 폴더 하나)를 받는다. 제안은 실행을 시작하지
+        않는다 — 화면이 팀원별 칸을 채우고, 사람이 고치거나 그대로 두고 확인해 시작하면 그때 그 실행 하나에 묶인다.
+        다듬기·다음 단계 제안과 같은 관문(한 번에 하나·예약·상한·종료 미확인·재시작)을 지난다."""
+        goal = goal.strip() if isinstance(goal, str) else ""
+        if not goal or len(goal) > refining.MAX_ORIGINAL or not storable(goal):
+            raise ControllerError(f"전체 목표는 1~{refining.MAX_ORIGINAL}자의 올바른 글이어야 합니다.")
+        checked_sources = _checked_sources(sources)
+        if (not members or len({p.pid for p in members}) != len(members) or any(p.transport != CLI for p in members)
+                or len({p.provider for p in members}) != len(members)):
+            raise ControllerError("팀원은 서로 다른 provider의 CLI 카드여야 합니다.")
+        with self.lock:
+            if self._closing:
+                raise ControllerError("controller is shutting down")
+            if orchestrator.transport != CLI or orchestrator.adapter_id not in self.executor.adapter_ids:
+                raise ControllerError("오케스트레이터는 설정된 CLI 카드여야 합니다.")
+            if task_id is not None and not self.store.row("SELECT 1 FROM tasks WHERE task_id = ?", task_id):
+                raise ControllerError("작업을 찾을 수 없습니다.")
+            if self._supervisor_busy():
+                raise ControllerError("다른 상위 모델 호출(다듬기·제안·분담)이 진행 중입니다. 끝난 뒤에 다시 부르세요.")
+            if self.paused or self.unsettled() >= self.unsettled_limit:
+                raise ControllerError("execution is paused or has unsettled attempts; no call was started")
+            if self._slots_used() >= self.max_parallel:
+                raise ControllerError("parallel execution limit reached; no call was started")
+            if self.store.row("SELECT 1 FROM runs WHERE phase = 'drafting' AND NOT cancel_requested"):
+                raise ControllerError("진행 중인 실행을 먼저 정리하세요. 분담 제안은 실행이 없을 때만 부릅니다.")
+            key = f"s{time.strftime('%m%d-%H%M%S')}-{uuid.uuid4().hex}"
+            labels = {f"M{index}": p.pid for index, p in enumerate(members, 1)}
+            rows = [{"name": name, "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest(), "content": data}
+                    for name, data in checked_sources]
+            listed = [{key_: row[key_] for key_ in ("name", "bytes", "sha256")} for row in rows]
+            folder = None
+            if rows:
+                try:
+                    folder = self._snapshot(self._source_root(key), rows)
+                except OSError as exc:
+                    raise ControllerError(f"could not prepare the source folder: {type(exc).__name__}") from None
+            text = splitting.prompt(goal, {label: next(p.label for p in members if p.pid == pid)
+                                           for label, pid in labels.items()}, listed, folder)
+
+            def insert(tx, attempt, kind):
+                for row in rows:
+                    tx.execute("INSERT INTO sources (run_id, name, sha256, bytes, content) VALUES (?, ?, ?, ?, ?)",
+                               key, row["name"], row["sha256"], row["bytes"], row["content"])
+                tx.execute("INSERT INTO splits (split_id, task_id, created_at, goal, orchestrator, members, sources, "
+                           "prompt, input_sha256, attempt, kind, state) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                           key, task_id, time.time(), goal, json.dumps(asdict(orchestrator), ensure_ascii=False),
+                           json.dumps(labels), json.dumps(listed), text,
+                           hashlib.sha256(text.encode("utf-8")).hexdigest(), attempt, kind, RUNNING)
+
+            self._start_seat(SPLIT_SEAT, key, {"split_id": key}, orchestrator, text,
+                             os.path.join(self.work_root, "_split", key), insert, inputs=(folder,) if folder else ())
+            return key
+
+    def acknowledge_split_unknown(self, split_id: str) -> None:
+        """사람이 그 분담 제안 호출의 자손 종료를 직접 확인했다. 자리만 풀고 재호출·환불하지 않는다."""
+        self._acknowledge_seat(SPLIT_SEAT, split_id, {"split_id": split_id})
+
+    def _split_view(self, row) -> dict[str, Any]:
+        record = json.loads(row["result"]) if row["result"] else {}
+        spec = json.loads(row["orchestrator"])
+        return {"split_id": row["split_id"], "task_id": row["task_id"], "created_at": row["created_at"],
+                "goal": row["goal"], "state": row["state"], "status": row["status"], "execution": row["kind"],
+                "orchestrator": {key: spec.get(key) for key in ("pid", "label", "adapter_id", "model")},
+                "members": json.loads(row["members"]), "sources": json.loads(row["sources"]),
+                "prompt": row["prompt"], "input_sha256": row["input_sha256"], "used_by": row["used_by"],
+                "as_proposed": None if row["as_proposed"] is None else bool(row["as_proposed"]),
+                "reply": record.get("reply"), "reason": record.get("reason"), "raw": record.get("raw"),
+                "observation": record.get("observation")}
+
+    def _approved_split(self, split, roles, question, participants, assignments, checked_sources, task_id):
+        """분담 제안에서 온 일반 실행. 통과했고 실행에 쓰지 않은 제안이어야 하며, 목표·팀원·자료(이름·해시)·작업·역할판의
+        오케스트레이터가 제안 때와 같아야 한다. 사람이 맡길 일이나 자료를 고쳤으면 as_proposed가 거짓이다 — 거절하지 않는다."""
+        if not isinstance(split, dict) or set(split) != {"id"} or not isinstance(split["id"], str):
+            raise ControllerError("분담 제안은 {id}로 줍니다.")
+        row = self.store.row("SELECT * FROM splits WHERE split_id = ?", split["id"])
+        if row is None:
+            raise ControllerError("분담 제안을 찾을 수 없습니다.")
+        if row["used_by"]:
+            raise ControllerError("이미 실행에 쓴 분담 제안입니다. 같은 제안으로 실행을 두 번 만들지 않습니다.")
+        reply = (json.loads(row["result"]) if row["result"] else {}).get("reply")
+        if row["state"] != ACCEPTED or not reply:
+            raise ControllerError("검사를 통과한 분담 제안만 씁니다.")
+        fixed, board = json.loads(row["orchestrator"]), roles["orchestrator"] or {}
+        if (fixed["pid"], fixed["adapter_id"], fixed["model"]) != (board.get("pid"), board.get("adapter_id"),
+                                                                     board.get("model")):
+            raise ControllerError("분담을 제안한 오케스트레이터·모델과 역할판의 오케스트레이터가 다릅니다.")
+        if list(json.loads(row["members"]).values()) != [p.pid for p in participants]:
+            raise ControllerError("분담 제안 때와 팀원이 다릅니다. 다시 제안받거나 제안 없이 나누세요.")
+        listed = [(s["name"], s["sha256"]) for s in json.loads(row["sources"])]
+        if listed != [(name, hashlib.sha256(data).hexdigest()) for name, data in checked_sources]:
+            raise ControllerError("분담 제안 때와 자료가 다릅니다. 다시 제안받거나 제안 없이 나누세요.")
+        if row["goal"] != question or row["task_id"] != task_id:
+            raise ControllerError("분담 제안 때와 전체 목표나 작업이 다릅니다.")
+        sent = {pid: {"task": item["task"].strip(), "sources": sorted(item["sources"])}
+                for pid, item in assignments.items()}
+        return {"split_id": row["split_id"], "as_proposed": sent == reply["assignments"]}
 
     def _refinement_view(self, row) -> dict[str, Any]:
         """다듬기 한 건의 화면 투영. 원문·차례별 보낸 입력·받은 답(또는 실패 이유와 원문)·사람이 쓴 말을 그대로 보인다."""
@@ -1561,6 +1693,8 @@ class Controller:
                 runs[-1]["refinement"] = self._refinement_view(refined) if refined else None
                 came = self.store.row("SELECT proposal_id, run_id FROM proposals WHERE used_by = ?", run["run_id"])
                 runs[-1]["proposal"] = {"proposal_id": came["proposal_id"], "source_run": came["run_id"]} if came else None
+                divided = self.store.row("SELECT * FROM splits WHERE used_by = ?", run["run_id"])
+                runs[-1]["split"] = self._split_view(divided) if divided else None   # 일반 실행의 분담 제안(#135)
                 if judged:
                     runs[-1]["result_revision"] = revision   # 판단 완료 버튼이 이 판을 함께 보낸다. 공개·모음 뒤에만 싣는다
                 if revealed:
@@ -1590,8 +1724,15 @@ class Controller:
                 "(SELECT refine_id FROM refine_turns WHERE state IN (?, ?))", RUNNING, UNKNOWN)})
             refinements = sorted((self._refinement_view(row) for row in open_rows.values()),
                                  key=lambda item: item["created_at"], reverse=True)
+            # 실행에 쓰지 않은 분담 제안도 같은 규칙: 최근 것과, 끝나지 않았거나 종료 미확인인 것
+            open_splits = {row["split_id"]: row for row in self.store.rows(
+                "SELECT * FROM splits WHERE used_by IS NULL ORDER BY created_at DESC LIMIT 20")}
+            open_splits.update({row["split_id"]: row for row in self.store.rows(
+                "SELECT * FROM splits WHERE used_by IS NULL AND state IN (?, ?)", RUNNING, UNKNOWN)})
+            splits = sorted((self._split_view(row) for row in open_splits.values()),
+                            key=lambda item: item["created_at"], reverse=True)
             return {"executor": self.executor.name, "live_call_budget": self.call_budget(), "tasks": tasks,
-                    "refinements": refinements,
+                    "refinements": refinements, "splits": splits,
                     "provider_call_budgets": {aid: self.call_budget(aid) for aid in self.provider_call_caps},
                     "slots": {"used": self._slots_used(), "cap": self.max_parallel},
                     "unsettled": {"count": unsettled, "limit": self.unsettled_limit},
