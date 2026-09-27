@@ -537,11 +537,13 @@ class Controller:
                 spec = ParticipantSpec(**json.loads(row["spec"]))
                 attempt = uuid.uuid4().hex
                 work = os.path.join(self.work_root, row["run_id"], spec.pid)
-                os.makedirs(work, exist_ok=True)
                 prompt = self._run(row["run_id"])["prompt"]
                 # 최종 계획을 한 번 만든다. 그 기록(질문 본문 없이)과 실행 종류를 시도 ID와 함께 저장한 뒤에만 같은
                 # 계획을 실행한다(G4·G6). 저장하지 못하면 실행하지 않는다.
                 try:
+                    # 작업 폴더 준비도 시작 전 실패다. 여기서 빠져나가면 이 참여자가 queued로 남아 다음 pump마다
+                    # 대기열 맨 앞에서 다시 멈춘다(구조 검토 AH-02). 이 참여자만 시작 전 실패로 닫고 다음으로 간다.
+                    os.makedirs(work, exist_ok=True)
                     # 자료가 있는 실행은 그 사본 폴더 하나를 입력으로 준다. 목록·해시가 다르면 여기서 거절된다.
                     source = self._source_dir(row["run_id"])
                     extra = {"inputs": (source,)} if source else {}
@@ -852,11 +854,14 @@ class Controller:
                 raise ControllerError(str(exc)) from None
             attempt = uuid.uuid4().hex
             work = os.path.join(self.work_root, run_id, f"synthesis-{attempt[:12]}")
-            os.makedirs(work, exist_ok=True)
-            source = self._source_dir(run_id)
             try:
+                # 폴더 준비 실패도 계획 거절처럼 요청 거절로 돌려준다 — 파일 시스템 예외를 API 밖으로 흘리지 않는다(AH-02).
+                os.makedirs(work, exist_ok=True)
+                source = self._source_dir(run_id)
                 plan = self.executor.plan(replace(chosen, pid="synthesis", label="합성"), prompt, work,
                                           **({"inputs": (source,)} if source else {}))
+            except ControllerError:
+                raise
             except Exception as exc:  # 계획 거절: 아무것도 시작하지 않았다
                 raise ControllerError(f"synthesis plan refused: {type(exc).__name__}: {exc}") from None
             with self.store.tx() as tx:

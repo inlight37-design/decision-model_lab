@@ -16,7 +16,8 @@
 - exit 0은 프로세스가 끝났다는 뜻이지 작업이 성공했다는 뜻이 아니다.
 - 프로세스를 만든 뒤의 명시적 정리 대기에는 상한(CLEANUP_LIMIT)이 있다(경계 리뷰 R02). 운영체제의
   프로세스 생성 지연까지 포함한 벽시계 보장은 아니다. 돌아온 뒤에도 파이프를 쥔 프로세스가 남으면
-  입출력 스레드가 남는다 — lingering()이 센다(WSL2 리뷰 WM-07).
+  입출력 스레드가 남는다 — lingering()이 센다(WSL2 리뷰 WM-07). 프로세스를 만든 뒤 입출력 스레드를
+  시작하지 못해도 예외를 흘리지 않고 트리를 끝내 같은 정리를 밟는다 — aborted 또는 unknown(구조 검토 AH-03).
 
 추적 단위(containment): Windows는 job object(ctypes) — 자손이 떠날 수 없다. 그 밖은 새
 session의 프로세스 그룹 — setsid 등으로 새 세션을 만든 자손은 보이지 않는다. 그래서 결과는
@@ -47,7 +48,10 @@ TIMED_OUT = "timed_out"              # 제한 시간에 끊었고 추적 단위�
 CANCELLED = "cancelled"              # 취소 요청으로 끊었고 추적 단위가 빈 것을 확인했다
 UNKNOWN = "unknown"                  # 끝났는지 확인하지 못했다. 예산 점유를 유지한다
 FAILED_TO_START = "failed_to_start"  # 프로세스를 만들지 못했다. 모델 호출은 없었다
-STATES = (EXITED, TIMED_OUT, CANCELLED, UNKNOWN, FAILED_TO_START)
+# 프로세스를 만든 뒤 입출력 스레드를 시작하지 못해 스스로 끊었고 추적 단위가 빈 것을 확인했다(AH-03).
+# 프로세스는 시작했으므로 모델 호출이 있었을 수 있다 — FAILED_TO_START와 달리 예산을 돌려받지 않는다.
+ABORTED = "aborted"
+STATES = (EXITED, TIMED_OUT, CANCELLED, UNKNOWN, FAILED_TO_START, ABORTED)
 
 # 추적 단위. 자손 전체를 담는 단위만 WHOLE_TREE에 넣는다.
 JOB_OBJECT = "job_object"            # Windows. 브레이크어웨이를 허용하지 않으므로 자손이 떠날 수 없다
@@ -365,18 +369,34 @@ def _execute(args: tuple[str, ...], *, cwd: str | os.PathLike, env: Mapping[str,
                          int((time.monotonic() - started) * 1000), None, True,
                          error=type(exc).__name__)  # 아무것도 시작하지 않았으니 비어 있다
 
+    # 여기부터 정리 책임이 있다. _Tree는 예외를 내지 않는다(job을 못 만들면 추적하지 않는 쪽으로 기운다).
     tree = _Tree(proc, pid_namespace=pid_namespace)
     notes = [tree.note] if tree.note else []
-    out, err = _Reader(proc.stdout, max_output_bytes), _Reader(proc.stderr, max_output_bytes, stderr_marks)
-    out.start()
-    err.start()
-    writer = _Writer(proc.stdin, data, cancel) if data is not None else None
-    if writer:
-        writer.start()
+    out = err = writer = None
+    running: list[threading.Thread] = []   # 실제로 시작한 입출력 스레드만. 합류·센 값은 이것만 믿는다
+    reason = None
+    try:
+        out, err = _Reader(proc.stdout, max_output_bytes), _Reader(proc.stderr, max_output_bytes, stderr_marks)
+        writer = _Writer(proc.stdin, data, cancel) if data is not None else None
+        for thread in (out, err, writer):
+            if thread is not None:
+                thread.start()
+                running.append(thread)
+    except Exception as exc:
+        # 스레드를 시작하지 못했다(자원 부족 등). 감독할 수 없으니 바로 끊고 아래의 정리를 그대로 밟는다(AH-03).
+        # 성공으로 두지 않고 다시 부르지 않는다. 스레드가 없는 파이프는 여기서 닫는다 — 스레드가 쥔 파이프는
+        # 그 스레드가 EOF에서 닫는다(읽는 중인 스트림을 여기서 닫으면 막힌다).
+        reason = ABORTED
+        notes.append(f"runner could not start its I/O threads ({type(exc).__name__}); the process was terminated")
+        for stream, thread in ((proc.stdout, out), (proc.stderr, err), (proc.stdin, writer)):
+            if stream is not None and thread not in running:
+                try:
+                    stream.close()
+                except OSError:
+                    pass
 
     deadline = started + timeout
-    reason = None
-    while proc.poll() is None:
+    while reason is None and proc.poll() is None:
         if cancel is not None and cancel.is_set():
             reason = CANCELLED
             break
@@ -405,7 +425,7 @@ def _execute(args: tuple[str, ...], *, cwd: str | os.PathLike, env: Mapping[str,
     confirmed = tree.confirm_empty() if proc.poll() is not None else False
     tree.close()
     joined_by = time.monotonic() + _GRACE
-    for reader in (out, err):
+    for reader in (r for r in (out, err) if r in running):
         reader.join(timeout=max(0.0, joined_by - time.monotonic()))
         if reader.is_alive():
             # 추적 단위 밖에서 파이프를 쥔 프로세스가 아직 있다는 뜻이다. 스트림은 닫지 않고 둔다 —
@@ -415,7 +435,10 @@ def _execute(args: tuple[str, ...], *, cwd: str | os.PathLike, env: Mapping[str,
             with _LINGERING_LOCK:
                 _LINGERING.add(reader)
     delivery = None
-    if writer:
+    if data is not None and writer not in running:
+        delivery = INPUT_FAILED   # 쓰는 스레드가 시작하지 못했다 — 한 바이트도 보내지 않았다
+        notes.append(f"stdin {delivery}: wrote 0 of {len(data)} bytes (writer not started)")
+    elif writer:
         writer.join(timeout=max(0.0, joined_by - time.monotonic()))
         if writer.is_alive():
             delivery = INPUT_INCOMPLETE
@@ -433,8 +456,11 @@ def _execute(args: tuple[str, ...], *, cwd: str | os.PathLike, env: Mapping[str,
         state = UNKNOWN
         if confirmed is None:
             notes.append("process tree could not be counted on this platform")
-    counts = dict(err.counter.counts) if stderr_marks and not err.is_alive() else None
-    return RunResult(args, state, proc.poll(), out.text(), err.text(), out.truncated, err.truncated,
+    # 시작하지 못한 읽기 스레드는 아무것도 읽지 않았다. 그 스트림의 글·센 값은 없다.
+    out_ok, err_ok = out in running, err in running
+    counts = dict(err.counter.counts) if stderr_marks and err_ok and not err.is_alive() else None
+    return RunResult(args, state, proc.poll(), out.text() if out_ok else "", err.text() if err_ok else "",
+                     out_ok and out.truncated, err_ok and err.truncated,
                      int((time.monotonic() - started) * 1000), leftover, confirmed,
                      notes=tuple(notes), containment=tree.containment, input_delivery=delivery,
                      stderr_counts=counts)

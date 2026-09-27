@@ -425,7 +425,8 @@ const PHASE_LABEL = { drafting: "답 받는 중", revealed: "공개됨", preflig
 const BEHAVIOR_LABEL = { ok: "정상", slow: "느림", fail: "CLI 오류", partial_input: "입력 일부만 읽음(큰 질문에서만 드러남)", hang: "멈춤(시간 초과)" };
 const EXECUTION_LABEL = { mock: "CLI 모의", real: "실제 CLI", synthetic: "CLI 합성 시험" };
 const STATUS_LABEL = { cli_error: "CLI 오류", format_error: "답의 형식 오류", input_error: "입력 전달 실패", tools_rejected: "도구 사용 거절",
-  process_timeout: "시간 초과", process_cancelled: "취소", process_failed_to_start: "시작하지 못함", cancelled: "취소",
+  process_timed_out: "시간 초과", process_cancelled: "취소", process_failed_to_start: "시작하지 못함", cancelled: "취소",
+  process_aborted: "시작 직후 중단(앱이 실행을 지켜볼 수 없었음)",
   cancelled_before_start: "시작 전 취소", withdrawn: "답을 받지 못해 뺌", permission_mismatch: "실행 허가 불일치",
   controller_restarted: "앱 재시작", result_not_stored: "결과 저장 실패", unknown_acknowledged: "종료를 직접 확인함" };
 const CARD_STATUS = { supported: "확인됨 · supported", qualified: "조건부 · qualified", rejected: "반박됨 · rejected", unresolved: "미해결 · unresolved" };
