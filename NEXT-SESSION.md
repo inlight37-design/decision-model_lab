@@ -65,7 +65,7 @@
 
 일은 `card` 라벨 이슈에서 [협업 규칙](docs/COLLABORATION.md) 3절의 보드 규칙대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** `claude/aux-pc-retire-20260927`의 PR — 보조 PC를 더 쓰지 않는다는 사용자 결정(2절 26)을 적고 재관측을 주 PC로 좁힌다. 모델 호출 없음.
+- **이 판을 들인 PR:** [PR #128](https://github.com/inlight37-design/decision-model_lab/pull/128)(`claude/aux-pc-retire-20260927`) — 보조 PC를 더 쓰지 않는다는 사용자 결정(2절 26)을 적고 재관측을 주 PC로 좁힌다. 모델 호출 없음.
 
 | 사용자만 할 수 있는 것 | 지금 |
 |---|---|
