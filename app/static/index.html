@@ -552,6 +552,8 @@ function animateGauges(box) {
   }
 }
 let quotaData = null, quotaAutoAt = 0, settledSeen = null;
+// 조회 순번(refresh·refreshQuota가 함께 쓴다)과 화면에 적용한 마지막 상태·한도 조회의 순번, 진행 중인 상태 조회 수
+let refreshSent = 0, stateShown = 0, quotaShown = 0, refreshBusy = 0;
 function renderQuota(data) {
   quotaData = data;
   const box = $("accountQuota"), button = $("quotaRefresh");
@@ -574,13 +576,12 @@ function renderQuota(data) {
   animateGauges(box);
 }
 async function refreshQuota() {
-  const button = $("quotaRefresh");
+  const button = $("quotaRefresh"), seq = ++refreshSent;   // 1초 조회와 같은 순번 — showQuota가 순서를 지킨다
   button.disabled = true; button.textContent = "조회 중…";
-  try { renderQuota(await api("/api/account-quota/refresh", {})); }
-  catch (e) {
-    quotaSignature = null; $("accountQuota").replaceChildren(h("p", { class: "sm muted" }, "계정 한도를 조회하지 못했습니다."));
-    button.disabled = false; button.textContent = "조회";
-  }
+  let data = null;
+  try { data = await api("/api/account-quota/refresh", {}); } catch (e) { /* 실패는 아래에서 한도 칸에 적는다 */ }
+  showQuota(seq, data);
+  if (!data) { button.disabled = false; button.textContent = "조회"; }
 }
 $("quotaRefresh").onclick = refreshQuota;
 // Codex 값은 모델을 부르지 않는 조회라 이 창을 보고 있을 때 저절로 새로 받는다: 창으로 돌아왔는데 2분이 지났거나,
@@ -1138,16 +1139,44 @@ async function act(path, body) {
   try { await api(path, body || {}); await refresh(); return true; }
   catch (e) { toast(e.message, true); return false; }
 }
-async function refresh() {
-  try {
-    const [next, quota] = await Promise.all([api("/api/state"), api("/api/account-quota")]);
-    connection = ""; state = next; render(); renderQuota(quota);
-    // 실제 CLI 시도가 끝나면 계정 사용량이 바뀌었으니 Codex 값을 새로 받는다
-    const settled = next.runs.reduce((n, r) => n + r.participants.filter(p => p.execution === "real" &&
-      ["accepted", "rejected"].includes(p.state)).length, 0);
-    if (settledSeen !== null && settled > settledSeen) autoQuota("run");
-    settledSeen = settled;
-  } catch (e) { connection = String(e.message); renderHeader(); }
+async function refresh(timer = false) {
+  // 조회마다 보낸 순서를 붙이고, 이미 보인 것보다 먼저 보낸 조회의 응답은 버린다 — 늦게 온 옛 응답이 최신 화면을
+  // 덮지 않는다(구조 검토 AH-05). 1초 타이머는 진행 중인 상태 조회가 있으면 한 번 건너뛴다. 버튼 동작 뒤의 조회는 늘
+  // 새로 보낸다 — 동작 전에 보낸 조회로는 그 결과를 볼 수 없다. 계정 한도는 따로 받는다: 늦거나 실패해도 실행 상태
+  // 갱신과 타이머를 붙잡지 않고, 실패는 한도 칸에만 적는다. 이 함수는 상태를 적용하면 돌아온다.
+  if (timer && refreshBusy) return false;
+  const seq = ++refreshSent;
+  const statePromise = api("/api/state");
+  api("/api/account-quota").then(data => showQuota(seq, data), () => showQuota(seq, null));
+  refreshBusy++;
+  let next;
+  try { next = await statePromise; }
+  catch (e) {
+    if (seq > stateShown) { connection = String(e.message); renderHeader(); }
+    return false;
+  } finally { refreshBusy--; }
+  if (seq <= stateShown) return false;
+  stateShown = seq;
+  connection = ""; state = next; render();
+  // 실제 CLI 시도가 끝나면 계정 사용량이 바뀌었으니 Codex 값을 새로 받는다
+  const settled = next.runs.reduce((n, r) => n + r.participants.filter(p => p.execution === "real" &&
+    ["accepted", "rejected"].includes(p.state)).length, 0);
+  if (settledSeen !== null && settled > settledSeen) autoQuota("run");
+  settledSeen = settled;
+  return true;
+}
+function showQuota(seq, data) {
+  // 한도 응답은 1초 조회·조회 버튼·자동 조회 모두 보낸 순서로만 적용한다 — 늦게 온 옛 조회가 새 값을 덮지 않는다.
+  // data가 null이면 그 조회가 실패했다.
+  if (seq <= quotaShown) return false;
+  quotaShown = seq;
+  if (data) renderQuota(data); else quotaFailed();
+  return true;
+}
+function quotaFailed() {
+  if (quotaSignature === "failed") return;   // 같은 안내를 매초 다시 그리지 않는다
+  quotaSignature = "failed";
+  $("accountQuota").replaceChildren(h("p", { class: "sm muted" }, "계정 한도를 조회하지 못했습니다. 실행 상태는 계속 갱신합니다."));
 }
 async function loadOptions() {
   const opt = await api("/api/options");
@@ -1195,8 +1224,8 @@ if (!TOKEN) {
   renderHeader();
 } else {
   renderHeader();
-  loadOptions().then(refresh).catch(e => { connection = String(e.message); renderHeader(); });
-  setInterval(refresh, 1000);
+  loadOptions().then(() => refresh()).catch(e => { connection = String(e.message); renderHeader(); });
+  setInterval(() => refresh(true), 1000);
 }
 </script>
 </body>

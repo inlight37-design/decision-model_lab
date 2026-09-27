@@ -148,6 +148,8 @@ class SynthesisHttpTests(HttpServerCase):
         run = self.ctl.create_run("selected", [manual("app")], min_independent=1, quorum_policy=c.INCLUDE_UNVERIFIED)
         self.assertEqual(self.decision_report(run)[0], 401)
         self.assertEqual(self.decision_report(run, "wrong")[0], 401)
+        # 없는 실행은 원문 보고(/report)처럼 거절한다. 예전에는 IndexError가 요청 처리 밖으로 샜다.
+        self.assertEqual(self.decision_report("r0000-000000-" + "0" * 32, self.token), (409, {"error": "no such run"}))
         self.assertEqual(self.decision_report(run, self.token)[0], 409)
         digest = self.ctl.view(run)["runs"][0]["input_sha256"]
         self.ctl.submit_manual(run, "app", "주장\n반례", digest)
