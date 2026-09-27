@@ -181,6 +181,19 @@ class RefineTests(support.Base):
         self.assertTrue(ctl.wait_idle())
         self.assertEqual(self.turns(ctl, rid)[1]["state"], c.ACCEPTED)
 
+    def test_only_one_refine_turn_runs_at_a_time_even_across_refinements(self):
+        # 버튼을 두 번 누르거나 창 두 개에서 불러도 두 번째 호출을 시작하지 않는다(Codex 교차검토, PR #131)
+        ex = Refiner(hold=("supervisor",))
+        ctl = self.controller(ex)
+        rid = ctl.refine(ROSTER["claude"], ORIGINAL)
+        self.assertTrue(support.wait_for(lambda: self.turns(ctl, rid)[0]["state"] == c.RUNNING))
+        with self.assertRaises(c.ControllerError):
+            ctl.refine(ROSTER["claude"], ORIGINAL)
+        ex.release("supervisor")
+        self.assertTrue(ctl.wait_idle())
+        self.assertEqual(self.store.row("SELECT COUNT(*) AS n FROM refinements")["n"], 1)
+        self.assertEqual(ex.started.count("supervisor"), 1)
+
     def test_real_turns_are_reserved_under_the_same_cap_and_refused_when_it_is_used_up(self):
         ex = RealLike()
         ctl = self.controller(ex, max_real_calls=1)
@@ -262,7 +275,7 @@ class RefineCheckTests(unittest.TestCase):
         ok = refine.check('앞말 ```json\n{"refined": " 질문 ", "changes": [], "ask": ""}\n```')
         self.assertEqual(ok, {"refined": "질문", "changes": [], "ask": None})
         for bad in ("JSON 아님", '{"refined": ""}', '{"refined": "q", "answer": "몰래 답"}',
-                    '{"refined": "q", "changes": "하나"}', '{"refined": "q", "refined": "r"}',
+                    '{"refined": "q", "changes": "하나"}', '{"refined": "q", "changes": false}', '{"refined": "q", "refined": "r"}',
                     json.dumps({"refined": "x" * (refine.MAX_REFINED + 1)}),
                     json.dumps({"refined": "q", "changes": ["c"] * (refine.MAX_CHANGES + 1)})):
             with self.subTest(bad=bad[:30]), self.assertRaises(refine.RefineError):

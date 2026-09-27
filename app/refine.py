@@ -67,7 +67,9 @@ def check(text: str) -> dict[str, Any]:
         raise RefineError(str(exc).replace("synthesis", "supervisor").replace("synthesizer", "supervisor")) from None
     if set(raw) - {"refined", "changes", "ask"}:
         raise RefineError("the supervisor reply may only have refined, changes and ask")
-    changes = raw.get("changes") or []
+    changes = raw.get("changes")
+    if changes is None:   # 없거나 null이면 바뀐 점 없음. false·0·""처럼 목록이 아닌 값은 받지 않는다(Codex 교차검토)
+        changes = []
     if not isinstance(changes, list) or len(changes) > MAX_CHANGES:
         raise RefineError(f"changes must be a list of at most {MAX_CHANGES} items")
     ask = raw.get("ask")

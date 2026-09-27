@@ -156,6 +156,24 @@ const pair=text(refinementPair("내 원문","보낸 문장"));
 assert.ok(pair.includes("원래 목표") && pair.includes("내 원문") && pair.includes("실제로 보낸 질문") && pair.includes("보낸 문장"));
 state.refinements[0].turns[1].state="unknown"; taskSelected=null; taskPageSig=null; renderTaskPage();
 assert.ok(nodes.mainCol.kids.map(text).join(" ").includes("끝났는지 모르는 다듬기 차례"));
+// Codex 교차검토(PR #131): 원문 모드의 확인 화면에 null이, 원본 앱 전달문 목록이 배열째 글자로 들어가지 않는다
+showInputPreview({mode:"isolated",run_id:"r",confirmation:"c",question:"질문",prompt:"전달문",sources:[],manual_packets:{"b":"옮길 전달문"},
+  role_config:{isolated:[],orchestrator:null,supervisor:null},quorum_policy:"independent_only",min_independent:1,
+  calls:{draft_cli:1,model_calls:0}},{});
+assert.ok(nodes.inputPreview.kids.every(isNode), JSON.stringify(nodes.inputPreview.kids.filter(k=>!isNode(k))));
+// 두 번 눌러도 요청은 하나이고, 응답 전에 원문으로 돌아가면(창을 새로 연 것과 같다) 늦은 응답을 붙이지 않는다
+let pending=[], apiCalls=0;
+function api(path, body) { apiCalls++; return new Promise(resolve => pending.push(() => resolve({refine_id:"late"}))); }
+async function refresh() { return true; }
+(async () => {
+  roleBoard={...emptyBoard(),isolated:["z"],supervisor:["a"],input_mode:"refine"}; state.refinements=[];
+  resetRefine(); nodes.question.value="원문 A";
+  const first=refineTurn(), second=refineTurn();
+  assert.equal(apiCalls,1);
+  resetRefine();
+  pending.forEach(f => f()); await first; await second;
+  assert.equal(refineCurrent,null); assert.equal(refineBusy,false);
+})().catch(e => { console.error(e); process.exit(1); });
 '''
         # 스크립트가 Windows 명령줄 길이 한도(약 32K자)를 넘으므로 표준 입력으로 준다.
         result = subprocess.run([shutil.which("node"), "-"], input=script, capture_output=True, text=True,

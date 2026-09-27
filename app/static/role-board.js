@@ -106,12 +106,15 @@ function chooseInputMode(mode) {
 // ---- 다듬기(카드 #130) ------------------------------------------------------------------------------------------
 // 원장이 원문·차례·승인을 기록한다. 이 화면이 쥐는 것은 지금 다듬는 ID·승인하려고 고른 차례·쓰는 중인 말뿐이다.
 let refineCurrent = null, refineApproved = null, refineNote = "", refineSig = null;
+// 요청 중에는 버튼을 막는다. 원문으로 돌아가거나 창을 새로 열면 세대가 바뀌어, 늦게 온 옛 응답을 새 창에 붙이지 않는다.
+let refineBusy = false, refineGeneration = 0;
 const REFINE_STATE = { running: "다듬는 중", accepted: "받음", unknown: "종료 미확인" };
 function currentRefinement() { return ((state && state.refinements) || []).find(r => r.refine_id === refineCurrent) || null; }
 function resetRefine() {
   const ref = currentRefinement();
   if (ref) $("question").value = ref.original;   // 승인한 문장 대신 원문을 되돌려 놓는다
   refineCurrent = null; refineApproved = null; refineNote = ""; refineSig = null;
+  refineBusy = false; refineGeneration += 1;
   $("question").readOnly = false;
 }
 function supervisorChoice() {
@@ -119,20 +122,29 @@ function supervisorChoice() {
   return { supervisor: pid, ...(model ? { model: model.value } : {}), ...(behavior ? { behavior: behavior.value } : {}) };
 }
 async function refineTurn() {
+  if (refineBusy) return;
+  const generation = refineGeneration;
   $("formErr").textContent = "";
+  refineBusy = true; renderRefine(true);
   try {
     if (!refineCurrent) {
       const original = $("question").value.trim();
       if (!original) throw new Error("다듬을 원문을 먼저 질문 칸에 적어 주세요.");
-      refineCurrent = (await api("/api/refinements", { ...supervisorChoice(), original })).refine_id;
+      const made = await api("/api/refinements", { ...supervisorChoice(), original });
+      if (generation !== refineGeneration) return;   // 그 사이 원문으로 돌아갔거나 창을 새로 열었다
+      refineCurrent = made.refine_id;
     } else {
       await api(`/api/refinements/${refineCurrent}/turn`, { ...supervisorChoice(), note: refineNote });
+      if (generation !== refineGeneration) return;
       refineNote = "";
     }
     refineApproved = null; invalidatePreview();
     await refresh().catch(() => false);
-  } catch (e) { $("formErr").textContent = e.message; }
-  renderRefine(true);
+  } catch (e) {
+    if (generation === refineGeneration) $("formErr").textContent = e.message;
+  } finally {
+    if (generation === refineGeneration) { refineBusy = false; renderRefine(true); }
+  }
 }
 function approveTurn(turn) {
   refineApproved = turn.turn; $("question").value = turn.reply.refined;
@@ -167,7 +179,7 @@ function renderRefine(force = false) {
   box.hidden = !on;
   if (!on) { box.replaceChildren(); refineSig = null; return; }
   const ref = currentRefinement();
-  const sig = JSON.stringify([refineCurrent, refineApproved, ref]);
+  const sig = JSON.stringify([refineCurrent, refineApproved, refineBusy, ref]);
   if (!force && sig === refineSig) return;
   refineSig = sig;
   $("question").readOnly = !!refineCurrent;   // 다듬기를 시작하면 원문을 고정한다
@@ -176,8 +188,8 @@ function renderRefine(force = false) {
     h("p", { class: "sm muted" }, "슈퍼바이저가 원문을 다듬고 필요한 것을 묻습니다. 한 차례마다 호출 1회, 최대 3차례입니다. " +
       "내가 승인한 문장만 격리 팀원에게 가고 이 대화는 가지 않습니다. 답을 흘리지 않았는지는 기계가 판정하지 않으니 읽고 승인하세요.")];
   if (!refineCurrent) {
-    parts.push(h("div", {}, h("button", { type: "button", class: "btn btn-primary", id: "refineGo", onclick: refineTurn },
-      "질문 칸의 원문으로 다듬기 요청 · 호출 1회")));
+    parts.push(h("div", {}, h("button", { type: "button", class: "btn btn-primary", id: "refineGo", onclick: refineTurn,
+      disabled: refineBusy }, refineBusy ? "요청하는 중…" : "질문 칸의 원문으로 다듬기 요청 · 호출 1회")));
   } else if (!ref) {
     parts.push(h("p", { class: "sm muted" }, "다듬기 상태를 받는 중입니다."));
   } else {
@@ -188,8 +200,8 @@ function renderRefine(force = false) {
       const note = h("textarea", { rows: 2, maxlength: "2000", "aria-label": "슈퍼바이저에게 쓰는 말",
         placeholder: "물음에 대한 답이나 바라는 점(선택)", oninput: e => { refineNote = e.target.value; } });
       note.value = refineNote;
-      parts.push(note, h("div", {}, h("button", { type: "button", class: "btn", id: "refineGo", onclick: refineTurn },
-        `한 번 더 다듬기 · 호출 1회 (${ref.turns.length + 1}/${ref.max_turns}차례)`)));
+      parts.push(note, h("div", {}, h("button", { type: "button", class: "btn", id: "refineGo", onclick: refineTurn,
+        disabled: refineBusy }, refineBusy ? "요청하는 중…" : `한 번 더 다듬기 · 호출 1회 (${ref.turns.length + 1}/${ref.max_turns}차례)`)));
     } else if (!busy) parts.push(h("p", { class: "cap muted" }, `${ref.max_turns}차례를 모두 썼습니다. 한 차례를 승인하거나 원문으로 돌아가세요.`));
     parts.push(h("div", {}, h("button", { type: "button", class: "btn", onclick: () => { resetRefine(); invalidatePreview(); renderRefine(true); } },
       "원문으로 돌아가기(이 다듬기는 쓰지 않음)")));
@@ -317,7 +329,8 @@ function showInputPreview(preview, body) {
     h("p", { class: "cap muted" }, MODEL_NOTE),
     h("p", { class: "sm" }, `입력 모드: ${preview.refinement ? `다듬기(${preview.refinement.turn}차례를 승인 · 승인한 문장만 보냄)` : "원문"} · ` +
       `${preview.quorum_policy === "independent_only" ? "독립성이 확인된 참여자만" : "미확인 답도 포함"} · 최소 ${preview.min_independent}명`),
-    preview.refinement ? refinementPair(preview.refinement.original, preview.question, true) : null,
+    // replaceChildren은 null을 "null" 글자로 넣는다 — 다듬기가 없을 때는 아무것도 넣지 않는다(Codex 교차검토)
+    ...(preview.refinement ? [refinementPair(preview.refinement.original, preview.question, true)] : []),
     h("p", { class: "sm" }, `이번 실행: CLI 시작 최대 ${calls.draft_cli}회 · 수동 답 ${Object.keys(preview.manual_packets).length}개`),
     callLimitLine(calls),
     h("p", { class: "cap muted" }, orchestrator ? `${orchestrator.label}: 공개 뒤 기존 합성을 직접 눌러 실행합니다. ${calls.model_calls === 0 ? "모의 합성도 모델 호출 없음." : "누를 때마다 같은 원장 상한에서 1회 사용."}` :
@@ -327,8 +340,8 @@ function showInputPreview(preview, body) {
     h("p", { class: "cap muted" }, "원본 앱에는 아래 전달문과 자료를 직접 옮깁니다. 입력·역할·자료는 시작할 때 고정됩니다."),
     h("p", { class: "sm strong" }, "질문 전문"), h("pre", { class: "input-full" }, preview.question),
     collapsible("preview-prompt", "CLI에 보낼 전달문 전문", h("pre", { class: "input-full" }, preview.prompt), { open: true }),
-    Object.entries(preview.manual_packets).map(([pid, packet]) => collapsible("packet-" + pid,
-      `${pid}에 옮길 전달문 전문`, h("pre", { class: "input-full" }, packet))),
+    ...Object.entries(preview.manual_packets).map(([pid, packet]) => collapsible("packet-" + pid,
+      `${pid}에 옮길 전달문 전문`, h("pre", { class: "input-full" }, packet))),   // 배열째 넣으면 글자가 된다 — 펼친다
     confirmButton());
   pressAll($("inputPreview")); $("confirmStart").focus();
 }

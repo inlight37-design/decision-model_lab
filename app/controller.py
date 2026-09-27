@@ -1164,6 +1164,10 @@ class Controller:
                 raise ControllerError("parallel execution limit reached; no call was started")
             if self.store.row("SELECT 1 FROM runs WHERE phase = 'drafting' AND NOT cancel_requested"):
                 raise ControllerError("진행 중인 실행을 먼저 정리하세요. 다듬기는 실행이 없을 때만 부릅니다.")
+            # 다듬기 차례는 한 번에 하나다. 버튼을 두 번 누르거나 창 두 개에서 불러도 두 번째 호출을 시작하지 않는다
+            # (Codex 교차검토, PR #131).
+            if self.store.row("SELECT 1 FROM refine_turns WHERE state = ?", RUNNING):
+                raise ControllerError("다른 다듬기 차례가 진행 중입니다. 끝난 뒤에 다시 부르세요.")
             key = refine_id or f"q{time.strftime('%m%d-%H%M%S')}-{uuid.uuid4().hex}"
             turn, attempt = len(previous) + 1, uuid.uuid4().hex
             text = refining.prompt(original, previous, note)
