@@ -12,7 +12,9 @@
 
 - **관측 기록**: 저장소의 `docs/reviews/*/manifest.v2.json` 가운데 이 기기에 등록된 가장 새 기록(`updated_at`).
   재관측해 등록하면 다음에 열 때 저절로 그 기록을 쓴다. 준비 조회가 거절하면 서버를 띄우지 않고 이유를 남긴다.
-- **모델**: `MODELS`. 실험(L1·긴 자료)과 같은 이름이다. 바꾸려면 `--codex-model`·`--claude-model`.
+- **모델**: 기본은 `MODELS`. 실험(L1·긴 자료)과 같은 이름이다. 바꾸려면 `--codex-model`·`--claude-model`.
+  역할판에서 고를 수 있는 모델은 `MODEL_CHOICES`이고, 항목마다 과금 경로와 근거를 적는다(app.live_config).
+  기본 모델도 그 목록에 고를 수 있는 항목으로 있어야 한다 — 목록 밖 모델을 인자로 주면 시작하지 않는다.
 - **원장**: `<상태 폴더>/live/<시각>`. 가장 새 원장에 provider마다 호출이 남아 있으면 이어 쓰고(앞 실행이 보인다),
   하나라도 다 썼으면 새 원장을 만든다. 원장 하나의 상한은 `CAPS`(Codex 5·Claude 5, 앱의 최대 10)이고 첫 호출에
   고정된다. 앞 원장은 지우지 않는다 — 상한을 늘리는 것이 아니라 새 상한으로 새 기록을 여는 것이다.
@@ -38,6 +40,16 @@ import time
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA = "dml-launcher/1"
 MODELS = {"codex": "gpt-6-luna", "claude-code": "claude-sonnet-5"}
+# 역할판의 모델 목록(카드 #119). 고를 수 있는 것은 구독 포함 한도로 쓴 근거가 있는 것뿐이다. 나머지는 이유와 함께
+# 막힌 채로 보인다 — 쓰려면 근거를 확인해 funding을 바꾸는 PR을 낸다. 모델을 불러 과금 경로를 알아내지 않는다.
+# (model, funding, basis). funding: included | credits | unconfirmed(app.live_config).
+MODEL_CHOICES = {
+    "codex": (("gpt-6-luna", "included", "구독 로그인으로 관측·실험에 쓴 모델(재관측 2026-09-25·26, 서빙 모델은 미보고 K32)"),
+              ("gpt-6-astra", "unconfirmed", "이 기기의 참여자로 관측하지 않았고 구독 포함 여부를 확인하지 않았다")),
+    "claude-code": (("claude-sonnet-5", "included", "구독 로그인으로 관측·실험에 쓴 모델(재관측 2026-09-25·26, 요청=보고)"),
+                    ("claude-opus-5-5", "unconfirmed", "이 기기의 참여자로 관측하지 않았고 구독 포함 여부를 확인하지 않았다"),
+                    ("claude-fable-5-1", "credits", "공식 문서: 계정에 따라 추가 크레딧(usage credits)으로 청구된다")),
+}
 CAPS = {"codex": 5, "claude-code": 5}
 PORTS = range(8765, 8775)
 TIMEOUT = 180.0
@@ -171,7 +183,7 @@ def _interrupt(_number, _frame):
 
 
 def serve(args) -> int:
-    from app.live_config import Provider
+    from app.live_config import ModelChoice, Provider
     from app.server import EXIT_NOT_ELIGIBLE, serve as start_server, serve_until_stopped
     paths = _paths()
     paths["root"].mkdir(mode=0o700, parents=True, exist_ok=True)
@@ -199,7 +211,8 @@ def serve(args) -> int:
                 "이 기기에 등록된 관측 기록이 없다 — docs/SETUP.md 4절로 관측하고 등록한다"]})
             return EXIT_NOT_ELIGIBLE
         try:
-            providers = tuple(Provider(adapter, model, manifest, CAPS[adapter], _empty_dir(paths["inputs"] / f"{adapter}-empty"))
+            providers = tuple(Provider(adapter, model, manifest, CAPS[adapter], _empty_dir(paths["inputs"] / f"{adapter}-empty"),
+                                       choices=tuple(ModelChoice(*item) for item in MODEL_CHOICES[adapter]))
                               for adapter, model in (("codex", args.codex_model), ("claude-code", args.claude_model)))
         except ValueError as exc:
             _write_state({**base, "status": "failed", "reasons": [str(exc)]})

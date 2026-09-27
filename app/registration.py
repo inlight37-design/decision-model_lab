@@ -72,14 +72,17 @@ def _load() -> dict:
     return data
 
 
-def problem(manifest: str | Path) -> str | None:
-    """이 기기에 등록된 기록이면 None, 아니면 거절 이유. 읽을 수 없으면 거절이다."""
+def problem(manifest: str | Path, *, data: bytes | None = None) -> str | None:
+    """이 기기에 등록된 기록이면 None, 아니면 거절 이유. 읽을 수 없으면 거절이다.
+
+    data는 호출한 쪽이 이미 읽어 적격성을 판단한 그 바이트다. 주면 파일을 다시 읽지 않는다 — 한 허가 판단 안에서
+    적격성과 등록이 서로 다른 판을 보지 않게 한다(구조 검토 AH-08)."""
     here = fingerprint()
     if here is None:
         return "this machine has no /etc/machine-id; observation records can only be registered on Linux/WSL"
     try:
         entries = _load()["entries"]
-        mine = digest(manifest)
+        mine = hashlib.sha256(data).hexdigest() if data is not None else digest(manifest)
     except (OSError, ValueError) as exc:
         return f"cannot check the local registration ({type(exc).__name__})"
     matches = [e for e in entries if isinstance(e, dict) and e.get("manifest_sha256") == mine]

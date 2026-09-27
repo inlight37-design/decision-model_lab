@@ -1,6 +1,6 @@
 """모의 모드의 가짜 CLI. 모델을 부르지 않고 aux-pc에서 받은 Claude·Codex 출력 형식을 흉내 낸다.
 
-  python fake_cli.py <claude|codex> <행동>  (질문은 stdin)
+  python fake_cli.py <claude|codex> <행동> [모델]  (질문은 stdin. 모델을 주면 Claude 흉내가 그 이름을 보고한다)
 
 행동: ok(곧 답함) · slow(오래 걸림) · fail(CLI 오류) · partial_input(1바이트만 읽고 stdin을 닫음, WM-01 —
 질문이 파이프 버퍼보다 클 때만 쓰는 쪽에서 드러난다) ·
@@ -34,7 +34,7 @@ def main() -> int:
     else:
         question = sys.stdin.buffer.read().decode("utf-8", errors="replace")
     time.sleep(DELAY[behavior])
-    model = f"mock-{flavor}"
+    model = sys.argv[3] if len(sys.argv) > 3 else f"mock-{flavor}"   # Codex 흉내는 실제처럼 모델을 보고하지 않는다
     if flavor == "claude":
         failed = behavior == "fail"
         print(json.dumps({

@@ -17,6 +17,7 @@ Host 머리글이 우리 주소가 아니면 거절한다(DNS rebinding).
 from __future__ import annotations
 
 import argparse
+from dataclasses import replace
 import hmac
 import json
 import math
@@ -35,7 +36,8 @@ if __package__ in (None, ""):  # `python app/server.py`로 실행해도 저장�
 from app.controller import CLI, MANUAL, Controller, ControllerError, MockExecutor, ParticipantSpec
 from app.report import ReportError, build_report, decision_report
 from app.store import LedgerBusy, Store, StoreError
-from app.live_config import Provider, load as load_live_config, validate as validate_providers
+from app.live_config import (CREDITS, INCLUDED, UNCONFIRMED, ModelChoice, Provider, load as load_live_config,
+                             validate as validate_providers)
 from app.account_quota import AccountQuota
 
 STATIC = Path(__file__).with_name("static")
@@ -57,6 +59,46 @@ PARTICIPANTS = {
     "antigravity-app": ParticipantSpec("antigravity-app", "Antigravity", "google", MANUAL),
 }
 BEHAVIORS = ("ok", "slow", "fail", "partial_input", "hang")
+# 모의 모드의 모델 고르기(카드 #119). 모델을 부르지 않고, 가짜 CLI가 고른 이름을 그대로 보고한다. 막힌 두 항목은
+# 추가 크레딧·미확인 모델이 화면에서 이유와 함께 막히는 모습을 보이려고 둔다.
+MOCK_MODEL_CHOICES = {
+    "claude": (ModelChoice("mock-claude", INCLUDED, "모의 — 모델 호출 없음"),
+               ModelChoice("mock-claude-large", INCLUDED, "모의 — 모델 호출 없음"),
+               ModelChoice("mock-claude-credits", CREDITS, "모의 — 추가 크레딧 경로라서 막히는 모습")),
+    "codex": (ModelChoice("mock-codex", INCLUDED, "모의 — 모델 호출 없음"),
+              ModelChoice("mock-codex-large", INCLUDED, "모의 — 모델 호출 없음"),
+              ModelChoice("mock-codex-unconfirmed", UNCONFIRMED, "모의 — 구독 포함 여부를 확인하지 않아 막히는 모습")),
+}
+
+
+def pid_of(adapter_id: str) -> str:
+    return "claude" if adapter_id == "claude-code" else "codex"
+
+
+def model_choices(providers) -> dict[str, tuple[ModelChoice, ...]]:
+    """화면에서 고를 수 있는 모델. 실제 연결은 provider마다 설정한 허용 목록, 모의는 위의 목록이다."""
+    return {pid_of(p.adapter_id): p.choices for p in providers} if providers else MOCK_MODEL_CHOICES
+
+
+def chosen_models(roster: dict, choices: dict, requested) -> dict:
+    """요청의 모델 선택을 허용 목록으로 확인해 이 실행의 명단 사본에 싣는다(카드 #119). 목록 밖이거나 막힌 모델은
+    거절한다 — 미리보기·시작 모두 원장을 쓰기 전이다. 다른 모델로 조용히 바꾸지 않는다."""
+    if requested is None:
+        return roster
+    if not isinstance(requested, dict):
+        raise ControllerError("models must map participant IDs to model names")
+    chosen = dict(roster)
+    for pid, model in requested.items():
+        spec, allowed = roster.get(pid), choices.get(pid, ())
+        if spec is None or spec.transport != CLI or not allowed:
+            raise ControllerError(f"{pid!r}에는 고를 모델이 없습니다.")
+        choice = next((c for c in allowed if c.model == model), None)
+        if choice is None:
+            raise ControllerError(f"{model!r}은(는) {spec.label}에 허용한 모델이 아닙니다.")
+        if not choice.usable:
+            raise ControllerError(f"{model}은(는) 구독 전용 정책에서 고를 수 없습니다 — {choice.basis}")
+        chosen[pid] = replace(spec, model=model)
+    return chosen
 MAX_BODY = 2 * 1024 * 1024
 # 준비 조회가 허가하지 않았다. argparse의 인자 오류가 2라서 같은 값을 쓰면 스크립트가 둘을 가르지 못한다(병합 검증 N3).
 EXIT_NOT_ELIGIBLE = 3
@@ -75,11 +117,14 @@ def _text(body: dict, key: str, default: str = "") -> str:
     return value
 
 
-def make_handler(controller: Controller, token: str, port: int, *, participants=None, account_quota=None):
+def make_handler(controller: Controller, token: str, port: int, *, participants=None, account_quota=None,
+                 choices=None):
     allowed_hosts = {f"127.0.0.1:{port}", f"localhost:{port}"}
     roster = dict(PARTICIPANTS if participants is None else participants)
     live = controller.executor.kind == "real"
     behaviors = ("ok",) if live else BEHAVIORS
+    # 실제 연결에 허용 목록을 넘기지 않았으면 고를 모델이 없다(명단의 기본 모델만). 모의 목록으로 채우지 않는다.
+    choices = dict(choices if choices is not None else ({} if live else MOCK_MODEL_CHOICES))
     account_quota = account_quota or AccountQuota(Path("."), enabled=False)
 
     class Handler(BaseHTTPRequestHandler):
@@ -171,6 +216,8 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                 self._json(200, account_quota.view())
             elif path == "/api/options":
                 self._json(200, {"participants": [dict(vars(p)) for p in roster.values()],
+                                 "model_choices": {pid: [c.public() for c in items] for pid, items in choices.items()
+                                                   if pid in roster},
                                  "behaviors": list(behaviors), "live": live,
                                  "context_unverified": bool(getattr(controller.executor,
                                                                      "allow_context_unverified", False))})
@@ -205,8 +252,10 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                     items = body.get("participants", [])
                     if not isinstance(items, list) or any(not isinstance(item, dict) for item in items):
                         raise ControllerError("participants must be an array of objects")
+                    # 고른 모델은 이 실행의 명단 사본에만 싣는다 — 격리 팀원과 오케스트레이터가 같은 사본을 쓴다
+                    run_roster = chosen_models(roster, choices, body.get("models"))
                     for item in items:
-                        spec = roster[item["pid"]]
+                        spec = run_roster[item["pid"]]
                         behavior = item.get("behavior", "ok")
                         if behavior not in behaviors:
                             raise ControllerError(f"unknown behavior {behavior!r}")
@@ -222,7 +271,7 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                                   quorum_policy=_text(body, "quorum_policy", "independent_only"),
                                   sources=[(item["name"], item["text"]) for item in sources],
                                   task_id=body.get("task_id"), task_title=body.get("task_title"),
-                                  role_board=body.get("role_board"), roster=roster, run_id=body.get("run_id"))
+                                  role_board=body.get("role_board"), roster=run_roster, run_id=body.get("run_id"))
                     if parts[-1] == "preview":
                         self._json(200, controller.prepare_run(_text(body, "question"), chosen, **kwargs))
                     else:
@@ -359,10 +408,11 @@ def live_setup(data_dir: Path, *, timeout: float, live_cli: str | None = None, i
                                inventories_by_adapter={p.adapter_id: p.inventory for p in providers},
                                allow_context_unverified=allow_context_unverified,
                                inputs_by_adapter={p.adapter_id: () if p.input_dir is None else (str(p.input_dir),)
-                                                  for p in providers})
+                                                  for p in providers},
+                               models_by_adapter={p.adapter_id: p.choices for p in providers})
         roster = {p.pid: p for p in PARTICIPANTS.values() if p.transport == MANUAL}
         for provider in providers:
-            pid = "claude" if provider.adapter_id == "claude-code" else "codex"
+            pid = pid_of(provider.adapter_id)
             roster[pid] = ParticipantSpec(**{**vars(PARTICIPANTS[pid]), "model": provider.model,
                                             "context_unverified": allow_context_unverified})
         call_budget = sum(p.call_budget for p in providers)
@@ -413,7 +463,8 @@ def serve(data_dir: Path, port: int, *, timeout: float = 20.0, live_cli: str | N
                          claude=(controller.claude_account_limit
                                  if any(p.adapter_id == "claude-code" for p in providers) else None))
     server.RequestHandlerClass = make_handler(controller, token, server.server_address[1],
-                                              participants=roster, account_quota=quota)
+                                              participants=roster, account_quota=quota,
+                                              choices=model_choices(providers))
     return server, token, controller
 
 

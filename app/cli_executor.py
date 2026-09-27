@@ -34,7 +34,7 @@ from pathlib import Path
 import re
 from typing import Callable, Mapping, Sequence
 
-from app import registration
+from app import live_config, registration
 from core import adapters, contract, eligibility, env as core_env, isolation, runner
 
 SUPPORTED = ("claude-code", "codex")
@@ -66,10 +66,12 @@ class CliExecutor:
                  max_output_bytes: int = runner.DEFAULT_MAX_OUTPUT, allow_context_unverified: bool = False,
                  default_inputs: Sequence[str] = (),
                  inputs_by_adapter: Mapping[str, Sequence[str]] | None = None,
-                 inventories_by_adapter: Mapping[str, str | Path] | None = None) -> None:
+                 inventories_by_adapter: Mapping[str, str | Path] | None = None,
+                 models_by_adapter: Mapping[str, tuple] | None = None) -> None:
         """never: 참여자에게 보이면 안 되는 경로(controller 데이터 폴더). inventory: 이 기기의 `runtime-inventory/2`
         기록 — 시도마다 다시 읽어 실행 허가를 계산한다. unchecked: 허가를 계산하지 않는다(관측 도구·시험만).
-        base_env: 실행 파일을 찾을 환경."""
+        base_env: 실행 파일을 찾을 환경. models_by_adapter: 지금의 모델 허용 목록(app.live_config.ModelChoice) —
+        계획마다 요청 모델을 다시 본다. 원장에 저장된 명세도 지금 목록 밖이면 시작 전에 거절된다(카드 #119)."""
         if inventory is None and not inventories_by_adapter and not unchecked:
             raise ValueError("the real CLI executor needs a runtime-inventory/2 record (inventory=...); "
                              "only observation tools and tests run it unchecked")
@@ -86,6 +88,7 @@ class CliExecutor:
         self.max_output_bytes = max_output_bytes
         self.allow_context_unverified = allow_context_unverified
         self.default_inputs = tuple(str(Path(p).resolve()) for p in default_inputs)
+        self.models_by_adapter = None if models_by_adapter is None else dict(models_by_adapter)
 
     def _check_context(self, adapter_id: str) -> None:
         """참여자 문맥에 실릴 개인 지시문이 있으면 시작하지 않는다(E2). 관측 도구도 거절한다 — 그 파일이 있는 채로 본
@@ -103,7 +106,9 @@ class CliExecutor:
                 return
             raise adapters.AdapterError("no inventory configured for this adapter")
         try:
-            record = eligibility.load(inventory)
+            # 한 번 읽은 바이트로 적격성과 등록을 함께 본다. 두 번 읽으면 그 사이에 바뀐 판이 섞일 수 있다(AH-08).
+            raw = Path(inventory).read_bytes()
+            record = eligibility.parse(raw)
         except (OSError, ValueError) as exc:
             raise adapters.AdapterError(f"cannot read the inventory: {type(exc).__name__}") from None
         verdict = eligibility.eligibility(record, adapter_id, enabled=True, today=date.today(),
@@ -111,7 +116,7 @@ class CliExecutor:
                                           allow_context_unverified=self.allow_context_unverified)
         if not verdict.eligible:
             raise adapters.AdapterError("not eligible to run: " + "; ".join(verdict.reasons))
-        unregistered = registration.problem(inventory)   # 실행 직전에도 이 기기의 등록을 다시 본다(카드 #71)
+        unregistered = registration.problem(inventory, data=raw)   # 실행 직전에도 이 기기의 등록을 다시 본다(카드 #71)
         if unregistered:
             raise adapters.AdapterError("not eligible to run: " + unregistered)
 
@@ -125,6 +130,13 @@ class CliExecutor:
         """
         if spec.adapter_id not in SUPPORTED:
             raise adapters.AdapterError(f"{spec.adapter_id!r} is not run by the CLI executor")
+        # 모델 허가: 화면이 고른 것이든 다시 연 원장의 대기 시도·저장된 합성자든, 지금의 목록으로 예약 전에 본다.
+        # 문서상 추가 크레딧 모델은 목록이 없어도 막는다. 다른 모델로 바꾸지 않는다.
+        refused = live_config.refusal(spec.adapter_id, spec.model or "",
+                                      None if self.models_by_adapter is None
+                                      else self.models_by_adapter.get(spec.adapter_id, ()))
+        if refused:
+            raise adapters.AdapterError(refused)
         inputs = self.inputs_by_adapter.get(spec.adapter_id, self.default_inputs) if inputs is None else tuple(inputs)
         exe = core_env.resolve(adapters.ADAPTERS[spec.adapter_id].command, self.child_env)
         # Claude는 읽을 폴더를 --add-dir로 알려 주고 Read 도구만 준다. Codex에는 그런 옵션을 주지 않는다 —

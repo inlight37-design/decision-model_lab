@@ -250,7 +250,7 @@ class ExecutorPolicyTests(cli_support.Base):
 
 class ServerLiveTests(unittest.TestCase):
     @unittest.skipUnless(sys.platform == "linux", "live server is Linux-only; no model/process in this test")
-    def test_live_startup_is_explicit_and_options_do_not_offer_mock_fallback_or_mutable_models(self):
+    def test_live_startup_is_explicit_and_options_offer_only_allowlisted_models(self):
         with tempfile.TemporaryDirectory() as root:
             srv, token, ctl = server.serve(Path(root), 0, live_cli="codex", inventory=Path(root)/"missing.json",
                                           model="full-explicit-model", call_budget=1, allow_context_unverified=True)
@@ -271,10 +271,16 @@ class ServerLiveTests(unittest.TestCase):
             self.assertEqual(options["behaviors"], ["ok"])
             native = [p for p in options["participants"] if p["transport"] == c.CLI]
             self.assertEqual([(p["pid"], p["model"]) for p in native], [("codex", "full-explicit-model")])
-            for item in ({"pid": "claude"}, {"pid": "codex", "behavior": "hang"}):
+            # 허용 목록 없이 준 단일 모델은 그 모델 하나만 고를 수 있다 — 모의 목록으로 채우지 않는다(카드 #119)
+            self.assertEqual([(m["model"], m["usable"]) for m in options["model_choices"]["codex"]],
+                             [("full-explicit-model", True)])
+            self.assertEqual(set(options["model_choices"]), {"codex"})
+            for item, models in (({"pid": "claude"}, None), ({"pid": "codex", "behavior": "hang"}, None),
+                                 ({"pid": "codex"}, {"codex": "mock-codex"}), ({"pid": "codex"}, {"codex": "other-model"})):
                 headers["Content-Type"] = "application/json"
                 connection.request("POST", "/api/runs", json.dumps({"question": "q", "participants": [item],
-                    "min_independent": 1, "quorum_policy": c.INCLUDE_UNVERIFIED}), headers)
+                    "min_independent": 1, "quorum_policy": c.INCLUDE_UNVERIFIED,
+                    **({"models": models} if models else {})}), headers)
                 response = connection.getresponse()
                 response.read()
                 self.assertEqual(response.status, 400)
