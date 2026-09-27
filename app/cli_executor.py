@@ -98,6 +98,12 @@ class CliExecutor:
             names = ", ".join("~/" + os.path.relpath(p, self.home) for p in found)
             raise adapters.AdapterError(f"Codex would add {names} to every participant's instructions; "
                                         "move it out of the Codex home to run Codex as a participant")
+        # 사용자 전역 훅 파일도 같다(카드 #111). 빈 파일·링크·폴더·확인 불가도 거절한다. 이름만 쓰고 내용은 읽지 않는다
+        hooks = adapters.codex_user_hooks(self.home) if adapter_id == "codex" else ()
+        if hooks:
+            names = ", ".join("~/" + os.path.relpath(p, self.home) for p in hooks)
+            raise adapters.AdapterError(f"Codex may run user hooks from {names} during every participant run; "
+                                        "move it out of the Codex home to run Codex as a participant")
 
     def _check_eligible(self, adapter_id: str, exe: str, revision: str) -> None:
         inventory = self.inventories_by_adapter.get(adapter_id, self.inventory)
@@ -137,6 +143,8 @@ class CliExecutor:
                                       else self.models_by_adapter.get(spec.adapter_id, ()))
         if refused:
             raise adapters.AdapterError(refused)
+        # 개인 지시문·사용자 훅 파일은 계획을 만들기 전에 본다 — 실행 직전(run)에도 다시 본다
+        self._check_context(spec.adapter_id)
         inputs = self.inputs_by_adapter.get(spec.adapter_id, self.default_inputs) if inputs is None else tuple(inputs)
         exe = core_env.resolve(adapters.ADAPTERS[spec.adapter_id].command, self.child_env)
         # Claude는 읽을 폴더를 --add-dir로 알려 주고 Read 도구만 준다. Codex에는 그런 옵션을 주지 않는다 —
@@ -150,7 +158,6 @@ class CliExecutor:
                                         codex_user_home=os.path.realpath(self.home))
         argv, changes = variant(list(built.argv)) if variant else (list(built.argv), [])
         built = dataclasses.replace(built, argv=tuple(argv))
-        self._check_context(spec.adapter_id)
         ro, rw, ro_at = isolation.participant_mounts(spec.adapter_id, exe, self.home)
         box = isolation.Sandbox(work_dir=work_dir, home=self.home, read_only=ro + tuple(inputs), read_write=rw,
                                 env=SANDBOX_ENV, never=self.never, read_only_at=ro_at)

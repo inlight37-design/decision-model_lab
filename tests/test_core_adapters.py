@@ -8,6 +8,7 @@ import sys
 import tempfile
 import tomllib
 import unittest
+from unittest import mock
 
 from core import adapters, runner
 from core.adapters import AdapterError, build_spec, child_env, interpret
@@ -132,6 +133,48 @@ class ArgvTests(unittest.TestCase):
             os.remove(os.path.join(codex, "AGENTS.md"))
             os.mkdir(os.path.join(codex, "AGENTS.md"))
             self.assertEqual(len(adapters.codex_global_instructions(home)), 2)
+
+    def test_codex_user_hooks_expectation_table(self):
+        """카드 #111(S4). 없음 → 통과, 빈 파일·내용 있는 파일·링크·폴더·확인 불가 → 남긴다(실행 전 거절). 내용은 읽지 않는다."""
+        with tempfile.TemporaryDirectory() as home:
+            codex = os.path.join(home, ".codex")
+            hooks = os.path.join(codex, "hooks.json")
+            self.assertEqual(adapters.codex_user_hooks(home), ())                 # .codex도 없다
+            open(codex, "w").close()
+            self.assertEqual(adapters.codex_user_hooks(home), ())                 # .codex가 파일이면 그 안도 없다
+            os.remove(codex)
+            os.mkdir(codex)
+            self.assertEqual(adapters.codex_user_hooks(home), ())
+            open(hooks, "w").close()
+            self.assertEqual(adapters.codex_user_hooks(home), (hooks,))           # 빈 파일
+            with open(hooks, "w", encoding="utf-8") as f:
+                f.write("{}")
+            self.assertEqual(adapters.codex_user_hooks(home), (hooks,))
+            os.remove(hooks)
+            os.mkdir(hooks)
+            self.assertEqual(adapters.codex_user_hooks(home), (hooks,))           # 폴더
+            os.rmdir(hooks)
+            try:
+                os.symlink(os.path.join(home, "nowhere"), hooks)
+            except (OSError, NotImplementedError):
+                pass   # 이 플랫폼에서 링크를 만들 권한이 없다 — Linux CI가 본다
+            else:
+                self.assertEqual(adapters.codex_user_hooks(home), (hooks,))       # 깨진 링크도
+                os.remove(hooks)
+            with mock.patch.object(adapters.os, "lstat", side_effect=PermissionError("denied")):
+                self.assertEqual(adapters.codex_user_hooks(home), (hooks,))       # 확인 불가
+            with open(hooks, "w", encoding="utf-8") as f:
+                f.write("{}")
+            with mock.patch("builtins.open", side_effect=AssertionError("must not read")):   # 파일이 있어도 읽지 않는다
+                self.assertEqual(adapters.codex_user_hooks(home), (hooks,))
+            target = os.path.join(home, "real-hooks.json")
+            os.replace(hooks, target)
+            try:
+                os.symlink(target, hooks)
+            except (OSError, NotImplementedError):
+                pass
+            else:
+                self.assertEqual(adapters.codex_user_hooks(home), (hooks,))       # 정상 링크도
 
     def test_codex_config_exception_is_only_the_values_of_this_run(self):
         define, select = adapters.codex_permissions("/home/u")
