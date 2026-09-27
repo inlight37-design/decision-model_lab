@@ -18,6 +18,27 @@ DELAY = {"ok": 1.2, "slow": 6.0, "fail": 0.8, "partial_input": 0.8, "hang": 3600
 REFINE_MARKER = "[다듬기 요청]"   # app/refine.py의 MARKER와 같은 줄. 이 가짜는 격리 안에서 app 패키지 없이 돈다
 NEXT_MARKER = "[다음 단계 제안 요청]"   # app/next_step.py의 MARKER와 같은 줄
 SPLIT_MARKER = "[분담 제안 요청]"   # app/split.py의 MARKER와 같은 줄
+COLLATE_MARKER = "[결과 모으기 요청]"   # app/collate.py의 MARKER와 같은 줄
+
+
+def collate_reply(question: str) -> str:
+    """결과 모으기 지시문에 모의 JSON으로 답한다. 팀원마다 결과의 첫 줄을 글자 그대로 인용하고, 인용 없는 주장 하나를
+    덧붙인다 — 화면의 원문 일치·원문에 없음 표시를 확인하려는 것이다. 이번 경계 표식이 붙은 경계 줄만 믿는다."""
+    nonce = question.split("이번 경계 표식: ", 1)[-1].split("\n", 1)[0].strip()
+    claims = []
+    for line in question.splitlines():
+        if not (line.startswith("<<<") and line.endswith(f" 시작 {nonce}>>>")):
+            continue
+        label = line[3:].split(" ", 1)[0]
+        body = question.split(line + "\n", 1)[-1].split(f"\n<<<{label} 끝 {nonce}>>>", 1)[0]
+        body = body.split("결과:\n", 1)[-1]
+        first = next((row for row in body.splitlines() if row.strip()), "")
+        if first and not first.startswith("(결과 없음"):
+            claims.append({"statement": f"[모의 취합] {label}의 결과 첫 줄", "quotes": [{"member": label, "text": first}]})
+    claims.append({"statement": "[모의 취합] 원문에 없는 추가 주장(표시 확인용)", "quotes": []})
+    return json.dumps({"claims": claims, "overlaps": ["모의: 겹침·어긋남은 사람이 판단한다(실제 취합 아님)"],
+                       "gaps": ["모의: 아무도 비용을 다루지 않았다"], "next": ["모의: 각 결과를 원문으로 읽고 판단"]},
+                      ensure_ascii=False)
 
 
 def split_reply(question: str) -> str:
@@ -55,6 +76,8 @@ def answer(flavor: str, question: str) -> str:
         return next_reply(question)
     if question.startswith(SPLIT_MARKER):
         return split_reply(question)
+    if question.startswith(COLLATE_MARKER):
+        return collate_reply(question)
     digest = hashlib.sha256(question.encode("utf-8")).hexdigest()[:12]
     asked = question.split("질문:", 1)[-1].strip()
     first = asked.splitlines()[0][:80] if asked else "(빈 질문)"

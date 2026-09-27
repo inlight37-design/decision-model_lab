@@ -191,6 +191,30 @@ nodes.question.value="다음 질문"; assert.deepEqual(proposalBody(),{proposal:
 nodes.question.value="내가 고친 질문"; assert.deepEqual(proposalBody(),{});
 nodes.question.value="다음 질문"; roleBoard.input_mode="refine"; assert.deepEqual(proposalBody(),{});
 proposalLink=null; roleBoard.input_mode="original";
+// 결과 모으기(카드 #137): 모두 끝난 일반 실행에 오케스트레이터 모델이 있을 때만. 인용마다 원문 일치 배지, 사실 검증 안 함.
+const orch={pid:"a",label:"CLI A",transport:"cli",model:"m1"};
+const crun=(collations,extra={})=>({run_id:"g1",mode:"general",gate:{collected:true},role_config:{orchestrator:orch,general:[orch]},
+  participants:[{pid:"a",label:"CLI A"},{pid:"z",label:"CLI Z"}],collations,...extra});
+assert.equal(collationIsland(crun([],{role_config:{orchestrator:null}})),null);
+assert.equal(collationIsland(crun([],{gate:{collected:false}})),null);
+assert.equal(collationIsland(crun([],{mode:"isolated"})),null);
+const gathered={collation_id:"c1",state:"accepted",labels:{T1:"a",T2:"z"},reply:{claims:[
+  {statement:"둘 다 도입 찬성",support:"quoted",quotes:[{member:"T1",text:"찬성한다",source_check:"exact_match"},
+    {member:"T2",text:"지어낸 말",source_check:"not_found"}]},
+  {statement:"비용은 작다",support:"unsupported_addition",quotes:[]}],overlaps:["겹침 X"],gaps:["빈 곳 Y"],next:["다음 Z"],
+  checks:{quotes:2,exact_matches:1,unsupported_additions:1}}};
+const cisle=collationIsland(crun([gathered]));
+assert.ok(all(cisle).every(x=>x.kids.every(k=>typeof k!=="object"||isNode(k))));
+let ctext=text(cisle);
+for (const piece of ["둘 다 도입 찬성","원문 일치","T1 CLI A","찬성한다","원문에 없음","T2 CLI Z","원문에 없는 추가 주장",
+  "겹침 X","빈 곳 Y","다음 Z","사실 검증 안 함","(2/2)"]) assert.ok(ctext.includes(piece), piece);
+ctext=text(collationIsland(crun([gathered,gathered])));
+assert.ok(!ctext.includes("(3/2)") && !ctext.includes("호출 1회"));
+ctext=text(collationIsland(crun([{collation_id:"c2",state:"unknown",labels:{}}])));
+assert.ok(ctext.includes("종료 미확인") && ctext.includes("종료를 직접 확인했음") && !ctext.includes("호출 1회"));
+ctext=text(collationIsland(crun([{collation_id:"c3",state:"rejected",status:"format_error",reason:"JSON 아님",raw:{text:"RAW_C"},labels:{}}])));
+assert.ok(ctext.includes("형식 검사 실패") && ctext.includes("RAW_C"));
+assert.ok(!text(generalResults(crun([]))).includes("오케스트레이터는 나"));
 // 분담 제안(카드 #135): 오케스트레이터 칸에 CLI 카드가 있을 때만 버튼. 제안이 오면 팀원별 칸을 채우고,
 // 같은 목표·팀원·자료로 보낼 때만 제안을 붙인다.
 roleOptions={participants:sroster,live:false,behaviors:["ok"]};

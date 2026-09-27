@@ -620,10 +620,11 @@ function refinementLog(ref) {
 }
 // 일반 팀원 작업의 결과 모음. 끝난 팀원의 답은 바로 보인다(봉인 없음). 독립·정족수 라벨을 붙이지 않는다.
 function generalResults(run) {
-  const collected = (run.gate || {}).collected;
-  return island("팀원 결과 · 오케스트레이터는 나", [h("p", { class: "sm muted" }, collected
-      ? "모든 팀원이 끝났습니다. 결과를 모아 보고 아래에서 판단 완료를 하세요. 합성은 부르지 않습니다."
-      : "끝나는 대로 결과가 보입니다. 모두 끝나면 판단 완료를 할 수 있습니다."),
+  const collected = (run.gate || {}).collected, orch = run.role_config && run.role_config.orchestrator;
+  return island(orch ? "팀원 결과" : "팀원 결과 · 오케스트레이터는 나", [h("p", { class: "sm muted" }, !collected
+      ? "끝나는 대로 결과가 보입니다. 모두 끝나면 판단 완료를 할 수 있습니다."
+      : orch ? "모든 팀원이 끝났습니다. 아래에서 오케스트레이터에게 결과 모으기를 맡길 수 있습니다. 판단은 내가 합니다."
+      : "모든 팀원이 끝났습니다. 결과를 모아 보고 아래에서 판단 완료를 하세요. 합성은 부르지 않습니다."),
     h("div", { class: "task-grid island-part" }, run.participants.map(p => {
       const failed = p.state === "rejected" || p.state === "unknown";
       return h("section", { class: "cell stack" },
@@ -633,6 +634,48 @@ function generalResults(run) {
           : failed ? h("p", { class: "sm cell cell-alert" }, "결과 없음 · " + (p.detail || p.status || "이유 미확인"))
           : h("p", { class: "sm muted" }, p.state === "queued" ? "시작을 기다립니다." : "작업 중입니다."));
     }))]);
+}
+// ---- 결과 모으기(카드 #137) ----------------------------------------------------------------------------------
+// 모두 끝난 일반 실행에서, 역할판에 오케스트레이터 모델이 있을 때만 보인다. 인용이 결과 원문과 글자 그대로 맞는지만
+// 표시한다 — 맞는 말인지(사실)는 확인하지 않는다. 판단은 내가 한다.
+const COLLATION_STATE = { running: "모으는 중", unknown: "종료 미확인" };
+const QUOTE_CHECK = { exact_match: "원문 일치", not_found: "원문에 없음" };
+function collationList(title, items) {
+  return items.length ? [h("p", { class: "cap muted" }, title), h("ul", { class: "stack" }, items.map(x => h("li", { class: "sm" }, x)))] : null;
+}
+function collationCard(run, col) {
+  const label = col.state === "accepted" ? "모음" : col.state === "rejected" ? (col.status === "format_error" ? "형식 검사 실패" : "실패")
+    : COLLATION_STATE[col.state] || col.state;
+  const who = tag => { const p = run.participants.find(x => x.pid === col.labels[tag]); return p ? `${tag} ${p.label}` : `${tag}(없는 이름표)`; };
+  const r = col.reply;
+  const body = r ? [h("p", { class: "cap muted" }, `인용 ${r.checks.quotes}개 중 원문 일치 ${r.checks.exact_matches}개 · ` +
+        `원문에 없는 추가 주장 ${r.checks.unsupported_additions}개 · 사실 검증 안 함`),
+      ...r.claims.map(cl => h("div", { class: "cell stack" },
+        h("div", { class: "row between" }, h("p", { class: "sm strong" }, cl.statement),
+          badge(cl.support === "quoted" ? "원문 인용 있음" : "원문에 없는 추가 주장")),
+        cl.quotes.map(q => h("div", { class: "row" }, badge(QUOTE_CHECK[q.source_check] || q.source_check),
+          h("span", { class: "sm" }, `${who(q.member)} · "${q.text}"`))))),
+      collationList("겹침·어긋남", r.overlaps), collationList("빈 곳", r.gaps), collationList("다음 할 일(제안)", r.next)]
+    : col.state === "unknown" ? [h("p", { class: "sm cell cell-alert" }, "끝났는지 확인하지 못했습니다. 자리를 차지하고 있어 새 호출을 막습니다."),
+      h("div", {}, h("button", { type: "button", class: "btn btn-danger", onclick: () => {
+        if (window.confirm("이 결과 모으기 호출의 프로세스가 모두 끝난 것을 직접 확인했습니까? 호출은 돌려받지 않습니다."))
+          act(`/api/collations/${col.collation_id}/acknowledge`);
+      } }, "종료를 직접 확인했음(호출은 돌려받지 않음)"))]
+    : col.state === "rejected" ? [h("p", { class: "sm cell cell-alert" }, "이 모음은 쓸 수 없습니다 · " + (col.reason || col.status || "이유 미확인")),
+      col.raw ? h("pre", { class: "input-full" }, col.raw.text) : null]
+    : h("p", { class: "sm muted" }, "오케스트레이터가 팀원 결과를 읽는 중입니다.");
+  return h("section", { class: "cell stack" }, h("div", { class: "row between" }, h("span", { class: "sm strong" }, "결과 모으기"), badge(label)), body);
+}
+function collationIsland(run) {
+  const orch = run.role_config && run.role_config.orchestrator;
+  if (!orch || run.mode !== "general" || !(run.gate || {}).collected) return null;
+  const items = run.collations || [], busy = items.some(x => x.state === "running" || x.state === "unknown");
+  return island(`결과 모으기 · ${orch.label}`, [
+    h("p", { class: "sm muted" }, "오케스트레이터에게 팀원마다 맡긴 일과 결과 원문만 보냅니다(자료 원문은 보내지 않음). 주장마다 결과의 문장을 " +
+      "그대로 인용하게 하고, 인용이 결과와 글자 그대로 맞는지만 확인합니다 — 맞는 말인지는 확인하지 않습니다. 판단은 내가 합니다."),
+    ...items.map(x => collationCard(run, x)),
+    !busy && items.length < 2 ? h("div", { class: "island-part" }, h("button", { type: "button", class: "btn",
+      onclick: () => act(`/api/runs/${run.run_id}/collate`) }, `결과 모으기 · 호출 1회 (${items.length + 1}/2)`)) : null]);
 }
 function humanComparison(run) {
   return island("원문 대조표 · 오케스트레이터는 나", [h("p", { class: "sm muted" }, "합성 호출 없이 공개된 답을 그대로 나란히 봅니다. 판단과 다음 실행은 내가 정합니다."),

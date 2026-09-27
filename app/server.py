@@ -365,6 +365,11 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                 elif len(parts) == 4 and parts[:2] == ["api", "proposals"] and parts[3] == "acknowledge":
                     controller.acknowledge_proposal_unknown(parts[2])
                     self._json(200, {"ok": True})
+                elif len(parts) == 4 and parts[:2] == ["api", "runs"] and parts[3] == "collate":   # 호출 1회
+                    self._json(200, {"collation_id": controller.collate(parts[2])})
+                elif len(parts) == 4 and parts[:2] == ["api", "collations"] and parts[3] == "acknowledge":
+                    controller.acknowledge_collation_unknown(parts[2])
+                    self._json(200, {"ok": True})
                 elif parts == ["api", "resume"]:
                     controller.resume()
                     self._json(200, {"ok": True})
