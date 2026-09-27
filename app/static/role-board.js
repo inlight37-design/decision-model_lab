@@ -38,8 +38,9 @@ function boardWarnings(board, roster) {
   if (board.orchestrator.length > 1) warnings.push("오케스트레이터는 한 장만 배치하세요.");
   const assigned = Object.keys(ROLE_LABELS).flatMap(slot => board[slot]).map(id => roster.find(p => p.pid === id));
   if (assigned.some(p => !p)) warnings.push("현재 명단에 없는 카드가 있습니다.");
-  // 슈퍼바이저는 팀원과 같은 카드여도 된다(위의 주의). provider당 한 장 규칙은 팀원·오케스트레이터에만 적용한다.
-  const known = ["orchestrator", "isolated", "general"].flatMap(slot => board[slot]).map(find).filter(Boolean);
+  // 슈퍼바이저는 팀원과 같은 카드여도 된다(위의 주의). provider당 한 장 규칙은 격리 실행에서는 팀원·오케스트레이터에,
+  // 일반 작업에서는 팀원에만 적용한다 — 일반 작업의 오케스트레이터는 분담만 제안하고 팀원과 같은 카드여도 된다(#135).
+  const known = (general ? ["general"] : ["orchestrator", "isolated"]).flatMap(slot => board[slot]).map(find).filter(Boolean);
   if (new Set(known.map(p => p.provider)).size < known.length) warnings.push("같은 provider 두 장은 아직 지원하지 않습니다. provider당 한 장만 배치하세요.");
   if (board.orchestrator.some(id => roster.find(p => p.pid === id)?.transport === "manual"))
     warnings.push("A 단계 오케스트레이터는 CLI 합성자만 지원합니다. 원본 앱은 격리 칸에 놓으세요.");

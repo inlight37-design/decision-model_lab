@@ -36,6 +36,8 @@ assert.deepEqual(original.isolated,[]); assert.deepEqual(placed.isolated,["a"]);
 assert.deepEqual(placeRole(placed,"a","isolated").isolated,["a"]);
 assert.equal(boardWarnings(placed,roster).length,0);
 assert.ok(boardWarnings(placeRole(placed,"c","orchestrator"),roster).join(" ").includes("같은 provider"));
+// 일반 작업의 오케스트레이터는 팀원과 같은 카드여도 된다(분담만 제안, #135) — 서버와 같은 규칙
+assert.ok(!boardWarnings({...emptyBoard(),general:["a"],orchestrator:["a"]},roster).join(" ").includes("같은 provider"));
 assert.ok(boardWarnings(placeRole(placed,"b","general"),roster).join(" ").includes("CLI 카드만"));
 assert.ok(boardWarnings(placeRole(placed,"a","general"),roster).join(" ").includes("함께 쓰지 않습니다"));
 assert.equal(boardWarnings(placeRole(emptyBoard(),"a","general"),roster).length,0);
