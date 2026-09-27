@@ -49,6 +49,23 @@ class ProjectionTests(unittest.TestCase):
         self.assertTrue(lifecycle)
         self.assertNotIn('x' * 20, json.dumps(view))
 
+    def test_the_synthesis_lifecycle_is_read_once_per_view(self):
+        # 카드 #121(S6): 실행 수와 상관없이 한 번의 조회가 합성 이력을 한 번만 읽고, 실행별·전역 투영이 나눠 쓴다
+        rids = [self.create(f'q{i}') for i in range(3)]
+        with self.store.tx() as tx:
+            for rid in rids:
+                tx.event(rid, 'synthesis_started', attempt=f'a-{rid}')
+        for target in (None, rids[0]):
+            sql = []
+            self.store._db.set_trace_callback(sql.append)
+            try:
+                self.ctl.view(target)
+            finally:
+                self.store._db.set_trace_callback(None)
+            lifecycle = [q for q in sql if q.startswith('SELECT run_id, kind, payload FROM events')]
+            with self.subTest(target=target):
+                self.assertEqual(len(lifecycle), 1)
+
     def test_one_run_projection_does_not_materialize_other_runs(self):
         first, second = self.create('first'), self.create('second')
         sql = []

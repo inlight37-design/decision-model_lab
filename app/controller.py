@@ -730,8 +730,10 @@ class Controller:
         return sum(self.store.row(f"SELECT COUNT(*) AS n FROM {seat.table} WHERE state IN ({marks})", *states)["n"]
                    for seat in SEATS)
 
-    def _slots_used(self) -> int:
-        return sum(item["status"] in (RUNNING, UNKNOWN) for item in self._synthesis_attempts().values()) + self.store.row(
+    def _slots_used(self, attempts: dict | None = None) -> int:
+        """attempts: 같은 요청에서 이미 만든 전역 합성 이력(view가 한 번 만들어 넘긴다, S6). 없으면 새로 읽는다."""
+        attempts = self._synthesis_attempts() if attempts is None else attempts
+        return sum(item["status"] in (RUNNING, UNKNOWN) for item in attempts.values()) + self.store.row(
             "SELECT COUNT(*) AS n FROM participants WHERE state IN (?, ?)", RUNNING, UNKNOWN)["n"] + self._seat_count(
             RUNNING, UNKNOWN)
 
@@ -741,15 +743,16 @@ class Controller:
         return budget["used"] >= budget["cap"] or bool(self.provider_call_caps and (
             provider["cap"] is None or provider["used"] >= provider["cap"]))
 
-    def _unknown_slots(self) -> int:
-        """종료를 확인하지 못해 자리를 쥔 시도: 참여자·합성·상위 모델 호출(다듬기·제안·분담·모으기)."""
+    def _unknown_slots(self, attempts: dict | None = None) -> int:
+        """종료를 확인하지 못해 자리를 쥔 시도: 참여자·합성·상위 모델 호출(다듬기·제안·분담·모으기·검토)."""
+        attempts = self._synthesis_attempts() if attempts is None else attempts
         return (self.store.row("SELECT COUNT(*) AS n FROM participants WHERE state = ?", UNKNOWN)["n"]
-                + sum(item["status"] == UNKNOWN for item in self._synthesis_attempts().values())
+                + sum(item["status"] == UNKNOWN for item in attempts.values())
                 + self._seat_count(UNKNOWN))
 
-    def unsettled(self) -> int:
+    def unsettled(self, attempts: dict | None = None) -> int:
         with self.lock:
-            return self._unknown_slots() + runner.lingering()
+            return self._unknown_slots(attempts) + runner.lingering()
 
     def call_budget(self, adapter_id: str | None = None) -> dict[str, int | None]:
         """실제 CLI를 시작하기 전에 원장에 예약한다. 재시작·실패·취소로 환불하지 않는다(계정 잔여와 다름)."""
@@ -1891,6 +1894,9 @@ class Controller:
         """
         with self.lock:
             runs = []
+            # 합성 이력은 요청 하나에서 한 번만 만들어 실행별·전역 투영이 나눠 쓴다(카드 #121, S6). 같은 lock 안이라
+            # 요청 사이의 캐시가 아니다 — 매 요청 새로 읽는다
+            every = self._synthesis_attempts()
             query = "SELECT * FROM runs" + (" WHERE run_id = ?" if run_id is not None else "")
             for run in self.store.rows(query + " ORDER BY created_at DESC", *(() if run_id is None else (run_id,))):
                 rows = self.store.rows("SELECT * FROM participants WHERE run_id = ? ORDER BY rowid", run["run_id"])
@@ -1903,6 +1909,9 @@ class Controller:
                 assigned = {row["pid"]: row for row in self.store.rows(
                     "SELECT * FROM assignments WHERE run_id = ?", run["run_id"])} if general else {}
                 parts, calls = [], {"succeeded": 0, "failed": 0, "unknown": 0}
+                # 받은 답은 실행마다 한 번에 읽는다(참여자마다 읽지 않는다, S6). 공개 뒤·일반 실행에만 싣는다
+                drafts = {d["pid"]: d for d in self.store.rows(
+                    "SELECT pid, source, sha256, text FROM drafts WHERE run_id = ?", run["run_id"])}                     if revealed or general else {}
                 for p in rows:
                     spec = ParticipantSpec(**json.loads(p["spec"]))
                     result = json.loads(p["result"]) if p["result"] else None
@@ -1931,8 +1940,7 @@ class Controller:
                     if current_gate.accepting and spec.transport == MANUAL and p["state"] == AWAITING_USER:
                         item["packet"] = packet(run["run_id"], spec.pid, run["input_sha256"], run["prompt"])
                     if (revealed or general) and p["state"] == ACCEPTED:
-                        draft = self.store.row("SELECT text, source, sha256 FROM drafts WHERE run_id = ? AND pid = ?",
-                                               run["run_id"], spec.pid)
+                        draft = drafts.get(spec.pid)
                         item["draft"] = draft["text"] if draft else None
                         item["draft_sha256"] = draft["sha256"] if draft else None
                     parts.append(item)
@@ -1989,14 +1997,15 @@ class Controller:
                                               "AND kind = 'synthesis_completed' ORDER BY seq DESC LIMIT 1", run["run_id"])
                     if artifact:
                         runs[-1]["synthesis"] = json.loads(artifact["payload"])["result"]
-                    runs[-1]["model_synthesis"] = self._model_synthesis_state(run["run_id"])
+                    mine = {key: item for key, item in every.items() if key[0] == run["run_id"]}
+                    runs[-1]["model_synthesis"] = self._model_synthesis_state(run["run_id"], mine)
                     runs[-1]["model_syntheses"] = [
                         {"attempt": attempt, "status": item["status"], "result": item["result"] or None}
-                        for (_, attempt), item in self._synthesis_attempts(run["run_id"]).items()]
-            unsettled = self.unsettled()
+                        for (_, attempt), item in mine.items()]
+            unsettled = self.unsettled(every)
             # 대기 시도를 controller가 지금 시작하지 않고, 사람이 무언가 해야 풀리는 이유(N3). pump()가 멈추는 두 조건에
             # 더해, 종료 미확인 시도가 병렬 자리를 모두 쥔 경우도 같다 — 진행 중인 시도가 끝나서 풀리는 자리가 아니다.
-            unknown_slots = self._unknown_slots()
+            unknown_slots = self._unknown_slots(every)
             held = "paused" if self.paused else ("unsettled" if unsettled >= self.unsettled_limit or (
                 unknown_slots and unknown_slots >= self.max_parallel) else None)
             tasks = task_projection(self.store.rows("SELECT * FROM tasks ORDER BY created_at DESC"), runs, held=held)
@@ -2018,7 +2027,7 @@ class Controller:
             return {"executor": self.executor.name, "live_call_budget": self.call_budget(), "tasks": tasks,
                     "refinements": refinements, "splits": splits,
                     "provider_call_budgets": {aid: self.call_budget(aid) for aid in self.provider_call_caps},
-                    "slots": {"used": self._slots_used(), "cap": self.max_parallel},
+                    "slots": {"used": self._slots_used(every), "cap": self.max_parallel},
                     "unsettled": {"count": unsettled, "limit": self.unsettled_limit},
                     "paused": self.paused, "runs": runs}
 
@@ -2084,9 +2093,10 @@ class Controller:
                 note = (memo or "").strip()
                 tx.event(run_id, "human_reviewed", revision=current, **({"memo": note} if note else {}))
 
-    def _model_synthesis_state(self, run_id: str) -> dict[str, Any] | None:
-        """같은 사건 투영으로 진행·실패·종료 미확인을 보인다. 과거 미확인 시도도 숨기지 않는다."""
-        attempts = self._synthesis_attempts(run_id)
+    def _model_synthesis_state(self, run_id: str, attempts: dict | None = None) -> dict[str, Any] | None:
+        """같은 사건 투영으로 진행·실패·종료 미확인을 보인다. 과거 미확인 시도도 숨기지 않는다. attempts: 이 실행의
+        합성 이력(view가 요청마다 한 번 만든 것에서 잘라 넘긴다). 없으면 새로 읽는다."""
+        attempts = self._synthesis_attempts(run_id) if attempts is None else attempts
         if not attempts:
             return None
         unknown = [attempt for (_, attempt), item in attempts.items() if item["status"] == UNKNOWN]
