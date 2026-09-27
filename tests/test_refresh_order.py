@@ -19,22 +19,25 @@ class RefreshOrderTests(unittest.TestCase):
         html = (ROOT / "app/static/index.html").read_text(encoding="utf-8")
         board = (ROOT / "app/static/role-board.js").read_text(encoding="utf-8")
         refresh = html[html.index("async function refresh("):html.index("async function loadOptions()")]
+        manual = html[html.index("async function refreshQuota()"):html.index('$("quotaRefresh").onclick')]
         confirm = board[board.index("async function confirmRun()"):board.index("function closeNewRun()")]
         script = r'''
 const vm = require("node:vm"), assert = require("node:assert/strict");
-const REFRESH = ''' + json.dumps(refresh) + ''', CONFIRM = ''' + json.dumps(confirm) + r''';
+const SOURCE = ''' + json.dumps(refresh + "\n" + manual + "\n" + confirm) + r''';
 const deferred = () => { let resolve, reject; const promise = new Promise((a, b) => { resolve = a; reject = b; });
   return {promise, resolve, reject}; };
+const settle = () => new Promise(r => setTimeout(r, 0));   // 한도 응답은 따로 적용된다 — 다음 차례까지 기다린다
 function page(api, extra = {}) {
   const nodes = {}, seen = {headers: 0, quotas: [], toasts: [], navigated: null, closed: false};
   const context = {state: {version: "old", runs: []}, connection: "", settledSeen: null, quotaSignature: null, seen, nodes,
+    refreshSent: 0, stateShown: 0, quotaShown: 0, refreshBusy: 0,   // 제품에서는 index.html 위쪽의 let
     api, render() {}, renderHeader() { seen.headers++; }, renderQuota(q) { seen.quotas.push(q); }, autoQuota() {},
     $: id => nodes[id] ||= {textContent: "", disabled: false, replaceChildren(...kids) { this.kids = kids; }},
     h: (tag, attrs, ...kids) => ({tag, kids}), toast(text) { seen.toasts.push(text); },
     closeNewRun() { seen.closed = true; }, renderPicked() {}, navigateTask(task, run) { seen.navigated = [task, run]; },
     ...extra};
   vm.createContext(context);
-  vm.runInContext(REFRESH + "\n" + CONFIRM, context);
+  vm.runInContext(SOURCE, context);
   return context;
 }
 const text = node => node && typeof node === "object" ? (node.kids || []).map(text).join(" ") : String(node);
@@ -62,9 +65,48 @@ for (const order of [["new", "old"], ["old", "new"]]) {
     answer[which][0].resolve({version: which, runs: []}); answer[which][1].resolve({which});
     await (which === "old" ? first : second);
   }
+  await settle();
   assert.equal(ctx.state.version, "new", "order " + order);
   assert.deepEqual(ctx.seen.quotas.at(-1), {which: "new"});
 }
+''')
+
+    def test_a_slow_quota_holds_neither_state_polling_nor_navigation(self):
+        # Codex 교차검토: 한도 조회가 끝나지 않으면 진행 중 표시가 남아 1초 조회가 멈추고 시작 뒤 이동도 기다렸다.
+        self.run_node(r'''
+let calls = 0;
+const never = new Promise(() => {});
+const run = {run_id: "new-run", task_id: "t-new", participants: []};
+const ctx = page(url => { calls++; return url === "/api/account-quota" ? never
+  : url === "/api/runs" ? Promise.resolve({run_id: "new-run"}) : Promise.resolve({version: calls, runs: [run]}); },
+  {previewRequest: {question: "q"}});
+assert.equal(await ctx.refresh(true), true);                    // 상태는 한도를 기다리지 않고 적용된다
+const before = calls;
+assert.equal(await ctx.refresh(true), true);                    // 다음 타이머도 건너뛰지 않는다
+assert.equal(calls, before + 2);
+await ctx.confirmRun();                                         // 시작 뒤 이동도 한도를 기다리지 않는다
+assert.deepEqual(ctx.seen.navigated, ["t-new", "new-run"]);
+''')
+
+    def test_poll_and_quota_button_responses_apply_in_send_order(self):
+        # Codex 교차검토: 조회 버튼의 새 값 뒤에 먼저 보낸 1초 조회의 한도 응답이 오면 새 값을 덮었다.
+        self.run_node(r'''
+for (const order of [["poll", "button"], ["button", "poll"]]) {
+  const quota = {}, stateReply = Promise.resolve({version: "s", runs: []});
+  const ctx = page(url => url === "/api/state" ? stateReply
+    : (quota[url === "/api/account-quota" ? "poll" : "button"] = deferred()).promise);
+  const poll = ctx.refresh(), button = ctx.refreshQuota();        // 1초 조회가 먼저, 조회 버튼이 나중
+  for (const which of order) { quota[which].resolve({which}); await settle(); }
+  await poll; await button;
+  assert.deepEqual(ctx.seen.quotas.at(-1), {which: "button"}, "order " + order);
+}
+// 조회 버튼이 실패하면 한도 칸에 적고 버튼을 되살린다
+const failed = page(url => url === "/api/account-quota/refresh" ? Promise.reject(new Error("down"))
+                                                                 : Promise.resolve({version: "s", runs: []}));
+await failed.refreshQuota();
+assert.ok(text(failed.nodes.accountQuota.kids[0]).includes("계정 한도를 조회하지 못했습니다"));
+assert.equal(failed.nodes.quotaRefresh.disabled, false);
+assert.equal(failed.nodes.quotaRefresh.textContent, "조회");
 ''')
 
     def test_a_quota_failure_does_not_block_the_run_state(self):
@@ -74,8 +116,9 @@ const ctx = page(url => url === "/api/state" ? Promise.resolve({version: "new", 
 assert.equal(await ctx.refresh(), true);
 assert.equal(ctx.state.version, "new");
 assert.equal(ctx.connection, "");                               // 연결 오류로 보지 않는다
+await settle();
 assert.ok(text(ctx.nodes.accountQuota.kids[0]).includes("계정 한도를 조회하지 못했습니다"));
-await ctx.refresh();
+await ctx.refresh(); await settle();
 assert.equal(ctx.quotaSignature, "failed");                     // 같은 안내를 매초 다시 그리지 않는다
 ''')
 
