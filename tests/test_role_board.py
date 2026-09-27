@@ -29,7 +29,8 @@ class RoleBoardTests(Base):
     def test_unsupported_layouts_leave_no_task_run_source_or_event(self):
         ctl = self.controller(SyntheticExecutor(), max_parallel=0)
         layouts = []
-        for field, value in (("supervisor", ["claude"]), ("general", ["claude"]),
+        # 슈퍼바이저 CLI 카드는 이제 원문 모드에서도 받는다(카드 #133). 원본 앱 카드는 여전히 거절한다
+        for field, value in (("supervisor", ["claude-app"]), ("general", ["claude"]),
                              ("orchestrator", ["codex"]), ("orchestrator", ["antigravity-app"]),
                              ("isolated", ["codex", "chatgpt-app"]), ("input_mode", "refine"),
                              ("orchestrator", ["claude", "antigravity-app"])):

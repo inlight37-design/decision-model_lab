@@ -30,7 +30,7 @@ function boardWarnings(board, roster) {
   if (board.supervisor.some(id => find(id)?.transport === "manual")) warnings.push("슈퍼바이저에는 CLI 카드만 놓을 수 있습니다.");
   if (board.supervisor.length && general) warnings.push("일반 팀원 작업의 다듬기는 아직 지원하지 않습니다. 격리 칸을 쓰거나 슈퍼바이저 칸을 비우세요.");
   const leaning = board.supervisor.map(find).filter(Boolean).filter(s => board.isolated.some(id => find(id)?.provider === s.provider));
-  if (leaning.length) warnings.push(`주의: 슈퍼바이저(${leaning[0].label})와 같은 회사의 격리 팀원이 있습니다. 다듬은 질문이 그쪽으로 기울 수 있습니다 — 막지는 않습니다.`);
+  if (leaning.length) warnings.push(`주의: 슈퍼바이저(${leaning[0].label})와 같은 회사의 격리 팀원이 있습니다. 다듬은 질문이나 다음 단계 제안이 그쪽으로 기울 수 있습니다 — 막지는 않습니다.`);
   if (general && board.isolated.length) warnings.push("격리 칸과 일반 칸은 한 실행에 함께 쓰지 않습니다(E 단계). 한쪽만 채우세요.");
   if (general && board.orchestrator.length) warnings.push("일반 팀원 작업의 오케스트레이터 모델은 D 단계에서 지원합니다. 비우면 내가 나누고 모읍니다.");
   if (board.general.some(id => roster.find(p => p.pid === id)?.transport === "manual"))
@@ -276,7 +276,8 @@ function roleCard(p, opt) {
 function chosenModels(board) {
   // 이번 실행에 놓은 CLI 카드의 모델. 서버가 허용 목록으로 다시 확인한다.
   const models = {};
-  for (const pid of [...board.isolated, ...(board.general || []), ...board.orchestrator]) {
+  // 슈퍼바이저 칸만 쓰는 카드도 넣는다 — 빠지면 역할판에 기본 모델이 고정된다(Codex 교차검토, PR #134)
+  for (const pid of [...(board.supervisor || []), ...board.isolated, ...(board.general || []), ...board.orchestrator]) {
     const select = $("m-" + pid);
     if (select) models[pid] = select.value;
   }
@@ -331,6 +332,7 @@ function showInputPreview(preview, body) {
       `${preview.quorum_policy === "independent_only" ? "독립성이 확인된 참여자만" : "미확인 답도 포함"} · 최소 ${preview.min_independent}명`),
     // replaceChildren은 null을 "null" 글자로 넣는다 — 다듬기가 없을 때는 아무것도 넣지 않는다(Codex 교차검토)
     ...(preview.refinement ? [refinementPair(preview.refinement.original, preview.question, true)] : []),
+    ...(preview.proposal ? [h("p", { class: "sm cell ask-cell" }, "이 질문은 앞 실행의 슈퍼바이저 제안에서 왔습니다. 시작하면 그 제안이 이 실행 하나에 묶입니다.")] : []),
     h("p", { class: "sm" }, `이번 실행: CLI 시작 최대 ${calls.draft_cli}회 · 수동 답 ${Object.keys(preview.manual_packets).length}개`),
     callLimitLine(calls),
     h("p", { class: "cap muted" }, orchestrator ? `${orchestrator.label}: 공개 뒤 기존 합성을 직접 눌러 실행합니다. ${calls.model_calls === 0 ? "모의 합성도 모델 호출 없음." : "누를 때마다 같은 원장 상한에서 1회 사용."}` :
@@ -435,6 +437,63 @@ function renderTaskPage() {
         run.action ? h("span", { class: "sm strong" }, run.action + " →") : null))))));
   }
   pressAll($("mainCol"));
+}
+// ---- 다음 단계 제안(카드 #133) --------------------------------------------------------------------------------
+// 제안에서 새 실행을 준비하면 그 제안을 기억한다. 보낼 질문이 제안한 질문 그대로일 때만 제안에 묶는다 — 고쳐 쓰면 내 질문이다.
+let proposalLink = null;
+const PROPOSAL_STATE = { running: "묻는 중", unknown: "종료 미확인" };
+function proposalCard(run, p) {
+  const label = p.state === "accepted" ? (p.reply.next === "again" ? "제안: 한 번 더" : "제안: 여기서 끝")
+    : p.state === "rejected" ? (p.status === "format_error" ? "형식 검사 실패" : "실패") : PROPOSAL_STATE[p.state] || p.state;
+  const body = p.reply ? h("div", { class: "cell ask-cell stack" },
+      h("p", { class: "cap strong" }, p.reply.next === "again" ? "슈퍼바이저 제안 · 질문을 바꿔 한 번 더" : "슈퍼바이저 제안 · 여기서 끝"),
+      h("p", { class: "sm" }, "이유: " + p.reply.reason),
+      p.reply.open_points.length ? h("ul", { class: "stack" }, p.reply.open_points.map(x => h("li", { class: "sm" }, "남은 쟁점: " + x))) : null,
+      p.reply.question ? [h("p", { class: "cap muted" }, "제안한 다음 질문"), h("pre", { class: "input-full" }, p.reply.question)] : null,
+      p.reply.next !== "again" ? h("p", { class: "cap muted" }, "끝낼지는 내가 정합니다. 아래에서 판단 완료를 누르세요.")
+        : p.used_by ? h("p", { class: "sm strong" }, "이 제안으로 새 실행을 만들었습니다.")
+        : h("div", {}, h("button", { type: "button", class: "btn btn-brand", onclick: () => prepareFromProposal(run, p) },
+            "이 질문으로 새 실행 준비(시작 전에 확인)")))
+    : p.state === "unknown" ? [h("p", { class: "sm cell cell-alert" }, "끝났는지 확인하지 못했습니다. 자리를 차지하고 있어 새 호출을 막습니다."),
+      h("div", {}, h("button", { type: "button", class: "btn btn-danger", onclick: () => {
+        if (window.confirm("이 제안 호출의 프로세스가 모두 끝난 것을 직접 확인했습니까? 호출은 돌려받지 않습니다."))
+          act(`/api/proposals/${p.proposal_id}/acknowledge`);
+      } }, "종료를 직접 확인했음(호출은 돌려받지 않음)"))]
+    : p.state === "rejected" ? [h("p", { class: "sm cell cell-alert" }, "이 제안은 쓸 수 없습니다 · " + (p.reason || p.status || "이유 미확인")),
+      p.raw ? h("pre", { class: "input-full" }, p.raw.text) : null]
+    : h("p", { class: "sm muted" }, "슈퍼바이저가 공개된 답을 읽는 중입니다.");
+  return h("section", { class: "cell stack" }, h("div", { class: "row between" }, h("span", { class: "sm strong" }, "다음 단계 제안"), badge(label)), body);
+}
+// 공개된 격리 실행에서, 역할판에 슈퍼바이저 모델이 있을 때만 보인다. 제안은 실행을 시작하지 않는다.
+function proposalIsland(run) {
+  const sup = run.role_config && run.role_config.supervisor;
+  if (!sup || run.mode === "general" || run.phase !== "revealed") return null;
+  const items = run.proposals || [], busy = items.some(p => p.state === "running" || p.state === "unknown");
+  return island(`슈퍼바이저 제안 · ${sup.label}`, [
+    h("p", { class: "sm muted" }, "공개된 답을 이름표(D1·D2)로만 보여 주고 '한 번 더'나 '여기서 끝'을 제안받습니다. 제안은 실행을 시작하지 않습니다 — " +
+      "'한 번 더'의 질문은 내가 확인하고 시작해야 새 실행이 됩니다."),
+    ...items.map(p => proposalCard(run, p)),
+    !busy && items.length < 2 ? h("div", { class: "island-part" }, h("button", { type: "button", class: "btn",
+      onclick: () => act(`/api/runs/${run.run_id}/propose`) }, `다음 단계 제안 받기 · 호출 1회 (${items.length + 1}/2)`)) : null]);
+}
+// 같은 작업의 새 실행 창을 같은 역할판·같은 모델·제안한 질문으로 연다. 시작은 내가 보낼 입력을 확인한 뒤에 한다.
+function prepareFromProposal(run, p) {
+  openNewRun(run.task_id);
+  const rc = run.role_config, pick = spec => spec ? [spec.pid] : [];
+  roleBoard = { ...emptyBoard(), supervisor: pick(rc.supervisor), orchestrator: pick(rc.orchestrator),
+                isolated: (rc.isolated || []).map(spec => spec.pid), input_mode: "original" };
+  for (const spec of [rc.supervisor, rc.orchestrator, ...(rc.isolated || [])].filter(Boolean)) {
+    const select = $("m-" + spec.pid);
+    if (select && spec.model) select.value = spec.model;
+  }
+  $("question").value = p.reply.question;
+  proposalLink = { id: p.proposal_id, question: p.reply.question };
+  renderRoleBoard(); updateSourceNote();
+  $("roleNotice").textContent = "슈퍼바이저 제안의 질문과 앞 실행의 역할판으로 채웠습니다. 질문을 고치면 제안과 묶지 않고 내 질문으로 보냅니다.";
+}
+function proposalBody() {
+  return proposalLink && roleBoard.input_mode === "original" && roleBoard.general.length === 0 &&
+    $("question").value.trim() === proposalLink.question ? { proposal: { id: proposalLink.id } } : {};
 }
 // 원래 목표(원문)와 실제로 보낸 질문을 나란히(요청서 P9). 같은 쪽으로 끌려간 질문을 사람이 알아보게 한다.
 function refinementPair(original, sent, before = false) {

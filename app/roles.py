@@ -24,13 +24,11 @@ def freeze(board, participants, roster):
         if not isinstance(board[slot], list) or any(not isinstance(pid, str) or pid not in roster
                                                    for pid in board[slot]):
             raise ValueError(f"{slot}: 현재 명단에 있는 참여자만 배치할 수 있습니다.")
-    # 슈퍼바이저 모델은 D 첫 조각(카드 #130)에서 다듬기만 한다. 팀 구성·다음 실행 제안은 아직 없다.
+    # 슈퍼바이저 모델은 다듬기(카드 #130)와 공개 뒤 다음 단계 제안(카드 #133)을 한다. 원문 모드에서는 제안만 한다.
     if len(board["supervisor"]) > 1:
         raise ValueError("슈퍼바이저는 한 장만 배치할 수 있습니다.")
     if board["supervisor"] and roster[board["supervisor"][0]].transport != CLI:
         raise ValueError("슈퍼바이저에는 CLI 카드만 놓을 수 있습니다. 원본 앱은 격리 칸에 놓으세요.")
-    if board["supervisor"] and board["input_mode"] != "refine":
-        raise ValueError("슈퍼바이저 모델은 지금 다듬기 모드에서만 일합니다. 다듬기를 고르거나 이 칸을 비우세요.")
     if board["input_mode"] == "refine" and not board["supervisor"]:
         raise ValueError("다듬기는 슈퍼바이저 칸에 모델이 있을 때만 고를 수 있습니다.")
     if len(board["orchestrator"]) > 1:
@@ -51,7 +49,7 @@ def freeze(board, participants, roster):
         result["orchestrator"] = asdict(spec)
     if board["supervisor"]:
         # 같은 provider의 격리 팀원은 막지 않는다 — 화면이 경고한다(RB-06). 예산은 provider 상한을 같이 쓴다.
-        result["supervisor"], result["input_mode"] = asdict(roster[board["supervisor"][0]]), "refine"
+        result["supervisor"], result["input_mode"] = asdict(roster[board["supervisor"][0]]), board["input_mode"]
     return result
 
 
@@ -88,13 +86,15 @@ def task_projection(tasks, runs, held=None):
             gate, parts = run["gate"], run["participants"]
             states = {p["state"] for p in parts}
             synth = (run.get("model_synthesis") or {}).get("status")
+            # 다음 단계 제안도 합성처럼 본다: 끝났는지 모르면 문제, 도는 중이면 작업 중(Codex 교차검토, PR #134)
+            asked = {p["state"] for p in run.get("proposals", [])}
             if run.get("mode") == "general":
                 status, action = _general_status(run, states, held)
-            elif "unknown" in states or synth == "unknown" or (synth == "failed" and not run["reviewed"]):
+            elif "unknown" in states or synth == "unknown" or "unknown" in asked or (synth == "failed" and not run["reviewed"]):
                 status, action = "problem", "종료·실패 확인"
             elif run["cancel_requested"] or gate["status"] == "quorum_blocked":
                 status, action = "problem", "실행 확인"
-            elif synth == "running":
+            elif synth == "running" or "running" in asked:
                 status, action = "working", None
             elif gate["can_submit"] and "awaiting_user" in states:
                 status, action = "my_turn", "원본 앱 답 붙여넣기"
@@ -113,9 +113,10 @@ def task_projection(tasks, runs, held=None):
             timeline.append({"run_id": run["run_id"], "question": run["question"],
                              "created_at": run["created_at"], "role_config": run["role_config"],
                              "status": status, "action": action,
-                             # 실행에 묶인 다듬기 차례도 이 작업이 쓴 호출이다(2026-09-27 실제 확인에서 빠진 것을 봄)
-                             "calls_used": max(run["budget"]["used"] + len(run.get("model_syntheses", [])),
-                                               run["budget"]["reserved"])
+                             # 실행에 묶인 다듬기 차례와 다음 단계 제안도 이 작업이 쓴 호출이다(2026-09-27 실제 확인에서
+                             # 다듬기 차례가 빠진 것을 봄). 제안의 실제 예약은 그 실행의 예약(reserved)에도 들어 있다
+                             "calls_used": max(run["budget"]["used"] + len(run.get("model_syntheses", []))
+                                               + len(run.get("proposals", [])), run["budget"]["reserved"])
                                            + len((run.get("refinement") or {}).get("turns", []))})
         latest = timeline[-1] if timeline else None
         if latest is None:

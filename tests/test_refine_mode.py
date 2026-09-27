@@ -237,7 +237,6 @@ class RefineTests(support.Base):
         ctl = self.controller(Refiner(), max_parallel=0)
         cases = [("original app", board("codex", supervisor=("claude-app",))),
                  ("two cards", board("codex", supervisor=("claude", "codex"))),
-                 ("supervisor in original mode", board("codex", mode="original")),
                  ("refine without supervisor", board("codex", supervisor=())),
                  ("general work", board(general=("codex",)))]
         for name, layout in cases:
