@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-27** · 작성 세션: claude(사용자 PC `DESKTOP-T0UDE01` — 역할판 D4 결과 모으기, 모델 호출 없음) · 브랜치 `claude/role-board-d4-20260927` · 기준 main `e5ed2c6`.
+최종 갱신 **2026-09-27** · 작성 세션: claude(사용자 PC `DESKTOP-T0UDE01` — D4 실제 확인, 모델 호출 Claude 2·Codex 1) · 브랜치 `claude/d4-live-record-20260927` · 기준 main `ba1a5b1`.
 
 이 파일은 **지금 상태와 다음 일만** 담는다. 끝난 일의 경위는 PR·git 이력과 날짜가 붙은 기록에 있고, 옛 판은 [docs/handoff/](docs/handoff/README.md)에 있다. **3절에는 진행 중인 일과 "이 판을 들인 PR" 한 줄만 둔다** — 새 PR은 그 줄을 자기 PR로 바꾸고, 병합 전에도 뒤에도 맞는 말만 쓴다("병합했다"고 미리 적지 않는다). 크기 상한과 3절의 모양은 CI가 본다. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있는 규칙은 여기 다시 적지 않는다 — 쌓임을 막는 원칙은 협업 규칙 7절이다.
 
@@ -23,7 +23,7 @@
 | 실제 실행 | 병렬·봉인·공개, 공통 자료, strict 독립 정족수, 실제 중도 취소와 자손 종료 확인, 실제 합성(실행마다 켬, 형식 실패 원문 보존, 이름표 순서는 실행마다 섞음). 자료 합계 약 490 KB는 둘 다 시간 안, **약 1 MiB는 Claude가 180초를 넘겼다**(Codex 24초) | [병렬](docs/reviews/2026-09-24-windows-live-completion/README.md) · [자료](docs/reviews/2026-09-24-source-snapshot/README.md) · [strict·취소](docs/reviews/2026-09-25-strict-live-run/README.md) · [합성](docs/reviews/2026-09-24-model-synthesis/README.md) · [1 MiB](docs/experiments/2026-09-25-1mib-sources/RESULTS.md) |
 | 계정 한도 | provider별 카드에 한도 창마다 쓴 비율의 게이지. Codex는 모델 없는 조회(버튼, 그리고 창을 보는 동안 값이 2~5분 지나면 화면이 저절로 — 서버는 1분에 한 번), Claude는 모델 없이 묻는 통로가 없어 마지막으로 끝난 실제 실행의 `rate_limit_event`. 봉인 중·모의 값은 쓰지 않는다 | [A·F](docs/reviews/2026-09-24-account-limits/README.md) |
 | 원장 | 실험은 aux-pc-wsl의 `~/.local/state/dml-*` — 모두 상한까지 썼고 새 실험은 새 원장. 앱 아이콘은 `~/.local/state/decision-model-lab/app/live/`의 원장을 호출이 남은 동안 이어 쓴다(원장당 Codex 5·Claude 5) | 각 기록 · [app 안내](app/README.md) |
-| 작업·역할판 A–D4 | 홈·작업 타임라인·역할판·입력 확인·결과. 상위 칸이 비면 나. CLI 카드마다 허용 목록의 모델(추론 강도 미연결). 격리 칸(봉인·정족수), 일반 칸(내가 나누고 모음), 슈퍼바이저(다듬기·공개 뒤 다음 단계 제안), 일반 작업의 오케스트레이터(분담 제안·결과 모으기). 상위 모델은 제안·모음만 하고 시작과 판단은 내가 한다 | [화면·원장 안내](app/README.md)(카드 번호도 거기). 모의 흐름과 C1–D3의 실제 모드를 2026-09-27 한 번씩 확인([C1·D1](docs/reviews/2026-09-27-c1-d1-live/README.md) · [D2·D3](docs/reviews/2026-09-27-d2-d3-live/README.md)). D4는 아직 모의로만 확인 |
+| 작업·역할판 A–D4 | 홈·작업 타임라인·역할판·입력 확인·결과. 상위 칸이 비면 나. CLI 카드마다 허용 목록의 모델(추론 강도 미연결). 격리 칸(봉인·정족수), 일반 칸(내가 나누고 모음), 슈퍼바이저(다듬기·공개 뒤 다음 단계 제안), 일반 작업의 오케스트레이터(분담 제안·결과 모으기). 상위 모델은 제안·모음만 하고 시작과 판단은 내가 한다 | [화면·원장 안내](app/README.md)(카드 번호도 거기). 모의 흐름과 C1–D3의 실제 모드를 2026-09-27 한 번씩 확인([C1·D1](docs/reviews/2026-09-27-c1-d1-live/README.md) · [D2·D3](docs/reviews/2026-09-27-d2-d3-live/README.md) · [D4](docs/reviews/2026-09-27-d4-live/README.md)). CLI 호출 중 이 PC의 GPU 사용은 없고 CPU 증가도 거의 없었다(D4 기록) |
 | 비교 실험 | L1: 같은 provider의 틀린 초안 대신 맞는 초안을 고른 사례 관측, 다른 과제는 보류. 합성의 일반적 이득은 미확립 | [L1](docs/experiments/2026-09-25-l1/RESULTS.md) · [D](docs/experiments/2026-09-24-comparison-pilot/RESULTS.md) · [D 후속](docs/experiments/2026-09-25-d-followup/RESULTS.md) |
 | 협업 | GitHub 이슈 카드 보드(시범 뒤 2026-09-27 채택, 규칙은 [협업 규칙](docs/COLLABORATION.md) 3절). 새 컴퓨터는 원터치 설치 | [시범 기록](docs/experiments/2026-09-25-card-pilot/README.md) · [SETUP](docs/SETUP.md) |
 | 한계·남은 일 | 못 고치는 것, 해야 할 일의 우선순위, 조사 거리를 한 장에 모았고 외부 검토를 받았다 | [검토 요청서](docs/reviews/2026-09-25-review-request/README.md) · [검토](docs/reviews/2026-09-25-review/README.md) |
@@ -65,7 +65,7 @@
 
 일은 `card` 라벨 이슈에서 [협업 규칙](docs/COLLABORATION.md) 3절의 보드 규칙대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #139](https://github.com/inlight37-design/decision-model_lab/pull/139)(`claude/role-board-d4-20260927`) — 역할판 D 넷째 조각([카드 #137](https://github.com/inlight37-design/decision-model_lab/issues/137)): 일반 작업의 오케스트레이터 결과 모으기(원문 인용 대조, 사실 검증 안 함), 원장 스키마 13. 모델 호출 없음.
+- **이 판을 들인 PR:** [PR #142](https://github.com/inlight37-design/decision-model_lab/pull/142)(`claude/d4-live-record-20260927`) — D4 실제 확인 기록과 그동안의 자원 사용. 모델 호출 Claude 2·Codex 1.
 
 | 사용자만 할 수 있는 것 | 지금 |
 |---|---|
@@ -80,7 +80,7 @@
 
 1. **2026-10-25 전 — V04-01 절차서를 정한다.** 쌓임 검사의 `PROCEDURES` 예외가 그날 끝난다(`tests/test_accumulation.py`) — 지나면 CI가 실패한다. WSL 참여자의 설치·관측 절차는 이미 [SETUP](docs/SETUP.md)에 있으니, 절차서가 아직 맡는 일(Windows CLI 조사, `probe.ps1`·`summarize_claude_init.py`)을 살아 있는 문서로 옮길지 은퇴시킬지 정하고 AGENTS.md의 가리킴을 맞춘다. 모델 호출 없음.
 2. **2026-10-27 전 — 주 PC 재관측**([SETUP 4절](docs/SETUP.md)의 절차, 모델 호출 Claude 2·Codex 3). main-pc-wsl은 10월 27일부터 만료이고, 이 PC의 세션만 관측·등록할 수 있다. 참여자 계획이나 CLI 판이 바뀌면 그때 바로 한다. 관측 기록은 `tools/w2/assemble.py`가 조립한다. 추론 강도를 연결하는 PR은 그 계획으로 바로 관측한다 — 이 날짜를 기다리지 않는다([역할판 검토](docs/reviews/2026-09-26-role-board-review/README.md) RB-01). 그 전에 [카드 #111](https://github.com/inlight37-design/decision-model_lab/issues/111)(S4 Codex 사용자 훅 방어)을 끝낸다. 파일 하나 검사로 전체 문맥 검증을 대신하지 않는다.
-3. **역할판 다음 조각 — 카드부터 만든다.** D 넷째 조각(#137, 결과 모으기)은 3절의 PR에 있다. 권하는 순서: D4 실제 확인(새 원장, 일반 팀원 2 + 모으기 1) → E 섞어 쓰기·최적화(공개 뒤 교차검토부터, [역할판 검토](docs/reviews/2026-09-26-role-board-review/README.md) §6). 카드에는 [리뷰 통합](docs/reviews/2026-09-26-review-consolidation/README.md) 6절 D·E 행을 완료 조건으로 옮긴다. 미룬 것 — P7 절약 규칙(계획이 바뀌어 재관측 필요), 문서함 공유, 일반 칸의 원본 앱 카드, 다듬은 문장 고쳐 쓰기, 슈퍼바이저의 팀 구성 제안 — 은 필요할 때 카드로 연다. S6([카드 #121](https://github.com/inlight37-design/decision-model_lab/issues/121))는 `controller.py`가 겹치니 같은 조각과 동시에 하지 않고, S5([카드 #120](https://github.com/inlight37-design/decision-model_lab/issues/120))는 따로 할 수 있다. **추론 강도는 연결하지 않았다** — 관측한 유한한 값만 넣고 그 계획으로 재관측해야 한다(RB-01).
+3. **역할판 다음 조각 — [카드 #140](https://github.com/inlight37-design/decision-model_lab/issues/140)(E1 공개 뒤 한 라운드 교차검토)부터.** 역할판 D(다듬기·제안·분담·모으기)는 모두 실제로 한 번씩 확인했다. E의 다음 조각도 카드부터 만든다([역할판 검토](docs/reviews/2026-09-26-role-board-review/README.md) §6). 카드에는 [리뷰 통합](docs/reviews/2026-09-26-review-consolidation/README.md) 6절 D·E 행을 완료 조건으로 옮긴다. 미룬 것 — P7 절약 규칙(계획이 바뀌어 재관측 필요), 문서함 공유, 일반 칸의 원본 앱 카드, 다듬은 문장 고쳐 쓰기, 슈퍼바이저의 팀 구성 제안 — 은 필요할 때 카드로 연다. S6([카드 #121](https://github.com/inlight37-design/decision-model_lab/issues/121))는 `controller.py`가 겹치니 같은 조각과 동시에 하지 않고, S5([카드 #120](https://github.com/inlight37-design/decision-model_lab/issues/120))는 따로 할 수 있다. **추론 강도는 연결하지 않았다** — 관측한 유한한 값만 넣고 그 계획으로 재관측해야 한다(RB-01).
 4. 새 카드가 필요하면 [카드 양식](.github/ISSUE_TEMPLATE/card.md)으로 만든다. 멈추거나 넘길 때는 체크포인트 다섯 줄을 쓴다.
 
 새 실험은 **헤드리스 실행** `python -m app.run`으로 한다 — 서버와 같은 준비 조회·원장·상한을 쓰고 결과 JSON 하나를 낸다([app 안내](app/README.md)의 "헤드리스 실행", 먼저 `--mock`으로 흐름 확인). 설정 파일의 모양은 같은 안내에, 만드는 예는 [D 후속의 make_configs.py](docs/experiments/2026-09-25-d-followup/make_configs.py)에 있다. 앞선 실험 폴더의 `drive.py`들은 그 기록으로 남는다.
