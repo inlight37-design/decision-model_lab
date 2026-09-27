@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-27** · 작성 세션: claude(사용자 PC `DESKTOP-T0UDE01` — 역할판 D 셋째 조각, 모델 호출 없음) · 브랜치 `claude/role-board-d3-20260927` · 기준 main `de19a7c`.
+최종 갱신 **2026-09-27** · 작성 세션: claude(사용자 PC `DESKTOP-T0UDE01` — D2·D3 실제 확인, 모델 호출 Claude 4·Codex 2) · 브랜치 `claude/d2-d3-live-record-20260927` · 기준 main `d713426`.
 
 이 파일은 **지금 상태와 다음 일만** 담는다. 끝난 일의 경위는 PR·git 이력과 날짜가 붙은 기록에 있고, 옛 판은 [docs/handoff/](docs/handoff/README.md)에 있다. **3절에는 진행 중인 일과 "이 판을 들인 PR" 한 줄만 둔다** — 새 PR은 그 줄을 자기 PR로 바꾸고, 병합 전에도 뒤에도 맞는 말만 쓴다("병합했다"고 미리 적지 않는다). 크기 상한과 3절의 모양은 CI가 본다. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있는 규칙은 여기 다시 적지 않는다 — 쌓임을 막는 원칙은 협업 규칙 7절이다.
 
@@ -23,7 +23,7 @@
 | 실제 실행 | 병렬·봉인·공개, 공통 자료, strict 독립 정족수, 실제 중도 취소와 자손 종료 확인, 실제 합성(실행마다 켬, 형식 실패 원문 보존, 이름표 순서는 실행마다 섞음). 자료 합계 약 490 KB는 둘 다 시간 안, **약 1 MiB는 Claude가 180초를 넘겼다**(Codex 24초) | [병렬](docs/reviews/2026-09-24-windows-live-completion/README.md) · [자료](docs/reviews/2026-09-24-source-snapshot/README.md) · [strict·취소](docs/reviews/2026-09-25-strict-live-run/README.md) · [합성](docs/reviews/2026-09-24-model-synthesis/README.md) · [1 MiB](docs/experiments/2026-09-25-1mib-sources/RESULTS.md) |
 | 계정 한도 | provider별 카드에 한도 창마다 쓴 비율의 게이지. Codex는 모델 없는 조회(버튼, 그리고 창을 보는 동안 값이 2~5분 지나면 화면이 저절로 — 서버는 1분에 한 번), Claude는 모델 없이 묻는 통로가 없어 마지막으로 끝난 실제 실행의 `rate_limit_event`. 봉인 중·모의 값은 쓰지 않는다 | [A·F](docs/reviews/2026-09-24-account-limits/README.md) |
 | 원장 | 실험은 aux-pc-wsl의 `~/.local/state/dml-*` — 모두 상한까지 썼고 새 실험은 새 원장. 앱 아이콘은 `~/.local/state/decision-model-lab/app/live/`의 원장을 호출이 남은 동안 이어 쓴다(원장당 Codex 5·Claude 5) | 각 기록 · [app 안내](app/README.md) |
-| 작업·역할판 A–D3 | 홈·작업 타임라인·역할판·입력 확인·결과. 상위 칸이 비면 나. CLI 카드마다 허용 목록의 모델(추론 강도 미연결). 격리 칸(봉인·정족수), 일반 칸(내가 나누고 모음), 슈퍼바이저(다듬기·공개 뒤 다음 단계 제안), 일반 작업의 오케스트레이터(분담 제안). 상위 모델은 제안만 하고 시작은 내가 한다 | [화면·원장 안내](app/README.md)(카드 번호도 거기). 모의 흐름과 C1·D1의 실제 모드를 2026-09-27 한 번씩 확인([기록](docs/reviews/2026-09-27-c1-d1-live/README.md)), D2·D3의 실제 모드는 미확인 |
+| 작업·역할판 A–D3 | 홈·작업 타임라인·역할판·입력 확인·결과. 상위 칸이 비면 나. CLI 카드마다 허용 목록의 모델(추론 강도 미연결). 격리 칸(봉인·정족수), 일반 칸(내가 나누고 모음), 슈퍼바이저(다듬기·공개 뒤 다음 단계 제안), 일반 작업의 오케스트레이터(분담 제안). 상위 모델은 제안만 하고 시작은 내가 한다 | [화면·원장 안내](app/README.md)(카드 번호도 거기). 모의 흐름과 C1–D3의 실제 모드를 2026-09-27 한 번씩 확인([C1·D1](docs/reviews/2026-09-27-c1-d1-live/README.md) · [D2·D3](docs/reviews/2026-09-27-d2-d3-live/README.md)) |
 | 비교 실험 | L1: 같은 provider의 틀린 초안 대신 맞는 초안을 고른 사례 관측, 다른 과제는 보류. 합성의 일반적 이득은 미확립 | [L1](docs/experiments/2026-09-25-l1/RESULTS.md) · [D](docs/experiments/2026-09-24-comparison-pilot/RESULTS.md) · [D 후속](docs/experiments/2026-09-25-d-followup/RESULTS.md) |
 | 협업 | GitHub 이슈 카드 보드(시범 뒤 2026-09-27 채택, 규칙은 [협업 규칙](docs/COLLABORATION.md) 3절). 새 컴퓨터는 원터치 설치 | [시범 기록](docs/experiments/2026-09-25-card-pilot/README.md) · [SETUP](docs/SETUP.md) |
 | 한계·남은 일 | 못 고치는 것, 해야 할 일의 우선순위, 조사 거리를 한 장에 모았고 외부 검토를 받았다 | [검토 요청서](docs/reviews/2026-09-25-review-request/README.md) · [검토](docs/reviews/2026-09-25-review/README.md) |
@@ -65,7 +65,7 @@
 
 일은 `card` 라벨 이슈에서 [협업 규칙](docs/COLLABORATION.md) 3절의 보드 규칙대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #136](https://github.com/inlight37-design/decision-model_lab/pull/136)(`claude/role-board-d3-20260927`) — 역할판 D 셋째 조각([카드 #135](https://github.com/inlight37-design/decision-model_lab/issues/135)): 일반 작업의 오케스트레이터 분담 제안, 원장 스키마 12. 모델 호출 없음.
+- **이 판을 들인 PR:** [PR #138](https://github.com/inlight37-design/decision-model_lab/pull/138)(`claude/d2-d3-live-record-20260927`) — D2·D3 실제 확인 기록. 모델 호출 Claude 4·Codex 2.
 
 | 사용자만 할 수 있는 것 | 지금 |
 |---|---|
