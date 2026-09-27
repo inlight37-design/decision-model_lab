@@ -86,13 +86,15 @@ def task_projection(tasks, runs, held=None):
             gate, parts = run["gate"], run["participants"]
             states = {p["state"] for p in parts}
             synth = (run.get("model_synthesis") or {}).get("status")
+            # 다음 단계 제안도 합성처럼 본다: 끝났는지 모르면 문제, 도는 중이면 작업 중(Codex 교차검토, PR #134)
+            asked = {p["state"] for p in run.get("proposals", [])}
             if run.get("mode") == "general":
                 status, action = _general_status(run, states, held)
-            elif "unknown" in states or synth == "unknown" or (synth == "failed" and not run["reviewed"]):
+            elif "unknown" in states or synth == "unknown" or "unknown" in asked or (synth == "failed" and not run["reviewed"]):
                 status, action = "problem", "종료·실패 확인"
             elif run["cancel_requested"] or gate["status"] == "quorum_blocked":
                 status, action = "problem", "실행 확인"
-            elif synth == "running":
+            elif synth == "running" or "running" in asked:
                 status, action = "working", None
             elif gate["can_submit"] and "awaiting_user" in states:
                 status, action = "my_turn", "원본 앱 답 붙여넣기"

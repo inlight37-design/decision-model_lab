@@ -276,7 +276,8 @@ function roleCard(p, opt) {
 function chosenModels(board) {
   // 이번 실행에 놓은 CLI 카드의 모델. 서버가 허용 목록으로 다시 확인한다.
   const models = {};
-  for (const pid of [...board.isolated, ...(board.general || []), ...board.orchestrator]) {
+  // 슈퍼바이저 칸만 쓰는 카드도 넣는다 — 빠지면 역할판에 기본 모델이 고정된다(Codex 교차검토, PR #134)
+  for (const pid of [...(board.supervisor || []), ...board.isolated, ...(board.general || []), ...board.orchestrator]) {
     const select = $("m-" + pid);
     if (select) models[pid] = select.value;
   }

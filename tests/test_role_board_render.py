@@ -48,6 +48,7 @@ assert.ok(text(pickModel).includes("추가 크레딧"));
 assert.ok(!all(roleCard(roster[1],{...roleOptions,model_choices:listed})).some(x=>x.tag==="select"));   // 원본 앱은 고를 모델이 없다
 nodes["m-a"]={value:"m1"};
 assert.deepEqual(chosenModels({isolated:["a"],orchestrator:[]}),{a:"m1"});
+assert.deepEqual(chosenModels({supervisor:["a"],isolated:[],orchestrator:[]}),{a:"m1"});   // 슈퍼바이저 칸만 쓰는 카드(PR #134 검토)
 assert.ok(roleSummary({isolated:[{label:"CLI A",transport:"cli",model:"m1"}]}).includes("CLI A(m1)"));
 const card=roleCard(roster[0],roleOptions);
 const choose=all(card).find(x=>x.attrs.id==="card-a");

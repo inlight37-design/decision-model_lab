@@ -166,6 +166,36 @@ class NextStepTests(support.Base):
         ctl.mark_reviewed(rid, run["result_revision"], memo="제안 없이 끝")
         self.assertTrue(self.run_view(ctl, rid)["reviewed"])
 
+    def test_the_task_shows_a_running_or_unconfirmed_proposal_even_after_review(self):
+        # 판단 완료한 작업에 제안을 부르면 끝남으로 남지 않는다(Codex 교차검토, PR #134)
+        ex = Proposer(hold=("supervisor",))
+        ctl = self.controller(ex)
+        rid = self.revealed(ctl)
+        ctl.mark_reviewed(rid, self.run_view(ctl, rid)["result_revision"])
+        self.assertEqual(ctl.view()["tasks"][0]["status"], "done")
+        pid = ctl.propose_next(rid)
+        self.assertTrue(support.wait_for(lambda: self.proposals(ctl, rid)[0]["state"] == c.RUNNING))
+        self.assertEqual(ctl.view()["tasks"][0]["status"], "working")
+        ex.outcomes = {"supervisor": "unknown"}
+        ex.release("supervisor")
+        self.assertTrue(ctl.wait_idle())
+        task = ctl.view()["tasks"][0]
+        self.assertEqual((task["status"], task["runs"][0]["action"]), ("problem", "종료·실패 확인"))
+        ctl.acknowledge_proposal_unknown(pid)
+        self.assertNotEqual(ctl.view()["tasks"][0]["status"], "problem")
+
+    def test_a_supervisor_only_card_keeps_the_model_chosen_for_it(self):
+        # 슈퍼바이저 칸에만 둔 카드의 모델이 역할판에 고정된다 — 제안도 그 모델로 부른다
+        ex = Proposer()
+        ctl = self.controller(ex)
+        roster = server.chosen_models(ROSTER, server.MOCK_MODEL_CHOICES, {"claude": "mock-claude-large"})
+        rid = ctl.create_run("q", [roster["codex"]], min_independent=1, role_board=board("codex"), roster=roster)
+        self.assertTrue(ctl.wait_idle())
+        self.assertEqual(self.run_view(ctl, rid)["role_config"]["supervisor"]["model"], "mock-claude-large")
+        ctl.propose_next(rid)
+        self.assertTrue(ctl.wait_idle())
+        self.assertEqual(self.proposals(ctl, rid)[0]["supervisor"]["model"], "mock-claude-large")
+
     def test_a_new_proposal_result_makes_it_my_turn_again(self):
         ctl = self.controller(Proposer())
         rid = self.revealed(ctl)
