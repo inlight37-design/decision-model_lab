@@ -117,9 +117,11 @@ def task_projection(tasks, runs, held=None):
                              "created_at": run["created_at"], "role_config": run["role_config"],
                              "status": status, "action": action,
                              # 실행에 묶인 다듬기 차례와 다음 단계 제안도 이 작업이 쓴 호출이다(2026-09-27 실제 확인에서
-                             # 다듬기 차례가 빠진 것을 봄). 제안의 실제 예약은 그 실행의 예약(reserved)에도 들어 있다
+                             # 다듬기 차례가 빠진 것을 봄). 제안·결과 모으기의 실제 예약은 그 실행의 예약(reserved)에도
+                             # 들어 있다
                              "calls_used": max(run["budget"]["used"] + len(run.get("model_syntheses", []))
-                                               + len(run.get("proposals", [])), run["budget"]["reserved"])
+                                               + len(run.get("proposals", [])) + len(run.get("collations", [])),
+                                               run["budget"]["reserved"])
                                            + len((run.get("refinement") or {}).get("turns", []))
                                            + (1 if run.get("split") else 0)})   # 일반 실행에 묶인 분담 제안(#135)
         latest = timeline[-1] if timeline else None
@@ -136,10 +138,13 @@ def task_projection(tasks, runs, held=None):
 def _general_status(run, states, held):
     """일반 실행의 작업 상태. 결과는 끝나는 대로 보이지만, 판단 완료는 모든 팀원이 끝나 모음으로 닫힌 뒤에 한다."""
     gate = run["gate"]
-    if "unknown" in states:
+    gathered = {c["state"] for c in run.get("collations", [])}   # 결과 모으기도 제안처럼 본다(#137)
+    if "unknown" in states or "unknown" in gathered:
         return "problem", "종료·실패 확인"
     if run["cancel_requested"]:
         return "problem", "실행 확인"
+    if "running" in gathered:
+        return "working", None
     if gate["collected"]:
         return ("done", None) if run["reviewed"] else ("my_turn", "결과 모아 판단")
     if "queued" in states and held == "paused":

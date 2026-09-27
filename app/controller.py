@@ -1268,7 +1268,7 @@ class Controller:
 
     def _start_seat(self, seat: "_Seat", event_key: str, where: dict, supervisor: ParticipantSpec, text: str,
                     work: str, insert, inputs: tuple[str, ...] = ()) -> None:
-        """상위 모델 호출 하나를 시작한다 — 다듬기 차례·다음 단계 제안·분담 제안이 같이 쓴다. 계획을 한 번 만들고, 같은
+        """상위 모델 호출 하나를 시작한다 — 다듬기 차례·다음 단계 제안·분담 제안·결과 모으기가 같이 쓴다. 계획을 한 번 만들고, 같은
         거래에서 상한을 보고 예약하고 행을 넣은 뒤(insert), 그 계획을 백그라운드로 돌린다. 시작 전 거절은 아무것도 예약하지
         않는다. inputs는 읽기 전용 자료 폴더(분담 제안만 준다). 호출하는 쪽이 self.lock을 쥐고 이미 관문(한 번에 하나·
         자리·종료 미확인)을 봤다."""
@@ -1519,6 +1519,80 @@ class Controller:
                              os.path.join(self.work_root, "_split", key), insert, inputs=(folder,) if folder else ())
             return key
 
+    # ---- 결과 모으기(카드 #137) ----------------------------------------------------------------
+    def collate(self, run_id: str) -> str:
+        """모두 끝난 일반 실행의 팀원 결과를 역할판의 오케스트레이터 모델이 원문 인용으로 취합한다 — 호출 1회.
+
+        오케스트레이터는 전체 목표와 팀원마다 맡긴 일·결과 원문(이름표 T1·T2, 결과가 없으면 "결과 없음")을 받는다. 자료
+        원문은 주지 않는다. 인용은 이 호출이 받은 원문과 글자 그대로 대조하고, 사실 검증은 하지 않는다. 실행 하나에
+        collate.MAX_PER_RUN번까지, 다른 상위 모델 호출과 같은 관문(한 번에 하나·예약·상한·종료 미확인·재시작)을 지난다.
+        판단 완료는 사람이 한다."""
+        with self.lock:
+            if self._closing:
+                raise ControllerError("controller is shutting down")
+            run = self._run(run_id)
+            roles = json.loads(run["role_config"]) if run["role_config"] else {}
+            orchestrator = roles.get("orchestrator")
+            current_gate = self._gate(run_id)
+            if not current_gate.general or not current_gate.collected:
+                raise ControllerError("결과 모으기는 모두 끝난 일반 팀원 작업에만 부릅니다.")
+            if not orchestrator:
+                raise ControllerError("오케스트레이터 칸이 비어 있습니다(나). 결과는 내가 모읍니다.")
+            if self.store.row("SELECT COUNT(*) AS n FROM collations WHERE run_id = ?", run_id)["n"] >= collating.MAX_PER_RUN:
+                raise ControllerError(f"결과 모으기는 실행 하나에 {collating.MAX_PER_RUN}번까지입니다.")
+            if self.store.row("SELECT 1 FROM collations WHERE run_id = ? AND state = ?", run_id, UNKNOWN):
+                raise ControllerError("끝났는지 모르는 결과 모으기가 있습니다. 종료를 먼저 확인하세요.")
+            if self._supervisor_busy():
+                raise ControllerError("다른 상위 모델 호출(다듬기·제안·분담·모으기)이 진행 중입니다. 끝난 뒤에 다시 부르세요.")
+            if self.paused or self.unsettled() >= self.unsettled_limit:
+                raise ControllerError("execution is paused or has unsettled attempts; no call was started")
+            if self._slots_used() >= self.max_parallel:
+                raise ControllerError("parallel execution limit reached; no call was started")
+            if self.store.row("SELECT 1 FROM runs WHERE phase = 'drafting' AND NOT cancel_requested"):
+                raise ControllerError("진행 중인 실행을 먼저 정리하세요. 결과 모으기는 실행이 없을 때만 부릅니다.")
+            spec = ParticipantSpec(**orchestrator)
+            if spec.transport != CLI or spec.adapter_id not in self.executor.adapter_ids:
+                raise ControllerError("오케스트레이터는 설정된 CLI 카드여야 합니다.")
+            members, labels, drafts = [], {}, {}
+            for index, part in enumerate(self.store.rows(
+                    "SELECT pid, spec, state FROM participants WHERE run_id = ? ORDER BY rowid", run_id), 1):
+                label, member = f"T{index}", ParticipantSpec(**json.loads(part["spec"]))
+                work = self._assignment(run_id, member.pid)
+                draft = self.store.row("SELECT text FROM drafts WHERE run_id = ? AND pid = ?", run_id, member.pid)
+                text = draft["text"] if draft and part["state"] == ACCEPTED else None
+                labels[label], drafts[label] = member.pid, text
+                members.append({"label": label, "name": member.label, "task": work["task"], "text": text})
+            text = collating.prompt(run["question"], members)
+            key = f"c{time.strftime('%m%d-%H%M%S')}-{uuid.uuid4().hex}"
+
+            def insert(tx, attempt, kind):
+                tx.execute("INSERT INTO collations (collation_id, run_id, created_at, orchestrator, labels, drafts, prompt, "
+                           "input_sha256, attempt, kind, state) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", key, run_id,
+                           time.time(), json.dumps(orchestrator, ensure_ascii=False), json.dumps(labels),
+                           json.dumps(drafts, ensure_ascii=False), text, hashlib.sha256(text.encode("utf-8")).hexdigest(),
+                           attempt, kind, RUNNING)
+
+            self._start_seat(COLLATE_SEAT, run_id, {"collation_id": key}, spec, text,
+                             os.path.join(self.work_root, run_id, f"collation-{key[-12:]}"), insert)
+            return key
+
+    def acknowledge_collation_unknown(self, collation_id: str) -> None:
+        """사람이 그 결과 모으기 호출의 자손 종료를 직접 확인했다. 자리만 풀고 재호출·환불하지 않는다."""
+        row = self.store.row("SELECT run_id FROM collations WHERE collation_id = ?", collation_id)
+        if row is None:
+            raise ControllerError("결과 모으기를 찾을 수 없습니다.")
+        self._acknowledge_seat(COLLATE_SEAT, row["run_id"], {"collation_id": collation_id})
+
+    def _collation_view(self, row) -> dict[str, Any]:
+        record = json.loads(row["result"]) if row["result"] else {}
+        spec = json.loads(row["orchestrator"])
+        return {"collation_id": row["collation_id"], "run_id": row["run_id"], "created_at": row["created_at"],
+                "state": row["state"], "status": row["status"], "execution": row["kind"],
+                "orchestrator": {key: spec.get(key) for key in ("pid", "label", "adapter_id", "model")},
+                "labels": json.loads(row["labels"]), "prompt": row["prompt"], "input_sha256": row["input_sha256"],
+                "reply": record.get("reply"), "reason": record.get("reason"), "raw": record.get("raw"),
+                "observation": record.get("observation")}
+
     def acknowledge_split_unknown(self, split_id: str) -> None:
         """사람이 그 분담 제안 호출의 자손 종료를 직접 확인했다. 자리만 풀고 재호출·환불하지 않는다."""
         self._acknowledge_seat(SPLIT_SEAT, split_id, {"split_id": split_id})
@@ -1697,6 +1771,10 @@ class Controller:
                 runs[-1]["split"] = self._split_view(divided) if divided else None   # 일반 실행의 분담 제안(#135)
                 if judged:
                     runs[-1]["result_revision"] = revision   # 판단 완료 버튼이 이 판을 함께 보낸다. 공개·모음 뒤에만 싣는다
+                if general and current_gate.collected:
+                    # 결과 모으기는 모두 끝난 일반 실행의 일이다(#137). 그 전에는 부를 수도 없고 목록도 비어 있다
+                    runs[-1]["collations"] = [self._collation_view(row) for row in self.store.rows(
+                        "SELECT * FROM collations WHERE run_id = ? ORDER BY created_at", run["run_id"])]
                 if revealed:
                     # 다음 단계 제안은 공개 뒤의 일이다. 봉인 중에는 부를 수도 없고 목록도 비어 있다
                     runs[-1]["proposals"] = [self._proposal_view(row) for row in self.store.rows(
@@ -1752,11 +1830,11 @@ class Controller:
 
     def _review_state(self, run_id: str) -> tuple[int, bool, str | None]:
         """(결과 판, 그 판을 판단 완료했는가, 그때 남긴 취합 메모). 판은 사람이 보는 결과를 바꾼 마지막 사건의 seq다 —
-        공개, 일반 실행의 모음, 합성 완료·실패, 다음 단계 제안의 결과. 판단 완료 사건이 그보다 뒤에 있어야 그 판을 본 것이다. 새 합성이 끝나면
+        공개, 일반 실행의 모음, 합성 완료·실패, 다음 단계 제안·결과 모으기의 결과. 판단 완료 사건이 그보다 뒤에 있어야 그 판을 본 것이다. 새 합성이 끝나면
         판이 올라가 다시 내 차례가 된다(AH-01). 판을 싣지 않은 옛 원장의 판단 완료 사건도 같은 순서 규칙으로 읽는다."""
         row = self.store.row(
             "SELECT COALESCE(MAX(CASE WHEN kind IN ('revealed', 'collected', 'synthesis_completed', 'synthesis_failed', "
-            "'proposal_completed', 'proposal_failed') "
+            "'proposal_completed', 'proposal_failed', 'collation_completed', 'collation_failed') "
             "THEN seq END), 0) AS revision, "
             "COALESCE(MAX(CASE WHEN kind = 'human_reviewed' THEN seq END), 0) AS reviewed "
             "FROM events WHERE run_id = ?", run_id)
@@ -1785,6 +1863,8 @@ class Controller:
                 raise ControllerError("합성의 종료를 먼저 확인하세요.")
             if self.store.row("SELECT 1 FROM proposals WHERE run_id = ? AND state IN (?, ?)", run_id, RUNNING, UNKNOWN):
                 raise ControllerError("다음 단계 제안이 끝나거나 그 종료를 확인한 뒤에 판단 완료를 누르세요.")
+            if self.store.row("SELECT 1 FROM collations WHERE run_id = ? AND state IN (?, ?)", run_id, RUNNING, UNKNOWN):
+                raise ControllerError("결과 모으기가 끝나거나 그 종료를 확인한 뒤에 판단 완료를 누르세요.")
             current, reviewed, _ = self._review_state(run_id)
             if revision != current:
                 raise ControllerError("화면에 보인 뒤 새 결과가 나왔습니다. 새 결과를 확인하고 다시 판단 완료를 누르세요.")
