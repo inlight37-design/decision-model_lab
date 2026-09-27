@@ -90,6 +90,46 @@ class PostSpawnThreadFailureTests(unittest.TestCase):
                     self.assertEqual(result.input_delivery, runner.INPUT_FAILED)
 
 
+class AbortedExecutor(UnverifiedSynthetic):
+    """runner가 스레드 시작 실패로 끊은 결과(aborted)를 돌려준다. 프로세스는 시작했던 것으로 본다."""
+
+    def __init__(self, containment):
+        super().__init__()
+        self.containment = containment
+
+    def execute(self, spec, prompt, work_dir, timeout, *, cancel=None):
+        self.started.append(spec.pid)
+        result = runner.RunResult(("synthetic",), runner.ABORTED, -9, "", "", False, False, 5, None, True,
+                                  containment=self.containment, input_delivery=runner.INPUT_FAILED)
+        return result, adapters.interpret("claude-code", result, requested_model="m")
+
+
+class AbortedResultTests(support.Base):
+    """aborted를 받은 controller: 성공이 아니고, 예약을 돌려주지 않고, 다시 부르지 않는다. 자손 전체의 종료를
+    확인하지 못한 추적 단위(프로세스 그룹)면 unknown으로 자리를 쥔다."""
+
+    def aborted(self, containment):
+        ex = AbortedExecutor(containment)
+        ctl = self.controller(ex, max_real_calls=2)
+        rid = ctl.create_run("q", [support.cli("a")], min_independent=1, quorum_policy=c.INCLUDE_UNVERIFIED)
+        self.assertTrue(ctl.wait_idle())
+        self.assertEqual(ctl.call_budget()["used"], 1)                   # 예약은 남는다
+        self.assertEqual(ex.started, ["a"])                              # 다시 부르지 않았다
+        self.assertEqual(self.run_view(ctl, rid)["budget"]["breakdown"]["succeeded"], 0)
+        return ctl, self.part(ctl, rid, "a")
+
+    def test_a_confirmed_abort_is_a_started_failure_that_frees_its_slot(self):
+        ctl, a = self.aborted(runner.JOB_OBJECT)
+        self.assertEqual((a["state"], a["status"]), (c.REJECTED, "process_aborted"))
+        self.assertNotEqual(a["contamination"], list(c.NOT_RUN))           # 시작 전 실패와 다르다 — 시작했다
+        self.assertEqual(ctl.view()["slots"]["used"], 0)
+
+    def test_an_abort_without_whole_tree_confirmation_stays_unknown(self):
+        ctl, a = self.aborted(runner.PROCESS_GROUP)
+        self.assertEqual(a["state"], c.UNKNOWN)
+        self.assertEqual(ctl.view()["slots"]["used"], 1)                   # 자리를 쥔다
+
+
 class WorkFolderFailureTests(support.Base):
     """AH-02. 실제 호출처럼 예약하는 합성 실행기로 본다 — 예약이 없어야 호출이 없었다는 뜻이다."""
 
