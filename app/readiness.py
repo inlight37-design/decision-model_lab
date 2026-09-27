@@ -30,7 +30,8 @@ def check(adapter_id: str, model: str, inventory: Path, data_dir: Path, *,
         result["reasons"] = ["real participants require Linux/WSL; use the WSL-native installation"]
         return result
     try:
-        record = eligibility.load(inventory)
+        raw = Path(inventory).read_bytes()   # 적격성과 등록을 같은 바이트로 본다(AH-08)
+        record = eligibility.parse(raw)
     except (OSError, ValueError):
         result["reasons"] = ["cannot read a runtime-inventory/2 record"]
         return result
@@ -55,7 +56,7 @@ def check(adapter_id: str, model: str, inventory: Path, data_dir: Path, *,
         result["reasons"] = [f"cannot prepare the isolated participant plan ({type(exc).__name__})"]
         return result
     # 다른 기기의 관측을 빌리지 않는다(카드 #71). 다른 이유도 함께 보이도록 거절만 더한다.
-    unregistered = registration.problem(inventory)
+    unregistered = registration.problem(inventory, data=raw)
     result.update(eligible=verdict.eligible and unregistered is None,
                   reasons=list(verdict.reasons) + ([unregistered] if unregistered else []))
     return result

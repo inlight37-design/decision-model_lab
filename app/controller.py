@@ -192,8 +192,9 @@ class MockExecutor:
     def plan(self, spec, prompt, work_dir, *, inputs=()):
         python = "/usr/bin/python3" if self.isolated else sys.executable
         data = prompt.encode("utf-8")
+        # 고른 모델 이름을 넘기면 가짜 CLI가 그 이름을 보고한다 — 요청·보고 대조가 실제와 같은 길을 지난다(카드 #119)
         planned = adapters.ExecutionSpec(spec.adapter_id, (python, self.SCRIPT, self.FLAVOR[spec.adapter_id],
-                                                           spec.behavior),
+                                                           spec.behavior) + ((spec.model,) if spec.model else ()),
                                          prompt, adapters.STDIN, hashlib.sha256(data).hexdigest(), len(data))
         box = isolation.Sandbox(work_dir=work_dir, home=work_dir + "-home",
                                 read_only=(os.path.dirname(self.SCRIPT),) + tuple(inputs),

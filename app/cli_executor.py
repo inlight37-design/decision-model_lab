@@ -103,7 +103,9 @@ class CliExecutor:
                 return
             raise adapters.AdapterError("no inventory configured for this adapter")
         try:
-            record = eligibility.load(inventory)
+            # 한 번 읽은 바이트로 적격성과 등록을 함께 본다. 두 번 읽으면 그 사이에 바뀐 판이 섞일 수 있다(AH-08).
+            raw = Path(inventory).read_bytes()
+            record = eligibility.parse(raw)
         except (OSError, ValueError) as exc:
             raise adapters.AdapterError(f"cannot read the inventory: {type(exc).__name__}") from None
         verdict = eligibility.eligibility(record, adapter_id, enabled=True, today=date.today(),
@@ -111,7 +113,7 @@ class CliExecutor:
                                           allow_context_unverified=self.allow_context_unverified)
         if not verdict.eligible:
             raise adapters.AdapterError("not eligible to run: " + "; ".join(verdict.reasons))
-        unregistered = registration.problem(inventory)   # 실행 직전에도 이 기기의 등록을 다시 본다(카드 #71)
+        unregistered = registration.problem(inventory, data=raw)   # 실행 직전에도 이 기기의 등록을 다시 본다(카드 #71)
         if unregistered:
             raise adapters.AdapterError("not eligible to run: " + unregistered)
 

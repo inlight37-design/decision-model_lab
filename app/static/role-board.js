@@ -13,7 +13,7 @@ function placeRole(board, pid, slot) {
 }
 function roleSummary(config) {
   if (!config) return "역할 구성 없음";
-  const name = p => p ? p.label : "나";
+  const name = p => !p ? "나" : p.transport === "cli" && p.model ? `${p.label}(${p.model})` : p.label;
   return `슈퍼바이저 ${name(config.supervisor)} · 오케스트레이터 ${name(config.orchestrator)} · 격리 ${(config.isolated || []).map(name).join(", ") || "없음"}` +
     (config.source === "legacy" ? " · 기존 실행" : "");
 }
@@ -70,16 +70,35 @@ function renderRoleBoard() {
   for (const p of roster) $("card-" + p.pid).setAttribute("aria-pressed", String(chosenCard === p.pid));
   pressAll($("roleSlots"));
 }
+const FUNDING_LABEL = { credits: "막음 · 추가 크레딧 경로", unconfirmed: "막음 · 구독 포함 미확인" };
+function modelSelect(p, choices) {
+  // 허용 목록만 보인다. 막힌 모델은 고를 수 없게 두고 이유를 붙인다(카드 #119). 추론 강도는 아직 연결하지 않았다.
+  if (!choices || !choices.length) return null;
+  return h("label", { class: "cap muted" }, "모델 ",
+    h("select", { id: "m-" + p.pid, "aria-label": p.label + " 모델" }, choices.map(c => h("option", {
+      value: c.model, disabled: !c.usable, selected: c.model === p.model, title: c.basis },
+      c.usable ? c.model : `${c.model} — ${FUNDING_LABEL[c.funding] || "막음"}`))));
+}
 function roleCard(p, opt) {
-  const kind = p.transport === "manual" ? "원본 앱 · 독립 미확인" : opt.live ? `실제 CLI · ${p.model}` : "모의 CLI · 모델 호출 없음";
+  const kind = p.transport === "manual" ? "원본 앱 · 독립 미확인" : opt.live ? "실제 CLI · 강도는 CLI 기본값" : "모의 CLI · 모델 호출 없음";
   return h("div", { class: "cell role-card" },
     h("button", { type: "button", class: "role-pick", id: "card-" + p.pid, draggable: "true", "aria-pressed": "false",
       onclick: () => { chosenCard = chosenCard === p.pid ? null : p.pid; renderRoleBoard();
         $("roleNotice").textContent = chosenCard ? `${p.label} 선택됨. 배치할 칸을 누르세요.` : "선택을 해제했습니다."; },
       ondragstart: e => { e.dataTransfer.setData("text/role-card", p.pid); e.dataTransfer.effectAllowed = "copy"; }
     }, h("span", { class: "strong" }, p.label), h("span", { class: "cap muted" }, kind)),
+    p.transport === "cli" ? modelSelect(p, (opt.model_choices || {})[p.pid]) : null,
     p.transport === "cli" && !opt.live ? h("select", { id: "b-" + p.pid, "aria-label": p.label + " 모의 행동" },
       opt.behaviors.map(b => h("option", { value: b }, BEHAVIOR_LABEL[b] || b))) : null);
+}
+function chosenModels(board) {
+  // 이번 실행에 놓은 CLI 카드의 모델. 서버가 허용 목록으로 다시 확인한다.
+  const models = {};
+  for (const pid of [...board.isolated, ...board.orchestrator]) {
+    const select = $("m-" + pid);
+    if (select) models[pid] = select.value;
+  }
+  return models;
 }
 function showInputPreview(preview, body) {
   previewRequest = { ...body, run_id: preview.run_id, confirmation: preview.confirmation };
@@ -87,6 +106,8 @@ function showInputPreview(preview, body) {
   $("inputPreview").hidden = false;
   $("inputPreview").replaceChildren(h("h3", { class: "block-title" }, "보낼 입력 확인"),
     h("p", { class: "sm strong" }, roleSummary(preview.role_config)),
+    h("p", { class: "cap muted" }, "괄호 안의 모델을 그대로 요청합니다. 답한 모델의 보고가 다르면 받지 않고, 다른 모델로 바꾸지 않습니다. " +
+      "추론 강도는 아직 연결하지 않았습니다(CLI 기본값)."),
     h("p", { class: "sm" }, `입력 모드: 원문 · ${preview.quorum_policy === "independent_only" ? "독립성이 확인된 참여자만" : "미확인 답도 포함"} · 최소 ${preview.min_independent}명`),
     h("p", { class: "sm" }, `이번 실행: CLI 시작 최대 ${calls.draft_cli}회 · 수동 답 ${Object.keys(preview.manual_packets).length}개`),
     h("p", { class: "sm" }, calls.model_calls === 0 ? "모의 모드 · 실제 모델 호출 상한 0" :

@@ -45,7 +45,12 @@ class Verdict:
 
 
 def load(path: str | Path) -> dict[str, Any]:
-    return json.loads(Path(path).read_text(encoding="utf-8"))
+    return parse(Path(path).read_bytes())
+
+
+def parse(raw: bytes) -> dict[str, Any]:
+    """이미 읽은 기록 바이트. 허가 판단은 같은 바이트로 등록(sha256)도 본다(구조 검토 AH-08)."""
+    return json.loads(raw.decode("utf-8"))
 
 
 def observed_on(entry: Mapping[str, Any]) -> date | None:

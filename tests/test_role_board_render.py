@@ -36,6 +36,15 @@ assert.equal(boardWarnings(placed,roster).length,0);
 assert.ok(boardWarnings(placeRole(placed,"c","orchestrator"),roster).join(" ").includes("같은 provider"));
 assert.ok(boardWarnings(placeRole(placed,"b","general"),roster).join(" ").includes("C 단계"));
 roleOptions={participants:roster,live:false,behaviors:["ok"]}; roleBoard=emptyBoard();
+// 모델 고르기(카드 #119): 허용 목록만 보이고, 막힌 모델은 고를 수 없게 두고 이유를 붙인다. 기본은 명단의 모델.
+const listed={a:[{model:"m1",funding:"included",basis:"관측",usable:true},{model:"m2",funding:"credits",basis:"문서",usable:false}]};
+const pickModel=all(roleCard({...roster[0],model:"m1"},{...roleOptions,model_choices:listed})).find(x=>x.attrs.id==="m-a");
+assert.deepEqual(pickModel.kids.map(o=>[o.attrs.value,o.attrs.disabled,o.attrs.selected]),[["m1",false,true],["m2",true,false]]);
+assert.ok(text(pickModel).includes("추가 크레딧"));
+assert.ok(!all(roleCard(roster[1],{...roleOptions,model_choices:listed})).some(x=>x.tag==="select"));   // 원본 앱은 고를 모델이 없다
+nodes["m-a"]={value:"m1"};
+assert.deepEqual(chosenModels({isolated:["a"],orchestrator:[]}),{a:"m1"});
+assert.ok(roleSummary({isolated:[{label:"CLI A",transport:"cli",model:"m1"}]}).includes("CLI A(m1)"));
 const card=roleCard(roster[0],roleOptions);
 const choose=all(card).find(x=>x.attrs.id==="card-a");
 assert.equal(choose.tag,"button"); assert.equal(choose.attrs.type,"button");
