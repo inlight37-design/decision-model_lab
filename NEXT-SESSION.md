@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-27** · 작성 세션: claude(사용자 PC `DESKTOP-T0UDE01` — D4 실제 확인, 모델 호출 Claude 2·Codex 1) · 브랜치 `claude/d4-live-record-20260927` · 기준 main `ba1a5b1`.
+최종 갱신 **2026-09-27** · 작성 세션: claude(사용자 PC `DESKTOP-T0UDE01` — 제안·합성 지시문의 경계 표식, 모델 호출 없음) · 브랜치 `claude/prompt-boundary-20260927` · 기준 main `06b2523`.
 
 이 파일은 **지금 상태와 다음 일만** 담는다. 끝난 일의 경위는 PR·git 이력과 날짜가 붙은 기록에 있고, 옛 판은 [docs/handoff/](docs/handoff/README.md)에 있다. **3절에는 진행 중인 일과 "이 판을 들인 PR" 한 줄만 둔다** — 새 PR은 그 줄을 자기 PR로 바꾸고, 병합 전에도 뒤에도 맞는 말만 쓴다("병합했다"고 미리 적지 않는다). 크기 상한과 3절의 모양은 CI가 본다. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있는 규칙은 여기 다시 적지 않는다 — 쌓임을 막는 원칙은 협업 규칙 7절이다.
 
@@ -65,7 +65,7 @@
 
 일은 `card` 라벨 이슈에서 [협업 규칙](docs/COLLABORATION.md) 3절의 보드 규칙대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #143](https://github.com/inlight37-design/decision-model_lab/pull/143)(`claude/d4-live-record-20260927`) — D4 실제 확인 기록과 그동안의 자원 사용. 모델 호출 Claude 2·Codex 1.
+- **이 판을 들인 PR:** [PR #142](https://github.com/inlight37-design/decision-model_lab/pull/142)(`claude/prompt-boundary-20260927`) — 다음 단계 제안·실제 합성 지시문의 답 경계에 호출마다 새 표식을 붙인다(결과 모으기 #139와 같은 방식, 세 지시문이 `synthesis.boundary()` 하나를 씀). 합성 시작 사건에 표식(`boundary`)을 남긴다. 모델 호출 없음.
 
 | 사용자만 할 수 있는 것 | 지금 |
 |---|---|

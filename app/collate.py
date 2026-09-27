@@ -7,10 +7,9 @@
 """
 from __future__ import annotations
 
-import secrets
 from typing import Any
 
-from app.synthesis import SynthesisError, _json_object
+from app.synthesis import SynthesisError, _json_object, boundary
 
 # 지시문의 첫 줄. 모의 CLI(fake_cli.py)가 이 줄로 결과 모으기 요청을 알아본다 — 두 곳을 같이 바꾼다.
 MARKER = "[결과 모으기 요청]"
@@ -36,12 +35,10 @@ class CollateError(ValueError):
 def prompt(goal: str, members: list[dict], nonce: str | None = None) -> str:
     """members: [{label, name, task, text 또는 None}] — 결과가 없는 팀원은 "결과 없음"으로 적는다.
 
-    결과 경계에는 이번 호출에만 쓰는 표식(nonce)을 붙인다. 팀원 결과는 이 호출 전에 끝났으므로 표식을 알 수 없다 —
-    결과 안에 경계 줄을 흉내 내도 다른 팀원의 결과처럼 보이지 않는다(Codex 교차검토, PR #139). 목표·맡긴 일·결과
-    어디에든 표식이 이미 있으면 새로 뽑는다."""
-    texts = [goal] + [str(m[key]) for m in members for key in ("name", "task", "text") if m[key] is not None]
-    while nonce is None or any(nonce in text for text in texts):
-        nonce = secrets.token_hex(6)
+    결과 경계에는 이번 호출에만 쓰는 표식(synthesis.boundary)을 붙인다. 목표·이름·맡긴 일·결과 어디에든 이미 있는
+    값은 쓰지 않는다."""
+    nonce = boundary([goal] + [str(m[key]) for m in members for key in ("name", "task", "text") if m[key] is not None],
+                     nonce)
     blocks = []
     for m in members:
         body = m["text"] if m["text"] is not None else "(결과 없음 — 이 팀원은 실패했거나 답하지 않았다)"

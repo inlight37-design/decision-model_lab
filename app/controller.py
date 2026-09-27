@@ -1121,7 +1121,7 @@ class Controller:
                 raise ControllerError("the synthesizer must be a configured CLI provider")
             report = build_report(self.view(run_id), run_id)
             try:
-                prompt, labels = model_prompt(report)
+                prompt, labels, nonce = model_prompt(report)
             except SynthesisError as exc:
                 raise ControllerError(str(exc)) from None
             attempt = uuid.uuid4().hex
@@ -1144,7 +1144,7 @@ class Controller:
                     tx.event(run_id, "live_call_reserved", pid="synthesis", attempt=attempt, adapter_id=adapter_id,
                              cap=self.max_real_calls, purpose="synthesis")
                 tx.event(run_id, "synthesis_started", attempt=attempt, adapter_id=adapter_id, execution=plan.kind,
-                         labels=labels, label_order=LABEL_ORDER, spec=plan.record())
+                         labels=labels, label_order=LABEL_ORDER, boundary=nonce, spec=plan.record())
             cancel = threading.Event()
             thread = threading.Thread(target=self._synthesis_attempt,
                                       args=(run_id, attempt, plan, report, labels, cancel), daemon=True)
