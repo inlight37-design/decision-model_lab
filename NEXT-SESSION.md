@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-27** · 작성 세션: claude(사용자 PC `DESKTOP-T0UDE01` — codex-peek에서 가져올 것의 연결 점검, 모델 호출 없음) · 브랜치 `claude/peek-adoption-wiring-20260927` · 기준 main `14e2d92`.
+최종 갱신 **2026-09-27** · 작성 세션: claude(사용자 PC `DESKTOP-T0UDE01` — 다음 작업의 순서 정리, 모델 호출 없음) · 브랜치 `claude/next-steps-order-20260927` · 기준 main `44dcd9f`.
 
 이 파일은 **지금 상태와 다음 일만** 담는다. 끝난 일의 경위는 PR·git 이력과 날짜가 붙은 기록에 있고, 옛 판은 [docs/handoff/](docs/handoff/README.md)에 있다. **3절에는 진행 중인 일과 "이 판을 들인 PR" 한 줄만 둔다** — 새 PR은 그 줄을 자기 PR로 바꾸고, 병합 전에도 뒤에도 맞는 말만 쓴다("병합했다"고 미리 적지 않는다). 크기 상한과 3절의 모양은 CI가 본다. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있는 규칙은 여기 다시 적지 않는다 — 쌓임을 막는 원칙은 협업 규칙 7절이다.
 
@@ -64,7 +64,7 @@
 
 일은 `card` 라벨 이슈에서 [협업 규칙](docs/COLLABORATION.md) 3절의 보드 규칙대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #114](https://github.com/inlight37-design/decision-model_lab/pull/114)(`claude/peek-adoption-wiring-20260927`) — codex-peek 검토에서 가져오기로 한 것이 실제로 쓰일 자리에 닿게 한다: B–E 카드에 옮길 완료 조건의 가리킴(4절 3), PR 양식의 교차검토 칸. 모델 호출 없음.
+- **이 판을 들인 PR:** [PR #115](https://github.com/inlight37-design/decision-model_lab/pull/115)(`claude/next-steps-order-20260927`) — 4절 머리에 지금 할 일(3의 S1)과 기한이 있는 일(1·2)을 가려 적는다. 모델 호출 없음.
 
 | 사용자만 할 수 있는 것 | 지금 |
 |---|---|
@@ -76,7 +76,7 @@
 
 ## 4. 다음 작업
 
-순서대로. 모델 호출이 드는 일은 카드에 상한을 먼저 적고 새 원장·새 상태 폴더로 한다(2절 22).
+**지금 할 일은 3의 S1부터다.** 1·2는 기한이 있는 일이라 기한 전에 끼워 넣는다. 모델 호출이 드는 일은 카드에 상한을 먼저 적고 새 원장·새 상태 폴더로 한다(2절 22).
 
 1. **2026-10-25 전 — V04-01 절차서를 정한다.** 쌓임 검사의 `PROCEDURES` 예외가 그날 끝난다(`tests/test_accumulation.py`) — 지나면 CI가 실패한다. WSL 참여자의 설치·관측 절차는 이미 [SETUP](docs/SETUP.md)에 있으니, 절차서가 아직 맡는 일(Windows CLI 조사, `probe.ps1`·`summarize_claude_init.py`)을 살아 있는 문서로 옮길지 은퇴시킬지 정하고 AGENTS.md의 가리킴을 맞춘다. 모델 호출 없음.
 2. **2026-10-26 전 — 재관측**([SETUP 4절](docs/SETUP.md)의 절차, PC마다 모델 호출 Claude 2·Codex 3). aux-pc-wsl은 10월 26일, main-pc-wsl은 10월 27일부터 만료이고, 그 PC의 세션만 관측·등록할 수 있다. 참여자 계획이나 CLI 판이 바뀌면 그때 바로 한다. 관측 기록은 `tools/w2/assemble.py`가 조립한다. 추론 강도를 연결하는 PR은 그 계획으로 바로 관측한다 — 이 날짜를 기다리지 않는다([역할판 검토](docs/reviews/2026-09-26-role-board-review/README.md) RB-01). 그 전에 [카드 #111](https://github.com/inlight37-design/decision-model_lab/issues/111)(S4 Codex 사용자 훅 방어)을 끝낸다. 파일 하나 검사로 전체 문맥 검증을 대신하지 않는다.
