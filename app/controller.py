@@ -163,7 +163,8 @@ class ParticipantSpec:
 
 class Executor(Protocol):
     """실행 계약(core.contract, G4). plan()이 최종 계획을 한 번 만들고 — 거절하면 예외, 아무것도 시작하지 않았다 —
-    run()이 그 계획 그대로 실행한다. kind는 이 실행기가 만드는 시도의 종류, adapter_ids는 받는 CLI다."""
+    run()이 그 계획 그대로 실행한다. kind는 이 실행기가 만드는 시도의 종류, adapter_ids는 받는 CLI다. 선택으로
+    check(plan)을 두면 controller가 호출을 예약하기 직전에 부른다(격리 경로·연결 검사, 구조 검토 R4)."""
     name: str
     kind: str
     adapter_ids: tuple[str, ...]
@@ -212,6 +213,14 @@ class MockExecutor:
             result = runner.run(list(plan.spec.argv), cwd=plan.work_dir, env=child, timeout=timeout,
                                 stdin_text=plan.spec.stdin_text, cancel=cancel)
         return result, adapters.interpret(plan.spec.adapter_id, result, requested_model=plan.model)
+
+
+def _check(executor, plan: contract.Plan) -> None:
+    """실행기가 예약 직전 검사(check)를 가지면 부른다 — 실제 CLI 실행기의 격리 경로·연결 검사(구조 검토 R4).
+    거절하면 예외가 난다. 아무것도 예약·시작하지 않았다. 모의·합성 실행기에는 없다."""
+    check = getattr(executor, "check", None)
+    if check is not None:
+        check(plan)
 
 
 def _not_started(spec: ParticipantSpec, error: str) -> tuple[runner.RunResult, adapters.Outcome]:
@@ -551,6 +560,7 @@ class Controller:
                     plan, refused = self.executor.plan(spec, prompt, work, **extra), None
                     if plan.context_unverified and not spec.context_unverified:
                         raise ControllerError("queued participant has a different context policy; create a new run")
+                    _check(self.executor, plan)   # 예약 전에 격리 경로·연결을 본다(R4)
                     record, kind = plan.record(), plan.kind
                 except Exception as exc:  # 거절: 아무것도 시작하지 않았다
                     plan, refused = None, f"{type(exc).__name__}: {exc}"
@@ -861,6 +871,7 @@ class Controller:
                 source = self._source_dir(run_id)
                 plan = self.executor.plan(replace(chosen, pid="synthesis", label="합성"), prompt, work,
                                           **({"inputs": (source,)} if source else {}))
+                _check(self.executor, plan)   # 예약 전에 격리 경로·연결을 본다(R4)
             except ControllerError:
                 raise
             except Exception as exc:  # 계획 거절: 아무것도 시작하지 않았다

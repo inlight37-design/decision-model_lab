@@ -161,6 +161,14 @@ class CliExecutor:
         return contract.Plan(contract.REAL, built, work_dir, box, spec.model or "", marks, revision, tmpl,
                              tuple(changes), context_unverified=self.allow_context_unverified)
 
+    def check(self, plan: contract.Plan) -> None:
+        """예약 직전의 격리 검사: 경로가 있는지, 연결이 겹치지 않는지. 프로세스는 만들지 않는다.
+
+        없는 입력 폴더나 겹치는 연결이 실행 때에야 드러나면 controller가 호출 예약을 먼저 쓴 뒤 시작 전 실패로
+        끝났다 — 모델 호출 없이 상한 한 칸이 사라졌다(구조 검토 R4). controller·준비 조회가 예약·판정 전에 부른다.
+        실행 때의 isolation.run()도 같은 검사를 다시 한다. 거절하면 REFUSED_BEFORE_START 중 하나를 던진다."""
+        isolation.plan(list(plan.spec.argv), plan.box)
+
     def run(self, plan: contract.Plan, timeout: float, *, cancel=None):
         """계획 그대로 한 번 실행한다. 계획을 다시 만들지 않고, 현재 기록의 허가만 다시 확인한다."""
         try:

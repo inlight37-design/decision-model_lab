@@ -39,6 +39,7 @@ from pathlib import PurePosixPath
 import stat
 import sys
 import threading
+from types import MappingProxyType
 from typing import Mapping, Sequence
 
 from core import runner
@@ -75,6 +76,11 @@ class Sandbox:
     env: Mapping[str, str] = field(default_factory=dict)   # PASS_ENV에 있는 것만 넘어간다
     never: tuple[str, ...] = ()            # 호스트 연결과 겹치면 안 되는 경로(원장, 봉인 저장소)
     read_only_at: tuple[tuple[str, str], ...] = ()   # (호스트 폴더, 안에서 보일 경로). 읽기 전용
+
+    def __post_init__(self) -> None:
+        # 넘겨받은 env를 그대로 쥐면, 넘긴 쪽이 나중에 고칠 때 판(revision)은 그대로인 채 실행 환경이 바뀐다
+        # (구조 검토 R3). 받는 순간의 사본을 읽기 전용으로 고정한다.
+        object.__setattr__(self, "env", MappingProxyType(dict(self.env)))
 
 
 def cli_mounts(adapter_id: str, exe: str, home: str) -> tuple[tuple[str, ...], tuple[str, ...]]:
