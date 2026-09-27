@@ -29,6 +29,7 @@ class TotalTests(unittest.TestCase):
                                             "reasoning_output_tokens": 4}},
             {"provider": "codex", "usage": {}},                 # 보고 없음
             {"provider": "codex", "usage": None},
+            {"provider": "antigravity", "usage": {"client_estimate_usd": 0.5}},   # 정가 추정만 — 토큰 관측이 아니다
             {"provider": None, "usage": None}])                 # 원본 앱
         claude, codex = result["by_provider"]["claude-code"], result["by_provider"]["codex"]
         self.assertEqual(claude["tokens"], {"input_tokens": 150, "output_tokens": 20, "cache_creation_input_tokens": 7,
@@ -38,7 +39,10 @@ class TotalTests(unittest.TestCase):
                                            "reasoning_output_tokens": 4})
         self.assertEqual((codex["calls"], codex["observed"], codex["unobserved"]), (3, 1, 2))
         self.assertIsNone(codex["list_price_estimate_usd"])                     # 추정이 없으면 0이 아니라 없음
-        self.assertEqual(result["unobserved"], {"manual": 1, "no_usage_reported": 2})
+        agy = result["by_provider"]["antigravity"]
+        self.assertEqual((agy["observed"], agy["unobserved"], agy["tokens"], agy["list_price_estimate_usd"]),
+                         (0, 1, {}, 0.5))                                         # 보고 안 된 필드를 0으로 채우지 않는다
+        self.assertEqual(result["unobserved"], {"manual": 1, "no_usage_reported": 3})
         self.assertNotIn("tokens", result)                                     # provider를 넘는 합계가 없다
         self.assertTrue(any("청구액이 아니다" in note for note in result["notes"]))
 
@@ -58,7 +62,9 @@ class TotalTests(unittest.TestCase):
                               "turns": [{"execution": "real", "state": "accepted", "observation": {"usage": seen}}]},
                "split": {"orchestrator": {"adapter_id": "claude-code"}, "execution": "real", "state": "accepted",
                          "observation": {"usage": seen}},
-               "proposals": [{"supervisor": {"adapter_id": "claude-code"}, "execution": "real", "state": "running"}],
+               "proposals": [{"supervisor": {"adapter_id": "claude-code"}, "execution": "real", "state": "running"},
+                             {"supervisor": {"adapter_id": "claude-code"}, "execution": "real", "state": "rejected",
+                              "status": "process_failed_to_start", "observation": {"state": "failed_to_start"}}],
                "collations": [{"orchestrator": {"adapter_id": "claude-code"}, "execution": "real", "state": "unknown",
                                "observation": None}],
                "cross_review": {"reviews": [

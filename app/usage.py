@@ -64,8 +64,10 @@ def calls(run: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def _seat(role: str, item: dict, provider: str | None) -> list[dict]:
-    """상위 모델 호출 하나. 시작하지 않았거나(기록된 실행 종류 없음) 아직 도는 호출은 세지 않는다."""
-    if item.get("execution") is None or item.get("state") in ("running", "queued", "skipped"):
+    """상위 모델 호출 하나. 시작하지 않았거나 아직 도는 호출은 세지 않는다. 실행 종류는 작업자를 띄우기 전에 적히므로
+    그것만으로는 시작했다고 보지 않는다 — 시작하지 못한 상태도 뺀다(Codex 교차검토, PR #151)."""
+    if (item.get("execution") is None or item.get("state") in ("running", "queued", "skipped")
+            or item.get("status") in NOT_STARTED or (item.get("observation") or {}).get("state") == "failed_to_start"):
         return []
     return [{"role": role, "provider": provider, "usage": (item.get("observation") or {}).get("usage")}]
 
@@ -75,8 +77,9 @@ NOTES = ["provider끼리 토큰을 더하지 않는다", "list_price_estimate_us
 
 
 def _empty(provider: str) -> dict[str, Any]:
-    return {"calls": 0, "observed": 0, "unobserved": 0, "tokens": {key: 0 for key in FIELDS.get(provider, ())},
-            "cache_read_field": CACHE_READ.get(provider), "list_price_estimate_usd": None}
+    """tokens에는 보고된 필드만 들어간다 — 보고되지 않은 필드를 0으로 채우지 않는다(Codex 교차검토, PR #151)."""
+    return {"calls": 0, "observed": 0, "unobserved": 0, "tokens": {}, "cache_read_field": CACHE_READ.get(provider),
+            "list_price_estimate_usd": None}
 
 
 def _add_estimate(entry: dict[str, Any], value) -> None:
@@ -95,16 +98,14 @@ def total(found: Iterable[dict[str, Any]]) -> dict[str, Any]:
         entry = result["by_provider"].setdefault(provider, _empty(provider))
         entry["calls"] += 1
         numbers = {key: value for key, value in (usage or {}).items() if _number(value)}
+        _add_estimate(entry, numbers.pop(ESTIMATE, None))   # 정가 추정은 토큰 관측이 아니다
         if not numbers:
             entry["unobserved"] += 1
             result["unobserved"]["no_usage_reported"] += 1
             continue
         entry["observed"] += 1
         for key, value in numbers.items():
-            if key == ESTIMATE:
-                _add_estimate(entry, value)
-            else:
-                entry["tokens"][key] = entry["tokens"].get(key, 0) + value
+            entry["tokens"][key] = entry["tokens"].get(key, 0) + value
     return result
 
 
