@@ -23,14 +23,16 @@ COLLATE_MARKER = "[결과 모으기 요청]"   # app/collate.py의 MARKER와 같
 
 def collate_reply(question: str) -> str:
     """결과 모으기 지시문에 모의 JSON으로 답한다. 팀원마다 결과의 첫 줄을 글자 그대로 인용하고, 인용 없는 주장 하나를
-    덧붙인다 — 화면의 원문 일치·원문에 없음 표시를 확인하려는 것이다."""
+    덧붙인다 — 화면의 원문 일치·원문에 없음 표시를 확인하려는 것이다. 이번 경계 표식이 붙은 경계 줄만 믿는다."""
+    nonce = question.split("이번 경계 표식: ", 1)[-1].split("\n", 1)[0].strip()
     claims = []
-    for block in question.split("<<<")[1:]:
-        head, _, rest = block.partition(">>>\n")
-        label = head.split(" ", 1)[0]
-        if " 시작 · " not in head or not rest:
+    for line in question.splitlines():
+        if not (line.startswith("<<<") and line.endswith(f" 시작 {nonce}>>>")):
             continue
-        first = next((line for line in rest.split(f"\n<<<{label} 끝", 1)[0].splitlines() if line.strip()), "")
+        label = line[3:].split(" ", 1)[0]
+        body = question.split(line + "\n", 1)[-1].split(f"\n<<<{label} 끝 {nonce}>>>", 1)[0]
+        body = body.split("결과:\n", 1)[-1]
+        first = next((row for row in body.splitlines() if row.strip()), "")
         if first and not first.startswith("(결과 없음"):
             claims.append({"statement": f"[모의 취합] {label}의 결과 첫 줄", "quotes": [{"member": label, "text": first}]})
     claims.append({"statement": "[모의 취합] 원문에 없는 추가 주장(표시 확인용)", "quotes": []})

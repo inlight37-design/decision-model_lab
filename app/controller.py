@@ -1249,7 +1249,7 @@ class Controller:
             # 다듬기 차례는 한 번에 하나다. 버튼을 두 번 누르거나 창 두 개에서 불러도 두 번째 호출을 시작하지 않는다
             # (Codex 교차검토, PR #131).
             if self._supervisor_busy():
-                raise ControllerError("다른 슈퍼바이저 호출(다듬기·제안)이 진행 중입니다. 끝난 뒤에 다시 부르세요.")
+                raise ControllerError("다른 상위 모델 호출(다듬기·제안·분담·모으기)이 진행 중이거나 끝났는지 모릅니다. 끝나거나 종료를 확인한 뒤에 다시 부르세요.")
             key = refine_id or f"q{time.strftime('%m%d-%H%M%S')}-{uuid.uuid4().hex}"
             turn = len(previous) + 1
             text = refining.prompt(original, previous, note)
@@ -1368,8 +1368,9 @@ class Controller:
 
     def _supervisor_busy(self) -> bool:
         """상위 모델 호출은 다듬기·제안·분담·모으기를 통틀어 한 번에 하나다. 버튼을 두 번 누르거나 창 두 개에서 불러도
-        둘째를 시작하지 않는다(Codex 교차검토, PR #131)."""
-        return self._seat_count(RUNNING) > 0
+        둘째를 시작하지 않는다(Codex 교차검토, PR #131). 종료 미확인도 아직 돌고 있을 수 있으므로 사람이 종료를 확인할
+        때까지 다른 실행·다른 창의 상위 모델 호출까지 막는다(Codex 교차검토, PR #139)."""
+        return self._seat_count(RUNNING, UNKNOWN) > 0
 
     # ---- 다음 단계 제안(카드 #133) --------------------------------------------------------------
     def propose_next(self, run_id: str) -> str:
@@ -1395,7 +1396,7 @@ class Controller:
             if self.store.row("SELECT 1 FROM proposals WHERE run_id = ? AND state = ?", run_id, UNKNOWN):
                 raise ControllerError("끝났는지 모르는 제안이 있습니다. 종료를 먼저 확인하세요.")
             if self._supervisor_busy():
-                raise ControllerError("다른 슈퍼바이저 호출(다듬기·제안)이 진행 중입니다. 끝난 뒤에 다시 부르세요.")
+                raise ControllerError("다른 상위 모델 호출(다듬기·제안·분담·모으기)이 진행 중이거나 끝났는지 모릅니다. 끝나거나 종료를 확인한 뒤에 다시 부르세요.")
             if self.paused or self.unsettled() >= self.unsettled_limit:
                 raise ControllerError("execution is paused or has unsettled attempts; no call was started")
             if self._slots_used() >= self.max_parallel:
@@ -1484,7 +1485,7 @@ class Controller:
             if task_id is not None and not self.store.row("SELECT 1 FROM tasks WHERE task_id = ?", task_id):
                 raise ControllerError("작업을 찾을 수 없습니다.")
             if self._supervisor_busy():
-                raise ControllerError("다른 상위 모델 호출(다듬기·제안·분담)이 진행 중입니다. 끝난 뒤에 다시 부르세요.")
+                raise ControllerError("다른 상위 모델 호출(다듬기·제안·분담·모으기)이 진행 중이거나 끝났는지 모릅니다. 끝나거나 종료를 확인한 뒤에 다시 부르세요.")
             if self.paused or self.unsettled() >= self.unsettled_limit:
                 raise ControllerError("execution is paused or has unsettled attempts; no call was started")
             if self._slots_used() >= self.max_parallel:
@@ -1543,7 +1544,7 @@ class Controller:
             if self.store.row("SELECT 1 FROM collations WHERE run_id = ? AND state = ?", run_id, UNKNOWN):
                 raise ControllerError("끝났는지 모르는 결과 모으기가 있습니다. 종료를 먼저 확인하세요.")
             if self._supervisor_busy():
-                raise ControllerError("다른 상위 모델 호출(다듬기·제안·분담·모으기)이 진행 중입니다. 끝난 뒤에 다시 부르세요.")
+                raise ControllerError("다른 상위 모델 호출(다듬기·제안·분담·모으기)이 진행 중이거나 끝났는지 모릅니다. 끝나거나 종료를 확인한 뒤에 다시 부르세요.")
             if self.paused or self.unsettled() >= self.unsettled_limit:
                 raise ControllerError("execution is paused or has unsettled attempts; no call was started")
             if self._slots_used() >= self.max_parallel:
