@@ -1,5 +1,4 @@
 """Publication regressions use synthetic strings only; no native CLI or auth probes."""
-import importlib.util
 import json
 from pathlib import Path
 import tempfile
@@ -55,12 +54,8 @@ class InitPublicationTests(unittest.TestCase):
             "agents": [], "skills": "private_invalid_list", "cwd": "/home/private-user/work",
             "private_field": "anything", "permissionMode": {"private_permission": []}}
 
-    def test_both_exporters_use_counts_and_preserve_absent_vs_empty(self):
-        path = Path(__file__).resolve().parents[1] / "tools/v04-01/summarize_claude_init.py"
-        spec = importlib.util.spec_from_file_location("init_publication_test", path)
-        standalone = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(standalone)
-        old = standalone.summarize(self.INIT, {"result": "person@example.test"}, "a" * 64, "b" * 40)
+    def test_the_observer_uses_counts_and_preserves_absent_vs_empty(self):
+        # 같은 요약을 하던 V04-01 도구(summarize_claude_init.py)는 카드 #149에서 은퇴했다 — 관측 도구의 요약만 본다
         run = SimpleNamespace(state="exited", exit_code=0, duration_ms=1, containment="pid_namespace",
                               tree_confirmed_empty=True, input_delivery="complete", stderr_counts={}, stderr="", stdout="")
         outcome = SimpleNamespace(text="OK", status="ok", ok=True, reported_models=("m",), model_match=True,
@@ -69,7 +64,6 @@ class InitPublicationTests(unittest.TestCase):
             current = observe.summarize("b1", run, outcome, record={"argv": []}, argv=[], changes=[],
                                         work=Path(tmp), home="/home/u", init=self.INIT)
         counts = current["init"]["init_counts"]
-        self.assertEqual(counts, old["init_counts"])
         self.assertEqual(counts["tools"], 2)
         self.assertEqual(counts["agents"], 0)
         self.assertIsNone(counts["skills"])
@@ -79,12 +73,8 @@ class InitPublicationTests(unittest.TestCase):
         self.assertEqual(current["init"]["missing_fields"], ["skills", "slash_commands"])
         self.assertEqual(current["init"]["unknown_field_count"], 1)
         self.assertIsNone(current["init"]["permissionMode"])
-        for summary in (current, old):
-            self.assertNotIn("private_", json.dumps(summary))
-            self.assertNotIn("private-user", json.dumps(summary))
-            self.assertNotIn("person@example.test", json.dumps(summary))
-        self.assertEqual(old["raw_sha256"], "a" * 64)
-        self.assertRegex(old["publication_policy_git_blob_sha1"], r"^[0-9a-f]{40}$")
+        self.assertNotIn("private_", json.dumps(current))
+        self.assertNotIn("private-user", json.dumps(current))
 
 
 if __name__ == "__main__":

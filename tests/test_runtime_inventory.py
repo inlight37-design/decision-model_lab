@@ -330,41 +330,6 @@ class FreshEnvironmentTests(unittest.TestCase):
         self.assertIsInstance(user, dict)
 
 
-def load_summarizer():
-    import importlib.util
-    path = Path(__file__).resolve().parents[1] / "tools/v04-01/summarize_claude_init.py"
-    spec = importlib.util.spec_from_file_location("summarize_claude_init", path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
-
-
-class SummarizeClaudeInitTests(unittest.TestCase):
-    """P4 요약기. 합성 stream 만 쓴다. PR #4 R05: 없는 필드가 0 으로 기록됐다."""
-    INIT = {"type": "system", "subtype": "init", "model": "m", "apiKeySource": "none",
-            "tools": [], "mcp_servers": [], "plugins": [{"name": "a@builtin"}, {"name": "mine@shop"}],
-            "agents": ["x"], "cwd": r"C:\Users\carol\work"}
-    RESULT = {"type": "result", "subtype": "success", "is_error": False, "result": "OK", "usage": {}}
-
-    def test_missing_list_is_null_not_zero(self):
-        s = load_summarizer()
-        summary = s.summarize(self.INIT, self.RESULT, "0" * 64, "0" * 40)
-        counts = summary["init_counts"]
-        self.assertEqual(counts["tools"], 0)            # 있고 비었다
-        self.assertIsNone(counts["skills"])             # 필드가 없었다
-        self.assertIsNone(counts["slash_commands"])
-        self.assertEqual(summary["missing_fields"], ["skills", "slash_commands"])
-        self.assertEqual(counts["plugins_by_origin"], {"builtin": 1, "other": 1})
-        self.assertIn("cwd", summary["init_fields"])
-        self.assertNotIn("carol", json.dumps(summary))  # 필드 이름만, 값은 싣지 않는다
-        self.assertNotIn("mine", json.dumps(summary))
-
-    def test_stream_without_init_is_refused(self):
-        s = load_summarizer()
-        with self.assertRaises(ValueError):
-            s.parse(json.dumps(self.RESULT))
-
-
 class CliTests(unittest.TestCase):
     def test_redirected_output_is_utf8_even_with_cp949_default(self):
         child_env = dict(os.environ, PYTHONIOENCODING="cp949", PATH="")
