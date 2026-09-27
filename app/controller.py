@@ -44,7 +44,7 @@ import uuid
 from typing import Any, Protocol
 
 from app.store import Store
-from app import next_step, refine as refining, split as splitting
+from app import collate as collating, next_step, refine as refining, split as splitting
 from app.roles import freeze as freeze_roles, task_projection
 from app.report import build_report
 from app.synthesis import (LABEL_ORDER, SynthesisError, _sources as synthesis_sources, check_model_synthesis,
@@ -168,8 +168,9 @@ PACKET = ("{marker}\n답의 첫 줄에 위 대괄호 줄을 그대로 옮겨 적
 
 @dataclass(frozen=True)
 class _Seat:
-    """슈퍼바이저 호출 한 종류가 원장에 앉는 자리: 표, 행을 고르는 열, 사건 이름, 답 검사. 다듬기 차례(#130)와 다음 단계
-    제안(#133)이 같은 시작·결과·종료 확인 관문을 쓰게 한다. 표 이름과 열은 코드에 박은 값이다(사용자 입력이 아니다)."""
+    """상위 모델 호출 한 종류가 원장에 앉는 자리: 표, 행을 고르는 열, 사건 이름, 답 검사. 다듬기 차례(#130)·다음 단계
+    제안(#133)·분담 제안(#135)·결과 모으기(#137)가 같은 시작·결과·종료 확인 관문을 쓰게 한다. 표 이름과 열은 코드에 박은
+    값이다(사용자 입력이 아니다). 자리·종료 미확인·한 번에 하나·재시작 복구는 SEATS를 한꺼번에 본다."""
     table: str
     keys: tuple[str, ...]
     labels: tuple[str, ...]          # 사건에 싣는 열(사건의 실행 키로 이미 드러나는 열은 뺀다)
@@ -180,6 +181,7 @@ class _Seat:
     not_stored: str
     acknowledged: str
     check: Any                       # (답 원문, 그 호출의 원장 행) → 검사한 답. 분담 제안은 행의 팀원·자료로 검사한다
+    event_column: str = ""           # 사건을 남기는 키가 든 열(다듬기: refine_id, 제안·모으기: run_id, 분담: split_id)
 
     @property
     def match(self) -> str:
@@ -192,17 +194,22 @@ class _Seat:
 REFINE_SEAT = _Seat("refine_turns", ("refine_id", "turn"), ("turn",), "refine", "refine_turn_started",
                     {ACCEPTED: "refine_turn_completed", REJECTED: "refine_turn_failed", UNKNOWN: "refine_turn_unknown"},
                     "refine_result_ignored", "refine_result_not_stored", "refine_unknown_acknowledged",
-                    lambda text, row: refining.check(text))
-# 제안 사건은 그 실행의 사건으로 남긴다(실행 화면의 사건 기록에 보인다)
+                    lambda text, row: refining.check(text), "refine_id")
+# 제안·모으기 사건은 그 실행의 사건으로 남긴다(실행 화면의 사건 기록에 보인다)
 NEXT_SEAT = _Seat("proposals", ("proposal_id",), ("proposal_id",), "next_step", "proposal_started",
                   {ACCEPTED: "proposal_completed", REJECTED: "proposal_failed", UNKNOWN: "proposal_unknown"},
                   "proposal_result_ignored", "proposal_result_not_stored", "proposal_unknown_acknowledged",
-                  lambda text, row: next_step.check(text))
+                  lambda text, row: next_step.check(text), "run_id")
 SPLIT_SEAT = _Seat("splits", ("split_id",), (), "split", "split_started",
                    {ACCEPTED: "split_completed", REJECTED: "split_failed", UNKNOWN: "split_unknown"},
                    "split_result_ignored", "split_result_not_stored", "split_unknown_acknowledged",
                    lambda text, row: splitting.check(text, json.loads(row["members"]),
-                                                     [s["name"] for s in json.loads(row["sources"])]))
+                                                     [s["name"] for s in json.loads(row["sources"])]), "split_id")
+COLLATE_SEAT = _Seat("collations", ("collation_id",), ("collation_id",), "collate", "collation_started",
+                     {ACCEPTED: "collation_completed", REJECTED: "collation_failed", UNKNOWN: "collation_unknown"},
+                     "collation_result_ignored", "collation_result_not_stored", "collation_unknown_acknowledged",
+                     lambda text, row: collating.check(text, json.loads(row["drafts"])), "run_id")
+SEATS = (REFINE_SEAT, NEXT_SEAT, SPLIT_SEAT, COLLATE_SEAT)
 
 
 @dataclass(frozen=True)
@@ -700,13 +707,16 @@ class Controller:
                                " ORDER BY run_id, seq", *((run_id,) if run_id else ()))
         return synthesis_attempts(rows, ((rid, worker[2]) for rid, worker in self._synthesis.items()))
 
+    def _seat_count(self, *states: str) -> int:
+        """상위 모델 호출(SEATS의 모든 표)에서 주어진 상태인 행의 수."""
+        marks = ", ".join("?" for _ in states)
+        return sum(self.store.row(f"SELECT COUNT(*) AS n FROM {seat.table} WHERE state IN ({marks})", *states)["n"]
+                   for seat in SEATS)
+
     def _slots_used(self) -> int:
         return sum(item["status"] in (RUNNING, UNKNOWN) for item in self._synthesis_attempts().values()) + self.store.row(
-            "SELECT COUNT(*) AS n FROM participants WHERE state IN (?, ?)", RUNNING, UNKNOWN)["n"] + self.store.row(
-            "SELECT (SELECT COUNT(*) FROM refine_turns WHERE state IN (?, ?)) + "
-            "(SELECT COUNT(*) FROM proposals WHERE state IN (?, ?)) + "
-            "(SELECT COUNT(*) FROM splits WHERE state IN (?, ?)) AS n",
-            RUNNING, UNKNOWN, RUNNING, UNKNOWN, RUNNING, UNKNOWN)["n"]
+            "SELECT COUNT(*) AS n FROM participants WHERE state IN (?, ?)", RUNNING, UNKNOWN)["n"] + self._seat_count(
+            RUNNING, UNKNOWN)
 
     def _budget_exhausted(self, adapter_id: str) -> bool:
         """전체·provider 상한. 거래 안에서 읽고 같은 거래에서 예약한다 — 병렬 요청이 마지막 한 칸을 함께 쓰지 못한다."""
@@ -715,12 +725,10 @@ class Controller:
             provider["cap"] is None or provider["used"] >= provider["cap"]))
 
     def _unknown_slots(self) -> int:
-        """종료를 확인하지 못해 자리를 쥔 시도: 참여자·합성·다듬기 차례·다음 단계 제안."""
+        """종료를 확인하지 못해 자리를 쥔 시도: 참여자·합성·상위 모델 호출(다듬기·제안·분담·모으기)."""
         return (self.store.row("SELECT COUNT(*) AS n FROM participants WHERE state = ?", UNKNOWN)["n"]
                 + sum(item["status"] == UNKNOWN for item in self._synthesis_attempts().values())
-                + self.store.row("SELECT (SELECT COUNT(*) FROM refine_turns WHERE state = ?) + "
-                                 "(SELECT COUNT(*) FROM proposals WHERE state = ?) + "
-                                 "(SELECT COUNT(*) FROM splits WHERE state = ?) AS n", UNKNOWN, UNKNOWN, UNKNOWN)["n"])
+                + self._seat_count(UNKNOWN))
 
     def unsettled(self) -> int:
         with self.lock:
@@ -1049,24 +1057,15 @@ class Controller:
                 if self._transition(tx, row, UNKNOWN, status="controller_restarted",
                                     detail="controller restarted; termination not confirmed"):
                     tx.event(row["run_id"], "attempt_unknown", pid=row["pid"], detail="controller restarted")
-        for row in self.store.rows("SELECT refine_id, turn, attempt FROM refine_turns WHERE state = ?", RUNNING):
-            with self.store.tx() as tx:   # 다듬기 차례도 같다: 종료를 확인할 수 없으니 종료 미확인, 다시 부르지 않는다
-                if tx.execute("UPDATE refine_turns SET state = ?, status = 'controller_restarted' WHERE refine_id = ? "
-                              "AND turn = ? AND state = ? AND attempt = ?", UNKNOWN, row["refine_id"], row["turn"],
-                              RUNNING, row["attempt"]):
-                    tx.event(row["refine_id"], "refine_turn_unknown", turn=row["turn"], attempt=row["attempt"],
-                             detail="controller restarted")
-        for row in self.store.rows("SELECT proposal_id, run_id, attempt FROM proposals WHERE state = ?", RUNNING):
-            with self.store.tx() as tx:   # 다음 단계 제안도 같다
-                if tx.execute("UPDATE proposals SET state = ?, status = 'controller_restarted' WHERE proposal_id = ? "
-                              "AND state = ? AND attempt = ?", UNKNOWN, row["proposal_id"], RUNNING, row["attempt"]):
-                    tx.event(row["run_id"], "proposal_unknown", proposal_id=row["proposal_id"], attempt=row["attempt"],
-                             detail="controller restarted")
-        for row in self.store.rows("SELECT split_id, attempt FROM splits WHERE state = ?", RUNNING):
-            with self.store.tx() as tx:   # 분담 제안도 같다
-                if tx.execute("UPDATE splits SET state = ?, status = 'controller_restarted' WHERE split_id = ? "
-                              "AND state = ? AND attempt = ?", UNKNOWN, row["split_id"], RUNNING, row["attempt"]):
-                    tx.event(row["split_id"], "split_unknown", attempt=row["attempt"], detail="controller restarted")
+        for seat in SEATS:   # 상위 모델 호출도 같다: 종료를 확인할 수 없으니 종료 미확인, 다시 부르지 않는다
+            for row in self.store.rows(f"SELECT * FROM {seat.table} WHERE state = ?", RUNNING):
+                where = {key: row[key] for key in seat.keys}
+                with self.store.tx() as tx:
+                    if tx.execute(f"UPDATE {seat.table} SET state = ?, status = 'controller_restarted' WHERE "
+                                  f"{seat.match} AND state = ? AND attempt = ?", UNKNOWN, *where.values(), RUNNING,
+                                  row["attempt"]):
+                        tx.event(row[seat.event_column], seat.done[UNKNOWN], **seat.label(where), attempt=row["attempt"],
+                                 detail="controller restarted")
         for run in self.store.rows("SELECT run_id FROM runs WHERE phase = ?", m.DRAFTING):
             with self.store.tx() as tx:
                 self._maybe_reveal(run["run_id"], tx)
@@ -1368,11 +1367,9 @@ class Controller:
         self._acknowledge_seat(REFINE_SEAT, refine_id, {"refine_id": refine_id, "turn": turn})
 
     def _supervisor_busy(self) -> bool:
-        """슈퍼바이저 호출은 다듬기·제안을 통틀어 한 번에 하나다. 버튼을 두 번 누르거나 창 두 개에서 불러도 둘째를
-        시작하지 않는다(Codex 교차검토, PR #131)."""
-        return bool(self.store.row("SELECT 1 FROM refine_turns WHERE state = ? UNION ALL "
-                                   "SELECT 1 FROM proposals WHERE state = ? UNION ALL "
-                                   "SELECT 1 FROM splits WHERE state = ?", RUNNING, RUNNING, RUNNING))
+        """상위 모델 호출은 다듬기·제안·분담·모으기를 통틀어 한 번에 하나다. 버튼을 두 번 누르거나 창 두 개에서 불러도
+        둘째를 시작하지 않는다(Codex 교차검토, PR #131)."""
+        return self._seat_count(RUNNING) > 0
 
     # ---- 다음 단계 제안(카드 #133) --------------------------------------------------------------
     def propose_next(self, run_id: str) -> str:
