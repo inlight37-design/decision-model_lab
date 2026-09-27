@@ -322,7 +322,7 @@ button.is-pressed { background-image: linear-gradient(color-mix(in oklch, curren
               <textarea id="question" rows="4" placeholder="예: 사내 문서 검색을 벡터 DB로 바꿀까, 기존 키워드 검색을 개선할까?"></textarea>
             </div>
             <div class="form-field">
-              <span class="form-label" id="sourcesLabel">공통 자료 <span class="muted">(선택)</span></span>
+              <span class="form-label" id="sourcesLabel"><span id="sourcesLabelText">공통 자료</span> <span class="muted">(선택)</span></span>
               <div class="file-drop" id="fileDrop" aria-labelledby="sourcesLabel">
                 <div class="file-list" id="fileChips"></div>
                 <div class="file-pick-row">
@@ -343,6 +343,7 @@ button.is-pressed { background-image: linear-gradient(color-mix(in oklch, curren
               <div class="role-grid" id="roleSlots"></div>
               <p class="sm error-line" id="roleWarnings" role="status"></p>
             </div>
+            <div class="form-field stack" id="assignments" hidden></div>
             <div id="advanced"></div>
             <button class="btn btn-brand btn-block" id="startBtn" type="button">보낼 입력 확인</button>
             <p class="sm error-line" id="formErr" role="alert"></p>
@@ -627,7 +628,8 @@ function sourceNote(sizes, claudeLive) {
     : "");
 }
 function updateSourceNote() {
-  $("sourcesNote").textContent = sourceNote(picked.map(f => f.size), liveMode && !!roleBoard && roleBoard.isolated.includes("claude"));
+  $("sourcesNote").textContent = sourceNote(picked.map(f => f.size), liveMode && !!roleBoard &&
+    [...roleBoard.isolated, ...roleBoard.general].includes("claude"));
 }
 // 한도를 넘거나 받지 않는 형식은 넣지 않고 이유를 적는다(조용히 빼지 않는다)
 function addFiles(files) {
@@ -654,20 +656,22 @@ function renderPicked(note) {
   const taken = new Set(), renamed = picked.map(f => [f.name, sourceName(f.name, taken)]).filter(([a, b]) => a !== b);
   $("sourcesHelp").hidden = !picked.length;
   // replaceChildren은 null을 "null" 글자로 넣는다 — 바뀌는 이름이 없을 때 걸러 낸다
+  const general = !!roleBoard && roleBoard.general.length > 0;
   $("sourcesHelp").replaceChildren(...[
-    h("p", {}, "CLI 참여자는 같은 파일을 읽기 전용으로 받습니다. 원본 앱 참여자는 같은 파일을 직접 첨부해야 하며, 첨부했는지는 확인하지 못합니다."),
+    h("p", {}, general ? "일반 팀원은 아래에서 고른 자료만 읽기 전용으로 받습니다. 아무 팀원도 받지 않는 자료는 보낼 수 없습니다."
+      : "CLI 참여자는 같은 파일을 읽기 전용으로 받습니다. 원본 앱 참여자는 같은 파일을 직접 첨부해야 하며, 첨부했는지는 확인하지 못합니다."),
     renamed.length ? h("p", {}, "영문·숫자가 아닌 글자는 _로 바꿔 보냅니다: " + renamed.map(([a, b]) => `${a} → ${b}`).join(", ")) : null].filter(Boolean));
   updateSourceNote();
+  if (roleBoard) renderAssignments();   // 팀원별 자료 고르기에 새 목록을 보인다
   pressAll(box);
 }
 function advancedSummary() {
   return `정족수 ${$("min").value}명 · ${$("policy").value === "independent_only" ? "독립성이 확인된 참여자만 셈" : "미확인 답도 셈"}`;
 }
 function initNewRun(opt) {
-  roleOptions = opt;
+  roleOptions = opt; assignDraft = {};
   roleBoard = emptyBoard(); roleBoard.isolated = opt.participants.filter(p => p.transport === "cli").map(p => p.pid);
   $("choices").replaceChildren(...opt.participants.map(p => roleCard(p, opt)));
-  renderRoleBoard();
   const min = h("input", { type: "number", id: "min", min: "1",
     value: String(opt.live ? opt.participants.filter(p => p.transport === "cli").length : 2) });
   const policy = h("select", { id: "policy" },
@@ -680,6 +684,7 @@ function initNewRun(opt) {
     h("p", { class: "cap muted" }, "정족수가 차야 공개합니다. 모자라도 유료로 채우지 않습니다.")]));
   const summary = () => { $("advancedHead").textContent = "정족수 설정 · " + advancedSummary(); };
   min.addEventListener("input", summary); policy.addEventListener("change", summary); summary();
+  renderRoleBoard();   // 정족수 칸을 만든 뒤에 그린다 — 일반 칸이 차면 그 칸을 숨긴다
   $("startBtn").textContent = "보낼 입력 확인";
   $("modeNote").textContent = (opt.live
     ? "시작하면 고른 실제 CLI를 부릅니다. 쓴 호출은 실패·취소해도 돌려받지 않고, 서버를 다시 켜도 채워지지 않습니다. "
@@ -691,7 +696,9 @@ async function startRun() {
   const err = $("formErr"), button = $("startBtn");
   err.textContent = "";
   if (!$("question").value.trim()) { err.textContent = "질문을 적어 주세요."; $("question").focus(); return; }
-  const participants = roleBoard.isolated.map(pid => {
+  // 일반 칸을 채웠으면 그 팀원들로, 아니면 격리 팀원으로 실행한다. 둘을 섞은 배치는 서버가 거절한다.
+  const general = roleBoard.general.length > 0, members = general ? roleBoard.general : roleBoard.isolated;
+  const participants = members.map(pid => {
     const sel = $("b-" + pid);
     return { pid, behavior: sel ? sel.value : "ok" };
   });
@@ -700,11 +707,18 @@ async function startRun() {
   invalidatePreview();
   const generation = previewGeneration;
   const body = { question: $("question").value, participants, role_board: roleBoard, models: chosenModels(roleBoard),
-                 min_independent: +$("min").value, quorum_policy: $("policy").value,
+                 ...(general ? {} : { min_independent: +$("min").value, quorum_policy: $("policy").value }),
                  ...(composeTask ? { task_id: composeTask } : { task_title: $("taskTitle").value.trim() || $("question").value.trim().slice(0, 120) }) };
   const files = [...picked];
   try {
     body.sources = await sourceFiles(files);
+    if (general) {
+      const built = buildAssignments(members, files, body.sources, assignDraft);
+      const label = pid => (roleOptions.participants.find(p => p.pid === pid) || {}).label || pid;
+      if (built.missing.length) throw new Error("팀원마다 맡길 일을 적어 주세요: " + built.missing.map(label).join(", "));
+      if (built.unused.length) throw new Error("아무 팀원도 받지 않는 자료가 있습니다. 빼거나 팀원에게 주세요: " + built.unused.join(", "));
+      body.assignments = built.assignments;
+    }
     const preview = await api("/api/runs/preview", body);
     if (generation === previewGeneration) showInputPreview(preview, body);
   } catch (e) { err.textContent = e.message; }
@@ -732,6 +746,8 @@ function participantState(run, p) {
   if (p.status === "cancelled_before_start") return ["시작 전 취소", "badge-missing"];
   if (p.status === "cancelled") return ["취소 · 종료 확인", "badge-missing"];
   if (p.state === "accepted" && run.phase === "revealed") return ["공개됨", "badge-qualified"];
+  if (run.mode === "general") return [MEMBER_STATE[p.state] || p.state, p.state === "accepted" ? "badge-qualified"
+    : STATE_BADGE[p.state] || "badge-neutral"];   // 일반 팀원은 봉인하지 않는다 — "봉인" 표시를 쓰지 않는다
   return [STATE_LABEL[p.state] || p.state, STATE_BADGE[p.state] || "badge-neutral"];
 }
 // 공개된 초안의 실행 정보. 독립성·모델·시간·사용량. 모르는 값은 그렇게 적는다.
@@ -743,7 +759,9 @@ function draftInfo(p) {
             (r && typeof r.user_confirmed === "boolean" ? `사용자 확인 ${r.user_confirmed ? "예" : "아니오"} · ` : "") + "사용량·시간 관측 안 됨"];
   }
   const reported = r.reported_models && r.reported_models.length ? r.reported_models.join(", ") : "보고 없음";
-  return [p.independence === "confirmed" ? "독립성 확인(controller가 고정 입력만 주고 실행)" : "문맥 미확인 · 독립 정족수에 세지 않음",
+  return [p.independence === "confirmed" ? "독립성 확인(controller가 고정 입력만 주고 실행)"
+    : p.independence === "not_applicable" ? "일반 팀원 · blind 초안이 아니어서 독립 판정을 하지 않음"
+    : "문맥 미확인 · 독립 정족수에 세지 않음",
     `모델: 요청 ${r.requested_model || "?"} → ${reported}${r.model_match === false ? " (불일치)" : ""}`,
     `걸린 시간: ${typeof r.duration_ms === "number" ? (r.duration_ms / 1000).toFixed(1) + "초" : "미확인"}`,
     `사용량: ${r.usage && Object.keys(r.usage).length ? Object.entries(r.usage).map(([k, v]) => `${k} ${fmtNumber(v)}`).join(" · ") : "관측 안 됨"}`,
@@ -751,13 +769,20 @@ function draftInfo(p) {
 }
 function participantRow(run, p) {
   const gate = run.gate || {};
-  const revealed = run.phase === "revealed";
+  const general = run.mode === "general";
+  const revealed = run.phase === "revealed" || general;   // 일반 팀원의 답은 받는 즉시 보인다(봉인 없음)
   const [label, cls] = participantState(run, p);
   const card = h("div", { class: "participant-card" },
     h("div", { class: "row between" }, h("strong", { class: "sm" }, p.label), badge(label, cls)),
     h("p", { class: "cap muted" }, `${p.provider} · ${participantKind(p)}`));
-  if (p.independence !== "confirmed")
+  if (p.independence === "unverified")
     card.append(h("div", { class: "row" }, h("span", { class: "tag", title: "정족수에서 보조 근거로만 셉니다" }, "독립성 미확인")));
+  if (p.assignment) card.append(collapsible(`assign-${run.run_id}-${p.pid}`, "받은 입력 · 맡은 일과 자료", h("div", { class: "info-list" },
+    h("p", {}, "맡은 일: " + p.assignment.task),
+    p.assignment.sources.length ? p.assignment.sources.map(s => h("p", {}, h("span", { class: "mono" }, s.name),
+      ` · ${s.bytes}바이트 · 원문 파일 전체 · sha256 `, h("span", { class: "mono hash" }, s.sha256.slice(0, 12) + "…"))) : h("p", {}, "받은 자료 없음"),
+    h("p", {}, "입력 sha256 ", h("span", { class: "mono hash" }, p.assignment.input_sha256), ` · ${p.assignment.input_bytes}바이트`),
+    h("pre", { class: "input-full" }, p.assignment.prompt))));
   if (p.result && p.result.model_match === false)
     card.append(h("p", { class: "sm cell cell-alert" }, "요청한 모델과 다른 모델이 답했다고 보고했습니다."));
   const extra = (p.contamination || []).map(c => h("p", {}, c));
@@ -777,7 +802,7 @@ function participantRow(run, p) {
   }
   if (p.state === "awaiting_user" && gate.can_submit) card.append(manualForm(run, p));
   if (revealed && p.draft != null) {
-    card.append(collapsible(`draft-${run.run_id}-${p.pid}`, "초안 원문 보기", [
+    card.append(collapsible(`draft-${run.run_id}-${p.pid}`, general ? "답 원문과 실행 정보" : "초안 원문 보기", [
       h("div", { class: "draft-text" }, p.draft),
       h("div", { class: "info-list" }, draftInfo(p).map(t => h("p", {}, t)),
         p.draft_sha256 ? h("p", { class: "mono hash" }, "sha256 " + p.draft_sha256) : null, extra)]));
@@ -818,8 +843,10 @@ function participantsIsland(run) {
   const revealed = run.phase === "revealed";
   const done = run.participants.filter(p => p.state === "accepted").length;
   const n = run.participants.length;
-  return island("참여자", [
-    h("p", { class: "sm muted" }, revealed ? `${n}명 중 ${done}명의 답을 공개했습니다.`
+  return island(run.mode === "general" ? "일반 팀원" : "참여자", [
+    h("p", { class: "sm muted" }, run.mode === "general" ? `${n}명 중 ${done}명의 결과를 받았습니다` +
+      ((run.gate || {}).collected ? " · 모두 끝났습니다." : " · 끝나는 대로 보입니다.")
+      : revealed ? `${n}명 중 ${done}명의 답을 공개했습니다.`
       : run.cancel_requested ? `${n}명 중 ${done}명 제출 · 취소해서 공개하지 않습니다(봉인 유지).`
       : (run.gate || {}).status === "waiting" ? `${n}명 중 ${done}명 제출 · 모두 끝나면 한꺼번에 공개합니다.` : `${n}명 중 ${done}명 제출`),
     h("div", { class: "island-part" }, run.participants.map(p => participantRow(run, p))),
@@ -972,6 +999,26 @@ function synthesisPanel(run) {
     return [...(firstView === "decision" ? [card, table] : [table, card]), wantsModel ? modelIsland() : null];
   }
 }
+// 내 차례의 판단 완료와 취합 메모. 메모는 원장의 판단 완료 사건에 남는 사람의 기록이며 검증·합의 판정이 아니다.
+function reviewIsland(run) {
+  const general = run.mode === "general";
+  if (run.reviewed) return island("내 차례 · 판단 완료", [
+    h("p", { class: "sm" }, general ? "팀원들의 결과를 판단 완료로 표시했습니다. 추가 일은 작업에서 새 실행으로 이어 가세요."
+      : "지금까지의 원문과 합성 결과를 판단 완료로 표시했습니다. 새 합성 결과가 나오면 다시 판단합니다. 추가 질문은 작업에서 새 실행으로 이어 가세요."),
+    run.review_memo ? h("div", { class: "island-part stack" }, h("p", { class: "cap muted" }, "취합 메모"),
+      h("pre", { class: "input-full" }, run.review_memo)) : null]);
+  const key = run.run_id + "/memo";
+  const memo = h("textarea", { rows: 4, maxlength: "8000", "aria-label": "취합 메모", placeholder: "결과를 모아 정한 것, 남은 일(선택)",
+                               oninput: e => { drafts[key] = e.target.value; } });
+  memo.value = drafts[key] || "";
+  return island(general ? "내 차례 · 결과 모아 판단" : "내 차례 · 공개 뒤 판단", [
+    h("p", { class: "sm muted" }, general ? "팀원들의 결과를 모아 보고 이번 실행을 마칠지, 새 실행으로 이어 갈지 정하세요. 실패한 팀원의 자리는 채우지 않습니다."
+      : "원문과 지금까지의 합성 결과(실패 포함)를 확인하고 이번 실행을 마칠지, 새 실행으로 이어 갈지 정하세요."),
+    h("div", { class: "form-field island-part" }, memo),
+    h("div", { class: "island-part" }, h("button", { type: "button", class: "btn btn-primary", onclick: () =>
+      act(`/api/runs/${run.run_id}/reviewed`, { revision: run.result_revision, memo: memo.value })
+        .then(ok => { if (ok) delete drafts[key]; }) }, "판단 완료"))]);
+}
 function saveIsland(run) {
   const hasSynthesis = !!run.synthesis && run.synthesis.status === "completed";
   return island("저장", [
@@ -987,6 +1034,9 @@ function runStatus(run) {
   const gate = run.gate || {}, ps = run.participants;
   if (run.cancel_requested) return ["취소 요청됨", "badge-missing"];
   if (gate.revealed) return ["공개됨", "badge-qualified"];
+  if (gate.collected) return ["모두 끝남", "badge-qualified"];
+  if (run.mode === "general" && ps.some(p => p.state === "unknown")) return ["종료 미확인", "badge-unresolved"];
+  if (run.mode === "general") return ["팀원 작업 중", "badge-neutral"];
   if (ps.some(p => p.state === "unknown")) return ["종료 미확인", "badge-unresolved"];
   if (gate.status === "reduction_required") return ["승인 필요", "badge-unresolved"];
   if (gate.status === "quorum_blocked") return ["정족수 부족", "badge-missing"];
@@ -1038,20 +1088,25 @@ function renderHeader() {
 }
 // 질문 섬: 질문 · 한 줄 요약 · 해야 할 일(승인·취소) · 공개 뒤 정족수와 보기 순서. 해시·사건 기록은 '실행 정보'에 접어 둔다.
 function questionIsland(run) {
-  const gate = run.gate || {}, revealed = run.phase === "revealed";
+  const gate = run.gate || {}, revealed = run.phase === "revealed", general = run.mode === "general";
   const [label, cls] = runStatus(run);
   const sources = run.sources || [];
   const parts = [
     h("div", { class: "row between" }, badge(label, cls), h("span", { class: "cap muted" }, fmtTime(run.created_at))),
     h("h2", { class: "run-question", style: "margin-top:var(--s-3)" }, run.question),
-    h("p", { class: "meta-line" }, `참여자 ${run.participants.length}명` + (sources.length ? ` · 공통 자료 ${sources.length}개` : "") +
-      ` · 최소 정족수 ${run.min_independent}명`)];
+    h("p", { class: "meta-line" }, general
+      ? `일반 팀원 ${run.participants.length}명` + (sources.length ? ` · 자료 ${sources.length}개(팀원마다 고름)` : "") + " · 정족수 없음"
+      : `참여자 ${run.participants.length}명` + (sources.length ? ` · 공통 자료 ${sources.length}개` : "") +
+        ` · 최소 정족수 ${run.min_independent}명`)];
+  if (general && !run.cancel_requested && !gate.collected)
+    parts.push(h("p", { class: "sm muted island-part" }, "팀원의 결과는 끝나는 대로 보입니다. 봉인·독립·정족수 판정 없이 내가 모아 판단합니다."));
   if (run.cancel_requested) {
     parts.push(h("div", { class: "cell island-part stack" }, h("p", { class: "sm strong" }, run.note || "취소를 요청했습니다."),
       h("p", { class: "cap muted" }, run.participants.some(p => p.state === "running" || p.state === "unknown")
         ? "취소 요청 저장됨 · 종료 대기/미확인 작업이 있습니다. 실행 자리는 종료 확인 뒤에만 풀립니다."
+        : general ? "취소 요청 저장됨 · controller에 종료 대기/미확인 시도는 없습니다. 이미 받은 결과는 그대로 보입니다."
         : "취소 요청 저장됨 · controller에 종료 대기/미확인 시도는 없습니다. 초안은 계속 봉인됩니다. 원본 앱의 작업 종료는 별도입니다.")));
-  } else if (!revealed) {
+  } else if (!revealed && !general) {
     if (gate.status === "waiting")
       parts.push(h("p", { class: "sm muted island-part" }, "모두 끝나면 한꺼번에 공개합니다. 그 전에는 누구의 답도 보이지 않습니다(봉인)."));
     if (run.note) parts.push(h("div", { class: "cell cell-alert island-part stack" }, h("p", { class: "sm strong" }, run.note),
@@ -1072,17 +1127,19 @@ function questionIsland(run) {
   }
   const info = [
     h("p", {}, roleSummary(run.role_config)),
-    h("p", {}, "입력 모드: 원문 · 역할 구성은 시작할 때 고정됨"),
+    h("p", {}, general ? "입력 모드: 원문 · 역할·팀원별 입력과 자료는 시작할 때 고정됨" : "입력 모드: 원문 · 역할 구성은 시작할 때 고정됨"),
     h("p", {}, "실행 ID ", h("span", { class: "mono hash" }, run.run_id)),
-    h("p", {}, "입력 sha256 ", h("span", { class: "mono hash" }, run.input_sha256), ` · ${run.input_bytes}바이트`),
-    h("p", {}, `정족수 정책: ${run.quorum && run.quorum.policy === "include_unverified" ? "미확인 답도 셈" : "독립성이 확인된 참여자만"}`),
-    sources.length ? h("p", {}, "공통 자료(읽기 전용, 시도마다 해시 확인)") : null,
+    h("p", {}, general ? "입력 묶음 sha256(팀원별 입력 해시를 묶은 값) " : "입력 sha256 ", h("span", { class: "mono hash" }, run.input_sha256), ` · ${run.input_bytes}바이트`),
+    general ? h("p", {}, "정족수·독립 판정: 하지 않음(일반 팀원)")
+      : h("p", {}, `정족수 정책: ${run.quorum && run.quorum.policy === "include_unverified" ? "미확인 답도 셈" : "독립성이 확인된 참여자만"}`),
+    sources.length ? h("p", {}, general ? "자료(팀원은 받은 것만 읽기 전용, 시도마다 해시 확인)" : "공통 자료(읽기 전용, 시도마다 해시 확인)") : null,
     sources.map(s => h("p", {}, h("span", { class: "mono" }, s.name), ` · ${s.bytes}바이트 · sha256 `, h("span", { class: "mono hash" }, s.sha256.slice(0, 12) + "…"))),
     revealed ? h("p", {}, "controller가 공개했다. 공개 전 초안은 서로 보지 않은 상태에서 받았다(수동 참여자는 blind 미확인).") : null,
     h("p", {}, "사건: " + run.events.join(" → "))];
   parts.push(h("div", { class: "island-part" }, collapsible(`info-${run.run_id}`, "실행 정보 · 사건 기록", h("div", { class: "info-list" }, info))));
   if (gate.can_cancel) parts.push(h("div", { class: "island-part" }, h("button", { class: "btn btn-danger", type: "button", onclick: () => {
-    if (window.confirm("이 실행을 되돌릴 수 없게 취소합니다. 받은 초안도 공개하지 않으며 이미 예약한 예산은 돌려받지 않습니다. 원본 앱 작업은 따로 중단해야 합니다."))
+    if (window.confirm(general ? "이 실행을 되돌릴 수 없게 취소합니다. 아직 시작하지 않은 팀원은 부르지 않고, 이미 예약한 예산은 돌려받지 않습니다."
+      : "이 실행을 되돌릴 수 없게 취소합니다. 받은 초안도 공개하지 않으며 이미 예약한 예산은 돌려받지 않습니다. 원본 앱 작업은 따로 중단해야 합니다."))
       act(`/api/runs/${run.run_id}/cancel`);
   } }, "이 실행 취소")));
   return island(null, parts);
@@ -1096,12 +1153,10 @@ function renderRun(run) {
   runSig = sig;
   if (!run) return;
   const revealed = run.phase === "revealed";
-  $("mainCol").replaceChildren(questionIsland(run), ...(revealed ? [...synthesisPanel(run),
-    island("내 차례 · 공개 뒤 판단", run.reviewed ? h("p", { class: "sm" }, "지금까지의 원문과 합성 결과를 판단 완료로 표시했습니다. 새 합성 결과가 나오면 다시 판단합니다. 추가 질문은 작업에서 새 실행으로 이어 가세요.") :
-      [h("p", { class: "sm muted" }, "원문과 지금까지의 합성 결과(실패 포함)를 확인하고 이번 실행을 마칠지, 새 실행으로 이어 갈지 정하세요."),
-       h("button", { type: "button", class: "btn btn-primary",
-         onclick: () => act(`/api/runs/${run.run_id}/reviewed`, { revision: run.result_revision }) }, "판단 완료")]),
-    saveIsland(run)] : []).filter(Boolean));
+  // 일반 실행: 결과 모음은 처음부터, 판단은 모두 끝난 뒤. 합성·원문 보고는 공개된 격리 실행에만 있다.
+  const body = run.mode === "general" ? [generalResults(run), (run.gate || {}).collected ? reviewIsland(run) : null]
+    : revealed ? [...synthesisPanel(run), reviewIsland(run), saveIsland(run)] : [];
+  $("mainCol").replaceChildren(questionIsland(run), ...body.filter(Boolean));
   $("asideCol").replaceChildren(participantsIsland(run));
   pressAll($("mainCol")); pressAll($("asideCol"));
   placeIndicator($("orderSeg"));

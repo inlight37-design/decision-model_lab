@@ -7,7 +7,7 @@ import threading
 from unittest import mock
 
 from app import controller as c, server
-from app.store import Store, StoreError
+from app.store import SCHEMA_VERSION, Store, StoreError
 from test_app_controller import Base, SyntheticExecutor, wait_for
 from test_app_integrity import HttpServerCase
 
@@ -162,7 +162,7 @@ class RoleBoardTests(Base):
         self.assertEqual(backup.execute("PRAGMA user_version").fetchone()[0], 7)
         self.assertNotIn("task_id", [r[1] for r in backup.execute("PRAGMA table_info(runs)")])
         self.assertEqual(backup.execute("SELECT run_id FROM runs").fetchone()[0], rid)
-        self.assertEqual(reopened.row("PRAGMA user_version")[0], 8)
+        self.assertEqual(reopened.row("PRAGMA user_version")[0], SCHEMA_VERSION)
         again = c.Controller(reopened, SyntheticExecutor(), max_parallel=0)
         self.addCleanup(again.shutdown)
         task = again.view()["tasks"][0]
@@ -171,7 +171,7 @@ class RoleBoardTests(Base):
         self.assertEqual(task["role_config"]["isolated"][0]["pid"], "codex")
         with mock.patch("app.store.SCHEMA_VERSION", 7), self.assertRaises(StoreError):
             reopened._migrate()
-        self.assertEqual(reopened.row("PRAGMA user_version")[0], 8)
+        self.assertEqual(reopened.row("PRAGMA user_version")[0], SCHEMA_VERSION)
 
 
 class RoleBoardHttpTests(HttpServerCase):

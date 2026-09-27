@@ -17,6 +17,11 @@ ACCEPTED, REJECTED, UNKNOWN = "accepted", "rejected", "unknown"
 DONE = (ACCEPTED, REJECTED)
 INDEPENDENT_ONLY, INCLUDE_UNVERIFIED = "independent_only", "include_unverified"
 QUORUM_POLICIES = (INDEPENDENT_ONLY, INCLUDE_UNVERIFIED)
+# 실행 방식(runs.mode). 일반 실행은 사람이 나눈 일을 팀원마다 따로 보내고, 끝나는 대로 결과를 보인다. 봉인·정족수가
+# 없으므로 공개(revealed)가 아니라 "모두 끝남"(collected)으로 닫는다. 그 뒤로는 결과를 받지 않는다.
+ISOLATED, GENERAL = "isolated", "general"
+COLLECTED = "collected"
+NO_QUORUM = "none"   # 일반 실행의 runs.quorum_policy. 정족수를 세지 않는다
 
 
 def confirmed(spec) -> bool:
@@ -34,30 +39,43 @@ class RunGate:
     requested: tuple[str, ...]
     dropped: tuple[str, ...]
     note: str | None
+    general: bool = False
+    collected: bool = False
 
     @property
     def can_reveal(self) -> bool:
         return self.status == "ready"
 
     @property
+    def can_collect(self) -> bool:
+        return self.status == "collect"
+
+    @property
     def can_approve_reduction(self) -> bool:
         return self.status == "reduction_required"
 
     def public(self) -> dict[str, Any]:
-        return {"status": self.status, "can_start": self.accepting, "can_submit": self.accepting,
+        return {"status": self.status, "can_start": self.accepting, "can_submit": self.accepting and not self.general,
                 "can_cancel": self.accepting, "can_approve_reduction": self.can_approve_reduction,
                 "can_reveal": self.can_reveal, "can_synthesize": self.revealed,
                 "can_report": self.revealed, "revealed": self.revealed, "settled": self.settled,
-                "note": self.note}
+                "collected": self.collected, "note": self.note}
+
+
+def mode_of(run) -> str:
+    """스키마 9 전의 행(과 시험의 dict)에는 mode가 없다 — 그때의 실행은 모두 격리 실행이다."""
+    return run["mode"] if "mode" in run.keys() else ISOLATED
 
 
 def gate(run, rows) -> RunGate:
     """Derive all permissions from one snapshot; pending participants count only as potential quorum."""
-    revealed = run["phase"] in ("revealed", "synthesis")
     accepting = run["phase"] == "drafting" and not run["cancel_requested"]
     settled = all(p["state"] in DONE for p in rows)
     requested = tuple(p["pid"] for p in rows)
     dropped = tuple(p["pid"] for p in rows if p["state"] == REJECTED)
+    if mode_of(run) == GENERAL:
+        return _general_gate(run, accepting, settled, requested, dropped)
+    revealed = run["phase"] in ("revealed", "synthesis")
     live = [p for p in rows if p["state"] not in (REJECTED, UNKNOWN)]
     independent = sum(confirmed(json.loads(p["spec"])) for p in live)
     unverified = len(live) - independent
@@ -86,6 +104,23 @@ def gate(run, rows) -> RunGate:
     else:
         status = "ready"
     return RunGate(status, accepting, revealed, settled, quorum, requested, dropped, note)
+
+
+def _general_gate(run, accepting, settled, requested, dropped) -> RunGate:
+    """일반 실행: 봉인·정족수·축소 승인이 없다. 팀원이 모두 끝나면(종료 미확인 없이) 모음으로 닫는다. 실패한 팀원은
+    빈자리로 보이고, 채우지 않는다. 공개(revealed)라고 부르지 않는다 — 합성·원문 보고의 관문을 열지 않는다."""
+    collected = run["phase"] == COLLECTED
+    note = None
+    if run["cancel_requested"]:
+        status = "cancelled"
+        note = "취소를 요청했습니다. 새 시도는 막았습니다. 진행 중인 작업의 종료는 별도 확인합니다."
+    elif collected:
+        status = COLLECTED
+    elif not accepting or not settled:
+        status = "waiting"
+    else:
+        status = "collect"
+    return RunGate(status, accepting, False, settled, {}, requested, dropped, note, general=True, collected=collected)
 
 
 def synthesis_attempts(rows, active=()) -> dict[tuple[str, str], dict[str, Any]]:

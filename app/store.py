@@ -27,7 +27,9 @@ from typing import Any, Iterator
 # 6: live_budget — 첫 실제 호출 상한은 원장에 고정한다. 재기동으로 늘리거나 없애지 못한다.
 # 7: sources — 실행을 만들 때 고정한 공통 자료(이름·sha256·크기·내용). 옛 코드가 자료를 모른 채 이어 부르지 않게 올린다.
 # 8: tasks·runs.task_id·role_config — 실행과 같은 거래에서 고정하는 작업/역할판.
-SCHEMA_VERSION = 8
+# 9: runs.mode·assignments — 일반 팀원 실행(카드 #125). 팀원마다 맡긴 일·입력 전문·받은 자료 목록을 고정한다.
+#    옛 코드가 일반 실행을 격리 실행으로 읽어 봉인·정족수 관문에 넣지 않게 올린다.
+SCHEMA_VERSION = 9
 # 스키마 5 이전 시도의 종류는 시작 사건에 남은 실행기 이름에서만 복원한다. 모의 실행기의 이름은 격리 방식이었다.
 # 근거가 없으면 NULL로 두고, 화면은 "실행 종류 기록 없음"으로 보인다.
 LEGACY_EXECUTORS = {"bubblewrap": "mock", "job_object": "mock", "process_group": "mock", "cli": "real"}
@@ -38,7 +40,13 @@ CREATE TABLE IF NOT EXISTS runs (
   roster TEXT NOT NULL, reduction_approved INTEGER NOT NULL DEFAULT 0, note TEXT,
   quorum_policy TEXT NOT NULL,
   cancel_requested INTEGER NOT NULL DEFAULT 0,
-  phase TEXT NOT NULL DEFAULT 'drafting', task_id TEXT, role_config TEXT
+  phase TEXT NOT NULL DEFAULT 'drafting', task_id TEXT, role_config TEXT,
+  mode TEXT NOT NULL DEFAULT 'isolated'
+);
+CREATE TABLE IF NOT EXISTS assignments (
+  run_id TEXT NOT NULL, pid TEXT NOT NULL, task TEXT NOT NULL, prompt TEXT NOT NULL,
+  input_sha256 TEXT NOT NULL, input_bytes INTEGER NOT NULL, sources TEXT NOT NULL,
+  PRIMARY KEY (run_id, pid)
 );
 CREATE TABLE IF NOT EXISTS tasks (
   task_id TEXT PRIMARY KEY, title TEXT NOT NULL, created_at REAL NOT NULL
@@ -200,6 +208,11 @@ class Store:
                         self._db.execute("UPDATE runs SET task_id = ?, role_config = ? "
                                          "WHERE run_id = ? AND task_id IS NULL",
                                          (task_id, json.dumps(roles, ensure_ascii=False), run["run_id"]))
+                if version < 9:
+                    # 9 이전의 실행은 모두 격리 실행이다. 기본값이 그 뜻을 그대로 적는다.
+                    columns = {row[1] for row in self._db.execute("PRAGMA table_info(runs)")}
+                    if "mode" not in columns:
+                        self._db.execute("ALTER TABLE runs ADD COLUMN mode TEXT NOT NULL DEFAULT 'isolated'")
                 if version != SCHEMA_VERSION:
                     self._db.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
                 self._db.execute("COMMIT")

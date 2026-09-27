@@ -1,9 +1,15 @@
-"""A 단계 역할판의 고정 명세. 실행·봉인·예산은 기존 controller가 맡는다."""
+"""역할판의 고정 명세. 실행·봉인·예산은 기존 controller가 맡는다.
+
+한 실행은 격리 칸(봉인·정족수) 또는 일반 칸(사람이 나눈 일, 카드 #125) 가운데 한쪽만 쓴다. 둘을 섞는 것은 E 단계다.
+"""
 from dataclasses import asdict
+
+from app.state import CLI
 
 
 def freeze(board, participants, roster):
-    """칸의 ID를 서버 명단으로 해석한다. 미지원 배치는 기록/호출보다 먼저 거절한다."""
+    """칸의 ID를 서버 명단으로 해석한다. 미지원 배치는 기록/호출보다 먼저 거절한다. participants는 채운 쪽 칸
+    (격리 또는 일반)의 실행 참여자다."""
     result = {"source": "legacy" if board is None else "board", "input_mode": "original",
               "supervisor": None, "orchestrator": None, "general": [],
               "isolated": [asdict(p) for p in participants]}
@@ -20,10 +26,10 @@ def freeze(board, participants, roster):
             raise ValueError(f"{slot}: 현재 명단에 있는 참여자만 배치할 수 있습니다.")
     if board["supervisor"]:
         raise ValueError("슈퍼바이저 모델은 D 단계에서 지원합니다. 이 칸을 비우면 내가 맡습니다.")
-    if board["general"]:
-        raise ValueError("팀원(일반)은 C 단계에서 지원합니다. A 단계에서는 팀원(격리)를 사용하세요.")
     if len(board["orchestrator"]) > 1:
         raise ValueError("오케스트레이터는 한 장만 배치할 수 있습니다.")
+    if board["general"]:
+        return _freeze_general(board, participants, result)
     if board["isolated"] != [p.pid for p in participants]:
         raise ValueError("격리 칸과 실행 참여자가 다릅니다. 입력을 다시 확인하세요.")
     specs = [roster[pid] for slot in ("isolated", "orchestrator") for pid in board[slot]]
@@ -35,6 +41,21 @@ def freeze(board, participants, roster):
             raise ValueError("A 단계 오케스트레이터는 CLI 합성자만 지원합니다. 원본 앱은 격리 칸에 놓으세요.")
         result["orchestrator"] = asdict(spec)
     return result
+
+
+def _freeze_general(board, participants, result):
+    """일반 팀원 작업의 첫 조각: 사람이 나누고 모은다. 팀원은 격리 팀원과 같은 관측된 CLI 계획으로 읽기만 한다."""
+    if board["isolated"]:
+        raise ValueError("격리 칸과 일반 칸을 한 실행에 함께 쓰는 것은 E 단계에서 지원합니다. 한쪽만 채우세요.")
+    if board["orchestrator"]:
+        raise ValueError("일반 팀원 작업의 오케스트레이터 모델은 D 단계에서 지원합니다. 이 칸을 비우면 내가 나누고 모읍니다.")
+    if board["general"] != [p.pid for p in participants]:
+        raise ValueError("일반 칸과 실행 팀원이 다릅니다. 입력을 다시 확인하세요.")
+    if any(p.transport != CLI for p in participants):
+        raise ValueError("팀원(일반)에는 CLI 카드만 놓을 수 있습니다. 원본 앱은 격리 칸에 놓으세요.")
+    if len({p.provider for p in participants}) != len(participants):
+        raise ValueError("같은 provider 두 장은 아직 지원하지 않습니다. provider당 한 장만 배치하세요.")
+    return {**result, "general": [asdict(p) for p in participants], "isolated": []}
 
 
 def task_projection(tasks, runs, held=None):
@@ -55,7 +76,9 @@ def task_projection(tasks, runs, held=None):
             gate, parts = run["gate"], run["participants"]
             states = {p["state"] for p in parts}
             synth = (run.get("model_synthesis") or {}).get("status")
-            if "unknown" in states or synth == "unknown" or (synth == "failed" and not run["reviewed"]):
+            if run.get("mode") == "general":
+                status, action = _general_status(run, states, held)
+            elif "unknown" in states or synth == "unknown" or (synth == "failed" and not run["reviewed"]):
                 status, action = "problem", "종료·실패 확인"
             elif run["cancel_requested"] or gate["status"] == "quorum_blocked":
                 status, action = "problem", "실행 확인"
@@ -89,3 +112,21 @@ def task_projection(tasks, runs, held=None):
                           "status": status, "role_config": latest["role_config"] if latest else None,
                           "calls_used": sum(r["calls_used"] for r in timeline), "runs": timeline})
     return projected
+
+
+def _general_status(run, states, held):
+    """일반 실행의 작업 상태. 결과는 끝나는 대로 보이지만, 판단 완료는 모든 팀원이 끝나 모음으로 닫힌 뒤에 한다."""
+    gate = run["gate"]
+    if "unknown" in states:
+        return "problem", "종료·실패 확인"
+    if run["cancel_requested"]:
+        return "problem", "실행 확인"
+    if gate["collected"]:
+        return ("done", None) if run["reviewed"] else ("my_turn", "결과 모아 판단")
+    if "queued" in states and held == "paused":
+        return "my_turn", "멈춘 시도 이어서 시작"
+    if "queued" in states and held == "unsettled":
+        return "problem", "종료 미확인 정리 뒤 시작"
+    if gate["status"] == "waiting" and states & {"running", "queued"}:
+        return "working", None
+    return "problem", "상태 확인"
