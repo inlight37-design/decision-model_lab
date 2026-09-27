@@ -192,6 +192,17 @@ class CollateTests(support.Base):
         self.assertTrue(ctl.wait_idle())
         self.assertEqual(self.collations(ctl, second)[0]["state"], c.ACCEPTED)
 
+    def test_an_unconfirmed_collation_reopens_my_turn_even_after_review(self):
+        # 종료 확인이 새 결과의 판단을 대신하지 않는다(Codex 교차검토, PR #144 — 모으기에도 같은 틈이 있었다)
+        ctl = self.controller(Collator(outcomes={"supervisor": "unknown"}))
+        rid = self.collected(ctl)
+        ctl.mark_reviewed(rid, self.run_view(ctl, rid)["result_revision"])
+        key = ctl.collate(rid)
+        self.assertTrue(ctl.wait_idle())
+        self.assertFalse(self.run_view(ctl, rid)["reviewed"])
+        ctl.acknowledge_collation_unknown(key)
+        self.assertEqual(ctl.view()["tasks"][0]["status"], "my_turn")
+
     def test_a_new_collation_result_makes_it_my_turn_again(self):
         ctl = self.controller(Collator())
         rid = self.collected(ctl)

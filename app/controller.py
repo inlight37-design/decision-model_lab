@@ -995,6 +995,8 @@ class Controller:
                 worker = self._workers.get(part["attempt"])
                 if worker:
                     worker[1].set()
+        # 실행을 닫는 사람의 동작이다. 진행 중인 실행을 기다리던 교차검토 차례를 깨운다(Codex 교차검토, PR #144)
+        self.pump()
 
     def submit_manual(self, run_id: str, pid: str, text: str, input_sha256: str, *,
                       user_confirmed: bool = False) -> None:
@@ -1036,6 +1038,8 @@ class Controller:
                     self._maybe_reveal(run_id, tx)
             if reason:
                 raise ControllerError(reason)
+        # 실행을 닫는 사람의 동작이다. 진행 중인 실행을 기다리던 교차검토 차례를 깨운다(Codex 교차검토, PR #144)
+        self.pump()
 
     def withdraw_manual(self, run_id: str, pid: str) -> None:
         """사용자가 원본 앱에서 답을 받지 못했다. 그 참여자를 빼고, 빈자리는 채우지 않는다."""
@@ -1046,6 +1050,8 @@ class Controller:
             if self._transition(tx, part, REJECTED, status="withdrawn"):
                 tx.event(run_id, "manual_withdrawn", pid=pid)
                 self._maybe_reveal(run_id, tx)
+        # 실행을 닫는 사람의 동작이다. 진행 중인 실행을 기다리던 교차검토 차례를 깨운다(Codex 교차검토, PR #144)
+        self.pump()
 
     def approve_reduction(self, run_id: str) -> None:
         """축소 승인은 controller가 그것을 기다릴 때만 받는다: 초안 작성 중이고, 모두 끝났고, 빠진 사람이 있고,
@@ -1057,6 +1063,8 @@ class Controller:
             tx.execute("UPDATE runs SET reduction_approved = 1 WHERE run_id = ? AND NOT reduction_approved", run_id)
             tx.event(run_id, "reduction_approved", requested=list(current_gate.requested), dropped=list(current_gate.dropped))
             self._maybe_reveal(run_id, tx)
+        # 실행을 닫는 사람의 동작이다. 진행 중인 실행을 기다리던 교차검토 차례를 깨운다(Codex 교차검토, PR #144)
+        self.pump()
 
     def acknowledge_unknown(self, run_id: str, pid: str) -> None:
         """사용자가 그 시도의 종료를 직접 확인했다고 알린다. 자리는 풀지만 예산은 돌려주지 않고, 초안도 받지 않는다."""
@@ -2033,7 +2041,9 @@ class Controller:
         row = self.store.row(
             "SELECT COALESCE(MAX(CASE WHEN kind IN ('revealed', 'collected', 'synthesis_completed', 'synthesis_failed', "
             "'proposal_completed', 'proposal_failed', 'collation_completed', 'collation_failed', "
-            "'review_completed', 'review_failed', 'review_skipped') "
+            "'review_completed', 'review_failed', 'review_skipped', "
+            # 종료 미확인도 새 결과다 — 종료 확인이 판단을 대신하지 않게 판을 올린다(Codex 교차검토, PR #144)
+            "'proposal_unknown', 'collation_unknown', 'review_unknown') "
             "THEN seq END), 0) AS revision, "
             "COALESCE(MAX(CASE WHEN kind = 'human_reviewed' THEN seq END), 0) AS reviewed "
             "FROM events WHERE run_id = ?", run_id)

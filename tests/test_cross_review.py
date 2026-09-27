@@ -153,6 +153,45 @@ class CrossReviewTests(support.Base):
                 ctl.mark_reviewed(rid, self.run_view(ctl, rid)["result_revision"])
                 self.assertTrue(self.run_view(ctl, rid)["reviewed"])
 
+    def test_a_run_closed_by_a_person_wakes_the_waiting_reviewer(self):
+        # 다른 실행이 원본 앱 답·축소 승인·취소로 닫히면 기다리던 검토자를 부른다(Codex 교차검토, PR #144)
+        for close in ("submit", "cancel"):
+            with self.subTest(close):
+                ex = Reviewer(hold=("reviewer",))
+                ctl = self.controller(ex, work_root=str(self.tmp / f"work-{close}"))
+                rid = self.revealed(ctl)
+                first, second = ctl.cross_review(rid)
+                self.assertTrue(support.wait_for(lambda: self.round(ctl, rid)["reviews"][0]["state"] == c.RUNNING))
+                other = ctl.create_run(f"다른 질문 {close}", [support.manual("gpt")], min_independent=1,
+                                       quorum_policy=c.INCLUDE_UNVERIFIED)   # 사람을 기다리는 실행
+                ex.release("reviewer")
+                self.assertTrue(support.wait_for(lambda: self.round(ctl, rid)["reviews"][0]["state"] == c.ACCEPTED))
+                self.assertTrue(ctl.wait_idle())
+                self.assertEqual(self.round(ctl, rid)["reviews"][1]["state"], c.QUEUED)   # 진행 중인 실행을 기다린다
+                if close == "submit":
+                    ctl.submit_manual(other, "gpt", "원본 앱의 답", self.run_view(ctl, other)["input_sha256"])
+                else:
+                    ctl.cancel_run(other)
+                self.assertTrue(ctl.wait_idle())
+                self.assertEqual(self.round(ctl, rid)["reviews"][1]["state"], c.ACCEPTED)
+                self.assertTrue(ctl.shutdown())
+
+    def test_an_unconfirmed_review_reopens_my_turn_even_after_review(self):
+        # 종료 확인이 새 결과의 판단을 대신하지 않는다(Codex 교차검토, PR #144)
+        ctl = self.controller(Reviewer(reviews=["unknown"]))
+        rid = ctl.create_run("질문", [support.cli("a"), support.manual("gpt")], min_independent=2,
+                             quorum_policy=c.INCLUDE_UNVERIFIED)
+        self.assertTrue(ctl.wait_idle())
+        ctl.submit_manual(rid, "gpt", "원본 앱의 답", self.run_view(ctl, rid)["input_sha256"])
+        ctl.mark_reviewed(rid, self.run_view(ctl, rid)["result_revision"])
+        (key,) = ctl.cross_review(rid)
+        self.assertTrue(ctl.wait_idle())
+        self.assertFalse(self.run_view(ctl, rid)["reviewed"])
+        ctl.acknowledge_review_unknown(key)
+        self.assertEqual(ctl.view()["tasks"][0]["status"], "my_turn")
+        ctl.mark_reviewed(rid, self.run_view(ctl, rid)["result_revision"])
+        self.assertEqual(ctl.view()["tasks"][0]["status"], "done")
+
     def test_the_cap_closes_the_rest_of_the_round_and_a_spent_cap_opens_no_round(self):
         ctl = self.controller(RealLike(), max_real_calls=3)
         rid = self.revealed(ctl)
