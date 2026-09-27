@@ -108,15 +108,19 @@ async function confirmRun() {
   if (!previewRequest) return;
   const button = $("confirmStart"), body = previewRequest;
   button.disabled = true; $("formErr").textContent = "";
-  try {
-    const created = await api("/api/runs", body);
-    closeNewRun(); picked = []; renderPicked("");
-    await refresh();
-    const run = state.runs.find(r => r.run_id === created.run_id);
-    navigateTask(run.task_id, run.run_id);
-    toast("실행을 시작했습니다. 모두 끝나면 한꺼번에 공개합니다.");
-  } catch (e) { $("formErr").textContent = e.message; }
+  let created;
+  try { created = await api("/api/runs", body); }
+  catch (e) { $("formErr").textContent = e.message; return; }
   finally { button.disabled = false; }
+  // 여기부터 실행은 이미 시작했다. 뒤이은 조회가 실패하거나 아직 새 실행을 모르더라도 응답의 run_id로 그 실행을
+  // 고른다 — 창의 오류 칸에 쓰거나 다시 시작하게 하지 않는다(구조 검토 AH-05). 작업은 조회가 그 실행을 가져오면
+  // render()가 채운다. 기존 작업에 붙인 실행이면 그 작업은 처음부터 안다.
+  closeNewRun(); picked = []; renderPicked("");
+  await refresh().catch(() => false);
+  const run = ((state && state.runs) || []).find(r => r.run_id === created.run_id);
+  navigateTask(run ? run.task_id : (body.task_id || null), created.run_id);
+  toast(run ? "실행을 시작했습니다. 모두 끝나면 한꺼번에 공개합니다."
+    : "실행을 시작했습니다 — 상태를 확인하는 중입니다. 다시 시작하지 마세요.");
 }
 function closeNewRun() {
   $("composeDialog").close(); $("newRunBtn").setAttribute("aria-expanded", "false");

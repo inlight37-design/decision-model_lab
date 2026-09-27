@@ -1138,16 +1138,47 @@ async function act(path, body) {
   try { await api(path, body || {}); await refresh(); return true; }
   catch (e) { toast(e.message, true); return false; }
 }
-async function refresh() {
+async function refresh(timer = false) {
+  // 조회마다 보낸 순서를 붙이고, 이미 보인 것보다 먼저 보낸 조회의 응답은 버린다 — 늦게 온 옛 응답이 최신 화면을
+  // 덮지 않는다(구조 검토 AH-05). 1초 타이머는 진행 중인 조회가 있으면 한 번 건너뛴다. 버튼 동작 뒤의 조회는 늘 새로
+  // 보낸다 — 동작 전에 보낸 조회로는 그 결과를 볼 수 없다. 계정 한도는 따로 기다린다: 실패해도 실행 상태는 갱신하고
+  // 한도 칸에만 적는다.
+  if (timer && refreshBusy) return false;
+  const seq = ++refreshSent;
+  refreshBusy++;
   try {
-    const [next, quota] = await Promise.all([api("/api/state"), api("/api/account-quota")]);
-    connection = ""; state = next; render(); renderQuota(quota);
-    // 실제 CLI 시도가 끝나면 계정 사용량이 바뀌었으니 Codex 값을 새로 받는다
-    const settled = next.runs.reduce((n, r) => n + r.participants.filter(p => p.execution === "real" &&
-      ["accepted", "rejected"].includes(p.state)).length, 0);
-    if (settledSeen !== null && settled > settledSeen) autoQuota("run");
-    settledSeen = settled;
-  } catch (e) { connection = String(e.message); renderHeader(); }
+    const statePromise = api("/api/state"), quotaPromise = api("/api/account-quota");
+    quotaPromise.catch(() => {});   // 아래에서 따로 다룬다. 상태 실패로 먼저 돌아가도 처리 안 된 거부로 남기지 않는다
+    let next;
+    try { next = await statePromise; }
+    catch (e) {
+      if (seq > stateShown) { connection = String(e.message); renderHeader(); }
+      return false;
+    }
+    const applied = seq > stateShown;
+    if (applied) {
+      stateShown = seq;
+      connection = ""; state = next; render();
+      // 실제 CLI 시도가 끝나면 계정 사용량이 바뀌었으니 Codex 값을 새로 받는다
+      const settled = next.runs.reduce((n, r) => n + r.participants.filter(p => p.execution === "real" &&
+        ["accepted", "rejected"].includes(p.state)).length, 0);
+      if (settledSeen !== null && settled > settledSeen) autoQuota("run");
+      settledSeen = settled;
+    }
+    try {
+      const quota = await quotaPromise;
+      if (seq > quotaShown) { quotaShown = seq; renderQuota(quota); }
+    } catch (e) {
+      if (seq > quotaShown) { quotaShown = seq; quotaFailed(); }
+    }
+    return applied;
+  } finally { refreshBusy--; }
+}
+let refreshSent = 0, stateShown = 0, quotaShown = 0, refreshBusy = 0;
+function quotaFailed() {
+  if (quotaSignature === "failed") return;   // 같은 안내를 매초 다시 그리지 않는다
+  quotaSignature = "failed";
+  $("accountQuota").replaceChildren(h("p", { class: "sm muted" }, "계정 한도를 조회하지 못했습니다. 실행 상태는 계속 갱신합니다."));
 }
 async function loadOptions() {
   const opt = await api("/api/options");
@@ -1195,8 +1226,8 @@ if (!TOKEN) {
   renderHeader();
 } else {
   renderHeader();
-  loadOptions().then(refresh).catch(e => { connection = String(e.message); renderHeader(); });
-  setInterval(refresh, 1000);
+  loadOptions().then(() => refresh()).catch(e => { connection = String(e.message); renderHeader(); });
+  setInterval(() => refresh(true), 1000);
 }
 </script>
 </body>

@@ -182,7 +182,8 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
             elif len(parts) == 4 and parts[:2] == ["api", "runs"] and parts[3] == "decision-report":
                 try:
                     view = controller.view(parts[2])
-                    result = decision_report(view["runs"][0], build_report(view, parts[2]))
+                    report = build_report(view, parts[2])   # 없는 실행은 여기서 거절된다 — /report와 같은 409
+                    result = decision_report(view["runs"][0], report)
                     if result is None:
                         raise ReportError("synthesis has not been requested")
                     self._json(200, result)   # 판의 변천은 app.report.DECISION_SCHEMA 주석
