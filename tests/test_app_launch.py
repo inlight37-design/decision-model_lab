@@ -185,13 +185,15 @@ class OwnerTests(unittest.TestCase):
         holder = os.open(launch._paths()["lock"], os.O_RDWR | os.O_CREAT, 0o600)   # 첫 serve가 쥔 잠금
         self.addCleanup(os.close, holder)
         fcntl.flock(holder, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        os.write(holder, json.dumps({"pid": 4242, "nonce": "A"}).encode("utf-8"))
         with mock.patch.object(launch, "_alive", return_value=False):   # 기록만으로는 살아 있는지 모르는 순간
             code, out = self.call(launch.serve, mock=True, nonce="B", avoid_ports="")
         self.assertEqual((code, out["reason"]), (1, "already running"))
         self.assertEqual(launch._paths()["state"].read_bytes(), before)            # 기록을 덮지 않았다
         self.assertEqual((self.root / "server.log").read_text(encoding="utf-8"), "owner log")   # 로그도
         self.assertEqual((self.root / "stop-request").read_text(encoding="utf-8"), "4242")      # 끄기 요청도
-        self.assertTrue((self.root / "lost-B").exists())
+        self.assertEqual(json.loads((self.root / "lost-B").read_text(encoding="utf-8"))["owner"],
+                         {"pid": 4242, "nonce": "A"})                               # 누구에게 졌는지 남긴다
 
     @unittest.skipUnless(hasattr(os, "fork") and os.name == "posix", "flock은 Linux의 launch에서만 쓴다")
     def test_only_one_holder_of_the_owner_lock(self):
@@ -203,9 +205,12 @@ class OwnerTests(unittest.TestCase):
         with self.assertRaises(OSError):
             fcntl.flock(other, fcntl.LOCK_EX | fcntl.LOCK_NB)
 
+    def lost(self, nonce, owner):
+        (self.root / f"lost-{nonce}").write_text(json.dumps({"owner": owner}), encoding="utf-8")
+
     def test_the_losers_url_joins_the_live_server(self):
         self.running("A")
-        (self.root / "lost-B").write_text("{}", encoding="utf-8")
+        self.lost("B", {"pid": 4242, "nonce": "A"})
         with mock.patch.object(launch, "_alive", return_value=True), \
                 mock.patch.object(launch, "_listening", return_value=True):
             code, out = self.call(launch.url, wait=0, nonce="B")
@@ -216,6 +221,29 @@ class OwnerTests(unittest.TestCase):
                 mock.patch.object(launch, "_listening", return_value=True):
             code, out = self.call(launch.url, wait=0, nonce="C")                  # 물러난 적 없는 nonce는 기다린다
         self.assertEqual((code, out["status"]), (1, "not_started"))
+
+    def test_a_loser_never_joins_a_later_server(self):
+        # 진 상대가 끝나고 다른 서버가 떠도 그 서버에 합류하지 않는다(Codex 교차검토, PR #147)
+        self.running("C", pid=5555)
+        self.lost("B", {"pid": 4242, "nonce": "A"})
+        with mock.patch.object(launch, "_alive", side_effect=lambda pid: pid == 5555),                 mock.patch.object(launch, "_listening", return_value=True):
+            code, out = self.call(launch.url, wait=0, nonce="B")
+        self.assertEqual((code, out["status"]), (1, "owner_gone"))
+        self.assertFalse((self.root / "lost-B").exists())
+        (self.root / "lost-D").write_text("{}", encoding="utf-8")                    # 상대를 모르는 표시
+        with mock.patch.object(launch, "_alive", return_value=True),                 mock.patch.object(launch, "_listening", return_value=True):
+            code, out = self.call(launch.url, wait=0, nonce="D")
+        self.assertEqual((code, out["status"]), (1, "not_started"))                  # 합류하지 않고 기다린다
+
+    def test_a_stop_request_is_replaced_in_one_step_and_status_names_the_server(self):
+        self.running("A", pid=os.getpid())
+        with mock.patch.object(launch.os, "replace", wraps=os.replace) as replaced,                 mock.patch.object(launch, "_alive", return_value=True):
+            self.call(launch.stop, wait=0, nonce="A")
+        replaced.assert_called_once()
+        self.assertEqual((self.root / "stop-request").read_text(encoding="utf-8"), str(os.getpid()))
+        with mock.patch.object(launch, "_alive", return_value=True):
+            _, out = self.call(launch.status)
+        self.assertEqual(out["nonce"], "A")                                        # start.ps1이 그 서버만 끈다
 
     def test_a_failure_is_written_only_by_the_owner(self):
         from app.store import LedgerBusy

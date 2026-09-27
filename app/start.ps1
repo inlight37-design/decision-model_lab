@@ -125,6 +125,7 @@ try {
         if ($status.stop_requested) { Launch 'cancel-stop' | Out-Null }
         $opened = Launch 'url --wait 10'
         if ((App-Windows).Count -gt 0) { $owner = $false }   # an earlier copy is already watching the window
+        $nonce = [string]$status.nonce   # stop only the server this window opened, not a later replacement
     } else {
         $nonce = [guid]::NewGuid().ToString('N')
         $flag = ''
