@@ -11,7 +11,6 @@
 #
 # Usage (from the repository root):
 #   powershell -NoProfile -ExecutionPolicy Bypass -File tools\v04-01\fresh-shell.ps1 -Script tools\v04-01\check-versions.ps1
-#   powershell -NoProfile -ExecutionPolicy Bypass -File tools\v04-01\fresh-shell.ps1 -Script tools\v04-01\probe.ps1 P1-agy aux-pc
 param(
     [Parameter(Mandatory = $true)][string]$Script,
     [Parameter(ValueFromRemainingArguments = $true)]$Rest

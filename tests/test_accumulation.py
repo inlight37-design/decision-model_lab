@@ -36,10 +36,7 @@ TEXT = (".py", ".md", ".ps1", ".sh", ".yml", ".yaml", ".json", ".html", ".js")
 
 # 날짜 기록 폴더에 있지만 지금도 따라 하는 절차. 다시 따라 할 절차는 살아 있는 문서로 옮기는 것이 원칙이다
 # (7절) — 옮기기 전까지만 여기에 적고, 옮기면 뺀다.
-PROCEDURES = {
-    "docs/experiments/v04-01-inventory/README.md":
-        ("2026-10-25", "AGENTS.md가 설치·권한 재조사 절차로 지정한다 — 카드 #82에서 살아 있는 문서로 옮긴다"),
-}
+PROCEDURES: dict[str, tuple[str, str]] = {}   # 비어 있는 것이 정상이다(V04-01 절차서는 카드 #149에서 SETUP으로 옮겼다)
 
 # 쓰는 곳은 없지만 지우지 않고 남기는 도구. 비어 있는 것이 정상이다.
 KEPT: dict[str, tuple[str, str]] = {}
