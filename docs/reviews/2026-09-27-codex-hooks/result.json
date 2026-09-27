@@ -1,0 +1,55 @@
+{
+ "codex": "codex-cli 0.156.1",
+ "participant_flags": [
+  "--json",
+  "--skip-git-repo-check",
+  "--ephemeral",
+  "--ignore-user-config",
+  "--ignore-rules",
+  "--model"
+ ],
+ "results": [
+  {
+   "case": "A-none exec(participant argv)",
+   "exit": 1,
+   "hook_markers_fired": [],
+   "hooks_parse_error": false,
+   "login_or_auth_mentioned": true
+  },
+  {
+   "case": "A-none debug prompt-input",
+   "exit": 0,
+   "hook_markers_fired": [],
+   "hooks_parse_error": false,
+   "login_or_auth_mentioned": true
+  },
+  {
+   "case": "B-marker-hooks exec(participant argv)",
+   "exit": 1,
+   "hook_markers_fired": [],
+   "hooks_parse_error": false,
+   "login_or_auth_mentioned": true
+  },
+  {
+   "case": "B-marker-hooks debug prompt-input",
+   "exit": 0,
+   "hook_markers_fired": [],
+   "hooks_parse_error": false,
+   "login_or_auth_mentioned": true
+  },
+  {
+   "case": "C-broken-json exec(participant argv)",
+   "exit": 1,
+   "hook_markers_fired": [],
+   "hooks_parse_error": true,
+   "login_or_auth_mentioned": true
+  },
+  {
+   "case": "C-broken-json debug prompt-input",
+   "exit": 0,
+   "hook_markers_fired": [],
+   "hooks_parse_error": false,
+   "login_or_auth_mentioned": true
+  }
+ ]
+}

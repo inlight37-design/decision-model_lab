@@ -87,8 +87,9 @@ CODEX_AUTH_FILE = ".codex/auth.json"
 # 2026-09-25 무모델 `codex debug prompt-input`(합성 HOME): 이 파일의 표식이 모델 입력에 실렸고 project_doc_max_bytes=0으로도
 # 빠지지 않았다. 빈 파일은 건너뛴다. 참여자 문맥에 개인 지시문이 실리지 않게, 있으면 실행 전에 거절한다.
 CODEX_GLOBAL_INSTRUCTIONS = ("AGENTS.override.md", "AGENTS.md")
-# Codex 사용자 전역 훅 파일(카드 #111, 리뷰 통합 S4). 훅은 참여자 실행 중에 사용자 명령을 돌릴 수 있다. 참여자 옵션
-# (`--ignore-user-config` 등)이 이 파일을 막는지는 관측하지 않았으므로, 있으면 참여자 계획을 거절한다(codex_user_hooks).
+# Codex 사용자 전역 훅 파일(카드 #111, 리뷰 통합 S4). 훅은 참여자 실행 중에 사용자 명령을 돌릴 수 있다. 2026-09-27 무모델
+# 관측(0.156.1, 합성 HOME): 참여자 argv(`--ignore-user-config` 포함)로도 이 파일을 읽는다 — 깨진 JSON이면 해석 오류가 났다.
+# 실행되는지는 미확인이다(docs/reviews/2026-09-27-codex-hooks). 있으면 참여자 계획을 거절한다(codex_user_hooks).
 CODEX_USER_HOOKS = ("hooks.json",)
 # Linux 참여자에게는 계정의 연결 앱(ChatGPT apps·connectors, MCP `codex_apps`)을 끈다. 켜 두면 사용자의 GitHub·Google
 # Drive 같은 연결 앱 도구(쓰기 포함)가 참여자 모델에 보인다 — 그 도구는 서버 쪽에서 돌므로 bubblewrap이 막지 못하고,
