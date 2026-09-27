@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-27** · 작성 세션: claude(사용자 PC `DESKTOP-T0UDE01` — 역할판 B 모델 고르기, 앱 모델 호출 없음) · 브랜치 `claude/b-model-choice-20260927` · 기준 main `72d7ab1`.
+최종 갱신 **2026-09-27** · 작성 세션: claude(사용자 PC `DESKTOP-T0UDE01` — S7 계획 경로의 빈틈, 앱 모델 호출 없음) · 브랜치 `claude/s7-plan-gaps-20260927` · 기준 main `0a9daad`.
 
 이 파일은 **지금 상태와 다음 일만** 담는다. 끝난 일의 경위는 PR·git 이력과 날짜가 붙은 기록에 있고, 옛 판은 [docs/handoff/](docs/handoff/README.md)에 있다. **3절에는 진행 중인 일과 "이 판을 들인 PR" 한 줄만 둔다** — 새 PR은 그 줄을 자기 PR로 바꾸고, 병합 전에도 뒤에도 맞는 말만 쓴다("병합했다"고 미리 적지 않는다). 크기 상한과 3절의 모양은 CI가 본다. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있는 규칙은 여기 다시 적지 않는다 — 쌓임을 막는 원칙은 협업 규칙 7절이다.
 
@@ -64,7 +64,7 @@
 
 일은 `card` 라벨 이슈에서 [협업 규칙](docs/COLLABORATION.md) 3절의 보드 규칙대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #123](https://github.com/inlight37-design/decision-model_lab/pull/123)(`claude/b-model-choice-20260927`) — 역할판 B([카드 #119](https://github.com/inlight37-design/decision-model_lab/issues/119)): CLI 카드마다 허용 목록에서 모델을 고른다. 목록은 모델마다 과금 경로와 근거를 적고 구독 포함만 고를 수 있다(Fable은 추가 크레딧이라 막음, 관측하지 않은 모델은 미확인으로 막음). 허가 판단은 관측 기록을 한 번 읽는다(AH-08). 앱 모델 호출 없음.
+- **이 판을 들인 PR:** [PR #124](https://github.com/inlight37-design/decision-model_lab/pull/124)(`claude/s7-plan-gaps-20260927`) — S7([카드 #122](https://github.com/inlight37-design/decision-model_lab/issues/122)): 실제 CLI 실행기가 예약 직전에 격리 경로·연결을 검사해 없는 입력 폴더가 상한을 쓰지 않게 하고(R4), 계획이 받은 실행 틀·환경을 사본으로 고정한다(R3). 앱 모델 호출 없음.
 
 | 사용자만 할 수 있는 것 | 지금 |
 |---|---|
@@ -76,11 +76,11 @@
 
 ## 4. 다음 작업
 
-**지금 할 일은 3의 S7이다**(역할판 B는 3절의 PR이 맡는다). 1·2는 기한이 있는 일이라 기한 전에 끼워 넣는다. 모델 호출이 드는 일은 카드에 상한을 먼저 적고 새 원장·새 상태 폴더로 한다(2절 22).
+**지금 할 일은 3의 역할판 C다**(S7은 3절의 PR이 맡는다). 1·2는 기한이 있는 일이라 기한 전에 끼워 넣는다. 모델 호출이 드는 일은 카드에 상한을 먼저 적고 새 원장·새 상태 폴더로 한다(2절 22).
 
 1. **2026-10-25 전 — V04-01 절차서를 정한다.** 쌓임 검사의 `PROCEDURES` 예외가 그날 끝난다(`tests/test_accumulation.py`) — 지나면 CI가 실패한다. WSL 참여자의 설치·관측 절차는 이미 [SETUP](docs/SETUP.md)에 있으니, 절차서가 아직 맡는 일(Windows CLI 조사, `probe.ps1`·`summarize_claude_init.py`)을 살아 있는 문서로 옮길지 은퇴시킬지 정하고 AGENTS.md의 가리킴을 맞춘다. 모델 호출 없음.
 2. **2026-10-26 전 — 재관측**([SETUP 4절](docs/SETUP.md)의 절차, PC마다 모델 호출 Claude 2·Codex 3). aux-pc-wsl은 10월 26일, main-pc-wsl은 10월 27일부터 만료이고, 그 PC의 세션만 관측·등록할 수 있다. 참여자 계획이나 CLI 판이 바뀌면 그때 바로 한다. 관측 기록은 `tools/w2/assemble.py`가 조립한다. 추론 강도를 연결하는 PR은 그 계획으로 바로 관측한다 — 이 날짜를 기다리지 않는다([역할판 검토](docs/reviews/2026-09-26-role-board-review/README.md) RB-01). 그 전에 [카드 #111](https://github.com/inlight37-design/decision-model_lab/issues/111)(S4 Codex 사용자 훅 방어)을 끝낸다. 파일 하나 검사로 전체 문맥 검증을 대신하지 않는다.
-3. **계획 경로의 빈틈 S7([카드 #122](https://github.com/inlight37-design/decision-model_lab/issues/122)), 그 뒤 역할판 C.** S5 launcher 소유권([카드 #120](https://github.com/inlight37-design/decision-model_lab/issues/120))은 파일이 겹치지 않아 따로 할 수 있고, S6 조회 줄이기([카드 #121](https://github.com/inlight37-design/decision-model_lab/issues/121))는 `controller.py`가 겹치니 S7·C와 동시에 하지 않는다. 편의·최적화 후보 전체를 C의 선행 조건으로 만들지 않는다. B의 모델 고르기에서 **추론 강도는 연결하지 않았다** — 관측한 유한한 값만 넣고 그 계획으로 재관측해야 하므로(역할판 검토 RB-01) 쓸 때 카드를 따로 만든다. 막힌 모델을 여는 법은 [app 안내](app/README.md)의 provider별 설정 절. C는 사람이 나누는 일반 팀원 작업, 그 뒤 D 슈퍼바이저 모델·다듬기 모드 → E 섞어 쓰기·최적화다([역할판 검토](docs/reviews/2026-09-26-role-board-review/README.md) §6). C–E의 카드를 만들 때는 [리뷰 통합](docs/reviews/2026-09-26-review-consolidation/README.md) 6절의 단계별 완료 조건(codex-peek 검토에서 온 것)을 카드의 완료 조건으로 옮긴다.
+3. **역할판 C — 카드가 아직 없으니 먼저 만든다.** S5 launcher 소유권([카드 #120](https://github.com/inlight37-design/decision-model_lab/issues/120))은 파일이 겹치지 않아 따로 할 수 있고, S6 조회 줄이기([카드 #121](https://github.com/inlight37-design/decision-model_lab/issues/121))는 `controller.py`가 겹치니 C와 동시에 하지 않는다. 편의·최적화 후보 전체를 C의 선행 조건으로 만들지 않는다. B의 모델 고르기에서 **추론 강도는 연결하지 않았다** — 관측한 유한한 값만 넣고 그 계획으로 재관측해야 하므로(역할판 검토 RB-01) 쓸 때 카드를 따로 만든다. 막힌 모델을 여는 법은 [app 안내](app/README.md)의 provider별 설정 절. C는 사람이 나누는 일반 팀원 작업, 그 뒤 D 슈퍼바이저 모델·다듬기 모드 → E 섞어 쓰기·최적화다([역할판 검토](docs/reviews/2026-09-26-role-board-review/README.md) §6). C–E의 카드를 만들 때는 [리뷰 통합](docs/reviews/2026-09-26-review-consolidation/README.md) 6절의 단계별 완료 조건(codex-peek 검토에서 온 것)을 카드의 완료 조건으로 옮긴다.
 4. 새 카드가 필요하면 [카드 양식](.github/ISSUE_TEMPLATE/card.md)으로 만든다. 멈추거나 넘길 때는 체크포인트 다섯 줄을 쓴다.
 
 새 실험은 **헤드리스 실행** `python -m app.run`으로 한다 — 서버와 같은 준비 조회·원장·상한을 쓰고 결과 JSON 하나를 낸다([app 안내](app/README.md)의 "헤드리스 실행", 먼저 `--mock`으로 흐름 확인). 설정 파일의 모양은 같은 안내에, 만드는 예는 [D 후속의 make_configs.py](docs/experiments/2026-09-25-d-followup/make_configs.py)에 있다. 앞선 실험 폴더의 `drive.py`들은 그 기록으로 남는다.

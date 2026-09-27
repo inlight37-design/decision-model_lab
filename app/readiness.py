@@ -44,7 +44,7 @@ def check(adapter_id: str, model: str, inventory: Path, data_dir: Path, *,
         isolation._trusted_bwrap()  # 바이너리 존재·소유/쓰기 권한만 검사; namespace 생성은 실행 때 확인
         with tempfile.TemporaryDirectory(prefix="dml-readiness-") as work:
             plan = executor.plan(spec, "readiness check; never sent to a model", work)
-            isolation.plan(plan.spec.argv, plan.box)  # 경로/격리 설정 검사만; 프로세스 생성 없음
+            executor.check(plan)  # 경로/격리 설정 검사만; 프로세스 생성 없음 — controller가 예약 전에 하는 것과 같다
             result["revision"] = plan.revision
             result["installed_version"] = installed_version(adapter_id, plan.spec.argv[0])
         verdict = eligibility.eligibility(record, adapter_id, enabled=True, today=date.today(),

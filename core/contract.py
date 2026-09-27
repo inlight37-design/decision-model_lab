@@ -14,6 +14,7 @@
 """
 from __future__ import annotations
 
+import copy
 from dataclasses import dataclass
 import hashlib
 import json
@@ -46,10 +47,15 @@ class Plan:
     changes: tuple[str, ...] = ()   # 관측 도구의 변형이 참여자 argv에서 바꾼 것
     context_unverified: bool = False  # 실행 허가 정책. argv 판과 별도로 보존하며 독립 정족수에 세지 않는다.
 
+    def __post_init__(self) -> None:
+        # 만든 쪽이 넘긴 실행 틀을 그대로 쥐지 않는다 — 나중에 그 dict를 고쳐도 이 계획은 그대로다(구조 검토 R3)
+        object.__setattr__(self, "template", copy.deepcopy(self.template))
+
     def record(self) -> dict[str, Any]:
-        """journal·관측 요약에 남길 사본. 질문 본문은 넣지 않는다(ExecutionSpec.record())."""
+        """journal·관측 요약에 남길 사본. 질문 본문은 넣지 않는다(ExecutionSpec.record()). 실행 틀도 깊은 사본이다 —
+        기록을 고쳐도 계획이 바뀌지 않는다(구조 검토 R3)."""
         return {**self.spec.record(), "kind": self.kind, "revision": self.revision, "model": self.model,
-                "template": self.template, "changes": list(self.changes),
+                "template": copy.deepcopy(self.template), "changes": list(self.changes),
                 "context_unverified": self.context_unverified}
 
 
