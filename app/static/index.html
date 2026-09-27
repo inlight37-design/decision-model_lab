@@ -670,7 +670,7 @@ function advancedSummary() {
   return `정족수 ${$("min").value}명 · ${$("policy").value === "independent_only" ? "독립성이 확인된 참여자만 셈" : "미확인 답도 셈"}`;
 }
 function initNewRun(opt) {
-  roleOptions = opt; assignDraft = {}; proposalLink = null; resetRefine();
+  roleOptions = opt; assignDraft = {}; proposalLink = null; resetRefine(); resetSplit();
   roleBoard = emptyBoard(); roleBoard.isolated = opt.participants.filter(p => p.transport === "cli").map(p => p.pid);
   $("choices").replaceChildren(...opt.participants.map(p => roleCard(p, opt)));
   const min = h("input", { type: "number", id: "min", min: "1",
@@ -724,6 +724,7 @@ async function startRun() {
       if (built.missing.length) throw new Error("팀원마다 맡길 일을 적어 주세요: " + built.missing.map(label).join(", "));
       if (built.unused.length) throw new Error("아무 팀원도 받지 않는 자료가 있습니다. 빼거나 팀원에게 주세요: " + built.unused.join(", "));
       body.assignments = built.assignments;
+      Object.assign(body, splitBody());   // 분담 제안과 같은 목표·팀원·자료일 때만 제안을 붙인다(#135)
     }
     const preview = await api("/api/runs/preview", body);
     if (generation === previewGeneration) showInputPreview(preview, body);
@@ -1106,6 +1107,11 @@ function questionIsland(run) {
         ` · 최소 정족수 ${run.min_independent}명`)];
   if (general && !run.cancel_requested && !gate.collected)
     parts.push(h("p", { class: "sm muted island-part" }, "팀원의 결과는 끝나는 대로 보입니다. 봉인·독립·정족수 판정 없이 내가 모아 판단합니다."));
+  if (run.split) parts.push(h("div", { class: "island-part stack" }, h("p", { class: "sm cell ask-cell" },
+    `분담: 오케스트레이터 ${run.split.orchestrator.label}의 제안 — ${run.split.as_proposed ? "그대로 보냄" : "내가 고쳐 보냄"}`),
+    collapsible(`split-${run.run_id}`, "분담 제안 원문 · 나눈 이유", h("div", { class: "info-list" },
+      h("p", {}, "나눈 이유: " + run.split.reply.reason),
+      Object.entries(run.split.reply.assignments).map(([pid, a]) => h("p", {}, `${pid}: ${a.task} · 자료 ${a.sources.join(", ") || "없음"}`))))));
   if (run.proposal) parts.push(h("div", { class: "island-part row" }, h("p", { class: "sm cell ask-cell" },
     "이 질문은 앞 실행의 슈퍼바이저 제안에서 왔고, 내가 확인해 시작했습니다."),
     h("button", { type: "button", class: "btn", onclick: () => navigateTask(run.task_id, run.proposal.source_run) }, "제안이 나온 실행 보기")));
@@ -1177,7 +1183,7 @@ function renderRun(run) {
 function render() {
   renderHeader();
   if (!state) return;
-  if ($("composeDialog").open && roleBoard) renderRefine();   // 다듬기 차례의 결과가 오면 창 안의 패널을 다시 그린다
+  if ($("composeDialog").open && roleBoard) { renderRefine(); renderSplitIfChanged(); }   // 다듬기·분담 제안의 결과가 오면 창 안을 다시 그린다
   const run = state.runs.find(r => r.run_id === selected) || null;
   if (run) taskSelected = run.task_id;
   renderTaskNavigation();

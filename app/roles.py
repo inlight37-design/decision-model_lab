@@ -36,7 +36,7 @@ def freeze(board, participants, roster):
     if board["general"]:
         if board["supervisor"]:
             raise ValueError("일반 팀원 작업의 다듬기는 아직 지원하지 않습니다. 격리 칸을 쓰거나 슈퍼바이저 칸을 비우세요.")
-        return _freeze_general(board, participants, result)
+        return _freeze_general(board, participants, result, roster)
     if board["isolated"] != [p.pid for p in participants]:
         raise ValueError("격리 칸과 실행 참여자가 다릅니다. 입력을 다시 확인하세요.")
     specs = [roster[pid] for slot in ("isolated", "orchestrator") for pid in board[slot]]
@@ -53,19 +53,22 @@ def freeze(board, participants, roster):
     return result
 
 
-def _freeze_general(board, participants, result):
-    """일반 팀원 작업의 첫 조각: 사람이 나누고 모은다. 팀원은 격리 팀원과 같은 관측된 CLI 계획으로 읽기만 한다."""
+def _freeze_general(board, participants, result, roster):
+    """일반 팀원 작업: 사람이 나누고 모은다. 오케스트레이터 칸에 CLI 모델을 두면 일 나누기를 제안받을 수 있다(카드 #135)
+    — 시작은 여전히 내가 한다. 팀원은 격리 팀원과 같은 관측된 CLI 계획으로 읽기만 한다."""
     if board["isolated"]:
         raise ValueError("격리 칸과 일반 칸을 한 실행에 함께 쓰는 것은 E 단계에서 지원합니다. 한쪽만 채우세요.")
-    if board["orchestrator"]:
-        raise ValueError("일반 팀원 작업의 오케스트레이터 모델은 D 단계에서 지원합니다. 이 칸을 비우면 내가 나누고 모읍니다.")
+    orchestrator = roster[board["orchestrator"][0]] if board["orchestrator"] else None
+    if orchestrator is not None and orchestrator.transport != CLI:
+        raise ValueError("일반 작업의 오케스트레이터에는 CLI 카드만 놓을 수 있습니다. 비우면 내가 나눕니다.")
     if board["general"] != [p.pid for p in participants]:
         raise ValueError("일반 칸과 실행 팀원이 다릅니다. 입력을 다시 확인하세요.")
     if any(p.transport != CLI for p in participants):
         raise ValueError("팀원(일반)에는 CLI 카드만 놓을 수 있습니다. 원본 앱은 격리 칸에 놓으세요.")
     if len({p.provider for p in participants}) != len(participants):
         raise ValueError("같은 provider 두 장은 아직 지원하지 않습니다. provider당 한 장만 배치하세요.")
-    return {**result, "general": [asdict(p) for p in participants], "isolated": []}
+    return {**result, "general": [asdict(p) for p in participants], "isolated": [],
+            "orchestrator": asdict(orchestrator) if orchestrator else None}
 
 
 def task_projection(tasks, runs, held=None):
@@ -117,7 +120,8 @@ def task_projection(tasks, runs, held=None):
                              # 다듬기 차례가 빠진 것을 봄). 제안의 실제 예약은 그 실행의 예약(reserved)에도 들어 있다
                              "calls_used": max(run["budget"]["used"] + len(run.get("model_syntheses", []))
                                                + len(run.get("proposals", [])), run["budget"]["reserved"])
-                                           + len((run.get("refinement") or {}).get("turns", []))})
+                                           + len((run.get("refinement") or {}).get("turns", []))
+                                           + (1 if run.get("split") else 0)})   # 일반 실행에 묶인 분담 제안(#135)
         latest = timeline[-1] if timeline else None
         if latest is None:
             continue  # 단일 실행 보고에는 그 실행의 작업만 싣는다.
