@@ -370,6 +370,17 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                 elif len(parts) == 4 and parts[:2] == ["api", "collations"] and parts[3] == "acknowledge":
                     controller.acknowledge_collation_unknown(parts[2])
                     self._json(200, {"ok": True})
+                elif len(parts) == 4 and parts[:2] == ["api", "runs"] and parts[3] == "cross-review":   # 검토자 1명 = 호출 1회
+                    question = body.get("question")
+                    if question is not None and not isinstance(question, str):
+                        raise ControllerError("question must be text")
+                    self._json(200, {"review_ids": controller.cross_review(parts[2], question)})
+                elif len(parts) == 4 and parts[:2] == ["api", "reviews"] and parts[3] == "acknowledge":
+                    controller.acknowledge_review_unknown(parts[2])
+                    self._json(200, {"ok": True})
+                elif len(parts) == 4 and parts[:2] == ["api", "reviews"] and parts[3] == "disposition":
+                    controller.set_review_disposition(parts[2], body.get("finding"), body.get("disposition"))
+                    self._json(200, {"ok": True})
                 elif parts == ["api", "resume"]:
                     controller.resume()
                     self._json(200, {"ok": True})

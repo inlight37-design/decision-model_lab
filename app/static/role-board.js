@@ -582,6 +582,70 @@ function proposalIsland(run) {
     !busy && items.length < 2 ? h("div", { class: "island-part" }, h("button", { type: "button", class: "btn",
       onclick: () => act(`/api/runs/${run.run_id}/propose`) }, `다음 단계 제안 받기 · 호출 1회 (${items.length + 1}/2)`)) : null]);
 }
+// ---- 공개 뒤 한 라운드 교차검토(카드 #140) ----------------------------------------------------------------------
+// 답을 낸 CLI 팀원이 다른 팀원의 답을 이름표로 읽고 지적한다. 인용이 대상 답과 글자 그대로 맞는지만 표시하고 맞는
+// 말인지는 확인하지 않는다. 다른 답을 본 검토라 독립 정족수에 세지 않는다. 지적의 처분은 내가 고른다.
+const FINDING_KIND = { counterexample: "반례", missing_condition: "빠진 조건", unsupported: "근거 없음", error: "틀림", other: "기타" };
+const DISPOSITION_CHOICES = [["qualified", "받아들임"], ["rejected", "아님"], ["unresolved", "보류"]];
+const REVIEW_SKIP = { cap_reached: "호출 상한에 닿음", earlier_reviewer_not_accepted: "앞 검토자가 받지 못함" };
+const reviewQuestion = {};   // 실행 → 쓰던 검토 질문. 화면을 다시 그려도 지우지 않는다
+function reviewCard(run, r) {
+  const name = pid => (run.participants.find(p => p.pid === pid) || {}).label || pid;
+  const label = r.state === "accepted" ? (r.reply.findings.length ? `지적 ${r.reply.findings.length}개` : "지적 없음")
+    : r.state === "rejected" ? (r.status === "format_error" ? "판독 실패" : "실패")
+    : { running: "검토 중", queued: "차례 기다림", unknown: "종료 미확인", skipped: "시작하지 않음" }[r.state] || r.state;
+  const stale = Object.entries(r.targets).filter(([, t]) => !t.fresh).map(([l]) => l);
+  const body = r.state === "accepted" ? [
+      h("p", { class: "cap muted" }, "이름표: " + Object.entries(r.labels).map(([l, pid]) => `${l} = ${name(pid)}`).join(" · ")),
+      stale.length ? h("p", { class: "sm cell cell-alert" }, `검토한 뒤 대상 답이 바뀌었습니다: ${stale.join(", ")}`) : null,
+      r.reply.findings.length ? r.reply.findings.map((f, i) => h("div", { class: "cell stack" },
+        h("div", { class: "row between" }, h("span", { class: "sm strong" }, `${f.target} ${name(f.target_pid)} · ${FINDING_KIND[f.kind] || f.kind}`),
+          badge(f.source_check === "exact_match" ? "원문 일치" : "대상 원문에 없음")),
+        h("p", { class: "sm" }, `"${f.quote}"`), h("p", { class: "sm" }, f.detail),
+        h("div", { class: "row", role: "group", "aria-label": "이 지적의 처분" }, DISPOSITION_CHOICES.map(([value, text]) =>
+          h("button", { type: "button", class: f.disposition === value ? "btn btn-brand" : "btn", "aria-pressed": String(f.disposition === value),
+            onclick: () => act(`/api/reviews/${r.review_id}/disposition`, { finding: i, disposition: value }) }, text)))))
+        : h("p", { class: "sm muted" }, "지적 없음 — 검토자가 형식에 맞게 빈 목록을 냈습니다.")]
+    : r.state === "unknown" ? [h("p", { class: "sm cell cell-alert" }, "끝났는지 확인하지 못했습니다. 자리를 차지하고 있어 새 호출을 막습니다."),
+      h("div", {}, h("button", { type: "button", class: "btn btn-danger", onclick: () => {
+        if (window.confirm("이 검토 호출의 프로세스가 모두 끝난 것을 직접 확인했습니까? 호출은 돌려받지 않습니다."))
+          act(`/api/reviews/${r.review_id}/acknowledge`);
+      } }, "종료를 직접 확인했음(호출은 돌려받지 않음)"))]
+    : r.state === "rejected" ? [h("p", { class: "sm cell cell-alert" }, "이 검토는 쓸 수 없습니다 — '지적 없음'이 아닙니다 · " + (r.reason || r.status || "이유 미확인")),
+      r.raw ? h("pre", { class: "input-full" }, r.raw.text) : null]
+    : r.state === "skipped" ? h("p", { class: "sm muted" }, "부르지 않았습니다 · " + (REVIEW_SKIP[r.status] || r.status || "이유 미확인"))
+    : h("p", { class: "sm muted" }, r.state === "queued" ? "앞 검토자가 끝나면 부릅니다." : "다른 팀원의 답을 읽는 중입니다.");
+  return h("section", { class: "cell stack" }, h("div", { class: "row between" },
+    h("span", { class: "sm strong" }, `검토자 ${name(r.reviewer.pid)}`), badge(label)), body);
+}
+function crossReviewIsland(run) {
+  if (run.mode === "general" || run.phase !== "revealed") return null;
+  const answered = run.participants.filter(p => p.draft != null);
+  const reviewers = answered.filter(p => p.transport === "cli");
+  const round = run.cross_review;
+  const intro = h("p", { class: "sm muted" }, "답을 낸 CLI 팀원이 다른 팀원의 답을 이름표로 읽고 반례·빠진 조건·근거 없는 주장을 지적합니다. " +
+    "인용이 대상 답과 글자 그대로 맞는지만 확인하고, 맞는 말인지는 확인하지 않습니다. 다른 답을 본 검토라 독립 정족수에 세지 않습니다.");
+  if (!round) {
+    if (answered.length < 2 || !reviewers.length) return null;
+    const box = h("textarea", { rows: 2, maxlength: "1000", "aria-label": "검토 질문(비우면 기본 질문)",
+      placeholder: "비우면: 다른 팀원의 답에서 반례, 빠진 조건, 근거 없는 주장, 틀린 곳을 찾아라." });
+    box.value = reviewQuestion[run.run_id] || "";
+    box.oninput = () => { reviewQuestion[run.run_id] = box.value; };
+    return island("교차검토 · 공개 뒤, 독립 아님", [intro, box,
+      h("div", { class: "island-part" }, h("button", { type: "button", class: "btn", onclick: () => {
+        if (window.confirm(`검토자 ${reviewers.length}명이 한 명씩 차례로 검토합니다. 호출 ${reviewers.length}회를 씁니다. 시작할까요?`))
+          act(`/api/runs/${run.run_id}/cross-review`, { question: box.value });
+      } }, `교차검토 받기 · 호출 ${reviewers.length}회(검토자 ${reviewers.length}명)`))]);
+  }
+  const name = pid => (run.participants.find(p => p.pid === pid) || {}).label || pid;
+  const cov = round.coverage;
+  return island("교차검토 · 공개 뒤, 독립 아님", [intro,
+    h("p", { class: "sm" }, "검토 질문: " + round.question),
+    h("p", { class: "cap muted" }, `검토한 관계 ${cov.reviewed}/${cov.pairs} · 사실 검증 안 함 · 한 라운드`),
+    cov.missing.length ? h("ul", { class: "stack" }, cov.missing.map(m => h("li", { class: "sm" },
+      `검토하지 않음: ${name(m.reviewer)} → ${name(m.target)} · ${REVIEW_SKIP[m.reason] || m.reason}`))) : null,
+    ...round.reviews.map(r => reviewCard(run, r))]);
+}
 // 같은 작업의 새 실행 창을 같은 역할판·같은 모델·제안한 질문으로 연다. 시작은 내가 보낼 입력을 확인한 뒤에 한다.
 function prepareFromProposal(run, p) {
   openNewRun(run.task_id);

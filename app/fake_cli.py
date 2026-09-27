@@ -19,6 +19,24 @@ REFINE_MARKER = "[다듬기 요청]"   # app/refine.py의 MARKER와 같은 줄. 
 NEXT_MARKER = "[다음 단계 제안 요청]"   # app/next_step.py의 MARKER와 같은 줄
 SPLIT_MARKER = "[분담 제안 요청]"   # app/split.py의 MARKER와 같은 줄
 COLLATE_MARKER = "[결과 모으기 요청]"   # app/collate.py의 MARKER와 같은 줄
+REVIEW_MARKER = "[교차검토 요청]"   # app/cross_review.py의 MARKER와 같은 줄
+
+
+def review_reply(question: str) -> str:
+    """교차검토 지시문에 모의 JSON으로 답한다. 다른 팀원의 답마다 첫 줄을 글자 그대로 인용해 지적 하나를 낸다. 자기
+    답("내 답")은 겨누지 않는다. 이번 경계 표식이 붙은 경계 줄만 믿는다."""
+    nonce = question.split("이번 경계 표식: ", 1)[-1].split("\n", 1)[0].strip()
+    findings = []
+    for line in question.splitlines():
+        if not (line.startswith("<<<D") and line.endswith(f" 시작 {nonce}>>>")):
+            continue
+        label = line[3:].split(" ", 1)[0]
+        body = question.split(line + "\n", 1)[-1].split(f"\n<<<{label} 끝 {nonce}>>>", 1)[0]
+        first = next((row for row in body.splitlines() if row.strip()), "")
+        if first:
+            findings.append({"target": label, "quote": first, "kind": "missing_condition",
+                             "detail": "모의: 이 문장에 어떤 조건에서 맞는지가 빠져 있다(실제 검토 아님)"})
+    return json.dumps({"findings": findings}, ensure_ascii=False)
 
 
 def collate_reply(question: str) -> str:
@@ -78,6 +96,8 @@ def answer(flavor: str, question: str) -> str:
         return split_reply(question)
     if question.startswith(COLLATE_MARKER):
         return collate_reply(question)
+    if question.startswith(REVIEW_MARKER):
+        return review_reply(question)
     digest = hashlib.sha256(question.encode("utf-8")).hexdigest()[:12]
     asked = question.split("질문:", 1)[-1].strip()
     first = asked.splitlines()[0][:80] if asked else "(빈 질문)"
