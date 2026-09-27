@@ -148,6 +148,141 @@ class UrlTests(unittest.TestCase):
         self.assertNotIn("token", launch._paths()["state"].read_text(encoding="utf-8"))
 
 
+class OwnerTests(unittest.TestCase):
+    """카드 #120(S5, AH-07): 동시 시작의 패자가 살아 있는 서버의 기록을 덮지 못하고, 그 nonce의 url은 살아 있는 서버에
+    합류하며, 끄기는 소유자에게만 닿는다. 실제 프로세스 경쟁 대신 함수·임시 폴더로 순서를 만든다."""
+
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory(prefix="dml-launch-owner-")
+        self.addCleanup(tmp.cleanup)
+        self.root = Path(tmp.name)
+        patcher = mock.patch.dict(os.environ, {"DML_LAUNCHER_DIR": tmp.name})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        owner = mock.patch.object(launch, "_OWNER", None)
+        owner.start()
+        self.addCleanup(owner.stop)
+
+    def running(self, nonce="A", pid=4242):
+        ledger_dir = self.root / "ledger"
+        ledger_dir.mkdir(exist_ok=True)
+        (ledger_dir / "control-token").write_text("TOKEN", encoding="utf-8")
+        launch._write_state({"pid": pid, "mode": "mock", "status": "running", "port": 8766, "nonce": nonce,
+                             "ledger": str(ledger_dir)})
+
+    def call(self, fn, **kwargs):
+        with mock.patch("builtins.print") as printed:
+            code = fn(mock.Mock(**kwargs))
+        return code, json.loads(printed.call_args[0][0])
+
+    @unittest.skipUnless(hasattr(os, "fork") and os.name == "posix", "flock은 Linux의 launch에서만 쓴다")
+    def test_the_loser_of_a_simultaneous_start_leaves_the_owners_record_alone(self):
+        self.running("A")
+        (self.root / "server.log").write_text("owner log", encoding="utf-8")
+        (self.root / "stop-request").write_text("4242", encoding="utf-8")
+        before = launch._paths()["state"].read_bytes()
+        import fcntl
+        holder = os.open(launch._paths()["lock"], os.O_RDWR | os.O_CREAT, 0o600)   # 첫 serve가 쥔 잠금
+        self.addCleanup(os.close, holder)
+        fcntl.flock(holder, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        os.write(holder, json.dumps({"pid": 4242, "nonce": "A"}).encode("utf-8"))
+        with mock.patch.object(launch, "_alive", return_value=False):   # 기록만으로는 살아 있는지 모르는 순간
+            code, out = self.call(launch.serve, mock=True, nonce="B", avoid_ports="")
+        self.assertEqual((code, out["reason"]), (1, "already running"))
+        self.assertEqual(launch._paths()["state"].read_bytes(), before)            # 기록을 덮지 않았다
+        self.assertEqual((self.root / "server.log").read_text(encoding="utf-8"), "owner log")   # 로그도
+        self.assertEqual((self.root / "stop-request").read_text(encoding="utf-8"), "4242")      # 끄기 요청도
+        self.assertEqual(json.loads((self.root / "lost-B").read_text(encoding="utf-8"))["owner"],
+                         {"pid": 4242, "nonce": "A"})                               # 누구에게 졌는지 남긴다
+
+    @unittest.skipUnless(hasattr(os, "fork") and os.name == "posix", "flock은 Linux의 launch에서만 쓴다")
+    def test_only_one_holder_of_the_owner_lock(self):
+        self.assertTrue(launch._acquire_owner())
+        self.addCleanup(lambda: os.close(launch._OWNER))
+        import fcntl
+        other = os.open(launch._paths()["lock"], os.O_RDWR)
+        self.addCleanup(os.close, other)
+        with self.assertRaises(OSError):
+            fcntl.flock(other, fcntl.LOCK_EX | fcntl.LOCK_NB)
+
+    def lost(self, nonce, owner):
+        (self.root / f"lost-{nonce}").write_text(json.dumps({"owner": owner}), encoding="utf-8")
+
+    def test_the_losers_url_joins_the_live_server(self):
+        self.running("A")
+        self.lost("B", {"pid": 4242, "nonce": "A"})
+        with mock.patch.object(launch, "_alive", return_value=True), \
+                mock.patch.object(launch, "_listening", return_value=True):
+            code, out = self.call(launch.url, wait=0, nonce="B")
+        self.assertEqual((code, out["ok"], out["joined"]), (0, True, True))
+        self.assertIn(":8766/", out["url"])
+        self.assertFalse((self.root / "lost-B").exists())
+        with mock.patch.object(launch, "_alive", return_value=True), \
+                mock.patch.object(launch, "_listening", return_value=True):
+            code, out = self.call(launch.url, wait=0, nonce="C")                  # 물러난 적 없는 nonce는 기다린다
+        self.assertEqual((code, out["status"]), (1, "not_started"))
+
+    def test_a_loser_never_joins_a_later_server(self):
+        # 진 상대가 끝나고 다른 서버가 떠도 그 서버에 합류하지 않는다(Codex 교차검토, PR #147)
+        self.running("C", pid=5555)
+        self.lost("B", {"pid": 4242, "nonce": "A"})
+        with mock.patch.object(launch, "_alive", side_effect=lambda pid: pid == 5555),                 mock.patch.object(launch, "_listening", return_value=True):
+            code, out = self.call(launch.url, wait=0, nonce="B")
+        self.assertEqual((code, out["status"]), (1, "owner_gone"))
+        self.assertFalse((self.root / "lost-B").exists())
+        (self.root / "lost-D").write_text("{}", encoding="utf-8")                    # 상대를 모르는 표시
+        with mock.patch.object(launch, "_alive", return_value=True),                 mock.patch.object(launch, "_listening", return_value=True):
+            code, out = self.call(launch.url, wait=0, nonce="D")
+        self.assertEqual((code, out["status"]), (1, "not_started"))                  # 합류하지 않고 기다린다
+
+    def test_a_stop_request_is_replaced_in_one_step_and_status_names_the_server(self):
+        self.running("A", pid=os.getpid())
+        with mock.patch.object(launch.os, "replace", wraps=os.replace) as replaced,                 mock.patch.object(launch, "_alive", return_value=True):
+            self.call(launch.stop, wait=0, nonce="A")
+        replaced.assert_called_once()
+        self.assertEqual((self.root / "stop-request").read_text(encoding="utf-8"), str(os.getpid()))
+        with mock.patch.object(launch, "_alive", return_value=True):
+            _, out = self.call(launch.status)
+        self.assertEqual(out["nonce"], "A")                                        # start.ps1이 그 서버만 끈다
+
+    def test_a_failure_is_written_only_by_the_owner(self):
+        from app.store import LedgerBusy
+        self.running("A")
+        before = launch._paths()["state"].read_bytes()
+        with mock.patch.object(launch.sys, "platform", "linux"), \
+                mock.patch.object(launch, "serve", side_effect=LedgerBusy("busy")):
+            self.assertEqual(launch.main(["serve", "--mock", "--nonce", "B"]), 1)
+        self.assertEqual(launch._paths()["state"].read_bytes(), before)            # 소유자가 아니면 적지 않는다
+        with mock.patch.object(launch.sys, "platform", "linux"), mock.patch.object(launch, "_OWNER", 99), \
+                mock.patch.object(launch, "serve", side_effect=LedgerBusy("busy")):
+            self.assertEqual(launch.main(["serve", "--mock", "--nonce", "B"]), 1)
+        self.assertEqual((launch.read_state()["status"], launch.read_state()["nonce"]), ("failed", "B"))
+
+    def test_stop_reaches_only_the_server_of_its_nonce(self):
+        self.running("A", pid=os.getpid())
+        with mock.patch.object(launch, "_alive", return_value=True):
+            code, out = self.call(launch.stop, wait=0, nonce="B")
+        self.assertEqual((code, out.get("not_owner")), (0, True))
+        self.assertFalse((self.root / "stop-request").exists())
+        with mock.patch.object(launch, "_alive", return_value=True):
+            code, out = self.call(launch.stop, wait=0, nonce="A")
+        self.assertEqual((self.root / "stop-request").read_text(encoding="utf-8"), str(os.getpid()))
+        self.assertTrue(out.get("waiting_for_work"))
+
+    def test_the_watch_ignores_a_request_for_another_server(self):
+        stop_file = self.root / "stop-request"
+        stop_file.write_text("1", encoding="utf-8")                                 # 다른 pid를 향한 요청
+        server, controller = mock.Mock(), mock.Mock()
+        controller.wait_idle.return_value = True
+        watcher = threading.Thread(target=launch._watch, args=(server, controller, stop_file, 0.01), daemon=True)
+        watcher.start()
+        time.sleep(0.1)
+        server.shutdown.assert_not_called()
+        stop_file.write_text(str(os.getpid()), encoding="utf-8")                   # 이 서버를 향한 요청
+        watcher.join(5)
+        server.shutdown.assert_called_once_with()
+
+
 class StartScriptTests(unittest.TestCase):
     SCRIPT = ROOT / "app" / "start.ps1"
 

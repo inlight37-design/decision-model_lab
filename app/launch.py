@@ -22,6 +22,11 @@
 끄기는 창을 닫으면 start.ps1이 요청한다. 돌던 호출을 끊지 않으려고 서버는 controller가 쉬고 있을 때만
 (`wait_idle(0)`) 요청 받기를 멈추고 `server.serve_until_stopped`의 정상 종료 순서로 닫는다.
 토큰은 원장의 `control-token`(0600)에만 있고 이 모듈의 상태 파일·로그에는 쓰지 않는다.
+
+**소유(카드 #120, AH-07)**: serve는 상태 폴더의 `launcher.lock`을 배타 잠금으로 잡은 쪽만 서버를 띄우고, 끝날 때까지
+쥔다. 동시에 연 두 번째 serve는 상태 파일·로그·끄기 요청을 건드리지 않고 `lost-<nonce>` 표시만 남긴 채 물러난다.
+그 nonce로 기다리던 url은 그 표시를 보고 살아 있는 서버의 주소를 "합류"로 돌려준다. stop --nonce는 그 nonce의 서버에만
+끄기를 요청하고, 끄기 요청 파일에는 대상 pid를 적어 다른 서버가 받지 않게 한다.
 """
 from __future__ import annotations
 
@@ -65,7 +70,7 @@ def state_dir() -> Path:
 
 def _paths() -> dict[str, Path]:
     root = state_dir()
-    return {"root": root, "state": root / "launcher.json", "stop": root / "stop-request",
+    return {"root": root, "state": root / "launcher.json", "stop": root / "stop-request", "lock": root / "launcher.lock",
             "log": root / "server.log", "live": root / "live", "mock": root / "mock", "inputs": root / "inputs"}
 
 
@@ -77,6 +82,68 @@ def _write_state(data: dict) -> None:
         temp = Path(handle.name)
     temp.chmod(0o600)
     os.replace(temp, path)
+
+
+_OWNER: int | None = None   # 이 프로세스가 쥔 launcher.lock의 fd. 프로세스가 끝나면 풀린다
+
+
+def _acquire_owner(nonce: str = "") -> bool:
+    """launcher.lock을 배타·비차단으로 잡는다. 다른 serve가 쥐고 있으면 False — 상태를 쓰지 않고 물러난다. 잡으면
+    잠금 파일에 소유자(pid·nonce)를 적는다 — 진 쪽이 누구에게 졌는지 남기는 데 쓴다(_owner_record)."""
+    global _OWNER
+    if _OWNER is not None:
+        return True
+    import fcntl   # Linux 전용(main이 다른 플랫폼을 거절한다). 모듈 머리에서 들이면 Windows에서 시험을 못 읽는다
+    fd = os.open(_paths()["lock"], os.O_RDWR | os.O_CREAT, 0o600)
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        os.close(fd)
+        return False
+    os.ftruncate(fd, 0)
+    os.write(fd, json.dumps({"pid": os.getpid(), "nonce": nonce}).encode("utf-8"))
+    _OWNER = fd
+    return True
+
+
+def _owner_record(wait: float = 1.0) -> dict:
+    """잠금을 쥔 serve의 pid·nonce. 방금 잠금을 잡은 쪽이 아직 적지 않았으면 잠깐 기다린다. 모르면 {}."""
+    deadline = time.monotonic() + wait
+    while True:
+        try:
+            owner = json.loads(_paths()["lock"].read_text(encoding="utf-8") or "{}")
+        except (OSError, ValueError):
+            owner = {}
+        if isinstance(owner, dict) and type(owner.get("pid")) is int or time.monotonic() >= deadline:
+            return owner if isinstance(owner, dict) and type(owner.get("pid")) is int else {}
+        time.sleep(0.05)
+
+
+def _request_stop(pid: int) -> None:
+    """끄기 요청을 한 번에 바꿔 넣는다. 파일을 만든 뒤 pid를 쓰면 그 사이 비어 있는 요청(손으로 만든 것과 같다)을
+    다른 서버가 읽을 수 있다(Codex 교차검토, PR #147)."""
+    path = _paths()["stop"]
+    with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=path.parent, delete=False) as handle:
+        handle.write(str(pid))
+        temp = Path(handle.name)
+    temp.chmod(0o600)
+    os.replace(temp, path)
+
+
+def _lost(nonce: str) -> Path | None:
+    """동시 시작에서 물러난 serve의 표시 파일. nonce가 비었거나 이름에 못 쓰는 글자가 있으면 None."""
+    return _paths()["root"] / f"lost-{nonce}" if nonce and nonce.isascii() and nonce.isalnum() else None
+
+
+def _lost_owner(lost: Path | None) -> dict:
+    """물러난 serve의 표시에 적힌 상대(pid·nonce). 표시가 없거나 상대를 모르면 {} — 합류하지 않는다."""
+    if lost is None:
+        return {}
+    try:
+        owner = json.loads(lost.read_text(encoding="utf-8")).get("owner")
+    except (OSError, ValueError, AttributeError):
+        return {}
+    return owner if isinstance(owner, dict) and type(owner.get("pid")) is int else {}
 
 
 def read_state() -> dict:
@@ -172,7 +239,13 @@ def _watch(server, controller, stop_file: Path, interval: float = 1.0) -> None:
     """
     while True:
         time.sleep(interval)
-        if stop_file.exists() and controller.wait_idle(0):
+        try:
+            target = stop_file.read_text(encoding="utf-8").strip()
+        except OSError:
+            continue
+        if target not in ("", str(os.getpid())):   # 다른 서버를 향한 요청 — 받지 않는다(카드 #120)
+            continue
+        if controller.wait_idle(0):
             stop_file.unlink(missing_ok=True)
             server.shutdown()
             return
@@ -199,8 +272,17 @@ def serve(args) -> int:
     from app.server import EXIT_NOT_ELIGIBLE, serve as start_server, serve_until_stopped
     paths = _paths()
     paths["root"].mkdir(mode=0o700, parents=True, exist_ok=True)
+    # 소유 잠금을 가장 먼저 잡는다. 진 쪽은 상태 파일·로그·끄기 요청을 건드리지 않는다 — 살아 있는 서버의 기록을
+    # 덮지 않는다(카드 #120, AH-07). 그 nonce로 기다리는 url이 합류하도록 표시만 남긴다.
     old = read_state()
-    if old.get("status") in ("starting", "running") and _alive(old.get("pid")):
+    legacy = old.get("status") in ("starting", "running") and _alive(old.get("pid"))   # 잠금을 모르는 옛 판 서버
+    if not _acquire_owner(args.nonce) or legacy:
+        # 누구에게 졌는지(pid·nonce)를 함께 남긴다 — url은 그 서버일 때만 합류한다(Codex 교차검토, PR #147)
+        owner = {"pid": old.get("pid"), "nonce": old.get("nonce")} if legacy and _OWNER is not None else _owner_record()
+        lost = _lost(args.nonce)
+        if lost is not None:
+            lost.write_text(json.dumps({"schema": SCHEMA, "status": "already_running", "owner": owner,
+                                        "at": int(time.time())}), encoding="utf-8")
         print(json.dumps({"ok": False, "reason": "already running"}))
         return 1
     paths["stop"].unlink(missing_ok=True)
@@ -272,9 +354,19 @@ def url(args) -> int:
     """서버가 포트를 열 때까지 기다린 뒤 토큰이 든 주소를 표준 출력으로만 준다(파일에 쓰지 않는다)."""
     deadline = time.monotonic() + args.wait
     while True:
-        state = read_state()
+        state, joined = read_state(), False
+        lost = _lost(args.nonce)
         if args.nonce and state.get("nonce") != args.nonce:
-            state = {}                       # 아직 이번 serve의 상태가 아니다(앞 실행의 stopped 등)
+            owner = _lost_owner(lost)
+            if owner and state.get("pid") == owner.get("pid") and state.get("nonce") == owner.get("nonce"):
+                joined = True                # 이번 serve는 동시 시작에서 그 서버에 졌다 — 그 서버에 합류한다
+            elif owner and not _alive(owner.get("pid")):
+                lost.unlink(missing_ok=True)   # 진 상대가 이미 끝났다 — 다른 서버에 합류하지 않는다
+                print(json.dumps({"ok": False, "status": "owner_gone",
+                                  "reasons": ["the server this start deferred to has ended; open the app again"]}))
+                return 1
+            else:
+                state = {}                   # 아직 이번 serve의 상태가 아니다(앞 실행의 stopped 등)
         status, alive = state.get("status"), _alive(state.get("pid"))
         if status == "running" and alive and _listening(state.get("port")):
             try:
@@ -282,8 +374,11 @@ def url(args) -> int:
             except (OSError, KeyError, TypeError):
                 token = ""
             if token:
+                if joined:
+                    lost.unlink(missing_ok=True)
                 print(json.dumps({"ok": True, "url": f"http://127.0.0.1:{state['port']}/#token={token}",
-                                  "mode": state.get("mode"), "paused": state.get("paused", False)}, ensure_ascii=False))
+                                  "mode": state.get("mode"), "paused": state.get("paused", False),
+                                  "joined": joined}, ensure_ascii=False))
                 return 0
         if status in ("refused", "failed", "stopped") or (status in ("starting", "running") and not alive):
             print(json.dumps({"ok": False, "status": status, "mode": state.get("mode"),
@@ -301,7 +396,11 @@ def stop(args) -> int:
     if not _alive(state.get("pid")):
         print(json.dumps({"stopped": True, "was_running": False}))
         return 0
-    paths["stop"].touch(mode=0o600)
+    if args.nonce and state.get("nonce") != args.nonce:   # 다른 창이 띄운 서버다 — 끄지 않는다(카드 #120)
+        print(json.dumps({"stopped": False, "was_running": True, "not_owner": True}))
+        return 0
+    # 대상 pid를 적는다. 요청이 남아 있는 사이 다른 serve가 떠도 그 서버는 이 요청을 받지 않는다(_watch)
+    _request_stop(state["pid"])
     deadline = time.monotonic() + args.wait
     while time.monotonic() < deadline:
         if not _alive(state["pid"]):
@@ -318,7 +417,7 @@ def stop(args) -> int:
 def status(_args) -> int:
     state = read_state()
     alive = _alive(state.get("pid"))
-    print(json.dumps({"running": alive and state.get("status") == "running",
+    print(json.dumps({"running": alive and state.get("status") == "running", "nonce": state.get("nonce"),
                       "status": state.get("status"), "mode": state.get("mode"), "port": state.get("port"),
                       "manifest": state.get("manifest"), "models": state.get("models"),
                       "stop_requested": _paths()["stop"].exists(), "reasons": state.get("reasons", [])},
@@ -346,6 +445,7 @@ def main(argv=None) -> int:
     u.add_argument("--nonce", default="")
     t = sub.add_parser("stop", help="끄기 요청")
     t.add_argument("--wait", type=float, default=20.0)
+    t.add_argument("--nonce", default="", help="이 nonce로 띄운 서버에만 끄기를 요청한다")
     sub.add_parser("status")
     sub.add_parser("cancel-stop")
     args = ap.parse_args(argv)
@@ -361,8 +461,9 @@ def main(argv=None) -> int:
     try:
         return handler(args)
     except (LedgerBusy, StoreError, ValueError) as exc:
-        _write_state({"pid": os.getpid(), "mode": "mock" if args.mock else "live", "status": "failed",
-                      "nonce": args.nonce, "reasons": [f"{type(exc).__name__}: {exc}"]})
+        if _OWNER is not None:   # 소유자일 때만 실패를 적는다 — 진 쪽은 살아 있는 서버의 기록을 덮지 않는다
+            _write_state({"pid": os.getpid(), "mode": "mock" if args.mock else "live", "status": "failed",
+                          "nonce": args.nonce, "reasons": [f"{type(exc).__name__}: {exc}"]})
         return 1
 
 
