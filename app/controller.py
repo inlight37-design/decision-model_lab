@@ -551,6 +551,13 @@ class Controller:
         if (item["prompt"] != expected or hashlib.sha256(data).hexdigest() != item["input_sha256"]
                 or len(data) != item["input_bytes"]):
             raise ControllerError("the fixed assignment differs from its recorded input; no call was started")
+        # 행 하나를 스스로 맞게(맡긴 일·입력 전문·해시·크기를 함께) 바꿔도 실행을 만들 때 묶은 입력 해시와는 다르다
+        # (Codex 교차검토, PR #129).
+        members = {row["pid"]: row for row in self.store.rows(
+            "SELECT pid, input_sha256 FROM assignments WHERE run_id = ?", run_id)}
+        if _bundle_digest(members) != run["input_sha256"]:
+            raise ControllerError("the fixed assignment differs from the input bundled when the run was created; "
+                                  "no call was started")
         if not listed:
             return None
         rows = [self.store.row("SELECT name, sha256, bytes, content FROM sources WHERE run_id = ? AND name = ?",

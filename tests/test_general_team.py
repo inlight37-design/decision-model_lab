@@ -272,6 +272,27 @@ class GeneralTeamTests(support.Base):
         self.assertTrue(any("assignment differs" in r for r in refusals))
         self.assertTrue(any("snapshot changed" in r for r in refusals))
 
+    def test_a_self_consistent_rewrite_of_one_assignment_still_starts_nothing(self):
+        # 맡긴 일·입력 전문·해시·크기를 서로 맞게 함께 바꿔도, 실행을 만들 때 묶은 입력 해시와 다르면 거절한다
+        ex = Recording()
+        ctl = self.controller(ex, max_parallel=0)
+        rid = self.create(ctl, pids=("codex",), work={"codex": {"task": "원래 일", "sources": ["a.md", "b.md"]}})
+        row = ctl._assignment(rid, "codex")
+        prompt = c.GENERAL_PROMPT.format(question="전체 목표: 도입 여부 판단", task="바꾼 일") + \
+            row["prompt"][len(c.GENERAL_PROMPT.format(question="전체 목표: 도입 여부 판단", task="원래 일")):]
+        data = prompt.encode("utf-8")
+        with self.store.tx() as tx:
+            tx.execute("UPDATE assignments SET task = ?, prompt = ?, input_sha256 = ?, input_bytes = ? "
+                       "WHERE run_id = ? AND pid = 'codex'", "바꾼 일", prompt, hashlib.sha256(data).hexdigest(),
+                       len(data), rid)
+        ctl.max_parallel = 1
+        ctl.pump()
+        self.assertTrue(ctl.wait_idle())
+        self.assertEqual(ex.started, [])
+        self.assertEqual(self.part(ctl, rid, "codex")["status"], "process_failed_to_start")
+        refused = next(e for e in events(self.store, rid) if e["kind"] == "attempt_started")
+        self.assertIn("input bundled when the run was created", refused["spec"]["refused"])
+
     def test_a_general_run_does_not_start_while_another_run_is_drafting(self):
         ctl = self.controller(Recording(), max_parallel=0)
         ctl.create_run("격리 질문", [ROSTER["codex"]], min_independent=1, role_board=board(isolated=("codex",)),
