@@ -127,6 +127,17 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
     choices = dict(choices if choices is not None else ({} if live else MOCK_MODEL_CHOICES))
     account_quota = account_quota or AccountQuota(Path("."), enabled=False)
 
+    def supervisor_spec(body: dict) -> ParticipantSpec:
+        """다듬기를 부를 슈퍼바이저 카드. 모델은 역할판과 같은 허용 목록으로 확인한다(막힌 모델은 부르지 않는다)."""
+        pid, model = _text(body, "supervisor"), body.get("model")
+        spec = chosen_models(roster, choices, {pid: model} if model is not None else None).get(pid)
+        if spec is None or spec.transport != CLI:
+            raise ControllerError("슈퍼바이저는 명단의 CLI 카드여야 합니다.")
+        behavior = body.get("behavior", "ok")
+        if behavior not in behaviors:
+            raise ControllerError(f"unknown behavior {behavior!r}")
+        return replace(spec, behavior=behavior)
+
     class Handler(BaseHTTPRequestHandler):
         server_version = "ledger-mock"
         timeout = 5.0  # 유휴 제한. 별도로 _Server가 연결 수와 네트워크 I/O 기한을 제한한다.
@@ -272,7 +283,8 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                                   sources=[(item["name"], item["text"]) for item in sources],
                                   task_id=body.get("task_id"), task_title=body.get("task_title"),
                                   role_board=body.get("role_board"), roster=run_roster, run_id=body.get("run_id"),
-                                  assignments=body.get("assignments"))   # 일반 팀원마다 맡길 일·받을 자료
+                                  assignments=body.get("assignments"),   # 일반 팀원마다 맡길 일·받을 자료
+                                  refinement=body.get("refinement"))     # 다듬기 모드에서 승인한 {id, turn}
                     if parts[-1] == "preview":
                         self._json(200, controller.prepare_run(_text(body, "question"), chosen, **kwargs))
                     else:
@@ -317,6 +329,14 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                         controller.synthesize(parts[2])
                     else:
                         raise ControllerError("mode must be mock or model")
+                    self._json(200, {"ok": True})
+                elif parts == ["api", "refinements"]:   # 다듬기 첫 차례: 호출 1회
+                    self._json(200, {"refine_id": controller.refine(supervisor_spec(body), _text(body, "original"))})
+                elif len(parts) == 4 and parts[:2] == ["api", "refinements"] and parts[3] == "turn":
+                    controller.refine(supervisor_spec(body), refine_id=parts[2], note=_text(body, "note"))
+                    self._json(200, {"refine_id": parts[2]})
+                elif len(parts) == 4 and parts[:2] == ["api", "refinements"] and parts[3] == "acknowledge":
+                    controller.acknowledge_refine_unknown(parts[2], body.get("turn"))
                     self._json(200, {"ok": True})
                 elif parts == ["api", "resume"]:
                     controller.resume()

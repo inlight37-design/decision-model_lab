@@ -15,7 +15,21 @@ import time
 DELAY = {"ok": 1.2, "slow": 6.0, "fail": 0.8, "partial_input": 0.8, "hang": 3600.0}
 
 
+REFINE_MARKER = "[다듬기 요청]"   # app/refine.py의 MARKER와 같은 줄. 이 가짜는 격리 안에서 app 패키지 없이 돈다
+
+
+def refine_reply(question: str) -> str:
+    """다듬기 지시문에 모의 JSON으로 답한다. 원문 첫 줄을 되풀이할 뿐 다듬지 않는다 — 화면 흐름 확인용이다."""
+    original = question.split("원문:\n", 1)[-1].split("\n", 1)[0].strip() or "(빈 원문)"
+    turn = question.count("의 다듬은 질문:") + 1
+    return json.dumps({"refined": f"[모의 다듬기 {turn}차례] {original[:200]}",
+                       "changes": ["모의: 무엇을 비교할지 한 문장으로 모았다(실제 다듬기 아님)"],
+                       "ask": "모의: 결정 기한이나 예산 같은 조건이 있나요?"}, ensure_ascii=False)
+
+
 def answer(flavor: str, question: str) -> str:
+    if question.startswith(REFINE_MARKER):
+        return refine_reply(question)
     digest = hashlib.sha256(question.encode("utf-8")).hexdigest()[:12]
     asked = question.split("질문:", 1)[-1].strip()
     first = asked.splitlines()[0][:80] if asked else "(빈 질문)"

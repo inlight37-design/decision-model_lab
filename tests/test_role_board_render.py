@@ -125,8 +125,58 @@ assert.ok(results.includes("받은 답 원문") && results.includes("A만 읽기
 assert.ok(results.includes("작업 중입니다"));
 assert.ok(!results.includes("독립") && !results.includes("정족수"));
 assert.ok(roleSummary({supervisor:null,orchestrator:null,isolated:[],general:[gspec]}).includes("일반 CLI A(m1)"));
+// 다듬기(카드 #130): 슈퍼바이저 칸은 CLI 한 장, 같은 회사 팀원은 막지 않고 알린다. 다듬기 모드는 그때만 고를 수 있다.
+const sroster=[{pid:"a",label:"CLI A",provider:"p1",transport:"cli"},{pid:"z",label:"CLI Z",provider:"p2",transport:"cli"},
+ {pid:"b",label:"앱 B",provider:"p3",transport:"manual"}];
+const sboard={...emptyBoard(),supervisor:["a"],isolated:["a","z"],input_mode:"refine"};
+let sw=boardWarnings(sboard,sroster).join(" ");
+assert.ok(sw.includes("주의") && !sw.includes("같은 provider 두 장"), sw);
+assert.ok(boardWarnings({...sboard,supervisor:["b"]},sroster).join(" ").includes("CLI 카드만"));
+roleOptions={participants:sroster,live:false,behaviors:["ok"]}; state={tasks:[],runs:[],refinements:[]};
+roleBoard={...emptyBoard(),isolated:["z"],supervisor:["a"]}; syncInputMode();
+assert.equal(nodes.modeRefine.disabled,false);
+roleBoard={...emptyBoard(),isolated:["z"],input_mode:"refine"}; syncInputMode();
+assert.equal(nodes.modeRefine.disabled,true); assert.equal(roleBoard.input_mode,"original");   // 슈퍼바이저가 빠지면 원문으로
+// 다듬기 패널: 진행 상태는 배지, 슈퍼바이저가 묻는 말은 따로 표시한 칸. 형식 실패는 승인할 수 없고 원문을 보인다.
+roleBoard={...emptyBoard(),isolated:["z"],supervisor:["a"],input_mode:"refine"};
+state.refinements=[{refine_id:"q1",original:"원문 질문",max_turns:3,supervisor:{label:"CLI A"},turns:[
+  {turn:1,note:"",state:"accepted",reply:{refined:"다듬은 1",changes:["범위"],ask:"기한은?"}},
+  {turn:2,note:"석 달",state:"rejected",status:"format_error",reason:"JSON 아님",raw:{text:"RAW_REPLY"}}]}];
+refineCurrent="q1"; renderRefine(true);
+assert.ok(nodes.refinePanel.kids.every(isNode));
+const panel=nodes.refinePanel.kids.map(text).join(" ");
+for (const piece of ["원문 질문","다듬은 1","범위","슈퍼바이저가 나에게 묻는 말","기한은?","형식 검사 실패","RAW_REPLY","내가 쓴 말: 석 달","(3/3차례)","원문으로 돌아가기"])
+  assert.ok(panel.includes(piece), piece);
+assert.equal(nodes.question.readOnly,true);   // 다듬기를 시작하면 원문을 고정한다
+const approve=nodes.refinePanel.kids.flatMap(all).filter(x=>x.tag==="button"&&text(x)==="이 문장으로 승인");
+assert.equal(approve.length,1);               // 받은 차례만 승인할 수 있다
+approve[0].attrs.onclick(); assert.equal(refineApproved,1); assert.equal(nodes.question.value,"다듬은 1");
+resetRefine(); assert.equal(nodes.question.value,"원문 질문"); assert.equal(refineCurrent,null);
+const pair=text(refinementPair("내 원문","보낸 문장"));
+assert.ok(pair.includes("원래 목표") && pair.includes("내 원문") && pair.includes("실제로 보낸 질문") && pair.includes("보낸 문장"));
+state.refinements[0].turns[1].state="unknown"; taskSelected=null; taskPageSig=null; renderTaskPage();
+assert.ok(nodes.mainCol.kids.map(text).join(" ").includes("끝났는지 모르는 다듬기 차례"));
+// Codex 교차검토(PR #131): 원문 모드의 확인 화면에 null이, 원본 앱 전달문 목록이 배열째 글자로 들어가지 않는다
+showInputPreview({mode:"isolated",run_id:"r",confirmation:"c",question:"질문",prompt:"전달문",sources:[],manual_packets:{"b":"옮길 전달문"},
+  role_config:{isolated:[],orchestrator:null,supervisor:null},quorum_policy:"independent_only",min_independent:1,
+  calls:{draft_cli:1,model_calls:0}},{});
+assert.ok(nodes.inputPreview.kids.every(isNode), JSON.stringify(nodes.inputPreview.kids.filter(k=>!isNode(k))));
+// 두 번 눌러도 요청은 하나이고, 응답 전에 원문으로 돌아가면(창을 새로 연 것과 같다) 늦은 응답을 붙이지 않는다
+let pending=[], apiCalls=0;
+function api(path, body) { apiCalls++; return new Promise(resolve => pending.push(() => resolve({refine_id:"late"}))); }
+async function refresh() { return true; }
+(async () => {
+  roleBoard={...emptyBoard(),isolated:["z"],supervisor:["a"],input_mode:"refine"}; state.refinements=[];
+  resetRefine(); nodes.question.value="원문 A";
+  const first=refineTurn(), second=refineTurn();
+  assert.equal(apiCalls,1);
+  resetRefine();
+  pending.forEach(f => f()); await first; await second;
+  assert.equal(refineCurrent,null); assert.equal(refineBusy,false);
+})().catch(e => { console.error(e); process.exit(1); });
 '''
-        result = subprocess.run([shutil.which("node"), "-e", script], capture_output=True, text=True,
+        # 스크립트가 Windows 명령줄 길이 한도(약 32K자)를 넘으므로 표준 입력으로 준다.
+        result = subprocess.run([shutil.which("node"), "-"], input=script, capture_output=True, text=True,
                                 encoding="utf-8", timeout=15)
         self.assertEqual(result.returncode, 0, result.stderr)
         # inline JS도 파싱한다. 실제 동작 함수는 위에서 외부 파일 원문 그대로 실행한다.

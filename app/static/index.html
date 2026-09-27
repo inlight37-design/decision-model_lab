@@ -314,13 +314,14 @@ button.is-pressed { background-image: linear-gradient(color-mix(in oklch, curren
             </div>
             <fieldset class="form-field">
               <legend class="form-label">질문 입력 모드</legend>
-              <label><input type="radio" name="inputMode" checked value="original"> 원문 · 내 말 그대로</label>
-              <label class="sm muted"><input type="radio" name="inputMode" disabled value="refine"> 다듬기 · 슈퍼바이저 칸에 모델이 있을 때만 — 다음 단계</label>
+              <label><input type="radio" name="inputMode" id="modeOriginal" checked value="original"> 원문 · 내 말 그대로</label>
+              <label class="sm muted"><input type="radio" name="inputMode" id="modeRefine" disabled value="refine"> 다듬기 · 슈퍼바이저 칸에 CLI 카드가 있을 때 — 슈퍼바이저와 다듬고, 내가 승인한 문장만 보냅니다</label>
             </fieldset>
             <div class="form-field">
               <label class="form-label" for="question">질문</label>
               <textarea id="question" rows="4" placeholder="예: 사내 문서 검색을 벡터 DB로 바꿀까, 기존 키워드 검색을 개선할까?"></textarea>
             </div>
+            <div class="form-field stack" id="refinePanel" aria-live="polite" hidden></div>
             <div class="form-field">
               <span class="form-label" id="sourcesLabel"><span id="sourcesLabelText">공통 자료</span> <span class="muted">(선택)</span></span>
               <div class="file-drop" id="fileDrop" aria-labelledby="sourcesLabel">
@@ -669,7 +670,7 @@ function advancedSummary() {
   return `정족수 ${$("min").value}명 · ${$("policy").value === "independent_only" ? "독립성이 확인된 참여자만 셈" : "미확인 답도 셈"}`;
 }
 function initNewRun(opt) {
-  roleOptions = opt; assignDraft = {};
+  roleOptions = opt; assignDraft = {}; resetRefine();
   roleBoard = emptyBoard(); roleBoard.isolated = opt.participants.filter(p => p.transport === "cli").map(p => p.pid);
   $("choices").replaceChildren(...opt.participants.map(p => roleCard(p, opt)));
   const min = h("input", { type: "number", id: "min", min: "1",
@@ -703,11 +704,15 @@ async function startRun() {
     return { pid, behavior: sel ? sel.value : "ok" };
   });
   if (!participants.length) { err.textContent = "참여자를 한 명 이상 고르세요."; return; }
+  if (roleBoard.input_mode === "refine" && !refineApproved) {
+    err.textContent = "다듬기 모드에서는 슈퍼바이저와 다듬은 한 차례를 승인한 뒤 보낼 입력을 확인합니다."; return;
+  }
   button.disabled = true;
   invalidatePreview();
   const generation = previewGeneration;
   const body = { question: $("question").value, participants, role_board: roleBoard, models: chosenModels(roleBoard),
                  ...(general ? {} : { min_independent: +$("min").value, quorum_policy: $("policy").value }),
+                 ...(roleBoard.input_mode === "refine" ? { refinement: { id: refineCurrent, turn: refineApproved } } : {}),
                  ...(composeTask ? { task_id: composeTask } : { task_title: $("taskTitle").value.trim() || $("question").value.trim().slice(0, 120) }) };
   const files = [...picked];
   try {
@@ -1100,6 +1105,9 @@ function questionIsland(run) {
         ` · 최소 정족수 ${run.min_independent}명`)];
   if (general && !run.cancel_requested && !gate.collected)
     parts.push(h("p", { class: "sm muted island-part" }, "팀원의 결과는 끝나는 대로 보입니다. 봉인·독립·정족수 판정 없이 내가 모아 판단합니다."));
+  if (run.refinement) parts.push(h("div", { class: "island-part stack" }, refinementPair(run.refinement.original, run.question),
+    collapsible(`refine-${run.run_id}`, `다듬기 기록 · ${run.refinement.turns.length}차례 · 슈퍼바이저 ${run.refinement.supervisor.label}`,
+      h("div", { class: "info-list" }, refinementLog(run.refinement)))));
   if (run.cancel_requested) {
     parts.push(h("div", { class: "cell island-part stack" }, h("p", { class: "sm strong" }, run.note || "취소를 요청했습니다."),
       h("p", { class: "cap muted" }, run.participants.some(p => p.state === "running" || p.state === "unknown")
@@ -1127,7 +1135,8 @@ function questionIsland(run) {
   }
   const info = [
     h("p", {}, roleSummary(run.role_config)),
-    h("p", {}, general ? "입력 모드: 원문 · 역할·팀원별 입력과 자료는 시작할 때 고정됨" : "입력 모드: 원문 · 역할 구성은 시작할 때 고정됨"),
+    h("p", {}, general ? "입력 모드: 원문 · 역할·팀원별 입력과 자료는 시작할 때 고정됨"
+      : `입력 모드: ${run.refinement ? `다듬기(${run.refinement.approved_turn}차례 승인)` : "원문"} · 역할 구성은 시작할 때 고정됨`),
     h("p", {}, "실행 ID ", h("span", { class: "mono hash" }, run.run_id)),
     h("p", {}, general ? "입력 묶음 sha256(팀원별 입력 해시를 묶은 값) " : "입력 sha256 ", h("span", { class: "mono hash" }, run.input_sha256), ` · ${run.input_bytes}바이트`),
     general ? h("p", {}, "정족수·독립 판정: 하지 않음(일반 팀원)")
@@ -1164,6 +1173,7 @@ function renderRun(run) {
 function render() {
   renderHeader();
   if (!state) return;
+  if ($("composeDialog").open && roleBoard) renderRefine();   // 다듬기 차례의 결과가 오면 창 안의 패널을 다시 그린다
   const run = state.runs.find(r => r.run_id === selected) || null;
   if (run) taskSelected = run.task_id;
   renderTaskNavigation();
@@ -1259,6 +1269,7 @@ $("composeDialog").addEventListener("close", () => { $("newRunBtn").setAttribute
 $("newRunPanel").addEventListener("input", invalidatePreview);
 $("newRunPanel").addEventListener("change", invalidatePreview);
 $("startBtn").addEventListener("click", startRun);
+for (const radio of [$("modeOriginal"), $("modeRefine")]) radio.addEventListener("change", e => chooseInputMode(e.target.value));
 $("filePick").addEventListener("click", () => $("fileInput").click());
 $("fileInput").addEventListener("change", e => { addFiles([...e.target.files]); e.target.value = ""; });
 const drop = $("fileDrop");
