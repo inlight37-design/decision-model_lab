@@ -532,7 +532,9 @@ function renderTaskPage() {
       h("div", { class: "task-grid island-part" }, tasks.length ? tasks.map(taskCard) : h("p", { class: "sm muted" }, "아직 작업이 없습니다."))]),
     ...(stuck ? [stuck] : []));
   } else {
+    const tokens = usageLines(task.usage);
     $("mainCol").replaceChildren(island(task.title, [h("p", { class: "sm muted" }, roleSummary(task.role_config)),
+      tokens.length ? h("p", { class: "cap muted" }, "토큰(이 작업 전체): " + tokens.join(" / ")) : null,
       h("div", { class: "row island-part" }, badge(TASK_LABELS[task.status]), h("span", { class: "sm" }, `쓴 CLI 호출 ${task.calls_used}`),
         h("button", { type: "button", class: "btn btn-brand", onclick: () => openNewRun(task.task_id) }, "이 작업에 새 실행"))]),
     island("실행 타임라인", h("ol", { class: "task-timeline stack-lg" }, task.runs.map((run, i) => h("li", {},
@@ -581,6 +583,31 @@ function proposalIsland(run) {
     ...items.map(p => proposalCard(run, p)),
     !busy && items.length < 2 ? h("div", { class: "island-part" }, h("button", { type: "button", class: "btn",
       onclick: () => act(`/api/runs/${run.run_id}/propose`) }, `다음 단계 제안 받기 · 호출 1회 (${items.length + 1}/2)`)) : null]);
+}
+// ---- 토큰 사용량(카드 #141) ------------------------------------------------------------------------------------
+// provider끼리 더하지 않는다. 캐시로 읽은 몫은 따로, 값이 없으면 0이 아니라 "관측 안 됨", 정가 추정은 청구액이 아니다.
+const PROVIDER_NAME = { "claude-code": "Claude", codex: "Codex", antigravity: "agy" };
+const TOKEN_FIELD = { input_tokens: "입력", output_tokens: "출력", cache_creation_input_tokens: "캐시에 씀",
+  cache_read_input_tokens: "캐시로 읽음", cached_input_tokens: "캐시로 읽음", reasoning_output_tokens: "추론",
+  thinking_tokens: "생각", cache_read_tokens: "캐시로 읽음" };
+function usageLines(u) {
+  if (!u) return [];
+  const lines = Object.entries(u.by_provider).map(([provider, e]) => {
+    const tokens = Object.entries(e.tokens).map(([k, v]) => `${TOKEN_FIELD[k] || k} ${Number(v).toLocaleString()}`).join(" · ");
+    return `${PROVIDER_NAME[provider] || provider} — 호출 ${e.calls}(관측 ${e.observed}${e.unobserved ? `, 관측 안 됨 ${e.unobserved}` : ""})` +
+      (e.observed ? ` · ${tokens}` : "") +
+      (e.list_price_estimate_usd != null ? ` · 정가 추정 $${e.list_price_estimate_usd}(청구액 아님)` : "");
+  });
+  if (u.unobserved.manual) lines.push(`원본 앱 답 ${u.unobserved.manual}건 — 사용량 관측 안 됨`);
+  if (u.sealed_runs) lines.push(`봉인 중인 실행 ${u.sealed_runs}개는 공개 뒤에 더합니다`);
+  return lines;
+}
+function usageIsland(run) {
+  if (!run.usage) return null;
+  const lines = usageLines(run.usage);
+  return island("토큰 사용량", [h("p", { class: "cap muted" }, "CLI가 보고한 값을 provider별로 더했습니다. 회사끼리는 더하지 않습니다. " +
+      "캐시로 읽은 몫은 같은 입력을 다시 읽은 양입니다. 계정 전체 한도와는 다른 숫자입니다."),
+    lines.length ? h("ul", { class: "stack" }, lines.map(x => h("li", { class: "sm" }, x))) : h("p", { class: "sm muted" }, "아직 끝난 호출이 없습니다.")]);
 }
 // ---- 공개 뒤 한 라운드 교차검토(카드 #140) ----------------------------------------------------------------------
 // 답을 낸 CLI 팀원이 다른 팀원의 답을 이름표로 읽고 지적한다. 인용이 대상 답과 글자 그대로 맞는지만 표시하고 맞는

@@ -25,7 +25,9 @@ QUORUM_FIELDS = ("policy", "min", "confirmed", "unverified", "counted", "met", "
 # 결정 보고의 판. 2: synthesis는 모의(a1-mock-synthesis/1) 또는 실제(a1-model-synthesis/1)이고 그 schema로 가른다.
 # 3: 실패한 실제 합성을 failed_model_synthesis로 따로 실었다. 4: 실행마다 실제 합성을 여러 번 할 수 있어
 # model_syntheses에 모든 시도를 순서대로 싣는다(시도 ID·상태·결과, 실패면 이유와 검사 실패한 원문 raw).
-DECISION_SCHEMA = "a1-decision-report/4"
+# 5: 실행에 묶인 모델 호출의 토큰 합계(usage, 카드 #141)를 싣는다. provider별로 나눠 더하고 캐시로 읽은 몫을 따로
+# 보이며, 값이 없는 호출은 "관측 안 됨"으로 센다. 정가 추정은 청구액이 아니다(app/usage.py).
+DECISION_SCHEMA = "a1-decision-report/5"
 
 
 class ReportError(ValueError):
@@ -90,4 +92,4 @@ def decision_report(run: dict[str, Any], draft_report: dict[str, Any]) -> dict[s
     if synthesis is None and not attempts:
         return None
     return {"schema": DECISION_SCHEMA, "draft_report": draft_report, "synthesis": synthesis,
-            "model_syntheses": attempts}
+            "model_syntheses": attempts, "usage": run.get("usage")}

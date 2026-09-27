@@ -1173,8 +1173,8 @@ function renderRun(run) {
   if (!run) return;
   const revealed = run.phase === "revealed";
   // 일반 실행: 결과 모음은 처음부터, 판단은 모두 끝난 뒤. 합성·원문 보고는 공개된 격리 실행에만 있다.
-  const body = run.mode === "general" ? [generalResults(run), collationIsland(run), (run.gate || {}).collected ? reviewIsland(run) : null]
-    : revealed ? [...synthesisPanel(run), proposalIsland(run), crossReviewIsland(run), reviewIsland(run), saveIsland(run)] : [];
+  const body = run.mode === "general" ? [generalResults(run), collationIsland(run), (run.gate || {}).collected ? reviewIsland(run) : null, usageIsland(run)]
+    : revealed ? [...synthesisPanel(run), proposalIsland(run), crossReviewIsland(run), reviewIsland(run), saveIsland(run), usageIsland(run)] : [];
   $("mainCol").replaceChildren(questionIsland(run), ...body.filter(Boolean));
   $("asideCol").replaceChildren(participantsIsland(run));
   pressAll($("mainCol")); pressAll($("asideCol"));
