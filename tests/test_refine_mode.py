@@ -95,6 +95,7 @@ class RefineTests(support.Base):
         self.assertEqual(run["refinement"]["approved_turn"], 2)
         self.assertEqual(len(run["refinement"]["turns"]), 2)
         self.assertEqual(ctl.view()["refinements"], [])                   # 실행에 쓴 다듬기는 열린 목록에서 빠진다
+        self.assertEqual(ctl.view()["tasks"][0]["calls_used"], 3)          # 다듬기 2차례 + 팀원 1명
         kinds = [e["kind"] for e in events(self.store, rid)]
         self.assertEqual(kinds.count("refine_turn_completed"), 2)
         self.assertIn("refine_approved", kinds)

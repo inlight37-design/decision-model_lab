@@ -182,6 +182,18 @@ def _interrupt(_number, _frame):
     raise KeyboardInterrupt
 
 
+def free_ports(avoid: str = "") -> list[int]:
+    """PORTS에서 Windows 쪽 프로그램이 이미 듣고 있는 포트를 뺀다. WSL 안의 bind는 그 포트가 비어 있다고 보지만,
+    Windows의 127.0.0.1:<포트>는 그 프로그램에 닿는다 — 앱 창이 다른 프로그램을 연다(2026-09-27, 8765에서 관측).
+    start.ps1이 Windows에서 본 포트를 쉼표로 넘긴다. 숫자가 아닌 값은 거절한다."""
+    skipped = set()
+    for item in filter(None, (part.strip() for part in avoid.split(","))):
+        if not item.isdecimal():
+            raise ValueError(f"--avoid-ports takes port numbers, got {item!r}")
+        skipped.add(int(item))
+    return [port for port in PORTS if port not in skipped]
+
+
 def serve(args) -> int:
     from app.live_config import ModelChoice, Provider
     from app.server import EXIT_NOT_ELIGIBLE, serve as start_server, serve_until_stopped
@@ -227,7 +239,15 @@ def serve(args) -> int:
             print(json.dumps({"mode": "readiness_only", "providers": results}, ensure_ascii=False, indent=1), flush=True)
             return EXIT_NOT_ELIGIBLE
     last = None
-    for port in PORTS:
+    try:
+        ports = free_ports(args.avoid_ports)
+    except ValueError as exc:
+        _write_state({**base, "status": "failed", "reasons": [str(exc)]})
+        return 1
+    if not ports:
+        _write_state({**base, "status": "failed", "reasons": [f"every port in {PORTS.start}..{PORTS.stop - 1} is used on the Windows side"]})
+        return 1
+    for port in ports:
         try:
             server, _token, controller = start_server(ledger, port, timeout=TIMEOUT, live_providers=providers)
             break
@@ -320,6 +340,7 @@ def main(argv=None) -> int:
     s.add_argument("--codex-model", default=MODELS["codex"])
     s.add_argument("--claude-model", default=MODELS["claude-code"])
     s.add_argument("--nonce", default="", help="url --nonce가 이번 serve의 상태만 보게 하는 표식")
+    s.add_argument("--avoid-ports", default="", help="Windows 쪽에서 이미 쓰는 포트(쉼표 구분). start.ps1이 넘긴다")
     u = sub.add_parser("url", help="열 주소를 JSON으로")
     u.add_argument("--wait", type=float, default=90.0)
     u.add_argument("--nonce", default="")

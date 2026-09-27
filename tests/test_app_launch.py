@@ -164,6 +164,22 @@ class StartScriptTests(unittest.TestCase):
                              timeout=60)
         self.assertEqual(out.stdout.strip(), "0", out.stdout + out.stderr)
 
+    def test_the_script_skips_ports_a_windows_program_already_holds(self):
+        # 2026-09-27: Windows의 다른 서버가 8765를 쥐고 있어 앱 창이 그 프로그램을 열었다. 스크립트가 넘기는지 본다
+        text = self.SCRIPT.read_text(encoding="ascii")
+        self.assertIn("Get-NetTCPConnection -State Listen", text)
+        self.assertIn("--avoid-ports", text)
+
+
+class PortTests(unittest.TestCase):
+    def test_ports_used_on_the_windows_side_are_skipped(self):
+        self.assertEqual(launch.free_ports(""), list(launch.PORTS))
+        self.assertEqual(launch.free_ports("8765, 8767"), [p for p in launch.PORTS if p not in (8765, 8767)])
+        self.assertEqual(launch.free_ports(",".join(map(str, launch.PORTS))), [])
+        for bad in ("8765;8766", "-1", "80a"):
+            with self.subTest(bad=bad), self.assertRaises(ValueError):
+                launch.free_ports(bad)
+
 
 if __name__ == "__main__":
     unittest.main()

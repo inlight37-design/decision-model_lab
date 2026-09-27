@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-27** · 작성 세션: claude(사용자 PC `DESKTOP-T0UDE01` — 역할판 D 첫 조각, 모델 호출 없음) · 브랜치 `claude/role-board-d1-20260927` · 기준 main `daf6264`.
+최종 갱신 **2026-09-27** · 작성 세션: claude(사용자 PC `DESKTOP-T0UDE01` — C1·D1 실제 확인, 모델 호출 Claude 4·Codex 2) · 브랜치 `claude/live-check-fixes-20260927` · 기준 main `98e640e`.
 
 이 파일은 **지금 상태와 다음 일만** 담는다. 끝난 일의 경위는 PR·git 이력과 날짜가 붙은 기록에 있고, 옛 판은 [docs/handoff/](docs/handoff/README.md)에 있다. **3절에는 진행 중인 일과 "이 판을 들인 PR" 한 줄만 둔다** — 새 PR은 그 줄을 자기 PR로 바꾸고, 병합 전에도 뒤에도 맞는 말만 쓴다("병합했다"고 미리 적지 않는다). 크기 상한과 3절의 모양은 CI가 본다. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있는 규칙은 여기 다시 적지 않는다 — 쌓임을 막는 원칙은 협업 규칙 7절이다.
 
@@ -23,7 +23,7 @@
 | 실제 실행 | 병렬·봉인·공개, 공통 자료, strict 독립 정족수, 실제 중도 취소와 자손 종료 확인, 실제 합성(실행마다 켬, 형식 실패 원문 보존, 이름표 순서는 실행마다 섞음). 자료 합계 약 490 KB는 둘 다 시간 안, **약 1 MiB는 Claude가 180초를 넘겼다**(Codex 24초) | [병렬](docs/reviews/2026-09-24-windows-live-completion/README.md) · [자료](docs/reviews/2026-09-24-source-snapshot/README.md) · [strict·취소](docs/reviews/2026-09-25-strict-live-run/README.md) · [합성](docs/reviews/2026-09-24-model-synthesis/README.md) · [1 MiB](docs/experiments/2026-09-25-1mib-sources/RESULTS.md) |
 | 계정 한도 | provider별 카드에 한도 창마다 쓴 비율의 게이지. Codex는 모델 없는 조회(버튼, 그리고 창을 보는 동안 값이 2~5분 지나면 화면이 저절로 — 서버는 1분에 한 번), Claude는 모델 없이 묻는 통로가 없어 마지막으로 끝난 실제 실행의 `rate_limit_event`(Claude Code 2.1.280 `--help`에 사용량 명령 없음, 2026-09-26 확인). 봉인 중·모의 값은 쓰지 않는다 | [A·F](docs/reviews/2026-09-24-account-limits/README.md) |
 | 원장 | 실험은 aux-pc-wsl의 `~/.local/state/dml-*` — 모두 상한까지 썼고 새 실험은 새 원장. 앱 아이콘은 `~/.local/state/decision-model-lab/app/live/`의 원장을 호출이 남은 동안 이어 쓴다(원장당 Codex 5·Claude 5) | 각 기록 · [app 안내](app/README.md) |
-| 작업·역할판 A·B·C1·D1 | 홈·내 차례 → 작업 타임라인 → 역할판·입력 확인 → 결과. 빈 상위 칸은 나, 미지원 배치는 시작 전 거절. 작업·역할 구성은 서버 원장에 고정. CLI 카드마다 허용 목록에서 모델을 고른다(실제 모드는 관측한 두 모델만, 추론 강도 미연결). 일반 칸: 내가 팀원마다 맡길 일·자료를 나누고, 결과를 끝나는 대로 보고 메모와 함께 판단 완료(봉인·정족수 없음, 같은 참여자 계획). 슈퍼바이저 칸: 다듬기 모드 — 3차례까지 다듬고 내가 승인한 문장만 격리 팀원에게 | [화면·원장 안내](app/README.md) · 카드 [#99](https://github.com/inlight37-design/decision-model_lab/issues/99)·[#119](https://github.com/inlight37-design/decision-model_lab/issues/119)·[#125](https://github.com/inlight37-design/decision-model_lab/issues/125)·[#130](https://github.com/inlight37-design/decision-model_lab/issues/130). 모의 흐름은 2026-09-27 브라우저로 확인, 실제 CLI 화면은 미확인 |
+| 작업·역할판 A·B·C1·D1 | 홈·내 차례 → 작업 타임라인 → 역할판·입력 확인 → 결과. 빈 상위 칸은 나, 미지원 배치는 시작 전 거절. 작업·역할 구성은 서버 원장에 고정. CLI 카드마다 허용 목록에서 모델을 고른다(실제 모드는 관측한 두 모델만, 추론 강도 미연결). 일반 칸: 내가 팀원마다 맡길 일·자료를 나누고, 결과를 끝나는 대로 보고 메모와 함께 판단 완료(봉인·정족수 없음, 같은 참여자 계획). 슈퍼바이저 칸: 다듬기 모드 — 3차례까지 다듬고 내가 승인한 문장만 격리 팀원에게 | [화면·원장 안내](app/README.md) · 카드 [#99](https://github.com/inlight37-design/decision-model_lab/issues/99)·[#119](https://github.com/inlight37-design/decision-model_lab/issues/119)·[#125](https://github.com/inlight37-design/decision-model_lab/issues/125)·[#130](https://github.com/inlight37-design/decision-model_lab/issues/130). 모의 흐름과 C1·D1의 실제 모드를 2026-09-27 한 번씩 확인([기록](docs/reviews/2026-09-27-c1-d1-live/README.md)) |
 | 비교 실험 | L1: 같은 provider의 틀린 초안 대신 맞는 초안을 고른 사례 관측, 다른 과제는 보류. 합성의 일반적 이득은 미확립 | [L1](docs/experiments/2026-09-25-l1/RESULTS.md) · [D](docs/experiments/2026-09-24-comparison-pilot/RESULTS.md) · [D 후속](docs/experiments/2026-09-25-d-followup/RESULTS.md) |
 | 협업 | GitHub 이슈 카드 보드(시범 뒤 2026-09-27 채택, 규칙은 [협업 규칙](docs/COLLABORATION.md) 3절). 새 컴퓨터는 원터치 설치 | [시범 기록](docs/experiments/2026-09-25-card-pilot/README.md) · [SETUP](docs/SETUP.md) |
 | 한계·남은 일 | 못 고치는 것, 해야 할 일의 우선순위, 조사 거리를 한 장에 모았고 외부 검토를 받았다 | [검토 요청서](docs/reviews/2026-09-25-review-request/README.md) · [검토](docs/reviews/2026-09-25-review/README.md) |
@@ -65,11 +65,11 @@
 
 일은 `card` 라벨 이슈에서 [협업 규칙](docs/COLLABORATION.md) 3절의 보드 규칙대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #131](https://github.com/inlight37-design/decision-model_lab/pull/131)(`claude/role-board-d1-20260927`) — 역할판 D 첫 조각([카드 #130](https://github.com/inlight37-design/decision-model_lab/issues/130)): 다듬기 모드, 원장 스키마 10. 모델 호출 없음.
+- **이 판을 들인 PR:** [PR #132](https://github.com/inlight37-design/decision-model_lab/pull/132)(`claude/live-check-fixes-20260927`) — C1·D1 실제 확인 기록, 작업 호출 수에 다듬기 차례 포함, 아이콘이 Windows 쪽에서 쓰는 포트를 건너뜀. 모델 호출 Claude 4·Codex 2.
 
 | 사용자만 할 수 있는 것 | 지금 |
 |---|---|
-| 새 화면을 실제로 써 보고 고칠 곳 말하기 | 실제 CLI 모드의 새 화면(격리·일반 팀원)은 아직 아무도 보지 않았다. 주 PC에는 main-pc-wsl 기록이 등록돼 있다(2026-09-27 확인) |
+| 새 화면을 실제로 써 보고 고칠 곳 말하기 | 세션이 실제 모드로 한 번씩 눌러 봤지만(1절 기록) 사용자는 아직 써 보지 않았다. 주 PC에는 main-pc-wsl 기록이 등록돼 있다(2026-09-27 확인) |
 | 로그인·`sudo` 비밀번호, 유료 전환, agy 켜기 | 필요할 때만(2절 9·13·14·22) |
 
 그 밖의 판단은 세션이 정하고 알린다(2절 25).

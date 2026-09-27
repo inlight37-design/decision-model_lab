@@ -63,6 +63,7 @@
 | [`2026-09-26-review-consolidation/`](2026-09-26-review-consolidation/README.md) | ChatGPT의 [PR #106](https://github.com/inlight37-design/decision-model_lab/pull/106). 구조 검토와 Claude의 [별도 Peek 검토](https://github.com/inlight37-design/decision-model_lab/blob/6d6fdb9debc07ef835dd3d3f0b224f372a918c01/docs/reviews/2026-09-26-codex-peek-claude/README.md)를 기존 적용안·역할판 코드와 통합. 중복·해결 범위·수정 순서·완료 조건, N1 훅 검사·N3 상태 입력·폴링 우선순위 보완. 제품 수정·설치·모델 호출·병합 없음 |
 | [`2026-09-27-review-closeout/`](2026-09-27-review-closeout/README.md) | claude(사용자 PC)의 리뷰 마감. 위 다섯 기록과 역할판 A(PR #101)를 병합한 결과, AI들이 합의한 것·애매한 것·사용자가 고를 것·아쉬웠던 것, 다음 카드 S1–S4. 병합 전 모의 화면을 브라우저로 눌러 본 결과와 글자 버그 수정(PR #107). 모델 호출 없음 |
 | [`2026-09-26-main-pc-observe/`](2026-09-26-main-pc-observe/README.md) | 주 PC `DESKTOP-T0UDE01`의 WSL(`main-pc-wsl`)에서 두 참여자 계획을 SETUP 4절로 관측한 기록(Claude 2·Codex 3, 모두 기대대로) — 2026-10-27부터 만료. 만든 세션은 올리지 않았고, 사용자가 판단을 맡긴 뒤 2026-09-27 claude가 원자료로 다시 조립해 대조하고 바이트 그대로 올렸다 |
+| [`2026-09-27-c1-d1-live/`](2026-09-27-c1-d1-live/README.md) | 주 PC WSL에서 일반 팀원(C1)과 다듬기 모드(D1)를 실제 Claude·Codex로 한 번씩 확인(호출 6, 새 원장). 다듬기 JSON 2/2 통과·승인본만 전달, 일반 팀원은 각자 받은 파일만 근거로 답함. 찾은 것: 작업 호출 수가 다듬기 차례를 뺌, Windows 쪽 다른 프로그램이 쥔 포트로 앱 창이 잘못 열림 — [PR #132](https://github.com/inlight37-design/decision-model_lab/pull/132)에서 고침 |
 
 ## 읽는 순서
 
