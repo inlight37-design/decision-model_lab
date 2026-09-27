@@ -44,7 +44,7 @@ import uuid
 from typing import Any, Protocol
 
 from app.store import Store
-from app import collate as collating, next_step, refine as refining, split as splitting
+from app import collate as collating, cross_review as cross, next_step, refine as refining, split as splitting
 from app.roles import freeze as freeze_roles, task_projection
 from app.report import build_report
 from app.synthesis import (LABEL_ORDER, SynthesisError, _sources as synthesis_sources, check_model_synthesis,
@@ -169,7 +169,7 @@ PACKET = ("{marker}\n답의 첫 줄에 위 대괄호 줄을 그대로 옮겨 적
 @dataclass(frozen=True)
 class _Seat:
     """상위 모델 호출 한 종류가 원장에 앉는 자리: 표, 행을 고르는 열, 사건 이름, 답 검사. 다듬기 차례(#130)·다음 단계
-    제안(#133)·분담 제안(#135)·결과 모으기(#137)가 같은 시작·결과·종료 확인 관문을 쓰게 한다. 표 이름과 열은 코드에 박은
+    제안(#133)·분담 제안(#135)·결과 모으기(#137)·교차검토(#140)가 같은 시작·결과·종료 확인 관문을 쓰게 한다. 표 이름과 열은 코드에 박은
     값이다(사용자 입력이 아니다). 자리·종료 미확인·한 번에 하나·재시작 복구는 SEATS를 한꺼번에 본다."""
     table: str
     keys: tuple[str, ...]
@@ -182,6 +182,8 @@ class _Seat:
     acknowledged: str
     check: Any                       # (답 원문, 그 호출의 원장 행) → 검사한 답. 분담 제안은 행의 팀원·자료로 검사한다
     event_column: str = ""           # 사건을 남기는 키가 든 열(다듬기: refine_id, 제안·모으기: run_id, 분담: split_id)
+    plan_pid: str = "supervisor"     # 계획·예약 사건에 쓰는 참여자 ID와 이름(교차검토는 검토자)
+    plan_label: str = "슈퍼바이저"
 
     @property
     def match(self) -> str:
@@ -209,7 +211,14 @@ COLLATE_SEAT = _Seat("collations", ("collation_id",), ("collation_id",), "collat
                      {ACCEPTED: "collation_completed", REJECTED: "collation_failed", UNKNOWN: "collation_unknown"},
                      "collation_result_ignored", "collation_result_not_stored", "collation_unknown_acknowledged",
                      lambda text, row: collating.check(text, json.loads(row["drafts"])), "run_id")
-SEATS = (REFINE_SEAT, NEXT_SEAT, SPLIT_SEAT, COLLATE_SEAT)
+# 교차검토는 답을 낸 팀원이 검토자다. 대상 답 원문은 행(targets)에 고정해 두고 그것과 인용을 대조한다
+REVIEW_SEAT = _Seat("reviews", ("review_id",), ("review_id",), "cross_review", "review_started",
+                    {ACCEPTED: "review_completed", REJECTED: "review_failed", UNKNOWN: "review_unknown"},
+                    "review_result_ignored", "review_result_not_stored", "review_unknown_acknowledged",
+                    lambda text, row: cross.check(text, {label: item["text"] for label, item
+                                                         in json.loads(row["targets"]).items()}),
+                    "run_id", "reviewer", "교차검토자")
+SEATS = (REFINE_SEAT, NEXT_SEAT, SPLIT_SEAT, COLLATE_SEAT, REVIEW_SEAT)
 
 
 @dataclass(frozen=True)
@@ -361,6 +370,10 @@ class ControllerError(ValueError):
     """요청을 받지 않았다. 상태는 바뀌지 않았다."""
 
 
+class _CapReached(ControllerError):
+    """실제 호출 상한에 닿아 시작하지 않았다. 교차검토 라운드는 이 이유로 남은 검토자를 닫는다."""
+
+
 class Controller:
     def __init__(self, store: Store, executor: Executor, *, max_parallel: int = 2, unsettled_limit: int = 2,
                  timeout: float = 60.0, work_root: str | None = None,
@@ -376,9 +389,13 @@ class Controller:
         self._synthesis: dict[str, tuple[threading.Thread, threading.Event, str]] = {}   # run_id → 진행 중인 실제 합성
         self._supervising: dict[str, tuple[threading.Thread, threading.Event]] = {}   # 시도 ID → 진행 중인 슈퍼바이저 호출(다듬기·제안)
         self._recover()
+        with self.lock:   # 앞 검토자가 종료 미확인이 된 교차검토 라운드는 남은 검토자를 바로 닫는다(부르지 않는다)
+            self._advance_reviews(start=False)
         # 이전 controller가 시작하지 못한 시도가 남아 있으면 사용자가 이어서 시작하라고 할 때까지 기다린다
+        # 교차검토 라운드의 시작하지 않은 검토자도 같다(카드 #140)
         self.paused = self.store.row("SELECT COUNT(*) AS n FROM participants JOIN runs USING (run_id) "
-                                     "WHERE state = ? AND NOT cancel_requested", QUEUED)["n"] > 0
+                                     "WHERE state = ? AND NOT cancel_requested", QUEUED)["n"] > 0 or bool(
+            self.store.row("SELECT 1 FROM reviews WHERE state = ?", QUEUED))
 
     # ---- 만들기와 예약 -------------------------------------------------------------------------
     def prepare_run(self, question: str, participants: list[ParticipantSpec], *, min_independent: int,
@@ -779,7 +796,12 @@ class Controller:
         controller 둘이 같은 참여자를 두 번 부르던 문제, A1 리뷰 반영).
         """
         with self.lock:
-            if self._closing or self.paused or self.unsettled() >= self.unsettled_limit:
+            if self._closing:
+                return
+            # 교차검토: 앞 검토자가 받지 못한 라운드는 관문과 상관없이 닫고, 관문이 열려 있으면 다음 검토자를 부른다
+            held = self.paused or self.unsettled() >= self.unsettled_limit
+            self._advance_reviews(start=not held)
+            if held:
                 return
             queued = self.store.rows("SELECT p.run_id, p.pid, p.spec FROM participants p JOIN runs r USING (run_id) "
                                      "WHERE p.state = ? AND NOT r.cancel_requested ORDER BY r.created_at, p.rowid", QUEUED)
@@ -973,6 +995,8 @@ class Controller:
                 worker = self._workers.get(part["attempt"])
                 if worker:
                     worker[1].set()
+        # 실행을 닫는 사람의 동작이다. 진행 중인 실행을 기다리던 교차검토 차례를 깨운다(Codex 교차검토, PR #144)
+        self.pump()
 
     def submit_manual(self, run_id: str, pid: str, text: str, input_sha256: str, *,
                       user_confirmed: bool = False) -> None:
@@ -1014,6 +1038,8 @@ class Controller:
                     self._maybe_reveal(run_id, tx)
             if reason:
                 raise ControllerError(reason)
+        # 실행을 닫는 사람의 동작이다. 진행 중인 실행을 기다리던 교차검토 차례를 깨운다(Codex 교차검토, PR #144)
+        self.pump()
 
     def withdraw_manual(self, run_id: str, pid: str) -> None:
         """사용자가 원본 앱에서 답을 받지 못했다. 그 참여자를 빼고, 빈자리는 채우지 않는다."""
@@ -1024,6 +1050,8 @@ class Controller:
             if self._transition(tx, part, REJECTED, status="withdrawn"):
                 tx.event(run_id, "manual_withdrawn", pid=pid)
                 self._maybe_reveal(run_id, tx)
+        # 실행을 닫는 사람의 동작이다. 진행 중인 실행을 기다리던 교차검토 차례를 깨운다(Codex 교차검토, PR #144)
+        self.pump()
 
     def approve_reduction(self, run_id: str) -> None:
         """축소 승인은 controller가 그것을 기다릴 때만 받는다: 초안 작성 중이고, 모두 끝났고, 빠진 사람이 있고,
@@ -1035,6 +1063,8 @@ class Controller:
             tx.execute("UPDATE runs SET reduction_approved = 1 WHERE run_id = ? AND NOT reduction_approved", run_id)
             tx.event(run_id, "reduction_approved", requested=list(current_gate.requested), dropped=list(current_gate.dropped))
             self._maybe_reveal(run_id, tx)
+        # 실행을 닫는 사람의 동작이다. 진행 중인 실행을 기다리던 교차검토 차례를 깨운다(Codex 교차검토, PR #144)
+        self.pump()
 
     def acknowledge_unknown(self, run_id: str, pid: str) -> None:
         """사용자가 그 시도의 종료를 직접 확인했다고 알린다. 자리는 풀지만 예산은 돌려주지 않고, 초안도 받지 않는다."""
@@ -1249,7 +1279,7 @@ class Controller:
             # 다듬기 차례는 한 번에 하나다. 버튼을 두 번 누르거나 창 두 개에서 불러도 두 번째 호출을 시작하지 않는다
             # (Codex 교차검토, PR #131).
             if self._supervisor_busy():
-                raise ControllerError("다른 상위 모델 호출(다듬기·제안·분담·모으기)이 진행 중이거나 끝났는지 모릅니다. 끝나거나 종료를 확인한 뒤에 다시 부르세요.")
+                raise ControllerError("다른 상위 모델 호출(다듬기·제안·분담·모으기·검토)이 진행 중이거나 끝났는지 모릅니다. 끝나거나 종료를 확인한 뒤에 다시 부르세요.")
             key = refine_id or f"q{time.strftime('%m%d-%H%M%S')}-{uuid.uuid4().hex}"
             turn = len(previous) + 1
             text = refining.prompt(original, previous, note)
@@ -1275,7 +1305,7 @@ class Controller:
         attempt = uuid.uuid4().hex
         try:
             os.makedirs(work, exist_ok=True)
-            plan = self.executor.plan(replace(supervisor, pid="supervisor", label="슈퍼바이저"), text, work,
+            plan = self.executor.plan(replace(supervisor, pid=seat.plan_pid, label=seat.plan_label), text, work,
                                       **({"inputs": inputs} if inputs else {}))
             _check(self.executor, plan)   # 예약 전에 격리 경로·연결을 본다(R4)
         except Exception as exc:   # 계획 거절: 아무것도 시작하지 않았다
@@ -1283,8 +1313,8 @@ class Controller:
         with self.store.tx() as tx:
             if plan.kind == contract.REAL and self.max_real_calls is not None:
                 if self._budget_exhausted(supervisor.adapter_id):
-                    raise ControllerError("real CLI call budget exhausted; no call was started")
-                tx.event(event_key, "live_call_reserved", pid="supervisor", attempt=attempt,
+                    raise _CapReached("real CLI call budget exhausted; no call was started")
+                tx.event(event_key, "live_call_reserved", pid=seat.plan_pid, attempt=attempt,
                          adapter_id=supervisor.adapter_id, cap=self.max_real_calls, purpose=seat.purpose)
             insert(tx, attempt, plan.kind)
             tx.event(event_key, seat.started, **seat.label(where), attempt=attempt, adapter_id=supervisor.adapter_id,
@@ -1396,7 +1426,7 @@ class Controller:
             if self.store.row("SELECT 1 FROM proposals WHERE run_id = ? AND state = ?", run_id, UNKNOWN):
                 raise ControllerError("끝났는지 모르는 제안이 있습니다. 종료를 먼저 확인하세요.")
             if self._supervisor_busy():
-                raise ControllerError("다른 상위 모델 호출(다듬기·제안·분담·모으기)이 진행 중이거나 끝났는지 모릅니다. 끝나거나 종료를 확인한 뒤에 다시 부르세요.")
+                raise ControllerError("다른 상위 모델 호출(다듬기·제안·분담·모으기·검토)이 진행 중이거나 끝났는지 모릅니다. 끝나거나 종료를 확인한 뒤에 다시 부르세요.")
             if self.paused or self.unsettled() >= self.unsettled_limit:
                 raise ControllerError("execution is paused or has unsettled attempts; no call was started")
             if self._slots_used() >= self.max_parallel:
@@ -1485,7 +1515,7 @@ class Controller:
             if task_id is not None and not self.store.row("SELECT 1 FROM tasks WHERE task_id = ?", task_id):
                 raise ControllerError("작업을 찾을 수 없습니다.")
             if self._supervisor_busy():
-                raise ControllerError("다른 상위 모델 호출(다듬기·제안·분담·모으기)이 진행 중이거나 끝났는지 모릅니다. 끝나거나 종료를 확인한 뒤에 다시 부르세요.")
+                raise ControllerError("다른 상위 모델 호출(다듬기·제안·분담·모으기·검토)이 진행 중이거나 끝났는지 모릅니다. 끝나거나 종료를 확인한 뒤에 다시 부르세요.")
             if self.paused or self.unsettled() >= self.unsettled_limit:
                 raise ControllerError("execution is paused or has unsettled attempts; no call was started")
             if self._slots_used() >= self.max_parallel:
@@ -1544,7 +1574,7 @@ class Controller:
             if self.store.row("SELECT 1 FROM collations WHERE run_id = ? AND state = ?", run_id, UNKNOWN):
                 raise ControllerError("끝났는지 모르는 결과 모으기가 있습니다. 종료를 먼저 확인하세요.")
             if self._supervisor_busy():
-                raise ControllerError("다른 상위 모델 호출(다듬기·제안·분담·모으기)이 진행 중이거나 끝났는지 모릅니다. 끝나거나 종료를 확인한 뒤에 다시 부르세요.")
+                raise ControllerError("다른 상위 모델 호출(다듬기·제안·분담·모으기·검토)이 진행 중이거나 끝났는지 모릅니다. 끝나거나 종료를 확인한 뒤에 다시 부르세요.")
             if self.paused or self.unsettled() >= self.unsettled_limit:
                 raise ControllerError("execution is paused or has unsettled attempts; no call was started")
             if self._slots_used() >= self.max_parallel:
@@ -1593,6 +1623,179 @@ class Controller:
                 "labels": json.loads(row["labels"]), "prompt": row["prompt"], "input_sha256": row["input_sha256"],
                 "reply": record.get("reply"), "reason": record.get("reason"), "raw": record.get("raw"),
                 "observation": record.get("observation")}
+
+    # ---- 공개 뒤 한 라운드 교차검토(카드 #140) ----------------------------------------------------
+    def cross_review(self, run_id: str, question: str | None = None) -> list[str]:
+        """공개된 격리 실행에서 교차검토 한 라운드를 연다 — 받은 답을 낸 CLI 팀원 한 명 = 호출 1회.
+
+        검토자는 답을 낸 그 카드·모델이다(같은 관측된 계획, 읽기 전용). 자기 답(따로 표시)과 다른 팀원의 답(이름표,
+        검토자마다 섞은 순서)과 검토 질문을 받는다. 원본 앱 팀원의 답은 대상으로만 들어간다. 입력은 여기서 모두 고정하고,
+        검토자는 다른 상위 모델 호출처럼 한 번에 하나씩 차례로 부른다(pump). 앞 검토자가 받지 못하면(실패·종료
+        미확인·상한·시작 못 함) 남은 검토자는 시작하지 않는다. 실행 하나에 한 라운드. 공개 뒤 다른 답을 본 검토라
+        독립 정족수에 세지 않는다. 검토는 새 실행을 시작하지 않고, 지적의 처분은 사람이 한다."""
+        question = question.strip() if isinstance(question, str) else ""
+        question = question or cross.DEFAULT_QUESTION
+        if len(question) > cross.MAX_QUESTION or not storable(question):
+            raise ControllerError(f"검토 질문은 {cross.MAX_QUESTION}자까지의 올바른 글이어야 합니다.")
+        with self.lock:
+            if self._closing:
+                raise ControllerError("controller is shutting down")
+            run = self._run(run_id)
+            current_gate = self._gate(run_id)
+            if current_gate.general or not current_gate.revealed:
+                raise ControllerError("교차검토는 공개된 격리 실행에만 부릅니다. 봉인 중에는 부르지 않습니다.")
+            if self.store.row("SELECT 1 FROM reviews WHERE run_id = ?", run_id):
+                raise ControllerError("교차검토는 실행 하나에 한 라운드입니다.")
+            if self._supervisor_busy():
+                raise ControllerError("다른 상위 모델 호출(다듬기·제안·분담·모으기·검토)이 진행 중이거나 끝났는지 "
+                                      "모릅니다. 끝나거나 종료를 확인한 뒤에 다시 부르세요.")
+            if self.paused or self.unsettled() >= self.unsettled_limit:
+                raise ControllerError("execution is paused or has unsettled attempts; no call was started")
+            if self._slots_used() >= self.max_parallel:
+                raise ControllerError("parallel execution limit reached; no call was started")
+            if self.store.row("SELECT 1 FROM runs WHERE phase = 'drafting' AND NOT cancel_requested"):
+                raise ControllerError("진행 중인 실행을 먼저 정리하세요. 교차검토는 실행이 없을 때만 부릅니다.")
+            answers = {}   # pid → (명세, 답 원문, sha256). 받은 답만, 참여자 순서대로
+            for part in self.store.rows("SELECT pid, spec, state FROM participants WHERE run_id = ? ORDER BY rowid",
+                                        run_id):
+                draft = self.store.row("SELECT text, sha256 FROM drafts WHERE run_id = ? AND pid = ?", run_id, part["pid"])
+                if part["state"] == ACCEPTED and draft:
+                    answers[part["pid"]] = (ParticipantSpec(**json.loads(part["spec"])), draft["text"], draft["sha256"])
+            reviewers = [pid for pid, (spec, _, _) in answers.items()
+                         if spec.transport == CLI and spec.adapter_id in self.executor.adapter_ids]
+            if len(answers) < 2 or not reviewers:
+                raise ControllerError("교차검토에는 받은 답이 둘 이상이고, 그중 설정된 CLI 팀원이 하나 이상 있어야 합니다.")
+            first = answers[reviewers[0]][0]
+            if (self.executor.kind == contract.REAL and self.max_real_calls is not None
+                    and self._budget_exhausted(first.adapter_id)):
+                raise ControllerError("real CLI call budget exhausted; no call was started")
+            keys, now = [], time.time()
+            with self.store.tx() as tx:
+                for seq, pid in enumerate(reviewers, 1):
+                    spec, own, _ = answers[pid]
+                    others = [other for other in answers if other != pid]
+                    labels = {f"D{index}": other for index, other in
+                              enumerate(label_order(f"{run_id}\0review\0{pid}", others), 1)}
+                    targets = {label: {"pid": other, "sha256": answers[other][2], "text": answers[other][1]}
+                               for label, other in labels.items()}
+                    text = cross.prompt(question, run["question"], own,
+                                        [(label, item["text"]) for label, item in targets.items()])
+                    key = f"v{time.strftime('%m%d-%H%M%S')}-{uuid.uuid4().hex}"
+                    tx.execute("INSERT INTO reviews (review_id, run_id, seq, created_at, question, reviewer, labels, "
+                               "targets, prompt, input_sha256, state) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                               key, run_id, seq, now, question, json.dumps(asdict(spec), ensure_ascii=False),
+                               json.dumps(labels), json.dumps(targets, ensure_ascii=False), text,
+                               hashlib.sha256(text.encode("utf-8")).hexdigest(), QUEUED)
+                    keys.append(key)
+                tx.event(run_id, "review_round_created", reviewers=reviewers, calls=len(reviewers),
+                         default_question=question == cross.DEFAULT_QUESTION)
+            self._advance_reviews(start=True)
+            return keys
+
+    def _advance_reviews(self, *, start: bool) -> None:
+        """교차검토 라운드를 한 걸음 진행한다. pump가 lock 안에서 부른다. 앞 검토자가 받지 못했으면(실패·종료 미확인·
+        상한·시작 못 함) 남은 검토자를 시작하지 않고 그 이유로 닫는다 — 닫는 것은 관문과 상관없이 한다. start이면 관문
+        (한 번에 하나·자리·진행 중인 실행 없음)이 허락할 때 다음 검토자 하나를 시작한다. 한 번에 하나만 부른다."""
+        for item in self.store.rows("SELECT run_id FROM reviews WHERE state = ? GROUP BY run_id "
+                                    "ORDER BY MIN(created_at)", QUEUED):
+            run_id = item["run_id"]
+            rows = self.store.rows("SELECT * FROM reviews WHERE run_id = ? ORDER BY seq", run_id)
+            if any(row["state"] == RUNNING for row in rows):
+                continue
+            done = [row for row in rows if row["state"] != QUEUED]
+            if done and done[-1]["state"] != ACCEPTED:
+                self._close_reviews(run_id, "earlier_reviewer_not_accepted")
+                continue
+            if not start or self._supervisor_busy() or self._slots_used() >= self.max_parallel or self.store.row(
+                    "SELECT 1 FROM runs WHERE phase = 'drafting' AND NOT cancel_requested"):
+                continue
+            row = next(row for row in rows if row["state"] == QUEUED)
+            spec = ParticipantSpec(**json.loads(row["reviewer"]))
+
+            def insert(tx, attempt, kind, review_id=row["review_id"]):
+                if not tx.execute("UPDATE reviews SET state = ?, attempt = ?, kind = ? WHERE review_id = ? AND state = ?",
+                                  RUNNING, attempt, kind, review_id, QUEUED):
+                    raise ControllerError("this reviewer was already started")
+
+            try:
+                self._start_seat(REVIEW_SEAT, run_id, {"review_id": row["review_id"]}, spec, row["prompt"],
+                                 os.path.join(self.work_root, run_id, f"review-{row['review_id'][-12:]}"), insert)
+            except _CapReached:
+                self._close_reviews(run_id, "cap_reached")
+            except ControllerError as exc:   # 계획 거절 등: 이 검토자부터 시작하지 않았다
+                self._close_reviews(run_id, _storable_meta(f"not_started: {exc}")[:300])
+            return
+
+    def _close_reviews(self, run_id: str, reason: str) -> None:
+        """남은(대기 중인) 검토자를 시작하지 않은 채 닫는다. 검토하지 않은 관계로 보이고 호출은 쓰지 않았다."""
+        with self.store.tx() as tx:
+            closed = tx.execute("UPDATE reviews SET state = 'skipped', status = ? WHERE run_id = ? AND state = ?",
+                                reason, run_id, QUEUED)
+            if closed:
+                tx.event(run_id, "review_skipped", reviewers=closed, reason=reason)
+
+    def acknowledge_review_unknown(self, review_id: str) -> None:
+        """사람이 그 검토 호출의 자손 종료를 직접 확인했다. 자리만 풀고 재호출·환불하지 않는다."""
+        row = self.store.row("SELECT run_id FROM reviews WHERE review_id = ?", review_id)
+        if row is None:
+            raise ControllerError("교차검토를 찾을 수 없습니다.")
+        self._acknowledge_seat(REVIEW_SEAT, row["run_id"], {"review_id": review_id})
+
+    def set_review_disposition(self, review_id: str, finding: int, disposition: str) -> None:
+        """사람이 지적 하나의 처분을 고른다(qualified 받아들임·rejected 아님·unresolved 보류). 결과 판을 올리지 않는다 —
+        사람의 판단이지 새 결과가 아니다. 모델이 동의해도 supported로 올리는 길은 없다(외부 검사 없음)."""
+        if type(finding) is not int or disposition not in cross.DISPOSITIONS:
+            raise ControllerError(f"처분은 {', '.join(cross.DISPOSITIONS)} 중 하나이고 지적 번호는 정수입니다.")
+        with self.lock, self.store.tx() as tx:
+            row = self.store.row("SELECT run_id, state, result FROM reviews WHERE review_id = ?", review_id)
+            if row is None or row["state"] != ACCEPTED:
+                raise ControllerError("받은 교차검토의 지적에만 처분을 고릅니다.")
+            findings = json.loads(row["result"])["reply"]["findings"]
+            if not 0 <= finding < len(findings):
+                raise ControllerError("그런 지적이 없습니다.")
+            tx.execute("INSERT INTO review_dispositions (review_id, finding, disposition, at) VALUES (?, ?, ?, ?) "
+                       "ON CONFLICT (review_id, finding) DO UPDATE SET disposition = excluded.disposition, "
+                       "at = excluded.at", review_id, finding, disposition, time.time())
+            tx.event(row["run_id"], "review_disposition", review_id=review_id, finding=finding, disposition=disposition)
+
+    def _cross_review_view(self, run_id: str) -> dict[str, Any] | None:
+        rows = self.store.rows("SELECT * FROM reviews WHERE run_id = ? ORDER BY seq", run_id)
+        if not rows:
+            return None
+        current = {row["pid"]: row["sha256"] for row in self.store.rows(
+            "SELECT pid, sha256 FROM drafts WHERE run_id = ?", run_id)}
+        reviews, missing, reviewed = [], [], 0
+        for row in rows:
+            record = json.loads(row["result"]) if row["result"] else {}
+            spec, targets = json.loads(row["reviewer"]), json.loads(row["targets"])
+            reply = record.get("reply")
+            if reply:
+                chosen = {item["finding"]: item for item in self.store.rows(
+                    "SELECT finding, disposition, at FROM review_dispositions WHERE review_id = ?", row["review_id"])}
+                reply = {**reply, "findings": [
+                    {**finding, "target_pid": targets[finding["target"]]["pid"],
+                     "disposition": chosen[index]["disposition"] if index in chosen else "unresolved",
+                     "disposition_at": chosen[index]["at"] if index in chosen else None}
+                    for index, finding in enumerate(reply["findings"])]}
+            for label, target in targets.items():
+                if row["state"] == ACCEPTED:
+                    reviewed += 1
+                else:
+                    missing.append({"reviewer": spec["pid"], "target": target["pid"],
+                                    "reason": row["status"] or row["state"]})
+            reviews.append({"review_id": row["review_id"], "seq": row["seq"], "state": row["state"],
+                            "status": row["status"], "execution": row["kind"],
+                            "reviewer": {key: spec.get(key) for key in ("pid", "label", "adapter_id", "model")},
+                            "labels": json.loads(row["labels"]),
+                            "targets": {label: {"pid": t["pid"], "sha256": t["sha256"],
+                                                "fresh": current.get(t["pid"]) == t["sha256"]}
+                                        for label, t in targets.items()},
+                            "prompt": row["prompt"], "input_sha256": row["input_sha256"], "reply": reply,
+                            "reason": record.get("reason"), "raw": record.get("raw"),
+                            "observation": record.get("observation")})
+        return {"question": rows[0]["question"], "created_at": rows[0]["created_at"], "reviews": reviews,
+                "coverage": {"pairs": reviewed + len(missing), "reviewed": reviewed, "missing": missing},
+                "independence": "post_reveal_not_independent"}
 
     def acknowledge_split_unknown(self, split_id: str) -> None:
         """사람이 그 분담 제안 호출의 자손 종료를 직접 확인했다. 자리만 풀고 재호출·환불하지 않는다."""
@@ -1780,6 +1983,8 @@ class Controller:
                     # 다음 단계 제안은 공개 뒤의 일이다. 봉인 중에는 부를 수도 없고 목록도 비어 있다
                     runs[-1]["proposals"] = [self._proposal_view(row) for row in self.store.rows(
                         "SELECT * FROM proposals WHERE run_id = ? ORDER BY created_at", run["run_id"])]
+                    # 공개 뒤 교차검토 라운드(#140). 없으면 None
+                    runs[-1]["cross_review"] = self._cross_review_view(run["run_id"])
                     artifact = self.store.row("SELECT payload FROM events WHERE run_id = ? "
                                               "AND kind = 'synthesis_completed' ORDER BY seq DESC LIMIT 1", run["run_id"])
                     if artifact:
@@ -1831,11 +2036,14 @@ class Controller:
 
     def _review_state(self, run_id: str) -> tuple[int, bool, str | None]:
         """(결과 판, 그 판을 판단 완료했는가, 그때 남긴 취합 메모). 판은 사람이 보는 결과를 바꾼 마지막 사건의 seq다 —
-        공개, 일반 실행의 모음, 합성 완료·실패, 다음 단계 제안·결과 모으기의 결과. 판단 완료 사건이 그보다 뒤에 있어야 그 판을 본 것이다. 새 합성이 끝나면
+        공개, 일반 실행의 모음, 합성 완료·실패, 다음 단계 제안·결과 모으기·교차검토의 결과. 판단 완료 사건이 그보다 뒤에 있어야 그 판을 본 것이다. 새 합성이 끝나면
         판이 올라가 다시 내 차례가 된다(AH-01). 판을 싣지 않은 옛 원장의 판단 완료 사건도 같은 순서 규칙으로 읽는다."""
         row = self.store.row(
             "SELECT COALESCE(MAX(CASE WHEN kind IN ('revealed', 'collected', 'synthesis_completed', 'synthesis_failed', "
-            "'proposal_completed', 'proposal_failed', 'collation_completed', 'collation_failed') "
+            "'proposal_completed', 'proposal_failed', 'collation_completed', 'collation_failed', "
+            "'review_completed', 'review_failed', 'review_skipped', "
+            # 종료 미확인도 새 결과다 — 종료 확인이 판단을 대신하지 않게 판을 올린다(Codex 교차검토, PR #144)
+            "'proposal_unknown', 'collation_unknown', 'review_unknown') "
             "THEN seq END), 0) AS revision, "
             "COALESCE(MAX(CASE WHEN kind = 'human_reviewed' THEN seq END), 0) AS reviewed "
             "FROM events WHERE run_id = ?", run_id)
@@ -1866,6 +2074,9 @@ class Controller:
                 raise ControllerError("다음 단계 제안이 끝나거나 그 종료를 확인한 뒤에 판단 완료를 누르세요.")
             if self.store.row("SELECT 1 FROM collations WHERE run_id = ? AND state IN (?, ?)", run_id, RUNNING, UNKNOWN):
                 raise ControllerError("결과 모으기가 끝나거나 그 종료를 확인한 뒤에 판단 완료를 누르세요.")
+            if self.store.row("SELECT 1 FROM reviews WHERE run_id = ? AND state IN (?, ?, ?)",
+                              run_id, QUEUED, RUNNING, UNKNOWN):
+                raise ControllerError("교차검토 라운드가 끝나거나 그 종료를 확인한 뒤에 판단 완료를 누르세요.")
             current, reviewed, _ = self._review_state(run_id)
             if revision != current:
                 raise ControllerError("화면에 보인 뒤 새 결과가 나왔습니다. 새 결과를 확인하고 다시 판단 완료를 누르세요.")

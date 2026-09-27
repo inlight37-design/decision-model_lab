@@ -37,7 +37,9 @@ from typing import Any, Iterator
 #    시작한 실행·제안대로였는지(as_proposed)를 고정한다. 제안 때 붙인 자료는 sources 표에 분담 제안 ID로 둔다.
 # 13: collations — 일반 작업의 결과 모으기(카드 #137). 오케스트레이터가 받은 팀원 결과(이름표별 원문)·보낸 입력·결과·
 #    상태를 고정한다. 인용 대조는 저장한 그 원문과 한다.
-SCHEMA_VERSION = 13
+# 14: reviews·review_dispositions — 공개 뒤 한 라운드 교차검토(카드 #140). 검토자마다 차례·받은 이름표·대상 답(원문·
+#    sha256)·보낸 입력·결과·상태를 고정하고, 지적마다 사람이 고른 처분과 그 시각을 둔다.
+SCHEMA_VERSION = 14
 # 스키마 5 이전 시도의 종류는 시작 사건에 남은 실행기 이름에서만 복원한다. 모의 실행기의 이름은 격리 방식이었다.
 # 근거가 없으면 NULL로 두고, 화면은 "실행 종류 기록 없음"으로 보인다.
 LEGACY_EXECUTORS = {"bubblewrap": "mock", "job_object": "mock", "process_group": "mock", "cli": "real"}
@@ -74,6 +76,15 @@ CREATE TABLE IF NOT EXISTS collations (
   collation_id TEXT PRIMARY KEY, run_id TEXT NOT NULL, created_at REAL NOT NULL, orchestrator TEXT NOT NULL,
   labels TEXT NOT NULL, drafts TEXT NOT NULL, prompt TEXT NOT NULL, input_sha256 TEXT NOT NULL,
   attempt TEXT NOT NULL, kind TEXT, state TEXT NOT NULL, status TEXT, result TEXT
+);
+CREATE TABLE IF NOT EXISTS reviews (
+  review_id TEXT PRIMARY KEY, run_id TEXT NOT NULL, seq INTEGER NOT NULL, created_at REAL NOT NULL,
+  question TEXT NOT NULL, reviewer TEXT NOT NULL, labels TEXT NOT NULL, targets TEXT NOT NULL, prompt TEXT NOT NULL,
+  input_sha256 TEXT NOT NULL, attempt TEXT, kind TEXT, state TEXT NOT NULL, status TEXT, result TEXT
+);
+CREATE TABLE IF NOT EXISTS review_dispositions (
+  review_id TEXT NOT NULL, finding INTEGER NOT NULL, disposition TEXT NOT NULL, at REAL NOT NULL,
+  PRIMARY KEY (review_id, finding)
 );
 CREATE TABLE IF NOT EXISTS assignments (
   run_id TEXT NOT NULL, pid TEXT NOT NULL, task TEXT NOT NULL, prompt TEXT NOT NULL,

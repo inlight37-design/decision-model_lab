@@ -91,13 +91,19 @@ def task_projection(tasks, runs, held=None):
             synth = (run.get("model_synthesis") or {}).get("status")
             # 다음 단계 제안도 합성처럼 본다: 끝났는지 모르면 문제, 도는 중이면 작업 중(Codex 교차검토, PR #134)
             asked = {p["state"] for p in run.get("proposals", [])}
+            # 교차검토(#140)도 같다. 대기 중인 검토자는 멈춘 원장이면 내가 이어서 시작하고, 아니면 차례를 기다린다
+            reviews = (run.get("cross_review") or {}).get("reviews", [])
+            checked = {r["state"] for r in reviews}
             if run.get("mode") == "general":
                 status, action = _general_status(run, states, held)
-            elif "unknown" in states or synth == "unknown" or "unknown" in asked or (synth == "failed" and not run["reviewed"]):
+            elif ("unknown" in states or synth == "unknown" or "unknown" in asked or "unknown" in checked
+                  or (synth == "failed" and not run["reviewed"])):
                 status, action = "problem", "종료·실패 확인"
             elif run["cancel_requested"] or gate["status"] == "quorum_blocked":
                 status, action = "problem", "실행 확인"
-            elif synth == "running" or "running" in asked:
+            elif "queued" in checked and held == "paused":
+                status, action = "my_turn", "멈춘 교차검토 이어서 시작"
+            elif synth == "running" or "running" in asked or checked & {"running", "queued"}:
                 status, action = "working", None
             elif gate["can_submit"] and "awaiting_user" in states:
                 status, action = "my_turn", "원본 앱 답 붙여넣기"
@@ -120,7 +126,8 @@ def task_projection(tasks, runs, held=None):
                              # 다듬기 차례가 빠진 것을 봄). 제안·결과 모으기의 실제 예약은 그 실행의 예약(reserved)에도
                              # 들어 있다
                              "calls_used": max(run["budget"]["used"] + len(run.get("model_syntheses", []))
-                                               + len(run.get("proposals", [])) + len(run.get("collations", [])),
+                                               + len(run.get("proposals", [])) + len(run.get("collations", []))
+                                               + sum(r["execution"] is not None for r in reviews),
                                                run["budget"]["reserved"])
                                            + len((run.get("refinement") or {}).get("turns", []))
                                            + (1 if run.get("split") else 0)})   # 일반 실행에 묶인 분담 제안(#135)

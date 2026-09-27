@@ -215,6 +215,33 @@ assert.ok(ctext.includes("종료 미확인") && ctext.includes("종료를 직접
 ctext=text(collationIsland(crun([{collation_id:"c3",state:"rejected",status:"format_error",reason:"JSON 아님",raw:{text:"RAW_C"},labels:{}}])));
 assert.ok(ctext.includes("형식 검사 실패") && ctext.includes("RAW_C"));
 assert.ok(!text(generalResults(crun([]))).includes("오케스트레이터는 나"));
+// 교차검토(카드 #140): 공개된 격리 실행에서 받은 답이 둘 이상이고 CLI 팀원이 있을 때만 버튼. 판독 실패는 지적 없음이 아니다.
+const vparts=[{pid:"a",label:"CLI A",transport:"cli",draft:"A 답"},{pid:"z",label:"CLI Z",transport:"cli",draft:"Z 답"},
+  {pid:"m",label:"앱 M",transport:"manual",draft:"M 답"}];
+const vrun=(round,extra={})=>({run_id:"v1",mode:"isolated",phase:"revealed",participants:vparts,cross_review:round,...extra});
+assert.equal(crossReviewIsland(vrun(null,{phase:"drafting"})),null);
+assert.equal(crossReviewIsland(vrun(null,{mode:"general"})),null);
+assert.equal(crossReviewIsland(vrun(null,{participants:[vparts[0],{...vparts[1],draft:undefined}]})),null);
+let vtext=text(crossReviewIsland(vrun(null)));
+assert.ok(vtext.includes("호출 2회(검토자 2명)") && vtext.includes("독립 정족수에 세지 않습니다"), vtext);
+const vreview=(state,extra={})=>({review_id:"r-"+state,state,status:null,reviewer:{pid:"a"},labels:{D1:"z",D2:"m"},
+  targets:{D1:{pid:"z",fresh:true},D2:{pid:"m",fresh:true}},reply:null,...extra});
+const vround={question:"비용을 따져라",coverage:{pairs:4,reviewed:2,missing:[{reviewer:"z",target:"a",reason:"earlier_reviewer_not_accepted"}]},
+  reviews:[vreview("accepted",{reply:{findings:[{target:"D1",target_pid:"z",quote:"Z 답",kind:"counterexample",detail:"반례 설명",
+    source_check:"exact_match",disposition:"qualified"},{target:"D2",target_pid:"m",quote:"없는 말",kind:"other",detail:"d",
+    source_check:"not_found",disposition:"unresolved"}]}}),
+    vreview("rejected",{reviewer:{pid:"z"},status:"format_error",reason:"JSON 아님",raw:{text:"RAW_V"}}),
+    vreview("skipped",{reviewer:{pid:"z"},status:"cap_reached"}),vreview("unknown",{reviewer:{pid:"z"}}),
+    vreview("accepted",{reviewer:{pid:"z"},reply:{findings:[]},targets:{D1:{pid:"a",fresh:false}},labels:{D1:"a"}})]};
+const visle=crossReviewIsland(vrun(vround));
+assert.ok(all(visle).every(x=>x.kids.every(k=>typeof k!=="object"||isNode(k))));
+vtext=text(visle);
+for (const piece of ["검토 질문: 비용을 따져라","검토한 관계 2/4","검토하지 않음: CLI Z → CLI A · 앞 검토자가 받지 못함","D1 = CLI Z",
+  "D1 CLI Z · 반례","원문 일치","대상 원문에 없음","반례 설명","판독 실패","'지적 없음'이 아닙니다","RAW_V","호출 상한에 닿음",
+  "종료를 직접 확인했음","지적 없음 — 검토자가 형식에 맞게","대상 답이 바뀌었습니다: D1"]) assert.ok(vtext.includes(piece), piece);
+assert.ok(!vtext.includes("교차검토 받기"));   // 한 라운드
+const pressed=all(visle).filter(x=>x.tag==="button"&&x.attrs["aria-pressed"]==="true").map(text);
+assert.deepEqual(pressed,["받아들임","보류"]);
 // 분담 제안(카드 #135): 오케스트레이터 칸에 CLI 카드가 있을 때만 버튼. 제안이 오면 팀원별 칸을 채우고,
 // 같은 목표·팀원·자료로 보낼 때만 제안을 붙인다.
 roleOptions={participants:sroster,live:false,behaviors:["ok"]};
