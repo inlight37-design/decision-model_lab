@@ -36,7 +36,7 @@
 powershell -NoProfile -ExecutionPolicy Bypass -File app\start.ps1 -InstallShortcut
 ```
 
-아이콘은 그 명령을 부른 사본의 [start.ps1](start.ps1)을 가리킨다 — 사용자의 clone(`C:\ai\decision-model_lab`, main)에서 만든다. 병합된 변경은 그 폴더를 pull해야 앱에 들어간다. 누르면 [start.ps1](start.ps1)이 WSL 안에서 [launch.py](launch.py)를 부르고, 준비 조회를 통과하면 Microsoft Edge의 앱 창(전용 프로필 `%USERPROFILE%\.decision-model-lab\edge-app`)으로 연다. **창을 닫으면 서버가 꺼진다** — 돌던 참여자·합성이 있으면 그것이 끝난 뒤 스스로 꺼진다(호출을 끊지 않는다). 모델 호출 없이 보려면 `-Mock`. 이미 켜져 있으면 창만 하나 더 연다.
+아이콘은 그 명령을 부른 사본의 [start.ps1](start.ps1)을 가리킨다 — 사용자의 clone(`C:\ai\decision-model_lab`, main)에서 만든다. 병합된 변경은 그 폴더를 pull해야 앱에 들어간다. 누르면 [start.ps1](start.ps1)이 WSL 안에서 [launch.py](launch.py)를 부르고, 준비 조회를 통과하면 Microsoft Edge의 앱 창(전용 프로필 `%USERPROFILE%\.decision-model-lab\edge-app`)으로 연다. **창을 닫으면 서버가 꺼진다** — 돌던 참여자·합성이 있으면 그것이 끝난 뒤 스스로 꺼진다(호출을 끊지 않는다). 모델 호출 없이 보려면 `-Mock`. 이미 켜져 있으면 창만 하나 더 연다. 아이콘을 거의 동시에 두 번 눌러도 서버는 하나다 — 상태 폴더의 `launcher.lock`을 먼저 잡은 쪽만 띄우고, 진 쪽은 상태 기록·로그를 건드리지 않은 채 그 서버에 창만 연다(합류). 합류한 창을 닫아도 서버는 끄지 않고, 끄기는 서버를 띄운 창의 표식(nonce)에만 닿는다([카드 #120](https://github.com/inlight37-design/decision-model_lab/issues/120)).
 
 [launch.py](launch.py)가 정하는 것은 넷이고 나머지(준비 조회·원장·상한·봉인)는 `app.server` 그대로다.
 
