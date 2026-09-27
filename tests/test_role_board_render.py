@@ -161,6 +161,32 @@ showInputPreview({mode:"isolated",run_id:"r",confirmation:"c",question:"질문",
   role_config:{isolated:[],orchestrator:null,supervisor:null},quorum_policy:"independent_only",min_independent:1,
   calls:{draft_cli:1,model_calls:0}},{});
 assert.ok(nodes.inputPreview.kids.every(isNode), JSON.stringify(nodes.inputPreview.kids.filter(k=>!isNode(k))));
+// 다음 단계 제안(카드 #133): 슈퍼바이저가 있는 공개된 격리 실행에만. 제안 내용은 따로 표시한 칸, 진행 상태는 배지.
+const sup={pid:"a",label:"CLI A",transport:"cli",model:"m1"};
+const prun=(proposals,extra={})=>({run_id:"r1",task_id:"t1",phase:"revealed",mode:"isolated",
+  role_config:{supervisor:sup,orchestrator:null,isolated:[sup],general:[]},proposals,...extra});
+assert.equal(proposalIsland(prun([],{role_config:{supervisor:null,isolated:[sup]}})),null);
+assert.equal(proposalIsland(prun([],{phase:"drafting"})),null);
+assert.equal(proposalIsland(prun([],{mode:"general"})),null);
+const again={proposal_id:"p1",state:"accepted",reply:{next:"again",reason:"갈림",question:"다음 질문",open_points:["비용"]},used_by:null};
+const stop={proposal_id:"p2",state:"accepted",reply:{next:"stop",reason:"같음",question:null,open_points:[]},used_by:null};
+let pisle=proposalIsland(prun([again]));
+assert.ok(all(pisle).every(x=>x.kids.every(k=>typeof k!=="object"||isNode(k))));
+let ptext=text(pisle);
+for (const piece of ["제안: 한 번 더","이유: 갈림","남은 쟁점: 비용","다음 질문","이 질문으로 새 실행 준비","(2/2)"]) assert.ok(ptext.includes(piece), piece);
+ptext=text(proposalIsland(prun([again,stop])));
+assert.ok(ptext.includes("제안: 여기서 끝") && ptext.includes("판단 완료를 누르세요") && !ptext.includes("(3/2)"));
+assert.ok(!text(proposalIsland(prun([{...again,used_by:"r2"}]))).includes("이 질문으로 새 실행 준비"));
+ptext=text(proposalIsland(prun([{proposal_id:"p3",state:"unknown"}])));
+assert.ok(ptext.includes("종료 미확인") && ptext.includes("종료를 직접 확인했음") && !ptext.includes("제안 받기"));
+ptext=text(proposalIsland(prun([{proposal_id:"p4",state:"rejected",status:"format_error",reason:"JSON 아님",raw:{text:"RAW_P"}}])));
+assert.ok(ptext.includes("형식 검사 실패") && ptext.includes("RAW_P") && !ptext.includes("새 실행 준비"));
+// 보낼 질문이 제안 그대로이고 원문 모드일 때만 제안에 묶는다
+proposalLink={id:"p1",question:"다음 질문"}; roleBoard={...emptyBoard(),isolated:["a"],supervisor:["a"],input_mode:"original"};
+nodes.question.value="다음 질문"; assert.deepEqual(proposalBody(),{proposal:{id:"p1"}});
+nodes.question.value="내가 고친 질문"; assert.deepEqual(proposalBody(),{});
+nodes.question.value="다음 질문"; roleBoard.input_mode="refine"; assert.deepEqual(proposalBody(),{});
+proposalLink=null; roleBoard.input_mode="original";
 // 두 번 눌러도 요청은 하나이고, 응답 전에 원문으로 돌아가면(창을 새로 연 것과 같다) 늦은 응답을 붙이지 않는다
 let pending=[], apiCalls=0;
 function api(path, body) { apiCalls++; return new Promise(resolve => pending.push(() => resolve({refine_id:"late"}))); }

@@ -31,7 +31,9 @@ from typing import Any, Iterator
 #    옛 코드가 일반 실행을 격리 실행으로 읽어 봉인·정족수 관문에 넣지 않게 올린다.
 # 10: refinements·refine_turns — 다듬기 모드(카드 #130). 원문·차례별 입출력·승인한 차례와 그것을 쓴 실행을 고정한다.
 #    옛 코드가 다듬기 차례의 호출 예약을 모른 채 자리·종료 미확인을 계산하지 않게 올린다.
-SCHEMA_VERSION = 10
+# 11: proposals — 다음 단계 제안(카드 #133). 공개된 실행마다 슈퍼바이저의 제안·보낸 입력·이름표·결과·상태와,
+#    그 제안으로 사람이 시작한 실행(used_by)을 고정한다.
+SCHEMA_VERSION = 11
 # 스키마 5 이전 시도의 종류는 시작 사건에 남은 실행기 이름에서만 복원한다. 모의 실행기의 이름은 격리 방식이었다.
 # 근거가 없으면 NULL로 두고, 화면은 "실행 종류 기록 없음"으로 보인다.
 LEGACY_EXECUTORS = {"bubblewrap": "mock", "job_object": "mock", "process_group": "mock", "cli": "real"}
@@ -53,6 +55,11 @@ CREATE TABLE IF NOT EXISTS refine_turns (
   refine_id TEXT NOT NULL, turn INTEGER NOT NULL, note TEXT NOT NULL, prompt TEXT NOT NULL,
   input_sha256 TEXT NOT NULL, attempt TEXT NOT NULL, kind TEXT, state TEXT NOT NULL, status TEXT, result TEXT,
   PRIMARY KEY (refine_id, turn)
+);
+CREATE TABLE IF NOT EXISTS proposals (
+  proposal_id TEXT PRIMARY KEY, run_id TEXT NOT NULL, created_at REAL NOT NULL, supervisor TEXT NOT NULL,
+  prompt TEXT NOT NULL, input_sha256 TEXT NOT NULL, labels TEXT NOT NULL, attempt TEXT NOT NULL, kind TEXT,
+  state TEXT NOT NULL, status TEXT, result TEXT, used_by TEXT
 );
 CREATE TABLE IF NOT EXISTS assignments (
   run_id TEXT NOT NULL, pid TEXT NOT NULL, task TEXT NOT NULL, prompt TEXT NOT NULL,

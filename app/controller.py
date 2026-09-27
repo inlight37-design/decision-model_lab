@@ -44,11 +44,11 @@ import uuid
 from typing import Any, Protocol
 
 from app.store import Store
-from app import refine as refining
+from app import next_step, refine as refining
 from app.roles import freeze as freeze_roles, task_projection
 from app.report import build_report
-from app.synthesis import (LABEL_ORDER, SynthesisError, check_model_synthesis, mock_synthesize, model_prompt,
-                           model_unavailable, unavailable)
+from app.synthesis import (LABEL_ORDER, SynthesisError, _sources as synthesis_sources, check_model_synthesis,
+                           label_order, mock_synthesize, model_prompt, model_unavailable, unavailable)
 from app.state import (CLI, MANUAL, QUEUED, RUNNING, AWAITING_USER, ACCEPTED, REJECTED, UNKNOWN,
                        DONE, INDEPENDENT_ONLY, INCLUDE_UNVERIFIED, QUORUM_POLICIES, ISOLATED, GENERAL, COLLECTED,
                        NO_QUORUM, RunGate, gate, confirmed, synthesis_attempts)
@@ -164,6 +164,39 @@ MARKER = "[Ledger {run_id}/{pid} · {sha8}]"
 MARKER_LINE = re.compile(r"^\s*\[Ledger ([^\s/]+)/(\S+) · ([0-9a-f]{8})\]\s*$")
 PACKET = ("{marker}\n답의 첫 줄에 위 대괄호 줄을 그대로 옮겨 적어 주세요. 어느 실행의 답인지 확인하는 데만 씁니다.\n\n"
           "{prompt}")
+
+
+@dataclass(frozen=True)
+class _Seat:
+    """슈퍼바이저 호출 한 종류가 원장에 앉는 자리: 표, 행을 고르는 열, 사건 이름, 답 검사. 다듬기 차례(#130)와 다음 단계
+    제안(#133)이 같은 시작·결과·종료 확인 관문을 쓰게 한다. 표 이름과 열은 코드에 박은 값이다(사용자 입력이 아니다)."""
+    table: str
+    keys: tuple[str, ...]
+    labels: tuple[str, ...]          # 사건에 싣는 열(사건의 실행 키로 이미 드러나는 열은 뺀다)
+    purpose: str                     # 호출 예약 사건의 purpose
+    started: str
+    done: dict                       # 상태 → 끝난 사건 이름
+    ignored: str
+    not_stored: str
+    acknowledged: str
+    check: Any
+
+    @property
+    def match(self) -> str:
+        return " AND ".join(f"{key} = ?" for key in self.keys)
+
+    def label(self, where: dict) -> dict:
+        return {key: where[key] for key in self.labels}
+
+
+REFINE_SEAT = _Seat("refine_turns", ("refine_id", "turn"), ("turn",), "refine", "refine_turn_started",
+                    {ACCEPTED: "refine_turn_completed", REJECTED: "refine_turn_failed", UNKNOWN: "refine_turn_unknown"},
+                    "refine_result_ignored", "refine_result_not_stored", "refine_unknown_acknowledged", refining.check)
+# 제안 사건은 그 실행의 사건으로 남긴다(실행 화면의 사건 기록에 보인다)
+NEXT_SEAT = _Seat("proposals", ("proposal_id",), ("proposal_id",), "next_step", "proposal_started",
+                  {ACCEPTED: "proposal_completed", REJECTED: "proposal_failed", UNKNOWN: "proposal_unknown"},
+                  "proposal_result_ignored", "proposal_result_not_stored", "proposal_unknown_acknowledged",
+                  next_step.check)
 
 
 @dataclass(frozen=True)
@@ -328,7 +361,7 @@ class Controller:
         # 진행 중인 시도의 신호만 보관한다. 끝난 스레드/질문/작업 경로를 계속 쌓지 않는다.
         self._workers: dict[str, tuple[threading.Thread, threading.Event]] = {}
         self._synthesis: dict[str, tuple[threading.Thread, threading.Event, str]] = {}   # run_id → 진행 중인 실제 합성
-        self._refining: dict[str, tuple[threading.Thread, threading.Event]] = {}   # 시도 ID → 진행 중인 다듬기 차례
+        self._supervising: dict[str, tuple[threading.Thread, threading.Event]] = {}   # 시도 ID → 진행 중인 슈퍼바이저 호출(다듬기·제안)
         self._recover()
         # 이전 controller가 시작하지 못한 시도가 남아 있으면 사용자가 이어서 시작하라고 할 때까지 기다린다
         self.paused = self.store.row("SELECT COUNT(*) AS n FROM participants JOIN runs USING (run_id) "
@@ -337,7 +370,8 @@ class Controller:
     # ---- 만들기와 예약 -------------------------------------------------------------------------
     def prepare_run(self, question: str, participants: list[ParticipantSpec], *, min_independent: int,
                     quorum_policy: str = INDEPENDENT_ONLY, sources=None, task_id=None, task_title=None,
-                    role_board=None, roster=None, run_id=None, assignments=None, refinement=None) -> dict[str, Any]:
+                    role_board=None, roster=None, run_id=None, assignments=None, refinement=None,
+                    proposal=None) -> dict[str, Any]:
         """sources: (이름, 글) 목록. 원장에 내용·해시를 고정하고, CLI 참여자에게는 그 사본 폴더 하나를 읽기
         전용 입력으로 준다(provider별 빈 입력 폴더 대신). 입력 폴더가 하나인 것은 같으므로 계획의 판은 그대로다.
 
@@ -345,7 +379,10 @@ class Controller:
         정족수 인자는 쓰지 않는다. 팀원마다 입력 전문이 다르고, 받은 자료만 든 폴더를 따로 받는다.
 
         다듬기 모드(카드 #130)는 refinement={id, turn}으로 승인할 차례를 받는다. question은 그 차례의 다듬은 문장과 같아야
-        하고, 격리 팀원에게는 그 문장만 간다 — 원문과 다듬기 대화는 확인 명세에만 싣고 참여자 입력에 넣지 않는다."""
+        하고, 격리 팀원에게는 그 문장만 간다 — 원문과 다듬기 대화는 확인 명세에만 싣고 참여자 입력에 넣지 않는다.
+
+        다음 단계 제안(카드 #133)에서 온 실행은 proposal={id}를 받는다. 같은 작업·원문 모드·제안한 질문 그대로여야 하고,
+        제안은 그 실행 하나에만 묶인다."""
         question = question.strip()
         if not question:
             raise ControllerError("question is empty")
@@ -385,6 +422,8 @@ class Controller:
                 m.start(tuple(p.pid for p in participants), min_independent=min_independent)
             except m.MembershipError as exc:
                 raise ControllerError(str(exc)) from None
+        if proposal is not None and general:
+            raise ControllerError("제안한 질문은 격리 실행으로 보냅니다.")
         if run_id is None:
             run_id = f"r{time.strftime('%m%d-%H%M%S')}-{uuid.uuid4().hex}"
         elif not isinstance(run_id, str) or not re.fullmatch(r"r[0-9]{4}-[0-9]{6}-[0-9a-f]{32}", run_id):
@@ -397,6 +436,7 @@ class Controller:
         elif task_title is not None and (not isinstance(task_title, str) or not task_title.strip()
                                          or len(task_title.strip()) > 120 or not storable(task_title)):
             raise ControllerError("작업 제목은 1~120자의 올바른 글이어야 합니다.")
+        suggested = self._approved_proposal(proposal, roles, question, task_id) if proposal is not None else None
         if general:
             return self._general_manifest(run_id, task_id, task_title, question, participants, roles,
                                           checked_sources, assignments)
@@ -419,6 +459,8 @@ class Controller:
                                        for p in participants if p.transport == MANUAL}}
         if approved is not None:
             manifest["refinement"] = approved   # 원문·승인한 차례. 참여자 입력(prompt)에는 승인한 문장만 있다
+        if suggested is not None:
+            manifest["proposal"] = suggested    # 이 질문을 제안한 실행과 제안. 내가 확인해 시작해야 묶인다
         manifest["confirmation"] = hashlib.sha256(json.dumps(manifest, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
         return manifest
 
@@ -470,11 +512,11 @@ class Controller:
     def create_run(self, question: str, participants: list[ParticipantSpec], *, min_independent: int,
                    quorum_policy: str = INDEPENDENT_ONLY, sources=None, task_id=None, task_title=None,
                    role_board=None, roster=None, run_id=None, confirmation=None, assignments=None,
-                   refinement=None) -> str:
+                   refinement=None, proposal=None) -> str:
         prepared = self.prepare_run(question, participants, min_independent=min_independent,
                                     quorum_policy=quorum_policy, sources=sources, task_id=task_id, task_title=task_title,
                                     role_board=role_board, roster=roster, run_id=run_id, assignments=assignments,
-                                    refinement=refinement)
+                                    refinement=refinement, proposal=proposal)
         if confirmation is not None and confirmation != prepared["confirmation"]:
             raise ControllerError("확인한 입력에서 바뀌었습니다. 보낼 입력을 다시 확인하세요.")
         run_id, question, prompt = prepared["run_id"], prepared["question"], prepared["prompt"]
@@ -511,6 +553,13 @@ class Controller:
                                   "AND run_id IS NULL", run_id, chosen["turn"], chosen["refine_id"]):
                     raise ControllerError("이미 다른 실행에 쓴 다듬기입니다. 같은 승인으로 실행을 두 번 만들지 않습니다.")
                 tx.event(chosen["refine_id"], "refine_approved", used_by=run_id, turn=chosen["turn"])
+            if prepared.get("proposal"):
+                # 제안은 실행 하나에만 묶인다. 같은 제안으로 두 번 부르면 거래 전체가 되돌려진다.
+                chosen = prepared["proposal"]
+                if not tx.execute("UPDATE proposals SET used_by = ? WHERE proposal_id = ? AND used_by IS NULL",
+                                  run_id, chosen["proposal_id"]):
+                    raise ControllerError("이미 실행에 쓴 제안입니다. 같은 제안으로 실행을 두 번 만들지 않습니다.")
+                tx.event(chosen["source_run"], "proposal_used", proposal_id=chosen["proposal_id"], used_by=run_id)
             for pid, item in (prepared.get("assignments") or {}).items():
                 tx.execute("INSERT INTO assignments VALUES (?, ?, ?, ?, ?, ?, ?)", run_id, pid, item["task"],
                            item["prompt"], item["input_sha256"], item["input_bytes"],
@@ -636,7 +685,8 @@ class Controller:
     def _slots_used(self) -> int:
         return sum(item["status"] in (RUNNING, UNKNOWN) for item in self._synthesis_attempts().values()) + self.store.row(
             "SELECT COUNT(*) AS n FROM participants WHERE state IN (?, ?)", RUNNING, UNKNOWN)["n"] + self.store.row(
-            "SELECT COUNT(*) AS n FROM refine_turns WHERE state IN (?, ?)", RUNNING, UNKNOWN)["n"]
+            "SELECT (SELECT COUNT(*) FROM refine_turns WHERE state IN (?, ?)) + "
+            "(SELECT COUNT(*) FROM proposals WHERE state IN (?, ?)) AS n", RUNNING, UNKNOWN, RUNNING, UNKNOWN)["n"]
 
     def _budget_exhausted(self, adapter_id: str) -> bool:
         """전체·provider 상한. 거래 안에서 읽고 같은 거래에서 예약한다 — 병렬 요청이 마지막 한 칸을 함께 쓰지 못한다."""
@@ -645,10 +695,11 @@ class Controller:
             provider["cap"] is None or provider["used"] >= provider["cap"]))
 
     def _unknown_slots(self) -> int:
-        """종료를 확인하지 못해 자리를 쥔 시도: 참여자·합성·다듬기 차례."""
+        """종료를 확인하지 못해 자리를 쥔 시도: 참여자·합성·다듬기 차례·다음 단계 제안."""
         return (self.store.row("SELECT COUNT(*) AS n FROM participants WHERE state = ?", UNKNOWN)["n"]
                 + sum(item["status"] == UNKNOWN for item in self._synthesis_attempts().values())
-                + self.store.row("SELECT COUNT(*) AS n FROM refine_turns WHERE state = ?", UNKNOWN)["n"])
+                + self.store.row("SELECT (SELECT COUNT(*) FROM refine_turns WHERE state = ?) + "
+                                 "(SELECT COUNT(*) FROM proposals WHERE state = ?) AS n", UNKNOWN, UNKNOWN)["n"])
 
     def unsettled(self) -> int:
         with self.lock:
@@ -984,6 +1035,12 @@ class Controller:
                               RUNNING, row["attempt"]):
                     tx.event(row["refine_id"], "refine_turn_unknown", turn=row["turn"], attempt=row["attempt"],
                              detail="controller restarted")
+        for row in self.store.rows("SELECT proposal_id, run_id, attempt FROM proposals WHERE state = ?", RUNNING):
+            with self.store.tx() as tx:   # 다음 단계 제안도 같다
+                if tx.execute("UPDATE proposals SET state = ?, status = 'controller_restarted' WHERE proposal_id = ? "
+                              "AND state = ? AND attempt = ?", UNKNOWN, row["proposal_id"], RUNNING, row["attempt"]):
+                    tx.event(row["run_id"], "proposal_unknown", proposal_id=row["proposal_id"], attempt=row["attempt"],
+                             detail="controller restarted")
         for run in self.store.rows("SELECT run_id FROM runs WHERE phase = ?", m.DRAFTING):
             with self.store.tx() as tx:
                 self._maybe_reveal(run["run_id"], tx)
@@ -1166,66 +1223,80 @@ class Controller:
                 raise ControllerError("진행 중인 실행을 먼저 정리하세요. 다듬기는 실행이 없을 때만 부릅니다.")
             # 다듬기 차례는 한 번에 하나다. 버튼을 두 번 누르거나 창 두 개에서 불러도 두 번째 호출을 시작하지 않는다
             # (Codex 교차검토, PR #131).
-            if self.store.row("SELECT 1 FROM refine_turns WHERE state = ?", RUNNING):
-                raise ControllerError("다른 다듬기 차례가 진행 중입니다. 끝난 뒤에 다시 부르세요.")
+            if self._supervisor_busy():
+                raise ControllerError("다른 슈퍼바이저 호출(다듬기·제안)이 진행 중입니다. 끝난 뒤에 다시 부르세요.")
             key = refine_id or f"q{time.strftime('%m%d-%H%M%S')}-{uuid.uuid4().hex}"
-            turn, attempt = len(previous) + 1, uuid.uuid4().hex
+            turn = len(previous) + 1
             text = refining.prompt(original, previous, note)
-            work = os.path.join(self.work_root, "_refine", key, f"turn-{turn}")
-            try:
-                os.makedirs(work, exist_ok=True)
-                plan = self.executor.plan(replace(supervisor, pid="supervisor", label="슈퍼바이저"), text, work)
-                _check(self.executor, plan)   # 예약 전에 격리 경로·연결을 본다(R4)
-            except Exception as exc:   # 계획 거절: 아무것도 시작하지 않았다
-                raise ControllerError(f"supervisor plan refused: {type(exc).__name__}: {exc}") from None
-            with self.store.tx() as tx:
-                if plan.kind == contract.REAL and self.max_real_calls is not None:
-                    if self._budget_exhausted(supervisor.adapter_id):
-                        raise ControllerError("real CLI call budget exhausted; no call was started")
-                    tx.event(key, "live_call_reserved", pid="supervisor", attempt=attempt,
-                             adapter_id=supervisor.adapter_id, cap=self.max_real_calls, purpose="refine")
+
+            def insert(tx, attempt, kind):
                 if refine_id is None:
                     tx.execute("INSERT INTO refinements (refine_id, created_at, original, supervisor) VALUES (?, ?, ?, ?)",
                                key, time.time(), original, json.dumps(asdict(supervisor), ensure_ascii=False))
                 tx.execute("INSERT INTO refine_turns (refine_id, turn, note, prompt, input_sha256, attempt, kind, state) "
                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)", key, turn, note, text,
-                           hashlib.sha256(text.encode("utf-8")).hexdigest(), attempt, plan.kind, RUNNING)
-                tx.event(key, "refine_turn_started", turn=turn, attempt=attempt, adapter_id=supervisor.adapter_id,
-                         execution=plan.kind, spec=plan.record())
-            cancel = threading.Event()
-            thread = threading.Thread(target=self._refine_attempt, args=(key, turn, attempt, plan, cancel), daemon=True)
-            self._refining[attempt] = (thread, cancel)
-            try:
-                thread.start()
-            except RuntimeError:
-                self._refining.pop(attempt)
-                self._finish_refine(key, turn, attempt, *_not_started(supervisor, "worker thread did not start"))
+                           hashlib.sha256(text.encode("utf-8")).hexdigest(), attempt, kind, RUNNING)
+
+            self._start_seat(REFINE_SEAT, key, {"refine_id": key, "turn": turn}, supervisor, text,
+                             os.path.join(self.work_root, "_refine", key, f"turn-{turn}"), insert)
             return key
 
-    def _refine_attempt(self, refine_id: str, turn: int, attempt: str, plan: contract.Plan,
-                        cancel: threading.Event) -> None:
+    def _start_seat(self, seat: "_Seat", event_key: str, where: dict, supervisor: ParticipantSpec, text: str,
+                    work: str, insert) -> None:
+        """슈퍼바이저 호출 하나를 시작한다 — 다듬기 차례와 다음 단계 제안이 같이 쓴다. 계획을 한 번 만들고, 같은 거래에서
+        상한을 보고 예약하고 행을 넣은 뒤(insert), 그 계획을 백그라운드로 돌린다. 시작 전 거절은 아무것도 예약하지 않는다.
+        호출하는 쪽이 self.lock을 쥐고 이미 관문(한 번에 하나·자리·종료 미확인)을 봤다."""
+        attempt = uuid.uuid4().hex
+        try:
+            os.makedirs(work, exist_ok=True)
+            plan = self.executor.plan(replace(supervisor, pid="supervisor", label="슈퍼바이저"), text, work)
+            _check(self.executor, plan)   # 예약 전에 격리 경로·연결을 본다(R4)
+        except Exception as exc:   # 계획 거절: 아무것도 시작하지 않았다
+            raise ControllerError(f"supervisor plan refused: {type(exc).__name__}: {exc}") from None
+        with self.store.tx() as tx:
+            if plan.kind == contract.REAL and self.max_real_calls is not None:
+                if self._budget_exhausted(supervisor.adapter_id):
+                    raise ControllerError("real CLI call budget exhausted; no call was started")
+                tx.event(event_key, "live_call_reserved", pid="supervisor", attempt=attempt,
+                         adapter_id=supervisor.adapter_id, cap=self.max_real_calls, purpose=seat.purpose)
+            insert(tx, attempt, plan.kind)
+            tx.event(event_key, seat.started, **seat.label(where), attempt=attempt, adapter_id=supervisor.adapter_id,
+                     execution=plan.kind, spec=plan.record())
+        cancel = threading.Event()
+        thread = threading.Thread(target=self._seat_attempt, args=(seat, event_key, where, attempt, plan, cancel),
+                                  daemon=True)
+        self._supervising[attempt] = (thread, cancel)
+        try:
+            thread.start()
+        except RuntimeError:
+            self._supervising.pop(attempt)
+            self._settle_seat(seat, event_key, where, attempt, *_not_started(supervisor, "worker thread did not start"))
+
+    def _seat_attempt(self, seat: "_Seat", event_key: str, where: dict, attempt: str, plan: contract.Plan,
+                      cancel: threading.Event) -> None:
         try:
             try:
                 result, outcome = self.executor.run(plan, self.timeout, cancel=cancel)
             except Exception:   # 실행기 자체 실패: 자손 종료는 확인하지 못했다
                 result, outcome = None, None
             try:
-                self._finish_refine(refine_id, turn, attempt, result, outcome)
-            except Exception as exc:   # 결과를 저장하지 못했다 — 차례를 진행 중으로 남기지 않는다(카드 #70과 같다)
+                self._settle_seat(seat, event_key, where, attempt, result, outcome)
+            except Exception as exc:   # 결과를 저장하지 못했다 — 진행 중으로 남기지 않는다(카드 #70과 같다)
                 state = REJECTED if result is not None and result.tree_confirmed_empty is True else UNKNOWN
                 with self.lock, self.store.tx() as tx:
-                    if tx.execute("UPDATE refine_turns SET state = ?, status = 'result_not_stored' WHERE refine_id = ? "
-                                  "AND turn = ? AND state = ? AND attempt = ?", state, refine_id, turn, RUNNING, attempt):
-                        tx.event(refine_id, "refine_result_not_stored", turn=turn, attempt=attempt,
+                    if tx.execute(f"UPDATE {seat.table} SET state = ?, status = 'result_not_stored' WHERE "
+                                  f"{seat.match} AND state = ? AND attempt = ?", state, *where.values(), RUNNING, attempt):
+                        tx.event(event_key, seat.not_stored, **seat.label(where), attempt=attempt,
                                  error=type(exc).__name__)
         finally:
             with self.lock:
-                self._refining.pop(attempt, None)
+                self._supervising.pop(attempt, None)
                 self.pump()
 
-    def _finish_refine(self, refine_id: str, turn: int, attempt: str, result, outcome) -> None:
-        """차례의 결과 관문. 참여자와 같은 수용 관문(acceptance)을 지난 뒤 형식 검사를 한다. 형식에 실패한 답은 원문을
-        이유와 함께 남기고 승인할 수 없다. 이 차례가 아직 진행 중일 때만 반영하고, 늦은 결과는 사건으로만 남긴다."""
+    def _settle_seat(self, seat: "_Seat", event_key: str, where: dict, attempt: str, result, outcome) -> None:
+        """슈퍼바이저 답의 결과 관문. 참여자와 같은 수용 관문(acceptance)을 지난 뒤 형식 검사(seat.check)를 한다. 형식에
+        실패한 답은 원문을 이유와 함께 남기고 쓸 수 없다. 이 호출이 아직 진행 중일 때만 반영하고, 늦은 결과는 사건으로만
+        남긴다."""
         state, status, why = acceptance(result, outcome)
         observation = None if result is None else _storable_meta({
             "state": result.state, "containment": result.containment, "tree_confirmed_empty": result.tree_confirmed_empty,
@@ -1235,31 +1306,130 @@ class Controller:
         record = {"observation": observation}
         if state == ACCEPTED:
             try:
-                record["reply"] = refining.check(outcome.text)
-            except refining.RefineError as exc:
+                record["reply"] = seat.check(outcome.text)
+            except ValueError as exc:   # RefineError·NextStepError
                 state, status = REJECTED, "format_error"
                 record.update(reason=str(exc)[:300], raw=refining.rejected_reply(outcome.text))
         else:
             record["reason"] = _storable_meta(why or status)
         with self.lock, self.store.tx() as tx:
-            if tx.execute("UPDATE refine_turns SET state = ?, status = ?, result = ? WHERE refine_id = ? AND turn = ? "
+            if tx.execute(f"UPDATE {seat.table} SET state = ?, status = ?, result = ? WHERE {seat.match} "
                           "AND state = ? AND attempt = ?", state, status, json.dumps(record, ensure_ascii=False),
-                          refine_id, turn, RUNNING, attempt):
-                tx.event(refine_id, {ACCEPTED: "refine_turn_completed", REJECTED: "refine_turn_failed",
-                                     UNKNOWN: "refine_turn_unknown"}[state], turn=turn, attempt=attempt, status=status)
+                          *where.values(), RUNNING, attempt):
+                tx.event(event_key, seat.done[state], **seat.label(where), attempt=attempt, status=status)
             else:
-                tx.event(refine_id, "refine_result_ignored", turn=turn, attempt=attempt)
+                tx.event(event_key, seat.ignored, **seat.label(where), attempt=attempt)
+
+    def _acknowledge_seat(self, seat: "_Seat", event_key: str, where: dict) -> None:
+        """사람이 그 호출의 자손 종료를 직접 확인했다. 자리만 풀고 재호출·환불하지 않으며 답을 받지 않는다."""
+        with self.lock, self.store.tx() as tx:
+            if not tx.execute(f"UPDATE {seat.table} SET state = ?, status = 'unknown_acknowledged' WHERE {seat.match} "
+                              "AND state = ?", REJECTED, *where.values(), UNKNOWN):
+                raise ControllerError("only an attempt with unconfirmed termination can be acknowledged")
+            tx.event(event_key, seat.acknowledged, **seat.label(where))
+        self.pump()
 
     def acknowledge_refine_unknown(self, refine_id: str, turn: int) -> None:
         """사람이 그 차례의 자손 종료를 직접 확인했다. 자리만 풀고 재호출·환불하지 않으며 답을 받지 않는다."""
         if type(turn) is not int:
             raise ControllerError("turn must be an integer")
-        with self.lock, self.store.tx() as tx:
-            if not tx.execute("UPDATE refine_turns SET state = ?, status = 'unknown_acknowledged' WHERE refine_id = ? "
-                              "AND turn = ? AND state = ?", REJECTED, refine_id, turn, UNKNOWN):
-                raise ControllerError("only an unknown refine turn can be acknowledged")
-            tx.event(refine_id, "refine_unknown_acknowledged", turn=turn)
-        self.pump()
+        self._acknowledge_seat(REFINE_SEAT, refine_id, {"refine_id": refine_id, "turn": turn})
+
+    def _supervisor_busy(self) -> bool:
+        """슈퍼바이저 호출은 다듬기·제안을 통틀어 한 번에 하나다. 버튼을 두 번 누르거나 창 두 개에서 불러도 둘째를
+        시작하지 않는다(Codex 교차검토, PR #131)."""
+        return bool(self.store.row("SELECT 1 FROM refine_turns WHERE state = ? UNION ALL "
+                                   "SELECT 1 FROM proposals WHERE state = ?", RUNNING, RUNNING))
+
+    # ---- 다음 단계 제안(카드 #133) --------------------------------------------------------------
+    def propose_next(self, run_id: str) -> str:
+        """공개된 격리 실행을 보고 슈퍼바이저가 다음 단계("한 번 더"·"여기서 끝")를 제안한다 — 호출 1회.
+
+        슈퍼바이저는 역할판에 고정한 카드·모델이다. 받는 것은 원래 목표(다듬기 원문 또는 질문)·보낸 질문·공개된 답이고,
+        답은 합성과 같은 이름표(실행마다 섞은 순서)로 바꾼다. 봉인 중·일반 실행·슈퍼바이저 없는 실행은 부르지 않는다.
+        실행 하나에 next_step.MAX_PER_RUN번까지, 슈퍼바이저 호출은 한 번에 하나, 예약·상한·종료 미확인은 다듬기와 같다.
+        제안은 새 실행을 시작하지 않는다."""
+        with self.lock:
+            if self._closing:
+                raise ControllerError("controller is shutting down")
+            run = self._run(run_id)
+            roles = json.loads(run["role_config"]) if run["role_config"] else {}
+            supervisor = roles.get("supervisor")
+            if not supervisor:
+                raise ControllerError("슈퍼바이저 칸이 비어 있습니다(나). 다음 단계는 내가 정합니다.")
+            current_gate = self._gate(run_id)
+            if current_gate.general or not current_gate.revealed:
+                raise ControllerError("다음 단계 제안은 공개된 격리 실행에만 부릅니다. 봉인 중에는 부르지 않습니다.")
+            if self.store.row("SELECT COUNT(*) AS n FROM proposals WHERE run_id = ?", run_id)["n"] >= next_step.MAX_PER_RUN:
+                raise ControllerError(f"다음 단계 제안은 실행 하나에 {next_step.MAX_PER_RUN}번까지입니다.")
+            if self.store.row("SELECT 1 FROM proposals WHERE run_id = ? AND state = ?", run_id, UNKNOWN):
+                raise ControllerError("끝났는지 모르는 제안이 있습니다. 종료를 먼저 확인하세요.")
+            if self._supervisor_busy():
+                raise ControllerError("다른 슈퍼바이저 호출(다듬기·제안)이 진행 중입니다. 끝난 뒤에 다시 부르세요.")
+            if self.paused or self.unsettled() >= self.unsettled_limit:
+                raise ControllerError("execution is paused or has unsettled attempts; no call was started")
+            if self._slots_used() >= self.max_parallel:
+                raise ControllerError("parallel execution limit reached; no call was started")
+            if self.store.row("SELECT 1 FROM runs WHERE phase = 'drafting' AND NOT cancel_requested"):
+                raise ControllerError("진행 중인 실행을 먼저 정리하세요. 제안은 실행이 없을 때만 부릅니다.")
+            spec = ParticipantSpec(**supervisor)
+            if spec.transport != CLI or spec.adapter_id not in self.executor.adapter_ids:
+                raise ControllerError("슈퍼바이저는 설정된 CLI 카드여야 합니다.")
+            report = build_report(self.view(run_id), run_id)
+            sources = synthesis_sources(report)
+            labels = {f"D{index}": pid for index, pid in enumerate(label_order(run_id, sources), 1)}
+            refined = self.store.row("SELECT original FROM refinements WHERE run_id = ?", run_id)
+            text = next_step.prompt(refined["original"] if refined else run["question"], run["question"],
+                                    [(label, sources[pid]["draft"]) for label, pid in labels.items()])
+            key = f"p{time.strftime('%m%d-%H%M%S')}-{uuid.uuid4().hex}"
+
+            def insert(tx, attempt, kind):
+                tx.execute("INSERT INTO proposals (proposal_id, run_id, created_at, supervisor, prompt, input_sha256, "
+                           "labels, attempt, kind, state) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", key, run_id, time.time(),
+                           json.dumps(supervisor, ensure_ascii=False), text,
+                           hashlib.sha256(text.encode("utf-8")).hexdigest(), json.dumps(labels), attempt, kind, RUNNING)
+
+            self._start_seat(NEXT_SEAT, run_id, {"proposal_id": key}, spec, text,
+                             os.path.join(self.work_root, run_id, f"proposal-{key[-12:]}"), insert)
+            return key
+
+    def acknowledge_proposal_unknown(self, proposal_id: str) -> None:
+        """사람이 그 제안 호출의 자손 종료를 직접 확인했다. 자리만 풀고 재호출·환불하지 않는다."""
+        row = self.store.row("SELECT run_id FROM proposals WHERE proposal_id = ?", proposal_id)
+        if row is None:
+            raise ControllerError("제안을 찾을 수 없습니다.")
+        self._acknowledge_seat(NEXT_SEAT, row["run_id"], {"proposal_id": proposal_id})
+
+    def _proposal_view(self, row) -> dict[str, Any]:
+        record = json.loads(row["result"]) if row["result"] else {}
+        spec = json.loads(row["supervisor"])
+        return {"proposal_id": row["proposal_id"], "run_id": row["run_id"], "created_at": row["created_at"],
+                "state": row["state"], "status": row["status"], "execution": row["kind"], "used_by": row["used_by"],
+                "supervisor": {key: spec.get(key) for key in ("pid", "label", "adapter_id", "model")},
+                "labels": json.loads(row["labels"]), "prompt": row["prompt"], "input_sha256": row["input_sha256"],
+                "reply": record.get("reply"), "reason": record.get("reason"), "raw": record.get("raw"),
+                "observation": record.get("observation")}
+
+    def _approved_proposal(self, proposal, roles, question: str, task_id) -> dict[str, Any]:
+        """제안에서 온 새 실행. "한 번 더"인 통과한 제안이고, 실행에 쓰지 않았고, 같은 작업이고, 원문 모드이며, 질문이
+        제안한 질문과 글자까지 같아야 한다. 고쳐 쓴 질문은 내 질문이다 — 화면이 제안을 붙이지 않는다."""
+        if not isinstance(proposal, dict) or set(proposal) != {"id"} or not isinstance(proposal["id"], str):
+            raise ControllerError("제안은 {id}로 줍니다.")
+        row = self.store.row("SELECT * FROM proposals WHERE proposal_id = ?", proposal["id"])
+        if row is None:
+            raise ControllerError("제안을 찾을 수 없습니다.")
+        if row["used_by"]:
+            raise ControllerError("이미 실행에 쓴 제안입니다. 같은 제안으로 실행을 두 번 만들지 않습니다.")
+        reply = (json.loads(row["result"]) if row["result"] else {}).get("reply")
+        if row["state"] != ACCEPTED or not reply or reply["next"] != "again":
+            raise ControllerError("형식 검사를 통과한 '한 번 더' 제안만 새 실행이 됩니다.")
+        if roles["input_mode"] != "original":
+            raise ControllerError("제안한 질문은 원문 모드로 보냅니다. 다듬으려면 제안을 붙이지 말고 새로 다듬으세요.")
+        if task_id != self._run(row["run_id"])["task_id"]:
+            raise ControllerError("제안은 그 제안이 나온 작업의 새 실행에만 씁니다.")
+        if question != reply["question"]:
+            raise ControllerError("보낼 질문이 제안한 질문과 다릅니다. 고쳐 쓴 질문은 제안 없이 보내세요.")
+        return {"proposal_id": row["proposal_id"], "source_run": row["run_id"], "question": reply["question"]}
 
     def _refinement_view(self, row) -> dict[str, Any]:
         """다듬기 한 건의 화면 투영. 원문·차례별 보낸 입력·받은 답(또는 실패 이유와 원문)·사람이 쓴 말을 그대로 보인다."""
@@ -1389,9 +1559,14 @@ class Controller:
                 refined = self.store.row("SELECT * FROM refinements WHERE run_id = ?", run["run_id"])
                 # 원래 목표(원문)와 실제로 보낸 질문을 나란히 보이려고 싣는다(P9). 다듬기는 실행 전의 일이라 봉인과 무관하다
                 runs[-1]["refinement"] = self._refinement_view(refined) if refined else None
+                came = self.store.row("SELECT proposal_id, run_id FROM proposals WHERE used_by = ?", run["run_id"])
+                runs[-1]["proposal"] = {"proposal_id": came["proposal_id"], "source_run": came["run_id"]} if came else None
                 if judged:
                     runs[-1]["result_revision"] = revision   # 판단 완료 버튼이 이 판을 함께 보낸다. 공개·모음 뒤에만 싣는다
                 if revealed:
+                    # 다음 단계 제안은 공개 뒤의 일이다. 봉인 중에는 부를 수도 없고 목록도 비어 있다
+                    runs[-1]["proposals"] = [self._proposal_view(row) for row in self.store.rows(
+                        "SELECT * FROM proposals WHERE run_id = ? ORDER BY created_at", run["run_id"])]
                     artifact = self.store.row("SELECT payload FROM events WHERE run_id = ? "
                                               "AND kind = 'synthesis_completed' ORDER BY seq DESC LIMIT 1", run["run_id"])
                     if artifact:
@@ -1436,10 +1611,11 @@ class Controller:
 
     def _review_state(self, run_id: str) -> tuple[int, bool, str | None]:
         """(결과 판, 그 판을 판단 완료했는가, 그때 남긴 취합 메모). 판은 사람이 보는 결과를 바꾼 마지막 사건의 seq다 —
-        공개, 일반 실행의 모음, 합성 완료·실패. 판단 완료 사건이 그보다 뒤에 있어야 그 판을 본 것이다. 새 합성이 끝나면
+        공개, 일반 실행의 모음, 합성 완료·실패, 다음 단계 제안의 결과. 판단 완료 사건이 그보다 뒤에 있어야 그 판을 본 것이다. 새 합성이 끝나면
         판이 올라가 다시 내 차례가 된다(AH-01). 판을 싣지 않은 옛 원장의 판단 완료 사건도 같은 순서 규칙으로 읽는다."""
         row = self.store.row(
-            "SELECT COALESCE(MAX(CASE WHEN kind IN ('revealed', 'collected', 'synthesis_completed', 'synthesis_failed') "
+            "SELECT COALESCE(MAX(CASE WHEN kind IN ('revealed', 'collected', 'synthesis_completed', 'synthesis_failed', "
+            "'proposal_completed', 'proposal_failed') "
             "THEN seq END), 0) AS revision, "
             "COALESCE(MAX(CASE WHEN kind = 'human_reviewed' THEN seq END), 0) AS reviewed "
             "FROM events WHERE run_id = ?", run_id)
@@ -1466,6 +1642,8 @@ class Controller:
                 raise ControllerError("공개된 답을 확인한 뒤에만 판단 완료로 표시할 수 있습니다.")
             if any(item["status"] in (RUNNING, UNKNOWN) for item in self._synthesis_attempts(run_id).values()):
                 raise ControllerError("합성의 종료를 먼저 확인하세요.")
+            if self.store.row("SELECT 1 FROM proposals WHERE run_id = ? AND state IN (?, ?)", run_id, RUNNING, UNKNOWN):
+                raise ControllerError("다음 단계 제안이 끝나거나 그 종료를 확인한 뒤에 판단 완료를 누르세요.")
             current, reviewed, _ = self._review_state(run_id)
             if revision != current:
                 raise ControllerError("화면에 보인 뒤 새 결과가 나왔습니다. 새 결과를 확인하고 다시 판단 완료를 누르세요.")
@@ -1558,7 +1736,7 @@ class Controller:
                 cancel.set()
             for _, cancel, _ in self._synthesis.values():
                 cancel.set()
-            for _, cancel in self._refining.values():
+            for _, cancel in self._supervising.values():
                 cancel.set()
         # _finish와 finally가 같은 lock을 필요로 하므로 기다리는 동안 잡고 있지 않는다.
         return self.wait_idle(timeout)
@@ -1570,7 +1748,7 @@ class Controller:
         deadline = time.monotonic() + timeout
         while True:
             with self.lock:
-                if not self._workers and not self._synthesis and not self._refining:
+                if not self._workers and not self._synthesis and not self._supervising:
                     return True
             remaining = deadline - time.monotonic()
             if remaining <= 0:

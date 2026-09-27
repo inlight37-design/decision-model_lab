@@ -284,7 +284,8 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                                   task_id=body.get("task_id"), task_title=body.get("task_title"),
                                   role_board=body.get("role_board"), roster=run_roster, run_id=body.get("run_id"),
                                   assignments=body.get("assignments"),   # 일반 팀원마다 맡길 일·받을 자료
-                                  refinement=body.get("refinement"))     # 다듬기 모드에서 승인한 {id, turn}
+                                  refinement=body.get("refinement"),     # 다듬기 모드에서 승인한 {id, turn}
+                                  proposal=body.get("proposal"))         # 다음 단계 제안에서 온 질문의 {id}
                     if parts[-1] == "preview":
                         self._json(200, controller.prepare_run(_text(body, "question"), chosen, **kwargs))
                     else:
@@ -337,6 +338,11 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                     self._json(200, {"refine_id": parts[2]})
                 elif len(parts) == 4 and parts[:2] == ["api", "refinements"] and parts[3] == "acknowledge":
                     controller.acknowledge_refine_unknown(parts[2], body.get("turn"))
+                    self._json(200, {"ok": True})
+                elif len(parts) == 4 and parts[:2] == ["api", "runs"] and parts[3] == "propose":   # 호출 1회
+                    self._json(200, {"proposal_id": controller.propose_next(parts[2])})
+                elif len(parts) == 4 and parts[:2] == ["api", "proposals"] and parts[3] == "acknowledge":
+                    controller.acknowledge_proposal_unknown(parts[2])
                     self._json(200, {"ok": True})
                 elif parts == ["api", "resume"]:
                     controller.resume()

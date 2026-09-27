@@ -670,7 +670,7 @@ function advancedSummary() {
   return `정족수 ${$("min").value}명 · ${$("policy").value === "independent_only" ? "독립성이 확인된 참여자만 셈" : "미확인 답도 셈"}`;
 }
 function initNewRun(opt) {
-  roleOptions = opt; assignDraft = {}; resetRefine();
+  roleOptions = opt; assignDraft = {}; proposalLink = null; resetRefine();
   roleBoard = emptyBoard(); roleBoard.isolated = opt.participants.filter(p => p.transport === "cli").map(p => p.pid);
   $("choices").replaceChildren(...opt.participants.map(p => roleCard(p, opt)));
   const min = h("input", { type: "number", id: "min", min: "1",
@@ -713,6 +713,7 @@ async function startRun() {
   const body = { question: $("question").value, participants, role_board: roleBoard, models: chosenModels(roleBoard),
                  ...(general ? {} : { min_independent: +$("min").value, quorum_policy: $("policy").value }),
                  ...(roleBoard.input_mode === "refine" ? { refinement: { id: refineCurrent, turn: refineApproved } } : {}),
+                 ...proposalBody(),
                  ...(composeTask ? { task_id: composeTask } : { task_title: $("taskTitle").value.trim() || $("question").value.trim().slice(0, 120) }) };
   const files = [...picked];
   try {
@@ -1105,6 +1106,9 @@ function questionIsland(run) {
         ` · 최소 정족수 ${run.min_independent}명`)];
   if (general && !run.cancel_requested && !gate.collected)
     parts.push(h("p", { class: "sm muted island-part" }, "팀원의 결과는 끝나는 대로 보입니다. 봉인·독립·정족수 판정 없이 내가 모아 판단합니다."));
+  if (run.proposal) parts.push(h("div", { class: "island-part row" }, h("p", { class: "sm cell ask-cell" },
+    "이 질문은 앞 실행의 슈퍼바이저 제안에서 왔고, 내가 확인해 시작했습니다."),
+    h("button", { type: "button", class: "btn", onclick: () => navigateTask(run.task_id, run.proposal.source_run) }, "제안이 나온 실행 보기")));
   if (run.refinement) parts.push(h("div", { class: "island-part stack" }, refinementPair(run.refinement.original, run.question),
     collapsible(`refine-${run.run_id}`, `다듬기 기록 · ${run.refinement.turns.length}차례 · 슈퍼바이저 ${run.refinement.supervisor.label}`,
       h("div", { class: "info-list" }, refinementLog(run.refinement)))));
@@ -1136,7 +1140,7 @@ function questionIsland(run) {
   const info = [
     h("p", {}, roleSummary(run.role_config)),
     h("p", {}, general ? "입력 모드: 원문 · 역할·팀원별 입력과 자료는 시작할 때 고정됨"
-      : `입력 모드: ${run.refinement ? `다듬기(${run.refinement.approved_turn}차례 승인)` : "원문"} · 역할 구성은 시작할 때 고정됨`),
+      : `입력 모드: ${run.refinement ? `다듬기(${run.refinement.approved_turn}차례 승인)` : run.proposal ? "원문 · 슈퍼바이저 제안의 질문" : "원문"} · 역할 구성은 시작할 때 고정됨`),
     h("p", {}, "실행 ID ", h("span", { class: "mono hash" }, run.run_id)),
     h("p", {}, general ? "입력 묶음 sha256(팀원별 입력 해시를 묶은 값) " : "입력 sha256 ", h("span", { class: "mono hash" }, run.input_sha256), ` · ${run.input_bytes}바이트`),
     general ? h("p", {}, "정족수·독립 판정: 하지 않음(일반 팀원)")
@@ -1164,7 +1168,7 @@ function renderRun(run) {
   const revealed = run.phase === "revealed";
   // 일반 실행: 결과 모음은 처음부터, 판단은 모두 끝난 뒤. 합성·원문 보고는 공개된 격리 실행에만 있다.
   const body = run.mode === "general" ? [generalResults(run), (run.gate || {}).collected ? reviewIsland(run) : null]
-    : revealed ? [...synthesisPanel(run), reviewIsland(run), saveIsland(run)] : [];
+    : revealed ? [...synthesisPanel(run), proposalIsland(run), reviewIsland(run), saveIsland(run)] : [];
   $("mainCol").replaceChildren(questionIsland(run), ...body.filter(Boolean));
   $("asideCol").replaceChildren(participantsIsland(run));
   pressAll($("mainCol")); pressAll($("asideCol"));

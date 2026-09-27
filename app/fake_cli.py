@@ -16,6 +16,15 @@ DELAY = {"ok": 1.2, "slow": 6.0, "fail": 0.8, "partial_input": 0.8, "hang": 3600
 
 
 REFINE_MARKER = "[다듬기 요청]"   # app/refine.py의 MARKER와 같은 줄. 이 가짜는 격리 안에서 app 패키지 없이 돈다
+NEXT_MARKER = "[다음 단계 제안 요청]"   # app/next_step.py의 MARKER와 같은 줄
+
+
+def next_reply(question: str) -> str:
+    """다음 단계 제안 지시문에 모의 JSON으로 답한다. 늘 "한 번 더"를 제안한다 — 화면 흐름 확인용이다."""
+    asked = question.split("보낸 질문:\n", 1)[-1].split("\n", 1)[0].strip() or "(빈 질문)"
+    return json.dumps({"next": "again", "reason": "모의: 두 답의 결론이 갈려 조건을 좁혀 한 번 더 묻는다(실제 판단 아님)",
+                       "question": f"[모의 제안] {asked[:200]} — 예산 조건을 넣으면?",
+                       "open_points": ["모의: 비용 추정이 서로 다름"]}, ensure_ascii=False)
 
 
 def refine_reply(question: str) -> str:
@@ -30,6 +39,8 @@ def refine_reply(question: str) -> str:
 def answer(flavor: str, question: str) -> str:
     if question.startswith(REFINE_MARKER):
         return refine_reply(question)
+    if question.startswith(NEXT_MARKER):
+        return next_reply(question)
     digest = hashlib.sha256(question.encode("utf-8")).hexdigest()[:12]
     asked = question.split("질문:", 1)[-1].strip()
     first = asked.splitlines()[0][:80] if asked else "(빈 질문)"
