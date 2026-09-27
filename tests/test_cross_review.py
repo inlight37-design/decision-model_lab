@@ -304,6 +304,31 @@ class CrossReviewTests(support.Base):
         self.assertFalse(again.paused)
         self.assertEqual(ex.started, [])
 
+    def test_the_saved_report_carries_the_round_findings_and_dispositions(self):
+        # 카드 #152(E2): 원문 보고(5판)에 라운드를 그대로 옮긴다. 판독 실패는 "지적 없음"과 섞이지 않는다
+        from app.report import SCHEMA, build_report
+        ctl = self.controller(Reviewer(reviews=["stray", "badjson"]))
+        rid = self.revealed(ctl)
+        self.assertIsNone(build_report(ctl.view(rid), rid)["cross_review"])            # 라운드가 없으면 null
+        first, second = ctl.cross_review(rid, "비용 가정을 따져라")
+        self.assertTrue(ctl.wait_idle())
+        ctl.set_review_disposition(first, 1, "rejected")
+        report = build_report(ctl.view(rid), rid)
+        self.assertEqual(report["schema"], SCHEMA)
+        section = report["cross_review"]
+        self.assertEqual((section["question"], section["independence"], section["factual_check"]),
+                         ("비용 가정을 따져라", "post_reveal_not_independent", "not_performed"))
+        accepted, failed = section["reviews"]
+        self.assertEqual([f["source_check"] for f in accepted["findings"]], ["exact_match", "not_found"])
+        self.assertEqual(accepted["findings"][1]["disposition"], "rejected")
+        self.assertIsNotNone(accepted["findings"][1]["disposition_at"])
+        self.assertEqual(accepted["findings"][0]["target_pid"], "codex")
+        self.assertEqual((failed["state"], failed["status"], failed["findings"]), (c.REJECTED, "format_error", None))
+        self.assertEqual(section["coverage"]["reviewed"], 1)
+        self.assertNotIn("prompt", accepted)                                          # 지시문 전문은 싣지 않는다
+        self.assertEqual(len(accepted["input_sha256"]), 64)
+        self.assertTrue(any("not independent" in item for item in report["limitations"]))
+
     def test_a_schema_thirteen_ledger_is_backed_up_before_fourteen(self):
         ctl = self.controller(Reviewer(), max_parallel=0)
         ctl.create_run("이전 실행", [support.cli("a")], min_independent=1)

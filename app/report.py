@@ -12,7 +12,9 @@ from typing import Any
 
 # 3: 참여자마다 시도에 저장한 실행 종류(execution)를 싣고, 출처의 "지금 붙은 실행기"는 뺐다(G6).
 # 4: 입력에 실행을 만들 때 고정한 공통 자료 목록(이름·sha256·크기)을 싣는다. 자료 내용은 원장에만 둔다.
-SCHEMA = "a1-draft-report/4"
+# 5: 공개 뒤 교차검토(cross_review, 카드 #152)를 싣는다 — 검토 질문, 검토자마다의 상태와 지적(대상·인용·원문 일치·
+#    종류·설명), 사람이 고른 처분과 시각, 검토하지 않은 관계, 독립 아님. 검토자 지시문 전문은 싣지 않고 해시만 싣는다.
+SCHEMA = "a1-draft-report/5"
 # 공개 투영에 나중에 필드가 늘어도 원장·토큰·자유 메타데이터를 통째로 내보내지 않는다.
 PARTICIPANT_FIELDS = ("pid", "label", "provider", "transport", "independence", "state", "status", "dropped",
                       "contamination", "execution")
@@ -20,6 +22,8 @@ OBSERVATION_FIELDS = ("state", "exit_code", "containment", "tree_confirmed_empty
                       "status", "ok", "requested_model", "reported_models", "model_match", "usage", "source",
                       "marker_echo", "user_confirmed", "independence")
 QUORUM_FIELDS = ("policy", "min", "confirmed", "unverified", "counted", "met", "label")
+REVIEW_FIELDS = ("seq", "state", "status", "execution", "reviewer", "labels", "input_sha256", "reason")
+FINDING_FIELDS = ("target", "target_pid", "quote", "source_check", "kind", "detail", "disposition", "disposition_at")
 
 
 # 결정 보고의 판. 2: synthesis는 모의(a1-mock-synthesis/1) 또는 실제(a1-model-synthesis/1)이고 그 schema로 가른다.
@@ -74,11 +78,33 @@ def build_report(view: dict[str, Any], run_id: str) -> dict[str, Any]:
                        "client_estimates_are_invoices": False,
                        "attempts": {key: deepcopy(budget[key]) for key in ("used", "cap", "breakdown", "manual")}},
         "participants": participants,
+        "cross_review": _cross_review(run.get("cross_review")),
         "limitations": ["This draft-only export omits synthesis and recommendations; factual verification was not performed.",
+                        "Cross-review findings were written after seeing other answers; they are not independent and "
+                        "quote matches do not verify facts.",
                         "Checksums detect content changes; they do not prove truth, authorship or independence.",
                         "Manual-app context, independence and account-wide remaining usage are not observed.",
                         "Mock/synthetic execution is not evidence of real model quality or entitlement."],
     }
+
+
+def _cross_review(round_: dict[str, Any] | None) -> dict[str, Any] | None:
+    """화면 투영의 교차검토를 그대로 옮긴다. 새로 판정하지 않는다. 판독 실패·종료 미확인·시작 안 함은 state·status로
+    남고 findings는 None이다 — "지적 없음"(통과한 빈 목록)과 섞이지 않는다."""
+    if not round_:
+        return None
+    reviews = []
+    for review in round_["reviews"]:
+        item = {key: deepcopy(review.get(key)) for key in REVIEW_FIELDS}
+        item["targets"] = {label: {"pid": t["pid"], "sha256": t["sha256"], "fresh": t["fresh"]}
+                           for label, t in review["targets"].items()}
+        reply = review.get("reply")
+        item["findings"] = None if reply is None else [{key: deepcopy(f.get(key)) for key in FINDING_FIELDS}
+                                                       for f in reply["findings"]]
+        item["checks"] = deepcopy(reply["checks"]) if reply else None
+        reviews.append(item)
+    return {"question": round_["question"], "independence": round_["independence"],
+            "factual_check": "not_performed", "coverage": deepcopy(round_["coverage"]), "reviews": reviews}
 
 
 def decision_report(run: dict[str, Any], draft_report: dict[str, Any]) -> dict[str, Any] | None:
