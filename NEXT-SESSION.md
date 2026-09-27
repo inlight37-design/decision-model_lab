@@ -65,7 +65,7 @@
 
 일은 `card` 라벨 이슈에서 [협업 규칙](docs/COLLABORATION.md) 3절의 보드 규칙대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #142](https://github.com/inlight37-design/decision-model_lab/pull/142)(`claude/d4-live-record-20260927`) — D4 실제 확인 기록과 그동안의 자원 사용. 모델 호출 Claude 2·Codex 1.
+- **이 판을 들인 PR:** [PR #143](https://github.com/inlight37-design/decision-model_lab/pull/143)(`claude/d4-live-record-20260927`) — D4 실제 확인 기록과 그동안의 자원 사용. 모델 호출 Claude 2·Codex 1.
 
 | 사용자만 할 수 있는 것 | 지금 |
 |---|---|
