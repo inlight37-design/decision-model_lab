@@ -120,6 +120,7 @@ try {
     if ($null -eq $status) { Say (T 'NO_WSL') 'OK' 'Error' | Out-Null; exit 1 }
 
     $owner = $true        # this copy of the script stops the server when the window closes
+    $nonce = ''
     if ($status.running) {
         if ($status.stop_requested) { Launch 'cancel-stop' | Out-Null }
         $opened = Launch 'url --wait 10'
@@ -137,6 +138,8 @@ try {
         $serve = @('-d', $Distro, '--cd', "`"$Repo`"", '--', 'bash', '-lc', "`"python3 -m app.launch serve $flag --nonce $nonce`"")
         Start-Process -FilePath 'wsl.exe' -ArgumentList $serve -WindowStyle Hidden | Out-Null
         $opened = Launch "url --wait 120 --nonce $nonce"
+        # Another copy started the server at the same moment and owns it; this copy only opened a window on it.
+        if ($opened -and $opened.joined) { $owner = $false }
     }
 
     if ($null -eq $opened -or -not $opened.ok) {
@@ -181,7 +184,9 @@ try {
         Say (T 'NO_EDGE') | Out-Null
     }
 
-    $stopped = Launch 'stop --wait 20'
+    $stopArgs = 'stop --wait 20'
+    if ($nonce) { $stopArgs = "$stopArgs --nonce $nonce" }   # reaches only the server this copy started
+    $stopped = Launch $stopArgs
     if ($stopped -and $stopped.waiting_for_work) {
         $tray.ShowBalloonTip(5000, 'Decision Lab', (T 'WAITING'), 'Info')
         Start-Sleep -Seconds 5
