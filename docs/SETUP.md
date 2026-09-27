@@ -94,6 +94,17 @@ python3 -m app.server --check-config <live.json> --data-dir <새 원장>   # 두
 - 새 기록은 새 날짜 폴더에 두고 옛 기록은 고치지 않는다. 인계 1절의 만료일을 바꾼다.
 - **사용자의 앱 아이콘:** 등록을 마친 PC에서 Windows 쪽 clone의 루트에서 한 번 `powershell -NoProfile -ExecutionPolicy Bypass -File app\start.ps1 -InstallShortcut`. 바탕 화면의 **Decision Lab** 아이콘이 이 기기에 등록된 가장 새 기록으로 앱을 연다([app 안내](../app/README.md)) — 재관측해 등록하면 아이콘은 그대로 두어도 된다.
 
+### 어댑터를 붙이거나 모델을 바꾸기 전 — 다시 확인할 것
+
+CLI 판이 바뀌었거나, 새 provider·새 모델을 붙이거나, 참여자 옵션을 바꾸기 전에 네 가지를 **각자의 자리에서** 다시 본다. 지금 제품 경로는 WSL 참여자다. Windows 네이티브 CLI(agy 포함)는 제품으로 쓰지 않는다(인계 2절 15). 그 조사 기록은 날짜 기록인 [V04-01 절차서](experiments/v04-01-inventory/README.md)에 있다.
+
+| 무엇 | 어디서 | 모델 호출 |
+|---|---|---|
+| 설치된 판·위치 | Ubuntu에서 `python3 tools/setup/check_setup.py`(관측 판과 다르면 알린다). Windows 쪽 CLI 위치는 `tools\v04-01\fresh-shell.ps1 -Script tools\v04-01\check-versions.ps1` | 없음 |
+| 권한·문맥(참여자가 실제로 받는 것) | 위 "관측 기록을 새로 만드는 법"의 관측·조립·등록. 준비 조회(`python3 -m app.server --check-config`)가 기록·등록·판·만료를 함께 보고 strict 허가를 정한다 | 관측 대조만(Claude 2·Codex 3) |
+| 인증·과금 | 구독 로그인만 쓴다(로그인은 사용자가 한다). `check_setup.py`가 로그인 방식과 과금 환경변수의 **이름**을 보고, 앱의 자식 환경은 그 변수를 뺀다(`core/env.py`). API 키·추가 크레딧은 명시적 opt-in만(인계 2절 6·13) | 없음 |
+| 고를 수 있는 모델 | 역할판의 모델 목록은 `app/launch.py`의 `MODEL_CHOICES`다. 항목마다 과금 경로(`included`·`credits`·`unconfirmed`)와 근거를 적는다. 모델을 불러 과금 경로를 알아내지 않는다 — 새 모델은 근거를 확인해 목록을 바꾸는 PR로 연다 | 없음 |
+
 ## 5. 이미 겪은 함정
 
 1. **Claude 데스크톱 앱(Windows, MSIX) 안의 AI 세션이 `%LOCALAPPDATA%` 아래에 만든 폴더는 앱 전용 공간에 들어가** 사용자 터미널에서 안 보일 수 있다. 설치는 AppData 밖에 두고, `check_setup.py`가 그 공간에 새 폴더가 있으면 알린다(도구가 자기 상태 폴더를 만든 경우도 보인다). CLI 위치는 `tools\v04-01\check-versions.ps1`로 본다.

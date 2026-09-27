@@ -53,7 +53,7 @@ Codex `--ignore-user-config`는 config.toml, `--ignore-rules`는 execpolicy `.ru
 
 ### R03 — 중간: `fresh-env`는 새 터미널 환경을 재구성하지 않는다
 
-**위치:** [runtime_inventory.py:184–204](../../../tools/runtime_inventory.py#L184-L204), [fresh-shell.ps1](../../../tools/v04-01/fresh-shell.ps1), [probe.ps1](../../../tools/v04-01/probe.ps1)의 환경 표기.
+**위치:** [runtime_inventory.py:184–204](../../../tools/runtime_inventory.py#L184-L204), [fresh-shell.ps1](../../../tools/v04-01/fresh-shell.ps1), [probe.ps1](https://github.com/inlight37-design/decision-model_lab/blob/af90a9f47ad8c641cb3096929d47d9e59eda9087/tools/v04-01/probe.ps1)의 환경 표기.
 
 **근거: 관측(코드), 합성 재현.** 현재 구현은 AI 접두사 변수 중 **동일 이름이 시스템/사용자 설정에 없을 때만** process 값을 지운다. 이름이 있으면 그 설정의 값으로 덮어쓰지 않고 현재 process 값을 유지한다. 영구 설정에 새로 생긴 변수도 추가하지 않는다. PATH만 별도로 합친다.
 
@@ -65,7 +65,7 @@ Codex `--ignore-user-config`는 config.toml, `--ignore-rules`는 execpolicy `.ru
 
 ### R04 — 중간: 가림과 presence 검사는 비밀·개인 경로의 완전한 출판 경계가 아니다
 
-**위치:** [runtime_inventory.py:140–175](../../../tools/runtime_inventory.py#L140-L175) 및 `validate_manifest`, [probe.ps1](../../../tools/v04-01/probe.ps1)의 `Mask`와 출력 저장.
+**위치:** [runtime_inventory.py:140–175](../../../tools/runtime_inventory.py#L140-L175) 및 `validate_manifest`, [probe.ps1](https://github.com/inlight37-design/decision-model_lab/blob/af90a9f47ad8c641cb3096929d47d9e59eda9087/tools/v04-01/probe.ps1)의 `Mask`와 출력 저장.
 
 **근거: 관측(코드), 합성 재현.** `github_pat_` 접두사의 합성 문자열은 Python SECRET 정규식에 걸리지 않는다. 자신의 home이 아닌 `C:\Users\Jane Doe\notes.txt`는 `C:\Users\<user> Doe\notes.txt`로 일부만 가려지고, 재검사 정규식도 남은 부분을 문제로 잡지 않는다. 이것은 유효 토큰의 실사용 시험이 아니라 가림 규칙의 입력 범위 시험이다. 기존 Google 형태 문자열 가림은 합성 시험에서 동작했다.
 
@@ -75,7 +75,7 @@ PowerShell 가림은 Python과 별개이고 처리하는 토큰 종류도 더 �
 
 ### R05 — 중간: 공개 요약과 tier 2 metadata가 판정의 출처·시점을 충분히 보존하지 못한다
 
-**위치:** [summarize_claude_init.py](../../../tools/v04-01/summarize_claude_init.py), [P4b-claude.txt](../../experiments/v04-01-inventory/hosts/aux-pc/tier2/P4b-claude.txt), [manifest.tier2.json](../../experiments/v04-01-inventory/hosts/aux-pc/manifest.tier2.json).
+**위치:** [summarize_claude_init.py](https://github.com/inlight37-design/decision-model_lab/blob/af90a9f47ad8c641cb3096929d47d9e59eda9087/tools/v04-01/summarize_claude_init.py), [P4b-claude.txt](../../experiments/v04-01-inventory/hosts/aux-pc/tier2/P4b-claude.txt), [manifest.tier2.json](../../experiments/v04-01-inventory/hosts/aux-pc/manifest.tier2.json).
 
 **근거: 관측(코드/공개 기록).** 요약기는 `len(init.get(..., []))`로 누락된 목록도 0으로 만든다. 따라서 다른 버전에서 필드가 빠지거나 일부만 추출된 경우가 '아무것도 로드되지 않음'으로 표현될 수 있다. 공개 P4b 요약에는 plugin 수만 있고 `@builtin` origin, memory 경로의 확인 여부는 없다. RESULTS의 수행자 관측을 부정하는 것은 아니지만, 그 부분을 독립적으로 재검사할 공개 근거는 빠져 있다. `loaded_into_context`라는 이름 역시 init metadata를 실제 전송 프롬프트 전체와 동일시할 여지가 있다.
 
@@ -85,7 +85,7 @@ PowerShell 가림은 Python과 별개이고 처리하는 토큰 종류도 더 �
 
 ### R06 — 중간: probe helper는 timeout·출력 채널·완전한 종료의 재현 가능한 계약이 없다
 
-**위치:** [tools/v04-01/probe.ps1](../../../tools/v04-01/probe.ps1), [runtime_inventory.py](../../../tools/runtime_inventory.py)의 `run_probe`, [로드맵 V04-03/§9](../../architecture/v0.4/03-evaluation-and-roadmap.md).
+**위치:** [tools/v04-01/probe.ps1](https://github.com/inlight37-design/decision-model_lab/blob/af90a9f47ad8c641cb3096929d47d9e59eda9087/tools/v04-01/probe.ps1), [runtime_inventory.py](../../../tools/runtime_inventory.py)의 `run_probe`, [로드맵 V04-03/§9](../../architecture/v0.4/03-evaluation-and-roadmap.md).
 
 **근거: 관측(코드) + 추론.** tier 1 Python helper는 timeout과 stdin DEVNULL을 사용한다. 반면 tier 2 PowerShell helper는 native 실행에 외부 deadline을 적용하지 않고 `2>&1 | Out-String`으로 채널을 합쳐 끝까지 버퍼링한다. 이 파일만으로는 stdout의 JSON과 stderr의 권한 경고를 다시 구별할 수 없고, hang/부분 출력/자식 잔존을 종료 상태와 함께 보존하는 계약도 없다. 이 때문에 현재 기록된 성공·실패 결과가 틀렸다는 뜻은 아니다.
 
