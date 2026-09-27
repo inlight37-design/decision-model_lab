@@ -66,6 +66,41 @@ class ProjectionTests(unittest.TestCase):
             with self.subTest(target=target):
                 self.assertEqual(len(lifecycle), 1)
 
+    def test_the_shared_lifecycle_gives_the_same_answers_as_reading_it_per_run(self):
+        # 공개된 실행에서 요청 하나의 이력을 잘라 쓴 결과가 실행마다 새로 읽은 결과와 같다(Codex 교차검토, PR #148)
+        runs = []
+        for question in ('a', 'b'):
+            rid = self.create(question)
+            digest = next(r for r in self.ctl.view()['runs'] if r['run_id'] == rid)['input_sha256']
+            self.ctl.submit_manual(rid, 'app', f'answer {question}', digest)
+            runs.append(rid)
+        first, second = runs
+        with self.store.tx() as tx:
+            # 받지 않은 참여자의 답이 원장에 남아 있어도 내보내지 않는다(공개 뒤 원장에 직접 넣은 대조군)
+            tx.execute("INSERT INTO participants (run_id, pid, spec, state, status) VALUES (?, 'gone', ?, 'rejected', "
+                       "'withdrawn')", first, json.dumps({'pid': 'gone', 'label': 'Gone', 'provider': 'test2',
+                                                          'transport': c.MANUAL}))
+            tx.execute("INSERT INTO drafts VALUES (?, 'gone', 'SHOULD-NOT-SHOW', 'x', 'manual', 0)", first)
+            tx.event(first, 'synthesis_started', attempt='a1')
+            tx.event(first, 'synthesis_completed', attempt='a1', result={'status': 'completed'})
+            tx.event(first, 'synthesis_started', attempt='a2')
+            tx.event(first, 'synthesis_failed', attempt='a2', result={'reason': 'format', 'message': 'm'})
+            tx.event(second, 'synthesis_started', attempt='b1')
+        self.ctl._synthesis[second] = (None, None, 'b1')   # 도는 중인 합성(작업자)
+        self.addCleanup(self.ctl._synthesis.pop, second, None)
+        view = self.ctl.view()
+        for rid in runs:
+            run = next(r for r in view['runs'] if r['run_id'] == rid)
+            with self.subTest(run=rid):
+                self.assertEqual(run['model_synthesis'], self.ctl._model_synthesis_state(rid))
+                self.assertEqual([m['attempt'] for m in run['model_syntheses']], list(
+                    attempt for (_, attempt) in self.ctl._synthesis_attempts(rid)))
+                for gone in (p for p in run['participants'] if p['pid'] == 'gone'):
+                    self.assertNotIn('draft', gone)
+        self.assertEqual(next(r for r in view['runs'] if r['run_id'] == second)['model_synthesis'], {'status': 'running'})
+        self.assertEqual((view['slots']['used'], view['unsettled']['count']), (self.ctl._slots_used(), self.ctl.unsettled()))
+        self.assertNotIn('SHOULD-NOT-SHOW', json.dumps(view, ensure_ascii=False))
+
     def test_one_run_projection_does_not_materialize_other_runs(self):
         first, second = self.create('first'), self.create('second')
         sql = []
