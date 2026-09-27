@@ -7,10 +7,9 @@
 """
 from __future__ import annotations
 
-import secrets
 from typing import Any
 
-from app.synthesis import SynthesisError, _json_object
+from app.synthesis import SynthesisError, _json_object, boundary
 
 # 지시문의 첫 줄. 모의 CLI(fake_cli.py)가 이 줄로 교차검토 요청을 알아본다 — 두 곳을 같이 바꾼다.
 MARKER = "[교차검토 요청]"
@@ -42,10 +41,8 @@ class CrossReviewError(ValueError):
 def prompt(question: str, asked: str, own: str, targets: list[tuple[str, str]], nonce: str | None = None) -> str:
     """own: 검토자 자신의 답. targets: [(이름표, 다른 팀원의 답)] — 검토자마다 섞은 순서로 준다.
 
-    경계에는 이번 호출에만 쓰는 표식을 붙인다. 답은 이 호출 전에 끝났으므로 표식을 알 수 없다(#139와 같은 방법)."""
-    texts = [question, asked, own] + [text for _, text in targets]
-    while nonce is None or any(nonce in text for text in texts):
-        nonce = secrets.token_hex(6)
+    경계에는 이번 호출에만 쓰는 표식(synthesis.boundary)을 붙인다. 답은 이 호출 전에 끝났으므로 표식을 알 수 없다."""
+    nonce = boundary([question, asked, own] + [text for _, text in targets], nonce)
     blocks = [f"<<<내 답 시작 {nonce}>>>\n{own}\n<<<내 답 끝 {nonce}>>>", "다른 팀원의 답:"]
     blocks += [f"<<<{label} 시작 {nonce}>>>\n{text}\n<<<{label} 끝 {nonce}>>>" for label, text in targets]
     return PROMPT.format(nonce=nonce, question=question, asked=asked, blocks="\n\n".join(blocks))
