@@ -14,7 +14,7 @@
  "ok": true,
  "status": "ok",
  "answer_is_ok": true,
- "hook_markers_fired": [],
+ "hook_marker_files": [],
  "output_mentions_hook": false,
  "output_mentions_trust": false,
  "hooks_file_removed": true,
