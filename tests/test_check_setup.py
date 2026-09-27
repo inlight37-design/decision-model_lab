@@ -123,6 +123,18 @@ class CheckSetupTests(unittest.TestCase):
                                                      bwrap=Path(home) / "none")}
         self.assertEqual(rows["Codex 전역 AGENTS.md"].status, "warn")
 
+    def test_a_codex_user_hooks_file_is_reported_even_when_empty(self):
+        run, which, _ = fake({})
+        with tempfile.TemporaryDirectory() as home:
+            (Path(home) / ".codex").mkdir()
+            rows = {r.name: r for r in cs.linux_rows(run, which, {}, Path(home), observed={}, host=None,
+                                                     bwrap=Path(home) / "none")}
+            self.assertNotIn("Codex 사용자 훅", rows)
+            (Path(home) / ".codex" / "hooks.json").write_text("", encoding="utf-8")
+            rows = {r.name: r for r in cs.linux_rows(run, which, {}, Path(home), observed={}, host=None,
+                                                     bwrap=Path(home) / "none")}
+        self.assertEqual(rows["Codex 사용자 훅"].status, "warn")
+
     def test_wsl_list_is_decoded_from_utf16(self):
         self.assertEqual(cs.decode("Ubuntu-24.04\r\n".encode("utf-16-le")).strip(), "Ubuntu-24.04")
         self.assertEqual(cs.decode("가 ok".encode("utf-8")), "가 ok")
