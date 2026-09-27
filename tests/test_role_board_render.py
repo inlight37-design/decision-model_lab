@@ -199,9 +199,17 @@ roleBoard={...emptyBoard(),general:["a","z"],orchestrator:["a"]}; nodes.question
 renderAssignments();
 let stext=nodes.assignments.kids.map(text).join(" ");
 assert.ok(stext.includes("분담 제안 받기") && stext.includes("(1/2)"), stext);
-splitCurrent="s1"; state.splits=[{split_id:"s1",state:"accepted",goal:"목표",members:{M1:"a",M2:"z"},
+const acceptedSplit={split_id:"s1",state:"accepted",goal:"목표",members:{M1:"a",M2:"z"},
   sources:[{name:"a.md"},{name:"b.md"}],orchestrator:{label:"CLI A"},
-  reply:{assignments:{a:{task:"A 보기",sources:["a.md"]},z:{task:"B 보기",sources:["b.md"]}},reason:"자료마다 한 명"}}];
+  reply:{assignments:{a:{task:"A 보기",sources:["a.md"]},z:{task:"B 보기",sources:["b.md"]}},reason:"자료마다 한 명"}};
+// 제안을 받는 동안 같은 이름의 다른 파일로 바꿨으면 칸에 채우지도 실행에 붙이지도 않는다(Codex 교차검토, PR #136)
+splitCurrent="s1"; splitInputs=splitSnapshot(); state.splits=[acceptedSplit];
+const kept=picked; picked=[{name:"a.md",size:9},picked[1]]; assignDraft={a:{task:"내가 쓴 일",off:new Set()}};
+renderAssignments();
+assert.equal(assignDraft.a.task,"내가 쓴 일"); assert.equal(splitApplied,null);
+assert.ok(nodes.assignments.kids.map(text).join(" ").includes("이 제안을 쓰지 않습니다"));
+assert.deepEqual(splitBody(),{});
+picked=kept; assignDraft={};
 renderAssignments();
 assert.ok(nodes.assignments.kids.every(isNode));
 assert.equal(assignDraft.a.task,"A 보기"); assert.deepEqual([...assignDraft.a.off].map(f=>f.name),["b.md"]);

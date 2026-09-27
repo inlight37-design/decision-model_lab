@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 import sqlite3
 import unittest
+from unittest import mock
 
 from app import controller as c, server, split
 from app.store import SCHEMA_VERSION, Store, events
@@ -190,6 +191,18 @@ class SplitTests(support.Base):
             ctl.propose_split(GOAL, ROSTER["claude"], [ROSTER["claude"], ROSTER["codex"]], SOURCES)
         self.assertEqual(ctl.call_budget(), {"used": 1, "cap": 1})
 
+    def test_an_unexpected_error_in_the_check_keeps_the_raw_reply(self):
+        # 검사가 뜻밖의 예외를 내도 결과 저장 실패로 빠지지 않고, 원문과 이유를 남긴 형식 실패가 된다(Codex 검토, PR #136)
+        def broken(text, row):
+            raise TypeError("unhashable member")
+        with mock.patch.object(c, "SPLIT_SEAT", replace(c.SPLIT_SEAT, check=broken)):
+            ctl = self.controller(Splitter())
+            sid = self.ask(ctl)
+        item = self.split_of(ctl, sid)
+        self.assertEqual((item["state"], item["status"]), (c.REJECTED, "format_error"))
+        self.assertIn("TypeError", item["reason"])
+        self.assertIn("A를 본다", item["raw"]["text"])
+
     def test_bad_requests_start_nothing(self):
         ctl = self.controller(Splitter())
         for name, kwargs in (("empty goal", dict(goal="  ")),
@@ -240,6 +253,10 @@ class SplitCheckTests(unittest.TestCase):
             self.reply(assignments=[{"member": "M1", "task": "A", "sources": ["a.md"]},
                                     {"member": "M3", "task": "B", "sources": ["b.md"]}]),
             self.reply(reason=""), self.reply(answer="몰래 답"), "JSON 아님",
+            self.reply(assignments=[{"member": [], "task": "A", "sources": ["a.md"]},   # 글이 아닌 이름표(Codex 검토)
+                                    {"member": "M2", "task": "B", "sources": ["b.md"]}]),
+            self.reply(assignments=[{"member": {"M": 1}, "task": "A", "sources": ["a.md"]},
+                                    {"member": "M2", "task": "B", "sources": ["b.md"]}]),
         ]
         for text in bad:
             with self.subTest(text=text[:40]), self.assertRaises(split.SplitError):

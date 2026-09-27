@@ -1336,9 +1336,12 @@ class Controller:
             try:
                 row = self.store.row(f"SELECT * FROM {seat.table} WHERE {seat.match}", *where.values())
                 record["reply"] = seat.check(outcome.text, row)
-            except ValueError as exc:   # RefineError·NextStepError·SplitError
+            # RefineError·NextStepError·SplitError. 검사가 뜻밖의 모양에 걸려 다른 예외를 내도 답 원문과 이유를 남긴다 —
+            # 결과 저장 실패로 빠져 증거를 잃지 않는다(Codex 교차검토, PR #136)
+            except (ValueError, TypeError, KeyError, AttributeError) as exc:
                 state, status = REJECTED, "format_error"
-                record.update(reason=str(exc)[:300], raw=refining.rejected_reply(outcome.text))
+                reason = str(exc) if isinstance(exc, ValueError) else f"{type(exc).__name__}: {exc}"
+                record.update(reason=reason[:300], raw=refining.rejected_reply(outcome.text))
         else:
             record["reason"] = _storable_meta(why or status)
         with self.lock, self.store.tx() as tx:

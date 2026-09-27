@@ -216,7 +216,8 @@ function renderAssignments() {
   $("sourcesLabelText").textContent = members.length ? "자료 · 팀원마다 고름" : "공통 자료";
   if (!members.length) { box.replaceChildren(); splitSig = null; return; }
   const split = currentSplit();
-  if (split && split.state === "accepted" && splitApplied !== split.split_id) applySplit(split);
+  // 제안을 받는 동안 입력이 바뀌었으면 옛 입력으로 만든 제안을 칸에 덮어쓰지 않는다(Codex 교차검토, PR #136)
+  if (split && split.state === "accepted" && splitApplied !== split.split_id && splitMatchesNow()) applySplit(split);
   splitSig = JSON.stringify([splitCurrent, splitBusy, split && split.state]);
   box.replaceChildren(h("span", { class: "form-label" }, "팀원별 맡길 일과 받을 자료"),
     h("p", { class: "sm muted" }, "내가 일을 나눕니다. 팀원은 받은 자료만 읽기 전용으로 보고, 파일을 고치지 않습니다. " +
@@ -228,9 +229,27 @@ function renderAssignments() {
 // ---- 분담 제안(카드 #135) --------------------------------------------------------------------------------------
 // 오케스트레이터 칸에 CLI 카드가 있으면 분담을 제안받아 팀원별 칸을 채운다. 제안은 칸을 채우기만 하고, 시작은 내가 한다.
 let splitCurrent = null, splitApplied = null, splitAsked = 0, splitBusy = false, splitGeneration = 0, splitSig = null;
+let splitInputs = null;   // 제안을 요청할 때의 목표·팀원·파일(File 그대로)·오케스트레이터 카드와 모델
 const SPLIT_LIMIT = 2;
 function currentSplit() { return ((state && state.splits) || []).find(s => s.split_id === splitCurrent) || null; }
-function resetSplit() { splitCurrent = null; splitApplied = null; splitAsked = 0; splitBusy = false; splitGeneration += 1; splitSig = null; }
+function resetSplit() {
+  splitCurrent = null; splitApplied = null; splitAsked = 0; splitBusy = false; splitGeneration += 1; splitSig = null;
+  splitInputs = null;
+}
+function splitSnapshot() {
+  const pid = roleBoard.orchestrator[0], model = $("m-" + pid);
+  return { goal: $("question").value.trim(), members: [...roleBoard.general], files: [...picked], orchestrator: pid,
+           model: model ? model.value : null };
+}
+// 지금 입력이 제안을 요청할 때와 같은가. 파일은 이름이 아니라 File 그대로 견준다 — 같은 이름의 다른 내용으로 바꾸면
+// 새 File이라 다르다. 다르면 제안을 칸에 채우지도, 실행에 붙이지도 않는다(서버도 해시로 다시 본다).
+function splitMatchesNow() {
+  if (!splitInputs) return false;
+  const now = splitSnapshot();
+  return now.goal === splitInputs.goal && now.orchestrator === splitInputs.orchestrator && now.model === splitInputs.model &&
+    JSON.stringify(now.members) === JSON.stringify(splitInputs.members) &&
+    now.files.length === splitInputs.files.length && now.files.every((file, i) => file === splitInputs.files[i]);
+}
 // 붙인 파일(File)의 보낼 이름. sourceFiles()와 같은 순서·규칙이다.
 function pickedNames() { const taken = new Set(); return picked.map(f => sourceName(f.name, taken)); }
 function applySplit(split) {
@@ -253,7 +272,10 @@ function splitSection(split) {
   const detail = !split ? null
     : split.state === "accepted" ? h("div", { class: "cell ask-cell stack" }, h("p", { class: "cap strong" }, `${orchestrator.label}의 분담 제안`),
         h("p", { class: "sm" }, "나눈 이유: " + split.reply.reason),
-        h("p", { class: "cap muted" }, "아래 팀원별 칸을 제안대로 채웠습니다. 고쳐도 됩니다 — 시작하면 제안과 고쳤는지가 함께 남습니다."))
+        splitApplied === split.split_id && splitMatchesNow()
+          ? h("p", { class: "cap muted" }, "아래 팀원별 칸을 제안대로 채웠습니다. 고쳐도 됩니다 — 시작하면 제안과 고쳤는지가 함께 남습니다.")
+          : h("p", { class: "sm cell cell-alert" }, "제안을 요청한 뒤 목표·팀원·자료·오케스트레이터가 바뀌어 이 제안을 쓰지 않습니다. " +
+              "칸은 내가 나눈 대로 보냅니다. 제안을 쓰려면 다시 제안받으세요."))
     : split.state === "unknown" ? h("div", { class: "stack" }, h("p", { class: "sm cell cell-alert" }, "끝났는지 확인하지 못했습니다. 자리를 차지하고 있어 새 호출을 막습니다."),
         h("div", {}, h("button", { type: "button", class: "btn btn-danger", onclick: () => {
           if (window.confirm("이 분담 제안 호출의 프로세스가 모두 끝난 것을 직접 확인했습니까? 호출은 돌려받지 않습니다."))
@@ -275,14 +297,14 @@ async function requestSplit() {
   $("formErr").textContent = "";
   splitBusy = true; renderAssignments();
   try {
-    const goal = $("question").value.trim();
-    if (!goal) throw new Error("전체 목표(질문 칸)를 먼저 적어 주세요.");
-    const pid = roleBoard.orchestrator[0], model = $("m-" + pid), behavior = $("b-" + pid);
-    const made = await api("/api/splits", { goal, orchestrator: pid, ...(model ? { model: model.value } : {}),
-      ...(behavior ? { behavior: behavior.value } : {}), members: [...roleBoard.general],
-      sources: await sourceFiles([...picked]), ...(composeTask ? { task_id: composeTask } : {}) });
+    const asked = splitSnapshot();
+    if (!asked.goal) throw new Error("전체 목표(질문 칸)를 먼저 적어 주세요.");
+    const behavior = $("b-" + asked.orchestrator);
+    const made = await api("/api/splits", { goal: asked.goal, orchestrator: asked.orchestrator,
+      ...(asked.model ? { model: asked.model } : {}), ...(behavior ? { behavior: behavior.value } : {}),
+      members: asked.members, sources: await sourceFiles(asked.files), ...(composeTask ? { task_id: composeTask } : {}) });
     if (generation !== splitGeneration) return;   // 그 사이 창을 새로 열었다
-    splitCurrent = made.split_id; splitApplied = null; splitAsked += 1;
+    splitCurrent = made.split_id; splitApplied = null; splitAsked += 1; splitInputs = asked;
     await refresh().catch(() => false);
   } catch (e) {
     if (generation === splitGeneration) $("formErr").textContent = e.message;
@@ -294,11 +316,7 @@ async function requestSplit() {
 function splitBody() {
   const split = currentSplit();
   if (!split || split.state !== "accepted" || splitApplied !== split.split_id || !roleBoard.general.length) return {};
-  const names = pickedNames();
-  const same = split.goal === $("question").value.trim() &&
-    JSON.stringify(Object.values(split.members)) === JSON.stringify(roleBoard.general) &&
-    JSON.stringify(split.sources.map(s => s.name)) === JSON.stringify([...names].sort());
-  return same ? { split: { id: split.split_id } } : {};
+  return splitMatchesNow() ? { split: { id: split.split_id } } : {};
 }
 // 창이 열린 동안 제안 상태가 바뀌었을 때만 다시 그린다 — 맡길 일을 쓰는 중에 칸을 지우지 않는다.
 function renderSplitIfChanged() {

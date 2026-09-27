@@ -63,7 +63,8 @@ def check(text: str, labels: dict[str, str], names: list[str]) -> dict[str, Any]
         if not isinstance(item, dict) or set(item) != {"member", "task", "sources"}:
             raise SplitError("each assignment has member, task and sources only")
         member = item["member"]
-        if member not in labels or labels[member] in result:
+        # 글이 아닌 이름표(목록·객체)는 dict 조회에서 TypeError가 난다 — 형식 실패로 돌려 원문을 남긴다(Codex 교차검토)
+        if not isinstance(member, str) or member not in labels or labels[member] in result:
             raise SplitError("each assignment names a different listed member")
         chosen = item["sources"]
         if (not isinstance(chosen, list) or any(not isinstance(n, str) or n not in names for n in chosen)
