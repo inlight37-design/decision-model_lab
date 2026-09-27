@@ -40,7 +40,7 @@ const isNode = x => x !== null && typeof x === "object" && !Array.isArray(x) && 
 const $ = id => nodes[id] ||= {hidden:false, textContent:"", replaceChildren(...kids) {this.kids=kids.map(k => isNode(k) ? k : String(k));}};
 function h(tag,attrs,...kids) {return {tag,attrs:attrs||{},kids:kids.flat(Infinity).filter(x=>x!==null && x!==false && x!==undefined)};}
 const invalidatePreview=()=>{}, updateSourceNote=()=>{}, pressAll=()=>{}, fmtSize=n=>String(n);
-let picked;
+let picked, roleBoard = null;   // 역할판이 없으면 팀원별 자료 고르기를 그리지 않는다
 ''' + functions + r'''
 picked = [{name: "notes.md", size: 10}]; renderPicked("");
 assert.ok(nodes.sourcesHelp.kids.every(isNode), JSON.stringify(nodes.sourcesHelp.kids));

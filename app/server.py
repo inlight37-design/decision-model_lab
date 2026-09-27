@@ -271,7 +271,8 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                                   quorum_policy=_text(body, "quorum_policy", "independent_only"),
                                   sources=[(item["name"], item["text"]) for item in sources],
                                   task_id=body.get("task_id"), task_title=body.get("task_title"),
-                                  role_board=body.get("role_board"), roster=run_roster, run_id=body.get("run_id"))
+                                  role_board=body.get("role_board"), roster=run_roster, run_id=body.get("run_id"),
+                                  assignments=body.get("assignments"))   # 일반 팀원마다 맡길 일·받을 자료
                     if parts[-1] == "preview":
                         self._json(200, controller.prepare_run(_text(body, "question"), chosen, **kwargs))
                     else:
@@ -279,7 +280,7 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                                                        confirmation=body.get("confirmation"), **kwargs)
                         self._json(200, {"run_id": run_id})
                 elif len(parts) == 4 and parts[:2] == ["api", "runs"] and parts[3] == "reviewed":
-                    controller.mark_reviewed(parts[2], body.get("revision"))   # 화면이 본 결과 판
+                    controller.mark_reviewed(parts[2], body.get("revision"), memo=body.get("memo"))   # 화면이 본 결과 판
                     self._json(200, {"ok": True})
                 elif len(parts) == 5 and parts[:2] == ["api", "runs"] and parts[3] == "manual":
                     controller.submit_manual(parts[2], parts[4], _text(body, "text"),

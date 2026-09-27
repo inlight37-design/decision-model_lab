@@ -49,7 +49,8 @@ from app.report import build_report
 from app.synthesis import (LABEL_ORDER, SynthesisError, check_model_synthesis, mock_synthesize, model_prompt,
                            model_unavailable, unavailable)
 from app.state import (CLI, MANUAL, QUEUED, RUNNING, AWAITING_USER, ACCEPTED, REJECTED, UNKNOWN,
-                       DONE, INDEPENDENT_ONLY, INCLUDE_UNVERIFIED, QUORUM_POLICIES, RunGate, gate, confirmed, synthesis_attempts)
+                       DONE, INDEPENDENT_ONLY, INCLUDE_UNVERIFIED, QUORUM_POLICIES, ISOLATED, GENERAL, COLLECTED,
+                       NO_QUORUM, RunGate, gate, confirmed, synthesis_attempts)
 from core import adapters, contract, env as core_env, isolation, membership as m, runner
 
 # _source_dir가 원장의 질문 본문을 이 두 문구로 다시 만들어 맞춘다. 문구를 바꾸면 그 전에 만든 대기 실행은
@@ -59,6 +60,15 @@ PROMPT = ("다음 질문에, 다른 참여자의 답을 보지 않은 상태로 
 # 공통 자료(P0). 모든 참여자가 같은 질문 본문을 받으므로 목록·해시는 질문에 넣어 입력 digest에 묶는다.
 PROMPT_SOURCES = ("\n참고 자료 {count}개가 읽기 전용 폴더 {folder}에 있다. 자료에서 가져온 내용은 파일 이름을 밝히고, "
                   "자료에 없는 판단은 자료 밖의 판단이라고 표시한다.\n{listing}\n")
+# 일반 팀원(카드 #125). 사람이 나눈 일을 팀원마다 따로 보낸다. 봉인·독립 판정이 없으므로 "다른 답을 보지 않고"를
+# 요구하지 않는다. _member_source_dir가 원장의 목표·맡긴 일·자료 목록으로 이 문구를 다시 만들어 맞춘다 — 바꾸면 그
+# 전에 만든 대기 실행은 재개 때 호출 없이 거절된다.
+GENERAL_PROMPT = ("사람이 일을 나눠 너에게 한 부분을 맡겼다. 전체 목표는 참고만 하고 맡은 일만 한다. 파일을 고치지 않고 "
+                  "읽기만 한다. 결과, 근거, 확인하지 못한 점을 쓴다.\n\n전체 목표:\n{question}\n\n맡은 일:\n{task}\n")
+MAX_TASK_CHARS, MAX_MEMO_CHARS = 4000, 8000
+# 팀원이 받은 자료의 종류(리뷰 통합 6절 C 행: 원문/기계적 지도/AI 요약/기존 답). 첫 조각은 원문 파일 전체만 받는다 —
+# 요약만 받은 답을 원문 검토로 표시하지 않도록 종류를 입력에 고정해 둔다.
+SOURCE_KIND_ORIGINAL, SOURCE_RANGE_WHOLE = "original", "whole"
 SOURCE_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,79}")
 WINDOWS_DEVICES = re.compile(r"(?i)(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?")
 MAX_SOURCES, MAX_SOURCE_BYTES, MAX_SOURCES_TOTAL = 20, 256 * 1024, 1024 * 1024
@@ -109,6 +119,12 @@ def _checked_sources(items) -> list[tuple[str, bytes]]:
         seen.add(name.lower())
         checked.append((name, data))
     return sorted(checked)
+
+
+def _bundle_digest(members: dict[str, dict[str, Any]]) -> str:
+    """일반 실행 전체의 입력 해시: 팀원별 입력 전문의 sha256을 팀원 ID 순으로 묶은 것. 한 팀원의 입력이 바뀌어도 바뀐다."""
+    return hashlib.sha256(json.dumps({pid: item["input_sha256"] for pid, item in members.items()},
+                                     sort_keys=True).encode("utf-8")).hexdigest()
 
 
 def _source_footer(folder: str, sources) -> str:
@@ -319,9 +335,12 @@ class Controller:
     # ---- 만들기와 예약 -------------------------------------------------------------------------
     def prepare_run(self, question: str, participants: list[ParticipantSpec], *, min_independent: int,
                     quorum_policy: str = INDEPENDENT_ONLY, sources=None, task_id=None, task_title=None,
-                    role_board=None, roster=None, run_id=None) -> dict[str, Any]:
+                    role_board=None, roster=None, run_id=None, assignments=None) -> dict[str, Any]:
         """sources: (이름, 글) 목록. 원장에 내용·해시를 고정하고, CLI 참여자에게는 그 사본 폴더 하나를 읽기
-        전용 입력으로 준다(provider별 빈 입력 폴더 대신). 입력 폴더가 하나인 것은 같으므로 계획의 판은 그대로다."""
+        전용 입력으로 준다(provider별 빈 입력 폴더 대신). 입력 폴더가 하나인 것은 같으므로 계획의 판은 그대로다.
+
+        역할판의 일반 칸을 채운 실행(카드 #125)은 assignments로 팀원마다 {task, sources: [자료 이름]}을 받는다.
+        정족수 인자는 쓰지 않는다. 팀원마다 입력 전문이 다르고, 받은 자료만 든 폴더를 따로 받는다."""
         question = question.strip()
         if not question:
             raise ControllerError("question is empty")
@@ -337,20 +356,24 @@ class Controller:
             roles = freeze_roles(role_board, participants, roster or {p.pid: p for p in participants})
         except ValueError as exc:
             raise ControllerError(str(exc)) from None
-        if quorum_policy not in QUORUM_POLICIES:
+        general = bool(roles["general"])
+        if not general and assignments is not None:
+            raise ControllerError("맡길 일은 일반 칸의 팀원에게만 줍니다.")
+        if not general and quorum_policy not in QUORUM_POLICIES:
             raise ControllerError(f"quorum_policy must be one of {', '.join(QUORUM_POLICIES)}")
         # 프런트엔드가 false를 보내도 실행기의 opt-in 등급을 올려 주지 않는다. 더 낮은 등급은 보존한다.
         if getattr(self.executor, "allow_context_unverified", False):
             participants = [replace(p, context_unverified=True) if p.transport == CLI else p for p in participants]
-            roles["isolated"] = [asdict(p) for p in participants]
-        confirmable = sum(confirmed(asdict(p)) for p in participants)
-        if quorum_policy == INDEPENDENT_ONLY and min_independent > confirmable:
-            raise ControllerError(f"only {confirmable} participant(s) can be confirmed independent (CLI); lower "
-                                  "min_independent or choose include_unverified to count unverified answers")
-        try:
-            m.start(tuple(p.pid for p in participants), min_independent=min_independent)
-        except m.MembershipError as exc:
-            raise ControllerError(str(exc)) from None
+            roles["general" if general else "isolated"] = [asdict(p) for p in participants]
+        if not general:
+            confirmable = sum(confirmed(asdict(p)) for p in participants)
+            if quorum_policy == INDEPENDENT_ONLY and min_independent > confirmable:
+                raise ControllerError(f"only {confirmable} participant(s) can be confirmed independent (CLI); lower "
+                                      "min_independent or choose include_unverified to count unverified answers")
+            try:
+                m.start(tuple(p.pid for p in participants), min_independent=min_independent)
+            except m.MembershipError as exc:
+                raise ControllerError(str(exc)) from None
         if run_id is None:
             run_id = f"r{time.strftime('%m%d-%H%M%S')}-{uuid.uuid4().hex}"
         elif not isinstance(run_id, str) or not re.fullmatch(r"r[0-9]{4}-[0-9]{6}-[0-9a-f]{32}", run_id):
@@ -363,6 +386,9 @@ class Controller:
         elif task_title is not None and (not isinstance(task_title, str) or not task_title.strip()
                                          or len(task_title.strip()) > 120 or not storable(task_title)):
             raise ControllerError("작업 제목은 1~120자의 올바른 글이어야 합니다.")
+        if general:
+            return self._general_manifest(run_id, task_id, task_title, question, participants, roles,
+                                          checked_sources, assignments)
         prompt = PROMPT.format(question=question)
         if checked_sources:
             prompt += _source_footer(self._source_root(run_id), [
@@ -370,7 +396,7 @@ class Controller:
                 for name, data in checked_sources])
         data = prompt.encode("utf-8")
         manifest = {"run_id": run_id, "task_id": task_id, "task_title": task_title.strip() if task_title else question[:120],
-                    "question": question, "prompt": prompt, "input_sha256": hashlib.sha256(data).hexdigest(),
+                    "mode": ISOLATED, "question": question, "prompt": prompt, "input_sha256": hashlib.sha256(data).hexdigest(),
                     "input_bytes": len(data), "role_config": roles,
                     "min_independent": min_independent, "quorum_policy": quorum_policy,
                     "sources": [{"name": name, "bytes": len(content), "sha256": hashlib.sha256(content).hexdigest()}
@@ -383,17 +409,64 @@ class Controller:
         manifest["confirmation"] = hashlib.sha256(json.dumps(manifest, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
         return manifest
 
+    def _general_manifest(self, run_id, task_id, task_title, question, participants, roles, checked_sources,
+                          assignments) -> dict[str, Any]:
+        """일반 실행의 확인 명세. 팀원마다 맡긴 일·입력 전문·받은 자료(이름·해시·크기·종류·범위)를 고정한다. 아무
+        팀원도 받지 않는 자료는 원장에 두지 않도록 거절한다. 실행의 입력 해시는 팀원별 입력 해시를 묶은 것이다."""
+        if not isinstance(assignments, dict) or set(assignments) != {p.pid for p in participants}:
+            raise ControllerError("일반 팀원마다 맡길 일과 받을 자료가 필요합니다.")
+        contents = dict(checked_sources)
+        members, used = {}, set()
+        for p in participants:
+            item = assignments[p.pid]
+            if not isinstance(item, dict) or set(item) != {"task", "sources"}:
+                raise ControllerError(f"{p.label}: 맡길 일(task)과 받을 자료(sources)만 적습니다.")
+            task = item["task"].strip() if isinstance(item["task"], str) else ""
+            if not task or len(task) > MAX_TASK_CHARS or not storable(task):
+                raise ControllerError(f"{p.label}: 맡길 일은 1~{MAX_TASK_CHARS}자의 올바른 글이어야 합니다.")
+            names = item["sources"]
+            if (not isinstance(names, list) or any(not isinstance(n, str) or n not in contents for n in names)
+                    or len(set(names)) != len(names)):
+                raise ControllerError(f"{p.label}: 받을 자료는 이번에 붙인 자료의 이름을 한 번씩만 적습니다.")
+            used.update(names)
+            listed = [{"name": n, "bytes": len(contents[n]), "sha256": hashlib.sha256(contents[n]).hexdigest(),
+                       "kind": SOURCE_KIND_ORIGINAL, "range": SOURCE_RANGE_WHOLE} for n in sorted(names)]
+            prompt = GENERAL_PROMPT.format(question=question, task=task)
+            if listed:
+                prompt += _source_footer(self._member_source_root(run_id, p.pid), listed)
+            data = prompt.encode("utf-8")
+            members[p.pid] = {"task": task, "prompt": prompt, "input_sha256": hashlib.sha256(data).hexdigest(),
+                              "input_bytes": len(data), "sources": listed}
+        unused = sorted(set(contents) - used)
+        if unused:
+            raise ControllerError("아무 팀원도 받지 않는 자료가 있습니다: " + ", ".join(unused))
+        manifest = {"run_id": run_id, "task_id": task_id, "task_title": task_title.strip() if task_title else question[:120],
+                    "mode": GENERAL, "question": question, "prompt": "",
+                    "input_sha256": _bundle_digest(members), "input_bytes": sum(v["input_bytes"] for v in members.values()),
+                    "role_config": roles, "min_independent": 0, "quorum_policy": NO_QUORUM,
+                    "sources": [{"name": name, "bytes": len(content), "sha256": hashlib.sha256(content).hexdigest()}
+                                for name, content in checked_sources],
+                    "assignments": members,
+                    "calls": {"draft_cli": len(participants),
+                              "model_calls": 0 if self.executor.kind != contract.REAL else None,
+                              "live_cap": self.max_real_calls, "provider_caps": dict(self.provider_call_caps)},
+                    "manual_packets": {}}
+        manifest["confirmation"] = hashlib.sha256(json.dumps(manifest, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+        return manifest
+
     def create_run(self, question: str, participants: list[ParticipantSpec], *, min_independent: int,
                    quorum_policy: str = INDEPENDENT_ONLY, sources=None, task_id=None, task_title=None,
-                   role_board=None, roster=None, run_id=None, confirmation=None) -> str:
+                   role_board=None, roster=None, run_id=None, confirmation=None, assignments=None) -> str:
         prepared = self.prepare_run(question, participants, min_independent=min_independent,
                                     quorum_policy=quorum_policy, sources=sources, task_id=task_id, task_title=task_title,
-                                    role_board=role_board, roster=roster, run_id=run_id)
+                                    role_board=role_board, roster=roster, run_id=run_id, assignments=assignments)
         if confirmation is not None and confirmation != prepared["confirmation"]:
             raise ControllerError("확인한 입력에서 바뀌었습니다. 보낼 입력을 다시 확인하세요.")
         run_id, question, prompt = prepared["run_id"], prepared["question"], prepared["prompt"]
-        data = prompt.encode("utf-8")
-        participants = [ParticipantSpec(**p) for p in prepared["role_config"]["isolated"]]
+        general = prepared["mode"] == GENERAL
+        input_sha256, input_bytes = prepared["input_sha256"], prepared["input_bytes"]
+        min_independent, quorum_policy = prepared["min_independent"], prepared["quorum_policy"]
+        participants = [ParticipantSpec(**p) for p in prepared["role_config"]["general" if general else "isolated"]]
         checked_sources = _checked_sources(sources)
         with self.lock, self.store.tx() as tx:
             if self._closing:
@@ -411,17 +484,26 @@ class Controller:
                 tx.execute("INSERT INTO sources (run_id, name, sha256, bytes, content) VALUES (?, ?, ?, ?, ?)",
                            run_id, name, hashlib.sha256(content).hexdigest(), len(content), content)
             tx.execute("INSERT INTO runs (run_id, created_at, question, prompt, input_sha256, input_bytes, "
-                       "min_independent, roster, quorum_policy, task_id, role_config) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                       run_id, time.time(), question, prompt, hashlib.sha256(data).hexdigest(), len(data),
-                       min_independent, "{}", quorum_policy, task_id, json.dumps(prepared["role_config"], ensure_ascii=False))
+                       "min_independent, roster, quorum_policy, task_id, role_config, mode) "
+                       "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                       run_id, time.time(), question, prompt, input_sha256, input_bytes,
+                       min_independent, "{}", quorum_policy, task_id, json.dumps(prepared["role_config"], ensure_ascii=False),
+                       prepared["mode"])
+            for pid, item in (prepared.get("assignments") or {}).items():
+                tx.execute("INSERT INTO assignments VALUES (?, ?, ?, ?, ?, ?, ?)", run_id, pid, item["task"],
+                           item["prompt"], item["input_sha256"], item["input_bytes"],
+                           json.dumps(item["sources"], ensure_ascii=False))
             for p in participants:
                 tx.execute("INSERT INTO participants (run_id, pid, spec, state) VALUES (?, ?, ?, ?)", run_id, p.pid,
                            json.dumps(asdict(p), ensure_ascii=False), QUEUED if p.transport == CLI else AWAITING_USER)
-            tx.event(run_id, "run_created", input_sha256=hashlib.sha256(data).hexdigest(), input_bytes=len(data),
+            tx.event(run_id, "run_created", input_sha256=input_sha256, input_bytes=input_bytes,
                      participants=[p.pid for p in participants], min_independent=min_independent,
-                     quorum_policy=quorum_policy,
+                     quorum_policy=quorum_policy, mode=prepared["mode"],
                      sources=[{"name": name, "sha256": hashlib.sha256(content).hexdigest(), "bytes": len(content)}
-                              for name, content in checked_sources])
+                              for name, content in checked_sources],
+                     **({"assignments": {pid: {"input_sha256": item["input_sha256"],
+                                               "sources": [s["name"] for s in item["sources"]]}
+                                         for pid, item in prepared["assignments"].items()}} if general else {}))
             tx.event(run_id, "drafting_started")
         self.pump()
         return run_id
@@ -445,8 +527,55 @@ class Controller:
         if run["prompt"] != expected:
             raise ControllerError("the fixed source manifest or folder differs from the original prompt; "
                                   "no call was started")
-        if not rows:
+        return self._snapshot(root, rows) if rows else None
+
+    def _member_source_root(self, run_id: str, pid: str) -> str:
+        """일반 팀원 한 명이 받는 자료 폴더. 그 팀원이 받은 자료만 든다 — 다른 팀원의 자료 폴더는 연결하지 않는다."""
+        return os.path.join(self._source_root(run_id), pid)
+
+    def _assignment(self, run_id: str, pid: str):
+        row = self.store.row("SELECT * FROM assignments WHERE run_id = ? AND pid = ?", run_id, pid)
+        if row is None:
+            raise ControllerError(f"no assignment for {pid!r} in {run_id!r}")
+        return row
+
+    def _member_source_dir(self, run_id: str, pid: str) -> str | None:
+        """일반 팀원의 입력 전문을 원장의 목표·맡긴 일·자료 목록으로 다시 만들어 저장한 입력과 해시를 맞추고, 그 팀원이
+        받은 자료만 폴더로 둔다. 다르면 거절한다 — 아무것도 시작하지 않았다. _source_dir와 같은 규칙이다."""
+        run, item = self._run(run_id), self._assignment(run_id, pid)
+        listed = json.loads(item["sources"])
+        root = self._member_source_root(run_id, pid)
+        expected = GENERAL_PROMPT.format(question=run["question"], task=item["task"]) + (
+            _source_footer(root, listed) if listed else "")
+        data = item["prompt"].encode("utf-8")
+        if (item["prompt"] != expected or hashlib.sha256(data).hexdigest() != item["input_sha256"]
+                or len(data) != item["input_bytes"]):
+            raise ControllerError("the fixed assignment differs from its recorded input; no call was started")
+        # 행 하나를 스스로 맞게(맡긴 일·입력 전문·해시·크기를 함께) 바꿔도 실행을 만들 때 묶은 입력 해시와는 다르다
+        # (Codex 교차검토, PR #129).
+        members = {row["pid"]: row for row in self.store.rows(
+            "SELECT pid, input_sha256 FROM assignments WHERE run_id = ?", run_id)}
+        if _bundle_digest(members) != run["input_sha256"]:
+            raise ControllerError("the fixed assignment differs from the input bundled when the run was created; "
+                                  "no call was started")
+        if not listed:
             return None
+        rows = [self.store.row("SELECT name, sha256, bytes, content FROM sources WHERE run_id = ? AND name = ?",
+                               run_id, source["name"]) for source in listed]
+        if any(row is None or (row["sha256"], row["bytes"]) != (source["sha256"], source["bytes"])
+               or source.get("kind") != SOURCE_KIND_ORIGINAL for row, source in zip(rows, listed)):
+            raise ControllerError("the source snapshot changed after the run was created; no call was started")
+        return self._snapshot(root, rows)
+
+    def _attempt_input(self, run_id: str, pid: str) -> tuple[str, str | None]:
+        """이 참여자에게 보낼 입력 전문과 읽기 전용 자료 폴더. 격리 실행은 모두 같은 입력, 일반 실행은 팀원마다 다르다."""
+        run = self._run(run_id)
+        if run["mode"] == GENERAL:
+            return self._assignment(run_id, pid)["prompt"], self._member_source_dir(run_id, pid)
+        return run["prompt"], self._source_dir(run_id)
+
+    def _snapshot(self, root: str, rows) -> str:
+        """원장의 자료 행(이름·sha256·크기·내용)을 root 폴더로 두고 다시 맞춘다."""
         if not os.path.isdir(root):
             staging = f"{root}.{uuid.uuid4().hex}.tmp"
             os.makedirs(staging)
@@ -510,7 +639,7 @@ class Controller:
         """
         with self.lock:
             for event in self.store.rows("SELECT run_id, at, payload FROM events WHERE kind IN ('draft_sealed', "
-                                         "'attempt_rejected', 'synthesis_completed', 'synthesis_failed') "
+                                         "'result_accepted', 'attempt_rejected', 'synthesis_completed', 'synthesis_failed') "
                                          "ORDER BY at DESC LIMIT 200"):
                 payload = json.loads(event["payload"])
                 result = payload.get("result") or {}
@@ -547,15 +676,15 @@ class Controller:
                 spec = ParticipantSpec(**json.loads(row["spec"]))
                 attempt = uuid.uuid4().hex
                 work = os.path.join(self.work_root, row["run_id"], spec.pid)
-                prompt = self._run(row["run_id"])["prompt"]
                 # 최종 계획을 한 번 만든다. 그 기록(질문 본문 없이)과 실행 종류를 시도 ID와 함께 저장한 뒤에만 같은
                 # 계획을 실행한다(G4·G6). 저장하지 못하면 실행하지 않는다.
                 try:
                     # 작업 폴더 준비도 시작 전 실패다. 여기서 빠져나가면 이 참여자가 queued로 남아 다음 pump마다
                     # 대기열 맨 앞에서 다시 멈춘다(구조 검토 AH-02). 이 참여자만 시작 전 실패로 닫고 다음으로 간다.
                     os.makedirs(work, exist_ok=True)
-                    # 자료가 있는 실행은 그 사본 폴더 하나를 입력으로 준다. 목록·해시가 다르면 여기서 거절된다.
-                    source = self._source_dir(row["run_id"])
+                    # 자료가 있는 실행은 그 사본 폴더 하나를 입력으로 준다(일반 팀원은 자기가 받은 자료만).
+                    # 입력 전문·목록·해시가 다르면 여기서 거절된다.
+                    prompt, source = self._attempt_input(row["run_id"], spec.pid)
                     extra = {"inputs": (source,)} if source else {}
                     plan, refused = self.executor.plan(spec, prompt, work, **extra), None
                     if plan.context_unverified and not spec.context_unverified:
@@ -675,7 +804,9 @@ class Controller:
                 elif state == ACCEPTED:
                     tx.execute("INSERT OR REPLACE INTO drafts VALUES (?, ?, ?, ?, ?, ?)", run_id, pid, outcome.text,
                                hashlib.sha256(outcome.text.encode("utf-8")).hexdigest(), CLI, time.time())
-                    tx.event(run_id, "draft_sealed", pid=pid, attempt=attempt, result=summary)
+                    # 일반 팀원의 답은 봉인하지 않는다 — 받는 즉시 화면에 보이므로 사건 이름도 따로 둔다
+                    tx.event(run_id, "result_accepted" if current_gate.general else "draft_sealed",
+                             pid=pid, attempt=attempt, result=summary)
                 else:
                     tx.event(run_id, "attempt_rejected", pid=pid, attempt=attempt, status=status, result=summary)
                 self._maybe_reveal(run_id, tx)
@@ -683,9 +814,17 @@ class Controller:
     def _maybe_reveal(self, run_id: str, tx) -> None:
         """남은 참여자가 모두 끝났고 정족수가 있으면 연다. 빠진 사람이 있으면 축소 승인이 먼저다.
 
-        상태를 바꾼 거래 안에서 부른다. 거래 안의 읽기는 그 거래가 쓴 것까지 본다.
+        상태를 바꾼 거래 안에서 부른다. 거래 안의 읽기는 그 거래가 쓴 것까지 본다. 일반 실행은 공개가 아니라 모음으로
+        닫는다 — 팀원이 모두 끝나면(종료 미확인 없이) 더 받지 않고 사람의 판단 차례가 된다.
         """
         current_gate = self._gate(run_id)
+        if current_gate.general:
+            if current_gate.can_collect and tx.execute(
+                    "UPDATE runs SET phase = ? WHERE run_id = ? AND phase = ? AND NOT cancel_requested",
+                    COLLECTED, run_id, m.DRAFTING):
+                tx.event(run_id, "collected", accepted=len(current_gate.requested) - len(current_gate.dropped),
+                         failed=list(current_gate.dropped))
+            return
         if current_gate.can_reveal:
             if tx.execute("UPDATE runs SET phase = ? WHERE run_id = ? AND phase = ? AND NOT cancel_requested",
                           m.REVEALED, run_id, m.DRAFTING):
@@ -951,13 +1090,18 @@ class Controller:
             for run in self.store.rows(query + " ORDER BY created_at DESC", *(() if run_id is None else (run_id,))):
                 rows = self.store.rows("SELECT * FROM participants WHERE run_id = ? ORDER BY rowid", run["run_id"])
                 current_gate = gate(run, rows)
-                revealed, settled = current_gate.revealed, current_gate.settled or current_gate.revealed
+                general = current_gate.general
+                # 일반 팀원은 봉인하지 않는다(요청서 P6): 답·진단·실행 정보를 끝나는 대로 보인다. 다른 실행의 봉인된
+                # 답은 이 실행의 투영에 들어오지 않는다 — 행을 이 실행에서만 읽는다.
+                revealed, settled = current_gate.revealed, current_gate.settled or current_gate.revealed or general
                 keep = SEALED_VIEW_KEYS | (DIAGNOSTIC_KEYS if settled else frozenset())
+                assigned = {row["pid"]: row for row in self.store.rows(
+                    "SELECT * FROM assignments WHERE run_id = ?", run["run_id"])} if general else {}
                 parts, calls = [], {"succeeded": 0, "failed": 0, "unknown": 0}
                 for p in rows:
                     spec = ParticipantSpec(**json.loads(p["spec"]))
                     result = json.loads(p["result"]) if p["result"] else None
-                    if result and not revealed:
+                    if result and not (revealed or general):
                         result = {k: v for k, v in result.items() if k in keep}
                     if (spec.transport == CLI and p["state"] in (ACCEPTED, REJECTED, UNKNOWN)
                             and p["status"] not in ("cancelled_before_start", "process_failed_to_start")):
@@ -968,25 +1112,36 @@ class Controller:
                             "state": p["state"], "status": p["status"], "detail": p["detail"] if settled else None,
                             "contamination": list(_flags(spec.transport, p)) +
                                 (["개인 문맥 미확인 — 독립 정족수에 세지 않음"]
-                                 if spec.transport == CLI and spec.context_unverified else []),
+                                 if spec.transport == CLI and spec.context_unverified and not general else []),
                             "execution": p["kind"] if spec.transport == CLI else None,
-                            "independence": "confirmed" if confirmed(asdict(spec)) else "unverified",
+                            # 일반 팀원의 답은 blind 초안이 아니다 — 독립 라벨을 붙이지 않는다
+                            "independence": "not_applicable" if general else
+                                ("confirmed" if confirmed(asdict(spec)) else "unverified"),
                             "result": result, "dropped": spec.pid in current_gate.dropped}
+                    if general and spec.pid in assigned:
+                        work = assigned[spec.pid]
+                        item["assignment"] = {"task": work["task"], "prompt": work["prompt"],
+                                              "input_sha256": work["input_sha256"], "input_bytes": work["input_bytes"],
+                                              "sources": json.loads(work["sources"])}
                     if current_gate.accepting and spec.transport == MANUAL and p["state"] == AWAITING_USER:
                         item["packet"] = packet(run["run_id"], spec.pid, run["input_sha256"], run["prompt"])
-                    if revealed and p["state"] == ACCEPTED:
+                    if (revealed or general) and p["state"] == ACCEPTED:
                         draft = self.store.row("SELECT text, source, sha256 FROM drafts WHERE run_id = ? AND pid = ?",
                                                run["run_id"], spec.pid)
                         item["draft"] = draft["text"] if draft else None
                         item["draft_sha256"] = draft["sha256"] if draft else None
                     parts.append(item)
                 cli_total = sum(1 for p in parts if p["transport"] == CLI)
-                quorum = dict(current_gate.quorum)
-                quorum["label"] = _quorum_label(quorum) if revealed else None
-                revision, reviewed = self._review_state(run["run_id"])
+                quorum = None if general else dict(current_gate.quorum)   # 일반 실행은 정족수를 세지 않는다
+                if quorum is not None:
+                    quorum["label"] = _quorum_label(quorum) if revealed else None
+                revision, reviewed, memo = self._review_state(run["run_id"])
+                judged = revealed or current_gate.collected   # 사람이 판단할 결과 판이 있는가
                 runs.append({"run_id": run["run_id"], "created_at": run["created_at"], "question": run["question"],
                              "task_id": run["task_id"], "role_config": json.loads(run["role_config"]),
-                             "reviewed": revealed and reviewed,   # 지금 결과 판을 판단 완료했는가(AH-01)
+                             "mode": run["mode"],
+                             "reviewed": judged and reviewed,   # 지금 결과 판을 판단 완료했는가(AH-01)
+                             "review_memo": memo if judged and reviewed else None,
                              "prompt": run["prompt"], "input_sha256": run["input_sha256"],
                              "input_bytes": run["input_bytes"], "sources": self.sources(run["run_id"]),
                              "phase": run["phase"],
@@ -1006,8 +1161,9 @@ class Controller:
                              "participants": parts,
                              "events": [e["kind"] for e in reversed(self.store.rows(
                                  "SELECT kind FROM events WHERE run_id = ? ORDER BY seq DESC LIMIT 12", run["run_id"]))]})
+                if judged:
+                    runs[-1]["result_revision"] = revision   # 판단 완료 버튼이 이 판을 함께 보낸다. 공개·모음 뒤에만 싣는다
                 if revealed:
-                    runs[-1]["result_revision"] = revision   # 판단 완료 버튼이 이 판을 함께 보낸다. 공개 뒤에만 싣는다
                     artifact = self.store.row("SELECT payload FROM events WHERE run_id = ? "
                                               "AND kind = 'synthesis_completed' ORDER BY seq DESC LIMIT 1", run["run_id"])
                     if artifact:
@@ -1042,33 +1198,44 @@ class Controller:
             raise ControllerError("시작할 때 고정한 오케스트레이터와 다릅니다. 바꾸려면 새 실행을 만드세요.")
         return spec
 
-    def _review_state(self, run_id: str) -> tuple[int, bool]:
-        """(결과 판, 그 판을 판단 완료했는가). 판은 사람이 보는 결과를 바꾼 마지막 사건의 seq다 — 공개, 합성 완료·실패.
-        판단 완료 사건이 그보다 뒤에 있어야 그 판을 본 것이다. 새 합성이 끝나면 판이 올라가 다시 내 차례가 된다(AH-01).
-        판을 싣지 않은 옛 원장의 판단 완료 사건도 같은 순서 규칙으로 읽는다."""
+    def _review_state(self, run_id: str) -> tuple[int, bool, str | None]:
+        """(결과 판, 그 판을 판단 완료했는가, 그때 남긴 취합 메모). 판은 사람이 보는 결과를 바꾼 마지막 사건의 seq다 —
+        공개, 일반 실행의 모음, 합성 완료·실패. 판단 완료 사건이 그보다 뒤에 있어야 그 판을 본 것이다. 새 합성이 끝나면
+        판이 올라가 다시 내 차례가 된다(AH-01). 판을 싣지 않은 옛 원장의 판단 완료 사건도 같은 순서 규칙으로 읽는다."""
         row = self.store.row(
-            "SELECT COALESCE(MAX(CASE WHEN kind IN ('revealed', 'synthesis_completed', 'synthesis_failed') "
+            "SELECT COALESCE(MAX(CASE WHEN kind IN ('revealed', 'collected', 'synthesis_completed', 'synthesis_failed') "
             "THEN seq END), 0) AS revision, "
             "COALESCE(MAX(CASE WHEN kind = 'human_reviewed' THEN seq END), 0) AS reviewed "
             "FROM events WHERE run_id = ?", run_id)
-        return row["revision"], row["reviewed"] > row["revision"]
+        memo = None
+        if row["reviewed"]:
+            payload = self.store.row("SELECT payload FROM events WHERE run_id = ? AND seq = ?", run_id, row["reviewed"])
+            memo = json.loads(payload["payload"]).get("memo")
+        return row["revision"], row["reviewed"] > row["revision"], memo
 
-    def mark_reviewed(self, run_id: str, revision: int) -> None:
-        """사람이 공개된 원문 초안과 그때까지의 합성 결과(실패 포함)를 판단했다. 모델 호출 없이 내 차례를 끝내며
-        재시작에도 남는다. revision은 화면이 보여 준 결과 판이다 — 그 사이 새 결과가 나왔으면 거절한다. 같은 판을
-        두 번 누르면 사건은 하나다. 합성 실패 기록을 지우거나 품질 통과로 바꾸지 않는다."""
+    def mark_reviewed(self, run_id: str, revision: int, memo: str | None = None) -> None:
+        """사람이 공개된 원문 초안과 그때까지의 합성 결과(실패 포함) — 일반 실행이면 팀원들의 결과 — 를 판단했다. 모델
+        호출 없이 내 차례를 끝내며 재시작에도 남는다. revision은 화면이 보여 준 결과 판이다 — 그 사이 새 결과가 나왔으면
+        거절한다. 같은 판을 두 번 누르면 사건은 하나다(두 번째 메모는 남기지 않는다). memo는 사람이 쓴 취합 메모이며
+        검증이나 합의 판정이 아니다. 합성 실패 기록을 지우거나 품질 통과로 바꾸지 않는다."""
         if type(revision) is not int:
             raise ControllerError("revision must be the integer result revision shown on screen")
+        if memo is not None and (not isinstance(memo, str) or len(memo) > MAX_MEMO_CHARS or not storable(memo)):
+            raise ControllerError(f"취합 메모는 {MAX_MEMO_CHARS}자까지의 올바른 글이어야 합니다.")
         with self.lock, self.store.tx() as tx:
-            if not self._gate(run_id).revealed:
+            current_gate = self._gate(run_id)
+            if current_gate.general and not current_gate.collected:
+                raise ControllerError("모든 팀원이 끝난 뒤에만 판단 완료로 표시할 수 있습니다. 종료 미확인은 먼저 확인하세요.")
+            if not current_gate.general and not current_gate.revealed:
                 raise ControllerError("공개된 답을 확인한 뒤에만 판단 완료로 표시할 수 있습니다.")
             if any(item["status"] in (RUNNING, UNKNOWN) for item in self._synthesis_attempts(run_id).values()):
                 raise ControllerError("합성의 종료를 먼저 확인하세요.")
-            current, reviewed = self._review_state(run_id)
+            current, reviewed, _ = self._review_state(run_id)
             if revision != current:
                 raise ControllerError("화면에 보인 뒤 새 결과가 나왔습니다. 새 결과를 확인하고 다시 판단 완료를 누르세요.")
             if not reviewed:
-                tx.event(run_id, "human_reviewed", revision=current)
+                note = (memo or "").strip()
+                tx.event(run_id, "human_reviewed", revision=current, **({"memo": note} if note else {}))
 
     def _model_synthesis_state(self, run_id: str) -> dict[str, Any] | None:
         """같은 사건 투영으로 진행·실패·종료 미확인을 보인다. 과거 미확인 시도도 숨기지 않는다."""
