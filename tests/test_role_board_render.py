@@ -242,6 +242,16 @@ for (const piece of ["검토 질문: 비용을 따져라","검토한 관계 2/4"
 assert.ok(!vtext.includes("교차검토 받기"));   // 한 라운드
 const pressed=all(visle).filter(x=>x.tag==="button"&&x.attrs["aria-pressed"]==="true").map(text);
 assert.deepEqual(pressed,["받아들임","보류"]);
+// 토큰 사용량(카드 #141): provider별로 나누고 더하지 않는다. 관측 안 됨·원본 앱·봉인 중·정가 추정(청구액 아님)을 글로 적는다.
+assert.equal(usageIsland({usage:null}),null);
+const uvalue={by_provider:{"claude-code":{calls:2,observed:1,unobserved:1,tokens:{input_tokens:1200,cache_read_input_tokens:800},
+  list_price_estimate_usd:0.0125},codex:{calls:1,observed:1,unobserved:0,tokens:{input_tokens:300,cached_input_tokens:200},
+  list_price_estimate_usd:null}},unobserved:{manual:1,no_usage_reported:1},sealed_runs:1};
+const utext=text(usageIsland({usage:uvalue}));
+for (const piece of ["Claude — 호출 2(관측 1, 관측 안 됨 1)","입력 1,200","캐시로 읽음 800","정가 추정 $0.0125(청구액 아님)",
+  "Codex — 호출 1(관측 1)","캐시로 읽음 200","원본 앱 답 1건 — 사용량 관측 안 됨","봉인 중인 실행 1개는 공개 뒤에 더합니다"]) assert.ok(utext.includes(piece), piece);
+assert.ok(!utext.includes("1,500") && !utext.includes("1500"));   // 회사끼리 더한 숫자가 없다
+assert.ok(all(usageIsland({usage:uvalue})).every(x=>x.kids.every(k=>typeof k!=="object"||isNode(k))));
 // 분담 제안(카드 #135): 오케스트레이터 칸에 CLI 카드가 있을 때만 버튼. 제안이 오면 팀원별 칸을 채우고,
 // 같은 목표·팀원·자료로 보낼 때만 제안을 붙인다.
 roleOptions={participants:sroster,live:false,behaviors:["ok"]};

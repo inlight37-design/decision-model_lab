@@ -44,7 +44,8 @@ import uuid
 from typing import Any, Protocol
 
 from app.store import Store
-from app import collate as collating, cross_review as cross, next_step, refine as refining, split as splitting
+from app import (collate as collating, cross_review as cross, next_step, refine as refining, split as splitting,
+                 usage as token_usage)
 from app.roles import freeze as freeze_roles, task_projection
 from app.report import build_report
 from app.synthesis import (LABEL_ORDER, SynthesisError, _sources as synthesis_sources, check_model_synthesis,
@@ -2002,6 +2003,9 @@ class Controller:
                     runs[-1]["model_syntheses"] = [
                         {"attempt": attempt, "status": item["status"], "result": item["result"] or None}
                         for (_, attempt), item in mine.items()]
+                # 실행의 토큰 합계(카드 #141). 봉인 중에는 싣지 않는다 — 참여자가 볼 수 있는 채널로 새지 않게
+                # (2026-09-24 검토 8번). 일반 실행은 봉인이 없어 처음부터 싣는다
+                runs[-1]["usage"] = token_usage.for_run(runs[-1]) if revealed or general else None
             unsettled = self.unsettled(every)
             # 대기 시도를 controller가 지금 시작하지 않고, 사람이 무언가 해야 풀리는 이유(N3). pump()가 멈추는 두 조건에
             # 더해, 종료 미확인 시도가 병렬 자리를 모두 쥔 경우도 같다 — 진행 중인 시도가 끝나서 풀리는 자리가 아니다.

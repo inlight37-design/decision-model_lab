@@ -271,7 +271,7 @@ class ControllerTests(support.Base):
         self.finish(ctl, rid)
         status, body = self.decision_report(ctl, rid)
         self.assertEqual(status, 200)
-        self.assertEqual((body["schema"], body["synthesis"]), ("a1-decision-report/4", None))
+        self.assertEqual((body["schema"], body["synthesis"]), ("a1-decision-report/5", None))
         [failed] = body["model_syntheses"]
         self.assertEqual(failed["status"], "failed")
         self.assertEqual(failed["result"]["raw"]["text"], "JSON이 아닌 답")

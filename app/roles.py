@@ -4,6 +4,7 @@
 """
 from dataclasses import asdict
 
+from app import usage as token_usage
 from app.state import CLI
 
 
@@ -134,11 +135,14 @@ def task_projection(tasks, runs, held=None):
         latest = timeline[-1] if timeline else None
         if latest is None:
             continue  # 단일 실행 보고에는 그 실행의 작업만 싣는다.
+        mine = grouped.get(task["task_id"], [])
+        # 작업의 토큰 합계(카드 #141). 봉인 중인 실행은 합계가 없어 sealed_runs로만 센다
+        tokens = token_usage.combine((r.get("usage") for r in mine), sealed=sum(r.get("usage") is None for r in mine))
         status = next((s for s in ("problem", "my_turn", "working")
                        if any(r["status"] == s for r in timeline)), "done")
         projected.append({"task_id": task["task_id"], "title": task["title"], "created_at": task["created_at"],
                           "status": status, "role_config": latest["role_config"] if latest else None,
-                          "calls_used": sum(r["calls_used"] for r in timeline), "runs": timeline})
+                          "calls_used": sum(r["calls_used"] for r in timeline), "usage": tokens, "runs": timeline})
     return projected
 
 
