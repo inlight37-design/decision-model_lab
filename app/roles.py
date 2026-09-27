@@ -37,8 +37,14 @@ def freeze(board, participants, roster):
     return result
 
 
-def task_projection(tasks, runs):
-    """controller.view의 공개 투영만 받는다. 초안·결과·진행 시간은 목록으로 복사하지 않는다."""
+def task_projection(tasks, runs, held=None):
+    """controller.view의 공개 투영만 받는다. 초안·결과·진행 시간은 목록으로 복사하지 않는다.
+
+    held는 controller가 대기 시도를 지금 시작하지 않는 이유다 — "paused"(재시작 뒤 사용자가 이어서 시작하라고 할
+    때까지) 또는 "unsettled"(종료 미확인이 상한에 닿음). '작업 중'은 스스로 진행하는 것으로 확인된 상태에만 쓰고,
+    표에 없는 상태는 사람이 확인한다(N3). 합성 실패는 사람이 그 결과 판을 판단 완료하면 끝남이 된다 — 실패 기록은
+    실행의 합성 상태에 그대로 남는다.
+    """
     projected = []
     grouped = {}
     for run in sorted(runs, key=lambda r: r["created_at"]):
@@ -47,21 +53,28 @@ def task_projection(tasks, runs):
         timeline = []
         for run in grouped.get(task["task_id"], []):
             gate, parts = run["gate"], run["participants"]
-            synth = run.get("model_synthesis") or {}
-            if any(p["state"] == "unknown" for p in parts) or synth.get("status") in ("unknown", "failed"):
+            states = {p["state"] for p in parts}
+            synth = (run.get("model_synthesis") or {}).get("status")
+            if "unknown" in states or synth == "unknown" or (synth == "failed" and not run["reviewed"]):
                 status, action = "problem", "종료·실패 확인"
             elif run["cancel_requested"] or gate["status"] == "quorum_blocked":
                 status, action = "problem", "실행 확인"
-            elif synth.get("status") == "running":
+            elif synth == "running":
                 status, action = "working", None
-            elif gate["can_submit"] and any(p["state"] == "awaiting_user" for p in parts):
+            elif gate["can_submit"] and "awaiting_user" in states:
                 status, action = "my_turn", "원본 앱 답 붙여넣기"
             elif gate["can_approve_reduction"]:
                 status, action = "my_turn", "축소 여부 판단"
             elif gate["revealed"]:
                 status, action = ("done", None) if run["reviewed"] else ("my_turn", "공개된 답 판단")
-            else:
+            elif "queued" in states and held == "paused":
+                status, action = "my_turn", "멈춘 시도 이어서 시작"
+            elif "queued" in states and held == "unsettled":
+                status, action = "problem", "종료 미확인 정리 뒤 시작"
+            elif gate["status"] == "waiting" and states & {"running", "queued"}:
                 status, action = "working", None
+            else:
+                status, action = "problem", "상태 확인"
             timeline.append({"run_id": run["run_id"], "question": run["question"],
                              "created_at": run["created_at"], "role_config": run["role_config"],
                              "status": status, "action": action,

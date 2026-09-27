@@ -80,7 +80,8 @@ class RoleBoardTests(Base):
             ctl.synthesize(first)
         with self.assertRaises(c.ControllerError):
             ctl.synthesize_with_model(first, "claude-code", ROSTER["claude"])
-        ctl.mark_reviewed(first); ctl.mark_reviewed(first)
+        revision = self.run_view(ctl, first)["result_revision"]
+        ctl.mark_reviewed(first, revision); ctl.mark_reviewed(first, revision)   # 같은 판은 사건 하나
         self.assertEqual(ctl.view()["tasks"][0]["status"], "done")
         self.assertEqual(self.store.row("SELECT COUNT(*) FROM events WHERE kind = 'human_reviewed'")[0], 1)
         second = self.create(ctl, task_id=task["task_id"])
@@ -103,7 +104,7 @@ class RoleBoardTests(Base):
         ctl = self.controller(SyntheticExecutor(), max_parallel=0)
         rid = self.create(ctl, board("codex", orchestrator=("claude",)))
         with self.assertRaises(c.ControllerError):
-            ctl.mark_reviewed(rid)
+            ctl.mark_reviewed(rid, 0)
         with self.assertRaises(c.ControllerError):
             ctl.synthesize_with_model(rid, "codex")
         with self.assertRaises(c.ControllerError):
@@ -204,7 +205,9 @@ class RoleBoardHttpTests(HttpServerCase):
         opened = self.get_state()
         self.assertTrue(opened["runs"][0]["gate"]["revealed"])
         self.assertEqual(opened["tasks"][0]["runs"][0]["action"], "공개된 답 판단")
-        self.assertEqual(self.request({}, path=f"/api/runs/{rid}/reviewed")[0], 200)
+        self.assertEqual(self.request({}, path=f"/api/runs/{rid}/reviewed")[0], 400)   # 본 판 없이는 받지 않는다
+        self.assertEqual(self.request({"revision": opened["runs"][0]["result_revision"]},
+                                      path=f"/api/runs/{rid}/reviewed")[0], 200)
         saved = self.get_state()
         self.assertEqual(saved["tasks"][0]["status"], "done")
         self.httpd.shutdown(); self.httpd.server_close(); self.thread.join(2)
@@ -240,4 +243,4 @@ class RoleBoardHttpTests(HttpServerCase):
         saved = self.ctl.view()["runs"][0]
         self.assertEqual(saved["role_config"], preview["role_config"])
         self.assertEqual(saved["prompt"], preview["prompt"])
-        self.assertEqual(self.request({}, path=f"/api/runs/{saved['run_id']}/reviewed")[0], 400)
+        self.assertEqual(self.request({"revision": 0}, path=f"/api/runs/{saved['run_id']}/reviewed")[0], 400)

@@ -229,7 +229,7 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                                                        confirmation=body.get("confirmation"), **kwargs)
                         self._json(200, {"run_id": run_id})
                 elif len(parts) == 4 and parts[:2] == ["api", "runs"] and parts[3] == "reviewed":
-                    controller.mark_reviewed(parts[2])
+                    controller.mark_reviewed(parts[2], body.get("revision"))   # 화면이 본 결과 판
                     self._json(200, {"ok": True})
                 elif len(parts) == 5 and parts[:2] == ["api", "runs"] and parts[3] == "manual":
                     controller.submit_manual(parts[2], parts[4], _text(body, "text"),

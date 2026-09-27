@@ -36,10 +36,11 @@ class ProjectionTests(unittest.TestCase):
         tail = [q for q in queries if q.startswith('SELECT KIND ')]
         self.assertEqual(len(tail), 1)
         self.assertIn('LIMIT 12', tail[0])
+        # 판단 완료는 결과 판과 비교한다(AH-01). 한 번의 집계로 seq·kind만 읽고 내용(payload)은 읽지 않는다.
         review = [q for q in queries if "KIND = 'HUMAN_REVIEWED'" in q]
         self.assertEqual(len(review), 1)
-        self.assertTrue(review[0].startswith("SELECT 1 "))
-        self.assertIn("LIMIT 1", review[0])
+        self.assertTrue(review[0].startswith("SELECT COALESCE(MAX("))
+        self.assertNotIn("PAYLOAD", review[0])
         lifecycle = [q for q in queries if q not in tail and q not in review]
         for query in lifecycle:
             self.assertIn("WHERE KIND IN ('SYNTHESIS_STARTED', 'SYNTHESIS_FAILED', 'SYNTHESIS_COMPLETED', "

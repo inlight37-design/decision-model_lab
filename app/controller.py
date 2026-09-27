@@ -908,9 +908,18 @@ class Controller:
                     record = model_unavailable(report, synthesizer, str(exc), raw=outcome.text)
             else:
                 record = model_unavailable(report, synthesizer, why or status)
-            with self.lock, self.store.tx() as tx:
-                tx.event(run_id, "synthesis_completed" if record["status"] == "completed" else "synthesis_failed",
-                         attempt=attempt, result=record)
+            if not storable(json.dumps(record, ensure_ascii=False)):
+                # 초안의 진단 메타데이터와 같은 규칙(AH-04): 고립 surrogate는 \uXXXX 표기로 바꿔 저장하고 바꿨다고 남긴다.
+                # 합성은 봉인하는 원문이 아니고, 대조를 통과한 인용은 저장할 수 있는 초안에서 온 것이라 바뀌지 않는다.
+                record = {**_storable_meta(record), "escaped_text": True}
+            try:
+                with self.lock, self.store.tx() as tx:
+                    tx.event(run_id, "synthesis_completed" if record["status"] == "completed" else "synthesis_failed",
+                             attempt=attempt, result=record)
+            except Exception as exc:
+                # 결과를 원장에 남기지 못했다. 결과 없는 시작으로 남아 종료 미확인·자리 유지다(초안의 카드 #70과 같다).
+                with self.lock, self.store.tx() as tx:
+                    tx.event(run_id, "synthesis_result_not_stored", attempt=attempt, error=type(exc).__name__)
         finally:
             with self.lock:
                 self._synthesis.pop(run_id, None)
@@ -962,10 +971,10 @@ class Controller:
                 cli_total = sum(1 for p in parts if p["transport"] == CLI)
                 quorum = dict(current_gate.quorum)
                 quorum["label"] = _quorum_label(quorum) if revealed else None
+                revision, reviewed = self._review_state(run["run_id"])
                 runs.append({"run_id": run["run_id"], "created_at": run["created_at"], "question": run["question"],
                              "task_id": run["task_id"], "role_config": json.loads(run["role_config"]),
-                             "reviewed": self.store.row("SELECT 1 FROM events WHERE run_id = ? AND kind = 'human_reviewed' LIMIT 1",
-                                                        run["run_id"]) is not None,
+                             "reviewed": revealed and reviewed,   # 지금 결과 판을 판단 완료했는가(AH-01)
                              "prompt": run["prompt"], "input_sha256": run["input_sha256"],
                              "input_bytes": run["input_bytes"], "sources": self.sources(run["run_id"]),
                              "phase": run["phase"],
@@ -986,6 +995,7 @@ class Controller:
                              "events": [e["kind"] for e in reversed(self.store.rows(
                                  "SELECT kind FROM events WHERE run_id = ? ORDER BY seq DESC LIMIT 12", run["run_id"]))]})
                 if revealed:
+                    runs[-1]["result_revision"] = revision   # 판단 완료 버튼이 이 판을 함께 보낸다. 공개 뒤에만 싣는다
                     artifact = self.store.row("SELECT payload FROM events WHERE run_id = ? "
                                               "AND kind = 'synthesis_completed' ORDER BY seq DESC LIMIT 1", run["run_id"])
                     if artifact:
@@ -994,11 +1004,18 @@ class Controller:
                     runs[-1]["model_syntheses"] = [
                         {"attempt": attempt, "status": item["status"], "result": item["result"] or None}
                         for (_, attempt), item in self._synthesis_attempts(run["run_id"]).items()]
-            tasks = task_projection(self.store.rows("SELECT * FROM tasks ORDER BY created_at DESC"), runs)
+            unsettled = self.unsettled()
+            # 대기 시도를 controller가 지금 시작하지 않고, 사람이 무언가 해야 풀리는 이유(N3). pump()가 멈추는 두 조건에
+            # 더해, 종료 미확인 시도가 병렬 자리를 모두 쥔 경우도 같다 — 진행 중인 시도가 끝나서 풀리는 자리가 아니다.
+            unknown_slots = self.store.row("SELECT COUNT(*) AS n FROM participants WHERE state = ?", UNKNOWN)["n"] + sum(
+                item["status"] == UNKNOWN for item in self._synthesis_attempts().values())
+            held = "paused" if self.paused else ("unsettled" if unsettled >= self.unsettled_limit or (
+                unknown_slots and unknown_slots >= self.max_parallel) else None)
+            tasks = task_projection(self.store.rows("SELECT * FROM tasks ORDER BY created_at DESC"), runs, held=held)
             return {"executor": self.executor.name, "live_call_budget": self.call_budget(), "tasks": tasks,
                     "provider_call_budgets": {aid: self.call_budget(aid) for aid in self.provider_call_caps},
                     "slots": {"used": self._slots_used(), "cap": self.max_parallel},
-                    "unsettled": {"count": self.unsettled(), "limit": self.unsettled_limit},
+                    "unsettled": {"count": unsettled, "limit": self.unsettled_limit},
                     "paused": self.paused, "runs": runs}
 
     # ---- 내부 ---------------------------------------------------------------------------------
@@ -1013,15 +1030,33 @@ class Controller:
             raise ControllerError("시작할 때 고정한 오케스트레이터와 다릅니다. 바꾸려면 새 실행을 만드세요.")
         return spec
 
-    def mark_reviewed(self, run_id: str) -> None:
-        """사람이 공개된 답을 판단했다. 모델 호출 없이 내 차례를 끝내며 재시작에도 남는다."""
+    def _review_state(self, run_id: str) -> tuple[int, bool]:
+        """(결과 판, 그 판을 판단 완료했는가). 판은 사람이 보는 결과를 바꾼 마지막 사건의 seq다 — 공개, 합성 완료·실패.
+        판단 완료 사건이 그보다 뒤에 있어야 그 판을 본 것이다. 새 합성이 끝나면 판이 올라가 다시 내 차례가 된다(AH-01).
+        판을 싣지 않은 옛 원장의 판단 완료 사건도 같은 순서 규칙으로 읽는다."""
+        row = self.store.row(
+            "SELECT COALESCE(MAX(CASE WHEN kind IN ('revealed', 'synthesis_completed', 'synthesis_failed') "
+            "THEN seq END), 0) AS revision, "
+            "COALESCE(MAX(CASE WHEN kind = 'human_reviewed' THEN seq END), 0) AS reviewed "
+            "FROM events WHERE run_id = ?", run_id)
+        return row["revision"], row["reviewed"] > row["revision"]
+
+    def mark_reviewed(self, run_id: str, revision: int) -> None:
+        """사람이 공개된 원문 초안과 그때까지의 합성 결과(실패 포함)를 판단했다. 모델 호출 없이 내 차례를 끝내며
+        재시작에도 남는다. revision은 화면이 보여 준 결과 판이다 — 그 사이 새 결과가 나왔으면 거절한다. 같은 판을
+        두 번 누르면 사건은 하나다. 합성 실패 기록을 지우거나 품질 통과로 바꾸지 않는다."""
+        if type(revision) is not int:
+            raise ControllerError("revision must be the integer result revision shown on screen")
         with self.lock, self.store.tx() as tx:
             if not self._gate(run_id).revealed:
                 raise ControllerError("공개된 답을 확인한 뒤에만 판단 완료로 표시할 수 있습니다.")
             if any(item["status"] in (RUNNING, UNKNOWN) for item in self._synthesis_attempts(run_id).values()):
                 raise ControllerError("합성의 종료를 먼저 확인하세요.")
-            if not self.store.row("SELECT 1 FROM events WHERE run_id = ? AND kind = 'human_reviewed' LIMIT 1", run_id):
-                tx.event(run_id, "human_reviewed")
+            current, reviewed = self._review_state(run_id)
+            if revision != current:
+                raise ControllerError("화면에 보인 뒤 새 결과가 나왔습니다. 새 결과를 확인하고 다시 판단 완료를 누르세요.")
+            if not reviewed:
+                tx.event(run_id, "human_reviewed", revision=current)
 
     def _model_synthesis_state(self, run_id: str) -> dict[str, Any] | None:
         """같은 사건 투영으로 진행·실패·종료 미확인을 보인다. 과거 미확인 시도도 숨기지 않는다."""
