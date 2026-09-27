@@ -76,11 +76,11 @@
 
 ## 4. 다음 작업
 
-**지금 할 일은 3의 역할판 B다**(S3은 3절의 PR이 맡는다). 카드부터 만든다. 1·2는 기한이 있는 일이라 기한 전에 끼워 넣는다. 모델 호출이 드는 일은 카드에 상한을 먼저 적고 새 원장·새 상태 폴더로 한다(2절 22).
+**지금 할 일은 3의 역할판 B다**(S3은 3절의 PR이 맡는다). 1·2는 기한이 있는 일이라 기한 전에 끼워 넣는다. 모델 호출이 드는 일은 카드에 상한을 먼저 적고 새 원장·새 상태 폴더로 한다(2절 22).
 
 1. **2026-10-25 전 — V04-01 절차서를 정한다.** 쌓임 검사의 `PROCEDURES` 예외가 그날 끝난다(`tests/test_accumulation.py`) — 지나면 CI가 실패한다. WSL 참여자의 설치·관측 절차는 이미 [SETUP](docs/SETUP.md)에 있으니, 절차서가 아직 맡는 일(Windows CLI 조사, `probe.ps1`·`summarize_claude_init.py`)을 살아 있는 문서로 옮길지 은퇴시킬지 정하고 AGENTS.md의 가리킴을 맞춘다. 모델 호출 없음.
 2. **2026-10-26 전 — 재관측**([SETUP 4절](docs/SETUP.md)의 절차, PC마다 모델 호출 Claude 2·Codex 3). aux-pc-wsl은 10월 26일, main-pc-wsl은 10월 27일부터 만료이고, 그 PC의 세션만 관측·등록할 수 있다. 참여자 계획이나 CLI 판이 바뀌면 그때 바로 한다. 관측 기록은 `tools/w2/assemble.py`가 조립한다. 추론 강도를 연결하는 PR은 그 계획으로 바로 관측한다 — 이 날짜를 기다리지 않는다([역할판 검토](docs/reviews/2026-09-26-role-board-review/README.md) RB-01). 그 전에 [카드 #111](https://github.com/inlight37-design/decision-model_lab/issues/111)(S4 Codex 사용자 훅 방어)을 끝낸다. 파일 하나 검사로 전체 문맥 검증을 대신하지 않는다.
-3. **역할판 B(실제 모델 고르기) — 카드부터.** S5(launcher 소유권)·S6(조회 줄이기)도 카드로 만든다([마감 기록](docs/reviews/2026-09-27-review-closeout/README.md) 6절). 편의·최적화 후보 전체를 B의 선행 조건으로 만들지 않는다. B는 추가 크레딧 경로를 막는 허용 목록을 포함하고([검토 근거 O14](docs/reviews/2026-09-26-role-board-review/EVIDENCE.md)), 그 뒤는 C 사람이 나누는 일반 팀원 작업 → D 슈퍼바이저 모델·다듬기 모드 → E 섞어 쓰기·최적화다([역할판 검토](docs/reviews/2026-09-26-role-board-review/README.md) §6). B–E의 카드를 만들 때는 [리뷰 통합](docs/reviews/2026-09-26-review-consolidation/README.md) 6절의 단계별 완료 조건(codex-peek 검토에서 온 것)을 카드의 완료 조건으로 옮긴다.
+3. **역할판 B(실제 모델 고르기, [카드 #119](https://github.com/inlight37-design/decision-model_lab/issues/119)).** S5 launcher 소유권([카드 #120](https://github.com/inlight37-design/decision-model_lab/issues/120))은 파일이 겹치지 않아 따로 할 수 있고, S6 조회 줄이기([카드 #121](https://github.com/inlight37-design/decision-model_lab/issues/121))는 `controller.py`가 겹치니 B와 동시에 하지 않는다. 편의·최적화 후보 전체를 B의 선행 조건으로 만들지 않는다. B는 추가 크레딧 경로를 막는 허용 목록을 포함하고([검토 근거 O14](docs/reviews/2026-09-26-role-board-review/EVIDENCE.md)), 그 뒤는 C 사람이 나누는 일반 팀원 작업 → D 슈퍼바이저 모델·다듬기 모드 → E 섞어 쓰기·최적화다([역할판 검토](docs/reviews/2026-09-26-role-board-review/README.md) §6). B–E의 카드를 만들 때는 [리뷰 통합](docs/reviews/2026-09-26-review-consolidation/README.md) 6절의 단계별 완료 조건(codex-peek 검토에서 온 것)을 카드의 완료 조건으로 옮긴다.
 4. 새 카드가 필요하면 [카드 양식](.github/ISSUE_TEMPLATE/card.md)으로 만든다. 멈추거나 넘길 때는 체크포인트 다섯 줄을 쓴다.
 
 새 실험은 **헤드리스 실행** `python -m app.run`으로 한다 — 서버와 같은 준비 조회·원장·상한을 쓰고 결과 JSON 하나를 낸다([app 안내](app/README.md)의 "헤드리스 실행", 먼저 `--mock`으로 흐름 확인). 설정 파일의 모양은 같은 안내에, 만드는 예는 [D 후속의 make_configs.py](docs/experiments/2026-09-25-d-followup/make_configs.py)에 있다. 앞선 실험 폴더의 `drive.py`들은 그 기록으로 남는다.
