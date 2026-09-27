@@ -408,7 +408,8 @@ def live_setup(data_dir: Path, *, timeout: float, live_cli: str | None = None, i
                                inventories_by_adapter={p.adapter_id: p.inventory for p in providers},
                                allow_context_unverified=allow_context_unverified,
                                inputs_by_adapter={p.adapter_id: () if p.input_dir is None else (str(p.input_dir),)
-                                                  for p in providers})
+                                                  for p in providers},
+                               models_by_adapter={p.adapter_id: p.choices for p in providers})
         roster = {p.pid: p for p in PARTICIPANTS.values() if p.transport == MANUAL}
         for provider in providers:
             pid = pid_of(provider.adapter_id)

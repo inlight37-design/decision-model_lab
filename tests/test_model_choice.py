@@ -29,6 +29,10 @@ class AllowlistTests(unittest.TestCase):
     def provider(self, model, *choices):
         return Provider("claude-code", model, Path("inventory.json"), 1, choices=tuple(choices))
 
+    def test_an_old_config_without_a_list_still_refuses_a_fable_default(self):
+        with self.assertRaises(ValueError):
+            Provider("claude-code", "claude-fable-5-1", Path("inventory.json"), 1)
+
     def test_only_included_models_are_usable_and_fable_is_always_credits(self):
         p = self.provider("claude-sonnet-5", ModelChoice("claude-sonnet-5", INCLUDED, "관측"),
                           ModelChoice("claude-opus-5-5", UNCONFIRMED, "미확인"),
@@ -42,9 +46,21 @@ class AllowlistTests(unittest.TestCase):
         p = Provider("codex", "gpt-6-luna", Path("inventory.json"), 1)
         self.assertEqual([(ch.model, ch.funding) for ch in p.choices], [("gpt-6-luna", INCLUDED)])
 
+    def test_a_default_missing_from_an_explicit_list_is_refused(self):
+        # Codex 교차검토 P1: 목록을 주었는데 기본 모델이 그 밖이면 근거 없이 포함으로 끼워 넣지 않는다. 빈 목록도 목록이다.
+        for choices in ((ModelChoice("claude-sonnet-5", INCLUDED, "관측"),), ()):
+            with self.subTest(choices=choices), self.assertRaises(ValueError):
+                self.provider("claude-other-model", *choices)
+        with tempfile.TemporaryDirectory() as root:
+            path = Path(root) / "live.json"
+            path.write_text(json.dumps({"providers": [{"adapter_id": "codex", "model": "gpt-6-luna", "inventory": "i.json",
+                                                        "call_budget": 1, "models": []}]}), encoding="utf-8")
+            with self.assertRaises(ValueError):
+                load(path)
+
     def test_a_blocked_or_repeated_default_is_refused_at_startup(self):
         for model, choices in (("claude-opus-5-5", (ModelChoice("claude-opus-5-5", UNCONFIRMED, "미확인"),)),
-                               ("claude-fable-5-1", ()),
+                               ("claude-fable-5-1", (ModelChoice("claude-fable-5-1", INCLUDED, "설정"),)),
                                ("claude-sonnet-5", (ModelChoice("claude-sonnet-5", INCLUDED, "a"),
                                                     ModelChoice("claude-sonnet-5", INCLUDED, "b")))):
             with self.subTest(model=model), self.assertRaises(ValueError):
@@ -182,6 +198,45 @@ class PlanArgvTests(unittest.TestCase):
                 self.assertEqual(argv[argv.index("--model") + 1], model)
                 self.assertEqual((plan.model, plan.record()["model"]), (model, model))
             self.assertEqual(plans["claude-sonnet-5"].revision, plans["claude-other-7"].revision)
+
+
+class StoredModelPolicyTests(support.Base):
+    """Codex 교차검토 P1: 다시 연 원장에 저장된 명세(대기 시도·합성자)도 지금의 목록으로 예약 전에 막는다."""
+
+    def executor(self, policy):
+        temp = self.tmp / "cli"
+        temp.mkdir(exist_ok=True)
+        ex = cli_executor.CliExecutor(never=(), unchecked=True, home=str(temp), base_env={"PATH": ""},
+                                      models_by_adapter=policy)
+        for patch in (mock.patch.object(cli_executor.core_env, "resolve", return_value=str(temp / "versions" / "9.9.9")),
+                      mock.patch.object(isolation, "participant_mounts", return_value=((), (), ())),
+                      mock.patch.object(isolation, "run", side_effect=AssertionError("must not start a process"))):
+            patch.start()
+            self.addCleanup(patch.stop)
+        return ex
+
+    def test_the_executor_refuses_models_outside_the_current_list_and_always_refuses_fable(self):
+        strict = self.executor({"claude-code": (ModelChoice("claude-sonnet-5", INCLUDED, "관측"),
+                                                ModelChoice("claude-opus-5-5", UNCONFIRMED, "미확인"))})
+        spec = lambda model: SimpleNamespace(adapter_id="claude-code", model=model, context_unverified=False)
+        self.assertEqual(strict.plan(spec("claude-sonnet-5"), "q", str(self.tmp)).model, "claude-sonnet-5")
+        for model in ("claude-opus-5-5", "claude-other-model", "claude-fable-5-1"):
+            with self.subTest(model=model), self.assertRaises(adapters.AdapterError):
+                strict.plan(spec(model), "q", str(self.tmp))
+        with self.assertRaises(adapters.AdapterError):                    # 목록 없는 실행기(준비 조회·시험)도 Fable은 막는다
+            self.executor(None).plan(spec("claude-fable-5-1"), "q", str(self.tmp))
+
+    def test_a_stored_queued_attempt_with_a_now_blocked_model_starts_nothing_and_reserves_nothing(self):
+        ex = self.executor({"claude-code": (ModelChoice("claude-sonnet-5", INCLUDED, "관측"),)})
+        ctl = self.controller(ex, max_real_calls=2)
+        stored = c.ParticipantSpec("claude", "Claude Code", "anthropic", c.CLI, "claude-code", "claude-opus-5-5")
+        rid = ctl.create_run("q", [stored], min_independent=1)            # 예전 목록으로 저장된 명세라고 본다
+        self.assertTrue(ctl.wait_idle())
+        part = self.part(ctl, rid, "claude")
+        self.assertEqual((part["state"], part["status"]), (c.REJECTED, "process_failed_to_start"))
+        self.assertEqual([e for e in events(self.store, rid) if e["kind"] == "live_call_reserved"], [])
+        refused = next(e for e in events(self.store, rid) if e["kind"] == "attempt_started")
+        self.assertIn("allowlist", refused["spec"]["refused"])
 
 
 class ManifestSnapshotTests(unittest.TestCase):

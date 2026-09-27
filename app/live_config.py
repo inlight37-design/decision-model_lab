@@ -43,12 +43,35 @@ class ModelChoice:
         return {"model": self.model, "funding": self.funding, "basis": self.basis, "usable": self.usable}
 
 
+def credit_billed(adapter_id: str, model: str) -> str | None:
+    """문서로 추가 크레딧 경로가 알려진 모델이면 그 근거, 아니면 None."""
+    billed = CREDIT_BILLED.get(adapter_id)
+    return billed[1] if billed and billed[0].search(model) else None
+
+
 def classified(adapter_id: str, choice: ModelChoice) -> ModelChoice:
     """문서로 추가 크레딧 경로가 알려진 모델은 설정과 상관없이 credits로 둔다."""
-    billed = CREDIT_BILLED.get(adapter_id)
-    if billed and billed[0].search(choice.model) and choice.funding != CREDITS:
-        return replace(choice, funding=CREDITS, basis=billed[1])
+    basis = credit_billed(adapter_id, choice.model)
+    if basis and choice.funding != CREDITS:
+        return replace(choice, funding=CREDITS, basis=basis)
     return choice
+
+
+def refusal(adapter_id: str, model: str, choices: tuple[ModelChoice, ...] | None) -> str | None:
+    """실행 직전의 모델 허가. 지금의 허용 목록에서 고를 수 없는 모델이면 이유, 아니면 None.
+
+    원장에 저장된 명세(다시 연 원장의 대기 시도·저장된 합성자)도 여기서 다시 본다 — 저장할 때의 목록이 아니라
+    지금의 목록이 기준이다. choices가 None이면 목록 없이 만든 실행기(준비 조회·시험)라 문서상 추가 크레딧 모델만 막는다.
+    """
+    basis = credit_billed(adapter_id, model)
+    if basis:
+        return f"{model} is refused under the subscription-only policy: {basis}"
+    if choices is None:
+        return None
+    choice = next((c for c in choices if c.model == model), None)
+    if choice is None:
+        return f"{model} is not in the current model allowlist for {adapter_id}"
+    return None if choice.usable else f"{model} is not selectable now ({choice.funding}): {choice.basis}"
 
 
 @dataclass(frozen=True)
@@ -58,7 +81,8 @@ class Provider:
     inventory: Path
     call_budget: int
     input_dir: Path | None = None
-    choices: tuple[ModelChoice, ...] = ()
+    # None이면 목록을 주지 않은 예전 설정 — 기본 모델 하나만 고를 수 있다. 목록을 주면 기본 모델도 그 안에 있어야 한다.
+    choices: tuple[ModelChoice, ...] | None = None
 
     def __post_init__(self) -> None:
         if (self.adapter_id not in ("claude-code", "codex") or not isinstance(self.model, str)
@@ -66,16 +90,19 @@ class Provider:
                 or type(self.call_budget) is not int or not 1 <= self.call_budget <= 10
                 or (self.input_dir is not None and not isinstance(self.input_dir, Path))):
             raise ValueError("provider needs supported adapter, full model, inventory path and call_budget 1..10")
-        if not isinstance(self.choices, tuple) or not all(isinstance(c, ModelChoice) for c in self.choices):
+        if self.choices is None:
+            # 허용 목록 없이 쓴 예전 설정: 기본 모델 하나만 고를 수 있다(지금까지의 동작). 문서상 추가 크레딧 모델은 막는다.
+            choices = (classified(self.adapter_id, ModelChoice(self.model, INCLUDED, "설정·시작 인자로 정한 기본 모델")),)
+        elif not isinstance(self.choices, tuple) or not all(isinstance(c, ModelChoice) for c in self.choices):
             raise ValueError("model choices must be a tuple of ModelChoice")
-        choices = tuple(classified(self.adapter_id, c) for c in self.choices)
+        else:
+            choices = tuple(classified(self.adapter_id, c) for c in self.choices)
         if len({c.model for c in choices}) != len(choices):
             raise ValueError("model choices must not repeat a model")
-        if self.model not in {c.model for c in choices}:
-            # 허용 목록 없이 쓴 예전 설정: 기본 모델 하나만 고를 수 있다(지금까지의 동작). 문서상 추가 크레딧 모델은 막는다.
-            choices = (classified(self.adapter_id, ModelChoice(self.model, INCLUDED,
-                                                               "설정·시작 인자로 정한 기본 모델")),) + choices
         default = self.choice(self.model, choices)
+        if default is None:
+            # 목록을 주었으면 기본 모델도 근거와 함께 그 안에 있어야 한다 — 목록 밖 모델을 포함으로 끼워 넣지 않는다
+            raise ValueError(f"the default model {self.model} is not in the provider's model list")
         if not default.usable:
             raise ValueError(f"the default model {self.model} cannot run under the subscription-only policy: {default.basis}")
         object.__setattr__(self, "choices", choices)
@@ -104,11 +131,12 @@ def load(path: Path) -> tuple[Provider, ...]:
         if not isinstance(row, dict) or not required <= set(row) or set(row) - required - {"input_dir", "models"}:
             raise ValueError("invalid provider fields")
         row = dict(row)
-        models = row.pop("models", [])
-        if not isinstance(models, list) or any(not isinstance(m, dict) or set(m) != {"model", "funding", "basis"}
-                                               for m in models):
-            raise ValueError("models must be a list of {model, funding, basis}")
-        row["choices"] = tuple(ModelChoice(**m) for m in models)
+        if "models" in row:   # 없으면 예전 설정(기본 모델 하나), 있으면 빈 목록이라도 그 목록이 기준이다
+            models = row.pop("models")
+            if not isinstance(models, list) or any(not isinstance(m, dict) or set(m) != {"model", "funding", "basis"}
+                                                   for m in models):
+                raise ValueError("models must be a list of {model, funding, basis}")
+            row["choices"] = tuple(ModelChoice(**m) for m in models)
         for key in ("inventory", "input_dir"):
             value = row.get(key)
             if key == "input_dir" and value is None:
