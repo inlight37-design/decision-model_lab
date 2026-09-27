@@ -113,8 +113,10 @@ def task_projection(tasks, runs, held=None):
             timeline.append({"run_id": run["run_id"], "question": run["question"],
                              "created_at": run["created_at"], "role_config": run["role_config"],
                              "status": status, "action": action,
+                             # 실행에 묶인 다듬기 차례도 이 작업이 쓴 호출이다(2026-09-27 실제 확인에서 빠진 것을 봄)
                              "calls_used": max(run["budget"]["used"] + len(run.get("model_syntheses", [])),
-                                               run["budget"]["reserved"])})
+                                               run["budget"]["reserved"])
+                                           + len((run.get("refinement") or {}).get("turns", []))})
         latest = timeline[-1] if timeline else None
         if latest is None:
             continue  # 단일 실행 보고에는 그 실행의 작업만 싣는다.

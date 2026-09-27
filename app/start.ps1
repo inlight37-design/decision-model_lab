@@ -128,6 +128,12 @@ try {
         $nonce = [guid]::NewGuid().ToString('N')
         $flag = ''
         if ($Mock) { $flag = '--mock' }
+        # Ports a Windows program already listens on. The server inside WSL cannot see them, and Edge would reach
+        # that program instead of the app (seen 2026-09-27: another local server held 8765). Skip them.
+        $busy = @(Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue |
+                  Where-Object { $_.LocalPort -ge 8765 -and $_.LocalPort -le 8774 } |
+                  ForEach-Object { $_.LocalPort } | Sort-Object -Unique)
+        if ($busy.Count -gt 0) { $flag = "$flag --avoid-ports $($busy -join ',')" }
         $serve = @('-d', $Distro, '--cd', "`"$Repo`"", '--', 'bash', '-lc', "`"python3 -m app.launch serve $flag --nonce $nonce`"")
         Start-Process -FilePath 'wsl.exe' -ArgumentList $serve -WindowStyle Hidden | Out-Null
         $opened = Launch "url --wait 120 --nonce $nonce"
