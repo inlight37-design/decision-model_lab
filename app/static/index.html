@@ -1096,9 +1096,10 @@ function renderRun(run) {
   if (!run) return;
   const revealed = run.phase === "revealed";
   $("mainCol").replaceChildren(questionIsland(run), ...(revealed ? [...synthesisPanel(run),
-    island("내 차례 · 공개 뒤 판단", run.reviewed ? h("p", { class: "sm" }, "판단 완료로 표시했습니다. 추가 질문은 작업에서 새 실행으로 이어 가세요.") :
-      [h("p", { class: "sm muted" }, "원문을 확인하고 이번 실행을 마칠지, 새 실행으로 이어 갈지 정하세요."),
-       h("button", { type: "button", class: "btn btn-primary", onclick: () => act(`/api/runs/${run.run_id}/reviewed`) }, "판단 완료")]),
+    island("내 차례 · 공개 뒤 판단", run.reviewed ? h("p", { class: "sm" }, "지금까지의 원문과 합성 결과를 판단 완료로 표시했습니다. 새 합성 결과가 나오면 다시 판단합니다. 추가 질문은 작업에서 새 실행으로 이어 가세요.") :
+      [h("p", { class: "sm muted" }, "원문과 지금까지의 합성 결과(실패 포함)를 확인하고 이번 실행을 마칠지, 새 실행으로 이어 갈지 정하세요."),
+       h("button", { type: "button", class: "btn btn-primary",
+         onclick: () => act(`/api/runs/${run.run_id}/reviewed`, { revision: run.result_revision }) }, "판단 완료")]),
     saveIsland(run)] : []).filter(Boolean));
   $("asideCol").replaceChildren(participantsIsland(run));
   pressAll($("mainCol")); pressAll($("asideCol"));
