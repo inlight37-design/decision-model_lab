@@ -50,8 +50,8 @@ from app.roles import freeze as freeze_roles, task_projection
 from app.report import build_report
 from app.synthesis import (LABEL_ORDER, SynthesisError, _sources as synthesis_sources, check_model_synthesis,
                            label_order, mock_synthesize, model_prompt, model_unavailable, unavailable)
-from app.state import (CLI, MANUAL, QUEUED, RUNNING, AWAITING_USER, ACCEPTED, REJECTED, UNKNOWN,
-                       DONE, INDEPENDENT_ONLY, INCLUDE_UNVERIFIED, QUORUM_POLICIES, ISOLATED, GENERAL, COLLECTED,
+from app.state import (CLI, MANUAL, QUEUED, RUNNING, AWAITING_USER, ACCEPTED, REJECTED, UNKNOWN, NOT_STARTED,
+                       INDEPENDENT_ONLY, INCLUDE_UNVERIFIED, QUORUM_POLICIES, ISOLATED, GENERAL, COLLECTED,
                        NO_QUORUM, RunGate, gate, confirmed, synthesis_attempts)
 from core import adapters, contract, env as core_env, isolation, membership as m, runner
 
@@ -156,9 +156,21 @@ def _flags(transport: str, part) -> tuple[str, ...]:
     """시작하지 않은 시도(대기, 시작 전 취소, 계획·프로세스 거절)는 종류와 상관없이 "실행하지 않음"이다."""
     if transport == MANUAL:
         return CONTAMINATION[MANUAL]
-    if part["state"] == QUEUED or part["status"] in ("cancelled_before_start", "process_failed_to_start"):
+    if part["state"] == QUEUED or part["status"] in NOT_STARTED:
         return NOT_RUN
     return CONTAMINATION.get(part["kind"], UNRECORDED)
+
+
+def _card(spec: dict) -> dict:
+    """상위 칸 카드의 화면 표시 — 원장에 저장한 명세에서 네 칸만."""
+    return {key: spec.get(key) for key in ("pid", "label", "adapter_id", "model")}
+
+
+def _seat_result(row) -> dict:
+    """상위 모델 호출 행의 결과 칸: 통과한 답, 실패 이유, 실패한 답의 원문, 관측. 결과가 없으면 모두 None."""
+    record = json.loads(row["result"]) if row["result"] else {}
+    return {"reply": record.get("reply"), "reason": record.get("reason"), "raw": record.get("raw"),
+            "observation": record.get("observation")}
 
 # 원본 앱에 옮기는 질문의 첫 줄과, 답에서 그것을 찾는 형식(N5)
 MARKER = "[Ledger {run_id}/{pid} · {sha8}]"
@@ -402,9 +414,10 @@ class Controller:
     def prepare_run(self, question: str, participants: list[ParticipantSpec], *, min_independent: int,
                     quorum_policy: str = INDEPENDENT_ONLY, sources=None, task_id=None, task_title=None,
                     role_board=None, roster=None, run_id=None, assignments=None, refinement=None,
-                    proposal=None, split=None) -> dict[str, Any]:
+                    proposal=None, split=None, checked=None) -> dict[str, Any]:
         """sources: (이름, 글) 목록. 원장에 내용·해시를 고정하고, CLI 참여자에게는 그 사본 폴더 하나를 읽기
         전용 입력으로 준다(provider별 빈 입력 폴더 대신). 입력 폴더가 하나인 것은 같으므로 계획의 판은 그대로다.
+        checked: create_run이 이미 검사한 (이름, 바이트) 목록 — 있으면 sources를 다시 검사하지 않는다.
 
         역할판의 일반 칸을 채운 실행(카드 #125)은 assignments로 팀원마다 {task, sources: [자료 이름]}을 받는다.
         정족수 인자는 쓰지 않는다. 팀원마다 입력 전문이 다르고, 받은 자료만 든 폴더를 따로 받는다.
@@ -419,7 +432,7 @@ class Controller:
             raise ControllerError("question is empty")
         if not storable(question):
             raise ControllerError("the question contains text that is not valid Unicode")
-        checked_sources = _checked_sources(sources)
+        checked_sources = _checked_sources(sources) if checked is None else checked
         if len({p.pid for p in participants}) != len(participants) or not participants:
             raise ControllerError("participants must be unique and non-empty")
         for p in participants:
@@ -549,10 +562,11 @@ class Controller:
                    quorum_policy: str = INDEPENDENT_ONLY, sources=None, task_id=None, task_title=None,
                    role_board=None, roster=None, run_id=None, confirmation=None, assignments=None,
                    refinement=None, proposal=None, split=None) -> str:
+        checked_sources = _checked_sources(sources)   # 한 번 검사해 확인 명세와 원장 쓰기가 같은 바이트를 쓴다
         prepared = self.prepare_run(question, participants, min_independent=min_independent,
                                     quorum_policy=quorum_policy, sources=sources, task_id=task_id, task_title=task_title,
                                     role_board=role_board, roster=roster, run_id=run_id, assignments=assignments,
-                                    refinement=refinement, proposal=proposal, split=split)
+                                    refinement=refinement, proposal=proposal, split=split, checked=checked_sources)
         if confirmation is not None and confirmation != prepared["confirmation"]:
             raise ControllerError("확인한 입력에서 바뀌었습니다. 보낼 입력을 다시 확인하세요.")
         run_id, question, prompt = prepared["run_id"], prepared["question"], prepared["prompt"]
@@ -560,7 +574,6 @@ class Controller:
         input_sha256, input_bytes = prepared["input_sha256"], prepared["input_bytes"]
         min_independent, quorum_policy = prepared["min_independent"], prepared["quorum_policy"]
         participants = [ParticipantSpec(**p) for p in prepared["role_config"]["general" if general else "isolated"]]
-        checked_sources = _checked_sources(sources)
         with self.lock, self.store.tx() as tx:
             if self._closing:
                 raise ControllerError("controller is shutting down")
@@ -809,8 +822,9 @@ class Controller:
                 return
             queued = self.store.rows("SELECT p.run_id, p.pid, p.spec FROM participants p JOIN runs r USING (run_id) "
                                      "WHERE p.state = ? AND NOT r.cancel_requested ORDER BY r.created_at, p.rowid", QUEUED)
+            every = self._synthesis_attempts()   # 이 lock 안에서는 합성이 새로 시작되지 않는다 — 한 번만 읽는다
             for row in queued:
-                if self._slots_used() >= self.max_parallel:
+                if self._slots_used(every) >= self.max_parallel:
                     return
                 spec = ParticipantSpec(**json.loads(row["spec"]))
                 attempt = uuid.uuid4().hex
@@ -1247,8 +1261,7 @@ class Controller:
         with self.lock:
             if self._closing:
                 raise ControllerError("controller is shutting down")
-            if supervisor.transport != CLI or supervisor.adapter_id not in self.executor.adapter_ids:
-                raise ControllerError("슈퍼바이저는 설정된 CLI 카드여야 합니다.")
+            self._cli_card(supervisor, "슈퍼바이저")
             if refine_id is None:
                 original = original.strip() if isinstance(original, str) else ""
                 if not original or len(original) > refining.MAX_ORIGINAL or not storable(original):
@@ -1274,16 +1287,7 @@ class Controller:
                 original = row["original"]
                 previous = [(turn["note"], json.loads(turn["result"])["reply"] if turn["state"] == ACCEPTED else None)
                             for turn in turns]
-            if self.paused or self.unsettled() >= self.unsettled_limit:
-                raise ControllerError("execution is paused or has unsettled attempts; no call was started")
-            if self._slots_used() >= self.max_parallel:
-                raise ControllerError("parallel execution limit reached; no call was started")
-            if self.store.row("SELECT 1 FROM runs WHERE phase = 'drafting' AND NOT cancel_requested"):
-                raise ControllerError("진행 중인 실행을 먼저 정리하세요. 다듬기는 실행이 없을 때만 부릅니다.")
-            # 다듬기 차례는 한 번에 하나다. 버튼을 두 번 누르거나 창 두 개에서 불러도 두 번째 호출을 시작하지 않는다
-            # (Codex 교차검토, PR #131).
-            if self._supervisor_busy():
-                raise ControllerError("다른 상위 모델 호출(다듬기·제안·분담·모으기·검토)이 진행 중이거나 끝났는지 모릅니다. 끝나거나 종료를 확인한 뒤에 다시 부르세요.")
+            self._upper_call_gate("다듬기는")
             key = refine_id or f"q{time.strftime('%m%d-%H%M%S')}-{uuid.uuid4().hex}"
             turn = len(previous) + 1
             text = refining.prompt(original, previous, note)
@@ -1406,6 +1410,25 @@ class Controller:
         때까지 다른 실행·다른 창의 상위 모델 호출까지 막는다(Codex 교차검토, PR #139)."""
         return self._seat_count(RUNNING, UNKNOWN) > 0
 
+    def _upper_call_gate(self, what: str) -> None:
+        """상위 모델 호출(다듬기·제안·분담·모으기·검토)의 공통 관문. 호출하는 쪽이 self.lock을 쥔다. 한 번에 하나 →
+        멈춤·종료 미확인 → 자리 → 진행 중인 실행 순으로 본다. 여기서 거절하면 아무것도 예약하지 않았다. what은 거절
+        문구의 주어("다듬기는" 처럼 조사까지)다."""
+        if self._supervisor_busy():
+            raise ControllerError("다른 상위 모델 호출(다듬기·제안·분담·모으기·검토)이 진행 중이거나 끝났는지 모릅니다. "
+                                  "끝나거나 종료를 확인한 뒤에 다시 부르세요.")
+        if self.paused or self.unsettled() >= self.unsettled_limit:
+            raise ControllerError("execution is paused or has unsettled attempts; no call was started")
+        if self._slots_used() >= self.max_parallel:
+            raise ControllerError("parallel execution limit reached; no call was started")
+        if self.store.row("SELECT 1 FROM runs WHERE phase = 'drafting' AND NOT cancel_requested"):
+            raise ControllerError(f"진행 중인 실행을 먼저 정리하세요. {what} 실행이 없을 때만 부릅니다.")
+
+    def _cli_card(self, spec: ParticipantSpec, who: str) -> None:
+        """상위 칸(슈퍼바이저·오케스트레이터)의 카드는 이 실행기가 받는 CLI 카드여야 한다."""
+        if spec.transport != CLI or spec.adapter_id not in self.executor.adapter_ids:
+            raise ControllerError(f"{who}는 설정된 CLI 카드여야 합니다.")
+
     # ---- 다음 단계 제안(카드 #133) --------------------------------------------------------------
     def propose_next(self, run_id: str) -> str:
         """공개된 격리 실행을 보고 슈퍼바이저가 다음 단계("한 번 더"·"여기서 끝")를 제안한다 — 호출 1회.
@@ -1429,17 +1452,9 @@ class Controller:
                 raise ControllerError(f"다음 단계 제안은 실행 하나에 {next_step.MAX_PER_RUN}번까지입니다.")
             if self.store.row("SELECT 1 FROM proposals WHERE run_id = ? AND state = ?", run_id, UNKNOWN):
                 raise ControllerError("끝났는지 모르는 제안이 있습니다. 종료를 먼저 확인하세요.")
-            if self._supervisor_busy():
-                raise ControllerError("다른 상위 모델 호출(다듬기·제안·분담·모으기·검토)이 진행 중이거나 끝났는지 모릅니다. 끝나거나 종료를 확인한 뒤에 다시 부르세요.")
-            if self.paused or self.unsettled() >= self.unsettled_limit:
-                raise ControllerError("execution is paused or has unsettled attempts; no call was started")
-            if self._slots_used() >= self.max_parallel:
-                raise ControllerError("parallel execution limit reached; no call was started")
-            if self.store.row("SELECT 1 FROM runs WHERE phase = 'drafting' AND NOT cancel_requested"):
-                raise ControllerError("진행 중인 실행을 먼저 정리하세요. 제안은 실행이 없을 때만 부릅니다.")
+            self._upper_call_gate("제안은")
             spec = ParticipantSpec(**supervisor)
-            if spec.transport != CLI or spec.adapter_id not in self.executor.adapter_ids:
-                raise ControllerError("슈퍼바이저는 설정된 CLI 카드여야 합니다.")
+            self._cli_card(spec, "슈퍼바이저")
             report = build_report(self.view(run_id), run_id)
             sources = synthesis_sources(report)
             labels = {f"D{index}": pid for index, pid in enumerate(label_order(run_id, sources), 1)}
@@ -1466,14 +1481,11 @@ class Controller:
         self._acknowledge_seat(NEXT_SEAT, row["run_id"], {"proposal_id": proposal_id})
 
     def _proposal_view(self, row) -> dict[str, Any]:
-        record = json.loads(row["result"]) if row["result"] else {}
-        spec = json.loads(row["supervisor"])
         return {"proposal_id": row["proposal_id"], "run_id": row["run_id"], "created_at": row["created_at"],
                 "state": row["state"], "status": row["status"], "execution": row["kind"], "used_by": row["used_by"],
-                "supervisor": {key: spec.get(key) for key in ("pid", "label", "adapter_id", "model")},
+                "supervisor": _card(json.loads(row["supervisor"])),
                 "labels": json.loads(row["labels"]), "prompt": row["prompt"], "input_sha256": row["input_sha256"],
-                "reply": record.get("reply"), "reason": record.get("reason"), "raw": record.get("raw"),
-                "observation": record.get("observation")}
+                **_seat_result(row)}
 
     def _approved_proposal(self, proposal, roles, question: str, task_id) -> dict[str, Any]:
         """제안에서 온 새 실행. "한 번 더"인 통과한 제안이고, 실행에 쓰지 않았고, 같은 작업이고, 원문 모드이며, 질문이
@@ -1514,18 +1526,10 @@ class Controller:
         with self.lock:
             if self._closing:
                 raise ControllerError("controller is shutting down")
-            if orchestrator.transport != CLI or orchestrator.adapter_id not in self.executor.adapter_ids:
-                raise ControllerError("오케스트레이터는 설정된 CLI 카드여야 합니다.")
+            self._cli_card(orchestrator, "오케스트레이터")
             if task_id is not None and not self.store.row("SELECT 1 FROM tasks WHERE task_id = ?", task_id):
                 raise ControllerError("작업을 찾을 수 없습니다.")
-            if self._supervisor_busy():
-                raise ControllerError("다른 상위 모델 호출(다듬기·제안·분담·모으기·검토)이 진행 중이거나 끝났는지 모릅니다. 끝나거나 종료를 확인한 뒤에 다시 부르세요.")
-            if self.paused or self.unsettled() >= self.unsettled_limit:
-                raise ControllerError("execution is paused or has unsettled attempts; no call was started")
-            if self._slots_used() >= self.max_parallel:
-                raise ControllerError("parallel execution limit reached; no call was started")
-            if self.store.row("SELECT 1 FROM runs WHERE phase = 'drafting' AND NOT cancel_requested"):
-                raise ControllerError("진행 중인 실행을 먼저 정리하세요. 분담 제안은 실행이 없을 때만 부릅니다.")
+            self._upper_call_gate("분담 제안은")
             key = f"s{time.strftime('%m%d-%H%M%S')}-{uuid.uuid4().hex}"
             labels = {f"M{index}": p.pid for index, p in enumerate(members, 1)}
             rows = [{"name": name, "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest(), "content": data}
@@ -1577,17 +1581,9 @@ class Controller:
                 raise ControllerError(f"결과 모으기는 실행 하나에 {collating.MAX_PER_RUN}번까지입니다.")
             if self.store.row("SELECT 1 FROM collations WHERE run_id = ? AND state = ?", run_id, UNKNOWN):
                 raise ControllerError("끝났는지 모르는 결과 모으기가 있습니다. 종료를 먼저 확인하세요.")
-            if self._supervisor_busy():
-                raise ControllerError("다른 상위 모델 호출(다듬기·제안·분담·모으기·검토)이 진행 중이거나 끝났는지 모릅니다. 끝나거나 종료를 확인한 뒤에 다시 부르세요.")
-            if self.paused or self.unsettled() >= self.unsettled_limit:
-                raise ControllerError("execution is paused or has unsettled attempts; no call was started")
-            if self._slots_used() >= self.max_parallel:
-                raise ControllerError("parallel execution limit reached; no call was started")
-            if self.store.row("SELECT 1 FROM runs WHERE phase = 'drafting' AND NOT cancel_requested"):
-                raise ControllerError("진행 중인 실행을 먼저 정리하세요. 결과 모으기는 실행이 없을 때만 부릅니다.")
+            self._upper_call_gate("결과 모으기는")
             spec = ParticipantSpec(**orchestrator)
-            if spec.transport != CLI or spec.adapter_id not in self.executor.adapter_ids:
-                raise ControllerError("오케스트레이터는 설정된 CLI 카드여야 합니다.")
+            self._cli_card(spec, "오케스트레이터")
             members, labels, drafts = [], {}, {}
             for index, part in enumerate(self.store.rows(
                     "SELECT pid, spec, state FROM participants WHERE run_id = ? ORDER BY rowid", run_id), 1):
@@ -1619,14 +1615,11 @@ class Controller:
         self._acknowledge_seat(COLLATE_SEAT, row["run_id"], {"collation_id": collation_id})
 
     def _collation_view(self, row) -> dict[str, Any]:
-        record = json.loads(row["result"]) if row["result"] else {}
-        spec = json.loads(row["orchestrator"])
         return {"collation_id": row["collation_id"], "run_id": row["run_id"], "created_at": row["created_at"],
                 "state": row["state"], "status": row["status"], "execution": row["kind"],
-                "orchestrator": {key: spec.get(key) for key in ("pid", "label", "adapter_id", "model")},
+                "orchestrator": _card(json.loads(row["orchestrator"])),
                 "labels": json.loads(row["labels"]), "prompt": row["prompt"], "input_sha256": row["input_sha256"],
-                "reply": record.get("reply"), "reason": record.get("reason"), "raw": record.get("raw"),
-                "observation": record.get("observation")}
+                **_seat_result(row)}
 
     # ---- 공개 뒤 한 라운드 교차검토(카드 #140) ----------------------------------------------------
     def cross_review(self, run_id: str, question: str | None = None) -> list[str]:
@@ -1650,15 +1643,7 @@ class Controller:
                 raise ControllerError("교차검토는 공개된 격리 실행에만 부릅니다. 봉인 중에는 부르지 않습니다.")
             if self.store.row("SELECT 1 FROM reviews WHERE run_id = ?", run_id):
                 raise ControllerError("교차검토는 실행 하나에 한 라운드입니다.")
-            if self._supervisor_busy():
-                raise ControllerError("다른 상위 모델 호출(다듬기·제안·분담·모으기·검토)이 진행 중이거나 끝났는지 "
-                                      "모릅니다. 끝나거나 종료를 확인한 뒤에 다시 부르세요.")
-            if self.paused or self.unsettled() >= self.unsettled_limit:
-                raise ControllerError("execution is paused or has unsettled attempts; no call was started")
-            if self._slots_used() >= self.max_parallel:
-                raise ControllerError("parallel execution limit reached; no call was started")
-            if self.store.row("SELECT 1 FROM runs WHERE phase = 'drafting' AND NOT cancel_requested"):
-                raise ControllerError("진행 중인 실행을 먼저 정리하세요. 교차검토는 실행이 없을 때만 부릅니다.")
+            self._upper_call_gate("교차검토는")
             answers = {}   # pid → (명세, 답 원문, sha256). 받은 답만, 참여자 순서대로
             for part in self.store.rows("SELECT pid, spec, state FROM participants WHERE run_id = ? ORDER BY rowid",
                                         run_id):
@@ -1762,12 +1747,12 @@ class Controller:
                        "at = excluded.at", review_id, finding, disposition, time.time())
             tx.event(row["run_id"], "review_disposition", review_id=review_id, finding=finding, disposition=disposition)
 
-    def _cross_review_view(self, run_id: str) -> dict[str, Any] | None:
+    def _cross_review_view(self, run_id: str, drafts: dict) -> dict[str, Any] | None:
+        """drafts: view가 이 실행에서 이미 읽은 받은 답(pid → 행). 대상 답이 지금 답과 같은 판인지(fresh)를 본다."""
         rows = self.store.rows("SELECT * FROM reviews WHERE run_id = ? ORDER BY seq", run_id)
         if not rows:
             return None
-        current = {row["pid"]: row["sha256"] for row in self.store.rows(
-            "SELECT pid, sha256 FROM drafts WHERE run_id = ?", run_id)}
+        current = {pid: draft["sha256"] for pid, draft in drafts.items()}
         reviews, missing, reviewed = [], [], 0
         for row in rows:
             record = json.loads(row["result"]) if row["result"] else {}
@@ -1789,7 +1774,7 @@ class Controller:
                                     "reason": row["status"] or row["state"]})
             reviews.append({"review_id": row["review_id"], "seq": row["seq"], "state": row["state"],
                             "status": row["status"], "execution": row["kind"],
-                            "reviewer": {key: spec.get(key) for key in ("pid", "label", "adapter_id", "model")},
+                            "reviewer": _card(spec),
                             "labels": json.loads(row["labels"]),
                             "targets": {label: {"pid": t["pid"], "sha256": t["sha256"],
                                                 "fresh": current.get(t["pid"]) == t["sha256"]}
@@ -1806,16 +1791,13 @@ class Controller:
         self._acknowledge_seat(SPLIT_SEAT, split_id, {"split_id": split_id})
 
     def _split_view(self, row) -> dict[str, Any]:
-        record = json.loads(row["result"]) if row["result"] else {}
-        spec = json.loads(row["orchestrator"])
         return {"split_id": row["split_id"], "task_id": row["task_id"], "created_at": row["created_at"],
                 "goal": row["goal"], "state": row["state"], "status": row["status"], "execution": row["kind"],
-                "orchestrator": {key: spec.get(key) for key in ("pid", "label", "adapter_id", "model")},
+                "orchestrator": _card(json.loads(row["orchestrator"])),
                 "members": json.loads(row["members"]), "sources": json.loads(row["sources"]),
                 "prompt": row["prompt"], "input_sha256": row["input_sha256"], "used_by": row["used_by"],
                 "as_proposed": None if row["as_proposed"] is None else bool(row["as_proposed"]),
-                "reply": record.get("reply"), "reason": record.get("reason"), "raw": record.get("raw"),
-                "observation": record.get("observation")}
+                **_seat_result(row)}
 
     def _approved_split(self, split, roles, question, participants, assignments, checked_sources, task_id):
         """분담 제안에서 온 일반 실행. 통과했고 실행에 쓰지 않은 제안이어야 하며, 목표·팀원·자료(이름·해시)·작업·역할판의
@@ -1849,14 +1831,11 @@ class Controller:
         """다듬기 한 건의 화면 투영. 원문·차례별 보낸 입력·받은 답(또는 실패 이유와 원문)·사람이 쓴 말을 그대로 보인다."""
         turns = []
         for turn in self.store.rows("SELECT * FROM refine_turns WHERE refine_id = ? ORDER BY turn", row["refine_id"]):
-            record = json.loads(turn["result"]) if turn["result"] else {}
             turns.append({"turn": turn["turn"], "note": turn["note"], "state": turn["state"], "status": turn["status"],
                           "execution": turn["kind"], "prompt": turn["prompt"], "input_sha256": turn["input_sha256"],
-                          "reply": record.get("reply"), "reason": record.get("reason"), "raw": record.get("raw"),
-                          "observation": record.get("observation")})
-        spec = json.loads(row["supervisor"])
+                          **_seat_result(turn)})
         return {"refine_id": row["refine_id"], "created_at": row["created_at"], "original": row["original"],
-                "supervisor": {key: spec.get(key) for key in ("pid", "label", "adapter_id", "model")},
+                "supervisor": _card(json.loads(row["supervisor"])),
                 "run_id": row["run_id"], "approved_turn": row["approved_turn"], "max_turns": refining.MAX_TURNS,
                 "turns": turns}
 
@@ -1919,7 +1898,7 @@ class Controller:
                     if result and not (revealed or general):
                         result = {k: v for k, v in result.items() if k in keep}
                     if (spec.transport == CLI and p["state"] in (ACCEPTED, REJECTED, UNKNOWN)
-                            and p["status"] not in ("cancelled_before_start", "process_failed_to_start")):
+                            and p["status"] not in NOT_STARTED):
                         calls[{"accepted": "succeeded", "rejected": "failed", "unknown": "unknown"}[p["state"]]] += 1
                     item = {"pid": spec.pid, "label": spec.label, "provider": spec.provider,
                             "transport": spec.transport, "behavior": spec.behavior if spec.transport == CLI else None,
@@ -1966,8 +1945,8 @@ class Controller:
                              "diagnostics_sealed": not settled,
                              "budget": {"used": sum(calls.values()) + sum(1 for p in parts if p["state"] == RUNNING),
                                         "cap": cli_total, "breakdown": calls,
-                                        "not_started": sum(1 for p in parts if p["transport"] == CLI and p["status"]
-                                                           in ("cancelled_before_start", "process_failed_to_start")),
+                                        "not_started": sum(1 for p in parts if p["transport"] == CLI
+                                                           and p["status"] in NOT_STARTED),
                                         "reserved": (self.store.row("SELECT COUNT(*) AS n FROM events WHERE run_id = ? "
                                                                     "AND kind = 'live_call_reserved'", run["run_id"])["n"]
                                                      if any(p["execution"] == contract.REAL for p in parts) else 0),
@@ -1993,7 +1972,7 @@ class Controller:
                     runs[-1]["proposals"] = [self._proposal_view(row) for row in self.store.rows(
                         "SELECT * FROM proposals WHERE run_id = ? ORDER BY created_at", run["run_id"])]
                     # 공개 뒤 교차검토 라운드(#140). 없으면 None
-                    runs[-1]["cross_review"] = self._cross_review_view(run["run_id"])
+                    runs[-1]["cross_review"] = self._cross_review_view(run["run_id"], drafts)
                     artifact = self.store.row("SELECT payload FROM events WHERE run_id = ? "
                                               "AND kind = 'synthesis_completed' ORDER BY seq DESC LIMIT 1", run["run_id"])
                     if artifact:
