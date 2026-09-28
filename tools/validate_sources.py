@@ -10,35 +10,19 @@ locator 가 가리키는 문단이 실제로 그 주장을 담는지, limits 가
 """
 from __future__ import annotations
 
-import json
 import sys
 from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from tools.strict_json import strict_load  # noqa: E402 — 중복 키·비표준 상수를 입력 경계에서 거절한다
 
 # (원장 경로, 스키마 $defs 이름)
 REGISTRIES = (
     ("docs/architecture/v0.3/sources.json", "registry_v03"),
     ("docs/architecture/v0.4/sources.json", "registry_v04"),
 )
-
-
-def strict_load(path: Path) -> Any:
-    """중복 키와 비표준 JSON 상수를 입력 경계에서 거절한다."""
-    def constant(value: str) -> None:
-        raise ValueError(f"Non-standard JSON constant: {value}")
-
-    def pairs(items: list[tuple[str, Any]]) -> dict[str, Any]:
-        result: dict[str, Any] = {}
-        for key, value in items:
-            if key in result:
-                raise ValueError(f"Duplicate JSON key: {key}")
-            result[key] = value
-        return result
-
-    return json.loads(path.read_text(encoding="utf-8"),
-                      parse_constant=constant, object_pairs_hook=pairs)
 
 
 def errors_for(registry: Any, definition: str, schema: dict[str, Any]) -> list[str]:

@@ -31,7 +31,6 @@ from __future__ import annotations
 import argparse
 from datetime import date
 import json
-import os
 from pathlib import Path
 import sys
 import tempfile
