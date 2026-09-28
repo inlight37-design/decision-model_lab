@@ -16,7 +16,8 @@
 | [live_config.py](live_config.py) | 명시적 provider 설정 파싱·검사. 새 실행 엔진이 아님 |
 | [registration.py](registration.py) | 관측 기록의 로컬 기기 등록(저장소 밖). 실제 모드의 준비 조회·실행 직전 재검사가 확인한다 |
 | [codex_account.py](codex_account.py), [account_quota.py](account_quota.py) | 격리된 무모델 계정 조회·갱신 요청(조회 버튼, 또는 화면을 보는 동안 값이 오래됐을 때 화면이 보냄)·캐시/오래된 관측 표시 |
-| [server.py](server.py) | localhost API·인증·전체 준비 조회·화면 연결, 서버와 헤드리스 실행이 같이 쓰는 실행기·controller 구성(`live_setup`·`new_controller`) |
+| [server.py](server.py) | localhost API·인증·전체 준비 조회·화면 연결 |
+| [wiring.py](wiring.py) | 서버와 헤드리스 실행이 같이 쓰는 배선: 참여자 명단, 모의 동작·모델 목록, provider 설정에서 실행기·명단·상한 만들기(`live_setup`), 원장 위에 controller 만들기(`new_controller`) |
 | [run.py](run.py) | 헤드리스 실행: 화면 없이 질문 하나를 끝까지 돌리고 결과 JSON 하나를 쓴다 |
 | [start.ps1](start.ps1), [launch.py](launch.py) | 바탕 화면 아이콘의 입구: Windows 쪽이 WSL 쪽을 불러 관측 기록·모델·원장을 고르고 서버를 띄운 뒤 앱 창으로 연다. 창을 닫으면 끈다 |
 | [split.py](split.py) | 일반 작업의 분담 제안 지시문 만들기와 답 검사(모델을 부르지 않는다) |
@@ -26,6 +27,7 @@
 | [next_step.py](next_step.py) | 다음 단계 제안의 슈퍼바이저 지시문 만들기와 답의 형식·길이 검사(모델을 부르지 않는다) |
 | [refine.py](refine.py) | 다듬기 모드의 슈퍼바이저 지시문 만들기와 답의 형식·길이 검사(모델을 부르지 않는다) |
 | [report.py](report.py), [synthesis.py](synthesis.py) | 공개 원문의 허용 목록 투영, 모의 발췌/참조 검사, 실제 합성의 질문 만들기와 인용 대조(이 파일들은 모델을 부르지 않는다) |
+| [reply.py](reply.py) | 상위 자리 여섯(다듬기·다음 단계·분담·모으기·교차검토·합성)이 같이 쓰는 조각: 경계 표식·이름표 블록, 답에서 JSON 객체 찾기, 칸의 글·목록 검사, 형식 실패한 답의 원문 보존(모델을 부르지 않는다) |
 | [fake_cli.py](fake_cli.py) | 가짜 CLI |
 | [static/index.html](static/index.html), [static/island-ui/](static/island-ui/README.md) | 빌드 없는 HTML/JS 화면. 모양·움직임 부품 island-ui는 사용자가 [ai_unslop](https://github.com/inlight37-design/ai_unslop)에서 고른 것을 그대로 옮겼고 여기서 고치지 않는다. 화면은 결정·권고·뒤집을 조건·미해결과 호출을 쓰는 버튼만 늘 보이고, 해시·실행기·사건 기록·호출 집계·오염 표시는 접어 둔다 |
 
