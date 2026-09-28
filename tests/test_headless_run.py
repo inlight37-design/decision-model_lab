@@ -40,7 +40,7 @@ class HeadlessRunTests(unittest.TestCase):
         result = self.result()
         self.assertEqual((result["schema"], result["mode"], result["phase"]), ("a1-headless-run/1", "mock", "revealed"))
         self.assertEqual([p["state"] for p in result["participants"]], ["accepted", "accepted"])
-        self.assertEqual(result["draft_report"]["schema"], "a1-draft-report/4")
+        self.assertEqual(result["draft_report"]["schema"], "a1-draft-report/5")
         self.assertEqual(result["decision_report"]["schema"], "a1-decision-report/5")
         self.assertEqual(result["decision_report"]["synthesis"]["mode"], "mock_extractive")
         self.assertEqual(result["synthesis_requests"], [{"synthesizer": "mock", "started": True}])

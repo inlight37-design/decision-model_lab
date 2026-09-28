@@ -1,0 +1,22 @@
+{
+ "codex_release": "0.156.1-x86_64-unknown-linux-musl",
+ "participant_flags": [
+  "--json",
+  "--skip-git-repo-check",
+  "--ephemeral",
+  "--ignore-user-config",
+  "--ignore-rules",
+  "--model"
+ ],
+ "state": "exited",
+ "exit": 0,
+ "tree_confirmed_empty": true,
+ "ok": true,
+ "status": "ok",
+ "answer_is_ok": true,
+ "hook_marker_files": [],
+ "output_mentions_hook": false,
+ "output_mentions_trust": false,
+ "hooks_file_removed": true,
+ "usage_reported": true
+}
