@@ -45,7 +45,7 @@ def freeze(board, participants, roster):
         raise ValueError("같은 provider 두 장은 아직 지원하지 않습니다. provider당 한 장만 배치하세요.")
     if board["orchestrator"]:
         spec = roster[board["orchestrator"][0]]
-        if spec.transport != "cli":
+        if spec.transport != CLI:
             raise ValueError("A 단계 오케스트레이터는 CLI 합성자만 지원합니다. 원본 앱은 격리 칸에 놓으세요.")
         result["orchestrator"] = asdict(spec)
     if board["supervisor"]:

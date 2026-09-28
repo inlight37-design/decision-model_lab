@@ -15,6 +15,8 @@ from __future__ import annotations
 
 from typing import Any, Iterable
 
+from app.state import NOT_STARTED  # noqa: F401 — 이 모듈의 이름으로도 쓴다
+
 # provider마다 core.adapters.interpret가 남기는 필드(그 목록과 같이 바꾼다). 표시 순서도 이 순서다.
 FIELDS = {"claude-code": ("input_tokens", "output_tokens", "cache_creation_input_tokens", "cache_read_input_tokens"),
           "codex": ("input_tokens", "cached_input_tokens", "output_tokens", "reasoning_output_tokens"),
@@ -22,7 +24,6 @@ FIELDS = {"claude-code": ("input_tokens", "output_tokens", "cache_creation_input
 CACHE_READ = {"claude-code": "cache_read_input_tokens", "codex": "cached_input_tokens",
               "antigravity": "cache_read_tokens"}
 ESTIMATE = "client_estimate_usd"
-NOT_STARTED = ("cancelled_before_start", "process_failed_to_start")
 
 
 def _number(value: Any) -> bool:

@@ -15,6 +15,8 @@ CLI, MANUAL = "cli", "manual"
 QUEUED, RUNNING, AWAITING_USER = "queued", "running", "awaiting_user"
 ACCEPTED, REJECTED, UNKNOWN = "accepted", "rejected", "unknown"
 DONE = (ACCEPTED, REJECTED)
+# 실패로 닫혔지만 모델 호출은 없었던 시도의 status(시작 전 취소, 계획·프로세스 거절). 호출 수·사용량에 세지 않는다.
+NOT_STARTED = ("cancelled_before_start", "process_failed_to_start")
 INDEPENDENT_ONLY, INCLUDE_UNVERIFIED = "independent_only", "include_unverified"
 QUORUM_POLICIES = (INDEPENDENT_ONLY, INCLUDE_UNVERIFIED)
 # 실행 방식(runs.mode). 일반 실행은 사람이 나눈 일을 팀원마다 따로 보내고, 끝나는 대로 결과를 보인다. 봉인·정족수가

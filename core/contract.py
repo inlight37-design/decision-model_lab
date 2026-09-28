@@ -23,7 +23,6 @@ from typing import Any, Iterable
 from core import adapters, isolation
 
 MOCK, REAL, SYNTHETIC = "mock", "real", "synthetic"
-KINDS = (MOCK, REAL, SYNTHETIC)
 
 # 옛 이름 판 → 같은 계획으로 확인한 판. 기록의 spec_revision이 옛 이름이면 여기에 적은 판에서만 인정한다.
 # - codex discussant-2: K46 확인(2026-09-24, argv_changes 없음)이 돈 계획 — 참여자 argv 그대로, 공통 자료 하나를

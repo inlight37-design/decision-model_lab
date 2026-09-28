@@ -33,12 +33,14 @@ from urllib.parse import urlsplit
 if __package__ in (None, ""):  # `python app/server.py`로 실행해도 저장소 루트에서 app·core를 찾는다
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.controller import CLI, MANUAL, Controller, ControllerError, MockExecutor, ParticipantSpec
+from app.controller import CLI, Controller, ControllerError, ParticipantSpec
 from app.report import ReportError, build_report, decision_report
 from app.store import LedgerBusy, Store, StoreError
-from app.live_config import (CREDITS, INCLUDED, UNCONFIRMED, ModelChoice, Provider, load as load_live_config,
-                             validate as validate_providers)
+from app.live_config import Provider, load as load_live_config
 from app.account_quota import AccountQuota
+# 배선은 app.wiring에 있고 헤드리스 실행(app.run)과 나눠 쓴다. 시험은 이 모듈의 이름으로도 부른다.
+from app.wiring import (BEHAVIORS, EXIT_NOT_ELIGIBLE, MOCK_MODEL_CHOICES, PARTICIPANTS, live_setup,  # noqa: F401
+                        model_choices, new_controller)
 
 STATIC = Path(__file__).with_name("static")
 # 화면이 받아 가는 파일은 이 목록뿐이다(경로를 조립하지 않는다). island-ui는 static/island-ui/README.md.
@@ -51,35 +53,6 @@ ASSETS = {"/island-ui/themes.css": ("island-ui/themes.css", "text/css; charset=u
 # 페이지는 이 서버의 것만 불러오고 요청도 이 서버로만 보낸다 — 밖에서 받는 파일이 없어 인터넷 없이도 같게 그린다.
 PAGE_CSP = ("default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; "
             "connect-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
-PARTICIPANTS = {
-    "claude": ParticipantSpec("claude", "Claude Code", "anthropic", CLI, "claude-code", "mock-claude"),
-    "codex": ParticipantSpec("codex", "Codex", "openai", CLI, "codex", "mock-codex"),
-    "chatgpt-app": ParticipantSpec("chatgpt-app", "ChatGPT 앱", "openai", MANUAL),
-    "claude-app": ParticipantSpec("claude-app", "Claude 앱", "anthropic", MANUAL),
-    "antigravity-app": ParticipantSpec("antigravity-app", "Antigravity", "google", MANUAL),
-}
-BEHAVIORS = ("ok", "slow", "fail", "partial_input", "hang")
-# 모의 모드의 모델 고르기(카드 #119). 모델을 부르지 않고, 가짜 CLI가 고른 이름을 그대로 보고한다. 막힌 두 항목은
-# 추가 크레딧·미확인 모델이 화면에서 이유와 함께 막히는 모습을 보이려고 둔다.
-MOCK_MODEL_CHOICES = {
-    "claude": (ModelChoice("mock-claude", INCLUDED, "모의 — 모델 호출 없음"),
-               ModelChoice("mock-claude-large", INCLUDED, "모의 — 모델 호출 없음"),
-               ModelChoice("mock-claude-credits", CREDITS, "모의 — 추가 크레딧 경로라서 막히는 모습")),
-    "codex": (ModelChoice("mock-codex", INCLUDED, "모의 — 모델 호출 없음"),
-              ModelChoice("mock-codex-large", INCLUDED, "모의 — 모델 호출 없음"),
-              ModelChoice("mock-codex-unconfirmed", UNCONFIRMED, "모의 — 구독 포함 여부를 확인하지 않아 막히는 모습")),
-}
-
-
-def pid_of(adapter_id: str) -> str:
-    return "claude" if adapter_id == "claude-code" else "codex"
-
-
-def model_choices(providers) -> dict[str, tuple[ModelChoice, ...]]:
-    """화면에서 고를 수 있는 모델. 실제 연결은 provider마다 설정한 허용 목록, 모의는 위의 목록이다."""
-    return {pid_of(p.adapter_id): p.choices for p in providers} if providers else MOCK_MODEL_CHOICES
-
-
 def chosen_models(roster: dict, choices: dict, requested) -> dict:
     """요청의 모델 선택을 허용 목록으로 확인해 이 실행의 명단 사본에 싣는다(카드 #119). 목록 밖이거나 막힌 모델은
     거절한다 — 미리보기·시작 모두 원장을 쓰기 전이다. 다른 모델로 조용히 바꾸지 않는다."""
@@ -99,9 +72,9 @@ def chosen_models(roster: dict, choices: dict, requested) -> dict:
             raise ControllerError(f"{model}은(는) 구독 전용 정책에서 고를 수 없습니다 — {choice.basis}")
         chosen[pid] = replace(spec, model=model)
     return chosen
+
+
 MAX_BODY = 2 * 1024 * 1024
-# 준비 조회가 허가하지 않았다. argparse의 인자 오류가 2라서 같은 값을 쓰면 스크립트가 둘을 가르지 못한다(병합 검증 N3).
-EXIT_NOT_ELIGIBLE = 3
 
 
 class RequestError(ValueError):
@@ -450,50 +423,6 @@ def _write_token(path: Path, token: str) -> None:
     with os.fdopen(fd, "w", encoding="utf-8") as f:
         f.write(token)
     os.replace(staging, path)
-
-
-def live_setup(data_dir: Path, *, timeout: float, live_cli: str | None = None, inventory: Path | None = None,
-               model: str | None = None, call_budget: int | None = None, allow_context_unverified: bool = False,
-               input_dir: Path | None = None, live_providers: tuple[Provider, ...] | None = None):
-    """실행기·참여자 명단·provider·전체 상한을 만든다. 원장과 포트는 열지 않는다.
-
-    서버와 헤드리스 실행(app.run)이 같은 실행 경로를 쓰도록 둘이 함께 부른다. 실제 옵션 없이 부르면 모의 실행기다.
-    """
-    if live_providers is not None and any(value is not None for value in (live_cli, inventory, model, call_budget, input_dir)):
-        raise ValueError("do not mix live_providers with single-provider options")
-    providers = validate_providers(tuple(live_providers)) if live_providers is not None else ()
-    if live_cli is not None:
-        providers = (Provider(live_cli, model, inventory, call_budget, input_dir),)
-    if providers:
-        from app.cli_executor import CliExecutor
-        if sys.platform != "linux" or not math.isfinite(timeout) or not 0 < timeout <= 180:
-            raise ValueError("live CLI requires Linux, inventory, full model, call budget 1..10 and timeout 0..180s")
-        executor = CliExecutor(never=(str(data_dir.resolve()),), inventory=inventory,
-                               inventories_by_adapter={p.adapter_id: p.inventory for p in providers},
-                               allow_context_unverified=allow_context_unverified,
-                               inputs_by_adapter={p.adapter_id: () if p.input_dir is None else (str(p.input_dir),)
-                                                  for p in providers},
-                               models_by_adapter={p.adapter_id: p.choices for p in providers})
-        roster = {p.pid: p for p in PARTICIPANTS.values() if p.transport == MANUAL}
-        for provider in providers:
-            pid = pid_of(provider.adapter_id)
-            roster[pid] = ParticipantSpec(**{**vars(PARTICIPANTS[pid]), "model": provider.model,
-                                            "context_unverified": allow_context_unverified})
-        call_budget = sum(p.call_budget for p in providers)
-    else:
-        if (inventory is not None or model is not None or call_budget is not None
-                or allow_context_unverified or input_dir is not None):
-            raise ValueError("real options require live_cli; refusing a silent mock fallback")
-        executor, roster = MockExecutor(never=(str(data_dir.resolve()),)), PARTICIPANTS
-    return executor, roster, providers, call_budget
-
-
-def new_controller(store: Store, executor, providers, call_budget, *, timeout: float, per_provider: bool) -> Controller:
-    """원장 위에 controller를 만든다(재시작 복구 포함). provider별 상한은 설정 파일(--live-config)에서만 온다."""
-    return Controller(store, executor, timeout=timeout, max_real_calls=call_budget,
-                      provider_call_caps=({p.adapter_id: p.call_budget for p in providers} if per_provider else None),
-                      max_parallel=len(providers) if providers else 2,
-                      unsettled_limit=len(providers) if providers else 2)
 
 
 def serve(data_dir: Path, port: int, *, timeout: float = 20.0, live_cli: str | None = None,
