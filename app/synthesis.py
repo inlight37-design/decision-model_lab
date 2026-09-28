@@ -39,7 +39,8 @@ MODEL_PROMPT = (
     '"unresolved": ["확인하지 못한 점"], "recommendation": "조건을 붙인 권고 한두 문장"}}\n'
     "규칙: quotes의 text는 그 초안에 글자 그대로 있는 짧은 구절이어야 한다. 요약하거나 고쳐 쓰지 않는다. "
     "초안에 없는 새 주장은 quotes를 비워 둔다. 소수 의견과 반례를 버리지 않는다. 반례가 없으면 "
-    "strongest_counterexample은 null이다.\n")
+    "strongest_counterexample은 null이다. "
+    f"목록 하나는 {MAX_ITEMS}개까지, 글 하나는 {MAX_TEXT}자까지다. 넘으면 검사기가 합성 전체를 거절한다.\n")
 
 
 class SynthesisError(ValueError):
