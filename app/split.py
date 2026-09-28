@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.synthesis import SynthesisError, _json_object
+from app.reply import check_text, json_object
 
 # 지시문의 첫 줄. 모의 CLI(fake_cli.py)가 이 줄로 분담 제안 요청을 알아본다 — 두 곳을 같이 바꾼다.
 MARKER = "[분담 제안 요청]"
@@ -39,21 +39,12 @@ def prompt(goal: str, members: dict[str, str], sources: list[dict], folder: str 
 
 
 def _text(value: Any, what: str, limit: int) -> str:
-    if not isinstance(value, str) or not value.strip() or len(value) > limit:
-        raise SplitError(f"{what} must be non-empty text of at most {limit} characters")
-    try:
-        value.encode("utf-8")
-    except UnicodeEncodeError:
-        raise SplitError(f"{what} must be valid UTF-8 text") from None
-    return value.strip()
+    return check_text(value, what, limit, error=SplitError)
 
 
 def check(text: str, labels: dict[str, str], names: list[str]) -> dict[str, Any]:
     """labels: 이름표 → 참여자 ID. names: 붙인 자료 이름. 돌려주는 assignments는 참여자 ID → {task, sources}다."""
-    try:
-        raw = _json_object(text)
-    except SynthesisError as exc:
-        raise SplitError(str(exc).replace("synthesis", "split").replace("synthesizer", "orchestrator")) from None
+    raw = json_object(text, error=SplitError, who="orchestrator", what="split")
     if set(raw) - {"assignments", "reason"}:
         raise SplitError("the split may only have assignments and reason")
     items = raw.get("assignments")

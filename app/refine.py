@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.synthesis import SynthesisError, _json_object, failed_reply
+from app.reply import check_text, failed_reply, json_object
 
 # 지시문의 첫 줄. 모의 CLI(fake_cli.py)가 이 줄로 다듬기 요청을 알아보고 모의 JSON을 돌려준다 — 두 곳을 같이 바꾼다.
 MARKER = "[다듬기 요청]"
@@ -51,22 +51,13 @@ def prompt(original: str, previous: list[tuple[str, dict | None]], note: str) ->
 
 
 def _text(value: Any, what: str, limit: int) -> str:
-    if not isinstance(value, str) or not value.strip() or len(value) > limit:
-        raise RefineError(f"{what} must be non-empty text of at most {limit} characters")
-    try:
-        value.encode("utf-8")
-    except UnicodeEncodeError:
-        raise RefineError(f"{what} must be valid UTF-8 text") from None
-    return value.strip()
+    return check_text(value, what, limit, error=RefineError)
 
 
 def check(text: str) -> dict[str, Any]:
     """답에서 JSON 객체 하나를 찾아 칸 모양과 길이만 본다. 모르는 칸이 있어도 거절한다 — 다듬은 질문 옆에 답이나
     평가를 끼워 넣은 출력을 조용히 버리지 않는다."""
-    try:
-        raw = _json_object(text)
-    except SynthesisError as exc:
-        raise RefineError(str(exc).replace("synthesis", "supervisor").replace("synthesizer", "supervisor")) from None
+    raw = json_object(text, error=RefineError, who="supervisor", what="refinement")
     if set(raw) - {"refined", "changes", "ask"}:
         raise RefineError("the supervisor reply may only have refined, changes and ask")
     changes = raw.get("changes")

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.synthesis import SynthesisError, _json_object, boundary
+from app.reply import block, boundary, check_text, json_object
 
 # 지시문의 첫 줄. 모의 CLI(fake_cli.py)가 이 줄로 교차검토 요청을 알아본다 — 두 곳을 같이 바꾼다.
 MARKER = "[교차검토 요청]"
@@ -42,30 +42,21 @@ class CrossReviewError(ValueError):
 def prompt(question: str, asked: str, own: str, targets: list[tuple[str, str]], nonce: str | None = None) -> str:
     """own: 검토자 자신의 답. targets: [(이름표, 다른 팀원의 답)] — 검토자마다 섞은 순서로 준다.
 
-    경계에는 이번 호출에만 쓰는 표식(synthesis.boundary)을 붙인다. 답은 이 호출 전에 끝났으므로 표식을 알 수 없다."""
+    경계에는 이번 호출에만 쓰는 표식(reply.boundary)을 붙인다. 답은 이 호출 전에 끝났으므로 표식을 알 수 없다."""
     nonce = boundary([question, asked, own] + [text for _, text in targets], nonce)
-    blocks = [f"<<<내 답 시작 {nonce}>>>\n{own}\n<<<내 답 끝 {nonce}>>>", "다른 팀원의 답:"]
-    blocks += [f"<<<{label} 시작 {nonce}>>>\n{text}\n<<<{label} 끝 {nonce}>>>" for label, text in targets]
+    blocks = [block("내 답", nonce, own), "다른 팀원의 답:"]
+    blocks += [block(label, nonce, text) for label, text in targets]
     return PROMPT.format(nonce=nonce, question=question, asked=asked, blocks="\n\n".join(blocks))
 
 
 def _text(value: Any, what: str) -> str:
-    if not isinstance(value, str) or not value.strip() or len(value) > MAX_TEXT:
-        raise CrossReviewError(f"{what} must be non-empty text of at most {MAX_TEXT} characters")
-    try:
-        value.encode("utf-8")
-    except UnicodeEncodeError:
-        raise CrossReviewError(f"{what} must be valid UTF-8 text") from None
-    return value.strip()
+    return check_text(value, what, MAX_TEXT, error=CrossReviewError)
 
 
 def check(text: str, targets: dict[str, str]) -> dict[str, Any]:
     """targets: 이름표 → 대상 답 원문. 이름표 밖(자기 답 포함)을 겨눈 지적은 형식 실패다. 인용은 그 원문에 글자 그대로
     있는지만 본다. 빈 목록은 통과한 "지적 없음"이다 — 판독 실패와 다르다."""
-    try:
-        raw = _json_object(text)
-    except SynthesisError as exc:
-        raise CrossReviewError(str(exc).replace("synthesis", "review").replace("synthesizer", "reviewer")) from None
+    raw = json_object(text, error=CrossReviewError, who="reviewer", what="review")
     if set(raw) != {"findings"}:
         raise CrossReviewError("the review must have findings only")
     items = raw["findings"]

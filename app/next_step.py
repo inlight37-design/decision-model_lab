@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.synthesis import SynthesisError, _json_object, boundary
+from app.reply import block, boundary, check_text, json_object
 
 # 지시문의 첫 줄. 모의 CLI(fake_cli.py)가 이 줄로 제안 요청을 알아보고 모의 JSON을 돌려준다 — 두 곳을 같이 바꾼다.
 MARKER = "[다음 단계 제안 요청]"
@@ -37,30 +37,21 @@ class NextStepError(ValueError):
 
 
 def prompt(goal: str, question: str, labeled: list[tuple[str, str]], nonce: str | None = None) -> str:
-    """labeled: (이름표, 공개된 답 원문) — 섞은 순서 그대로. 답 경계에는 이번 호출에만 쓰는 표식(synthesis.boundary)을
+    """labeled: (이름표, 공개된 답 원문) — 섞은 순서 그대로. 답 경계에는 이번 호출에만 쓰는 표식(reply.boundary)을
     붙인다 — 답 안에서 경계 줄을 흉내 내도 다른 이름표의 답처럼 보이지 않는다. 보낸 입력은 원장에 남으므로 표식도 남는다."""
     nonce = boundary([goal, question] + [text for _, text in labeled], nonce)
-    drafts = "\n\n".join(f"<<<{label} 시작 {nonce}>>>\n{text}\n<<<{label} 끝 {nonce}>>>" for label, text in labeled)
+    drafts = "\n\n".join(block(label, nonce, text) for label, text in labeled)
     return PROMPT.format(goal=goal, question=question, drafts=drafts, nonce=nonce)
 
 
 def _text(value: Any, what: str, limit: int) -> str:
-    if not isinstance(value, str) or not value.strip() or len(value) > limit:
-        raise NextStepError(f"{what} must be non-empty text of at most {limit} characters")
-    try:
-        value.encode("utf-8")
-    except UnicodeEncodeError:
-        raise NextStepError(f"{what} must be valid UTF-8 text") from None
-    return value.strip()
+    return check_text(value, what, limit, error=NextStepError)
 
 
 def check(text: str) -> dict[str, Any]:
     """JSON 하나의 칸 모양과 길이만 본다. again이면 질문이 있어야 하고, stop이면 질문이 없어야 한다. 모르는 칸은
     거절한다 — 제안 옆에 답이나 합성을 끼워 넣은 출력을 조용히 버리지 않는다."""
-    try:
-        raw = _json_object(text)
-    except SynthesisError as exc:
-        raise NextStepError(str(exc).replace("synthesis", "proposal").replace("synthesizer", "supervisor")) from None
+    raw = json_object(text, error=NextStepError, who="supervisor", what="proposal")
     if set(raw) - {"next", "reason", "question", "open_points"}:
         raise NextStepError("the proposal may only have next, reason, question and open_points")
     choice = raw.get("next")
