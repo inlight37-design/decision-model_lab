@@ -11,11 +11,11 @@ matching quote is kept and marked as an unsupported addition (P5, evaluation §4
 from __future__ import annotations
 
 import hashlib
-import json
 import re
-import secrets
-from typing import Any, Iterable
+from typing import Any
 from app.report import SCHEMA as DRAFT_SCHEMA
+# 상위 자리들이 함께 쓰는 조각. boundary·failed_reply·MAX_RAW_CHARS는 이 모듈의 이름으로도 쓴다(시험).
+from app.reply import MAX_RAW_CHARS, block, boundary, check_items, check_text, failed_reply, json_object  # noqa: F401
 
 SCHEMA = "a1-mock-synthesis/1"
 MODEL_SCHEMA = "a1-model-synthesis/1"
@@ -23,7 +23,6 @@ MAX_EXCERPTS = 80
 MAX_EXCERPT_CHARS = 1200
 MAX_ITEMS = 40
 MAX_TEXT = 2000
-MAX_RAW_CHARS = 65536
 # 이름표 순서의 정의. 같은 실행은 늘 같은 순서(다시 계산해 기록과 맞춰 볼 수 있다), 실행마다 순서가 달라져
 # 초안의 자리(D1·D2)와 제공자를 가를 수 있다. 실제 대응은 시작 사건과 결과의 labels가 기준이다.
 LABEL_ORDER = "sha256(run_id NUL pid)"
@@ -144,18 +143,6 @@ def label_order(run_id: str, pids) -> list[str]:
     return sorted(pids, key=lambda pid: (hashlib.sha256(f"{run_id}\0{pid}".encode("utf-8")).digest(), pid))
 
 
-def boundary(texts: Iterable[str], nonce: str | None = None) -> str:
-    """이번 호출의 경계 표식. 이름표 블록의 시작 줄과 끝 줄에 붙인다(합성·다음 단계 제안·결과 모으기·교차검토).
-
-    넣을 글은 이 호출 전에 끝났으므로 표식을 알 수 없다 — 글 안에 경계 줄을 흉내 내도 다른 이름표의 블록처럼
-    보이지 않는다(Codex 교차검토, PR #139). 넣을 글 어디에든 이미 있는 값이면 새로 뽑는다. nonce는 시험용 시작값이다.
-    """
-    texts = list(texts)
-    while nonce is None or any(nonce in text for text in texts):
-        nonce = secrets.token_hex(6)
-    return nonce
-
-
 def model_prompt(report: dict, nonce: str | None = None) -> tuple[str, dict[str, str], str]:
     """공개된 초안을 이름표(D1, D2…, 실행마다 섞은 순서)로 바꿔 합성자에게 줄 질문, 이름표→참여자 대응, 경계 표식을
     만든다. 표식은 호출마다 새로 뽑으므로 시작 사건에 남겨야 같은 질문을 다시 만들어 입력 해시와 맞춰 볼 수 있다."""
@@ -163,61 +150,20 @@ def model_prompt(report: dict, nonce: str | None = None) -> tuple[str, dict[str,
     labels = {f"D{index}": pid for index, pid in enumerate(label_order(report["source"]["run_id"], sources), 1)}
     question = report["input"]["question"]
     nonce = boundary([question] + [part["draft"] for part in sources.values()], nonce)
-    drafts = "\n\n".join(f"<<<{label} 시작 {nonce}>>>\n{sources[pid]['draft']}\n<<<{label} 끝 {nonce}>>>"
-                         for label, pid in labels.items())
+    drafts = "\n\n".join(block(label, nonce, sources[pid]["draft"]) for label, pid in labels.items())
     return MODEL_PROMPT.format(question=question, drafts=drafts, nonce=nonce), labels, nonce
 
 
-def _unique_object(pairs: list[tuple[str, Any]]) -> dict:
-    """중복 키의 마지막 값만 남기면 반례·인용이 조용히 사라진다. 중첩 객체도 같은 관문을 쓴다."""
-    result = {}
-    for key, value in pairs:
-        if key in result:
-            raise SynthesisError("duplicate JSON object key in synthesis")
-        result[key] = value
-    return result
-
-
 def _json_object(text: str) -> dict:
-    """답에서 JSON 객체 하나를 찾는다. 통째로, 코드 울타리 안, 첫 { 부터 마지막 } 까지 순서로 본다."""
-    candidates = [text.strip()]
-    fence = re.search(r"```(?:json)?\s*(\{.*\})\s*```", text, re.S)
-    if fence:
-        candidates.append(fence.group(1))
-    start, end = text.find("{"), text.rfind("}")
-    if 0 <= start < end:
-        candidates.append(text[start:end + 1])
-    for candidate in candidates:
-        try:
-            value = json.loads(candidate, object_pairs_hook=_unique_object)
-        except SynthesisError:
-            raise   # 모호한 객체에서 다른 후보를 골라 근거를 조용히 버리지 않는다.
-        except (ValueError, RecursionError):
-            continue
-        if isinstance(value, dict):
-            return value
-    raise SynthesisError("the synthesizer did not return one JSON object")
+    return json_object(text, error=SynthesisError, who="synthesizer", what="synthesis")
 
 
 def _text(value: Any, what: str, *, optional: bool = False) -> str | None:
-    if value is None and optional:
-        return None
-    if not isinstance(value, str) or not value.strip() or len(value) > MAX_TEXT:
-        raise SynthesisError(f"{what} must be non-empty text of at most {MAX_TEXT} characters")
-    try:
-        value.encode("utf-8")
-    except UnicodeEncodeError:
-        # JSON의 고립 surrogate를 원장/HTTP 출력 단계까지 보내면 결과 저장 자체가 실패한다.
-        raise SynthesisError(f"{what} must be valid UTF-8 text") from None
-    return value.strip()
+    return check_text(value, what, MAX_TEXT, error=SynthesisError, optional=optional)
 
 
 def _items(value: Any, what: str) -> list:
-    if value is None:
-        return []
-    if not isinstance(value, list) or len(value) > MAX_ITEMS:
-        raise SynthesisError(f"{what} must be a list of at most {MAX_ITEMS} items")
-    return value
+    return check_items(value, what, MAX_ITEMS, error=SynthesisError)
 
 
 def check_model_synthesis(text: str, report: dict, labels: dict[str, str], synthesizer: dict) -> dict:
@@ -290,19 +236,6 @@ def check_model_synthesis(text: str, report: dict, labels: dict[str, str], synth
                      "coverage": {"supported": 0, "rejected": 0, "qualified": 0, "unresolved": len(claims)},
                      "unresolved": unresolved + notes,
                      "nextChecks": ["원문에 없는 추가 주장과 반례를 독립된 근거로 확인", "갈리는 점을 원문에서 대조"]}}
-
-
-def failed_reply(text: str) -> dict:
-    """형식 검사에 실패한 합성 답의 원문(앞 MAX_RAW_CHARS자). 결과가 아니며 인용 대조·사실 검사를 하지 않았다.
-
-    합성은 공개 뒤의 일이라 원문을 남겨도 봉인과 무관하다. sha256과 chars는 자르기 전 전체 답의 것이다.
-    JSON 문자열의 고립 surrogate는 원장에 쓸 수 없어 \\uXXXX 표기로 바꿔 남기고 escaped로 표시한다.
-    """
-    data = text.encode("utf-8", "surrogatepass")
-    kept = text[:MAX_RAW_CHARS]
-    safe = kept.encode("utf-8", "backslashreplace").decode("utf-8")
-    return {"check": "failed_format_check", "text": safe, "chars": len(text), "stored_chars": len(kept),
-            "truncated": len(kept) < len(text), "escaped": safe != kept, "sha256": hashlib.sha256(data).hexdigest()}
 
 
 def model_unavailable(report: dict, synthesizer: dict, reason: str, raw: str | None = None) -> dict:

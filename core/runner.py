@@ -51,7 +51,6 @@ FAILED_TO_START = "failed_to_start"  # 프로세스를 만들지 못했다. 모�
 # 프로세스를 만든 뒤 입출력 스레드를 시작하지 못해 스스로 끊었고 추적 단위가 빈 것을 확인했다(AH-03).
 # 프로세스는 시작했으므로 모델 호출이 있었을 수 있다 — FAILED_TO_START와 달리 예산을 돌려받지 않는다.
 ABORTED = "aborted"
-STATES = (EXITED, TIMED_OUT, CANCELLED, UNKNOWN, FAILED_TO_START, ABORTED)
 
 # 추적 단위. 자손 전체를 담는 단위만 WHOLE_TREE에 넣는다.
 JOB_OBJECT = "job_object"            # Windows. 브레이크어웨이를 허용하지 않으므로 자손이 떠날 수 없다

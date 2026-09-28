@@ -8,7 +8,6 @@
 from __future__ import annotations
 
 import copy
-import json
 import math
 import re
 import sys
@@ -21,24 +20,8 @@ except ImportError as exc:
     raise SystemExit("jsonschema가 필요합니다. 검사에 사용한 버전은 4.26.0입니다.") from exc
 
 ROOT = Path(__file__).resolve().parents[1]
-
-
-def reject_constant(value: str) -> None:
-    raise ValueError(f"표준 JSON에 없는 상수: {value}")
-
-
-def unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
-    result: dict[str, Any] = {}
-    for key, value in pairs:
-        if key in result:
-            raise ValueError(f"중복 JSON 키: {key}")
-        result[key] = value
-    return result
-
-
-def load_json(path: Path) -> Any:
-    return json.loads(path.read_text(encoding="utf-8"),
-                      parse_constant=reject_constant, object_pairs_hook=unique_object)
+sys.path.insert(0, str(ROOT))
+from tools.strict_json import strict_load as load_json, strict_loads  # noqa: E402 — 중복 키·비표준 상수 거절
 
 
 def require_finite(value: Any) -> None:
@@ -136,7 +119,7 @@ def main() -> int:
                        ("nonstandard_json_nan", '{"a":NaN}')):
         rejected = False
         try:
-            json.loads(text, parse_constant=reject_constant, object_pairs_hook=unique_object)
+            strict_loads(text)
         except ValueError:
             rejected = True
         if not rejected:

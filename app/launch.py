@@ -269,7 +269,8 @@ def free_ports(avoid: str = "") -> list[int]:
 
 def serve(args) -> int:
     from app.live_config import ModelChoice, Provider
-    from app.server import EXIT_NOT_ELIGIBLE, serve as start_server, serve_until_stopped
+    from app.server import serve as start_server, serve_until_stopped
+    from app.wiring import EXIT_NOT_ELIGIBLE
     paths = _paths()
     paths["root"].mkdir(mode=0o700, parents=True, exist_ok=True)
     # 소유 잠금을 가장 먼저 잡는다. 진 쪽은 상태 파일·로그·끄기 요청을 건드리지 않는다 — 살아 있는 서버의 기록을

@@ -30,8 +30,8 @@ if __package__ in (None, ""):
 from app.controller import CLI, INCLUDE_UNVERIFIED, INDEPENDENT_ONLY, ControllerError, ParticipantSpec
 from app.live_config import load as load_live_config
 from app.report import ReportError, build_report, decision_report
-from app.server import BEHAVIORS, EXIT_NOT_ELIGIBLE, live_setup, new_controller
 from app.store import LedgerBusy, Store, StoreError
+from app.wiring import BEHAVIORS, EXIT_NOT_ELIGIBLE, live_setup, new_controller
 
 SCHEMA = "a1-headless-run/1"
 MOCK_DIR = Path.home() / ".decision-model-lab" / "mock"

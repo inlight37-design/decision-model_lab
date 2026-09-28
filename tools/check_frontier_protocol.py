@@ -5,7 +5,11 @@ import argparse
 import json
 import re
 from pathlib import Path
+import sys
 from typing import Any
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from tools.strict_json import strict_loads  # noqa: E402
 
 
 class ProtocolError(ValueError):
@@ -19,17 +23,7 @@ def require(condition: bool, message: str) -> None:
 
 def load_record(text: str) -> Any:
     """Reject ambiguous keys and non-standard JSON numbers at the input boundary."""
-    def unique_object(pairs):
-        result = {}
-        for key, value in pairs:
-            require(key not in result, f"duplicate JSON key: {key}")
-            result[key] = value
-        return result
-
-    def reject_constant(value):
-        raise ProtocolError(f"non-standard JSON number: {value}")
-
-    return json.loads(text, object_pairs_hook=unique_object, parse_constant=reject_constant)
+    return strict_loads(text, error=ProtocolError)
 
 
 def indexed(value: Any, label: str) -> dict[str, dict[str, Any]]:

@@ -181,7 +181,7 @@ def linux_rows(run: Run, which: Which, env: Mapping[str, str], home: Path, *,
         else:
             rows.append(Row("bubblewrap", "ok", "최소 격리 실행 성공"))
     for adapter_id, exe, name in (("codex", "codex", "Codex CLI"), ("claude-code", "claude", "Claude Code")):
-        rows.append(cli_row(run, which, adapter_id, exe, name, observed.get(adapter_id)))
+        rows.append(cli_row(run, which, exe, name, observed.get(adapter_id)))
     rows.append(codex_login_row(run, which))
     rows.append(claude_login_row(run, which))
     codex_home = Path(env["CODEX_HOME"]) if env.get("CODEX_HOME") else home / ".codex"
@@ -203,7 +203,7 @@ def linux_rows(run: Run, which: Which, env: Mapping[str, str], home: Path, *,
     return rows
 
 
-def cli_row(run: Run, which: Which, adapter_id: str, exe: str, name: str, recorded: str | None) -> Row:
+def cli_row(run: Run, which: Which, exe: str, name: str, recorded: str | None) -> Row:
     path = which(exe)
     fix = "bash tools/setup/setup-wsl.sh (로그인 셸에서: bash -lc)"
     if not path:

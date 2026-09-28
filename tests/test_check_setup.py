@@ -90,7 +90,7 @@ class CheckSetupTests(unittest.TestCase):
 
     def test_a_windows_cli_found_through_wsl_path_is_refused(self):
         run, _, _ = fake({})
-        row = cs.cli_row(run, lambda name: "/mnt/c/Users/u/.local/bin/codex.exe", "codex", "codex", "Codex CLI", None)
+        row = cs.cli_row(run, lambda name: "/mnt/c/Users/u/.local/bin/codex.exe", "codex", "Codex CLI", None)
         self.assertEqual(row.status, "missing")
         self.assertIn("Windows", row.detail)
 

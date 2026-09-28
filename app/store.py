@@ -169,6 +169,9 @@ class Store:
             _unlock(self._lock_fd)
             raise
 
+    def _columns(self, table: str) -> set[str]:
+        return {row[1] for row in self._db.execute(f"PRAGMA table_info({table})")}
+
     def _migrate(self) -> None:
         with self._lock:
             version = self._db.execute("PRAGMA user_version").fetchone()[0]
@@ -193,21 +196,21 @@ class Store:
                 for statement in filter(str.strip, SCHEMA.split(";")):
                     self._db.execute(statement)
                 if version < 1:
-                    columns = {row[1] for row in self._db.execute("PRAGMA table_info(participants)")}
+                    columns = self._columns("participants")
                     if "attempt" not in columns:
                         self._db.execute("ALTER TABLE participants ADD COLUMN attempt TEXT")
                 if version < 2:
                     # 2 이전의 실행은 원본 앱 답도 정족수에 셌다 — 그 뜻을 바꾸지 않도록 그 정책으로 적는다
-                    columns = {row[1] for row in self._db.execute("PRAGMA table_info(runs)")}
+                    columns = self._columns("runs")
                     if "quorum_policy" not in columns:
                         self._db.execute("ALTER TABLE runs ADD COLUMN quorum_policy TEXT NOT NULL "
                                          "DEFAULT 'include_unverified'")
                 if version < 3:
-                    columns = {row[1] for row in self._db.execute("PRAGMA table_info(runs)")}
+                    columns = self._columns("runs")
                     if "cancel_requested" not in columns:
                         self._db.execute("ALTER TABLE runs ADD COLUMN cancel_requested INTEGER NOT NULL DEFAULT 0")
                 if version < 4:
-                    columns = {row[1] for row in self._db.execute("PRAGMA table_info(runs)")}
+                    columns = self._columns("runs")
                     if "phase" not in columns:
                         self._db.execute("ALTER TABLE runs ADD COLUMN phase TEXT NOT NULL DEFAULT 'drafting'")
                         for run_id, roster in self._db.execute("SELECT run_id, roster FROM runs").fetchall():
@@ -222,7 +225,7 @@ class Store:
                                 raise StoreError("cannot migrate malformed legacy run phase") from exc
                             self._db.execute("UPDATE runs SET phase = ? WHERE run_id = ?", (phase, run_id))
                 if version < 5:
-                    columns = {row[1] for row in self._db.execute("PRAGMA table_info(participants)")}
+                    columns = self._columns("participants")
                     if "kind" not in columns:
                         self._db.execute("ALTER TABLE participants ADD COLUMN kind TEXT")
                         for run_id, payload in self._db.execute(
@@ -236,7 +239,7 @@ class Store:
                                 self._db.execute("UPDATE participants SET kind = ? WHERE run_id = ? AND pid = ? "
                                                  "AND attempt = ?", (kind, run_id, event.get("pid"), event.get("attempt")))
                 if version < 8:
-                    columns = {row[1] for row in self._db.execute("PRAGMA table_info(runs)")}
+                    columns = self._columns("runs")
                     for name in ("task_id", "role_config"):
                         if name not in columns:
                             self._db.execute(f"ALTER TABLE runs ADD COLUMN {name} TEXT")
@@ -253,7 +256,7 @@ class Store:
                                          (task_id, json.dumps(roles, ensure_ascii=False), run["run_id"]))
                 if version < 9:
                     # 9 이전의 실행은 모두 격리 실행이다. 기본값이 그 뜻을 그대로 적는다.
-                    columns = {row[1] for row in self._db.execute("PRAGMA table_info(runs)")}
+                    columns = self._columns("runs")
                     if "mode" not in columns:
                         self._db.execute("ALTER TABLE runs ADD COLUMN mode TEXT NOT NULL DEFAULT 'isolated'")
                 if version != SCHEMA_VERSION:

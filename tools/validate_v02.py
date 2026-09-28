@@ -5,25 +5,12 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+import sys
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
-
-
-def strict_load(path: Path) -> Any:
-    def constant(value: str) -> None:
-        raise ValueError(f"Non-standard JSON constant: {value}")
-
-    def pairs(items: list[tuple[str, Any]]) -> dict[str, Any]:
-        result: dict[str, Any] = {}
-        for key, value in items:
-            if key in result:
-                raise ValueError(f"Duplicate JSON key: {key}")
-            result[key] = value
-        return result
-
-    return json.loads(path.read_text(encoding="utf-8"), parse_constant=constant,
-                      object_pairs_hook=pairs)
+sys.path.insert(0, str(ROOT))
+from tools.strict_json import strict_load  # noqa: E402,F401 — 시험이 이 모듈의 이름으로도 쓴다
 
 
 def fingerprint(value: Any) -> str:

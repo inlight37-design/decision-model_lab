@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-09-29** · 작성 세션: claude(사용자 PC `DESKTOP-T0UDE01` Windows 쪽 — 프롬프트 감사, 모델 호출 없음) · 브랜치 `claude/prompt-audit-20260929` · 기준 main `5892ae2`.
+최종 갱신 **2026-09-29** · 작성 세션: claude(사용자 PC `DESKTOP-T0UDE01` Windows 쪽 — 전체 점검·정리, 모델 호출 없음) · 브랜치 `claude/health-review-20260929` · 기준 main `1d248ed`.
 
 이 파일은 **지금 상태와 다음 일만** 담는다. 끝난 일의 경위는 PR·git 이력과 날짜가 붙은 기록에 있고, 옛 판은 [docs/handoff/](docs/handoff/README.md)에 있다. **3절에는 진행 중인 일과 "이 판을 들인 PR" 한 줄만 둔다** — 새 PR은 그 줄을 자기 PR로 바꾸고, 병합 전에도 뒤에도 맞는 말만 쓴다("병합했다"고 미리 적지 않는다). 크기 상한과 3절의 모양은 CI가 본다. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있는 규칙은 여기 다시 적지 않는다 — 쌓임을 막는 원칙은 협업 규칙 7절이다.
 
@@ -65,7 +65,7 @@
 
 일은 `card` 라벨 이슈에서 [협업 규칙](docs/COLLABORATION.md) 3절의 보드 규칙대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #154](https://github.com/inlight37-design/decision-model_lab/pull/154)(`claude/prompt-audit-20260929`) — [프롬프트 감사](docs/reviews/2026-09-29-prompt-audit/README.md): 낡은 모델용 패턴 0건, 여섯 상위 자리 지시문에 검사기의 개수·길이 상한을 한 줄씩 적음. 모델 호출 없음.
+- **이 판을 들인 PR:** [PR #155](https://github.com/inlight37-design/decision-model_lab/pull/155)(`claude/health-review-20260929`) — [전체 점검](docs/reviews/2026-09-29-health-review/README.md): 상위 자리 답 검사는 `app/reply.py`, 서버·헤드리스 배선은 `app/wiring.py`, 검사 도구의 JSON 로더는 `tools/strict_json.py` 하나로; controller의 상위 호출 관문 통합; 살아 있는 문서의 낡은 상태 서술 정리. 참여자 계획·원장 스키마 불변, 모델 호출 없음.
 
 | 사용자만 할 수 있는 것 | 지금 |
 |---|---|
@@ -79,7 +79,7 @@
 **지금 할 일은 2의 다음 조각 카드다.** 1은 기한이 있는 일이라 기한 전에 끼워 넣는다. 모델 호출이 드는 일은 카드에 상한을 먼저 적고 새 원장·새 상태 폴더로 한다(2절 22).
 
 1. **2026-10-27 전 — 주 PC 재관측**([SETUP 4절](docs/SETUP.md)의 절차, 모델 호출 Claude 2·Codex 3). main-pc-wsl은 10월 27일부터 만료이고, 이 PC의 세션만 관측·등록할 수 있다. 참여자 계획이나 CLI 판이 바뀌면 그때 바로 한다. 관측 기록은 `tools/w2/assemble.py`가 조립한다. 추론 강도를 연결하는 PR은 그 계획으로 바로 관측한다 — 이 날짜를 기다리지 않는다([역할판 검토](docs/reviews/2026-09-26-role-board-review/README.md) RB-01). S4(카드 #111)로 `~/.codex/hooks.json`이 있으면 Codex 참여자 계획을 거절한다 — 재관측 때 그 검사와 훅 표면을 함께 확인한다([훅 관측](docs/reviews/2026-09-27-codex-hooks/README.md)). 파일 하나 검사로 전체 문맥 검증을 대신하지 않는다.
-2. **역할판 다음 조각.** 역할판 D와 E1(공개 뒤 교차검토)은 모두 실제로 한 번씩 확인했다. E의 다음 조각 후보: 검토 결과를 결정 보고에 싣기, 지적을 받아들인 뒤 고친 답(새 판) 받기. 다음 조각도 카드부터 만든다([역할판 검토](docs/reviews/2026-09-26-role-board-review/README.md) §6). 카드에는 [리뷰 통합](docs/reviews/2026-09-26-review-consolidation/README.md) 6절 D·E 행을 완료 조건으로 옮긴다. 미룬 것 — P7 절약 규칙(계획이 바뀌어 재관측 필요), 문서함 공유, 일반 칸의 원본 앱 카드, 다듬은 문장 고쳐 쓰기, 슈퍼바이저의 팀 구성 제안, 상위 자리의 "JSON만" 지시를 CLI 스키마 출력으로 바꾸기(판이 바뀌어 재관측 필요, [프롬프트 감사](docs/reviews/2026-09-29-prompt-audit/README.md) 4절) — 은 필요할 때 카드로 연다. S4–S6(훅 방어·launcher 소유·조회 줄이기 ②)은 병합했다 — 조회의 목록/상세 분리(③)는 원장이 커져 느려질 때 카드로 연다. **추론 강도는 연결하지 않았다** — 관측한 유한한 값만 넣고 그 계획으로 재관측해야 한다(RB-01).
+2. **역할판 다음 조각.** 역할판 D와 E1(공개 뒤 교차검토)은 모두 실제로 한 번씩 확인했다. E의 다음 조각 후보: 검토 결과를 결정 보고에 싣기, 지적을 받아들인 뒤 고친 답(새 판) 받기. 다음 조각도 카드부터 만든다([역할판 검토](docs/reviews/2026-09-26-role-board-review/README.md) §6). 카드에는 [리뷰 통합](docs/reviews/2026-09-26-review-consolidation/README.md) 6절 D·E 행을 완료 조건으로 옮긴다. 미룬 것 — P7 절약 규칙(계획이 바뀌어 재관측 필요), 문서함 공유, 일반 칸의 원본 앱 카드, 다듬은 문장 고쳐 쓰기, 슈퍼바이저의 팀 구성 제안, 상위 자리의 "JSON만" 지시를 CLI 스키마 출력으로 바꾸기(판이 바뀌어 재관측 필요, [프롬프트 감사](docs/reviews/2026-09-29-prompt-audit/README.md) 4절), 합성을 상위 자리 표에 합치기([전체 점검](docs/reviews/2026-09-29-health-review/README.md) 4절) — 은 필요할 때 카드로 연다. S4–S6(훅 방어·launcher 소유·조회 줄이기 ②)은 병합했다 — 조회의 목록/상세 분리(③)는 원장이 커져 느려질 때 카드로 연다. **추론 강도는 연결하지 않았다** — 관측한 유한한 값만 넣고 그 계획으로 재관측해야 한다(RB-01).
 3. 새 카드가 필요하면 [카드 양식](.github/ISSUE_TEMPLATE/card.md)으로 만든다. 멈추거나 넘길 때는 체크포인트 다섯 줄을 쓴다.
 
 새 실험은 **헤드리스 실행** `python -m app.run`으로 한다 — 서버와 같은 준비 조회·원장·상한을 쓰고 결과 JSON 하나를 낸다([app 안내](app/README.md)의 "헤드리스 실행", 먼저 `--mock`으로 흐름 확인). 설정 파일의 모양은 같은 안내에, 만드는 예는 [D 후속의 make_configs.py](docs/experiments/2026-09-25-d-followup/make_configs.py)에 있다. 앞선 실험 폴더의 `drive.py`들은 그 기록으로 남는다.
