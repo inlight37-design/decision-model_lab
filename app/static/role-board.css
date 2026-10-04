@@ -13,7 +13,7 @@
 .role-target { display: flex; flex-direction: column; gap: var(--s-2); width: 100%; min-height: 76px; color: var(--text); text-align: left; border-radius: var(--r-cell); padding: var(--s-2); cursor: pointer; }
 .role-assignment { margin-top: var(--s-2); border-top: 1px solid var(--line); padding-top: var(--s-2); }
 .input-full { font: inherit; font-size: var(--t-sm-size); white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; line-height: 1.6; }
-.compose-dialog { width: min(1080px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: var(--s-5); border: 1px solid var(--line); border-radius: var(--r-island); background: var(--surface); color: var(--text); box-shadow: var(--shadow-float); }
+.compose-dialog { width: min(1080px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: var(--s-5); border: 1px solid var(--line); border-radius: var(--r-island); background: var(--surface); color: var(--text); box-shadow: var(--shadow-float); backdrop-filter: var(--surface-blur); }
 .compose-dialog::backdrop { background: #0008; }
 .catalog-dialog { width: min(720px, calc(100vw - 32px)); backdrop-filter: var(--surface-blur); }
 #newRunPanel { position: relative; inset: auto; max-height: none; padding: 0; overflow: visible; background: none; box-shadow: none; backdrop-filter: none; }

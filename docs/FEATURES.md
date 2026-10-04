@@ -26,6 +26,7 @@
 | 과거 기록 찾기 | 질문·자료 이름/해시·공개 답·검토·판단·합성을 문구와 작업/종류로 검색, 원래 실행으로 이동 | [공개 조회](../app/queries/public.py), [검색](../app/queries/catalog.py), [검색 화면](../app/static/catalog.js) | [검색 경계·HTTP 검사](../tests/test_foundation.py). 의미 검색·FTS는 아직 없음 |
 | 역할이 다른 호출을 함께 확인 | 초안·다듬기·분담·검토·취합·합성의 실제 attempt를 공통 형태로 읽음. manual·대기는 호출로 세지 않음 | [호출 원장 adapter](../app/execution/invocations.py), [검색 화면](../app/static/catalog.js) | [경계 검사](../tests/test_foundation.py), 기존 역할별 회귀 |
 | 왜 기억을 골랐는지 확인 | 새 pack의 일치 표현/최근 기록 대체를 표시하고 출처 실행으로 이동. 옛 이유는 추정하지 않음 | [선택기](../app/memory.py), [역할판](../app/static/role-board.js), [공개 조회](../app/queries/public.py) | [기억·호환 검사](../tests/test_memory.py), [고정 pack 검사](../tests/test_foundation.py) |
+| 반복 설정 재사용 | 팀·모델·질문·자료 사본·분담·기억 설정을 템플릿으로 저장/복원. 다른 원장에는 파일로 이동 | [템플릿 서비스](../app/application/templates.py), [화면](../app/static/templates.js) | [입력·모델·이전·복원·연결 검사](../tests/test_templates.py). 현재 모델 재검사, 새 입력 확인; 과거 승인·호출 예산 제외 |
 
 ## 우리 프로젝트에서의 가치
 
@@ -49,7 +50,7 @@
 | 순서 | 후보·작업 | 도움 / 현재 준비된 자리 | 선행·완료 조건 |
 |---|---|---|---|
 | 기반 반영 | 조회/입력/호출/계획/검토 책임 분리, 공통 예약, 공개 검색·기억 이유·호출 기록 | 이후 기능을 controller 한 파일에 계속 얹지 않고 담당 경계에 연결 | 구현과 오프라인/브라우저 확인. PC runtime 재관측은 별도 |
-| P1 다음 | 저장·복제 가능한 팀/작업 템플릿 — H02/19–23, D07 | 반복 역할·자료·질문 설정 감소. InputBuilder/WorkService 사용 | 불가 모델·삭제 자료·기억 범위 검증, 새 실행의 새 확인 hash |
+| 반영 | 저장·복제 가능한 팀/작업 템플릿 — H02/19–23, D07 | 반복 역할·자료·질문 설정 감소. 같은 입력 검증과 새 확인 사용 | 현재 카드/모델 재검사·자료 사본·다듬기 재승인. 원장 간에는 파일 복사이며 자동 동기화 아님 |
 | P1 다음 | 검토→수정 답→재검토 — H28, O11/12, OP06 | 지적을 실제 새 결과로 연결. ReviewService/InvocationLedger 사용 | artifact revision·원문 hash·반례 보존, 상한, 실패한 수정 뒤 이전 답 유지 |
 | P1 다음 | 자료 추출·부분 첨부 — H03/45/47 | PDF/URL 준비 부담 감소. InputBuilder 앞 extractor/preview | 원본/변환본/누락 범위·hash, extraction 실패 fixture |
 | P1 보강 | 목록/상세 query·대량 검색·선택 평가 — D05, OP01/03/08 | 원장이 커졌을 때 조회량 개선, 선택 누락 확인 | 현재 snapshot 동등성·큰 원장 baseline·한국어/반례 평가. FTS 도입 전 비용 비교 |

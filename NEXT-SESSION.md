@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-10-04** · 작성 세션: codex(클라우드·GitHub — 기반 재구성·공개 탐색, 사용자 PC·CLI 미확인, 추가 모델 호출 없음) · 브랜치 `codex/rebuild-foundation-20261004`.
+최종 갱신 **2026-10-04** · 작성 세션: codex(클라우드·GitHub — 작업 템플릿, 사용자 PC·CLI 미확인, 모델 호출 없음) · 브랜치 `codex/work-templates-20261004`.
 
 이 파일은 **지금 상태와 다음 일만** 담는다. 끝난 일의 경위는 PR·git 이력과 날짜가 붙은 기록에 있고, 옛 판은 [docs/handoff/](docs/handoff/README.md)에 있다. **3절에는 진행 중인 일과 "이 판을 들인 PR" 한 줄만 둔다** — 새 PR은 그 줄을 자기 PR로 바꾸고, 병합 전에도 뒤에도 맞는 말만 쓴다("병합했다"고 미리 적지 않는다). 크기 상한과 3절의 모양은 CI가 본다. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있는 규칙은 여기 다시 적지 않는다 — 쌓임을 막는 원칙은 협업 규칙 7절이다.
 
@@ -8,8 +8,8 @@
 
 1. **이 저장소를 처음 여는 컴퓨터라면 [docs/SETUP.md](docs/SETUP.md)부터 한다**(PowerShell 한 줄의 원터치 설치). 다른 기기의 관측 기록으로는 strict로 실행하지 않는다.
 2. 열린 PR·현재 main·미병합 브랜치와 카드 보드를 본다(`git fetch --all --prune`, `git branch -r --no-merged origin/main`, `gh pr list`, `gh issue list --label card`). 실제 GitHub 상태가 이 인계보다 우선이다.
-3. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)을 따른다. 자기 브랜치에서 작업하고 바로 push한다. 병합은 사용자 또는 PR의 CI 녹색을 확인한 claude 세션이 한다(2절 8).
-4. 실측한 같은 질문을 반복하지 않는다. 새 실제 호출은 새 원장·provider별 상한·멈춤 조건으로 하고 결과를 기록한다. 기존 원장을 지우거나 상한을 늘리지 않는다. 지금 스키마는 14이며, 구형 원장은 이전 거래 전에 자동 백업한다([원장 안내](app/README.md#회계와-원장)). 호출 이력은 각 실험·검토 기록에 있다.
+3. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)을 따른다. 자기 브랜치에서 작업하고 바로 push한다. 별도 사용자 지시가 없으면 병합은 사용자 또는 CI 녹색을 확인한 claude 세션이 한다(2절 8).
+4. 실측한 같은 질문을 반복하지 않는다. 새 실제 호출은 새 원장·provider별 상한·멈춤 조건으로 하고 결과를 기록한다. 기존 원장을 지우거나 상한을 늘리지 않는다. 지금 스키마는 15이며, 구형 원장은 이전 거래 전에 자동 백업한다([원장 안내](app/README.md#회계와-원장)). 호출 이력은 각 실험·검토 기록에 있다.
 
 ## 1. 지금 상태
 
@@ -66,7 +66,7 @@
 
 일은 `card` 라벨 이슈에서 [협업 규칙](docs/COLLABORATION.md) 3절의 보드 규칙대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #161](https://github.com/inlight37-design/decision-model_lab/pull/161)(`codex/rebuild-foundation-20261004`) — [카드 #160](https://github.com/inlight37-design/decision-model_lab/issues/160)의 기반 재구성·공개 탐색. 앞선 조사 브랜치 위에서 시작했고 main 대상이다. 적용·검증 범위는 PR에 있다.
+- **이 판을 들인 PR:** [PR #163](https://github.com/inlight37-design/decision-model_lab/pull/163)(`codex/work-templates-20261004`) — [카드 #162](https://github.com/inlight37-design/decision-model_lab/issues/162)의 팀·작업 템플릿. 적용·검증 범위는 PR에 있다.
 
 | 사용자만 할 수 있는 것 | 지금 |
 |---|---|
@@ -77,7 +77,7 @@
 
 ## 4. 다음 작업
 
-**사용자는 문서·기능 지도를 마무리하고 뼈대부터 실제로 재구성하길 요청했다.** 서비스 분리·공개 탐색을 반영했다. [문서 지도](docs/DOCUMENT-MAP.md) → [현재 구조](app/ARCHITECTURE.md) → [후속 우선순위](docs/FEATURES.md#후속-우선순위)로 이어간다. 다음 후보는 템플릿·검토 후 수정·자료 추출이다. PC 작업은 아래 조건을 따르며 모델 호출은 새 원장·상한으로 한다(2절 22).
+**사용자는 기반 점검·통합 → 템플릿 → 수정·재검토 → 자료 추출을 순서대로 진행하라고 요청했다.** 템플릿 저장·복원·파일 이동을 반영했다. [문서 지도](docs/DOCUMENT-MAP.md) → [현재 구조](app/ARCHITECTURE.md) → [후속 순서](docs/FEATURES.md#후속-우선순위)로 이어간다. 다음 구현은 수정·재검토와 자료 추출이다. PC·모델 관측은 별도다.
 
 1. **2026-10-27 전 — 주 PC 재관측**([SETUP 4절](docs/SETUP.md)의 절차, 모델 호출 Claude 2·Codex 3). main-pc-wsl은 10월 27일부터 만료이고, 이 PC의 세션만 관측·등록할 수 있다. 참여자 계획이나 CLI 판이 바뀌면 그때 바로 한다. 관측 기록은 `tools/w2/assemble.py`가 조립한다. 추론 강도를 연결하는 PR은 그 계획으로 바로 관측한다 — 이 날짜를 기다리지 않는다([역할판 검토](docs/reviews/2026-09-26-role-board-review/README.md) RB-01). S4(카드 #111)로 `~/.codex/hooks.json`이 있으면 Codex 참여자 계획을 거절한다 — 재관측 때 그 검사와 훅 표면을 함께 확인한다([훅 관측](docs/reviews/2026-09-27-codex-hooks/README.md)). 파일 하나 검사로 전체 문맥 검증을 대신하지 않는다.
 2. **역할판 다음 조각.** 역할판 D와 E1(공개 뒤 교차검토)은 모두 실제로 한 번씩 확인했고, E2(검토 결과를 보고서에)는 [PR #153](https://github.com/inlight37-design/decision-model_lab/pull/153)에 있다. E의 다음 후보: 지적을 받아들인 뒤 고친 답(새 판) 받기, 일반 작업에도 교차검토 붙이기([교차검토 확인](docs/reviews/2026-09-27-cross-review-catch/README.md): 심은 오류 둘을 잡았고 없는 오류는 지어내지 않았다) — 사용자가 써 본 뒤 필요하면. 다음 조각도 카드부터 만든다([역할판 검토](docs/reviews/2026-09-26-role-board-review/README.md) §6). 카드에는 [리뷰 통합](docs/reviews/2026-09-26-review-consolidation/README.md) 6절 D·E 행을 완료 조건으로 옮긴다. 미룬 것 — P7 절약 규칙(계획이 바뀌어 재관측 필요), 문서함 공유, 일반 칸의 원본 앱 카드, 다듬은 문장 고쳐 쓰기, 슈퍼바이저의 팀 구성 제안, 상위 자리의 "JSON만" 지시를 CLI 스키마 출력으로 바꾸기(판이 바뀌어 재관측 필요, [프롬프트 감사](docs/reviews/2026-09-29-prompt-audit/README.md) 4절), 합성을 상위 자리 표에 합치기([전체 점검](docs/reviews/2026-09-29-health-review/README.md) 4절) — 은 필요할 때 카드로 연다. S4–S6(훅 방어·launcher 소유·조회 줄이기 ②)은 병합했다 — 조회의 목록/상세 분리(③)는 원장이 커져 느려질 때 카드로 연다. **추론 강도는 연결하지 않았다** — 관측한 유한한 값만 넣고 그 계획으로 재관측해야 한다(RB-01).
