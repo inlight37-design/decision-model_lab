@@ -15,19 +15,18 @@ Jev류 판단 모델은 교체 가능한 선택 부품이며, 전체 시스템�
 
 | 갈래 | 위치 |
 |---|---|
+| 목적별 문서 입구 | [문서 지도](docs/DOCUMENT-MAP.md) — 현재 동작·제안·근거·과거 기록 구별 |
+| 대대적 개편 준비 | [통합 설계](docs/architecture/redesign-2026-10-04/README.md) · [우선순위·효용](docs/architecture/redesign-2026-10-04/PRIORITIES.md) — 현재 코드 대조·파이프라인·이행 계약 |
 | 실제 기능과 코드 찾기 | [기능 안내](docs/FEATURES.md) — 기능·구현 파일·검사·자동 기억 범위 |
 | 외부에서 찾아온 기능과 코드 찾기 | [참고 지도](docs/REFERENCE-MAP.md) — 출처·적용 상태·우리 코드·원본 분석 |
 | 작업 개념도 (한 장) | [docs/concept/](docs/concept/README.md) |
 | 셸 디자인 시스템 | [design/](design/README.md) |
 | 외부 검토 원문 | [docs/reviews/](docs/reviews/README.md) |
-| Hermes 패턴 선별 조사 (2026-09-23) | [요약·상세 분석·적용 시험·고정 근거](docs/research/hermes-2026-09-23/README.md) · [Claude 교차 확인](docs/research/hermes-2026-09-23/CROSSCHECK.md) |
-| tmux 설계 패턴 조사 (2026-09-23) | [요약·상세 분석·적용 계획·출처](docs/research/tmux-2026-09-23/README.md) (ChatGPT, [PR #8](https://github.com/inlight37-design/decision-model_lab/pull/8)) |
-| 여러 AI 작업 방식·도구 조사 (2026-09-25) | [사용자 요구, 수퍼바이저·작업판·컨텍스트 인계, 다른 도구의 편의 기능과 이유](docs/research/multi-ai-workflow-2026-09-25/README.md) (claude, 후보이지 채택된 운영 방식이 아님) |
 | 첫 cross_check 실험 기록 | [docs/experiments/2026-09-22-cross-check/](docs/experiments/2026-09-22-cross-check/README.md) |
 
 ## 지금 읽을 문서
 
-**[v0.4 개요](docs/architecture/v0.4/README.md)**에서 시작합니다. 지금 상태와 다음 일은 **[NEXT-SESSION.md](NEXT-SESSION.md)**에 있습니다([v0.4 HANDOFF](docs/architecture/v0.4/HANDOFF.md)는 2026-09-22 판).
+구조를 손볼 때는 **[통합 개편 준비서](docs/architecture/redesign-2026-10-04/README.md)**에서 시작합니다. 아래 [v0.4](docs/architecture/v0.4/README.md)는 협업 설계의 기반입니다. 지금 상태와 다음 일은 **[NEXT-SESSION.md](NEXT-SESSION.md)**에 있습니다([v0.4 HANDOFF](docs/architecture/v0.4/HANDOFF.md)는 2026-09-22 판).
 
 | 문서 | 내용 |
 |---|---|

@@ -1,11 +1,12 @@
 # 아키텍처 버전 지도
 
-**현재 제안은 [v0.4](v0.4/README.md)입니다.** 공식 구독 CLI·native 하네스 우선 기반 위에 상급 모델의 독립 추론·교차검토·근거 기반 합성을 추가했습니다. 지금 상태와 다음 작업은 [NEXT-SESSION.md](../../NEXT-SESSION.md)에 있습니다([v0.4 HANDOFF](v0.4/HANDOFF.md)는 2026-09-22 판). 기존 v0.3 운영/회계 원칙과 v0.2의 합성 계약·bounded_patch 절차는 유지합니다.
+**설계 기반은 [v0.4](v0.4/README.md), 최신 구조 변경 제안은 [통합 개편 준비서](redesign-2026-10-04/README.md)입니다.** 준비서는 현재 코드와 외부 조사를 연결한 목표 구조·파이프라인·이행 계획이며 운영 버전 승격이 아닙니다. 지금 상태와 다음 작업은 [NEXT-SESSION.md](../../NEXT-SESSION.md), 목적별 입구는 [문서 지도](../DOCUMENT-MAP.md)에 있습니다. v0.3 운영/회계 원칙과 v0.2 합성 계약·bounded_patch 절차는 유지합니다.
 
 ## 현재 읽을 문서
 
 | 문서 | 역할 |
 |---|---|
+| [개편 준비서](redesign-2026-10-04/README.md) / [우선순위](redesign-2026-10-04/PRIORITIES.md) | 현재 코드와 격차, 목표 책임·상태 계약·교체 순서·기대 효용 |
 | [v0.4 사례와 반례](v0.4/01-cases-and-findings.md) | 실제 council/critique 제품, 공개 코드 검토, 성과와 실패 근거 |
 | [v0.4 상급 협업 설계](v0.4/02-frontier-architecture.md) | 네 실행 모드, 독립 초안·제한 검토·검증·미합의, D10–D18 |
 | [v0.4 평가·ticket](v0.4/03-evaluation-and-roadmap.md) | 같은 예산 단일 모델/ensemble 대조군, 오류 전이, 단계별 구현 |

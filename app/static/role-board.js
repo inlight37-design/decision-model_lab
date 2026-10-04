@@ -547,10 +547,12 @@ function renderTaskPage() {
     island("모든 작업", [h("div", { class: "row between" }, h("p", { class: "sm muted" }, "질문부터 결과까지, 한 작업에서 이어 갑니다."),
       h("button", { type: "button", class: "btn btn-brand", onclick: () => openNewRun() }, "새 작업")),
       h("div", { class: "task-grid island-part" }, tasks.length ? tasks.map(taskCard) : h("p", { class: "sm muted" }, "아직 작업이 없습니다."))]),
-    island("프로젝트 안내", [h("p", { class: "sm muted" }, "현재 기능과 참고한 외부 코드의 위치를 GitHub 문서에서 확인합니다."),
+    island("프로젝트 안내", [h("p", { class: "sm muted" }, "현재 기능과 개편 제안, 참고 근거를 구분해 찾아봅니다."),
       h("div", { class: "row island-part" },
+        h("a", { class: "btn", href: "https://github.com/inlight37-design/decision-model_lab/blob/main/docs/DOCUMENT-MAP.md", target: "_blank", rel: "noopener" }, "문서 지도 (새 탭)"),
         h("a", { class: "btn", href: "https://github.com/inlight37-design/decision-model_lab/blob/main/docs/FEATURES.md", target: "_blank", rel: "noopener" }, "기능·코드 안내 (새 탭)"),
-        h("a", { class: "btn", href: "https://github.com/inlight37-design/decision-model_lab/blob/main/docs/REFERENCE-MAP.md", target: "_blank", rel: "noopener" }, "외부 참고 지도 (새 탭)"))]),
+        h("a", { class: "btn", href: "https://github.com/inlight37-design/decision-model_lab/blob/main/docs/REFERENCE-MAP.md", target: "_blank", rel: "noopener" }, "외부 참고 지도 (새 탭)"),
+        h("a", { class: "btn", href: "https://github.com/inlight37-design/decision-model_lab/blob/main/docs/architecture/redesign-2026-10-04/PRIORITIES.md", target: "_blank", rel: "noopener" }, "개편 우선순위 (새 탭)"))]),
     ...(stuck ? [stuck] : []));
   } else {
     const tokens = usageLines(task.usage);
