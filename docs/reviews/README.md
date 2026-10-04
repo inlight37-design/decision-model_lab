@@ -73,6 +73,8 @@
 | [`2026-09-29-prompt-audit/`](2026-09-29-prompt-audit/README.md) | claude(사용자 PC Windows 쪽)의 프롬프트 감사. 모델에 닿는 글(참여자·상위 자리 지시문, argv 조립, 답 파서, 규칙 파일)에서 낡은 모델용 패턴은 0건. 찾은 것은 출력 계약 둘 — 검사기의 개수·길이 상한을 여섯 지시문에 한 줄씩 적었고(F2), "JSON만" 지시를 CLI 스키마 출력으로 바꾸는 것(F1)은 재관측이 들어 설계만 남김. 모델 호출 없음 |
 | [`2026-09-29-health-review/`](2026-09-29-health-review/README.md) | claude(사용자 PC Windows 쪽)의 전체 점검 — 내 조사·부하 에이전트·Codex(medium) 독립 검토를 겹쳐 봄. 뼈대는 건강, 재작성 불요. 고친 것: 상위 자리 답 검사·경계 블록·오류 문구 바꿔치기를 `app/reply.py` 하나로, 서버·헤드리스 배선을 `app/wiring.py`로, controller의 상위 호출 관문 5중 복사와 자리 투영을 헬퍼로, 검사 도구 넷의 JSON 로더를 `tools/strict_json.py`로, 죽은 상수·흩어진 상수, 살아 있는 문서의 낡은 상태 서술. 일부러 둔 것과 이유도 적음. 참여자 계획·원장 스키마 불변. 모델 호출 없음 |
 
+| [`2026-10-04-anchormind/`](2026-10-04-anchormind/README.md) | codex(사용자 PC)의 AnchorMind 기능·저장/검색/회고 파이프라인 코드 검토. 출처 포함 고정 자료, 검색 예산·평가, 사건 이력의 선택적 적용안과 strict 참여자 연결·실행기 이식의 제약. 제품 코드 변경·추가 모델 호출 없음 |
+
 ## 읽는 순서
 
 주제별 시작점: 실행 경로 — [병렬 실행](2026-09-24-windows-live-completion/README.md), [strict 실행·취소](2026-09-25-strict-live-run/README.md) · 독립성 — [E2](2026-09-25-context-independence/README.md) · 합성 — [C](2026-09-24-model-synthesis/README.md), [D 후속](../experiments/2026-09-25-d-followup/RESULTS.md) · 한계와 남은 일 — [검토 요청서](2026-09-25-review-request/README.md) · 협업 방식 — [#56 검토·병합](2026-09-25-merge-56/README.md).
