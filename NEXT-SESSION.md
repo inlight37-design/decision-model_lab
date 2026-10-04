@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-10-04** · 작성 세션: codex(사용자 PC `DESKTOP-T0UDE01` — AnchorMind 조사·자동 기억 구현, 추가 모델 호출 없음, CLI 상태 재확인 안 함) · 브랜치 `codex/anchormind-review-20261004` · 열린 E2 PR의 head `36b5155` 위에서 작업.
+최종 갱신 **2026-10-04** · 작성 세션: codex(사용자 PC `DESKTOP-T0UDE01` — AnchorMind 조사·자동 기억 구현, 추가 모델 호출 없음, CLI 상태 재확인 안 함) · 브랜치 `codex/anchormind-review-20261004`.
 
 이 파일은 **지금 상태와 다음 일만** 담는다. 끝난 일의 경위는 PR·git 이력과 날짜가 붙은 기록에 있고, 옛 판은 [docs/handoff/](docs/handoff/README.md)에 있다. **3절에는 진행 중인 일과 "이 판을 들인 PR" 한 줄만 둔다** — 새 PR은 그 줄을 자기 PR로 바꾸고, 병합 전에도 뒤에도 맞는 말만 쓴다("병합했다"고 미리 적지 않는다). 크기 상한과 3절의 모양은 CI가 본다. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있는 규칙은 여기 다시 적지 않는다 — 쌓임을 막는 원칙은 협업 규칙 7절이다.
 
@@ -67,7 +67,6 @@
 일은 `card` 라벨 이슈에서 [협업 규칙](docs/COLLABORATION.md) 3절의 보드 규칙대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
 - **이 판을 들인 PR:** [PR #157](https://github.com/inlight37-design/decision-model_lab/pull/157)(`codex/anchormind-review-20261004`) — [카드 #156](https://github.com/inlight37-design/decision-model_lab/issues/156)의 AnchorMind 검토·작업 자동 기억·기능/참고 지도. 일반·상위 입력을 바꾸며 CLI 옵션·격리 계획은 유지한다. 검증 범위는 PR, 현재 동작은 [기능 안내](docs/FEATURES.md).
-- 진행 중: [PR #153](https://github.com/inlight37-design/decision-model_lab/pull/153)의 E2 보고서·관측 기록([카드 #152](https://github.com/inlight37-design/decision-model_lab/issues/152)). 이 조사 브랜치는 그 head를 포함한다. 병합 전 실제 PR 상태를 확인한다.
 
 | 사용자만 할 수 있는 것 | 지금 |
 |---|---|
