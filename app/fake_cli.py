@@ -99,7 +99,14 @@ def answer(flavor: str, question: str) -> str:
     if question.startswith(REVIEW_MARKER):
         return review_reply(question)
     digest = hashlib.sha256(question.encode("utf-8")).hexdigest()[:12]
-    asked = question.split("질문:", 1)[-1].strip()
+    # Recall can itself contain '이전 질문:'. Use the current prompt's section
+    # heading, including general-team goals, instead of a substring in history.
+    asked = question
+    for index, line in enumerate(question.splitlines()):
+        if line.startswith(("질문:", "전체 목표:")):
+            asked = "\n".join([line.split(":", 1)[1], *question.splitlines()[index + 1:]])
+            break
+    asked = asked.strip()
     first = asked.splitlines()[0][:80] if asked else "(빈 질문)"
     lean = {"claude": "조건부 찬성 — 되돌릴 비용이 작을 때만", "codex": "보류 — 먼저 작은 실험으로 확인"}[flavor]
     return (f"[모의 출력 · {flavor} 흉내 · 모델 호출 없음]\n"

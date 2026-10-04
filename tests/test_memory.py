@@ -5,7 +5,7 @@ Synthetic executors only. These do not establish retrieval or model quality.
 import hashlib
 import json
 
-from app import controller as c, memory
+from app import controller as c, fake_cli, memory
 from app.store import Store
 import test_app_controller as support
 from test_general_team import Recording, ROSTER, board
@@ -148,6 +148,13 @@ class MemoryTests(support.Base):
             with self.assertRaises(c.ControllerError):
                 self.general(ctl, use_memory=value)
         self.assertFalse(ctl.executor.started)
+
+    def test_mock_answer_echoes_current_goal_instead_of_history(self):
+        for prompt in [c.GENERAL_PROMPT.format(question="현재 목표", task="현재 일"),
+                       c.PROMPT.format(question="현재 목표")]:
+            answer = fake_cli.answer("claude", prompt + '\n이전 질문: 과거 질문\n')
+            self.assertIn("받은 질문: 현재 목표\n", answer)
+            self.assertNotIn("받은 질문: 과거 질문", answer)
 
     def test_restart_resumes_the_frozen_general_input(self):
         ctl = self.controller(Recording())
