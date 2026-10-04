@@ -271,7 +271,7 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                                   assignments=body.get("assignments"),   # 일반 팀원마다 맡길 일·받을 자료
                                   refinement=body.get("refinement"),     # 다듬기 모드에서 승인한 {id, turn}
                                   proposal=body.get("proposal"),         # 다음 단계 제안에서 온 질문의 {id}
-                                  split=body.get("split"))               # 일반 작업의 분담 제안 {id}
+                                  split=body.get("split"), use_memory=body.get("use_memory", True))
                     if parts[-1] == "preview":
                         self._json(200, controller.prepare_run(_text(body, "question"), chosen, **kwargs))
                     else:
@@ -318,7 +318,8 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                         raise ControllerError("mode must be mock or model")
                     self._json(200, {"ok": True})
                 elif parts == ["api", "refinements"]:   # 다듬기 첫 차례: 호출 1회
-                    self._json(200, {"refine_id": controller.refine(supervisor_spec(body), _text(body, "original"))})
+                    self._json(200, {"refine_id": controller.refine(supervisor_spec(body), _text(body, "original"),
+                        task_id=body.get("task_id"), use_memory=body.get("use_memory", True))})
                 elif len(parts) == 4 and parts[:2] == ["api", "refinements"] and parts[3] == "turn":
                     controller.refine(supervisor_spec(body), refine_id=parts[2], note=_text(body, "note"))
                     self._json(200, {"refine_id": parts[2]})
@@ -331,7 +332,7 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                     members, split_sources = split_request(body)
                     self._json(200, {"split_id": controller.propose_split(
                         _text(body, "goal"), supervisor_spec(body, "orchestrator"), members, split_sources,
-                        task_id=body.get("task_id"))})
+                        task_id=body.get("task_id"), use_memory=body.get("use_memory", True))})
                 elif len(parts) == 4 and parts[:2] == ["api", "splits"] and parts[3] == "acknowledge":
                     controller.acknowledge_split_unknown(parts[2])
                     self._json(200, {"ok": True})

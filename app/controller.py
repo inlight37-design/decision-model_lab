@@ -44,7 +44,7 @@ import uuid
 from typing import Any, Protocol
 
 from app.store import Store
-from app import (collate as collating, cross_review as cross, next_step, refine as refining, split as splitting,
+from app import (collate as collating, cross_review as cross, memory, next_step, refine as refining, split as splitting,
                  usage as token_usage)
 from app.roles import freeze as freeze_roles, task_projection
 from app.report import build_report
@@ -414,7 +414,7 @@ class Controller:
     def prepare_run(self, question: str, participants: list[ParticipantSpec], *, min_independent: int,
                     quorum_policy: str = INDEPENDENT_ONLY, sources=None, task_id=None, task_title=None,
                     role_board=None, roster=None, run_id=None, assignments=None, refinement=None,
-                    proposal=None, split=None, checked=None) -> dict[str, Any]:
+                    proposal=None, split=None, checked=None, use_memory=True) -> dict[str, Any]:
         """sources: (이름, 글) 목록. 원장에 내용·해시를 고정하고, CLI 참여자에게는 그 사본 폴더 하나를 읽기
         전용 입력으로 준다(provider별 빈 입력 폴더 대신). 입력 폴더가 하나인 것은 같으므로 계획의 판은 그대로다.
         checked: create_run이 이미 검사한 (이름, 바이트) 목록 — 있으면 sources를 다시 검사하지 않는다.
@@ -446,7 +446,7 @@ class Controller:
         if not general and assignments is not None:
             raise ControllerError("맡길 일은 일반 칸의 팀원에게만 줍니다.")
         if roles["input_mode"] == "refine":
-            approved = self._approved_refinement(refinement, roles, question)
+            approved = self._approved_refinement(refinement, roles, question, task_id, use_memory)
         elif refinement is not None:
             raise ControllerError("다듬기 차례는 다듬기 모드에서만 줍니다.")
         else:
@@ -482,6 +482,7 @@ class Controller:
         elif task_title is not None and (not isinstance(task_title, str) or not task_title.strip()
                                          or len(task_title.strip()) > 120 or not storable(task_title)):
             raise ControllerError("작업 제목은 1~120자의 올바른 글이어야 합니다.")
+        roles["memory"] = self._select_memory(task_id, question, use_memory)
         suggested = self._approved_proposal(proposal, roles, question, task_id) if proposal is not None else None
         if general:
             return self._general_manifest(run_id, task_id, task_title, question, participants, roles,
@@ -535,6 +536,7 @@ class Controller:
             prompt = GENERAL_PROMPT.format(question=question, task=task)
             if listed:
                 prompt += _source_footer(self._member_source_root(run_id, p.pid), listed)
+            prompt += memory.footer(roles["memory"])
             data = prompt.encode("utf-8")
             members[p.pid] = {"task": task, "prompt": prompt, "input_sha256": hashlib.sha256(data).hexdigest(),
                               "input_bytes": len(data), "sources": listed}
@@ -561,12 +563,13 @@ class Controller:
     def create_run(self, question: str, participants: list[ParticipantSpec], *, min_independent: int,
                    quorum_policy: str = INDEPENDENT_ONLY, sources=None, task_id=None, task_title=None,
                    role_board=None, roster=None, run_id=None, confirmation=None, assignments=None,
-                   refinement=None, proposal=None, split=None) -> str:
+                   refinement=None, proposal=None, split=None, use_memory=True) -> str:
         checked_sources = _checked_sources(sources)   # 한 번 검사해 확인 명세와 원장 쓰기가 같은 바이트를 쓴다
         prepared = self.prepare_run(question, participants, min_independent=min_independent,
                                     quorum_policy=quorum_policy, sources=sources, task_id=task_id, task_title=task_title,
                                     role_board=role_board, roster=roster, run_id=run_id, assignments=assignments,
-                                    refinement=refinement, proposal=proposal, split=split, checked=checked_sources)
+                                    refinement=refinement, proposal=proposal, split=split, checked=checked_sources,
+                                    use_memory=use_memory)
         if confirmation is not None and confirmation != prepared["confirmation"]:
             raise ControllerError("확인한 입력에서 바뀌었습니다. 보낼 입력을 다시 확인하세요.")
         run_id, question, prompt = prepared["run_id"], prepared["question"], prepared["prompt"]
@@ -679,6 +682,7 @@ class Controller:
         root = self._member_source_root(run_id, pid)
         expected = GENERAL_PROMPT.format(question=run["question"], task=item["task"]) + (
             _source_footer(root, listed) if listed else "")
+        expected += self._run_memory(run)
         data = item["prompt"].encode("utf-8")
         if (item["prompt"] != expected or hashlib.sha256(data).hexdigest() != item["input_sha256"]
                 or len(data) != item["input_bytes"]):
@@ -1170,6 +1174,7 @@ class Controller:
             report = build_report(self.view(run_id), run_id)
             try:
                 prompt, labels, nonce = model_prompt(report)
+                prompt += self._run_memory(self._run(run_id))
             except SynthesisError as exc:
                 raise ControllerError(str(exc)) from None
             attempt = uuid.uuid4().hex
@@ -1247,13 +1252,29 @@ class Controller:
                 self.pump()
 
     # ---- 다듬기(카드 #130) ---------------------------------------------------------------------
+    def _select_memory(self, task_id, question, enabled):
+        if task_id is not None and (not isinstance(task_id, str) or not self.store.row(
+                "SELECT 1 FROM tasks WHERE task_id = ?", task_id)):
+            raise ControllerError("작업을 찾을 수 없습니다.")
+        try:
+            with self.lock:
+                return memory.select(self.store, task_id, question, enabled=enabled)
+        except ValueError as exc:
+            raise ControllerError(str(exc)) from None
+
+    def _run_memory(self, run):
+        try:
+            return memory.footer(json.loads(run["role_config"] or "{}").get("memory"))
+        except ValueError as exc:
+            raise ControllerError(str(exc)) from None
+
     def refine(self, supervisor: ParticipantSpec, original: str | None = None, *, refine_id: str | None = None,
-               note: str = "") -> str:
+               note: str = "", task_id=None, use_memory=True) -> str:
         """슈퍼바이저 차례 한 번 — 호출 1회. refine_id가 없으면 original로 새 다듬기를 연다. 있으면 그 다듬기의 다음 차례다.
 
         격리 팀원·합성과 같은 계획·격리로 부르고, 같은 원장의 전체·provider 상한에서 예약한다(환불 없음). 차례는
         다듬기 하나에 refine.MAX_TURNS까지다. 실행에 이미 쓴 다듬기, 앞 차례가 진행 중이거나 종료 미확인인 다듬기,
-        진행 중·종료 미확인 실행이 있을 때는 부르지 않는다. 슈퍼바이저가 받는 것은 원문과 앞 차례의 대화뿐이다.
+        진행 중·종료 미확인 실행이 있을 때는 부르지 않는다. 원문·대화와 처음 고정한 선택적 작업 기억을 받는다.
         시작 전 거절은 아무것도 예약하지 않는다. 결과는 백그라운드에서 refine_turns에 조건부로 쓴다."""
         if not isinstance(note, str) or len(note.strip()) > refining.MAX_NOTE or not storable(note):
             raise ControllerError(f"슈퍼바이저에게 쓰는 말은 {refining.MAX_NOTE}자까지의 올바른 글이어야 합니다.")
@@ -1269,6 +1290,7 @@ class Controller:
                 if note:
                     raise ControllerError("첫 차례에는 원문만 보냅니다. 답은 슈퍼바이저가 물은 뒤에 적습니다.")
                 previous = []
+                remembered = self._select_memory(task_id, original, use_memory)
             else:
                 row = self.store.row("SELECT * FROM refinements WHERE refine_id = ?", refine_id)
                 if row is None:
@@ -1287,13 +1309,17 @@ class Controller:
                 original = row["original"]
                 previous = [(turn["note"], json.loads(turn["result"])["reply"] if turn["state"] == ACCEPTED else None)
                             for turn in turns]
+                snapshot = self.store.row("SELECT payload FROM events WHERE run_id = ? AND kind = 'memory_selected'",
+                                          refine_id)
+                remembered = json.loads(snapshot["payload"])["memory"] if snapshot else None
             self._upper_call_gate("다듬기는")
             key = refine_id or f"q{time.strftime('%m%d-%H%M%S')}-{uuid.uuid4().hex}"
             turn = len(previous) + 1
-            text = refining.prompt(original, previous, note)
+            text = refining.prompt(original, previous, note) + memory.footer(remembered)
 
             def insert(tx, attempt, kind):
                 if refine_id is None:
+                    tx.event(key, "memory_selected", memory=remembered)
                     tx.execute("INSERT INTO refinements (refine_id, created_at, original, supervisor) VALUES (?, ?, ?, ?)",
                                key, time.time(), original, json.dumps(asdict(supervisor), ensure_ascii=False))
                 tx.execute("INSERT INTO refine_turns (refine_id, turn, note, prompt, input_sha256, attempt, kind, state) "
@@ -1461,6 +1487,7 @@ class Controller:
             refined = self.store.row("SELECT original FROM refinements WHERE run_id = ?", run_id)
             text = next_step.prompt(refined["original"] if refined else run["question"], run["question"],
                                     [(label, sources[pid]["draft"]) for label, pid in labels.items()])
+            text += self._run_memory(run)
             key = f"p{time.strftime('%m%d-%H%M%S')}-{uuid.uuid4().hex}"
 
             def insert(tx, attempt, kind):
@@ -1510,7 +1537,7 @@ class Controller:
 
     # ---- 분담 제안(카드 #135) ------------------------------------------------------------------
     def propose_split(self, goal: str, orchestrator: ParticipantSpec, members: list[ParticipantSpec], sources=None,
-                      task_id=None) -> str:
+                      task_id=None, use_memory=True) -> str:
         """일반 팀원 작업의 오케스트레이터 모델이 팀원마다 맡길 일과 받을 자료를 제안한다 — 호출 1회.
 
         오케스트레이터는 전체 목표·팀원 목록·붙인 자료 전부(읽기 전용 사본 폴더 하나)를 받는다. 제안은 실행을 시작하지
@@ -1543,11 +1570,14 @@ class Controller:
                     raise ControllerError(f"could not prepare the source folder: {type(exc).__name__}") from None
             text = splitting.prompt(goal, {label: next(p.label for p in members if p.pid == pid)
                                            for label, pid in labels.items()}, listed, folder)
+            remembered = self._select_memory(task_id, goal, use_memory)
+            text += memory.footer(remembered)
 
             def insert(tx, attempt, kind):
                 for row in rows:
                     tx.execute("INSERT INTO sources (run_id, name, sha256, bytes, content) VALUES (?, ?, ?, ?, ?)",
                                key, row["name"], row["sha256"], row["bytes"], row["content"])
+                tx.event(key, "memory_selected", memory=remembered)
                 tx.execute("INSERT INTO splits (split_id, task_id, created_at, goal, orchestrator, members, sources, "
                            "prompt, input_sha256, attempt, kind, state) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                            key, task_id, time.time(), goal, json.dumps(asdict(orchestrator), ensure_ascii=False),
@@ -1594,6 +1624,7 @@ class Controller:
                 labels[label], drafts[label] = member.pid, text
                 members.append({"label": label, "name": member.label, "task": work["task"], "text": text})
             text = collating.prompt(run["question"], members)
+            text += self._run_memory(run)
             key = f"c{time.strftime('%m%d-%H%M%S')}-{uuid.uuid4().hex}"
 
             def insert(tx, attempt, kind):
@@ -1839,7 +1870,7 @@ class Controller:
                 "run_id": row["run_id"], "approved_turn": row["approved_turn"], "max_turns": refining.MAX_TURNS,
                 "turns": turns}
 
-    def _approved_refinement(self, refinement, roles, question: str) -> dict[str, Any]:
+    def _approved_refinement(self, refinement, roles, question: str, task_id=None, use_memory=True) -> dict[str, Any]:
         """다듬기 모드 실행의 승인본을 확인한다. 실행에 쓰지 않은 다듬기의, 형식 검사를 통과한 차례의 문장이어야 하고,
         역할판의 슈퍼바이저와 같은 카드·모델이 만든 것이어야 한다. 보낼 질문은 그 문장과 글자까지 같아야 한다."""
         if not isinstance(refinement, dict) or set(refinement) != {"id", "turn"} or type(refinement["turn"]) is not int:
@@ -1849,6 +1880,11 @@ class Controller:
             raise ControllerError("다듬기를 찾을 수 없습니다.")
         if row["run_id"]:
             raise ControllerError("이미 다른 실행에 쓴 다듬기입니다. 같은 승인으로 실행을 두 번 만들지 않습니다.")
+        snapshot = self.store.row("SELECT payload FROM events WHERE run_id = ? AND kind = 'memory_selected'",
+                                  row["refine_id"])
+        remembered = json.loads(snapshot["payload"])["memory"] if snapshot else None
+        if remembered and remembered["entries"] and (remembered["task_id"] != task_id or not use_memory):
+            raise ControllerError("다듬기에 쓴 작업 기억과 설정이 다릅니다. 이 작업에서 새로 다듬으세요.")
         fixed, board = json.loads(row["supervisor"]), roles["supervisor"]
         if (fixed["pid"], fixed["adapter_id"], fixed["model"]) != (board["pid"], board["adapter_id"], board["model"]):
             raise ControllerError("다듬기를 한 슈퍼바이저·모델과 역할판의 슈퍼바이저가 다릅니다.")

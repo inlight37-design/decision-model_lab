@@ -130,7 +130,8 @@ async function refineTurn() {
     if (!refineCurrent) {
       const original = $("question").value.trim();
       if (!original) throw new Error("다듬을 원문을 먼저 질문 칸에 적어 주세요.");
-      const made = await api("/api/refinements", { ...supervisorChoice(), original });
+      const made = await api("/api/refinements", { ...supervisorChoice(), original,
+        task_id: composeTask, use_memory: $("autoMemory").checked });
       if (generation !== refineGeneration) return;   // 그 사이 원문으로 돌아갔거나 창을 새로 열었다
       refineCurrent = made.refine_id;
     } else {
@@ -302,7 +303,8 @@ async function requestSplit() {
     const behavior = $("b-" + asked.orchestrator);
     const made = await api("/api/splits", { goal: asked.goal, orchestrator: asked.orchestrator,
       ...(asked.model ? { model: asked.model } : {}), ...(behavior ? { behavior: behavior.value } : {}),
-      members: asked.members, sources: await sourceFiles(asked.files), ...(composeTask ? { task_id: composeTask } : {}) });
+      members: asked.members, sources: await sourceFiles(asked.files), use_memory: $("autoMemory").checked,
+      ...(composeTask ? { task_id: composeTask } : {}) });
     if (generation !== splitGeneration) return;   // 그 사이 창을 새로 열었다
     splitCurrent = made.split_id; splitApplied = null; splitAsked += 1; splitInputs = asked;
     await refresh().catch(() => false);
@@ -341,7 +343,7 @@ function assignmentField(pid) {
   return h("div", { class: "cell stack assignment", role: "group", "aria-labelledby": head },
     h("span", { class: "sm strong", id: head }, p.label), task,
     files.length ? [h("span", { class: "cap muted" }, "받을 자료 · 원문 파일 전체"), files]
-      : h("p", { class: "cap muted" }, "붙인 자료가 없습니다. 맡길 일만 보냅니다."));
+      : h("p", { class: "cap muted" }, "붙인 자료가 없습니다."));
 }
 // 보낼 본문의 assignments. files는 붙인 순서의 File, sources는 sourceFiles()가 같은 순서로 만든 {name, text}다.
 // 비었거나 아무도 받지 않는 자료는 서버도 거절하지만, 보내기 전에 이유를 먼저 알린다.
@@ -400,6 +402,19 @@ function confirmButton() {
     liveMode ? "확인한 입력으로 시작 — 실제 CLI 호출" : "확인한 입력으로 시작 (모의)");
 }
 // 일반 팀원 작업의 확인 화면: 팀원마다 실제로 보낼 입력 전문과 받을 자료 목록을 그대로 보인다.
+function memoryPreview(config, id = "preview-memory", expanded = true) {
+  const pack = config.memory;
+  const entries = pack?.entries || [];
+  return collapsible(id, "이전 작업 기억 · 격리 팀원 제외", h("div", { class: "stack" },
+    h("p", { class: "sm" }, !pack?.enabled ? "자동 기억 꺼짐" : entries.length
+      ? "일반 팀원·상위 역할에만 전달합니다. 과거 답의 사실 여부는 검증하지 않았습니다."
+      : "같은 작업에 가져올 공개 이력이 없습니다."),
+    ...entries.map((e, index) => h("section", { class: "stack" },
+      h("p", { class: "sm strong" }, `이전 실행 · ${fmtTime(e.created_at)} · ${e.truncated ? "일부 발췌" : "전체 기록"}`),
+      h("pre", { class: "input-full" }, e.excerpt),
+      collapsible(`${id}-source-${index}`, "출처 확인", h("p", { class: "cap muted input-full" },
+        `${e.run_id} · 원본 sha256 ${e.source_sha256}`))))), { open: expanded && entries.length > 0 });
+}
 function generalPreview(preview) {
   const specs = Object.fromEntries(preview.role_config.general.map(p => [p.pid, p]));
   return [h("h3", { class: "block-title" }, "보낼 입력 확인"),
@@ -408,6 +423,7 @@ function generalPreview(preview) {
     h("p", { class: "sm" }, "입력 모드: 원문 · 일반 팀원 작업 — 내가 나누고 모읍니다. 끝나는 대로 결과가 보이고, 봉인·독립·정족수 판정은 하지 않습니다."),
     h("p", { class: "sm" }, `이번 실행: CLI 시작 최대 ${preview.calls.draft_cli}회(팀원마다 한 번) · 다시 부르지 않음`),
     callLimitLine(preview.calls),
+    memoryPreview(preview.role_config),
     ...(preview.split ? [h("p", { class: "sm cell ask-cell" }, preview.split.as_proposed
       ? "분담은 오케스트레이터 제안 그대로입니다. 시작하면 그 제안이 이 실행 하나에 묶입니다."
       : "분담은 오케스트레이터 제안에서 시작해 내가 고쳤습니다. 시작하면 제안과 고쳤다는 것이 함께 남습니다.")] : []),
@@ -432,6 +448,7 @@ function showInputPreview(preview, body) {
     return;
   }
   $("inputPreview").replaceChildren(h("h3", { class: "block-title" }, "보낼 입력 확인"),
+    memoryPreview(preview.role_config),
     h("p", { class: "sm strong" }, roleSummary(preview.role_config)),
     h("p", { class: "cap muted" }, MODEL_NOTE),
     h("p", { class: "sm" }, `입력 모드: ${preview.refinement ? `다듬기(${preview.refinement.turn}차례를 승인 · 승인한 문장만 보냄)` : "원문"} · ` +
@@ -530,6 +547,10 @@ function renderTaskPage() {
     island("모든 작업", [h("div", { class: "row between" }, h("p", { class: "sm muted" }, "질문부터 결과까지, 한 작업에서 이어 갑니다."),
       h("button", { type: "button", class: "btn btn-brand", onclick: () => openNewRun() }, "새 작업")),
       h("div", { class: "task-grid island-part" }, tasks.length ? tasks.map(taskCard) : h("p", { class: "sm muted" }, "아직 작업이 없습니다."))]),
+    island("프로젝트 안내", [h("p", { class: "sm muted" }, "현재 기능과 참고한 외부 코드의 위치를 GitHub 문서에서 확인합니다."),
+      h("div", { class: "row island-part" },
+        h("a", { class: "btn", href: "https://github.com/inlight37-design/decision-model_lab/blob/main/docs/FEATURES.md", target: "_blank", rel: "noopener" }, "기능·코드 안내 (새 탭)"),
+        h("a", { class: "btn", href: "https://github.com/inlight37-design/decision-model_lab/blob/main/docs/REFERENCE-MAP.md", target: "_blank", rel: "noopener" }, "외부 참고 지도 (새 탭)"))]),
     ...(stuck ? [stuck] : []));
   } else {
     const tokens = usageLines(task.usage);
