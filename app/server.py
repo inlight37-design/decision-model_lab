@@ -28,7 +28,7 @@ import secrets
 import socket
 import sys
 import threading
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, parse_qs
 
 if __package__ in (None, ""):  # `python app/server.py`로 실행해도 저장소 루트에서 app·core를 찾는다
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -45,6 +45,8 @@ from app.wiring import (BEHAVIORS, EXIT_NOT_ELIGIBLE, MOCK_MODEL_CHOICES, PARTIC
 STATIC = Path(__file__).with_name("static")
 # 화면이 받아 가는 파일은 이 목록뿐이다(경로를 조립하지 않는다). island-ui는 static/island-ui/README.md.
 ASSETS = {"/island-ui/themes.css": ("island-ui/themes.css", "text/css; charset=utf-8"),
+          "/api.js": ("api.js", "text/javascript; charset=utf-8"),
+          "/catalog.js": ("catalog.js", "text/javascript; charset=utf-8"),
           "/role-board.js": ("role-board.js", "text/javascript; charset=utf-8"),
           "/role-board.css": ("role-board.css", "text/css; charset=utf-8"),
           "/island-ui/base.css": ("island-ui/base.css", "text/css; charset=utf-8"),
@@ -208,6 +210,22 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                 self._send(200, (STATIC / name).read_bytes(), kind)
             elif path == "/api/state":
                 self._json(200, controller.view())
+            elif path == "/api/search":
+                try:
+                    params = parse_qs(urlsplit(self.path).query, keep_blank_values=True, max_num_fields=10)
+                    if set(params) - {"q", "task", "kind", "limit"} or any(len(v) != 1 for v in params.values()):
+                        raise ControllerError("invalid search parameters")
+                    self._json(200, controller.search(params.get("q", [""])[0],
+                               task_id=params.get("task", [None])[0], kind=params.get("kind", [None])[0],
+                               limit=int(params.get("limit", ["30"])[0])))
+                except ValueError as exc:
+                    self._json(400, {"error": str(exc)})
+            elif len(parts) == 4 and parts[:2] == ["api", "runs"] and parts[3] in ("activity", "memory"):
+                try:
+                    query = controller.activity if parts[3] == "activity" else controller.memory_sources
+                    self._json(200, query(parts[2]))
+                except ControllerError as exc:
+                    self._json(409, {"error": str(exc)})
             elif path == "/api/account-quota":
                 self._json(200, account_quota.view())
             elif path == "/api/options":

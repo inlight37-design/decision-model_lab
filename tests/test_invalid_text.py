@@ -77,7 +77,8 @@ class InvalidTextTests(support.Base):
     def test_a_result_that_cannot_be_stored_closes_the_attempt_instead_of_leaving_it_running(self):
         ex = Answers({"a": "fine"})
         ctl = self.controller(ex)
-        real = c.Controller._maybe_reveal
+        owner = type(ctl.execution)
+        real = owner._maybe_reveal
         calls = {"n": 0}
 
         def broken(self, *args, **kwargs):   # 결과를 쓰는 거래 안에서 한 번만 실패시킨다
@@ -85,7 +86,7 @@ class InvalidTextTests(support.Base):
             if calls["n"] == 1:
                 raise RuntimeError("storage failed")
             return real(self, *args, **kwargs)
-        with patch.object(c.Controller, "_maybe_reveal", broken):
+        with patch.object(owner, "_maybe_reveal", broken):
             rid = ctl.create_run("q", [support.cli("a")], min_independent=1, quorum_policy=c.INCLUDE_UNVERIFIED)
             self.assertTrue(ctl.wait_idle())
         part = self.parts(ctl, rid)["a"]

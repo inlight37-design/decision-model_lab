@@ -112,7 +112,7 @@ class SynthesisTests(Base):
     def test_synthesis_failure_keeps_original_report_and_has_no_retry_loop(self):
         ctl, run = self.revealed()
         before = build_report(ctl.view(), run)
-        with patch("app.controller.mock_synthesize", side_effect=SynthesisError("bad synthetic reference")):
+        with patch("app.application.synthesis.mock_synthesize", side_effect=SynthesisError("bad synthetic reference")):
             ctl.synthesize(run)
         self.assertEqual(self.run_view(ctl, run)["synthesis"]["status"], "unavailable")
         self.assertEqual(build_report(ctl.view(), run), before)

@@ -7,9 +7,9 @@
 | 하고 싶은 일 | 먼저 볼 곳 | 이어서 볼 곳 |
 |---|---|---|
 | 지금 할 일과 환경·확정 방침 확인 | [현재 인계](../NEXT-SESSION.md) | [협업 규칙](COLLABORATION.md), [설치](SETUP.md) |
-| 지금 되는 기능과 코드 찾기 | [기능 안내](FEATURES.md) | [앱 책임·실행](../app/README.md), [실행 기반](../core/README.md) |
+| 지금 되는 기능·가치와 코드 찾기 | [기능·용도·효용](FEATURES.md) | [실제 서비스 구조](../app/ARCHITECTURE.md), [앱 실행](../app/README.md), [실행 기반](../core/README.md) |
 | 크게 고치기 전 전체 구조 판단 | [통합 개편 준비서](architecture/redesign-2026-10-04/README.md) | [현재와 격차](architecture/redesign-2026-10-04/CURRENT.md), [목표 구조·대안](architecture/redesign-2026-10-04/TARGET.md) |
-| 어떤 기능을 먼저 넣을지 선택 | [우선순위·효용](architecture/redesign-2026-10-04/PRIORITIES.md) | [후보 배치 지도](architecture/redesign-2026-10-04/CAPABILITY-MAP.md), [누락·충돌 검토](architecture/redesign-2026-10-04/REVIEW.md) |
+| 어떤 기능을 먼저 넣을지 선택 | [구현 후 우선순위](FEATURES.md#후속-우선순위) | [개편 전 전체 효용 비교](architecture/redesign-2026-10-04/PRIORITIES.md), [후보 배치 지도](architecture/redesign-2026-10-04/CAPABILITY-MAP.md), [누락·충돌 검토](architecture/redesign-2026-10-04/REVIEW.md) |
 | 구현 카드로 쪼개기 | [이행 단계·완료 기준](architecture/redesign-2026-10-04/MIGRATION.md) | [파이프라인](architecture/redesign-2026-10-04/PIPELINES.md), [데이터·상태 계약](architecture/redesign-2026-10-04/DATA-CONTRACTS.md) |
 | 다른 프로젝트 기능을 다시 찾아보기 | [외부 참고 지도](REFERENCE-MAP.md) | 아래 원본 조사 지도, 각 기록의 고정 출처 |
 | 화면·개념·계약 확인 | [작업 개념도](concept/README.md), [디자인](../design/README.md) | [계약](../contracts/README.md), [아키텍처 버전 지도](architecture/README.md) |
@@ -43,9 +43,10 @@ flowchart TD
 |---|---|---|
 | 현 환경·확정 조건·열린 작업 | NEXT-SESSION | 요약을 복사하지 않고 연결 |
 | 실제 사용자 기능·기억 적용 범위 | FEATURES, app/README | 제안과 실제 동작을 대조 |
+| 현재 코드 책임·명령/조회 경계 | app/ARCHITECTURE | 개편 전 코드 지도와 구별 |
 | 외부 원문·버전·읽은 범위·제한 | 해당 연구의 SOURCES/EVIDENCE/source-map | 고정 출처를 인용 |
 | 후보의 목표 배치 | 개편 준비서 CAPABILITY-MAP와 JSON | 같은 후보의 중복 백로그를 만들지 않음 |
-| 우선순위·기대 효과·의존성 | 개편 준비서 PRIORITIES/MIGRATION | 구현 PR에서 채택·변경한 제안을 연결 |
+| 현재 후속 우선순위·기대 효과 | FEATURES의 후속 우선순위 | 개편 전 PRIORITIES/MIGRATION의 판단·의존성에 연결 |
 | 특정 시점 검증 결과 | CI·실험·날짜별 검토 기록 | 현재 성능이나 PC 관측으로 확대 해석하지 않음 |
 
 ## 정리·보존 기준

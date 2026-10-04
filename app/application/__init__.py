@@ -1,0 +1,1 @@
+"""Decision AI application boundary."""

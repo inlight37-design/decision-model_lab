@@ -68,7 +68,7 @@ def select(store, task_id, query, *, enabled=True):
                       "ORDER BY created_at DESC, run_id LIMIT ?", task_id, CANDIDATES)
     ranked = sorted(runs, key=lambda r: (len(terms(query) & terms(r["question"])),
                                         r["created_at"], r["run_id"]), reverse=True)
-    for run in ranked:
+    for rank, run in enumerate(ranked, 1):
         rid = run["run_id"]
         memo = store.row("SELECT payload FROM events WHERE run_id = ? AND kind = 'human_reviewed' "
                          "ORDER BY seq DESC LIMIT 1", rid)
@@ -99,9 +99,13 @@ def select(store, task_id, query, *, enabled=True):
                       answer["text"]]
         raw = "\n\n".join(lines).encode("utf-8")
         excerpt = raw[:EXCERPT_BYTES].decode("utf-8", errors="ignore")
+        matched = sorted(terms(query) & terms(run["question"]))
         entry = {"run_id": rid, "created_at": run["created_at"], "phase": run["phase"],
                  "kind": "unverified_task_history", "source_sha256": digest(raw), "source_bytes": len(raw),
-                 "truncated": len(excerpt.encode("utf-8")) < len(raw), "excerpt": excerpt}
+                 "truncated": len(excerpt.encode("utf-8")) < len(raw), "excerpt": excerpt,
+                 "selection": {"policy": "task-public-lexical-v1", "rank": rank,
+                               "overlap_count": len(matched), "overlap_terms": matched[:32],
+                               "recent_fallback": not matched}}
         body = {k: v for k, v in pack.items() if k != "sha256"}
         body["entries"] = [*pack["entries"], entry]
         candidate = {**body, "sha256": digest(encoded(body))}

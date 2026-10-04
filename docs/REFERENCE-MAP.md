@@ -6,6 +6,8 @@
 
 ## 외부 프로젝트에서 우리 구현으로
 
+실제 책임 분리와 공개 검색·기억 선택 이유·공통 호출 조회는 [현재 실행 아키텍처](../app/ARCHITECTURE.md)와 [기능·가치 지도](FEATURES.md)에 있다. 외부 엔진을 도입한 것이 아니라 참고 원리를 기존 계약 위에 독자 구현했다.
+
 이 조사들을 우리 구조에 함께 배치한 곳은 [통합 개편 준비서](architecture/redesign-2026-10-04/README.md)다. [후보 배치](architecture/redesign-2026-10-04/CAPABILITY-MAP.md)에서 출처를 따라가고, [우선순위](architecture/redesign-2026-10-04/PRIORITIES.md)에서 효용·선행 조건을 비교한다. 전체 문서의 역할은 [문서 지도](DOCUMENT-MAP.md)에서 구별한다.
 
 기능 이름을 넘어 내부 책임과 적용 방법을 비교하려면 [부품별 후속 분석](research/component-comparison-2026-10-04/README.md)을 본다. AnchorMind의 저장·검색·수명·운영 경로와 Hermes·codex-peek·WorkTrail의 대응 기능을 비교하고, 우리 코드 접점·데이터 계약·작은 시험을 연결했다. 전체 파일 분류와 실제로 읽거나 실행한 범위를 구별한다.

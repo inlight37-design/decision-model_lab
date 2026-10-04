@@ -18,6 +18,7 @@ Jev류 판단 모델은 교체 가능한 선택 부품이며, 전체 시스템�
 | 목적별 문서 입구 | [문서 지도](docs/DOCUMENT-MAP.md) — 현재 동작·제안·근거·과거 기록 구별 |
 | 대대적 개편 준비 | [통합 설계](docs/architecture/redesign-2026-10-04/README.md) · [우선순위·효용](docs/architecture/redesign-2026-10-04/PRIORITIES.md) — 현재 코드 대조·파이프라인·이행 계약 |
 | 실제 기능과 코드 찾기 | [기능 안내](docs/FEATURES.md) — 기능·구현 파일·검사·자동 기억 범위 |
+| 실행되는 애플리케이션 구조 | [현재 아키텍처](app/ARCHITECTURE.md) — 명령·입력·실행·조회 책임과 기존 원장 호환 |
 | 외부에서 찾아온 기능과 코드 찾기 | [참고 지도](docs/REFERENCE-MAP.md) — 출처·적용 상태·우리 코드·원본 분석 |
 | 작업 개념도 (한 장) | [docs/concept/](docs/concept/README.md) |
 | 셸 디자인 시스템 | [design/](design/README.md) |

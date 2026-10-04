@@ -195,7 +195,7 @@ class SplitTests(support.Base):
         # 검사가 뜻밖의 예외를 내도 결과 저장 실패로 빠지지 않고, 원문과 이유를 남긴 형식 실패가 된다(Codex 검토, PR #136)
         def broken(text, row):
             raise TypeError("unhashable member")
-        with mock.patch.object(c, "SPLIT_SEAT", replace(c.SPLIT_SEAT, check=broken)):
+        with mock.patch("app.application.planning.SPLIT_SEAT", replace(c.SPLIT_SEAT, check=broken)):
             ctl = self.controller(Splitter())
             sid = self.ask(ctl)
         item = self.split_of(ctl, sid)
