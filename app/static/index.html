@@ -345,6 +345,10 @@ button.is-pressed { background-image: linear-gradient(color-mix(in oklch, curren
               <p class="sm error-line" id="roleWarnings" role="status"></p>
             </div>
             <div class="form-field stack" id="assignments" hidden></div>
+            <div class="form-field">
+              <label class="checkbox-row"><input type="checkbox" id="autoMemory" checked aria-describedby="memoryHelp"> 이전 작업 기억 사용</label>
+              <p class="cap muted" id="memoryHelp">같은 작업의 공개된 결과와 판단 메모를 일반 팀원·상위 역할에 참고로 줍니다. 격리 팀원에게는 보내지 않습니다. 새 작업에는 이전 기억이 없습니다.</p>
+            </div>
             <div id="advanced"></div>
             <button class="btn btn-brand btn-block" id="startBtn" type="button">보낼 입력 확인</button>
             <p class="sm error-line" id="formErr" role="alert"></p>
@@ -711,6 +715,7 @@ async function startRun() {
   invalidatePreview();
   const generation = previewGeneration;
   const body = { question: $("question").value, participants, role_board: roleBoard, models: chosenModels(roleBoard),
+                 use_memory: $("autoMemory").checked,
                  ...(general ? {} : { min_independent: +$("min").value, quorum_policy: $("policy").value }),
                  ...(roleBoard.input_mode === "refine" ? { refinement: { id: refineCurrent, turn: refineApproved } } : {}),
                  ...proposalBody(),
@@ -1107,6 +1112,7 @@ function questionIsland(run) {
         ` · 최소 정족수 ${run.min_independent}명`)];
   if (general && !run.cancel_requested && !gate.collected)
     parts.push(h("p", { class: "sm muted island-part" }, "팀원의 결과는 끝나는 대로 보입니다. 봉인·독립·정족수 판정 없이 내가 모아 판단합니다."));
+  if (run.role_config?.memory) parts.push(memoryPreview(run.role_config, "memory-" + run.run_id, false));
   if (run.split) parts.push(h("div", { class: "island-part stack" }, h("p", { class: "sm cell ask-cell" },
     `분담: 오케스트레이터 ${run.split.orchestrator.label}의 제안 — ${run.split.as_proposed ? "그대로 보냄" : "내가 고쳐 보냄"}`),
     collapsible(`split-${run.run_id}`, "분담 제안 원문 · 나눈 이유", h("div", { class: "info-list" },
@@ -1266,6 +1272,7 @@ async function loadOptions() {
 function openNewRun(taskId = null) {
   if (!roleOptions) return;
   composeTask = taskId; chosenCard = null; initNewRun(roleOptions); invalidatePreview();
+  $("autoMemory").checked = true;
   $("formErr").textContent = ""; $("roleNotice").textContent = "";
   $("composeTitle").textContent = taskId ? "이 작업에 새 실행" : "새 작업";
   $("taskTitleField").hidden = !!taskId;
@@ -1278,6 +1285,7 @@ $("newRunClose").addEventListener("click", closeNewRun);
 $("composeDialog").addEventListener("close", () => { $("newRunBtn").setAttribute("aria-expanded", "false"); invalidatePreview(); });
 $("newRunPanel").addEventListener("input", invalidatePreview);
 $("newRunPanel").addEventListener("change", invalidatePreview);
+$("autoMemory").addEventListener("change", () => { resetRefine(); resetSplit(); renderRoleBoard(); });
 $("startBtn").addEventListener("click", startRun);
 for (const radio of [$("modeOriginal"), $("modeRefine")]) radio.addEventListener("change", e => chooseInputMode(e.target.value));
 $("filePick").addEventListener("click", () => $("fileInput").click());

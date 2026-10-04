@@ -15,6 +15,8 @@ Jev류 판단 모델은 교체 가능한 선택 부품이며, 전체 시스템�
 
 | 갈래 | 위치 |
 |---|---|
+| 실제 기능과 코드 찾기 | [기능 안내](docs/FEATURES.md) — 기능·구현 파일·검사·자동 기억 범위 |
+| 외부에서 찾아온 기능과 코드 찾기 | [참고 지도](docs/REFERENCE-MAP.md) — 출처·적용 상태·우리 코드·원본 분석 |
 | 작업 개념도 (한 장) | [docs/concept/](docs/concept/README.md) |
 | 셸 디자인 시스템 | [design/](design/README.md) |
 | 외부 검토 원문 | [docs/reviews/](docs/reviews/README.md) |

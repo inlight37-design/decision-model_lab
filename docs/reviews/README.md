@@ -204,6 +204,10 @@
 - 리뷰는 수정 **전** 코드를 본다. `reproduce_findings.py`를 지금 실행하면 고친 동작이 나오고, `reproduction-output.json`은 수정 전 관측이다.
 - 리뷰가 지적한 aux-pc 기록의 과한 문장(Claude `permission_mode`의 `observed`, "깨끗한 문맥", "agy 기본 모델은 Flash")은 원본에서 정정 표시와 함께 고쳤다. 무엇을 고쳤는지는 RESPONSE.md에 있다.
 
+## AnchorMind 기록에 대한 단서
+
+2026-10-04 사용자는 자동 기억을 격리 팀원에서 제외하고 적용하도록 요청했다. 같은 날짜의 검토 기록에 있는 수동 자료 우선안은 당시 제안으로 보존한다. 현재 적용 범위는 [기능 안내](../FEATURES.md), 원본 코드와 적용 위치는 [참고 지도](../REFERENCE-MAP.md)가 관리한다.
+
 ## 5번 기록에 대한 단서
 
 - 본문의 "루트의 날짜 붙은 파일"은 이후 [`docs/handoff/`](../handoff/README.md)로 옮겼다. 내용은 바이트 그대로다.
