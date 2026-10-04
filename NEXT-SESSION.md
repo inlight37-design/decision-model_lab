@@ -66,7 +66,7 @@
 
 일은 `card` 라벨 이슈에서 [협업 규칙](docs/COLLABORATION.md) 3절의 보드 규칙대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #157](https://github.com/inlight37-design/decision-model_lab/pull/157)(`codex/anchormind-review-20261004`) — [카드 #156](https://github.com/inlight37-design/decision-model_lab/issues/156)의 AnchorMind 검토·작업 자동 기억·기능/참고 지도. 일반·상위 입력을 바꾸며 CLI 옵션·격리 계획은 유지한다. 검증 범위는 PR, 현재 동작은 [기능 안내](docs/FEATURES.md).
+- **이 판을 들인 PR:** [PR #159](https://github.com/inlight37-design/decision-model_lab/pull/159)(`codex/feature-catalog-20261004`) — [카드 #158](https://github.com/inlight37-design/decision-model_lab/issues/158)의 외부 기능·편의성 조사. [후보 목록](docs/research/feature-catalog-2026-10-04/README.md)에 쓰임·적용 접점·조건·출처를 보존한다. 문서 변경이며 검증 범위는 PR에 있다.
 
 | 사용자만 할 수 있는 것 | 지금 |
 |---|---|
