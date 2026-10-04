@@ -1,0 +1,71 @@
+{
+  "observed_at": "2026-10-04",
+  "runtime": "v24.19.0",
+  "pins": {
+    "backlog": "69e7b15362337d6712783d9a685f6e4bb693fa9d",
+    "lite-harness": "dd99cfdfc68dbb6b3f7f986d54efd42572373a6c"
+  },
+  "limits": "Pure upstream functions and fake runtime only; no provider SDK invocation, no end-to-end agent run.",
+  "results": [
+    {
+      "id": "B01",
+      "note": "Missing dependency is unresolved and blocks readiness",
+      "result": "pass"
+    },
+    {
+      "id": "B02",
+      "note": "Different files with canonical duplicate IDs remain ambiguous",
+      "result": "pass"
+    },
+    {
+      "id": "B03",
+      "note": "Same-file duplicate preserves completed-corpus evidence despite old status",
+      "result": "pass"
+    },
+    {
+      "id": "B04",
+      "note": "Mutual dependency produces an explicit root cycle",
+      "result": "pass"
+    },
+    {
+      "id": "B05",
+      "note": "Canonical identity retains integers above Number safe precision",
+      "result": "pass"
+    },
+    {
+      "id": "B06",
+      "note": "Configured last status is terminal, not a hardcoded Done label",
+      "result": "pass"
+    },
+    {
+      "id": "L01",
+      "note": "Result builder defaults to success, empty usage and zero cost",
+      "result": "pass"
+    },
+    {
+      "id": "L02",
+      "note": "Unknown launch flag is silently ignored; non-text content is absent from prompt text",
+      "result": "pass"
+    },
+    {
+      "id": "L03",
+      "note": "Fake runtime with no frames still gets an empty success result from Session",
+      "result": "pass"
+    },
+    {
+      "id": "L04",
+      "note": "Fake runtime exception gets an error result",
+      "result": "pass"
+    },
+    {
+      "id": "L05",
+      "note": "Codex text transformer ignores failed-turn and usage events",
+      "result": "pass"
+    },
+    {
+      "id": "L06",
+      "note": "Accumulated text yields only new suffix, completion yields complete text",
+      "result": "pass"
+    }
+  ]
+}

@@ -1,0 +1,122 @@
+[
+  {
+    "name": "conductor-workflow",
+    "url": "https://www.conductor.build/docs/concepts/workflow",
+    "observed_at": "2026-10-04",
+    "sha256": "f4e15283585474ef6786af0f87bb35eb308814a98d20e93d7e70486c5ee805b9",
+    "text_sha256": "52281cb93dc24ade2d489edf88d02ab49b1af56c826d88a9d3760cfa9e622215",
+    "chars": 5385,
+    "status": "fetched",
+    "evidence_level": "official documentation/vendor report; selected main body read; product not exercised"
+  },
+  {
+    "name": "conductor-cloud",
+    "url": "https://www.conductor.build/docs/cloud/working-with-cloud-workspaces",
+    "observed_at": "2026-10-04",
+    "sha256": "7ce1b9e2a7a9ba70185b54a04d0a19ab77d5f84cf756cd3b0b0c22886ba01042",
+    "text_sha256": "9c18404f9607db1650648427fdef380b47f466116129843017347e1ece51f8b8",
+    "chars": 3778,
+    "status": "fetched",
+    "evidence_level": "official documentation/vendor report; selected main body read; product not exercised"
+  },
+  {
+    "name": "conductor-diff",
+    "url": "https://www.conductor.build/docs/reference/diff-viewer",
+    "observed_at": "2026-10-04",
+    "sha256": "8a4aef9baf28ebd76dec2bcdf9b02641524fd66c3e40a0e49bc9a9c597675836",
+    "text_sha256": "ed83e939fd5003798237f18d3395499958c35c26734b4a49b2bd1784a31d760a",
+    "chars": 2920,
+    "status": "fetched",
+    "evidence_level": "official documentation/vendor report; selected main body read; product not exercised"
+  },
+  {
+    "name": "conductor",
+    "url": "https://www.conductor.build/docs/",
+    "observed_at": "2026-10-04",
+    "sha256": "f7f5ca1c398e9c342917d85249bc1eae2e309f0c0377ba76621048c2c9020353",
+    "text_sha256": "d4f4037c10d18475fe87bc68e1129c9a2b8daee990b3e92e845d9520b673a6ca",
+    "chars": 1950,
+    "status": "fetched",
+    "evidence_level": "official documentation/vendor report; selected main body read; product not exercised"
+  },
+  {
+    "name": "jules",
+    "url": "https://jules.google/docs/",
+    "observed_at": "2026-10-04",
+    "sha256": "3581655f604e1369d3f22d273e9fa51a8ceb218f0959030dfa865304de724c1d",
+    "text_sha256": "1b13fe31385495dca395dd9d6376506459f307757f2e832485222936aeb895d5",
+    "chars": 3325,
+    "status": "fetched",
+    "evidence_level": "official documentation/vendor report; selected main body read; product not exercised"
+  },
+  {
+    "name": "kiro",
+    "url": "https://kiro.dev/docs/specs/",
+    "observed_at": "2026-10-04",
+    "sha256": "a480102988128e78a06710123cbd8b837d2a97f01974d39c0d653f622d31a7bd",
+    "text_sha256": "758c3d7d847d9c27fd32640bc6e2ccc58e7a6a71c559b6fc5b851fca2a0d3253",
+    "chars": 6891,
+    "status": "fetched",
+    "evidence_level": "official documentation/vendor report; selected main body read; product not exercised"
+  },
+  {
+    "name": "cursor",
+    "url": "https://cursor.com/changelog/2-0",
+    "observed_at": "2026-10-04",
+    "sha256": "b5444fb76aab9f53e49cd8a77ab4a465b439f0295d8a862cbafa274fb71e40b9",
+    "text_sha256": "5b1a1df0798860832b33b604308bde0bacc9bd31a43f274c3367baf0d8f252aa",
+    "chars": 10879,
+    "status": "fetched",
+    "evidence_level": "official documentation/vendor report; selected main body read; product not exercised"
+  },
+  {
+    "name": "amp",
+    "url": "https://ampcode.com/news/neo",
+    "observed_at": "2026-10-04",
+    "sha256": "f2efca674c3dc104e9040b665431f169f8c38b300403c3cc6a3539431ea21ef2",
+    "text_sha256": "00514d2a3e5b7a5cd31d680a016020675355d3f86d81e656fb971356b420317a",
+    "chars": 9946,
+    "status": "fetched",
+    "evidence_level": "official documentation/vendor report; selected main body read; product not exercised"
+  },
+  {
+    "name": "copilot",
+    "url": "https://docs.github.com/en/copilot/concepts/agents/cloud-agent/about-cloud-agent",
+    "observed_at": "2026-10-04",
+    "sha256": "0dd7d7128da08f556b1036594a620fcd738b169b56519d379be0e33640b0fee0",
+    "text_sha256": "032c3f997074a84c17fe28207794cbc35b277f73069129d58a732799c715210d",
+    "chars": 26317,
+    "status": "fetched",
+    "evidence_level": "official documentation/vendor report; selected main body read; product not exercised"
+  },
+  {
+    "name": "devin",
+    "url": "https://cognition.com/blog/devin-can-now-manage-devins",
+    "observed_at": "2026-10-04",
+    "sha256": "7586a8b1ba514904d115832490279f62a5df996c9697e53a46274e4a94db398b",
+    "text_sha256": "215d91031dd6657c818eb1ab1d4eceba32b76a9704503b8b8afaedaa68cd1314",
+    "chars": 4211,
+    "status": "fetched",
+    "evidence_level": "official documentation/vendor report; selected main body read; product not exercised"
+  },
+  {
+    "name": "jev",
+    "url": "https://docs.litellm.ai/blog/typesafe-jev-compaction",
+    "observed_at": "2026-10-04",
+    "sha256": "6831918b5ca9fdd4f2d535f33961fb8c6f9791cc98d1a5d4ece1bcafb0095b32",
+    "text_sha256": "9b7d6953753f0f70178f4225ba8dfa3097379340470b4f8840d0fa15f693d444",
+    "chars": 7871,
+    "status": "fetched",
+    "evidence_level": "official documentation/vendor report; selected main body read; product not exercised"
+  },
+  {
+    "name": "fusion",
+    "url": "https://docs.litellm.ai/blog/fusion-terminal-bench-benchmark",
+    "observed_at": "2026-10-04",
+    "sha256": "68553c92a957637b5635e4b0ce3c7ca8a459ed0820028ea04c32a11dd9c1b399",
+    "text_sha256": "775ac5c35549be759b791230e1b4d28ad55eee63a6029d23e76cc639654a7233",
+    "chars": 7042,
+    "status": "fetched",
+    "evidence_level": "official documentation/vendor report; selected main body read; product not exercised"
+  }
+]

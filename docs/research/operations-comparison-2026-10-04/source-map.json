@@ -1,0 +1,607 @@
+{
+  "observed_at": "2026-10-04",
+  "scope": "All tracked path inventory; selected bodies read, never a full-codebase audit. See per-file read_scope. Probe coverage is narrower and separately recorded.",
+  "projects": [
+    {
+      "id": "tmux",
+      "repository": "https://github.com/tmux/tmux",
+      "commit": "e476c1230b958df0cb12977517d24b3dc931375b",
+      "license_observation": "COPYING; individual source notices",
+      "tracked_files": 326,
+      "top_directories": {
+        "(root)": 163,
+        "regress": 66,
+        "compat": 47,
+        "logo": 19,
+        "fuzz": 12,
+        ".github": 10,
+        "tools": 6,
+        "presentations": 3
+      },
+      "inspected": [
+        {
+          "path": "COPYING",
+          "read_scope": "full",
+          "sha256": "2116115d46eeb1e736acfa562eed14fe6c34760794bc5b484642fe694adde0fd",
+          "url": "https://github.com/tmux/tmux/blob/e476c1230b958df0cb12977517d24b3dc931375b/COPYING"
+        },
+        {
+          "path": "README",
+          "read_scope": "full",
+          "sha256": "9fb75e6c7f10c25b73e41b8214336d0dc2acfbe4c99984514ccaf7327192d53e",
+          "url": "https://github.com/tmux/tmux/blob/e476c1230b958df0cb12977517d24b3dc931375b/README"
+        },
+        {
+          "path": "cmd-capture-pane.c",
+          "read_scope": "35-135;200-290",
+          "sha256": "757d9398be55c301f1935d0b6f17e5999c09a2ea8179228d3b95f3549041dffb",
+          "url": "https://github.com/tmux/tmux/blob/e476c1230b958df0cb12977517d24b3dc931375b/cmd-capture-pane.c"
+        },
+        {
+          "path": "cmd-queue.c",
+          "read_scope": "295-399;597-682;730-835",
+          "sha256": "2ea8548598efaa2162051b82643dc5f48970112d086781abe8785ca8e86d7ee2",
+          "url": "https://github.com/tmux/tmux/blob/e476c1230b958df0cb12977517d24b3dc931375b/cmd-queue.c"
+        },
+        {
+          "path": "cmd-wait-for.c",
+          "read_scope": "25-220",
+          "sha256": "6ae7422f730110d09b2da87ed273f1adf3fb0b9f3fe27a13da377fb792b06ff0",
+          "url": "https://github.com/tmux/tmux/blob/e476c1230b958df0cb12977517d24b3dc931375b/cmd-wait-for.c"
+        },
+        {
+          "path": "control.c",
+          "read_scope": "435-584;859-879;1042-1138",
+          "sha256": "a4bbd91f14a39c14edb7ca5cb0f2cdef4cd2c96123b42a1958be3ac0f66ed746",
+          "url": "https://github.com/tmux/tmux/blob/e476c1230b958df0cb12977517d24b3dc931375b/control.c"
+        },
+        {
+          "path": "notify.c",
+          "read_scope": "123-177",
+          "sha256": "57b122e2af32414e69ed8855ebffdb57d3e816479e09116c4f7d03013dcd3db1",
+          "url": "https://github.com/tmux/tmux/blob/e476c1230b958df0cb12977517d24b3dc931375b/notify.c"
+        },
+        {
+          "path": "server-fn.c",
+          "read_scope": "315-386",
+          "sha256": "30fb43c2520feb262da1c48e91d241bf1c1958792b9a1108e36e1ed51bf6ae89",
+          "url": "https://github.com/tmux/tmux/blob/e476c1230b958df0cb12977517d24b3dc931375b/server-fn.c"
+        },
+        {
+          "path": "session.c",
+          "read_scope": "185-260",
+          "sha256": "35e62ba0c1b4b44352326b15034b6e94af3b796e2a711d5ec3d7184b5d956094",
+          "url": "https://github.com/tmux/tmux/blob/e476c1230b958df0cb12977517d24b3dc931375b/session.c"
+        },
+        {
+          "path": "window.c",
+          "read_scope": "370-400",
+          "sha256": "2d86fbc3842e280148907f7f678daf0ca427a55ede0647a4c866ab0a0ca5fa6e",
+          "url": "https://github.com/tmux/tmux/blob/e476c1230b958df0cb12977517d24b3dc931375b/window.c"
+        }
+      ]
+    },
+    {
+      "id": "beads",
+      "repository": "https://github.com/steveyegge/beads",
+      "commit": "2f1e8be3ca1fe990727858ccd8e4a78461b39c7c",
+      "license_observation": "MIT; LICENSE",
+      "tracked_files": 4325,
+      "top_directories": {
+        "internal": 2066,
+        "cmd": 1363,
+        "docs": 188,
+        "scripts": 161,
+        "backend": 65,
+        "(root)": 64,
+        "engdocs": 60,
+        "plugins": 57,
+        ".github": 51,
+        "examples": 42,
+        "integrations": 36,
+        "issueops": 34,
+        "release-gates": 31,
+        "tools": 20,
+        "tests": 18,
+        "npm-package": 14,
+        "test": 10,
+        ".claude": 8,
+        ".githooks": 5,
+        "third_party": 5,
+        "winget": 5,
+        "journalops": 4,
+        "memoryops": 4,
+        ".devcontainer": 3,
+        "format": 3,
+        "schema": 3,
+        "beadserrors": 2,
+        ".agent": 1,
+        ".beads": 1,
+        ".claude-plugin": 1
+      },
+      "inspected": [
+        {
+          "path": "LICENSE",
+          "read_scope": "full",
+          "sha256": "caa2c60efbbf71e18b45ef6006a18213f8a42554b235af88883f6f1ec240b7db",
+          "url": "https://github.com/steveyegge/beads/blob/2f1e8be3ca1fe990727858ccd8e4a78461b39c7c/LICENSE"
+        },
+        {
+          "path": "go.mod",
+          "read_scope": "1-55",
+          "sha256": "953892bbb3b51b6b8e1678a57dbd7b039d1b76ec92da9d9334cfbb927c99f703",
+          "url": "https://github.com/steveyegge/beads/blob/2f1e8be3ca1fe990727858ccd8e4a78461b39c7c/go.mod"
+        },
+        {
+          "path": "internal/compact/compactor.go",
+          "read_scope": "1-130",
+          "sha256": "6a4c4498e34733e560df8d47e70fbf08fccf81b32f6d0aa10fb69b2ca91b2238",
+          "url": "https://github.com/steveyegge/beads/blob/2f1e8be3ca1fe990727858ccd8e4a78461b39c7c/internal/compact/compactor.go"
+        },
+        {
+          "path": "internal/storage/dolt/issue_claimer.go",
+          "read_scope": "full",
+          "sha256": "1b452f0887e4d68444961a6874daf8a8a9524f707f1279faf012d16f465910dd",
+          "url": "https://github.com/steveyegge/beads/blob/2f1e8be3ca1fe990727858ccd8e4a78461b39c7c/internal/storage/dolt/issue_claimer.go"
+        },
+        {
+          "path": "internal/storage/dolt/issue_operations_tx.go",
+          "read_scope": "full",
+          "sha256": "0bd765f9739bd30776128acce85c3d52497849624fc8710eedac9ce3cd395e3f",
+          "url": "https://github.com/steveyegge/beads/blob/2f1e8be3ca1fe990727858ccd8e4a78461b39c7c/internal/storage/dolt/issue_operations_tx.go"
+        },
+        {
+          "path": "internal/storage/issueops/claim.go",
+          "read_scope": "1-210",
+          "sha256": "cc9c028c5ff3348f7606d195c412387899c41b5697fd6e91399fe0c09be6e398",
+          "url": "https://github.com/steveyegge/beads/blob/2f1e8be3ca1fe990727858ccd8e4a78461b39c7c/internal/storage/issueops/claim.go"
+        },
+        {
+          "path": "internal/storage/issueops/lease.go",
+          "read_scope": "1-160 (selected bodies)",
+          "sha256": "4faa364afbc262b0209de0bb07c89f46c0e6719c84248031dee3cf2b962eb127",
+          "url": "https://github.com/steveyegge/beads/blob/2f1e8be3ca1fe990727858ccd8e4a78461b39c7c/internal/storage/issueops/lease.go"
+        },
+        {
+          "path": "internal/storage/sqlbuild/ready.go",
+          "read_scope": "1-105",
+          "sha256": "8350a2227f3a5418b498210e7717df10efdcc83541f8ed7d9cf94692947a59f7",
+          "url": "https://github.com/steveyegge/beads/blob/2f1e8be3ca1fe990727858ccd8e4a78461b39c7c/internal/storage/sqlbuild/ready.go"
+        },
+        {
+          "path": "internal/workapi/ready.go",
+          "read_scope": "1-140",
+          "sha256": "3078c95441cf2e2ea993e7ff526988e28944819d792a12bdb366c9feafa2981d",
+          "url": "https://github.com/steveyegge/beads/blob/2f1e8be3ca1fe990727858ccd8e4a78461b39c7c/internal/workapi/ready.go"
+        }
+      ]
+    },
+    {
+      "id": "backlog",
+      "repository": "https://github.com/MrLesk/Backlog.md",
+      "commit": "69e7b15362337d6712783d9a685f6e4bb693fa9d",
+      "license_observation": "MIT; LICENSE",
+      "tracked_files": 1346,
+      "top_directories": {
+        "backlog": 764,
+        "src": 523,
+        "(root)": 20,
+        ".github": 18,
+        "scripts": 9,
+        "completions": 7,
+        ".claude": 2,
+        ".codex": 1,
+        ".husky": 1,
+        "tools": 1
+      },
+      "inspected": [
+        {
+          "path": "LICENSE",
+          "read_scope": "full",
+          "sha256": "2039a3f558949ff32ce20b9a5a1dd36d01e5a7716a35dc0d0b7400bf68a1136e",
+          "url": "https://github.com/MrLesk/Backlog.md/blob/69e7b15362337d6712783d9a685f6e4bb693fa9d/LICENSE"
+        },
+        {
+          "path": "package.json",
+          "read_scope": "1-95",
+          "sha256": "be3cc0605f4e67e169af7840a45b94114c5d8714807d06a42ff72da7c9466a88",
+          "url": "https://github.com/MrLesk/Backlog.md/blob/69e7b15362337d6712783d9a685f6e4bb693fa9d/package.json"
+        },
+        {
+          "path": "src/constants/index.ts",
+          "read_scope": "1-95",
+          "sha256": "8d7a51262d353835a5fb9cf8a9780d3d1436b86c4ac7d82541b9a881374e4ae3",
+          "url": "https://github.com/MrLesk/Backlog.md/blob/69e7b15362337d6712783d9a685f6e4bb693fa9d/src/constants/index.ts"
+        },
+        {
+          "path": "src/core/content-store.ts",
+          "read_scope": "1-170 interface review",
+          "sha256": "e836eb275ebded7a17f4c63fa63a8d852579b6e83fc2d5b56108ce73974cd301",
+          "url": "https://github.com/MrLesk/Backlog.md/blob/69e7b15362337d6712783d9a685f6e4bb693fa9d/src/core/content-store.ts"
+        },
+        {
+          "path": "src/core/search-service.ts",
+          "read_scope": "1-140",
+          "sha256": "5709abf44351db363c210e2be9f1c81b8beed53cc299dc9b739aec134473e1ce",
+          "url": "https://github.com/MrLesk/Backlog.md/blob/69e7b15362337d6712783d9a685f6e4bb693fa9d/src/core/search-service.ts"
+        },
+        {
+          "path": "src/core/task-detail.ts",
+          "read_scope": "1-80; interface/symbol scan",
+          "sha256": "d9a53ffe4767a3fd6c7aa0952e0c00b36a9aad4c3e344d67f97700f2681c33f4",
+          "url": "https://github.com/MrLesk/Backlog.md/blob/69e7b15362337d6712783d9a685f6e4bb693fa9d/src/core/task-detail.ts"
+        },
+        {
+          "path": "src/file-system/operations.ts",
+          "read_scope": "640-735;784-840",
+          "sha256": "7e4399028bb3a235f21b41cdb3d3f6a852502278496c6b23da35b877c3e7ef38",
+          "url": "https://github.com/MrLesk/Backlog.md/blob/69e7b15362337d6712783d9a685f6e4bb693fa9d/src/file-system/operations.ts"
+        },
+        {
+          "path": "src/utils/dependency-graph.ts",
+          "read_scope": "1-275",
+          "sha256": "461aea3e356b810a42b1bfd8adf91ccae78c4899a185446da5a3b31619b12ba4",
+          "url": "https://github.com/MrLesk/Backlog.md/blob/69e7b15362337d6712783d9a685f6e4bb693fa9d/src/utils/dependency-graph.ts"
+        },
+        {
+          "path": "src/utils/prefix-config.ts",
+          "read_scope": "1-125; selected normalization bodies",
+          "sha256": "6737b65057797c10a940f4fa7aa8c469ef81375ca07ffcaee9c95f54978123d3",
+          "url": "https://github.com/MrLesk/Backlog.md/blob/69e7b15362337d6712783d9a685f6e4bb693fa9d/src/utils/prefix-config.ts"
+        },
+        {
+          "path": "src/utils/readiness.ts",
+          "read_scope": "full",
+          "sha256": "5782d88ba3ae2ceedf4fb68bcf5a8a0b35d344ccee8d6d75963e61fd6bb42f49",
+          "url": "https://github.com/MrLesk/Backlog.md/blob/69e7b15362337d6712783d9a685f6e4bb693fa9d/src/utils/readiness.ts"
+        },
+        {
+          "path": "src/utils/task-id.ts",
+          "read_scope": "1-90",
+          "sha256": "8bfd099e9865e32b56c995c5f5c4a0ff3e8c9150f6f6bbb671f7c6718f7cfad8",
+          "url": "https://github.com/MrLesk/Backlog.md/blob/69e7b15362337d6712783d9a685f6e4bb693fa9d/src/utils/task-id.ts"
+        },
+        {
+          "path": "src/utils/task-record-index.ts",
+          "read_scope": "full",
+          "sha256": "722522330cc74e50f5a4ddf9d643d2b61d7574bcc2f5add2330ed300d1397bdf",
+          "url": "https://github.com/MrLesk/Backlog.md/blob/69e7b15362337d6712783d9a685f6e4bb693fa9d/src/utils/task-record-index.ts"
+        },
+        {
+          "path": "src/utils/task-sorting.ts",
+          "read_scope": "selected comparison bodies",
+          "sha256": "2c774f5c614b81824a4fd89baa0c19beb716de75e5995800a39c9e61b10a7c2e",
+          "url": "https://github.com/MrLesk/Backlog.md/blob/69e7b15362337d6712783d9a685f6e4bb693fa9d/src/utils/task-sorting.ts"
+        },
+        {
+          "path": "src/utils/terminal-status.ts",
+          "read_scope": "full",
+          "sha256": "077c40e0adc6b3c42a876f6b40d098252288e4d8911d1201d703353c00afe942",
+          "url": "https://github.com/MrLesk/Backlog.md/blob/69e7b15362337d6712783d9a685f6e4bb693fa9d/src/utils/terminal-status.ts"
+        }
+      ]
+    },
+    {
+      "id": "gastown",
+      "repository": "https://github.com/gastownhall/gastown",
+      "commit": "649b832b7672bc7a2dbef26f5983aba6198b819b",
+      "license_observation": "MIT; LICENSE",
+      "tracked_files": 1563,
+      "top_directories": {
+        "internal": 1319,
+        "docs": 74,
+        "plugins": 31,
+        "scripts": 25,
+        "(root)": 24,
+        "gt-model-eval": 21,
+        ".github": 16,
+        "pr-sheriff-evidence": 13,
+        ".beads": 11,
+        ".claude": 7,
+        "npm-package": 7,
+        "cmd": 6,
+        "templates": 4,
+        ".cursor": 2,
+        ".githooks": 2,
+        ".runtime": 1
+      },
+      "inspected": [
+        {
+          "path": "LICENSE",
+          "read_scope": "full",
+          "sha256": "6141d15e761ef772bdd45fdd4036dfc1f97488011429e6643e1445afa9d22f4d",
+          "url": "https://github.com/gastownhall/gastown/blob/649b832b7672bc7a2dbef26f5983aba6198b819b/LICENSE"
+        },
+        {
+          "path": "go.mod",
+          "read_scope": "1-55",
+          "sha256": "ccfcb67121c54f196f6bb0ee8240408dce4628ca945c3176212f8d7e76a532be",
+          "url": "https://github.com/gastownhall/gastown/blob/649b832b7672bc7a2dbef26f5983aba6198b819b/go.mod"
+        },
+        {
+          "path": "internal/convoy/operations.go",
+          "read_scope": "1-150",
+          "sha256": "acfb15f87702c5b7f4bfdae52d6e4b4a6375255ad3a8c7a584a8581f2330ae24",
+          "url": "https://github.com/gastownhall/gastown/blob/649b832b7672bc7a2dbef26f5983aba6198b819b/internal/convoy/operations.go"
+        },
+        {
+          "path": "internal/formula/types.go",
+          "read_scope": "1-145 (selected types)",
+          "sha256": "5175e14b18a1d896f708d5a96d22bdd1e8f4ad9546c7195a890e427bc106b48d",
+          "url": "https://github.com/gastownhall/gastown/blob/649b832b7672bc7a2dbef26f5983aba6198b819b/internal/formula/types.go"
+        },
+        {
+          "path": "internal/nudge/queue.go",
+          "read_scope": "1-193",
+          "sha256": "c07b5fcdd5584e770bfa453d2e3fc84596c408827f78f079a49c9cd0e51fe205",
+          "url": "https://github.com/gastownhall/gastown/blob/649b832b7672bc7a2dbef26f5983aba6198b819b/internal/nudge/queue.go"
+        },
+        {
+          "path": "internal/polecat/workstate.go",
+          "read_scope": "1-225",
+          "sha256": "abe086ba7b0f2747260cdeeac2c74c979c1673c2b6101eee2ab8e73c455f674b",
+          "url": "https://github.com/gastownhall/gastown/blob/649b832b7672bc7a2dbef26f5983aba6198b819b/internal/polecat/workstate.go"
+        },
+        {
+          "path": "internal/refinery/safety_stop.go",
+          "read_scope": "full",
+          "sha256": "8455621c4ee0cfeeda77f9af55b5f5d5d52df803e4671e5af60d26d47e6335fe",
+          "url": "https://github.com/gastownhall/gastown/blob/649b832b7672bc7a2dbef26f5983aba6198b819b/internal/refinery/safety_stop.go"
+        },
+        {
+          "path": "internal/scheduler/capacity/dispatch.go",
+          "read_scope": "1-205",
+          "sha256": "317b0367c833435f7abec9609acb2d8fd11928662605a3a3ef39f4b9c18e8e0d",
+          "url": "https://github.com/gastownhall/gastown/blob/649b832b7672bc7a2dbef26f5983aba6198b819b/internal/scheduler/capacity/dispatch.go"
+        },
+        {
+          "path": "internal/scheduler/capacity/pipeline.go",
+          "read_scope": "1-210",
+          "sha256": "8249ae9663f829cc7b30c1dc10ee3ebd584dc75bece32bfd0a0255a608d689ff",
+          "url": "https://github.com/gastownhall/gastown/blob/649b832b7672bc7a2dbef26f5983aba6198b819b/internal/scheduler/capacity/pipeline.go"
+        },
+        {
+          "path": "internal/session/pidtrack.go",
+          "read_scope": "symbol inventory only",
+          "sha256": "72c23ac05c7aa8353fd80e5e20de298a8aebebdbf2320c9ff0ccab047d051639",
+          "url": "https://github.com/gastownhall/gastown/blob/649b832b7672bc7a2dbef26f5983aba6198b819b/internal/session/pidtrack.go"
+        },
+        {
+          "path": "internal/session/registry.go",
+          "read_scope": "1-120",
+          "sha256": "75705e434d8faac727bbaddab20f30e9863350f359dd370bab95e1b2e802ce30",
+          "url": "https://github.com/gastownhall/gastown/blob/649b832b7672bc7a2dbef26f5983aba6198b819b/internal/session/registry.go"
+        }
+      ]
+    },
+    {
+      "id": "cline",
+      "repository": "https://github.com/cline/cline",
+      "commit": "39ff2359f7e08231281539696e48a166ce49270c",
+      "license_observation": "Apache-2.0; LICENSE",
+      "tracked_files": 4179,
+      "top_directories": {
+        "apps": 2711,
+        "sdk": 1110,
+        "docs": 160,
+        ".agents": 48,
+        "evals": 45,
+        ".github": 32,
+        "(root)": 18,
+        ".clinerules": 16,
+        ".claude": 11,
+        "assets": 9,
+        ".cline": 7,
+        ".vscode": 4,
+        ".greptile": 3,
+        "patches": 2,
+        ".codex": 1,
+        ".husky": 1,
+        ".kanban": 1
+      },
+      "inspected": [
+        {
+          "path": "LICENSE",
+          "read_scope": "1-16 (license identification)",
+          "sha256": "f704446a5f1271608805598b557e4288cf8580477ea038c9c3d8b361f693f6b8",
+          "url": "https://github.com/cline/cline/blob/39ff2359f7e08231281539696e48a166ce49270c/LICENSE"
+        },
+        {
+          "path": "apps/vscode/src/core/context/context-tracking/FileContextTracker.ts",
+          "read_scope": "1-65; watcher interface",
+          "sha256": "02291887b3be00c52c55d43d467333749907e92a0b8a3653a718798a960820d9",
+          "url": "https://github.com/cline/cline/blob/39ff2359f7e08231281539696e48a166ce49270c/apps/vscode/src/core/context/context-tracking/FileContextTracker.ts"
+        },
+        {
+          "path": "apps/vscode/src/core/context/instructions/user-instructions/rule-conditionals.ts",
+          "read_scope": "1-115",
+          "sha256": "064278407bb71650f9bd0d32f68ce3e4719c5d913d2792c2633c41536415b9ad",
+          "url": "https://github.com/cline/cline/blob/39ff2359f7e08231281539696e48a166ce49270c/apps/vscode/src/core/context/instructions/user-instructions/rule-conditionals.ts"
+        },
+        {
+          "path": "docs/core-workflows/checkpoints.mdx",
+          "read_scope": "1-85",
+          "sha256": "a7da9a10d10456f40460a1f7d038b4fe2e223a7448bf5e45e8f791807c6cb4f6",
+          "url": "https://github.com/cline/cline/blob/39ff2359f7e08231281539696e48a166ce49270c/docs/core-workflows/checkpoints.mdx"
+        },
+        {
+          "path": "docs/features/auto-approve.mdx",
+          "read_scope": "selected permission examples",
+          "sha256": "50fa4c19be284e83f684ca27f393ff96a1d731d4bdfe899e27697f3330fc71a2",
+          "url": "https://github.com/cline/cline/blob/39ff2359f7e08231281539696e48a166ce49270c/docs/features/auto-approve.mdx"
+        },
+        {
+          "path": "sdk/packages/core/src/extensions/context/compaction-shared.ts",
+          "read_scope": "1-125",
+          "sha256": "1abe94cce127f7c2e2f287ca51efd711fc231d7a7f9a8f58743cda4150beccd1",
+          "url": "https://github.com/cline/cline/blob/39ff2359f7e08231281539696e48a166ce49270c/sdk/packages/core/src/extensions/context/compaction-shared.ts"
+        },
+        {
+          "path": "sdk/packages/core/src/extensions/context/compaction.ts",
+          "read_scope": "1-140;295-328;475-500",
+          "sha256": "50534c940f999797fbe5cacf821739ff99d81610e042aab9c9269ee15dedc696",
+          "url": "https://github.com/cline/cline/blob/39ff2359f7e08231281539696e48a166ce49270c/sdk/packages/core/src/extensions/context/compaction.ts"
+        },
+        {
+          "path": "sdk/packages/core/src/hooks/checkpoint-hooks.ts",
+          "read_scope": "1-150",
+          "sha256": "909dedc080c7ae85639449e595bca9c79f0c530f7dfb1a945806b063ebd51339",
+          "url": "https://github.com/cline/cline/blob/39ff2359f7e08231281539696e48a166ce49270c/sdk/packages/core/src/hooks/checkpoint-hooks.ts"
+        },
+        {
+          "path": "sdk/packages/core/src/session/checkpoint-restore.ts",
+          "read_scope": "1-175",
+          "sha256": "a1aa2fa03033b464380c068924056c647325ed6753134bd57a56348a5a9dfe03",
+          "url": "https://github.com/cline/cline/blob/39ff2359f7e08231281539696e48a166ce49270c/sdk/packages/core/src/session/checkpoint-restore.ts"
+        }
+      ]
+    },
+    {
+      "id": "lite-harness",
+      "repository": "https://github.com/LiteLLM-Labs/lite-harness",
+      "commit": "dd99cfdfc68dbb6b3f7f986d54efd42572373a6c",
+      "license_observation": "pyproject.toml declares MIT; no LICENSE/COPYING file found in tracked paths; grant/notice unresolved",
+      "tracked_files": 89,
+      "top_directories": {
+        "src": 61,
+        "docs": 13,
+        "(root)": 5,
+        "tests": 5,
+        ".githooks": 3,
+        ".github": 2
+      },
+      "inspected": [
+        {
+          "path": "README.md",
+          "read_scope": "1-120",
+          "sha256": "1ad808b29a9635f0639bf4cec379c601b184f6f362ecf40a588ab3370e50ea1e",
+          "url": "https://github.com/LiteLLM-Labs/lite-harness/blob/dd99cfdfc68dbb6b3f7f986d54efd42572373a6c/README.md"
+        },
+        {
+          "path": "src/sdk/python/decode.py",
+          "read_scope": "full",
+          "sha256": "a1c391bfc8f3dc77db7c818f59dd80a4b63151a2c8e86007397311a0a71578cf",
+          "url": "https://github.com/LiteLLM-Labs/lite-harness/blob/dd99cfdfc68dbb6b3f7f986d54efd42572373a6c/src/sdk/python/decode.py"
+        },
+        {
+          "path": "src/sdk/python/pyproject.toml",
+          "read_scope": "full",
+          "sha256": "018e1e143d6e0a14c56d7ef5f013b107324c2ffc06f7c8f8774b2f61fc8c6317",
+          "url": "https://github.com/LiteLLM-Labs/lite-harness/blob/dd99cfdfc68dbb6b3f7f986d54efd42572373a6c/src/sdk/python/pyproject.toml"
+        },
+        {
+          "path": "src/sdk/python/query.py",
+          "read_scope": "full",
+          "sha256": "a471f289002a7bdc36e178e0eb727bb28e419ed1a32c53957bd77c6d040a1e77",
+          "url": "https://github.com/LiteLLM-Labs/lite-harness/blob/dd99cfdfc68dbb6b3f7f986d54efd42572373a6c/src/sdk/python/query.py"
+        },
+        {
+          "path": "src/sdk/python/transport.py",
+          "read_scope": "1-85;190-240;329-370",
+          "sha256": "bfdbfbfa49866e37e2286983bdc846ab42114f799793706b5209306f426e8b28",
+          "url": "https://github.com/LiteLLM-Labs/lite-harness/blob/dd99cfdfc68dbb6b3f7f986d54efd42572373a6c/src/sdk/python/transport.py"
+        },
+        {
+          "path": "src/sdk/server/protocol.mjs",
+          "read_scope": "full",
+          "sha256": "33703e17a30cb4ecd0c1b2c153cb1cfac6146f7c8ca2a5dc494c3aba2fa18ccc",
+          "url": "https://github.com/LiteLLM-Labs/lite-harness/blob/dd99cfdfc68dbb6b3f7f986d54efd42572373a6c/src/sdk/server/protocol.mjs"
+        },
+        {
+          "path": "src/sdk/server/providers/codex/index.mjs",
+          "read_scope": "full",
+          "sha256": "32f2cde34f2635e97c013decb343eb5bbd03aa2d289d2d8c3f6b3df8eead5b3f",
+          "url": "https://github.com/LiteLLM-Labs/lite-harness/blob/dd99cfdfc68dbb6b3f7f986d54efd42572373a6c/src/sdk/server/providers/codex/index.mjs"
+        },
+        {
+          "path": "src/sdk/server/providers/codex/transformation.mjs",
+          "read_scope": "full",
+          "sha256": "5e27aca59139d4131677725ce047ef5d5d748aa250ce832f460dde24f4bab0f9",
+          "url": "https://github.com/LiteLLM-Labs/lite-harness/blob/dd99cfdfc68dbb6b3f7f986d54efd42572373a6c/src/sdk/server/providers/codex/transformation.mjs"
+        },
+        {
+          "path": "src/sdk/server/providers/index.mjs",
+          "read_scope": "full",
+          "sha256": "e4234daa644f63d1ba92a5330998d069d35bd99eb91403c784c32add67b87659",
+          "url": "https://github.com/LiteLLM-Labs/lite-harness/blob/dd99cfdfc68dbb6b3f7f986d54efd42572373a6c/src/sdk/server/providers/index.mjs"
+        },
+        {
+          "path": "src/sdk/server/session.mjs",
+          "read_scope": "full",
+          "sha256": "e5d1fef74684644925867d03036e9af96edb1188370556dd2ea2e0668c274a27",
+          "url": "https://github.com/LiteLLM-Labs/lite-harness/blob/dd99cfdfc68dbb6b3f7f986d54efd42572373a6c/src/sdk/server/session.mjs"
+        }
+      ]
+    },
+    {
+      "id": "symphony",
+      "repository": "https://github.com/openai/symphony",
+      "commit": "be10a1b79df723d6d7612b5651c8522704dafb2e",
+      "license_observation": "Apache-2.0; LICENSE",
+      "tracked_files": 132,
+      "top_directories": {
+        "elixir": 109,
+        ".codex": 9,
+        ".github": 8,
+        "(root)": 4,
+        "docs": 2
+      },
+      "inspected": [
+        {
+          "path": "LICENSE",
+          "read_scope": "1-20 (license identification)",
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+          "url": "https://github.com/openai/symphony/blob/be10a1b79df723d6d7612b5651c8522704dafb2e/LICENSE"
+        },
+        {
+          "path": "README.md",
+          "read_scope": "full",
+          "sha256": "b47702596a9f5d69878d6541d444358a7576ae9a462993f941056d0ca80e79dd",
+          "url": "https://github.com/openai/symphony/blob/be10a1b79df723d6d7612b5651c8522704dafb2e/README.md"
+        },
+        {
+          "path": "SPEC.md",
+          "read_scope": "headings inventory only",
+          "sha256": "c6638056502ecd2e60eb04e1f1a627a4964506fcdf4d39873e78aa5834de85d5",
+          "url": "https://github.com/openai/symphony/blob/be10a1b79df723d6d7612b5651c8522704dafb2e/SPEC.md"
+        },
+        {
+          "path": "elixir/lib/symphony_elixir/agent_runner.ex",
+          "read_scope": "1-120",
+          "sha256": "4b4ab877427c76e5778034c7c89a41e9ec884fb1b142f3c6754550f3ba25be39",
+          "url": "https://github.com/openai/symphony/blob/be10a1b79df723d6d7612b5651c8522704dafb2e/elixir/lib/symphony_elixir/agent_runner.ex"
+        },
+        {
+          "path": "elixir/lib/symphony_elixir/codex/app_server.ex",
+          "read_scope": "1-85",
+          "sha256": "40b87a197e96755a5343ffb7f211fb3c68e90b4dcdb7658f62d971f07f7e4e6e",
+          "url": "https://github.com/openai/symphony/blob/be10a1b79df723d6d7612b5651c8522704dafb2e/elixir/lib/symphony_elixir/codex/app_server.ex"
+        },
+        {
+          "path": "elixir/lib/symphony_elixir/orchestrator.ex",
+          "read_scope": "250-345;410-444;803-865;1034-1095;1232-1260; state symbols",
+          "sha256": "ffa6fd2ca66f775b93ca561adb60a61a416f8fb604ff247128d3638169fdab22",
+          "url": "https://github.com/openai/symphony/blob/be10a1b79df723d6d7612b5651c8522704dafb2e/elixir/lib/symphony_elixir/orchestrator.ex"
+        },
+        {
+          "path": "elixir/lib/symphony_elixir/path_safety.ex",
+          "read_scope": "full",
+          "sha256": "93881b60274584426c62f687be1252d490794f24a7b60b5607ad2c88b0586612",
+          "url": "https://github.com/openai/symphony/blob/be10a1b79df723d6d7612b5651c8522704dafb2e/elixir/lib/symphony_elixir/path_safety.ex"
+        },
+        {
+          "path": "elixir/lib/symphony_elixir/workflow_store.ex",
+          "read_scope": "selected 1-180 including reload/stamp",
+          "sha256": "5863443cbc9c027785c117050323e552ee9b8d47ff5f5b97f3f03bf4aed5a42c",
+          "url": "https://github.com/openai/symphony/blob/be10a1b79df723d6d7612b5651c8522704dafb2e/elixir/lib/symphony_elixir/workflow_store.ex"
+        },
+        {
+          "path": "elixir/lib/symphony_elixir/workspace.ex",
+          "read_scope": "1-175",
+          "sha256": "b72132293f572fa0c7caa38adda941452072e8639f2c39b4c8a569d69084c6e5",
+          "url": "https://github.com/openai/symphony/blob/be10a1b79df723d6d7612b5651c8522704dafb2e/elixir/lib/symphony_elixir/workspace.ex"
+        }
+      ]
+    }
+  ]
+}

@@ -14,6 +14,7 @@
 | 무슨 판을 어디까지 읽었나 | [출처·범위·이전 조사와의 차이](SOURCES.md) |
 | Hermes 기능 안내에서 빠뜨린 분야가 있나 | [기능 문서별 대응표](HERMES-COVERAGE.md) |
 | AnchorMind 등의 내부 부품을 해체하고 같은 기능끼리 비교 | [코드 수준 후속 분석](../component-comparison-2026-10-04/README.md) — 전체 파일 분류, 핵심 경로, 대응 기능, 적용 설계 |
+| tmux와 남은 작업·운영·agent 도구를 자세히 보기 | [운영 도구 후속 분석](../operations-comparison-2026-10-04/README.md) — 실제 tmux/순수 함수 시험, 상태·실패 경계, 편의 기능, 적용 설계 |
 
 ## 이런 불편이 생기면 다시 열기
 

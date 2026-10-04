@@ -8,6 +8,8 @@
 
 기능 이름을 넘어 내부 책임과 적용 방법을 비교하려면 [부품별 후속 분석](research/component-comparison-2026-10-04/README.md)을 본다. AnchorMind의 저장·검색·수명·운영 경로와 Hermes·codex-peek·WorkTrail의 대응 기능을 비교하고, 우리 코드 접점·데이터 계약·작은 시험을 연결했다. 전체 파일 분류와 실제로 읽거나 실행한 범위를 구별한다.
 
+실행 연결·작업 배정·복구·편의 흐름은 [tmux와 운영 도구 심층 비교](research/operations-comparison-2026-10-04/README.md)에 있다. Beads·Backlog.md·Gas Town·Cline·Lite-Harness·Symphony의 선택 코드와 비공개 제품의 공식 문서를 구분하고, [기능 비교](research/operations-comparison-2026-10-04/COMPARISON.md)와 [적용 설계](research/operations-comparison-2026-10-04/ADOPTION.md)를 연결했다.
+
 | 출처 | 참고한 기능 | 현재 적용 상태와 위치 | 상세 조사와 원본 코드 위치 |
 |---|---|---|---|
 | AnchorMind | 범위가 있는 기억 검색, 출처 메타데이터, 크기를 제한한 AnswerPack, 사건 이력 | **원리 적용·독자 구현.** [app/memory.py](../app/memory.py)가 같은 작업의 공개 이력을 자동 선택하고 고정. [controller](../app/controller.py)의 기존 원장·입력 경계를 재사용. 외부 패키지 의존성·코드 복사 없음 | [기능·파이프라인·코드 검토](reviews/2026-10-04-anchormind/README.md), [순수 함수 probe](reviews/2026-10-04-anchormind/probes.mjs). 검토의 링크는 upstream commit에 고정 |
