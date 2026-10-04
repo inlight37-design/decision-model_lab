@@ -47,6 +47,7 @@ STATIC = Path(__file__).with_name("static")
 ASSETS = {"/island-ui/themes.css": ("island-ui/themes.css", "text/css; charset=utf-8"),
           "/api.js": ("api.js", "text/javascript; charset=utf-8"),
           "/catalog.js": ("catalog.js", "text/javascript; charset=utf-8"),
+          "/templates.js": ("templates.js", "text/javascript; charset=utf-8"),
           "/role-board.js": ("role-board.js", "text/javascript; charset=utf-8"),
           "/role-board.css": ("role-board.css", "text/css; charset=utf-8"),
           "/island-ui/base.css": ("island-ui/base.css", "text/css; charset=utf-8"),
@@ -210,6 +211,19 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                 self._send(200, (STATIC / name).read_bytes(), kind)
             elif path == "/api/state":
                 self._json(200, controller.view())
+            elif parts[:2] == ['api', 'templates'] and (len(parts) in (2, 3) or len(parts) == 4 and parts[3] == 'export'):
+                try:
+                    if len(parts) == 2:
+                        self._json(200, {'templates': controller.templates.list()})
+                    elif len(parts) == 4:
+                        self._json(200, controller.templates.export(parts[2]))
+                    else:
+                        item = controller.templates.load(parts[2])
+                        current = chosen_models(roster, choices, item['draft'].get('models'))
+                        controller.templates.validate(item['draft'], current, item['bindings'])
+                        self._json(200, item)
+                except (ControllerError, ValueError, TypeError, KeyError) as exc:
+                    self._json(409, {'error': str(exc)})
             elif path == "/api/search":
                 try:
                     params = parse_qs(urlsplit(self.path).query, keep_blank_values=True, max_num_fields=10)
@@ -261,6 +275,21 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                 parts = urlsplit(self.path).path.strip("/").split("/")
                 if parts == ["api", "account-quota", "refresh"]:
                     self._json(200, account_quota.refresh())
+                elif parts == ['api', 'templates']:
+                    draft = body.get('draft')
+                    if not isinstance(draft, dict):
+                        raise ControllerError('템플릿 설정이 필요합니다.')
+                    current = chosen_models(roster, choices, draft.get('models'))
+                    self._json(200, controller.templates.save(body.get('name'), draft, current))
+                elif parts == ['api', 'templates', 'import']:
+                    item = body.get('item')
+                    if not isinstance(item, dict) or not isinstance(item.get('draft'), dict):
+                        raise ControllerError('템플릿 파일이 필요합니다.')
+                    current = chosen_models(roster, choices, item['draft'].get('models'))
+                    self._json(200, controller.templates.import_copy(item, current))
+                elif len(parts) == 4 and parts[:2] == ['api', 'templates'] and parts[3] == 'delete':
+                    controller.templates.delete(parts[2], _text(body, 'sha256'))
+                    self._json(200, {'ok': True})
                 elif parts in (["api", "runs"], ["api", "runs", "preview"]):
                     chosen = []
                     items = body.get("participants", [])

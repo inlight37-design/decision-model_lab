@@ -33,6 +33,7 @@ from app.application.planning import PlanningService
 from app.application.reviews import ReviewService
 from app.application.synthesis import SynthesisService
 from app.application.work import WorkService
+from app.application.templates import TemplateService
 
 
 class Controller:
@@ -62,6 +63,7 @@ class Controller:
         self.reviews = ReviewService(self.runtime, self.execution, self.inputs, self.invocations, self.repository)
         self.synthesis = SynthesisService(self.runtime, self.execution, self.inputs, self.invocations, self.queries, self.repository)
         self.work = WorkService(self.runtime, self.execution, self.inputs, self.invocations)
+        self.templates = TemplateService(self.runtime, self.inputs)
         self.execution.advance_reviews = self.reviews._advance_reviews
         self.execution._recover()
         with self.runtime.lock:

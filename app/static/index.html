@@ -308,6 +308,23 @@ button.is-pressed { background-image: linear-gradient(color-mix(in oklch, curren
           <button class="close-x" id="newRunClose" type="button" aria-label="닫기">×</button>
           <h2 class="block-title" id="composeTitle">새 작업</h2>
           <div class="stack-lg">
+            <details class="cell stack">
+              <summary class="form-label">팀·작업 템플릿</summary>
+              <label class="form-label" for="templateChoice">저장한 설정</label>
+              <select id="templateChoice"><option value="">저장한 템플릿 선택</option></select>
+              <div class="row">
+                <button type="button" class="btn" id="templateLoad">템플릿 불러오기</button>
+                <button type="button" class="btn" id="templateDelete">선택한 템플릿 삭제</button>
+                <button type="button" class="btn" id="templateExport">템플릿 파일로 받기</button>
+                <button type="button" class="btn" id="templateImport">템플릿 파일 가져오기</button>
+              </div>
+              <input type="file" id="templateFile" accept=".json" hidden>
+              <label class="form-label" for="templateName">템플릿 이름</label>
+              <input id="templateName" type="text" maxlength="80" placeholder="예: 문서 비교 팀">
+              <button type="button" class="btn" id="templateSave">현재 설정을 템플릿으로 저장</button>
+              <p class="cap muted">질문·역할·모델·자료 사본·분담을 이 원장에 보관합니다. 다른 원장에서는 템플릿 파일을 가져오세요. 불러온 뒤 보낼 입력을 새로 확인합니다.</p>
+              <p class="sm" id="templateStatus" role="status" aria-live="polite"></p>
+            </details>
             <div class="form-field" id="taskTitleField">
               <label class="form-label" for="taskTitle">작업 제목</label>
               <input id="taskTitle" type="text" maxlength="120" placeholder="예: 문서 검색 방식 검토">
@@ -379,6 +396,7 @@ button.is-pressed { background-image: linear-gradient(color-mix(in oklch, curren
 <script src="/api.js"></script>
 <script src="/catalog.js"></script>
 <script src="/role-board.js"></script>
+<script src="/templates.js"></script>
 <script>
 "use strict";
 const TOKEN = controlToken();
@@ -1272,10 +1290,18 @@ function openNewRun(taskId = null) {
   $("taskTitleField").hidden = !!taskId;
   $("taskTitle").value = ""; $("question").value = ""; picked = []; renderPicked("");
   $("composeDialog").showModal(); $("newRunBtn").setAttribute("aria-expanded", "true");
+  $("templateName").value = ""; $("templateStatus").textContent = ""; refreshTemplates();
   (taskId ? $("question") : $("taskTitle")).focus();
 }
 $("newRunBtn").addEventListener("click", () => openNewRun());
 $("newRunClose").addEventListener("click", closeNewRun);
+$("templateSave").addEventListener("click", saveTemplate);
+$("templateLoad").addEventListener("click", loadTemplate);
+$("templateDelete").addEventListener("click", deleteTemplate);
+$("templateExport").addEventListener("click", exportTemplate);
+$("templateImport").addEventListener("click", () => $("templateFile").click());
+$("templateFile").addEventListener("change", e => { importTemplate(e.target.files[0]); e.target.value = ""; });
+$("composeDialog").addEventListener("close", () => templateReads.cancel());
 $("composeDialog").addEventListener("close", () => { $("newRunBtn").setAttribute("aria-expanded", "false"); invalidatePreview(); });
 $("newRunPanel").addEventListener("input", invalidatePreview);
 $("newRunPanel").addEventListener("change", invalidatePreview);
