@@ -1,0 +1,468 @@
+{
+  "observed_at": "2026-10-04",
+  "kind": "dated research, not runtime or evidence-registry entries",
+  "limitations": "Selected source reading and pure probes only; no deployed upstream integration, model quality or historical development-age audit.",
+  "repositories": {
+    "anchormind": {
+      "repository": "JinHo-von-Choi/anchormind",
+      "commit": "cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb",
+      "root_license": "Apache-2.0",
+      "tracked_paths": 1313
+    },
+    "hermes-agent": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "root_license": "MIT",
+      "tracked_paths": 17261
+    },
+    "codex-peek": {
+      "repository": "kimbyungsu/codex-peek",
+      "commit": "1baf5ccd360b50da57911401aeca1388e1b0c05e",
+      "root_license": "MIT",
+      "tracked_paths": 328
+    },
+    "worktrail": {
+      "repository": "jasonethicseo/worktrail",
+      "commit": "3fb48f980133fd2fb458362648c7bb04cfdbea2b",
+      "root_license": "FSL-1.1-ALv2",
+      "tracked_paths": 126
+    }
+  },
+  "groups": {
+    "AM-WRITE": {
+      "repository": "anchormind",
+      "files": [
+        {
+          "path": "lib/memory/processors/MemoryRememberer.js",
+          "read_scope": "1-335,609-753",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/memory/processors/MemoryRememberer.js"
+        },
+        {
+          "path": "lib/memory/write/WriteGate.js",
+          "read_scope": "1-100",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/memory/write/WriteGate.js"
+        },
+        {
+          "path": "lib/memory/write/RememberPostProcessor.js",
+          "read_scope": "121-247",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/memory/write/RememberPostProcessor.js"
+        }
+      ]
+    },
+    "AM-SEARCH": {
+      "repository": "anchormind",
+      "files": [
+        {
+          "path": "lib/memory/processors/MemoryRecaller.js",
+          "read_scope": "118-210,275-365",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/memory/processors/MemoryRecaller.js"
+        },
+        {
+          "path": "lib/memory/read/FragmentSearch.js",
+          "read_scope": "213-330,442-615",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/memory/read/FragmentSearch.js"
+        },
+        {
+          "path": "lib/memory/read/RankFusion.js",
+          "read_scope": "whole",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/memory/read/RankFusion.js"
+        },
+        {
+          "path": "lib/memory/read/BudgetSelector.js",
+          "read_scope": "1-160",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/memory/read/BudgetSelector.js"
+        },
+        {
+          "path": "lib/memory/read/HotCacheValidator.js",
+          "read_scope": "whole",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/memory/read/HotCacheValidator.js"
+        }
+      ]
+    },
+    "AM-CONTEXT": {
+      "repository": "anchormind",
+      "files": [
+        {
+          "path": "lib/memory/read/ContextBuilder.js",
+          "read_scope": "523-680",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/memory/read/ContextBuilder.js"
+        },
+        {
+          "path": "lib/memory/read/ContextTrust.js",
+          "read_scope": "whole",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/memory/read/ContextTrust.js"
+        },
+        {
+          "path": "lib/memory/read/ReviewVisibility.js",
+          "read_scope": "whole",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/memory/read/ReviewVisibility.js"
+        },
+        {
+          "path": "lib/memory/provenance.js",
+          "read_scope": "1-230,255-279",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/memory/provenance.js"
+        },
+        {
+          "path": "lib/memory/write/reviewRules.js",
+          "read_scope": "whole",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/memory/write/reviewRules.js"
+        }
+      ]
+    },
+    "AM-SCOPE": {
+      "repository": "anchormind",
+      "files": [
+        {
+          "path": "lib/memory/read/WorkspaceScope.js",
+          "read_scope": "whole",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/memory/read/WorkspaceScope.js"
+        },
+        {
+          "path": "lib/memory/read/workspace-read-policy.js",
+          "read_scope": "selected policy functions",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/memory/read/workspace-read-policy.js"
+        },
+        {
+          "path": "lib/memory/read/WorkspaceReadAuthz.js",
+          "read_scope": "1-160",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/memory/read/WorkspaceReadAuthz.js"
+        }
+      ]
+    },
+    "AM-LIFECYCLE": {
+      "repository": "anchormind",
+      "files": [
+        {
+          "path": "lib/memory/consolidate/MemoryConsolidator.js",
+          "read_scope": "273-488",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/memory/consolidate/MemoryConsolidator.js"
+        },
+        {
+          "path": "lib/memory/processors/AutoReflect.js",
+          "read_scope": "1-165",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/memory/processors/AutoReflect.js"
+        },
+        {
+          "path": "lib/memory/link/ReconsolidationEngine.js",
+          "read_scope": "1-110",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/memory/link/ReconsolidationEngine.js"
+        }
+      ]
+    },
+    "AM-RELATIONS": {
+      "repository": "anchormind",
+      "files": [
+        {
+          "path": "lib/memory/read/HistoryReconstructor.js",
+          "read_scope": "1-135",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/memory/read/HistoryReconstructor.js"
+        },
+        {
+          "path": "lib/memory/link/ContradictionDetector.js",
+          "read_scope": "1-125",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/memory/link/ContradictionDetector.js"
+        },
+        {
+          "path": "lib/symbolic/ClaimConflictDetector.js",
+          "read_scope": "1-110",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/symbolic/ClaimConflictDetector.js"
+        }
+      ]
+    },
+    "AM-LEARNING": {
+      "repository": "anchormind",
+      "files": [
+        {
+          "path": "lib/memory/signals/SearchParamAdaptor.js",
+          "read_scope": "1-105",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/memory/signals/SearchParamAdaptor.js"
+        },
+        {
+          "path": "lib/memory/signals/FeedbackSampler.js",
+          "read_scope": "1-110",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/memory/signals/FeedbackSampler.js"
+        },
+        {
+          "path": "lib/memory/embedding/SyntheticQueryGenerator.js",
+          "read_scope": "1-105",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/memory/embedding/SyntheticQueryGenerator.js"
+        },
+        {
+          "path": "lib/memory/embedding/MorphemeTokenizer.js",
+          "read_scope": "1-105",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/memory/embedding/MorphemeTokenizer.js"
+        }
+      ]
+    },
+    "AM-EVAL": {
+      "repository": "anchormind",
+      "files": [
+        {
+          "path": "lib/memory/signals/RecallMetrics.js",
+          "read_scope": "1-110",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/memory/signals/RecallMetrics.js"
+        },
+        {
+          "path": "lib/memory/signals/PairedBootstrap.js",
+          "read_scope": "whole",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/memory/signals/PairedBootstrap.js"
+        }
+      ]
+    },
+    "AM-ASYNC": {
+      "repository": "anchormind",
+      "files": [
+        {
+          "path": "lib/outbox/OutboxStore.js",
+          "read_scope": "1-140",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/outbox/OutboxStore.js"
+        },
+        {
+          "path": "lib/outbox/OutboxWorker.js",
+          "read_scope": "1-100",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/outbox/OutboxWorker.js"
+        },
+        {
+          "path": "lib/hooks/hook-contract.js",
+          "read_scope": "1-90",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/hooks/hook-contract.js"
+        },
+        {
+          "path": "lib/hooks/hook-reflect-consumer.js",
+          "read_scope": "1-100",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/hooks/hook-reflect-consumer.js"
+        }
+      ]
+    },
+    "AM-TRANSFER": {
+      "repository": "anchormind",
+      "files": [
+        {
+          "path": "lib/memory/transfer/FragmentExporter.js",
+          "read_scope": "1-110",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/memory/transfer/FragmentExporter.js"
+        },
+        {
+          "path": "lib/memory/transfer/ImportRunner.js",
+          "read_scope": "1-140",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/memory/transfer/ImportRunner.js"
+        }
+      ]
+    },
+    "AM-EGRESS": {
+      "repository": "anchormind",
+      "files": [
+        {
+          "path": "lib/llm/EgressPolicy.js",
+          "read_scope": "1-110",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/llm/EgressPolicy.js"
+        },
+        {
+          "path": "lib/llm/index.js",
+          "read_scope": "162-265",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/llm/index.js"
+        }
+      ]
+    },
+    "AM-OPS": {
+      "repository": "anchormind",
+      "files": [
+        {
+          "path": "lib/admin/admin-memory.js",
+          "read_scope": "intro and symbol inventory",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/admin/admin-memory.js"
+        },
+        {
+          "path": "lib/admin/ReviewStore.js",
+          "read_scope": "intro and symbol inventory",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/admin/ReviewStore.js"
+        },
+        {
+          "path": "lib/admin/admin-auth.js",
+          "read_scope": "intro and symbol inventory",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/admin/admin-auth.js"
+        },
+        {
+          "path": "lib/cli/init.js",
+          "read_scope": "intro and symbol inventory",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/cli/init.js"
+        },
+        {
+          "path": "lib/cli/_fileTransaction.js",
+          "read_scope": "intro and symbol inventory",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/cli/_fileTransaction.js"
+        },
+        {
+          "path": "assets/admin/modules/memory.js",
+          "read_scope": "intro and symbol inventory",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/assets/admin/modules/memory.js"
+        },
+        {
+          "path": "assets/admin/modules/graph.js",
+          "read_scope": "intro and symbol inventory",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/assets/admin/modules/graph.js"
+        },
+        {
+          "path": "assets/admin/modules/metrics.js",
+          "read_scope": "intro and symbol inventory",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/assets/admin/modules/metrics.js"
+        },
+        {
+          "path": "lib/scheduler-registry.js",
+          "read_scope": "intro and symbol inventory",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/scheduler-registry.js"
+        },
+        {
+          "path": "lib/logging/audit-chain.js",
+          "read_scope": "whole",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/logging/audit-chain.js"
+        }
+      ]
+    },
+    "AM-CONFIG": {
+      "repository": "anchormind",
+      "files": [
+        {
+          "path": "lib/config.js",
+          "read_scope": "selected feature flag definitions",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/config.js"
+        },
+        {
+          "path": "config/memory.js",
+          "read_scope": "166-195,350-370,400-420",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/config/memory.js"
+        },
+        {
+          "path": "package.json",
+          "read_scope": "whole",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/package.json"
+        },
+        {
+          "path": "lib/memory/memory-schema.sql",
+          "read_scope": "1-130",
+          "url": "https://github.com/JinHo-von-Choi/anchormind/blob/cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb/lib/memory/memory-schema.sql"
+        }
+      ]
+    },
+    "HM-MEMORY": {
+      "repository": "hermes-agent",
+      "files": [
+        {
+          "path": "tools/memory_tool.py",
+          "read_scope": "1-115",
+          "url": "https://github.com/NousResearch/hermes-agent/blob/55bea1ddf1754dcacb87f13185df1eb1273c0a6e/tools/memory_tool.py"
+        }
+      ]
+    },
+    "HM-SEARCH": {
+      "repository": "hermes-agent",
+      "files": [
+        {
+          "path": "tools/session_search_tool.py",
+          "read_scope": "1-95",
+          "url": "https://github.com/NousResearch/hermes-agent/blob/55bea1ddf1754dcacb87f13185df1eb1273c0a6e/tools/session_search_tool.py"
+        }
+      ]
+    },
+    "HM-SKILLS": {
+      "repository": "hermes-agent",
+      "files": [
+        {
+          "path": "tools/skills_tool.py",
+          "read_scope": "248-277,550-600",
+          "url": "https://github.com/NousResearch/hermes-agent/blob/55bea1ddf1754dcacb87f13185df1eb1273c0a6e/tools/skills_tool.py"
+        },
+        {
+          "path": "agent/curator.py",
+          "read_scope": "200-262",
+          "url": "https://github.com/NousResearch/hermes-agent/blob/55bea1ddf1754dcacb87f13185df1eb1273c0a6e/agent/curator.py"
+        }
+      ]
+    },
+    "PK-RETRIEVAL": {
+      "repository": "codex-peek",
+      "files": [
+        {
+          "path": "bridge/map-retrieval.js",
+          "read_scope": "1-150",
+          "url": "https://github.com/kimbyungsu/codex-peek/blob/1baf5ccd360b50da57911401aeca1388e1b0c05e/bridge/map-retrieval.js"
+        },
+        {
+          "path": "bridge/map-provenance.js",
+          "read_scope": "1-100",
+          "url": "https://github.com/kimbyungsu/codex-peek/blob/1baf5ccd360b50da57911401aeca1388e1b0c05e/bridge/map-provenance.js"
+        }
+      ]
+    },
+    "PK-FRESHNESS": {
+      "repository": "codex-peek",
+      "files": [
+        {
+          "path": "bridge/map-freshness.js",
+          "read_scope": "1-75",
+          "url": "https://github.com/kimbyungsu/codex-peek/blob/1baf5ccd360b50da57911401aeca1388e1b0c05e/bridge/map-freshness.js"
+        },
+        {
+          "path": "bridge/map-reader.js",
+          "read_scope": "1-50",
+          "url": "https://github.com/kimbyungsu/codex-peek/blob/1baf5ccd360b50da57911401aeca1388e1b0c05e/bridge/map-reader.js"
+        }
+      ]
+    },
+    "PK-VERIFY": {
+      "repository": "codex-peek",
+      "files": [
+        {
+          "path": "bridge/verify-guard.js",
+          "read_scope": "1-120",
+          "url": "https://github.com/kimbyungsu/codex-peek/blob/1baf5ccd360b50da57911401aeca1388e1b0c05e/bridge/verify-guard.js"
+        }
+      ]
+    },
+    "WT-RECORD": {
+      "repository": "worktrail",
+      "files": [
+        {
+          "path": "casebook/core/worktrail.py",
+          "read_scope": "1-150",
+          "url": "https://github.com/jasonethicseo/worktrail/blob/3fb48f980133fd2fb458362648c7bb04cfdbea2b/casebook/core/worktrail.py"
+        },
+        {
+          "path": "casebook/core/recording.py",
+          "read_scope": "1-115",
+          "url": "https://github.com/jasonethicseo/worktrail/blob/3fb48f980133fd2fb458362648c7bb04cfdbea2b/casebook/core/recording.py"
+        }
+      ]
+    },
+    "WT-SEARCH": {
+      "repository": "worktrail",
+      "files": [
+        {
+          "path": "casebook/core/search.py",
+          "read_scope": "whole",
+          "url": "https://github.com/jasonethicseo/worktrail/blob/3fb48f980133fd2fb458362648c7bb04cfdbea2b/casebook/core/search.py"
+        },
+        {
+          "path": "casebook/core/prior.py",
+          "read_scope": "1-110",
+          "url": "https://github.com/jasonethicseo/worktrail/blob/3fb48f980133fd2fb458362648c7bb04cfdbea2b/casebook/core/prior.py"
+        }
+      ]
+    },
+    "WT-STATE": {
+      "repository": "worktrail",
+      "files": [
+        {
+          "path": "casebook/core/state.py",
+          "read_scope": "1-130",
+          "url": "https://github.com/jasonethicseo/worktrail/blob/3fb48f980133fd2fb458362648c7bb04cfdbea2b/casebook/core/state.py"
+        },
+        {
+          "path": "casebook/core/threads.py",
+          "read_scope": "symbol inventory",
+          "url": "https://github.com/jasonethicseo/worktrail/blob/3fb48f980133fd2fb458362648c7bb04cfdbea2b/casebook/core/threads.py"
+        }
+      ]
+    }
+  }
+}

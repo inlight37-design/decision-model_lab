@@ -1,0 +1,68 @@
+{
+  "observed_at": "2026-10-04",
+  "commit": "cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb",
+  "runtime": "v24.19.0",
+  "scope": "Pure module assertions only; no database integration, retrieval effectiveness, authentication audit or model calls.",
+  "results": [
+    {
+      "id": "P01",
+      "claim": "Unranked cache ID permutations preserve fused rank order",
+      "status": "pass"
+    },
+    {
+      "id": "P02",
+      "claim": "Duplicate candidate promotes content and preserves channel/max-score evidence",
+      "status": "pass"
+    },
+    {
+      "id": "P03",
+      "claim": "Hydrated tail is deterministic while primary candidate order remains",
+      "status": "pass"
+    },
+    {
+      "id": "P04",
+      "claim": "Explicit/default/global scopes differ; allWorkspaces requires master",
+      "status": "pass"
+    },
+    {
+      "id": "P05",
+      "claim": "Selected workspace SQL includes global rows",
+      "status": "pass"
+    },
+    {
+      "id": "P06",
+      "claim": "Held memory can be recalled by writer but cannot be injected; master point clause differs",
+      "status": "pass"
+    },
+    {
+      "id": "P07",
+      "claim": "Origin tier is a policy value; inferred and legacy-null are normal-tier",
+      "status": "pass"
+    },
+    {
+      "id": "P08",
+      "claim": "Missing provenance is excluded, known legacy-null provenance is included",
+      "status": "pass"
+    },
+    {
+      "id": "P09",
+      "claim": "Fullwidth override text matches the same rule as ASCII after normalization",
+      "status": "pass"
+    },
+    {
+      "id": "P10",
+      "claim": "Paired bootstrap is deterministic and exposes empty inputs as null estimates",
+      "status": "pass"
+    },
+    {
+      "id": "P11",
+      "claim": "Audit hash catches a modified row when stored hash is unchanged",
+      "status": "pass"
+    },
+    {
+      "id": "P12",
+      "claim": "Rehashing a rewritten history passes local consistency without an externally trusted terminal hash",
+      "status": "pass"
+    }
+  ]
+}

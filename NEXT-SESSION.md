@@ -66,7 +66,7 @@
 
 일은 `card` 라벨 이슈에서 [협업 규칙](docs/COLLABORATION.md) 3절의 보드 규칙대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #159](https://github.com/inlight37-design/decision-model_lab/pull/159)(`codex/feature-catalog-20261004`) — [카드 #158](https://github.com/inlight37-design/decision-model_lab/issues/158)의 외부 기능·편의성 조사. [후보 목록](docs/research/feature-catalog-2026-10-04/README.md)에 쓰임·적용 접점·조건·출처를 보존한다. 문서 변경이며 검증 범위는 PR에 있다.
+- **이 판을 들인 PR:** [PR #159](https://github.com/inlight37-design/decision-model_lab/pull/159)(`codex/feature-catalog-20261004`) — [카드 #158](https://github.com/inlight37-design/decision-model_lab/issues/158)의 외부 기능 조사와 [부품별 비교·적용 설계](docs/research/component-comparison-2026-10-04/README.md). 연구·안내 변경이며 검증 범위는 PR에 있다.
 
 | 사용자만 할 수 있는 것 | 지금 |
 |---|---|
@@ -77,7 +77,7 @@
 
 ## 4. 다음 작업
 
-**이번 사용자 지시는 클라우드에서 할 수 있는 일을 진행하고, 편의성까지 외부 기능 후보를 넓게 보존하는 것이다.** [외부 기능 목록](docs/research/feature-catalog-2026-10-04/README.md)에서 불편별로 찾고 [작은 적용안](docs/research/feature-catalog-2026-10-04/APPLICATIONS.md)을 카드로 구체화할 수 있다. 전체 목록의 구현 결정은 아니다. PC 작업은 1의 기한과 2의 실제 확인 조건에 따라 한다. 모델 호출이 드는 일은 카드에 상한을 먼저 적고 새 원장·새 상태 폴더로 한다(2절 22).
+**이번 사용자 지시는 클라우드에서 외부 기능을 폭넓게 보존하고 AnchorMind 등 내부를 비교·분석하는 것이다.** [기능 목록](docs/research/feature-catalog-2026-10-04/README.md)에서 불편별로 찾고 [적용 설계](docs/research/component-comparison-2026-10-04/ADOPTION.md)를 카드로 구체화할 수 있다. 전체 후보의 구현 결정은 아니다. PC 작업은 1의 기한과 2의 확인 조건을 따른다. 모델 호출은 카드에 상한을 적고 새 원장·상태 폴더로 한다(2절 22).
 
 1. **2026-10-27 전 — 주 PC 재관측**([SETUP 4절](docs/SETUP.md)의 절차, 모델 호출 Claude 2·Codex 3). main-pc-wsl은 10월 27일부터 만료이고, 이 PC의 세션만 관측·등록할 수 있다. 참여자 계획이나 CLI 판이 바뀌면 그때 바로 한다. 관측 기록은 `tools/w2/assemble.py`가 조립한다. 추론 강도를 연결하는 PR은 그 계획으로 바로 관측한다 — 이 날짜를 기다리지 않는다([역할판 검토](docs/reviews/2026-09-26-role-board-review/README.md) RB-01). S4(카드 #111)로 `~/.codex/hooks.json`이 있으면 Codex 참여자 계획을 거절한다 — 재관측 때 그 검사와 훅 표면을 함께 확인한다([훅 관측](docs/reviews/2026-09-27-codex-hooks/README.md)). 파일 하나 검사로 전체 문맥 검증을 대신하지 않는다.
 2. **역할판 다음 조각.** 역할판 D와 E1(공개 뒤 교차검토)은 모두 실제로 한 번씩 확인했고, E2(검토 결과를 보고서에)는 [PR #153](https://github.com/inlight37-design/decision-model_lab/pull/153)에 있다. E의 다음 후보: 지적을 받아들인 뒤 고친 답(새 판) 받기, 일반 작업에도 교차검토 붙이기([교차검토 확인](docs/reviews/2026-09-27-cross-review-catch/README.md): 심은 오류 둘을 잡았고 없는 오류는 지어내지 않았다) — 사용자가 써 본 뒤 필요하면. 다음 조각도 카드부터 만든다([역할판 검토](docs/reviews/2026-09-26-role-board-review/README.md) §6). 카드에는 [리뷰 통합](docs/reviews/2026-09-26-review-consolidation/README.md) 6절 D·E 행을 완료 조건으로 옮긴다. 미룬 것 — P7 절약 규칙(계획이 바뀌어 재관측 필요), 문서함 공유, 일반 칸의 원본 앱 카드, 다듬은 문장 고쳐 쓰기, 슈퍼바이저의 팀 구성 제안, 상위 자리의 "JSON만" 지시를 CLI 스키마 출력으로 바꾸기(판이 바뀌어 재관측 필요, [프롬프트 감사](docs/reviews/2026-09-29-prompt-audit/README.md) 4절), 합성을 상위 자리 표에 합치기([전체 점검](docs/reviews/2026-09-29-health-review/README.md) 4절) — 은 필요할 때 카드로 연다. S4–S6(훅 방어·launcher 소유·조회 줄이기 ②)은 병합했다 — 조회의 목록/상세 분리(③)는 원장이 커져 느려질 때 카드로 연다. **추론 강도는 연결하지 않았다** — 관측한 유한한 값만 넣고 그 계획으로 재관측해야 한다(RB-01).
