@@ -16,7 +16,8 @@
 | [live_config.py](live_config.py) | 명시적 provider 설정 파싱·검사. 새 실행 엔진이 아님 |
 | [registration.py](registration.py) | 관측 기록의 로컬 기기 등록(저장소 밖). 실제 모드의 준비 조회·실행 직전 재검사가 확인한다 |
 | [codex_account.py](codex_account.py), [account_quota.py](account_quota.py) | 격리된 무모델 계정 조회·갱신 요청(조회 버튼, 또는 화면을 보는 동안 값이 오래됐을 때 화면이 보냄)·캐시/오래된 관측 표시 |
-| [server.py](server.py) | localhost API·인증·전체 준비 조회·화면 연결, 서버와 헤드리스 실행이 같이 쓰는 실행기·controller 구성(`live_setup`·`new_controller`) |
+| [server.py](server.py) | localhost API·인증·전체 준비 조회·화면 연결 |
+| [wiring.py](wiring.py) | 서버와 헤드리스 실행이 같이 쓰는 배선: 참여자 명단, 모의 동작·모델 목록, provider 설정에서 실행기·명단·상한 만들기(`live_setup`), 원장 위에 controller 만들기(`new_controller`) |
 | [run.py](run.py) | 헤드리스 실행: 화면 없이 질문 하나를 끝까지 돌리고 결과 JSON 하나를 쓴다 |
 | [start.ps1](start.ps1), [launch.py](launch.py) | 바탕 화면 아이콘의 입구: Windows 쪽이 WSL 쪽을 불러 관측 기록·모델·원장을 고르고 서버를 띄운 뒤 앱 창으로 연다. 창을 닫으면 끈다 |
 | [split.py](split.py) | 일반 작업의 분담 제안 지시문 만들기와 답 검사(모델을 부르지 않는다) |
@@ -26,6 +27,7 @@
 | [next_step.py](next_step.py) | 다음 단계 제안의 슈퍼바이저 지시문 만들기와 답의 형식·길이 검사(모델을 부르지 않는다) |
 | [refine.py](refine.py) | 다듬기 모드의 슈퍼바이저 지시문 만들기와 답의 형식·길이 검사(모델을 부르지 않는다) |
 | [report.py](report.py), [synthesis.py](synthesis.py) | 공개 원문의 허용 목록 투영, 모의 발췌/참조 검사, 실제 합성의 질문 만들기와 인용 대조(이 파일들은 모델을 부르지 않는다) |
+| [reply.py](reply.py) | 상위 자리 여섯(다듬기·다음 단계·분담·모으기·교차검토·합성)이 같이 쓰는 조각: 경계 표식·이름표 블록, 답에서 JSON 객체 찾기, 칸의 글·목록 검사, 형식 실패한 답의 원문 보존(모델을 부르지 않는다) |
 | [fake_cli.py](fake_cli.py) | 가짜 CLI |
 | [static/index.html](static/index.html), [static/island-ui/](static/island-ui/README.md) | 빌드 없는 HTML/JS 화면. 모양·움직임 부품 island-ui는 사용자가 [ai_unslop](https://github.com/inlight37-design/ai_unslop)에서 고른 것을 그대로 옮겼고 여기서 고치지 않는다. 화면은 결정·권고·뒤집을 조건·미해결과 호출을 쓰는 버튼만 늘 보이고, 해시·실행기·사건 기록·호출 집계·오염 표시는 접어 둔다 |
 
@@ -135,6 +137,7 @@ python -m app.server --port 8765 --data-dir /path/new-mock-ledger
   - 지적마다 내가 **받아들임**(`qualified` — 대상 주장에 조건·수정이 붙음)·**아님**(`rejected`)·**보류**(`unresolved`, 기본)를 고른다(`POST /api/reviews/<id>/disposition`). 고른 값과 시각이 원장에 남는다.
   - 외부 검사가 없으므로 `supported`는 고를 수 없다. 처분은 새 결과가 아니라서 결과 판을 올리지 않는다.
   - 검토가 본 대상 답의 sha256을 남기고, 대상 답이 바뀌었으면 표시한다.
+  - 저장하는 보고서(원문 보고 5판, 결정 보고 안에도 들어감)에 라운드 전체와 처분이 실린다([카드 #152](https://github.com/inlight37-design/decision-model_lab/issues/152)).
 - **독립 아님.** 공개 뒤 다른 답을 본 검토라 독립 정족수에 세지 않는다. 정족수·봉인·합성은 그대로다. 고친 답(새 판)은 받지 않고, 검토 결과를 합성·다음 단계 제안에 자동으로 넣지 않는다.
 
 ### 토큰 사용량 — 실행·작업마다 provider별 합계
@@ -213,7 +216,7 @@ python -m app.run --live-config live.json --data-dir <새 원장> --question-fil
     --participants claude,codex --synthesize claude-code,codex --out result.json
 ```
 
-`--synthesize`는 공개 뒤 차례로 부른다: `mock`은 모델 없는 발췌 대조, provider 이름은 실제 합성 한 번씩(같은 초안에 합성자를 바꿔 붙이는 L1). 참여자가 빠지면 `--approve-reduction`을 준 경우에만 줄어든 구성으로 공개한다(정족수는 그대로). 모의에서는 `--mock-behavior codex=fail`처럼 동작을 고를 수 있다. 결과 JSON(`a1-headless-run/1`)에는 참여자 상태, 합성 요청, 원장의 호출 사용량, 원문 보고(`a1-draft-report/4`), 결정 보고(`a1-decision-report/5`, 합성이 있을 때)가 들어간다. 종료 코드는 0 공개까지 끝남, 1 공개되지 않음·원장 문제·끝났는지 모르는 작업, 2 인자 오류, 3 준비 조회 거절이다. 수동(원본 앱) 참여자는 화면에서만 받는다.
+`--synthesize`는 공개 뒤 차례로 부른다: `mock`은 모델 없는 발췌 대조, provider 이름은 실제 합성 한 번씩(같은 초안에 합성자를 바꿔 붙이는 L1). 참여자가 빠지면 `--approve-reduction`을 준 경우에만 줄어든 구성으로 공개한다(정족수는 그대로). 모의에서는 `--mock-behavior codex=fail`처럼 동작을 고를 수 있다. 결과 JSON(`a1-headless-run/1`)에는 참여자 상태, 합성 요청, 원장의 호출 사용량, 원문 보고(`a1-draft-report/5`), 결정 보고(`a1-decision-report/5`, 합성이 있을 때)가 들어간다. 종료 코드는 0 공개까지 끝남, 1 공개되지 않음·원장 문제·끝났는지 모르는 작업, 2 인자 오류, 3 준비 조회 거절이다. 수동(원본 앱) 참여자는 화면에서만 받는다.
 
 앞선 실험 폴더의 `drive.py`들은 그 실험의 기록으로 남는다. 새 실험은 이 명령을 쓰고, 실험에만 필요한 것(과제 목록·채점·분석)만 실험 폴더에 둔다.
 
@@ -253,7 +256,7 @@ python -m app.run --live-config live.json --data-dir <새 원장> --question-fil
 
 모든 `/api` 읽기/쓰기는 토큰이 필요하다. 토큰은 URL fragment로만 전달하고 페이지에 포함하지 않는다. Host·Origin 검사, JSON 타입·본문 크기·framing 검사, 프레임 삽입 차단을 유지한다. 페이지는 서버의 정해진 파일(`ASSETS`)만 불러오고 요청도 서버로만 보낸다(CSP). 글꼴 Pretendard(SIL OFL, [static/fonts/](static/fonts/LICENSE))도 저장소에 있어 인터넷 없이 같은 화면이다. 인증 전 연결도 상한과 I/O 기한을 적용하지만 CPU/메모리 전체 제한은 아니다. 원장은 참여자의 `never` 경로이며 토큰 파일은 POSIX 0600, 데이터 폴더는 0700이다. localhost 네트워크 공유를 파일 격리만으로 안전하다고 가정하지 않는다.
 
-공개 뒤 `GET /api/runs/<run_id>/report`는 `a1-draft-report/4` 원문 보고다. 질문/입력 해시, 공통 자료 목록(이름·크기·sha256), 초안/해시, 출처·독립성·시도 종류, 정책·탈락·축소 승인·회계를 내보낸다. 보고의 회계는 실행 원장의 값이다. 계정 전체 잔여는 아래 별도 계정 API와 화면에서 관측 시각을 붙여 제공하며 과거 실행의 사용량으로 소급하지 않는다. 해시 불일치·초안 누락·공개 전 요청은 거절한다. 원문이 들어가므로 공개 저장소에 자동 업로드하지 않는다.
+공개 뒤 `GET /api/runs/<run_id>/report`는 `a1-draft-report/5` 원문 보고다. 질문/입력 해시, 공통 자료 목록(이름·크기·sha256), 초안/해시, 출처·독립성·시도 종류, 정책·탈락·축소 승인·회계를 내보낸다. 5판부터 교차검토(`cross_review`: 검토 질문, 검토자마다의 상태와 지적·원문 일치·처분과 시각, 검토하지 않은 관계, 독립 아님 — 없으면 `null`)를 싣는다. 검토자 지시문 전문은 싣지 않고 해시만 싣는다. 결정 보고는 이 원문 보고를 품으므로 함께 들어간다. 보고의 회계는 실행 원장의 값이다. 계정 전체 잔여는 아래 별도 계정 API와 화면에서 관측 시각을 붙여 제공하며 과거 실행의 사용량으로 소급하지 않는다. 해시 불일치·초안 누락·공개 전 요청은 거절한다. 원문이 들어가므로 공개 저장소에 자동 업로드하지 않는다.
 
 `POST /api/runs/<run_id>/synthesize`(본문 없음 또는 `{"mode": "mock"}`)는 공개 원문의 줄을 발췌·중복 묶기하고 참조 위치만 검사한다. 모델 호출·외부 사실 검증은 없고 주장은 unresolved, 카드는 qualified다. 실패하면 unavailable과 원문 보고를 남긴다.
 
