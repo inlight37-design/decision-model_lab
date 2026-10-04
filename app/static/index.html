@@ -119,7 +119,7 @@ ul { padding: 0; list-style: none; }
 }
 .form-field { display: flex; flex-direction: column; gap: var(--s-2); }
 .form-label { font-size: var(--t-sm-size); font-weight: 600; }
-textarea, select, input[type="number"] {
+textarea, select, input[type="number"], input[type="search"] {
   font: inherit; font-size: var(--t-body-size); border-radius: var(--r-cell); border: 1px solid var(--line);
   background: var(--surface-2); color: var(--text); padding: var(--s-3); width: 100%; }
 select { padding: var(--s-2) var(--s-3); }
@@ -373,18 +373,16 @@ button.is-pressed { background-image: linear-gradient(color-mix(in oklch, curren
   </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<dialog class="compose-dialog catalog-dialog" id="catalogDialog" aria-labelledby="catalogTitle"></dialog>
 
 <script src="/island-ui/motion.js"></script>
+<script src="/api.js"></script>
+<script src="/catalog.js"></script>
 <script src="/role-board.js"></script>
 <script>
 "use strict";
-const TOKEN = (() => {
-  const m = location.hash.match(/token=([A-Za-z0-9_-]+)/);
-  try {
-    if (m) { sessionStorage.setItem("ledger-token", m[1]); history.replaceState(null, "", location.pathname + location.search); return m[1]; }
-    return sessionStorage.getItem("ledger-token");
-  } catch (e) { return m ? m[1] : null; }
-})();
+const TOKEN = controlToken();
+const api = createAPI(TOKEN);
 window.addEventListener("hashchange", () => location.reload());   // 열린 탭에 토큰 주소를 붙여 넣어도 동작한다
 
 let state = null;            // /api/state
@@ -411,14 +409,6 @@ function h(tag, attrs, ...kids) {
   for (const kid of kids.flat(Infinity)) if (kid !== null && kid !== undefined && kid !== false && kid !== "")
     el.append(kid instanceof Node ? kid : document.createTextNode(String(kid)));
   return el;
-}
-async function api(path, body) {
-  const res = await fetch(path, { method: body ? "POST" : "GET",
-    headers: { "Authorization": "Bearer " + TOKEN, "Content-Type": "application/json" },
-    body: body ? JSON.stringify(body) : undefined });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || res.status);
-  return data;
 }
 
 // ---- 부품: 이름표·접기·배지. h만 쓰므로 tests/가 DOM 없이 부른다 ------------------------------------------
@@ -1181,7 +1171,11 @@ function renderRun(run) {
   // 일반 실행: 결과 모음은 처음부터, 판단은 모두 끝난 뒤. 합성·원문 보고는 공개된 격리 실행에만 있다.
   const body = run.mode === "general" ? [generalResults(run), collationIsland(run), (run.gate || {}).collected ? reviewIsland(run) : null, usageIsland(run)]
     : revealed ? [...synthesisPanel(run), proposalIsland(run), crossReviewIsland(run), reviewIsland(run), saveIsland(run), usageIsland(run)] : [];
-  $("mainCol").replaceChildren(questionIsland(run), ...body.filter(Boolean));
+  $("mainCol").replaceChildren(questionIsland(run),
+    island("기록 탐색", [h("div", {class: "row"},
+      h("button", {type: "button", class: "btn", onclick: openCatalog}, "기록 찾기"),
+      h("button", {type: "button", class: "btn", onclick: () => openActivity(run)}, "호출 기록"))]),
+    ...body.filter(Boolean));
   $("asideCol").replaceChildren(participantsIsland(run));
   pressAll($("mainCol")); pressAll($("asideCol"));
   placeIndicator($("orderSeg"));

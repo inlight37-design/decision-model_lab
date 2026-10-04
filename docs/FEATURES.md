@@ -2,25 +2,61 @@
 
 이 문서는 **지금 구현된 기능을 찾는 입구**다. 기능에서 코드·검사로 바로 이동하고, 가져온 아이디어는 [외부 참고 지도](REFERENCE-MAP.md)에서 찾는다. 실제 계정으로 어디까지 관측했는지는 [현재 인계 1절](../NEXT-SESSION.md)이 기준이다. 아래의 ‘구현’은 일반적인 품질 향상이나 운영 안전성의 입증을 뜻하지 않는다.
 
-## 사용자 기능
+## 사용자 기능·용도·가치와 위치
+
+현재 기능의 책임 배치는 [실행 아키텍처](../app/ARCHITECTURE.md)가 기준이다. 아래는 사용 장면에서 찾는 지도다. 외부 후보 전체의 작동 설명·가치는 [원본 후보](research/feature-catalog-2026-10-04/README.md), 배치·우선순위는 [통합 후보 지도](architecture/redesign-2026-10-04/CAPABILITY-MAP.md)로 이어진다. 구조가 바뀌어도 그 날짜의 분석 원문은 보존한다.
 
 | 하고 싶은 일 | 현재 동작 | 코드 | 확인 근거 |
 |---|---|---|---|
 | 작업을 만들고 이어서 실행 | 홈·작업 목록·타임라인, 같은 작업에 새 실행, 역할·입력 확인 후 시작 | [역할판](../app/static/role-board.js), [역할 계약](../app/roles.py) | [역할판 검사](../tests/test_role_board.py), [화면 검사](../tests/test_role_board_render.py) |
 | 모델과 역할 고르기 | 슈퍼바이저·오케스트레이터·일반·격리 칸, 허용한 모델 선택. 빈 상위 칸은 사람 | [서버](../app/server.py), [역할 계약](../app/roles.py) | [앱 사용법](../app/README.md). 추론 강도 연결은 아직 없음 |
-| 서로 보지 않고 풀게 하기 | 격리 초안을 봉인하고 정족수·종료 관문 뒤 공개. 자동 기억 제외 | [controller](../app/controller.py), [상태 관문](../app/state.py) | [controller 검사](../tests/test_app_controller.py), [실제 관측 위치](../NEXT-SESSION.md) |
-| 일을 나눠 맡기기 | 일반 팀원마다 맡길 일·자료를 고정하고 결과가 오는 대로 표시 | [controller](../app/controller.py), [역할판](../app/static/role-board.js) | [일반 팀원 검사](../tests/test_general_team.py) |
-| 질문을 함께 다듬기 | 원문·대화·수정 내역을 보존하고 사람이 승인한 질문만 격리 팀원에게 전달 | [refine](../app/refine.py) | [다듬기 검사](../tests/test_refine_mode.py) |
-| 분담안을 제안받기 | 오케스트레이터가 일·자료 분담을 제안. 사람이 고치고 확인해야 실행 | [split](../app/split.py) | [분담 검사](../tests/test_split_proposal.py) |
-| 자료 파일 주기 | UTF-8 자료를 사본·해시로 고정. 격리는 공통 자료, 일반은 팀원별 자료 | [controller](../app/controller.py) | [자료 검사](../tests/test_sources.py) |
+| 서로 보지 않고 풀게 하기 | 격리 초안을 봉인하고 정족수·종료 관문 뒤 공개. 자동 기억 제외 | [실행 조정](../app/execution/coordinator.py), [상태 관문](../app/state.py) | [controller 검사](../tests/test_app_controller.py), [실제 관측 위치](../NEXT-SESSION.md) |
+| 일을 나눠 맡기기 | 일반 팀원마다 맡길 일·자료를 고정하고 결과가 오는 대로 표시 | [입력 구성](../app/context/inputs.py), [작업 명령](../app/application/work.py), [역할판](../app/static/role-board.js) | [일반 팀원 검사](../tests/test_general_team.py) |
+| 질문을 함께 다듬기 | 원문·대화·수정 내역을 보존하고 사람이 승인한 질문만 격리 팀원에게 전달 | [계획 명령](../app/application/planning.py), [refine 형식](../app/refine.py) | [다듬기 검사](../tests/test_refine_mode.py) |
+| 분담안을 제안받기 | 오케스트레이터가 일·자료 분담을 제안. 사람이 고치고 확인해야 실행 | [계획 명령](../app/application/planning.py), [split 형식](../app/split.py) | [분담 검사](../tests/test_split_proposal.py) |
+| 자료 파일 주기 | UTF-8 자료를 사본·해시로 고정. 격리는 공통 자료, 일반은 팀원별 자료 | [입력 구성](../app/context/inputs.py) | [자료 검사](../tests/test_sources.py) |
 | 이전 작업 기억 쓰기 | 같은 작업의 공개 이력 자동 선택, 일반 팀원·상위 역할에 전달, 기본 켬·실행별 끄기 | [memory](../app/memory.py), 아래 동작 설명 | [기억 검사](../tests/test_memory.py). 실제 모델 품질 효과는 미측정 |
-| 원본 앱 답 참여시키기 | 사람이 전달문을 옮기고 답을 붙여 넣음. 입력·독립성·사용량은 자동 검증하지 않음 | [controller](../app/controller.py), [화면](../app/static/index.html) | [앱 사용법](../app/README.md) |
-| 결과를 모으고 비교하기 | 일반 결과 취합·격리 결과 합성, 원문 인용 대조, 미확인 주장 표시 | [collate](../app/collate.py), [synthesis](../app/synthesis.py) | [취합 검사](../tests/test_collate.py), [합성 검사](../tests/test_model_synthesis.py) |
-| 서로의 답을 검토시키기 | 공개 뒤 한 라운드, 원문 인용 대조, 지적별 처분·미해결 보존, 보고서 반영 | [cross_review](../app/cross_review.py), [report](../app/report.py) | [교차검토 검사](../tests/test_cross_review.py), 실제 관측은 인계 |
-| 다음 단계를 제안받기 | 슈퍼바이저가 공개 결과를 보고 계속/종료·다음 질문 제안. 자동 실행은 안 함 | [next_step](../app/next_step.py), [controller](../app/controller.py) | [앱 사용법](../app/README.md) |
-| 사람이 판단하고 기록하기 | 결과 판을 확인해 메모·판단 완료 저장, 새 결과는 다시 확인 | [controller](../app/controller.py), [원장](../app/store.py) | [일반 팀원 검사](../tests/test_general_team.py), [역할판 검사](../tests/test_role_board.py) |
+| 원본 앱 답 참여시키기 | 사람이 전달문을 옮기고 답을 붙여 넣음. 입력·독립성·사용량은 자동 검증하지 않음 | [실행 조정](../app/execution/coordinator.py), [화면](../app/static/index.html) | [앱 사용법](../app/README.md) |
+| 결과를 모으고 비교하기 | 일반 결과 취합·격리 결과 합성, 원문 인용 대조, 미확인 주장 표시 | [검토 명령](../app/application/reviews.py), [합성 명령](../app/application/synthesis.py) | [취합 검사](../tests/test_collate.py), [합성 검사](../tests/test_model_synthesis.py) |
+| 서로의 답을 검토시키기 | 공개 뒤 한 라운드, 원문 인용 대조, 지적별 처분·미해결 보존, 보고서 반영 | [검토 명령](../app/application/reviews.py), [cross_review 형식](../app/cross_review.py), [report](../app/report.py) | [교차검토 검사](../tests/test_cross_review.py), 실제 관측은 인계 |
+| 다음 단계를 제안받기 | 슈퍼바이저가 공개 결과를 보고 계속/종료·다음 질문 제안. 자동 실행은 안 함 | [계획 명령](../app/application/planning.py), [next_step 형식](../app/next_step.py) | [앱 사용법](../app/README.md) |
+| 사람이 판단하고 기록하기 | 결과 판을 확인해 메모·판단 완료 저장, 새 결과는 다시 확인 | [검토 명령](../app/application/reviews.py), [행·판 계약](../app/repository.py) | [일반 팀원 검사](../tests/test_general_team.py), [역할판 검사](../tests/test_role_board.py) |
 | 비용과 상태 보기 | 호출 예약·사용량·실패·종료 미확인, 계정 한도 조회와 오래된 값 표시 | [usage](../app/usage.py), [account_quota](../app/account_quota.py) | [사용량](../tests/test_usage.py), [한도](../tests/test_account_quota.py) 검사. 토큰 추정과 구독 차감량은 다름 |
 | 화면 없이 실행하기 | 같은 controller와 관측·예산을 쓰는 `python -m app.run` | [run](../app/run.py), [wiring](../app/wiring.py) | [설정·명령](../app/README.md) |
+| 과거 기록 찾기 | 질문·자료 이름/해시·공개 답·검토·판단·합성을 문구와 작업/종류로 검색, 원래 실행으로 이동 | [공개 조회](../app/queries/public.py), [검색](../app/queries/catalog.py), [검색 화면](../app/static/catalog.js) | [검색 경계·HTTP 검사](../tests/test_foundation.py). 의미 검색·FTS는 아직 없음 |
+| 역할이 다른 호출을 함께 확인 | 초안·다듬기·분담·검토·취합·합성의 실제 attempt를 공통 형태로 읽음. manual·대기는 호출로 세지 않음 | [호출 원장 adapter](../app/execution/invocations.py), [검색 화면](../app/static/catalog.js) | [경계 검사](../tests/test_foundation.py), 기존 역할별 회귀 |
+| 왜 기억을 골랐는지 확인 | 새 pack의 일치 표현/최근 기록 대체를 표시하고 출처 실행으로 이동. 옛 이유는 추정하지 않음 | [선택기](../app/memory.py), [역할판](../app/static/role-board.js), [공개 조회](../app/queries/public.py) | [기억·호환 검사](../tests/test_memory.py), [고정 pack 검사](../tests/test_foundation.py) |
+
+## 우리 프로젝트에서의 가치
+
+| 기능 묶음과 사용하는 곳 | 사용자에게 주는 도움 | 실제로 움직이는 순서 | 확대할 접점 / 외부 후보 |
+|---|---|---|---|
+| 작업·역할·입력 확인 / 매 실행 전 | 역할과 입력을 분명히 하고 잘못된 중복 시작을 줄임 | 작업 → 역할·자료 → 고정 확인 hash → 같은 거래의 실행 생성 | WorkService/InputBuilder, H02·OP05 |
+| 격리·수용·공개 / 독립 비교 | 앞선 답을 보고 맞추는 경로를 줄이고 불명 종료를 성공으로 숨기지 않음 | native 관측 → 수용 → 초안 봉인 → 정족수·종료 → 공개 | coordinator/state, Hermes·tmux 원리와 기존 계약 |
+| 일반 분담·다듬기·다음 단계 / 반복 준비 | 목표를 나누고 질문을 다듬는 수작업 감소 | 계획 제안 → 사람의 확인 → 고정 새 실행 | planning/input, H19–H28·OP04/05 |
+| 자료·기억·출처 / 오래 이어지는 작업 | 이미 한 판단과 반례를 다시 찾고 실제 보낸 자료를 설명 | 공개 이력 → 선택 근거·바이트 상한 → frozen pack → 실제 입력 → 출처 보기 | context/memory, D01/02·O02/03·H14/16 |
+| 취합·합성·교차검토·처분 / 답을 받은 뒤 | 차이와 미해결을 찾아 사용자가 판단할 근거 제공 | 원문 고정 → 역할별 호출 → 형식·인용 검사 → 지적 처분/결과 판 | reviews/synthesis, D03/04·OP06/12 |
+| 공개 검색 / 다시 찾아볼 때 | 과거 답·검토·판단을 질문 이름만 기억하지 않아도 찾음 | 같은 public projection → 종류/작업/문구 → 제한된 결과 → 원래 실행 | queries/catalog, H01/07/13·D02·OP03 일부 |
+| 공통 호출·예산·복구 / 모든 모델 작업 | 새 역할을 붙여도 한도·미확정·취소 처리를 놓칠 경로 감소 | 최종 plan → 거래 예약 → coordinator 실행 → 관측·조건부 저장 | invocation/coordinator, OP04/09·H29/30 일부 |
+| 표시·전송·조회 세대 / 화면 사용 | 늦게 온 응답이 새 검색을 덮지 않고 인증을 같은 서버에만 전달 | 요청 소유권 → token API → 공개 데이터 → 렌더·취소 | api/catalog UI, OP01/03 일부 |
+
+효과는 기대 효용이다. 품질 향상률이나 시간 절감률을 실측한 수치는 없다. 코드·모의/브라우저 확인과 실제 기기·모델 효과를 구분한다.
+
+## 후속 우선순위
+
+기존 [전체 후보 우선순위](architecture/redesign-2026-10-04/PRIORITIES.md)는 개편 전 판단을 보존한다. 이번 기반 구현을 반영한 다음 순서는 아래다. 각 항목의 상세 동작·근거는 후보 ID로 원문을 찾는다.
+
+| 순서 | 후보·작업 | 도움 / 현재 준비된 자리 | 선행·완료 조건 |
+|---|---|---|---|
+| 기반 반영 | 조회/입력/호출/계획/검토 책임 분리, 공통 예약, 공개 검색·기억 이유·호출 기록 | 이후 기능을 controller 한 파일에 계속 얹지 않고 담당 경계에 연결 | 구현과 오프라인/브라우저 확인. PC runtime 재관측은 별도 |
+| P1 다음 | 저장·복제 가능한 팀/작업 템플릿 — H02/19–23, D07 | 반복 역할·자료·질문 설정 감소. InputBuilder/WorkService 사용 | 불가 모델·삭제 자료·기억 범위 검증, 새 실행의 새 확인 hash |
+| P1 다음 | 검토→수정 답→재검토 — H28, O11/12, OP06 | 지적을 실제 새 결과로 연결. ReviewService/InvocationLedger 사용 | artifact revision·원문 hash·반례 보존, 상한, 실패한 수정 뒤 이전 답 유지 |
+| P1 다음 | 자료 추출·부분 첨부 — H03/45/47 | PDF/URL 준비 부담 감소. InputBuilder 앞 extractor/preview | 원본/변환본/누락 범위·hash, extraction 실패 fixture |
+| P1 보강 | 목록/상세 query·대량 검색·선택 평가 — D05, OP01/03/08 | 원장이 커졌을 때 조회량 개선, 선택 누락 확인 | 현재 snapshot 동등성·큰 원장 baseline·한국어/반례 평가. FTS 도입 전 비용 비교 |
+| P2 | 명세·의존성·수신함·설정 설명 — OP04/05/10/11 | 다음 할 일과 막힌 이유를 한 흐름으로 표시 | 현재 command/service 경계 위 typed step, 전역 revision/receipt/outbox 필요성 별도 확정 |
+| P3 조건부 | 지속 실행·예약·원격/코딩·고급 검색 — OP02, H33–60, O31/33 | 장기 작업·실제 파일 변경·다른 도구 연결 | 기기 관측, writer 소유권, 파일/원장/지출 복구 구별, 효과·운영 부담 근거 |
+
+이 순서는 모든 외부 기능을 이미 채택했다는 뜻이 아니다. 입력·실행·검토의 새 책임은 동작하고, DAG engine·자동 수정 loop·새 invocation table·전역 memory·원격 worker는 후속 선택지다.
 
 ## 자동 기억의 범위
 
@@ -36,7 +72,7 @@
 | 다음 단계 제안·결과 취합·모델 합성 | 해당 실행을 만들 때 고정한 사본 사용 |
 | 격리 팀원·격리 참여자의 교차검토 | 자동 기억 전달 안 함. 고정 질문·자료/검토 대상 원문 경계 유지 |
 
-일반 팀원의 전달문과 선택된 기억은 **보낼 입력 확인**에서 볼 수 있다. 시작 뒤에는 실행의 기억과 각 상위 호출에 저장된 전달문으로 추적한다. 확인 후 선택 결과가 바뀌면 재확인을 요구한다. 생성한 실행은 재개할 때 다시 검색하지 않는다. 다듬기에 기억을 쓴 뒤 작업을 바꾸거나 기억을 끄려면 새로 다듬는다.
+일반 팀원의 전달문과 선택된 기억은 **보낼 입력 확인**에서 볼 수 있다. 새 기억에는 질문과 일치한 표현·선택 순위·일치가 없어 최근 기록을 대신 고른 여부도 hash 안에 저장하며 같은 바이트 상한에 포함한다. 화면에서 출처 실행으로 이동할 수 있다. 이유를 저장하지 않은 옛 pack에는 추측한 점수를 붙이지 않는다. 시작 뒤에는 실행의 기억과 각 상위 호출에 저장된 전달문으로 추적한다. 확인 후 선택 결과가 바뀌면 재확인을 요구한다. 생성한 실행은 재개할 때 다시 검색하지 않는다. 다듬기에 기억을 쓴 뒤 작업을 바꾸거나 기억을 끄려면 새로 다듬는다.
 
 기억은 참고 자료다. 사람의 승인도 사실 검증으로 승격하지 않는다. 발췌 밖의 반례가 빠질 수 있으므로 중요한 판단에서는 출처 실행의 전체 결과를 확인한다. 과거 기억이 현재 답의 원문 인용 검사 대상을 늘리지는 않는다. 전역 프로필, 저장소 전체 자동 색인, AI 자동 회고·승격, 모델 학습은 구현하지 않았다.
 

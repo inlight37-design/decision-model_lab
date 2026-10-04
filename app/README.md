@@ -6,11 +6,14 @@
 
 ## 파일과 책임
 
-사용자 기능은 [기능 안내](../docs/FEATURES.md), 외부 코드와 아이디어의 적용 여부는 [참고 지도](../docs/REFERENCE-MAP.md)에서 찾는다. 자동 기억의 기본값·전달 역할·제한도 기능 안내가 기준이다.
+사용자 기능·용도·가치·후속 순서는 [기능 안내](../docs/FEATURES.md), 현재 서비스의 책임·명령/조회 흐름은 [실행 아키텍처](ARCHITECTURE.md), 외부 아이디어는 [참고 지도](../docs/REFERENCE-MAP.md)에서 찾는다. 자동 기억의 기본값·전달 역할·제한도 기능 안내가 기준이다. 전체 입구는 [문서 지도](../docs/DOCUMENT-MAP.md)에 모았다.
 
 | 파일 | 책임 |
 |---|---|
-| [controller.py](controller.py) | 상태 전이·원자적 예약·자리/상한·수용·봉인/공개·취소/재시작·화면 투영 |
+| [controller.py](controller.py) | 서비스 조립과 기존 API 호환. 실제 책임 배치는 [ARCHITECTURE](ARCHITECTURE.md) |
+| [application/](application/) · [context/](context/) | 작업·계획·검토·합성 명령과 입력 검증·고정·자료 사본 |
+| [execution/](execution/) · [repository.py](repository.py) | 실행 수명·공통 예약·호출 조회·조건부 상태 전이·복구 |
+| [queries/](queries/) | 봉인 allowlist 기반 공개 조회·검색·기억 출처 |
 | [memory.py](memory.py) | 같은 작업의 공개 이력 검색·출처·발췌·크기 상한. 일반 팀원·상위 역할용 고정 기억, 격리 팀원 제외 |
 | [store.py](store.py) | SQLite 원장, 배타 잠금, 스키마 이전, 첫 호출 상한 고정, 실행별 자료, 일반 팀원별 맡긴 일(`assignments`) |
 | [state.py](state.py) | 참여자 행에서 정족수·축소 승인·공개 가능 여부 계산(일반 실행은 모음 여부만), 합성 사건을 시도별 상태로 투영해 자리·복구·화면이 함께 사용 |

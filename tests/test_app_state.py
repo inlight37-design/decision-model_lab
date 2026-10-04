@@ -58,8 +58,8 @@ class RunGateTests(support.Base):
         ctl.withdraw_manual(rid, "a")
         # Reproduce the audit's stale submit/withdraw order. The expected NULL attempt and
         # awaiting_user state no longer match, so neither a draft nor a sealed event is written.
-        original = ctl._part
-        with patch.object(ctl, "_part", side_effect=lambda run_id, pid: old if pid == "a" else original(run_id, pid)):
+        original = ctl.repository._part
+        with patch.object(ctl.repository, "_part", side_effect=lambda run_id, pid: old if pid == "a" else original(run_id, pid)):
             with self.assertRaisesRegex(c.ControllerError, "duplicate"):
                 ctl.submit_manual(rid, "a", "too late", digest)
         self.assertEqual(self.part(ctl, rid, "a")["state"], c.REJECTED)
@@ -70,7 +70,7 @@ class RunGateTests(support.Base):
         ctl, rid, digest = self.manual_run()
         old = ctl._part(rid, "a")
         ctl.submit_manual(rid, "a", "kept", digest)
-        with patch.object(ctl, "_part", return_value=old):
+        with patch.object(ctl.repository, "_part", return_value=old):
             ctl.withdraw_manual(rid, "a")
         self.assertEqual(self.part(ctl, rid, "a")["state"], c.ACCEPTED)
         self.assertFalse(self.part(ctl, rid, "a")["dropped"])
@@ -86,7 +86,7 @@ class RunGateTests(support.Base):
         old = ctl._part(rid, "a")
         with self.store.tx() as tx:
             tx.execute("UPDATE participants SET attempt = 'current' WHERE run_id = ?", rid)
-        with patch.object(ctl, "_part", return_value=old):
+        with patch.object(ctl.repository, "_part", return_value=old):
             ctl.acknowledge_unknown(rid, "a")
         self.assertEqual(self.part(ctl, rid, "a")["state"], c.UNKNOWN)
         self.assertEqual(ctl.view()["slots"]["used"], 1)

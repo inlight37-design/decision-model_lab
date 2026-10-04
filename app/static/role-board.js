@@ -412,8 +412,15 @@ function memoryPreview(config, id = "preview-memory", expanded = true) {
     ...entries.map((e, index) => h("section", { class: "stack" },
       h("p", { class: "sm strong" }, `이전 실행 · ${fmtTime(e.created_at)} · ${e.truncated ? "일부 발췌" : "전체 기록"}`),
       h("pre", { class: "input-full" }, e.excerpt),
-      collapsible(`${id}-source-${index}`, "출처 확인", h("p", { class: "cap muted input-full" },
-        `${e.run_id} · 원본 sha256 ${e.source_sha256}`))))), { open: expanded && entries.length > 0 });
+      h("p", {class: "cap muted"}, !e.selection ? "선택 이유가 저장되기 전의 기록입니다."
+        : e.selection.recent_fallback ? "질문에 일치하는 단어가 없어 최근 공개 기록을 참고로 골랐습니다."
+        : `질문과 일치한 표현: ${e.selection.overlap_terms.join(", ")} · 같은 작업의 공개 기록`),
+      collapsible(`${id}-source-${index}`, "출처 확인", h("div", {class: "stack"},
+        h("p", { class: "cap muted input-full" }, `${e.run_id} · 원본 sha256 ${e.source_sha256}`),
+        h("button", {type: "button", class: "btn", onclick: () => {
+          if ($("composeDialog").open) closeNewRun();
+          navigateTask(pack.task_id, e.run_id);
+        }}, "원래 실행 보기")))))), { open: expanded && entries.length > 0 });
 }
 function generalPreview(preview) {
   const specs = Object.fromEntries(preview.role_config.general.map(p => [p.pid, p]));
@@ -545,12 +552,16 @@ function renderTaskPage() {
     $("mainCol").replaceChildren(island("내 차례", [h("p", { class: "sm muted" }, "원본 앱 답을 붙여넣거나, 공개된 답을 보고 다음 일을 정하세요."),
       h("div", { class: "task-grid island-part" }, turns.length ? turns.map(taskCard) : h("p", { class: "sm muted" }, "지금 기다리는 일이 없습니다."))]),
     island("모든 작업", [h("div", { class: "row between" }, h("p", { class: "sm muted" }, "질문부터 결과까지, 한 작업에서 이어 갑니다."),
-      h("button", { type: "button", class: "btn btn-brand", onclick: () => openNewRun() }, "새 작업")),
+      h("div", {class: "row"},
+        h("button", {type: "button", class: "btn", onclick: () => openCatalog()}, "기록 찾기"),
+        h("button", { type: "button", class: "btn btn-brand", onclick: () => openNewRun() }, "새 작업"))),
       h("div", { class: "task-grid island-part" }, tasks.length ? tasks.map(taskCard) : h("p", { class: "sm muted" }, "아직 작업이 없습니다."))]),
-    island("프로젝트 안내", [h("p", { class: "sm muted" }, "현재 기능과 참고한 외부 코드의 위치를 GitHub 문서에서 확인합니다."),
+    island("프로젝트 안내", [h("p", { class: "sm muted" }, "현재 기능과 개편 제안, 참고 근거를 구분해 찾아봅니다."),
       h("div", { class: "row island-part" },
+        h("a", { class: "btn", href: "https://github.com/inlight37-design/decision-model_lab/blob/main/docs/DOCUMENT-MAP.md", target: "_blank", rel: "noopener" }, "문서 지도 (새 탭)"),
         h("a", { class: "btn", href: "https://github.com/inlight37-design/decision-model_lab/blob/main/docs/FEATURES.md", target: "_blank", rel: "noopener" }, "기능·코드 안내 (새 탭)"),
-        h("a", { class: "btn", href: "https://github.com/inlight37-design/decision-model_lab/blob/main/docs/REFERENCE-MAP.md", target: "_blank", rel: "noopener" }, "외부 참고 지도 (새 탭)"))]),
+        h("a", { class: "btn", href: "https://github.com/inlight37-design/decision-model_lab/blob/main/docs/REFERENCE-MAP.md", target: "_blank", rel: "noopener" }, "외부 참고 지도 (새 탭)"),
+        h("a", { class: "btn", href: "https://github.com/inlight37-design/decision-model_lab/blob/main/docs/architecture/redesign-2026-10-04/PRIORITIES.md", target: "_blank", rel: "noopener" }, "개편 우선순위 (새 탭)"))]),
     ...(stuck ? [stuck] : []));
   } else {
     const tokens = usageLines(task.usage);

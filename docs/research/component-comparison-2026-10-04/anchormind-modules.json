@@ -1,0 +1,7134 @@
+{
+  "commit": "cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb",
+  "method": "Static regex inventory; includes references in comments, can omit re-exports/dynamic references; no semantic or security audit implied.",
+  "modules": [
+    {
+      "path": "lib/admin/AdminAuthz.js",
+      "subsystem": "lib/admin",
+      "lines": 341,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./admin-redact.js",
+        "./admin-route-table.js",
+        "./capabilities.js",
+        "node:http"
+      ],
+      "named_exports_approx": [
+        "PRINCIPAL_KINDS",
+        "masterPrincipal",
+        "apiKeyPrincipal",
+        "decide",
+        "adminScopeOf",
+        "requireFullScope",
+        "adminPrincipalOf",
+        "requireCapability",
+        "authorizeAdminRoute"
+      ]
+    },
+    {
+      "path": "lib/admin/AdminUserStore.js",
+      "subsystem": "lib/admin",
+      "lines": 487,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../memory/schema.js",
+        "./admin-session-policy.js",
+        "node:crypto",
+        "pg"
+      ],
+      "named_exports_approx": [
+        "AdminUserStoreError",
+        "publicUser",
+        "AdminUserStore"
+      ]
+    },
+    {
+      "path": "lib/admin/ApiKeyLifecycleStore.js",
+      "subsystem": "lib/admin",
+      "lines": 196,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../logger.js",
+        "../memory/schema.js",
+        "../tools/db.js",
+        "./key-lifecycle.js",
+        "./key-material.js",
+        "pg"
+      ],
+      "named_exports_approx": [
+        "rotateApiKey",
+        "revokeApiKey",
+        "updateKeyLifecycle",
+        "recordAccessReview"
+      ]
+    },
+    {
+      "path": "lib/admin/ApiKeyStore.js",
+      "subsystem": "lib/admin",
+      "lines": 893,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../config.js",
+        "../logger.js",
+        "../memory/WorkingMemorySql.js",
+        "../memory/read/quotaQueries.js",
+        "../memory/schema.js",
+        "../metrics.js",
+        "../tools/db.js",
+        "./key-lifecycle.js",
+        "./key-material.js",
+        "./key-policy.js",
+        "./key-schema-state.js"
+      ],
+      "named_exports_approx": [
+        "getFragmentCount",
+        "updateFragmentLimit",
+        "updateDailyLimit",
+        "updatePermissions",
+        "listApiKeys",
+        "createApiKey",
+        "updateApiKeyStatus",
+        "ApiKeyInUseError",
+        "isApiKeyDeleteGuardEnabled",
+        "deleteApiKey",
+        "updateWorkspace",
+        "updateKeyPolicy",
+        "validateApiKeyFromDB",
+        "validateApiKeyById",
+        "getKeyAuthState",
+        "getAnchorState",
+        "getGroupKeyIds",
+        "resetLastUsedThrottle",
+        "incrementUsage",
+        "listKeyGroups",
+        "createKeyGroup",
+        "deleteKeyGroup",
+        "addKeyToGroup",
+        "removeKeyFromGroup",
+        "getGroupMembers",
+        "getSymbolicHardGate",
+        "invalidateHardGateCache",
+        "WORKSPACE_LOOKUP_FAILED",
+        "getAllowedWorkspaces",
+        "invalidateAllowedWorkspacesCache",
+        "getEgressPolicy",
+        "invalidateEgressPolicyCache",
+        "checkWorkspaceAllowed"
+      ]
+    },
+    {
+      "path": "lib/admin/OAuthClientStore.js",
+      "subsystem": "lib/admin",
+      "lines": 144,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../logger.js",
+        "../memory/schema.js",
+        "../tools/db.js",
+        "node:crypto"
+      ],
+      "named_exports_approx": [
+        "registerClient",
+        "getClient",
+        "validateRedirectUri",
+        "listClients",
+        "deleteClient",
+        "purgeUnusedClients"
+      ]
+    },
+    {
+      "path": "lib/admin/ReviewStore.js",
+      "subsystem": "lib/admin",
+      "lines": 444,
+      "review_status": "interface-inventory",
+      "imports_approx": [
+        "../config.js",
+        "../logger.js",
+        "../logging/audit-outbox.js",
+        "../logging/audit.js",
+        "../memory/FragmentIndex.js",
+        "../memory/anchorPolicy.js",
+        "../memory/keyScope.js",
+        "../memory/read/quotaQueries.js",
+        "../memory/reviewState.js",
+        "../memory/schema.js",
+        "../memory/write/ReviewQueue.js",
+        "../memory/write/anchorQuota.js",
+        "../memory/write/write-gate-metrics.js",
+        "../rbac.js",
+        "../security/SensitiveScanner.js",
+        "../tools/db.js",
+        "../tools/pool-gate.js",
+        "pg"
+      ],
+      "named_exports_approx": [
+        "REVIEW_DECISIONS",
+        "REVIEW_EXPIRY_DAYS",
+        "REVIEW_EXPIRY_BATCH",
+        "REVIEW_EXPIRY_INTERVAL_MS",
+        "REVIEW_NOTE_MAX",
+        "REVIEW_IDEMPOTENCY_KEY_MAX",
+        "REVIEW_LIST_MAX",
+        "ReviewNotFoundError",
+        "ReviewStateError",
+        "ReviewIdempotencyConflictError",
+        "sanitizeReviewNote",
+        "defaultAnchorDecisionCheck",
+        "decideReview",
+        "parseReviewCursor",
+        "listReviewQueue",
+        "expireStaleReviews",
+        "runReviewExpiry",
+        "scheduleReviewExpiry"
+      ]
+    },
+    {
+      "path": "lib/admin/ScopeFilter.js",
+      "subsystem": "lib/admin",
+      "lines": 104,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../memory/schema.js"
+      ],
+      "named_exports_approx": [
+        "WORKSPACE_COLUMN",
+        "F_WORKSPACE_COLUMN",
+        "ScopeFilterError",
+        "scopePredicate",
+        "scopedQuery",
+        "linkScopePredicate"
+      ]
+    },
+    {
+      "path": "lib/admin/admin-audit-actions.js",
+      "subsystem": "lib/admin",
+      "lines": 120,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./admin-route-table.js"
+      ],
+      "named_exports_approx": [
+        "ADMIN_AUDIT_FALLBACK_ACTION",
+        "ADMIN_AUDIT_ACTIONS",
+        "decodePathSegment",
+        "findAdminAuditAction",
+        "noteAdminAudit",
+        "takeAdminAuditNote",
+        "adminAuditEvent"
+      ]
+    },
+    {
+      "path": "lib/admin/admin-audit.js",
+      "subsystem": "lib/admin",
+      "lines": 176,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../logger.js",
+        "../logging/AuditStore.js",
+        "../tools/db.js",
+        "../utils.js",
+        "./admin-auth.js",
+        "./admin-export.js",
+        "http"
+      ],
+      "named_exports_approx": [
+        "handleAudit"
+      ]
+    },
+    {
+      "path": "lib/admin/admin-auth.js",
+      "subsystem": "lib/admin",
+      "lines": 276,
+      "review_status": "interface-inventory",
+      "imports_approx": [
+        "../auth.js",
+        "../config.js",
+        "../http/helpers.js",
+        "../logger.js",
+        "../logging/audit-outbox.js",
+        "../logging/audit.js",
+        "./admin-audit-actions.js",
+        "./admin-login-guard.js",
+        "http",
+        "node:crypto"
+      ],
+      "named_exports_approx": [
+        "ADMIN_BASE",
+        "safeErrorMessage",
+        "adminUserAuditActor",
+        "adminAuditActor",
+        "auditAdminAuth",
+        "sendAdminDenied",
+        "hasValidMasterCookie",
+        "validateAdminAccess",
+        "validateAdminOrigin",
+        "handleAuth"
+      ]
+    },
+    {
+      "path": "lib/admin/admin-export.js",
+      "subsystem": "lib/admin",
+      "lines": 352,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../config/memory.js",
+        "../logger.js",
+        "../logging/audit.js",
+        "../memory/keyScope.js",
+        "../memory/transfer/FragmentExporter.js",
+        "../memory/transfer/ImportReport.js",
+        "../memory/transfer/ImportRunner.js",
+        "../memory/transfer/exportFormat.js",
+        "../memory/transfer/importErrors.js",
+        "../memory/transfer/importRecords.js",
+        "../memory/transfer/importRuntime.js",
+        "../redis.js",
+        "../tools/db.js",
+        "../utils.js",
+        "./AdminAuthz.js",
+        "./ScopeFilter.js",
+        "./admin-auth.js",
+        "./admin-memory.js",
+        "node:events",
+        "pg"
+      ],
+      "named_exports_approx": [
+        "IMPORT_NDJSON_MAX_BYTES",
+        "writeLine",
+        "handleExport",
+        "handleImport"
+      ]
+    },
+    {
+      "path": "lib/admin/admin-handler-registry.js",
+      "subsystem": "lib/admin",
+      "lines": 87,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./admin-audit.js",
+        "./admin-export.js",
+        "./admin-keys.js",
+        "./admin-logs.js",
+        "./admin-me.js",
+        "./admin-memory.js",
+        "./admin-review.js",
+        "./admin-route-table.js",
+        "./admin-sessions.js",
+        "./admin-users.js"
+      ],
+      "named_exports_approx": [
+        "DIRECT_ADMIN_ROUTE_MODULES",
+        "buildAdminHandlerRegistry",
+        "ADMIN_HANDLER_REGISTRY",
+        "ADMIN_HANDLER_MODULES",
+        "ADMIN_MODULE_HANDLERS",
+        "dispatchAdminModuleHandlers"
+      ]
+    },
+    {
+      "path": "lib/admin/admin-keys.js",
+      "subsystem": "lib/admin",
+      "lines": 746,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../config.js",
+        "../llm/registry.js",
+        "../logger.js",
+        "../logging/audit.js",
+        "../memory/WorkingMemorySql.js",
+        "../memory/schema.js",
+        "../sessions.js",
+        "../tools/db.js",
+        "../utils.js",
+        "./AdminAuthz.js",
+        "./ApiKeyLifecycleStore.js",
+        "./ApiKeyStore.js",
+        "./ScopeFilter.js",
+        "./admin-audit-actions.js",
+        "./admin-auth.js",
+        "./key-lifecycle.js",
+        "./key-policy.js",
+        "./key-state-cache.js",
+        "http"
+      ],
+      "named_exports_approx": [
+        "handleKeys"
+      ]
+    },
+    {
+      "path": "lib/admin/admin-login-guard.js",
+      "subsystem": "lib/admin",
+      "lines": 109,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../config.js"
+      ],
+      "named_exports_approx": [
+        "loginDelayMs",
+        "checkAdminAuthAttempt",
+        "recordAdminAuthFailure",
+        "recordAdminAuthSuccess",
+        "_resetAdminAuthGuardForTest",
+        "createKeyedLoginGuard"
+      ]
+    },
+    {
+      "path": "lib/admin/admin-logs.js",
+      "subsystem": "lib/admin",
+      "lines": 216,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../config.js",
+        "../logger.js",
+        "./admin-auth.js",
+        "node:fs",
+        "node:path"
+      ],
+      "named_exports_approx": [
+        "handleLogs"
+      ]
+    },
+    {
+      "path": "lib/admin/admin-me.js",
+      "subsystem": "lib/admin",
+      "lines": 90,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./AdminAuthz.js",
+        "./admin-auth.js",
+        "./capabilities.js",
+        "./key-policy.js"
+      ],
+      "named_exports_approx": [
+        "principalCapabilities",
+        "handleMe"
+      ]
+    },
+    {
+      "path": "lib/admin/admin-memory.js",
+      "subsystem": "lib/admin",
+      "lines": 889,
+      "review_status": "interface-inventory",
+      "imports_approx": [
+        ",     column: ",
+        "../logger.js",
+        "../logging/audit-event.js",
+        "../memory/MemoryManager.js",
+        "../memory/WorkingMemorySql.js",
+        "../memory/keyScope.js",
+        "../memory/read/DeterministicRanking.js",
+        "../memory/schema.js",
+        "../memory/signals/SearchMetrics.js",
+        "../tools/db.js",
+        "../utils.js",
+        "./AdminAuthz.js",
+        "./ScopeFilter.js",
+        "./admin-audit-actions.js",
+        "./admin-auth.js",
+        "node:http",
+        "pg"
+      ],
+      "named_exports_approx": [
+        "parseKeyIdsScope",
+        "escapeLike",
+        "fetchGroupKeyIds",
+        "handleMemory",
+        "fragmentPatchAuditDetail",
+        "handleSearch",
+        "handleSearchEvents"
+      ]
+    },
+    {
+      "path": "lib/admin/admin-metrics.js",
+      "subsystem": "lib/admin",
+      "lines": 470,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../env-parse.js",
+        "../metrics.js"
+      ],
+      "named_exports_approx": [
+        "_setSamplingEnabled",
+        "buildMetricsSummary",
+        "resetMetricsState",
+        "_getTimeseriesBuffer",
+        "_injectSample"
+      ]
+    },
+    {
+      "path": "lib/admin/admin-password.js",
+      "subsystem": "lib/admin",
+      "lines": 180,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "node:crypto",
+        "node:util"
+      ],
+      "named_exports_approx": [
+        "PASSWORD_MIN_LENGTH",
+        "PASSWORD_MAX_LENGTH",
+        "SCRYPT_PARAMS",
+        "HASH_CONCURRENCY",
+        "HASH_QUEUE_MAX",
+        "PasswordHashFormatError",
+        "HashBusyError",
+        "checkPasswordPolicy",
+        "createHashLimiter",
+        "parsePasswordHash",
+        "hashPassword",
+        "verifyPassword",
+        "needsRehash",
+        "verifyAgainstDummy"
+      ]
+    },
+    {
+      "path": "lib/admin/admin-principal.js",
+      "subsystem": "lib/admin",
+      "lines": 88,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../auth.js",
+        "../logger.js",
+        "./AdminAuthz.js",
+        "./ApiKeyStore.js",
+        "./admin-auth.js",
+        "./admin-login-guard.js",
+        "./admin-route-table.js",
+        "./admin-user-auth.js",
+        "./capabilities.js",
+        "node:http"
+      ],
+      "named_exports_approx": [
+        "resolveAdminPrincipal"
+      ]
+    },
+    {
+      "path": "lib/admin/admin-redact.js",
+      "subsystem": "lib/admin",
+      "lines": 162,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../logger.js",
+        "../logging/audit-event.js",
+        "node:crypto",
+        "node:http"
+      ],
+      "named_exports_approx": [
+        "REDACT_ALLOWED_FIELDS",
+        "REDACT_NUMERIC_FIELDS",
+        "redactForPrincipal",
+        "applyResponseRedaction"
+      ]
+    },
+    {
+      "path": "lib/admin/admin-review.js",
+      "subsystem": "lib/admin",
+      "lines": 204,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../logger.js",
+        "../utils.js",
+        "./ReviewStore.js",
+        "./admin-auth.js",
+        "node:http"
+      ],
+      "named_exports_approx": [
+        "ReviewInputError",
+        "parseDecisionBody",
+        "parseListQuery",
+        "reviewerLabel",
+        "REVIEW_ROUTES",
+        "handleReview"
+      ]
+    },
+    {
+      "path": "lib/admin/admin-route-table.js",
+      "subsystem": "lib/admin",
+      "lines": 174,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./capabilities.js"
+      ],
+      "named_exports_approx": [
+        "ROUTE_SCOPES",
+        "ADMIN_AUTH_ACTION",
+        "ADMIN_TOTP_ENROLL_ACTION",
+        "ADMIN_ROUTES",
+        "RouteTableError",
+        "PARAM_FORMATS",
+        "compileRoutePath",
+        "findAdminRoute",
+        "isRateLimitedAdminRequest"
+      ]
+    },
+    {
+      "path": "lib/admin/admin-routes.js",
+      "subsystem": "lib/admin",
+      "lines": 421,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../config/switches.js",
+        "../config.js",
+        "../http/helpers.js",
+        "../logger.js",
+        "../logging/audit-event.js",
+        "../logging/audit-outbox.js",
+        "../logging/audit.js",
+        "../memory/WorkingMemorySql.js",
+        "../memory/read/DeterministicRanking.js",
+        "../memory/schema.js",
+        "../memory/signals/SearchEventAnalyzer.js",
+        "../memory/signals/SearchMetrics.js",
+        "../redis.js",
+        "../scheduler-registry.js",
+        "../scheduler.js",
+        "../sessions.js",
+        "../tools/db.js",
+        "./AdminAuthz.js",
+        "./ScopeFilter.js",
+        "./admin-audit-actions.js",
+        "./admin-auth.js",
+        "./admin-handler-registry.js",
+        "./admin-metrics.js",
+        "./admin-principal.js",
+        "./admin-user-auth.js",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
+      ],
+      "named_exports_approx": [
+        "handleAdminUi",
+        "handleAdminImage",
+        "handleAdminStatic",
+        "handleAdminApi"
+      ]
+    },
+    {
+      "path": "lib/admin/admin-seal.js",
+      "subsystem": "lib/admin",
+      "lines": 165,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "node:crypto"
+      ],
+      "named_exports_approx": [
+        "SealKeyError",
+        "SealError",
+        "parseSealKeyRing",
+        "sealSecret",
+        "sealKeyId",
+        "unsealSecret",
+        "needsReseal"
+      ]
+    },
+    {
+      "path": "lib/admin/admin-session-policy.js",
+      "subsystem": "lib/admin",
+      "lines": 273,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "node:crypto"
+      ],
+      "named_exports_approx": [
+        "SESSION_ABSOLUTE_TTL_MS",
+        "SESSION_IDLE_TTL_MS",
+        "LAST_SEEN_WRITE_INTERVAL_MS",
+        "USER_SESSION_COOKIE",
+        "CSRF_COOKIE",
+        "CSRF_HEADER",
+        "hashToken",
+        "sessionStatus",
+        "shouldTouchSession",
+        "newSessionValues",
+        "rotatedSessionValues",
+        "sessionCookieHeaders",
+        "clearSessionCookieHeaders",
+        "readCookies",
+        "isSecureRequest",
+        "expectedOrigins",
+        "csrfDecision",
+        "hasGlobalOwner",
+        "roleChangeRemovesOwner",
+        "ownerChangeDecision"
+      ]
+    },
+    {
+      "path": "lib/admin/admin-sessions.js",
+      "subsystem": "lib/admin",
+      "lines": 263,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../logger.js",
+        "../memory/processors/AutoReflect.js",
+        "../memory/processors/SessionActivityTracker.js",
+        "../memory/schema.js",
+        "../sessions.js",
+        "../tools/db.js",
+        "../tools/pool-gate.js",
+        "./AdminAuthz.js",
+        "./ScopeFilter.js",
+        "./admin-auth.js"
+      ],
+      "named_exports_approx": [
+        "handleSessions"
+      ]
+    },
+    {
+      "path": "lib/admin/admin-totp.js",
+      "subsystem": "lib/admin",
+      "lines": 169,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "node:crypto"
+      ],
+      "named_exports_approx": [
+        "TOTP_STEP_SEC",
+        "TOTP_DIGITS",
+        "TOTP_WINDOW",
+        "TOTP_SECRET_LEN",
+        "TotpFormatError",
+        "base32Encode",
+        "base32Decode",
+        "hotp",
+        "totpStep",
+        "totpAt",
+        "verifyTotp",
+        "generateTotpSecret",
+        "otpauthUri"
+      ]
+    },
+    {
+      "path": "lib/admin/admin-user-auth.js",
+      "subsystem": "lib/admin",
+      "lines": 455,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../config.js",
+        "../http/helpers.js",
+        "../logger.js",
+        "../tools/db.js",
+        "./AdminAuthz.js",
+        "./AdminUserStore.js",
+        "./admin-auth.js",
+        "./admin-login-guard.js",
+        "./admin-password.js",
+        "./admin-route-table.js",
+        "./admin-seal.js",
+        "./admin-session-policy.js",
+        "./admin-totp.js",
+        "./admin-user-rules.js",
+        "node:crypto",
+        "node:http"
+      ],
+      "named_exports_approx": [
+        "TOTP_ISSUER",
+        "ENROLL_TTL_MS",
+        "USER_COUNT_CACHE_MS",
+        "IP_FAILURE_THRESHOLD",
+        "adminUserStore",
+        "_setAdminUserStoreForTest",
+        "invalidateAdminUserCount",
+        "adminUsersActive",
+        "handleUserLogin",
+        "handleAuthEntry",
+        "handleTotpEnroll",
+        "resolveUserSessionPrincipal",
+        "enforceUserCsrf",
+        "rotateOwnSession",
+        "handleAuthLogout"
+      ]
+    },
+    {
+      "path": "lib/admin/admin-user-rules.js",
+      "subsystem": "lib/admin",
+      "lines": 175,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./capabilities.js",
+        "node:crypto"
+      ],
+      "named_exports_approx": [
+        "USERNAME_MAX",
+        "WORKSPACE_MAX",
+        "TOTP_REQUIRED_ROLES",
+        "ASSIGNABLE_ROLES",
+        "RECOVERY_CODE_COUNT",
+        "MAX_BINDINGS_PER_USER",
+        "AdminUserInputError",
+        "normalizeUsername",
+        "loginUsernameNorm",
+        "normalizeRoleBindings",
+        "requiresTotp",
+        "totpSealAad",
+        "generateRecoveryCodes",
+        "normalizeRecoveryCode",
+        "recoveryCodeHash",
+        "accountGuardKey"
+      ]
+    },
+    {
+      "path": "lib/admin/admin-users.js",
+      "subsystem": "lib/admin",
+      "lines": 211,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../config.js",
+        "../logger.js",
+        "../utils.js",
+        "./AdminAuthz.js",
+        "./AdminUserStore.js",
+        "./admin-audit-actions.js",
+        "./admin-auth.js",
+        "./admin-password.js",
+        "./admin-user-auth.js",
+        "./admin-user-rules.js"
+      ],
+      "named_exports_approx": [
+        "handleAdminUsers"
+      ]
+    },
+    {
+      "path": "lib/admin/capabilities.js",
+      "subsystem": "lib/admin",
+      "lines": 173,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "CAPABILITIES",
+        "REPRESENTATIVE_CAPABILITIES",
+        "CAP_MODES",
+        "CAP_MODE_ORDER",
+        "OWNER_ONLY_CAPABILITIES",
+        "CAP_PUBLIC",
+        "CAP_AUTHENTICATED",
+        "UNLISTED_ROUTE_CAP",
+        "ROLE_PRESETS",
+        "CORE_PRESETS",
+        "LEGACY_PERMISSION_CAPS",
+        "isCapability",
+        "capabilitiesFromPermissions"
+      ]
+    },
+    {
+      "path": "lib/admin/key-cidr.js",
+      "subsystem": "lib/admin",
+      "lines": 152,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./key-policy.js",
+        "node:net"
+      ],
+      "named_exports_approx": [
+        "MAX_ALLOWED_CIDRS",
+        "parseCidr",
+        "normalizeClientAddress",
+        "checkKeyAddress",
+        "validateCidrList"
+      ]
+    },
+    {
+      "path": "lib/admin/key-lifecycle-limits.js",
+      "subsystem": "lib/admin",
+      "lines": 16,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "DEFAULT_KEY_ROTATION_GRACE_HOURS",
+        "MAX_KEY_ROTATION_GRACE_HOURS",
+        "DEFAULT_KEY_LAST_USED_INTERVAL_SEC",
+        "MAX_KEY_LAST_USED_INTERVAL_SEC"
+      ]
+    },
+    {
+      "path": "lib/admin/key-lifecycle.js",
+      "subsystem": "lib/admin",
+      "lines": 394,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../config.js",
+        "./key-cidr.js",
+        "./key-lifecycle-limits.js",
+        "./key-policy.js",
+        "node:crypto"
+      ],
+      "named_exports_approx": [
+        "KEY_SECRET_SOURCE",
+        "KEY_SECRET_STATUS",
+        "DEFAULT_ROTATION_GRACE_HOURS",
+        "MAX_ROTATION_GRACE_HOURS",
+        "keyRotationGraceHours",
+        "keyLastUsedIntervalMs",
+        "KEY_LIFECYCLE_FIELDS",
+        "KEY_DESCRIPTION_MAX",
+        "KEY_OWNER_MAX",
+        "KEY_REVOKE_REASON_MAX",
+        "KEY_KIND_PATTERN",
+        "KeyLifecycleConflictError",
+        "parseStrictTimestamp",
+        "evaluateKeyState",
+        "evaluateKeyCredential",
+        "accessCutoff",
+        "isAccessRetired",
+        "assertCidrWritable",
+        "rotationValidUntil",
+        "resolveGraceHours",
+        "validateKeyLifecyclePatch",
+        "validateRevokeReason",
+        "hashClientIp",
+        "diffKeyLifecycle"
+      ]
+    },
+    {
+      "path": "lib/admin/key-material.js",
+      "subsystem": "lib/admin",
+      "lines": 47,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "node:crypto"
+      ],
+      "named_exports_approx": [
+        "KEY_PREFIX_LENGTH",
+        "hashKey",
+        "generateRawKey",
+        "newKeyMaterial"
+      ]
+    },
+    {
+      "path": "lib/admin/key-policy.js",
+      "subsystem": "lib/admin",
+      "lines": 296,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../llm/EgressPolicy.js",
+        "../memory/ModeRegistry.js",
+        "../memory/reviewState.js",
+        "../rbac.js"
+      ],
+      "named_exports_approx": [
+        "KEY_POLICY_FIELDS",
+        "MAX_ALLOWED_WORKSPACES",
+        "MAX_WORKSPACE_LENGTH",
+        "MARKER_PERMISSION_VALUES",
+        "KEY_PERMISSION_VALUES",
+        "isValidPermissionList",
+        "PERMISSION_LIST_MESSAGE",
+        "KeyPolicyValidationError",
+        "validateKeyPolicyPatch",
+        "validatePermissionList",
+        "diffKeyPolicy",
+        "formatKeyPermissionAuditDetails",
+        "formatKeyPolicyAuditDetails",
+        "keyPolicyAuditDetail"
+      ]
+    },
+    {
+      "path": "lib/admin/key-schema-state.js",
+      "subsystem": "lib/admin",
+      "lines": 125,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../logger.js"
+      ],
+      "named_exports_approx": [
+        "LIFECYCLE_SCHEMA_REPROBE_MS",
+        "SECRETS_TABLE_SQL",
+        "isMissingLifecycleSchema",
+        "queryWithLifecycle",
+        "lifecycleSchemaState",
+        "resetLifecycleSchemaState"
+      ]
+    },
+    {
+      "path": "lib/admin/key-state-cache.js",
+      "subsystem": "lib/admin",
+      "lines": 117,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../config.js",
+        "../logger.js",
+        "../metrics.js",
+        "./ApiKeyStore.js",
+        "./key-cidr.js",
+        "./key-lifecycle.js"
+      ],
+      "named_exports_approx": [
+        "KEY_STATE_FAILURE_WINDOW_MS",
+        "keyStateRecheckMs",
+        "getCachedKeyState",
+        "invalidateKeyState",
+        "isKeyStateRevoked",
+        "sessionKeyContext"
+      ]
+    },
+    {
+      "path": "lib/agy.js",
+      "subsystem": "lib",
+      "lines": 12,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./llm/index.js",
+        "./llm/runners/agy.js"
+      ],
+      "named_exports_approx": [
+        "isAgyCLIAvailable"
+      ]
+    },
+    {
+      "path": "lib/auth.js",
+      "subsystem": "lib",
+      "lines": 366,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./admin/ApiKeyStore.js",
+        "./admin/key-cidr.js",
+        "./admin/key-lifecycle.js",
+        "./config.js",
+        "./http/helpers.js",
+        "./logger.js",
+        "./metrics.js",
+        "./oauth.js",
+        "./redis.js",
+        "./safe-compare.js",
+        "http"
+      ],
+      "named_exports_approx": [
+        "extractBearerToken",
+        "resolveAuthConfig",
+        "buildAuthDecision",
+        "isInitializeRequest",
+        "validateAuthentication",
+        "validateMasterKey",
+        "requireAuthentication"
+      ]
+    },
+    {
+      "path": "lib/cli/_fileTransaction.js",
+      "subsystem": "lib/cli",
+      "lines": 178,
+      "review_status": "interface-inventory",
+      "imports_approx": [
+        "node:crypto",
+        "node:fs",
+        "node:path"
+      ],
+      "named_exports_approx": [
+        "FileTransactionError",
+        "inspectUnder",
+        "unwritableTargets",
+        "writeAll"
+      ]
+    },
+    {
+      "path": "lib/cli/_format.js",
+      "subsystem": "lib/cli",
+      "lines": 165,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "renderTable",
+        "renderFieldTable",
+        "renderJson",
+        "renderCsv",
+        "resolveFormat",
+        "print"
+      ]
+    },
+    {
+      "path": "lib/cli/_lineDiff.js",
+      "subsystem": "lib/cli",
+      "lines": 72,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "diffLines"
+      ]
+    },
+    {
+      "path": "lib/cli/_mcpClient.js",
+      "subsystem": "lib/cli",
+      "lines": 240,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "node:http",
+        "node:https"
+      ],
+      "named_exports_approx": [
+        "McpClient",
+        "callRemoteTool"
+      ]
+    },
+    {
+      "path": "lib/cli/_remoteSettings.js",
+      "subsystem": "lib/cli",
+      "lines": 38,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "PLUGIN_REMOTE_VARS",
+        "CLI_REMOTE_VARS",
+        "resolveHookRemote"
+      ]
+    },
+    {
+      "path": "lib/cli/_stdin.js",
+      "subsystem": "lib/cli",
+      "lines": 39,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "readStdin"
+      ]
+    },
+    {
+      "path": "lib/cli/_stdout.js",
+      "subsystem": "lib/cli",
+      "lines": 38,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "node:stream"
+      ],
+      "named_exports_approx": [
+        "createOutput"
+      ]
+    },
+    {
+      "path": "lib/cli/admin.js",
+      "subsystem": "lib/cli",
+      "lines": 152,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../scripts/ops/online-index-plan.mjs",
+        "../admin/AdminUserStore.js",
+        "../admin/admin-user-rules.js",
+        "../logging/audit-event.js",
+        "../outbox/outbox-sql.js",
+        "pg"
+      ],
+      "named_exports_approx": [
+        "RECOVER_ACTION",
+        "usage",
+        "AdminCliError",
+        "recoverTarget",
+        "recoverPlan",
+        "runRecover",
+        "admin"
+      ]
+    },
+    {
+      "path": "lib/cli/anchor-scope.js",
+      "subsystem": "lib/cli",
+      "lines": 203,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../memory/MemoryManager.js",
+        "../memory/admin/AgentScopeBackfill.js",
+        "../memory/admin/AnchorScopeInventory.js",
+        "../memory/write/FragmentStore.js",
+        "../tools/db.js",
+        "node:fs"
+      ],
+      "named_exports_approx": [
+        "usage",
+        "parseStrictBooleanFlag",
+        "parseSnapshotBatchSize",
+        "assertNoNormalizationFailures",
+        "normalizeApprovedFragments",
+        "anchorScope"
+      ]
+    },
+    {
+      "path": "lib/cli/audit.js",
+      "subsystem": "lib/cli",
+      "lines": 93,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../logging/AuditStore.js",
+        "../tools/db.js"
+      ],
+      "named_exports_approx": [
+        "usage",
+        "AuditChainBrokenError",
+        "positiveIntOption",
+        "formatVerifyResult",
+        "audit"
+      ]
+    },
+    {
+      "path": "lib/cli/backfill.js",
+      "subsystem": "lib/cli",
+      "lines": 23,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../scripts/backfill-embeddings.js"
+      ],
+      "named_exports_approx": [
+        "usage",
+        "backfill"
+      ]
+    },
+    {
+      "path": "lib/cli/benchmark.js",
+      "subsystem": "lib/cli",
+      "lines": 276,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../config.js",
+        "../memory/MemoryManager.js",
+        "../memory/signals/RecallBenchmark.js",
+        "../memory/signals/RecallEvalSet.js",
+        "../tools/db.js",
+        "./_format.js",
+        "node:fs/promises"
+      ],
+      "named_exports_approx": [
+        "usage",
+        "dbTargetLine",
+        "baselineRefusal",
+        "benchmark"
+      ]
+    },
+    {
+      "path": "lib/cli/cleanup.js",
+      "subsystem": "lib/cli",
+      "lines": 42,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../scripts/cleanup-noise.js"
+      ],
+      "named_exports_approx": [
+        "usage",
+        "cleanup"
+      ]
+    },
+    {
+      "path": "lib/cli/completion.js",
+      "subsystem": "lib/cli",
+      "lines": 200,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "usage",
+        "completion",
+        "COMMAND_COUNT"
+      ]
+    },
+    {
+      "path": "lib/cli/export.js",
+      "subsystem": "lib/cli",
+      "lines": 159,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../config.js",
+        "../memory/keyScope.js",
+        "../memory/transfer/FragmentExporter.js",
+        "../memory/transfer/exportFormat.js",
+        "node:events",
+        "node:fs",
+        "node:path",
+        "pg"
+      ],
+      "named_exports_approx": [
+        "usage",
+        "exportCmd"
+      ]
+    },
+    {
+      "path": "lib/cli/health.js",
+      "subsystem": "lib/cli",
+      "lines": 189,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../config.js",
+        "./_format.js",
+        "ioredis",
+        "node:fs",
+        "node:http",
+        "node:path",
+        "pg"
+      ],
+      "named_exports_approx": [
+        "usage",
+        "health"
+      ]
+    },
+    {
+      "path": "lib/cli/hook.js",
+      "subsystem": "lib/cli",
+      "lines": 255,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../hooks/hook-contract.js",
+        "../hooks/hook-excerpt.js",
+        "./_stdin.js",
+        "node:child_process",
+        "node:fs/promises"
+      ],
+      "named_exports_approx": [
+        "usage",
+        "hookUrl",
+        "hookTimeoutMs",
+        "buildHookBody",
+        "hook"
+      ]
+    },
+    {
+      "path": "lib/cli/import.js",
+      "subsystem": "lib/cli",
+      "lines": 196,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../config.js",
+        "../logging/audit.js",
+        "../memory/transfer/ImportReport.js",
+        "../memory/transfer/ImportRunner.js",
+        "../memory/transfer/importRecords.js",
+        "../memory/transfer/importRuntime.js",
+        "node:fs",
+        "node:path",
+        "node:readline",
+        "pg"
+      ],
+      "named_exports_approx": [
+        "usage",
+        "importRows",
+        "auditRestoreImport",
+        "runAudited",
+        "importCmd"
+      ]
+    },
+    {
+      "path": "lib/cli/init.js",
+      "subsystem": "lib/cli",
+      "lines": 395,
+      "review_status": "interface-inventory",
+      "imports_approx": [
+        "./_fileTransaction.js",
+        "./_lineDiff.js",
+        "./_stdout.js",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
+      ],
+      "named_exports_approx": [
+        "usage",
+        "InitError",
+        "INIT_TARGETS",
+        "planInit",
+        "onPath",
+        "init"
+      ]
+    },
+    {
+      "path": "lib/cli/inspect.js",
+      "subsystem": "lib/cli",
+      "lines": 204,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../memory/WorkingMemorySql.js",
+        "../memory/schema.js",
+        "../tools/db.js",
+        "./_format.js",
+        "./_mcpClient.js"
+      ],
+      "named_exports_approx": [
+        "usage",
+        "inspect"
+      ]
+    },
+    {
+      "path": "lib/cli/migrate.js",
+      "subsystem": "lib/cli",
+      "lines": 24,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../scripts/migrate.js"
+      ],
+      "named_exports_approx": [
+        "usage",
+        "migrate"
+      ]
+    },
+    {
+      "path": "lib/cli/parseArgs.js",
+      "subsystem": "lib/cli",
+      "lines": 76,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "parseArgs"
+      ]
+    },
+    {
+      "path": "lib/cli/recall.js",
+      "subsystem": "lib/cli",
+      "lines": 184,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../memory/MemoryManager.js",
+        "../tools/db.js",
+        "./_format.js",
+        "./_mcpClient.js"
+      ],
+      "named_exports_approx": [
+        "usage",
+        "resolveEmptyRecallHint",
+        "attachEmptyRecallHint",
+        "recall"
+      ]
+    },
+    {
+      "path": "lib/cli/remember.js",
+      "subsystem": "lib/cli",
+      "lines": 227,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../config.js",
+        "../memory/write/FragmentFactory.js",
+        "../memory/write/FragmentWriter.js",
+        "../memory/write/WriteGate.js",
+        "../tools/db.js",
+        "./_mcpClient.js",
+        "./_stdin.js",
+        "pg"
+      ],
+      "named_exports_approx": [
+        "usage",
+        "rememberLocal",
+        "remember"
+      ]
+    },
+    {
+      "path": "lib/cli/serve.js",
+      "subsystem": "lib/cli",
+      "lines": 24,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "child_process",
+        "path",
+        "url"
+      ],
+      "named_exports_approx": [
+        "usage",
+        "serve"
+      ]
+    },
+    {
+      "path": "lib/cli/session.js",
+      "subsystem": "lib/cli",
+      "lines": 439,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../sessions.js",
+        "./_format.js",
+        "node:http",
+        "node:https"
+      ],
+      "named_exports_approx": [
+        "usage",
+        "session"
+      ]
+    },
+    {
+      "path": "lib/cli/stats.js",
+      "subsystem": "lib/cli",
+      "lines": 182,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../config.js",
+        "../memory/WorkingMemorySql.js",
+        "./_format.js",
+        "./_mcpClient.js",
+        "pg"
+      ],
+      "named_exports_approx": [
+        "usage",
+        "stats"
+      ]
+    },
+    {
+      "path": "lib/cli/update.js",
+      "subsystem": "lib/cli",
+      "lines": 73,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../updater/cache.js",
+        "../updater/install-detector.js",
+        "../updater/update-executor.js",
+        "../updater/version-checker.js",
+        "node:readline"
+      ],
+      "named_exports_approx": [
+        "usage",
+        "run"
+      ]
+    },
+    {
+      "path": "lib/codex.js",
+      "subsystem": "lib",
+      "lines": 8,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./llm/index.js",
+        "./llm/runners/codex.js"
+      ],
+      "named_exports_approx": [
+        "isCodexCLIAvailable"
+      ]
+    },
+    {
+      "path": "lib/compression.js",
+      "subsystem": "lib",
+      "lines": 176,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./logger.js",
+        "util",
+        "zlib"
+      ],
+      "named_exports_approx": [
+        "supportsGzip",
+        "compressGzip",
+        "decompressGzip",
+        "shouldCompress",
+        "sendCompressed",
+        "sendJSON"
+      ]
+    },
+    {
+      "path": "lib/config.js",
+      "subsystem": "lib",
+      "lines": 1150,
+      "review_status": "selected-source",
+      "imports_approx": [
+        "./admin/admin-seal.js",
+        "./admin/key-lifecycle-limits.js",
+        "./env-parse.js",
+        "./protocol-versions.js",
+        "pg"
+      ],
+      "named_exports_approx": [
+        "envInt",
+        "envFloat",
+        "envBool",
+        "envEnum",
+        "getConfigIssues",
+        "PORT",
+        "ACCESS_KEY",
+        "AUTH_DISABLED",
+        "ALLOW_LEGACY_UNBOUND_AGENT_SCOPE",
+        "SESSION_TTL_MS",
+        "OAUTH_TOKEN_TTL_SECONDS",
+        "OAUTH_REFRESH_TTL_SECONDS",
+        "reservedAgentIdsMode",
+        "writeGateEnabled",
+        "sensitiveScanMode",
+        "workspaceReadAuthzMode",
+        "sensitiveScanEffectiveMode",
+        "anchorPermissionMode",
+        "DEFAULT_ANCHOR_LIMIT_PER_KEY",
+        "anchorLimitPerKey",
+        "wmPgFallbackEnabled",
+        "wmFallbackMaxRows",
+        "dedupScope",
+        "forgetCascadeEnabled",
+        "rankBeforeBudgetEnabled",
+        "rankingFixV2Enabled",
+        "gcThroughputEnabled",
+        "DEFAULT_GC_MAX_DELETE_PER_CYCLE",
+        "DEFAULT_GC_TIME_BUDGET_MS",
+        "gcMaxDeletePerCycle",
+        "gcTimeBudgetMs",
+        "contextAnnotateEnabled",
+        "provenanceEnabled",
+        "reviewQueueEnabled",
+        "lexicalChannelEnabled",
+        "lexicalTimeoutMs",
+        "logToStderr",
+        "workspaceGateEnforced",
+        "dcrHourlyCap",
+        "outboxEnabled",
+        "outboxWorkerEnabled",
+        "hookEndpointsEnabled",
+        "outboxMaxAttempts",
+        "outboxRetentionDays",
+        "outboxUnhandledDays",
+        "egressPolicyEnabled",
+        "egressUnknownKeyMode",
+        "EGRESS_LOCAL_HOSTS",
+        "auditDbEnabled",
+        "auditRetentionDays",
+        "LOG_DIR",
+        "ALLOWED_ORIGINS",
+        "ADMIN_ALLOWED_ORIGINS",
+        "adminAuthBackoffMode",
+        "adminUsersEnabled",
+        "adminSealKeyRing",
+        "REDIS_ENABLED",
+        "REDIS_SENTINEL_ENABLED",
+        "REDIS_HOST",
+        "REDIS_PORT",
+        "REDIS_PASSWORD",
+        "REDIS_DB",
+        "REDIS_SESSION_FAIL_CLOSED",
+        "REDIS_MASTER_NAME",
+        "REDIS_SENTINELS",
+        "CACHE_ENABLED",
+        "CACHE_DB_TTL",
+        "CACHE_SESSION_TTL",
+        "EMBEDDING_PROVIDER",
+        "OPENAI_API_KEY",
+        "EMBEDDING_API_KEY",
+        "CF_ACCOUNT_ID",
+        "CF_API_TOKEN",
+        "EMBEDDING_BASE_URL",
+        "EMBEDDING_MODEL",
+        "EMBEDDING_DIMENSIONS",
+        "EMBEDDING_SUPPORTS_DIMS_PARAM",
+        "EMBEDDING_ENABLED",
+        "EMBEDDING_TIMEOUT_MS",
+        "EMBEDDING_MAX_RETRIES",
+        "EMBEDDING_CONCURRENCY",
+        "EMBEDDING_SEM_WAIT_MS",
+        "LLM_PRIMARY",
+        "LLM_FALLBACKS",
+        "LLM_CONCURRENCY_ENABLED",
+        "LLM_CONCURRENCY_WAIT_MS",
+        "LLM_CONCURRENCY_LIMITS",
+        "getConcurrencyLimit",
+        "LLM_CB_FAILURE_THRESHOLD",
+        "LLM_CB_OPEN_DURATION_MS",
+        "LLM_CB_FAILURE_WINDOW_MS",
+        "LLM_PROVIDER_TIMEOUT_CONFIGURED",
+        "LLM_PROVIDER_TIMEOUT_MS",
+        "LLM_CHAIN_TIMEOUT_MS",
+        "LLM_TOKEN_BUDGET_INPUT",
+        "LLM_TOKEN_BUDGET_OUTPUT",
+        "LLM_TOKEN_BUDGET_WINDOW_SEC",
+        "NLI_SERVICE_URL",
+        "NLI_TIMEOUT_MS",
+        "CASE_BACKPROP_ENABLED",
+        "RERANKER_URL",
+        "RERANKER_ENABLED",
+        "RERANKER_TIMEOUT_MS",
+        "RERANKER_MODEL",
+        "RERANKER_EXTERNAL_FALLBACK",
+        "RERANKER_EXTERNAL_COOLDOWN_MS",
+        "FRAGMENT_DEFAULT_LIMIT",
+        "DEFAULT_DAILY_LIMIT",
+        "DEFAULT_FRAGMENT_LIMIT",
+        "DEFAULT_PERMISSIONS",
+        "QUOTA_NEAR_LIMIT_MARGIN",
+        "DB_HOST",
+        "DB_PORT",
+        "DB_NAME",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_MAX_CONNECTIONS",
+        "DB_IDLE_TIMEOUT_MS",
+        "DB_CONN_TIMEOUT_MS",
+        "DB_QUERY_TIMEOUT",
+        "HEALTH_READY_DB_TIMEOUT_MS",
+        "SHUTDOWN_DEADLINE_MS",
+        "CONFIG_STRICT",
+        "DEFAULT_SCORE_UPDATE_BATCH",
+        "DEFAULT_SESSION_KEY_RECHECK_MS",
+        "DEFAULT_DB_STATEMENT_TIMEOUT_MS",
+        "DEFAULT_DB_LOCK_RETRY_MAX",
+        "MAX_DB_LOCK_RETRY_MAX",
+        "DB_BACKGROUND_MAX_CONNECTIONS",
+        "DB_BACKGROUND_WAIT_MAX_MS",
+        "PGVECTOR_SCHEMA",
+        "buildSearchPath",
+        "detectPgvectorSchema",
+        "RATE_LIMIT_WINDOW_MS",
+        "RATE_LIMIT_MAX_REQUESTS",
+        "RATE_LIMIT_PER_IP",
+        "RATE_LIMIT_PER_KEY",
+        "TRUST_PROXY_HOPS",
+        "OAUTH_TRUSTED_ORIGINS",
+        "OAUTH_ALLOWED_REDIRECT_URIS",
+        "UPDATE_CHECK_DISABLED",
+        "UPDATE_CHECK_INTERVAL_HOURS",
+        "ENABLE_OPENAPI",
+        "REJECT_NONAPIKEY_OAUTH",
+        "AUTH_STORE_UNAVAILABLE_STATUS",
+        "sessionIdPolicy",
+        "ALLOW_AUTO_DCR_REGISTER",
+        "SSE_HEARTBEAT_INTERVAL_MS",
+        "SSE_MAX_HEARTBEAT_FAILURES",
+        "SSE_RETRY_MS",
+        "IDLE_REFLECT_HOURS",
+        "STRICT_ORIGIN",
+        "resolveSplitChainConfig",
+        "isRememberDuplicateGuardEnabled",
+        "scoreMinDeltaEnv"
+      ]
+    },
+    {
+      "path": "lib/copilot.js",
+      "subsystem": "lib",
+      "lines": 12,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./llm/index.js",
+        "./llm/runners/copilot.js"
+      ],
+      "named_exports_approx": [
+        "isCopilotCLIAvailable"
+      ]
+    },
+    {
+      "path": "lib/embeddings/LocalTransformersEmbedder.js",
+      "subsystem": "lib/embeddings",
+      "lines": 114,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./normalize.js",
+        "@huggingface/transformers"
+      ],
+      "named_exports_approx": [
+        "LocalTransformersEmbedder",
+        "getLocalEmbedder"
+      ]
+    },
+    {
+      "path": "lib/embeddings/normalize.js",
+      "subsystem": "lib/embeddings",
+      "lines": 18,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "normalizeL2"
+      ]
+    },
+    {
+      "path": "lib/env-parse.js",
+      "subsystem": "lib",
+      "lines": 135,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "classifyBool",
+        "classifyEnum",
+        "readToolArgsValidation",
+        "readOauthRedirectCheck",
+        "readCorsMode",
+        "readFrameOptions",
+        "readSseQueryKey",
+        "readVectorForceIndex",
+        "readAdminMetricsSampling",
+        "readMetricsDefault",
+        "isLiteralTrue"
+      ]
+    },
+    {
+      "path": "lib/gemini.js",
+      "subsystem": "lib",
+      "lines": 13,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./llm/index.js",
+        "./llm/runners/gemini.js"
+      ],
+      "named_exports_approx": [
+        "isGeminiCLIAvailable",
+        "geminiCLIJson"
+      ]
+    },
+    {
+      "path": "lib/handlers/_common.js",
+      "subsystem": "lib/handlers",
+      "lines": 113,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../config.js",
+        "../env-parse.js",
+        "../logger.js",
+        "node:http"
+      ],
+      "named_exports_approx": [
+        "workerRefs",
+        "setWorkerRefs",
+        "recordConsolidateRun",
+        "applyCorsOrigin",
+        "isOriginAllowed"
+      ]
+    },
+    {
+      "path": "lib/handlers/_ratelimit-cache.js",
+      "subsystem": "lib/handlers",
+      "lines": 28,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../memory/MemoryManager.js"
+      ],
+      "named_exports_approx": [
+        "getRateLimitUsageCached"
+      ]
+    },
+    {
+      "path": "lib/handlers/_rotate-ratelimit.js",
+      "subsystem": "lib/handlers",
+      "lines": 88,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../http/helpers.js",
+        "node:http"
+      ],
+      "named_exports_approx": [
+        "checkRotateRateLimit",
+        "_resetForTest",
+        "_setForTest"
+      ]
+    },
+    {
+      "path": "lib/handlers/health-handler.js",
+      "subsystem": "lib/handlers",
+      "lines": 251,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../auth.js",
+        "../compression.js",
+        "../config.js",
+        "../logger.js",
+        "../memory/signals/MemoryEvaluator.js",
+        "../metrics.js",
+        "../redis.js",
+        "../sessions.js",
+        "../tools/db.js",
+        "./_common.js"
+      ],
+      "named_exports_approx": [
+        "probeWithDeadline",
+        "handleLive",
+        "handleReady",
+        "handleHealth",
+        "handleMetrics"
+      ]
+    },
+    {
+      "path": "lib/handlers/hook-handler.js",
+      "subsystem": "lib/handlers",
+      "lines": 388,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../admin/ApiKeyStore.js",
+        "../admin/key-state-cache.js",
+        "../auth.js",
+        "../compression.js",
+        "../config.js",
+        "../hooks/hook-auth-cache.js",
+        "../hooks/hook-context.js",
+        "../hooks/hook-contract.js",
+        "../hooks/hook-excerpt.js",
+        "../hooks/hook-metrics.js",
+        "../hooks/hook-store.js",
+        "../hooks/recent-keys.js",
+        "../http/helpers.js",
+        "../logger.js",
+        "../metrics.js",
+        "../outbox/Outbox.js",
+        "../rate-limiter.js",
+        "../rbac.js",
+        "../security/SensitiveScanner.js",
+        "../tools/db.js",
+        "../tools/memory.js",
+        "node:http"
+      ],
+      "named_exports_approx": [
+        "HOOK_HANDLER_DEFAULTS",
+        "createHookLimiters",
+        "createHookHandler",
+        "handleHookPost"
+      ]
+    },
+    {
+      "path": "lib/handlers/mcp-handler.js",
+      "subsystem": "lib/handlers",
+      "lines": 1017,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../admin/ApiKeyStore.js",
+        "../admin/key-state-cache.js",
+        "../auth.js",
+        "../compression.js",
+        "../config.js",
+        "../http/helpers.js",
+        "../jsonrpc.js",
+        "../logger.js",
+        "../logging/session-ref.js",
+        "../memory/ModeRegistry.js",
+        "../memory/provenance.js",
+        "../memory/read/WorkspaceReadAuthz.js",
+        "../metrics.js",
+        "../protocol-versions.js",
+        "../redis.js",
+        "../session-id.js",
+        "../sessions.js",
+        "../utils.js",
+        "./_common.js",
+        "./_ratelimit-cache.js",
+        "crypto",
+        "http"
+      ],
+      "named_exports_approx": [
+        "deriveTokenKey",
+        "hasSessionIdentityMismatch",
+        "reanchorReusedSession",
+        "buildParseErrorMessage",
+        "classifyModernProtocolAttempt",
+        "injectSessionContext",
+        "handleMcpPost",
+        "handleMcpGet",
+        "handleMcpDelete",
+        "handleToolCallForTest"
+      ]
+    },
+    {
+      "path": "lib/handlers/oauth-handler.js",
+      "subsystem": "lib/handlers",
+      "lines": 492,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../admin/ApiKeyStore.js",
+        "../admin/OAuthClientStore.js",
+        "../auth.js",
+        "../compression.js",
+        "../config.js",
+        "../env-parse.js",
+        "../logger.js",
+        "../metrics.js",
+        "../oauth.js",
+        "../utils.js"
+      ],
+      "named_exports_approx": [
+        "parseBasicClientAuth",
+        "_resetDcrWindowForTest",
+        "handleOAuthServerMetadata",
+        "handleOAuthResourceMetadata",
+        "handleOAuthRegister",
+        "resolveErrorRedirect",
+        "handleOAuthAuthorize",
+        "handleOAuthToken"
+      ]
+    },
+    {
+      "path": "lib/handlers/session-handler.js",
+      "subsystem": "lib/handlers",
+      "lines": 165,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../auth.js",
+        "../compression.js",
+        "../config.js",
+        "../logger.js",
+        "../metrics.js",
+        "../sessions.js",
+        "../utils.js",
+        "./_rotate-ratelimit.js",
+        "node:http"
+      ],
+      "named_exports_approx": [
+        "handleSessionRotate"
+      ]
+    },
+    {
+      "path": "lib/handlers/sse-handler.js",
+      "subsystem": "lib/handlers",
+      "lines": 261,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../admin/ApiKeyStore.js",
+        "../admin/key-state-cache.js",
+        "../auth.js",
+        "../config.js",
+        "../env-parse.js",
+        "../http/helpers.js",
+        "../jsonrpc.js",
+        "../logger.js",
+        "../logging/session-ref.js",
+        "../memory/provenance.js",
+        "../metrics.js",
+        "../sessions.js",
+        "../utils.js",
+        "./mcp-handler.js",
+        "http"
+      ],
+      "named_exports_approx": [
+        "isLegacySseAuthDisabledMaster",
+        "legacySseQueryKeyMode",
+        "handleLegacySseGet",
+        "handleLegacySsePost"
+      ]
+    },
+    {
+      "path": "lib/hooks/hook-auth-cache.js",
+      "subsystem": "lib/hooks",
+      "lines": 86,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "node:crypto",
+        "node:http"
+      ],
+      "named_exports_approx": [
+        "authCacheKey",
+        "createHookAuthCache"
+      ]
+    },
+    {
+      "path": "lib/hooks/hook-context.js",
+      "subsystem": "lib/hooks",
+      "lines": 107,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../memory/read/AnswerPack.js",
+        "../memory/read/ContextLines.js"
+      ],
+      "named_exports_approx": [
+        "HOOK_CONTEXT_HEADER",
+        "HOOK_CONTEXT_OPEN",
+        "HOOK_CONTEXT_CLOSE",
+        "HOOK_CONTEXT_POLICY",
+        "escapeHookItem",
+        "splitContextSections",
+        "renderHookContext"
+      ]
+    },
+    {
+      "path": "lib/hooks/hook-contract.js",
+      "subsystem": "lib/hooks",
+      "lines": 350,
+      "review_status": "selected-source",
+      "imports_approx": [
+        "node:crypto"
+      ],
+      "named_exports_approx": [
+        "HOOK_CLIENTS",
+        "HOOK_EVENTS",
+        "SESSION_START_SOURCES",
+        "HOOK_REFLECT_TOPIC",
+        "HOOK_REFLECT_IDEMPOTENCY_TOOL",
+        "HOOK_PAYLOAD_VERSION",
+        "HOOK_LIMITS",
+        "HookInputError",
+        "parseHookRoute",
+        "isReflectEvent",
+        "hookTokenBudget",
+        "isJsonContentType",
+        "headerBytes",
+        "withinJsonDepth",
+        "normalizeGitRemote",
+        "normalizeCwd",
+        "workspaceCandidates",
+        "resolveHookWorkspace",
+        "validateHookBody",
+        "hookIdempotencyKey",
+        "formatSessionStartOutput"
+      ]
+    },
+    {
+      "path": "lib/hooks/hook-excerpt.js",
+      "subsystem": "lib/hooks",
+      "lines": 188,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "EXCERPT_ROLE_MARK",
+        "extractTranscriptMessages",
+        "formatExcerpt",
+        "lastAssistantBlock",
+        "clipText"
+      ]
+    },
+    {
+      "path": "lib/hooks/hook-metrics.js",
+      "subsystem": "lib/hooks",
+      "lines": 80,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../metrics.js",
+        "./hook-contract.js",
+        "prom-client"
+      ],
+      "named_exports_approx": [
+        "HOOK_CALL_OUTCOMES",
+        "HOOK_REFLECT_OUTCOMES",
+        "hookCallsTotal",
+        "hookReflectTotal",
+        "recordHookCall",
+        "recordHookReflect"
+      ]
+    },
+    {
+      "path": "lib/hooks/hook-reflect-consumer.js",
+      "subsystem": "lib/hooks",
+      "lines": 201,
+      "review_status": "selected-source",
+      "imports_approx": [
+        "../admin/ApiKeyStore.js",
+        "../logger.js",
+        "../memory/MemoryManager.js",
+        "../memory/write/IdempotencyStore.js",
+        "../memory/write/WriteGate.js",
+        "../outbox/OutboxHandlers.js",
+        "../rbac.js",
+        "./hook-contract.js",
+        "./hook-excerpt.js",
+        "./hook-metrics.js",
+        "node:crypto"
+      ],
+      "named_exports_approx": [
+        "HOOK_CLAIM_STALE_MS",
+        "HOOK_CLAIM_TTL_DAYS",
+        "validateHookReflectPayload",
+        "buildHookReflectArgs",
+        "createHookReflectHandler",
+        "registerHookReflectConsumer"
+      ]
+    },
+    {
+      "path": "lib/hooks/hook-store.js",
+      "subsystem": "lib/hooks",
+      "lines": 41,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../memory/schema.js",
+        "./hook-contract.js"
+      ],
+      "named_exports_approx": [
+        "hookAdmissionState"
+      ]
+    },
+    {
+      "path": "lib/hooks/recent-keys.js",
+      "subsystem": "lib/hooks",
+      "lines": 51,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "RecentKeys"
+      ]
+    },
+    {
+      "path": "lib/http-handlers.js",
+      "subsystem": "lib",
+      "lines": 23,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./admin/admin-routes.js",
+        "./handlers/_common.js",
+        "./handlers/health-handler.js",
+        "./handlers/hook-handler.js",
+        "./handlers/mcp-handler.js",
+        "./handlers/oauth-handler.js",
+        "./handlers/session-handler.js",
+        "./handlers/sse-handler.js"
+      ],
+      "named_exports_approx": []
+    },
+    {
+      "path": "lib/http/helpers.js",
+      "subsystem": "lib/http",
+      "lines": 296,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../config/recommended-settings.js",
+        "../config.js",
+        "../env-parse.js",
+        "../logger.js",
+        "../metrics.js",
+        "http",
+        "node:net"
+      ],
+      "named_exports_approx": [
+        "AUTH_STORE_RETRY_AFTER_SEC",
+        "sseWrite",
+        "writeSSEEvent",
+        "initSSEResponse",
+        "readRawBody",
+        "readJsonBody",
+        "getClientIp",
+        "resolveClientIp",
+        "noteForwardedHeader",
+        "getProxyDiagnostic",
+        "proxyHealthFlags",
+        "applyBaseResponseHeaders",
+        "validateOrigin",
+        "authStoreUnavailableStatus"
+      ]
+    },
+    {
+      "path": "lib/jsonrpc.js",
+      "subsystem": "lib",
+      "lines": 853,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./config.js",
+        "./env-parse.js",
+        "./logger.js",
+        "./logging/audit.js",
+        "./logging/caller-ref.js",
+        "./memory/ModeRegistry.js",
+        "./memory/provenance.js",
+        "./memory/read/AgentScope.js",
+        "./memory/read/WorkspaceReadAuthz.js",
+        "./memory/read/workspace-read-policy.js",
+        "./metrics.js",
+        "./rbac.js",
+        "./symbolic/errors.js",
+        "./tool-registry.js",
+        "./tools/index.js",
+        "./tools/prompts.js",
+        "./tools/resources.js",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ],
+      "named_exports_approx": [
+        "jsonRpcError",
+        "jsonRpcResult",
+        "isProtocolDateString",
+        "negotiateProtocolVersion",
+        "handleInitialize",
+        "handleToolsList",
+        "applyTrustedToolContext",
+        "validateToolArgs",
+        "handleToolsCall",
+        "handlePromptsList",
+        "handlePromptsGet",
+        "handleResourcesList",
+        "handleResourcesRead",
+        "dispatchJsonRpc"
+      ]
+    },
+    {
+      "path": "lib/llm/EgressGate.js",
+      "subsystem": "lib/llm",
+      "lines": 269,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../admin/ApiKeyStore.js",
+        "../config.js",
+        "../logger.js",
+        "../outbox/Outbox.js",
+        "../security/SensitiveScanner.js",
+        "../tools/db.js",
+        "./EgressPolicy.js",
+        "./egress-metrics.js"
+      ],
+      "named_exports_approx": [
+        "EGRESS_AUDIT_TOPIC",
+        "EgressAuditError",
+        "EGRESS_PASS_THROUGH",
+        "openEgressGate"
+      ]
+    },
+    {
+      "path": "lib/llm/EgressPolicy.js",
+      "subsystem": "lib/llm",
+      "lines": 362,
+      "review_status": "selected-source",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "EXTERNAL_DEFAULT_STAGES",
+        "STAGE_DEFAULT",
+        "KNOWN_STAGES",
+        "MAX_APPROVED_PROVIDERS",
+        "MAX_POLICY_WORKSPACES",
+        "EgressPolicyValidationError",
+        "EgressSkippedError",
+        "EgressDeniedError",
+        "stageLabel",
+        "classifyProvider",
+        "validateEgressPolicy",
+        "stageDefaultLocalOnly",
+        "resolveEgressRule",
+        "decideEgress",
+        "evaluateEgress",
+        "assertEgressAllowed"
+      ]
+    },
+    {
+      "path": "lib/llm/LlmProvider.js",
+      "subsystem": "lib/llm",
+      "lines": 119,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./util/circuit-breaker.js",
+        "./util/parse-json.js"
+      ],
+      "named_exports_approx": [
+        "LlmProvider"
+      ]
+    },
+    {
+      "path": "lib/llm/egress-audit-handler.js",
+      "subsystem": "lib/llm",
+      "lines": 87,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../logging/audit.js",
+        "../outbox/OutboxHandlers.js",
+        "./EgressGate.js"
+      ],
+      "named_exports_approx": [
+        "EGRESS_AUDIT_OPERATION",
+        "createEgressAuditHandler",
+        "registerEgressAuditHandler"
+      ]
+    },
+    {
+      "path": "lib/llm/egress-metrics.js",
+      "subsystem": "lib/llm",
+      "lines": 43,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../metrics.js",
+        "prom-client"
+      ],
+      "named_exports_approx": [
+        "llmEgressCallsTotal",
+        "llmEgressBytesTotal",
+        "llmEgressSkippedTotal",
+        "llmEgressMaskedTotal"
+      ]
+    },
+    {
+      "path": "lib/llm/errors.js",
+      "subsystem": "lib/llm",
+      "lines": 62,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "LlmError",
+        "LlmTimeoutError",
+        "LlmRateLimitError",
+        "LlmAuthError",
+        "LlmFatalError"
+      ]
+    },
+    {
+      "path": "lib/llm/index.js",
+      "subsystem": "lib/llm",
+      "lines": 410,
+      "review_status": "selected-source",
+      "imports_approx": [
+        "../config.js",
+        "../logger.js",
+        "./EgressGate.js",
+        "./EgressPolicy.js",
+        "./LlmProvider.js",
+        "./metrics.js",
+        "./registry.js",
+        "./util/redact-prompt.js",
+        "./util/semaphore.js",
+        "node:crypto"
+      ],
+      "named_exports_approx": [
+        "dispatchChain",
+        "llmJson",
+        "isLlmAvailable"
+      ]
+    },
+    {
+      "path": "lib/llm/metrics.js",
+      "subsystem": "lib/llm",
+      "lines": 70,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../metrics.js",
+        "prom-client"
+      ],
+      "named_exports_approx": [
+        "llmProviderCallsTotal",
+        "llmProviderLatencyMs",
+        "llmFallbackTriggeredTotal",
+        "llmTokenUsageTotal",
+        "llmProviderConcurrencyActive",
+        "llmProviderConcurrencyWaitMs",
+        "llmProvider429Total"
+      ]
+    },
+    {
+      "path": "lib/llm/providers/AgyCliProvider.js",
+      "subsystem": "lib/llm",
+      "lines": 49,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../LlmProvider.js",
+        "../runners/agy.js",
+        "../util/parse-json.js"
+      ],
+      "named_exports_approx": [
+        "AgyCliProvider"
+      ]
+    },
+    {
+      "path": "lib/llm/providers/AnthropicProvider.js",
+      "subsystem": "lib/llm",
+      "lines": 139,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../logger.js",
+        "../LlmProvider.js",
+        "../util/fetch-with-timeout.js",
+        "../util/retry-hints.js"
+      ],
+      "named_exports_approx": [
+        "AnthropicProvider"
+      ]
+    },
+    {
+      "path": "lib/llm/providers/CodexCliProvider.js",
+      "subsystem": "lib/llm",
+      "lines": 80,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../LlmProvider.js",
+        "../runners/codex.js",
+        "../util/parse-json.js"
+      ],
+      "named_exports_approx": [
+        "CodexCliProvider"
+      ]
+    },
+    {
+      "path": "lib/llm/providers/CohereProvider.js",
+      "subsystem": "lib/llm",
+      "lines": 137,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../logger.js",
+        "../LlmProvider.js",
+        "../util/fetch-with-timeout.js",
+        "../util/retry-hints.js"
+      ],
+      "named_exports_approx": [
+        "CohereProvider"
+      ]
+    },
+    {
+      "path": "lib/llm/providers/CopilotCliProvider.js",
+      "subsystem": "lib/llm",
+      "lines": 84,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../LlmProvider.js",
+        "../runners/copilot.js",
+        "../util/parse-json.js"
+      ],
+      "named_exports_approx": [
+        "CopilotCliProvider"
+      ]
+    },
+    {
+      "path": "lib/llm/providers/DeepSeekProvider.js",
+      "subsystem": "lib/llm",
+      "lines": 24,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./OpenAICompatibleProvider.js"
+      ],
+      "named_exports_approx": [
+        "DeepSeekProvider"
+      ]
+    },
+    {
+      "path": "lib/llm/providers/GeminiCliProvider.js",
+      "subsystem": "lib/llm",
+      "lines": 85,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../LlmProvider.js",
+        "../runners/gemini.js",
+        "../util/parse-json.js"
+      ],
+      "named_exports_approx": [
+        "GeminiCliProvider"
+      ]
+    },
+    {
+      "path": "lib/llm/providers/GoogleGeminiProvider.js",
+      "subsystem": "lib/llm",
+      "lines": 146,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../logger.js",
+        "../LlmProvider.js",
+        "../util/fetch-with-timeout.js",
+        "../util/retry-hints.js"
+      ],
+      "named_exports_approx": [
+        "GoogleGeminiProvider"
+      ]
+    },
+    {
+      "path": "lib/llm/providers/GroqProvider.js",
+      "subsystem": "lib/llm",
+      "lines": 24,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./OpenAICompatibleProvider.js"
+      ],
+      "named_exports_approx": [
+        "GroqProvider"
+      ]
+    },
+    {
+      "path": "lib/llm/providers/MistralProvider.js",
+      "subsystem": "lib/llm",
+      "lines": 24,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./OpenAICompatibleProvider.js"
+      ],
+      "named_exports_approx": [
+        "MistralProvider"
+      ]
+    },
+    {
+      "path": "lib/llm/providers/OllamaProvider.js",
+      "subsystem": "lib/llm",
+      "lines": 140,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../logger.js",
+        "../LlmProvider.js",
+        "../util/fetch-with-timeout.js",
+        "../util/retry-hints.js"
+      ],
+      "named_exports_approx": [
+        "OllamaProvider"
+      ]
+    },
+    {
+      "path": "lib/llm/providers/OpenAICompatibleProvider.js",
+      "subsystem": "lib/llm",
+      "lines": 190,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../logger.js",
+        "../LlmProvider.js",
+        "../errors.js",
+        "../metrics.js",
+        "../util/fetch-with-timeout.js",
+        "../util/retry-hints.js"
+      ],
+      "named_exports_approx": [
+        "OpenAICompatibleProvider"
+      ]
+    },
+    {
+      "path": "lib/llm/providers/OpenAIProvider.js",
+      "subsystem": "lib/llm",
+      "lines": 28,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./OpenAICompatibleProvider.js"
+      ],
+      "named_exports_approx": [
+        "OpenAIProvider"
+      ]
+    },
+    {
+      "path": "lib/llm/providers/OpenCodeCliProvider.js",
+      "subsystem": "lib/llm",
+      "lines": 71,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../LlmProvider.js",
+        "../runners/opencode.js",
+        "../util/parse-json.js"
+      ],
+      "named_exports_approx": [
+        "OpenCodeCliProvider"
+      ]
+    },
+    {
+      "path": "lib/llm/providers/OpenRouterProvider.js",
+      "subsystem": "lib/llm",
+      "lines": 30,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./OpenAICompatibleProvider.js"
+      ],
+      "named_exports_approx": [
+        "OpenRouterProvider"
+      ]
+    },
+    {
+      "path": "lib/llm/providers/QwenCliProvider.js",
+      "subsystem": "lib/llm",
+      "lines": 78,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../LlmProvider.js",
+        "../runners/qwen.js",
+        "../util/parse-json.js"
+      ],
+      "named_exports_approx": [
+        "QwenCliProvider"
+      ]
+    },
+    {
+      "path": "lib/llm/providers/VllmProvider.js",
+      "subsystem": "lib/llm",
+      "lines": 38,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./OpenAICompatibleProvider.js"
+      ],
+      "named_exports_approx": [
+        "VllmProvider"
+      ]
+    },
+    {
+      "path": "lib/llm/providers/XaiProvider.js",
+      "subsystem": "lib/llm",
+      "lines": 24,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./OpenAICompatibleProvider.js"
+      ],
+      "named_exports_approx": [
+        "XaiProvider"
+      ]
+    },
+    {
+      "path": "lib/llm/providers/ZaiProvider.js",
+      "subsystem": "lib/llm",
+      "lines": 28,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./OpenAICompatibleProvider.js"
+      ],
+      "named_exports_approx": [
+        "ZaiProvider"
+      ]
+    },
+    {
+      "path": "lib/llm/registry.js",
+      "subsystem": "lib/llm",
+      "lines": 100,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./LlmProvider.js",
+        "./providers/AgyCliProvider.js",
+        "./providers/AnthropicProvider.js",
+        "./providers/CodexCliProvider.js",
+        "./providers/CohereProvider.js",
+        "./providers/CopilotCliProvider.js",
+        "./providers/DeepSeekProvider.js",
+        "./providers/GeminiCliProvider.js",
+        "./providers/GoogleGeminiProvider.js",
+        "./providers/GroqProvider.js",
+        "./providers/MistralProvider.js",
+        "./providers/OllamaProvider.js",
+        "./providers/OpenAIProvider.js",
+        "./providers/OpenCodeCliProvider.js",
+        "./providers/OpenRouterProvider.js",
+        "./providers/QwenCliProvider.js",
+        "./providers/VllmProvider.js",
+        "./providers/XaiProvider.js",
+        "./providers/ZaiProvider.js"
+      ],
+      "named_exports_approx": [
+        "createProvider",
+        "listProviderNames"
+      ]
+    },
+    {
+      "path": "lib/llm/runners/agy.js",
+      "subsystem": "lib/llm",
+      "lines": 115,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../util/availability-timeout.js",
+        "../util/cli-env.js",
+        "child_process"
+      ],
+      "named_exports_approx": [
+        "_rawIsAgyCLIAvailable",
+        "buildAgyArgs",
+        "runAgyCLI"
+      ]
+    },
+    {
+      "path": "lib/llm/runners/codex.js",
+      "subsystem": "lib/llm",
+      "lines": 156,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../logger.js",
+        "../util/availability-timeout.js",
+        "../util/cli-env.js",
+        "child_process",
+        "crypto",
+        "fs",
+        "os",
+        "path"
+      ],
+      "named_exports_approx": [
+        "_rawIsCodexCLIAvailable",
+        "runCodexCLI"
+      ]
+    },
+    {
+      "path": "lib/llm/runners/copilot.js",
+      "subsystem": "lib/llm",
+      "lines": 220,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../util/availability-timeout.js",
+        "../util/cli-approval.js",
+        "../util/cli-env.js",
+        "child_process"
+      ],
+      "named_exports_approx": [
+        "_rawIsCopilotCLIAvailable",
+        "extractJsonBlock",
+        "runCopilotCLI"
+      ]
+    },
+    {
+      "path": "lib/llm/runners/gemini.js",
+      "subsystem": "lib/llm",
+      "lines": 121,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../util/availability-timeout.js",
+        "../util/cli-approval.js",
+        "../util/cli-env.js",
+        "child_process"
+      ],
+      "named_exports_approx": [
+        "_rawIsGeminiCLIAvailable",
+        "runGeminiCLI"
+      ]
+    },
+    {
+      "path": "lib/llm/runners/opencode.js",
+      "subsystem": "lib/llm",
+      "lines": 156,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../util/cli-approval.js",
+        "../util/cli-env.js",
+        "child_process"
+      ],
+      "named_exports_approx": [
+        "_rawIsOpenCodeCLIAvailable",
+        "runOpenCodeCLI",
+        "_getOpenCodeRunFlagSupport"
+      ]
+    },
+    {
+      "path": "lib/llm/runners/qwen.js",
+      "subsystem": "lib/llm",
+      "lines": 121,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../util/availability-timeout.js",
+        "../util/cli-env.js",
+        "child_process"
+      ],
+      "named_exports_approx": [
+        "_rawIsQwenCLIAvailable",
+        "runQwenCLI"
+      ]
+    },
+    {
+      "path": "lib/llm/util/availability-timeout.js",
+      "subsystem": "lib/llm",
+      "lines": 14,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "clampAvailabilityTimeoutMs",
+        "shouldCacheAvailabilityFailure"
+      ]
+    },
+    {
+      "path": "lib/llm/util/circuit-breaker.js",
+      "subsystem": "lib/llm",
+      "lines": 202,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../config.js",
+        "../../redis.js"
+      ],
+      "named_exports_approx": [
+        "circuitBreaker"
+      ]
+    },
+    {
+      "path": "lib/llm/util/cli-approval.js",
+      "subsystem": "lib/llm",
+      "lines": 60,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../config.js",
+        "node:fs",
+        "node:os",
+        "node:path"
+      ],
+      "named_exports_approx": [
+        "cliToolApprovalMode",
+        "cliWorkDir",
+        "cleanupCliWorkDir"
+      ]
+    },
+    {
+      "path": "lib/llm/util/cli-env.js",
+      "subsystem": "lib/llm",
+      "lines": 44,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "buildCliEnv"
+      ]
+    },
+    {
+      "path": "lib/llm/util/fetch-with-timeout.js",
+      "subsystem": "lib/llm",
+      "lines": 60,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../errors.js"
+      ],
+      "named_exports_approx": [
+        "fetchWithTimeout"
+      ]
+    },
+    {
+      "path": "lib/llm/util/parse-json.js",
+      "subsystem": "lib/llm",
+      "lines": 72,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "parseJsonResponse"
+      ]
+    },
+    {
+      "path": "lib/llm/util/redact-prompt.js",
+      "subsystem": "lib/llm",
+      "lines": 40,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../logger.js"
+      ],
+      "named_exports_approx": [
+        "redactPrompt"
+      ]
+    },
+    {
+      "path": "lib/llm/util/retry-hints.js",
+      "subsystem": "lib/llm",
+      "lines": 81,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "extractRetryHintMs",
+        "computeCooldown"
+      ]
+    },
+    {
+      "path": "lib/llm/util/semaphore.js",
+      "subsystem": "lib/llm",
+      "lines": 98,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": []
+    },
+    {
+      "path": "lib/logger.js",
+      "subsystem": "lib",
+      "lines": 308,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./config.js",
+        "./security/sensitivePatterns.js",
+        "fs",
+        "path",
+        "winston",
+        "winston-daily-rotate-file"
+      ],
+      "named_exports_approx": [
+        "REDACT_PATTERNS",
+        "redactString",
+        "redactorFormat",
+        "consoleStderrLevels",
+        "logger",
+        "logInfo",
+        "logWarn",
+        "logError",
+        "logDebug",
+        "logRequest",
+        "logToolExecution",
+        "closeLogger"
+      ]
+    },
+    {
+      "path": "lib/logging/AuditStore.js",
+      "subsystem": "lib/logging",
+      "lines": 463,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "),\n    to       : timeParam(params, ",
+        "../memory/schema.js",
+        "../tools/db.js",
+        "./audit-chain.js",
+        "./audit-event.js",
+        "pg"
+      ],
+      "named_exports_approx": [
+        "AUDIT_LIST_LIMIT_DEFAULT",
+        "AUDIT_LIST_LIMIT_MAX",
+        "AUDIT_SCAN_CHUNK",
+        "AUDIT_VERIFY_MAX_ROWS",
+        "AUDIT_APPEND_LOCK_TIMEOUT_MS",
+        "AUDIT_RETENTION_ACTION",
+        "AuditQueryError",
+        "parseAuditFilters",
+        "auditWhereClause",
+        "toAuditEvent",
+        "retentionCheckpoint",
+        "AuditStore"
+      ]
+    },
+    {
+      "path": "lib/logging/audit-chain.js",
+      "subsystem": "lib/logging",
+      "lines": 177,
+      "review_status": "selected-source",
+      "imports_approx": [
+        "node:crypto"
+      ],
+      "named_exports_approx": [
+        "GENESIS_HASH",
+        "CHAIN_BREAK",
+        "AuditChainValueError",
+        "canonicalJson",
+        "chainRecord",
+        "computeRowHash",
+        "nextRecordedAt",
+        "startChainVerification",
+        "verifyChainRows"
+      ]
+    },
+    {
+      "path": "lib/logging/audit-consumer.js",
+      "subsystem": "lib/logging",
+      "lines": 140,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../config.js",
+        "../llm/EgressGate.js",
+        "../outbox/OutboxHandlers.js",
+        "../tools/db.js",
+        "./AuditStore.js",
+        "./audit-event.js",
+        "./audit-metrics.js"
+      ],
+      "named_exports_approx": [
+        "AUDIT_RETENTION_CHUNK",
+        "AUDIT_RETENTION_MAX_PER_RUN",
+        "AUDIT_EGRESS_TOPIC",
+        "createAuditHandler",
+        "registerAuditConsumer",
+        "registerAuditTopic",
+        "egressAuditEvent",
+        "runAuditRetention"
+      ]
+    },
+    {
+      "path": "lib/logging/audit-event.js",
+      "subsystem": "lib/logging",
+      "lines": 336,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../security/SensitiveScanner.js",
+        "node:crypto"
+      ],
+      "named_exports_approx": [
+        "AUDIT_TOPIC",
+        "AUDIT_PAYLOAD_VERSION",
+        "AUDIT_OUTCOMES",
+        "AUDIT_ACTOR_KINDS",
+        "DETAIL_STRING_MAX",
+        "DETAIL_ARRAY_MAX",
+        "DETAIL_KEYS_MAX",
+        "DETAIL_DEPTH_MAX",
+        "TARGET_ID_MAX",
+        "WORKSPACE_MAX",
+        "ACTOR_KEY_MAX",
+        "ACTOR_SESSION_MAX",
+        "ACTOR_IP_MAX",
+        "AuditEventError",
+        "isValidAuditAction",
+        "truncateCodePoints",
+        "auditActor",
+        "contentFingerprint",
+        "sanitizeAuditDetail",
+        "buildAuditPayload",
+        "readAuditPayload",
+        "outcomeForStatus"
+      ]
+    },
+    {
+      "path": "lib/logging/audit-metrics.js",
+      "subsystem": "lib/logging",
+      "lines": 20,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../metrics.js",
+        "prom-client"
+      ],
+      "named_exports_approx": [
+        "auditEnqueueFailedTotal",
+        "auditRecordedTotal",
+        "auditCleanedTotal"
+      ]
+    },
+    {
+      "path": "lib/logging/audit-outbox.js",
+      "subsystem": "lib/logging",
+      "lines": 122,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../config.js",
+        "../logger.js",
+        "../outbox/Outbox.js",
+        "../tools/db.js",
+        "./audit-event.js",
+        "./audit-metrics.js",
+        "pg"
+      ],
+      "named_exports_approx": [
+        "enqueueAudit",
+        "recordAudit"
+      ]
+    },
+    {
+      "path": "lib/logging/audit.js",
+      "subsystem": "lib/logging",
+      "lines": 110,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../config.js",
+        "../logger.js",
+        "./session-ref.js",
+        "fs",
+        "path"
+      ],
+      "named_exports_approx": [
+        "maskAuditPath",
+        "buildAuditActor",
+        "writeAuditLine",
+        "logAudit",
+        "logAccess"
+      ]
+    },
+    {
+      "path": "lib/logging/caller-ref.js",
+      "subsystem": "lib/logging",
+      "lines": 43,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../logger.js",
+        "./session-ref.js"
+      ],
+      "named_exports_approx": [
+        "sanitizeUserAgent",
+        "formatCallerRef"
+      ]
+    },
+    {
+      "path": "lib/logging/session-ref.js",
+      "subsystem": "lib/logging",
+      "lines": 16,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "sessionRef"
+      ]
+    },
+    {
+      "path": "lib/memory/CaseEventStore.js",
+      "subsystem": "lib/memory/core",
+      "lines": 507,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../config.js",
+        "../logger.js",
+        "../tools/db.js",
+        "./keyScope.js",
+        "./read/AgentScope.js",
+        "./read/WorkspaceScope.js",
+        "./schema.js",
+        "./signals/CaseRewardBackprop.js"
+      ],
+      "named_exports_approx": [
+        "CASE_EVENT_TYPES",
+        "CaseEventStore"
+      ]
+    },
+    {
+      "path": "lib/memory/FragmentIndex.js",
+      "subsystem": "lib/memory/core",
+      "lines": 628,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../config.js",
+        "../logger.js",
+        "../redis.js",
+        "./WorkingMemoryRows.js",
+        "./schema.js",
+        "./write/FragmentFactory.js",
+        "pg"
+      ],
+      "named_exports_approx": [
+        "FragmentIndex",
+        "getFragmentIndex",
+        "deindexRows"
+      ]
+    },
+    {
+      "path": "lib/memory/LexicalCoverage.js",
+      "subsystem": "lib/memory/core",
+      "lines": 103,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../config.js",
+        "../logger.js",
+        "../metrics.js",
+        "../tools/db.js",
+        "./LexicalSchema.js",
+        "./schema.js",
+        "prom-client"
+      ],
+      "named_exports_approx": [
+        "COVERAGE_TTL_MS",
+        "COVERAGE_SQL",
+        "lexicalCoverageRatio",
+        "lexicalTokensMissing",
+        "coverageValues",
+        "refreshLexicalCoverage",
+        "resetLexicalCoverage"
+      ]
+    },
+    {
+      "path": "lib/memory/LexicalSchema.js",
+      "subsystem": "lib/memory/core",
+      "lines": 145,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../logger.js",
+        "./schema.js"
+      ],
+      "named_exports_approx": [
+        "LEXICAL_SCHEMA_TTL_MS",
+        "LEXICAL_COLUMN",
+        "LEXICAL_SCHEMA_SQL",
+        "LEXICAL_REASONS",
+        "evaluateLexicalSchema",
+        "lexicalParticipation",
+        "warnLexicalOnce",
+        "loadLexicalSchema",
+        "peekLexicalSchema",
+        "resetLexicalSchema"
+      ]
+    },
+    {
+      "path": "lib/memory/MemoryManager.js",
+      "subsystem": "lib/memory/core",
+      "lines": 283,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../admin/ApiKeyStore.js",
+        "../symbolic/LinkIntegrityChecker.js",
+        "../symbolic/PolicyRules.js",
+        "./CaseEventStore.js",
+        "./FragmentIndex.js",
+        "./QuotaChecker.js",
+        "./consolidate/MemoryConsolidator.js",
+        "./embedding/MorphemeIndex.js",
+        "./link/SessionLinker.js",
+        "./link/TemporalLinker.js",
+        "./processors/MemoryLinker.js",
+        "./processors/MemoryRecaller.js",
+        "./processors/MemoryReflector.js",
+        "./processors/MemoryRememberer.js",
+        "./processors/ReflectProcessor.js",
+        "./read/ContextBuilder.js",
+        "./read/FragmentSearch.js",
+        "./read/RecallSuggestionEngine.js",
+        "./write/BatchRememberProcessor.js",
+        "./write/ConflictResolver.js",
+        "./write/FragmentFactory.js",
+        "./write/FragmentStore.js",
+        "./write/RememberPostProcessor.js"
+      ],
+      "named_exports_approx": [
+        "MemoryManager"
+      ]
+    },
+    {
+      "path": "lib/memory/ModeRegistry.js",
+      "subsystem": "lib/memory/core",
+      "lines": 143,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../logger.js",
+        "./ModeRegistry.js",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ],
+      "named_exports_approx": [
+        "getPreset",
+        "listPresets",
+        "filterTools",
+        "getSkillGuideOverride",
+        "initModeRegistry"
+      ]
+    },
+    {
+      "path": "lib/memory/QuotaChecker.js",
+      "subsystem": "lib/memory/core",
+      "lines": 191,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../config.js",
+        "../metrics.js",
+        "../tools/db.js",
+        "./read/quotaQueries.js",
+        "./schema.js"
+      ],
+      "named_exports_approx": [
+        "invalidateUsageCache",
+        "clearUsageCache",
+        "QuotaChecker"
+      ]
+    },
+    {
+      "path": "lib/memory/WorkingMemoryRows.js",
+      "subsystem": "lib/memory/core",
+      "lines": 393,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../logger.js",
+        "../tools/db.js",
+        "./WorkingMemorySql.js",
+        "./keyScope.js",
+        "./read/ReviewVisibility.js",
+        "./schema.js"
+      ],
+      "named_exports_approx": [
+        "WM_TTL_SECONDS",
+        "WM_MAX_TOKENS",
+        "WM_MAX_ROWS",
+        "WM_SWEEP_CHUNK",
+        "WM_SWEEP_MAX_CHUNKS",
+        "workingMemoryCutoff",
+        "markWorkingMemoryRow",
+        "describeWorkingMemoryBackend",
+        "contentHashInput",
+        "WM_NONE_REASON",
+        "WM_FALLBACK_CAUSE",
+        "workingMemoryHints",
+        "rowToWorkingMemoryItem",
+        "mergeWorkingMemoryItems",
+        "selectBudgetEvictionIndices",
+        "listWorkingMemoryRows",
+        "evictWorkingMemoryRows",
+        "clearWorkingMemoryRows",
+        "enforceWorkingMemoryRowBudget",
+        "trimWorkingMemoryRowsOfKey",
+        "deleteExpiredWorkingMemoryRows"
+      ]
+    },
+    {
+      "path": "lib/memory/WorkingMemorySql.js",
+      "subsystem": "lib/memory/core",
+      "lines": 62,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./keyScope.js",
+        "./schema.js"
+      ],
+      "named_exports_approx": [
+        "WM_FALLBACK_SOURCE",
+        "notWorkingMemoryRow",
+        "NOT_WM_ROW",
+        "liveOrClosedCondition",
+        "deleteWorkingMemoryRowsOfKey"
+      ]
+    },
+    {
+      "path": "lib/memory/admin/AgentScopeBackfill.js",
+      "subsystem": "lib/memory/admin",
+      "lines": 216,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../tools/db.js",
+        "../schema.js"
+      ],
+      "named_exports_approx": [
+        "hasAgentScopeSnapshotSchema",
+        "getAgentScopeBackfillStatus",
+        "getPendingScopeSnapshotCounts",
+        "assertBackfillComplete",
+        "warnPendingAgentScopeSnapshots",
+        "backfillAgentScopeSnapshots"
+      ]
+    },
+    {
+      "path": "lib/memory/admin/AnchorScopeInventory.js",
+      "subsystem": "lib/memory/admin",
+      "lines": 18,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "classifyAnchors"
+      ]
+    },
+    {
+      "path": "lib/memory/admin/PendingMigrations.js",
+      "subsystem": "lib/memory/admin",
+      "lines": 54,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../schema.js",
+        "node:fs",
+        "node:path"
+      ],
+      "named_exports_approx": [
+        "listMigrationFiles",
+        "findPendingMigrations",
+        "warnPendingMigrations"
+      ]
+    },
+    {
+      "path": "lib/memory/anchorPolicy.js",
+      "subsystem": "lib/memory/core",
+      "lines": 83,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../rbac.js",
+        "node:crypto"
+      ],
+      "named_exports_approx": [
+        "ANCHOR_REASONS",
+        "ANCHOR_RULES",
+        "anchorChange",
+        "decideAnchor",
+        "anchorPrincipalLabel"
+      ]
+    },
+    {
+      "path": "lib/memory/consolidate/ConsolidatorGC.js",
+      "subsystem": "lib/memory/consolidate",
+      "lines": 974,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../../config/memory.js",
+        "../../config.js",
+        "../../gemini.js",
+        "../../llm/EgressPolicy.js",
+        "../../logger.js",
+        "../../redis.js",
+        "../../symbolic/errors.js",
+        "../../tools/db.js",
+        "../../tools/lock-retry.js",
+        "../FragmentIndex.js",
+        "../keyScope.js",
+        "../processors/SessionActivityTracker.js",
+        "../provenance.js",
+        "../schema.js",
+        "../write/FragmentFactory.js",
+        "../write/FragmentStore.js",
+        "../write/WriteGate.js",
+        "../write/rowLock.js",
+        "../write/serverWriteGate.js",
+        "./feedbackFactor.js",
+        "./proper-nouns.js",
+        "./split-gate.js",
+        "./split-metrics.js",
+        "crypto",
+        "fs",
+        "path",
+        "pg"
+      ],
+      "named_exports_approx": [
+        "buildSplitCandidateQuery",
+        "ConsolidatorGC"
+      ]
+    },
+    {
+      "path": "lib/memory/consolidate/FragmentGC.js",
+      "subsystem": "lib/memory/consolidate",
+      "lines": 374,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../../config/memory.js",
+        "../../config.js",
+        "../../logger.js",
+        "../../tools/db.js",
+        "../FragmentIndex.js",
+        "../WorkingMemoryRows.js",
+        "../schema.js",
+        "../write/rowLock.js",
+        "./gc-metrics.js",
+        "./gcChunks.js",
+        "./idOrderedUpdate.js"
+      ],
+      "named_exports_approx": [
+        "decayedImportanceSql",
+        "decayUpdateSpec",
+        "GC_CHUNK_LOCK_TIMEOUT_MS",
+        "GC_BACKLOG_COUNT_CAP",
+        "GC_CANDIDATE_FROM",
+        "gcCandidateParams",
+        "gcLimits",
+        "FragmentGC"
+      ]
+    },
+    {
+      "path": "lib/memory/consolidate/MemoryConsolidator.js",
+      "subsystem": "lib/memory/consolidate",
+      "lines": 1148,
+      "review_status": "selected-source",
+      "imports_approx": [
+        "../../../config/memory.js",
+        "../../config.js",
+        "../../logger.js",
+        "../../redis.js",
+        "../../tools/db.js",
+        "../FragmentIndex.js",
+        "../WorkingMemorySql.js",
+        "../embedding/EmbeddingWorker.js",
+        "../keyScope.js",
+        "../link/ContradictionDetector.js",
+        "../link/GraphLinker.js",
+        "../link/contradictionAudit.js",
+        "../read/ReviewVisibility.js",
+        "../schema.js",
+        "../write/FragmentStore.js",
+        "../write/rowLock.js",
+        "./ConsolidatorGC.js",
+        "./consolidate-gate.js",
+        "./gate-metrics.js",
+        "./idOrderedUpdate.js",
+        "node:perf_hooks"
+      ],
+      "named_exports_approx": [
+        "utilityScoreSql",
+        "summarizeWorkspaceDistribution",
+        "summarizeKeyWorkspaceFillRate",
+        "summarizeSessionFragmentDistribution",
+        "MemoryConsolidator"
+      ]
+    },
+    {
+      "path": "lib/memory/consolidate/MorphemeBackfill.js",
+      "subsystem": "lib/memory/consolidate",
+      "lines": 56,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../logger.js",
+        "../../tools/db.js",
+        "../WorkingMemorySql.js",
+        "../embedding/MorphemeIndex.js",
+        "../schema.js",
+        "pg"
+      ],
+      "named_exports_approx": [
+        "processMorphemeBackfill"
+      ]
+    },
+    {
+      "path": "lib/memory/consolidate/UtilityBaseline.js",
+      "subsystem": "lib/memory/consolidate",
+      "lines": 54,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../logger.js",
+        "../../tools/db.js",
+        "../schema.js",
+        "pg"
+      ],
+      "named_exports_approx": [
+        "refreshUtilityBaseline",
+        "getUtilityBaseline",
+        "computeConfidence"
+      ]
+    },
+    {
+      "path": "lib/memory/consolidate/consolidate-gate.js",
+      "subsystem": "lib/memory/consolidate",
+      "lines": 161,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "extractDistinctiveTokens",
+        "findLostTokens",
+        "judgeMergePair",
+        "summarizeGate",
+        "shouldAbortCycle"
+      ]
+    },
+    {
+      "path": "lib/memory/consolidate/decay.js",
+      "subsystem": "lib/memory/consolidate",
+      "lines": 131,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "HALF_LIFE_DAYS",
+        "computeDecayedImportance",
+        "EMA_ALPHA",
+        "updateEmaActivation",
+        "computeEmaRankBoost",
+        "computeUtilityScore",
+        "computeAdaptiveImportance",
+        "computeDynamicHalfLife"
+      ]
+    },
+    {
+      "path": "lib/memory/consolidate/feedbackFactor.js",
+      "subsystem": "lib/memory/consolidate",
+      "lines": 23,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "feedbackFactor"
+      ]
+    },
+    {
+      "path": "lib/memory/consolidate/gate-metrics.js",
+      "subsystem": "lib/memory/consolidate",
+      "lines": 51,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../metrics.js",
+        "prom-client"
+      ],
+      "named_exports_approx": [
+        "gateBlockedTotal",
+        "gateAllowedTotal",
+        "recordGateBlock",
+        "recordGateAllow"
+      ]
+    },
+    {
+      "path": "lib/memory/consolidate/gc-metrics.js",
+      "subsystem": "lib/memory/consolidate",
+      "lines": 28,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../metrics.js",
+        "prom-client"
+      ],
+      "named_exports_approx": [
+        "gcBacklog",
+        "setGcBacklog"
+      ]
+    },
+    {
+      "path": "lib/memory/consolidate/gcChunks.js",
+      "subsystem": "lib/memory/consolidate",
+      "lines": 44,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "runGcChunks"
+      ]
+    },
+    {
+      "path": "lib/memory/consolidate/idOrderedUpdate.js",
+      "subsystem": "lib/memory/consolidate",
+      "lines": 225,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../config.js",
+        "../../logger.js",
+        "../../tools/db.js",
+        "../schema.js"
+      ],
+      "named_exports_approx": [
+        "scoreUpdateBatchSize",
+        "minDeltaFromEnv",
+        "changedRowsSpec",
+        "BatchParamError",
+        "readBatchClock",
+        "updateOneBatch",
+        "paramGuard",
+        "unreferencedParamGuard",
+        "selectBatchIds",
+        "updateInIdOrder"
+      ]
+    },
+    {
+      "path": "lib/memory/consolidate/proper-nouns.js",
+      "subsystem": "lib/memory/consolidate",
+      "lines": 58,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../embedding/MorphemeTokenizer.js"
+      ],
+      "named_exports_approx": [
+        "extractSubjectAnchors"
+      ]
+    },
+    {
+      "path": "lib/memory/consolidate/resumableBackfill.js",
+      "subsystem": "lib/memory/consolidate",
+      "lines": 343,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../tools/db.js",
+        "../schema.js",
+        "./idOrderedUpdate.js"
+      ],
+      "named_exports_approx": [
+        "WATERMARK_TABLE",
+        "FAILURE_TABLE",
+        "BACKFILL_TABLES_DDL",
+        "BackfillError",
+        "BackfillTableMissingError",
+        "ensureBackfillTables",
+        "isRowLevelError",
+        "BackfillConcurrentRunError",
+        "runResumableBackfill",
+        "retryBackfillFailures",
+        "listBackfillFailures"
+      ]
+    },
+    {
+      "path": "lib/memory/consolidate/split-gate.js",
+      "subsystem": "lib/memory/consolidate",
+      "lines": 154,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "isAcceptableSplitChild",
+        "hasSubjectAnchor",
+        "detectModalityFamilies",
+        "findIntroducedModality",
+        "extractNumericAnchors",
+        "findMissingAnchors",
+        "clampChildImportance"
+      ]
+    },
+    {
+      "path": "lib/memory/consolidate/split-metrics.js",
+      "subsystem": "lib/memory/consolidate",
+      "lines": 55,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../metrics.js",
+        "prom-client"
+      ],
+      "named_exports_approx": [
+        "splitSkippedTotal",
+        "recordSplitSkip",
+        "splitStepFailedTotal",
+        "recordSplitStepFailure"
+      ]
+    },
+    {
+      "path": "lib/memory/contentGuard.js",
+      "subsystem": "lib/memory/core",
+      "lines": 17,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "MAX_CONTENT_INPUT_LENGTH",
+        "validateContentInput"
+      ]
+    },
+    {
+      "path": "lib/memory/embedding/EmbeddingCache.js",
+      "subsystem": "lib/memory/embedding",
+      "lines": 77,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "node:crypto"
+      ],
+      "named_exports_approx": [
+        "EmbeddingCache"
+      ]
+    },
+    {
+      "path": "lib/memory/embedding/EmbeddingWorker.js",
+      "subsystem": "lib/memory/embedding",
+      "lines": 340,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../../config/memory.js",
+        "../../logger.js",
+        "../../redis.js",
+        "../../tools/db.js",
+        "../../tools/embedding.js",
+        "../WorkingMemorySql.js",
+        "../read/assistant-query.js",
+        "../schema.js",
+        "../workers/PollingWorker.js",
+        "../write/rowLock.js",
+        "./EmbeddingCache.js"
+      ],
+      "named_exports_approx": [
+        "EmbeddingWorker"
+      ]
+    },
+    {
+      "path": "lib/memory/embedding/LexicalTokens.js",
+      "subsystem": "lib/memory/embedding",
+      "lines": 171,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./MorphemeTokenizer.js"
+      ],
+      "named_exports_approx": [
+        "DOCUMENT_TOKEN_LIMIT",
+        "QUERY_TERM_LIMIT",
+        "MAX_LEXEME_CHARS",
+        "TOKENIZE_MAX_CHARS",
+        "MAX_RUN_CHARS",
+        "SKIP_REASONS",
+        "normalizeLexicalTokens",
+        "lexicalInput",
+        "lexicalTokens",
+        "lexicalDocument",
+        "escapeTsqueryLexeme",
+        "buildLexicalTsquery",
+        "contentTokenResult",
+        "contentTokenDocument"
+      ]
+    },
+    {
+      "path": "lib/memory/embedding/MorphemeIndex.js",
+      "subsystem": "lib/memory/embedding",
+      "lines": 406,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../../config/memory.js",
+        "../../gemini.js",
+        "../../logger.js",
+        "../../tools/db.js",
+        "../../tools/embedding.js",
+        "../schema.js",
+        "./MorphemeTokenizer.js",
+        "pg"
+      ],
+      "named_exports_approx": [
+        "MorphemeIndex"
+      ]
+    },
+    {
+      "path": "lib/memory/embedding/MorphemeTokenizer.js",
+      "subsystem": "lib/memory/embedding",
+      "lines": 213,
+      "review_status": "selected-source",
+      "imports_approx": [
+        "../../../config/memory.js",
+        "@node-rs/jieba",
+        "@node-rs/jieba/dict.js",
+        "garu-ko",
+        "kuromoji",
+        "natural"
+      ],
+      "named_exports_approx": [
+        "warmup",
+        "extractProperNounTokens",
+        "tokenizeLocal",
+        "segmentByScript"
+      ]
+    },
+    {
+      "path": "lib/memory/embedding/SyntheticQueryGenerator.js",
+      "subsystem": "lib/memory/embedding",
+      "lines": 208,
+      "review_status": "selected-source",
+      "imports_approx": [
+        "../../../config/memory.js",
+        "../../llm/index.js",
+        "../../logger.js"
+      ],
+      "named_exports_approx": [
+        "extractAnchorTokens",
+        "validateQuery",
+        "filterQueries",
+        "isEligible",
+        "generateQueries"
+      ]
+    },
+    {
+      "path": "lib/memory/embedding/SyntheticQueryWorker.js",
+      "subsystem": "lib/memory/embedding",
+      "lines": 324,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../../config/memory.js",
+        "../../logger.js",
+        "../../redis.js",
+        "../../tools/db.js",
+        "../../tools/embedding.js",
+        "../schema.js",
+        "../workers/PollingWorker.js",
+        "./SyntheticQueryGenerator.js"
+      ],
+      "named_exports_approx": [
+        "RateLimiter",
+        "SyntheticQueryWorker",
+        "getSyntheticQueryWorker"
+      ]
+    },
+    {
+      "path": "lib/memory/embedding/column-spec.js",
+      "subsystem": "lib/memory/embedding",
+      "lines": 87,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "pg"
+      ],
+      "named_exports_approx": [
+        "resolveEmbeddingColumnSpec",
+        "embeddingColumnMismatch",
+        "fetchEmbeddingColumn"
+      ]
+    },
+    {
+      "path": "lib/memory/keyId.js",
+      "subsystem": "lib/memory/core",
+      "lines": 106,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "extractRequestCtx",
+        "normalizeKeyId"
+      ]
+    },
+    {
+      "path": "lib/memory/keyScope.js",
+      "subsystem": "lib/memory/core",
+      "lines": 126,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "keyScopeClause",
+        "keyScopeScalar",
+        "keyScopeGroup",
+        "keyScopeNullable",
+        "keyScopeCondition"
+      ]
+    },
+    {
+      "path": "lib/memory/lexical-metrics.js",
+      "subsystem": "lib/memory/core",
+      "lines": 44,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../metrics.js",
+        "prom-client"
+      ],
+      "named_exports_approx": [
+        "lexicalChannelSkippedTotal",
+        "lexicalTokenizeSkippedTotal",
+        "recordLexicalChannelSkipped",
+        "recordLexicalTokenizeSkipped"
+      ]
+    },
+    {
+      "path": "lib/memory/link/AuditProvenance.js",
+      "subsystem": "lib/memory/link",
+      "lines": 35,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../config.js",
+        "../../logger.js",
+        "../provenance.js"
+      ],
+      "named_exports_approx": [
+        "auditProvenance"
+      ]
+    },
+    {
+      "path": "lib/memory/link/ContradictionDetector.js",
+      "subsystem": "lib/memory/link",
+      "lines": 632,
+      "review_status": "selected-source",
+      "imports_approx": [
+        "../../gemini.js",
+        "../../llm/EgressPolicy.js",
+        "../../logger.js",
+        "../../redis.js",
+        "../../tools/db.js",
+        "../FragmentIndex.js",
+        "../read/ReviewVisibility.js",
+        "../schema.js",
+        "../signals/NLIClassifier.js",
+        "../write/FragmentStore.js",
+        "./AuditProvenance.js",
+        "./contradictionAudit.js"
+      ],
+      "named_exports_approx": [
+        "MAX_CONTRADICTION_DEPTH",
+        "MAX_FRAG_FAILURES",
+        "ContradictionDetector"
+      ]
+    },
+    {
+      "path": "lib/memory/link/GraphLinker.js",
+      "subsystem": "lib/memory/link",
+      "lines": 222,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../logger.js",
+        "../../tools/db.js",
+        "../FragmentIndex.js",
+        "../keyScope.js",
+        "../schema.js",
+        "../write/FragmentStore.js"
+      ],
+      "named_exports_approx": [
+        "GraphLinker"
+      ]
+    },
+    {
+      "path": "lib/memory/link/LinkStore.js",
+      "subsystem": "lib/memory/link",
+      "lines": 540,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../../config/memory.js",
+        "../../config.js",
+        "../../logger.js",
+        "../../tools/db.js",
+        "../WorkingMemorySql.js",
+        "../keyScope.js",
+        "../read/AgentScope.js",
+        "../read/ReviewVisibility.js",
+        "../read/SearchScope.js",
+        "../read/WorkspaceScope.js",
+        "../schema.js",
+        "../write/rowLock.js",
+        "pg"
+      ],
+      "named_exports_approx": [
+        "isRelationDowngrade",
+        "LinkStore"
+      ]
+    },
+    {
+      "path": "lib/memory/link/ReconsolidationEngine.js",
+      "subsystem": "lib/memory/link",
+      "lines": 106,
+      "review_status": "selected-source",
+      "imports_approx": [
+        "../../tools/db.js",
+        "../schema.js"
+      ],
+      "named_exports_approx": [
+        "reconsolidate",
+        "quarantineAdjacentLinks"
+      ]
+    },
+    {
+      "path": "lib/memory/link/SessionLinker.js",
+      "subsystem": "lib/memory/link",
+      "lines": 364,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../logger.js",
+        "../FragmentIndex.js",
+        "../read/AgentScope.js",
+        "../write/FragmentStore.js"
+      ],
+      "named_exports_approx": [
+        "scopeWorkingMemoryItems",
+        "SessionLinker"
+      ]
+    },
+    {
+      "path": "lib/memory/link/TemporalLinker.js",
+      "subsystem": "lib/memory/link",
+      "lines": 80,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../tools/db.js",
+        "../keyScope.js",
+        "../schema.js"
+      ],
+      "named_exports_approx": [
+        "TemporalLinker"
+      ]
+    },
+    {
+      "path": "lib/memory/link/contradictionAudit.js",
+      "subsystem": "lib/memory/link",
+      "lines": 30,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../config.js",
+        "../write/ForgetCascade.js"
+      ],
+      "named_exports_approx": [
+        "contradictionAuditContent"
+      ]
+    },
+    {
+      "path": "lib/memory/processors/AutoReflect.js",
+      "subsystem": "lib/memory/processors",
+      "lines": 310,
+      "review_status": "selected-source",
+      "imports_approx": [
+        "../../../config/memory.js",
+        "../../gemini.js",
+        "../../llm/EgressPolicy.js",
+        "../../logger.js",
+        "../../logging/session-ref.js",
+        "../MemoryManager.js",
+        "../write/WriteGate.js",
+        "./SessionActivityTracker.js"
+      ],
+      "named_exports_approx": [
+        "MIN_SESSION_DURATION_MS",
+        "GEMINI_TIMEOUT_MS",
+        "autoReflect",
+        "reflectEgressContext"
+      ]
+    },
+    {
+      "path": "lib/memory/processors/EpisodeContinuityService.js",
+      "subsystem": "lib/memory/processors",
+      "lines": 185,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../logger.js",
+        "../../tools/db.js",
+        "../keyScope.js",
+        "../schema.js",
+        "pg"
+      ],
+      "named_exports_approx": [
+        "_cacheLastEventForTest",
+        "_readCachedEventForTest",
+        "_lastEventCacheForTest",
+        "linkEpisodeMilestone"
+      ]
+    },
+    {
+      "path": "lib/memory/processors/MemoryLinker.js",
+      "subsystem": "lib/memory/processors",
+      "lines": 95,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "MemoryLinker"
+      ]
+    },
+    {
+      "path": "lib/memory/processors/MemoryRecaller.js",
+      "subsystem": "lib/memory/processors",
+      "lines": 723,
+      "review_status": "selected-source",
+      "imports_approx": [
+        "../../../config/memory.js",
+        "../../config.js",
+        "../../env-parse.js",
+        "../../logger.js",
+        "../../tools/db.js",
+        "../CaseEventStore.js",
+        "../FragmentIndex.js",
+        "../keyId.js",
+        "../keyScope.js",
+        "../link/GraphLinker.js",
+        "../read/BudgetSelector.js",
+        "../read/CaseRecall.js",
+        "../read/ContextBuilder.js",
+        "../read/DeterministicRanking.js",
+        "../read/FragmentSearch.js",
+        "../read/KeyNameEnricher.js",
+        "../read/LexicalSearch.js",
+        "../read/QueryProfile.js",
+        "../read/RecallSuggestionEngine.js",
+        "../read/ReviewVisibility.js",
+        "../read/SearchScope.js",
+        "../read/TopicResolver.js",
+        "../read/WorkspaceScope.js",
+        "../schema.js",
+        "../signals/SpreadingActivation.js",
+        "../write/FragmentStore.js",
+        "../write/rowLock.js"
+      ],
+      "named_exports_approx": [
+        "normalizeIrrelevanceReason",
+        "computeStale",
+        "MemoryRecaller",
+        "buildRecallSearchQuery",
+        "buildRecallScorer",
+        "computeRecallScore"
+      ]
+    },
+    {
+      "path": "lib/memory/processors/MemoryReflector.js",
+      "subsystem": "lib/memory/processors",
+      "lines": 97,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../read/HistoryReconstructor.js"
+      ],
+      "named_exports_approx": [
+        "MemoryReflector"
+      ]
+    },
+    {
+      "path": "lib/memory/processors/MemoryRememberer.js",
+      "subsystem": "lib/memory/processors",
+      "lines": 1237,
+      "review_status": "selected-source",
+      "imports_approx": [
+        "../../admin/ApiKeyStore.js",
+        "../../config.js",
+        "../../env-parse.js",
+        "../../logger.js",
+        "../../symbolic/LinkIntegrityChecker.js",
+        "../../symbolic/PolicyRules.js",
+        "../../tools/db.js",
+        "../CaseEventStore.js",
+        "../FragmentIndex.js",
+        "../QuotaChecker.js",
+        "../WorkingMemoryRows.js",
+        "../contentGuard.js",
+        "../embedding/MorphemeIndex.js",
+        "../keyId.js",
+        "../link/SessionLinker.js",
+        "../provenance.js",
+        "../read/quotaQueries.js",
+        "../schema.js",
+        "../write/BatchRememberProcessor.js",
+        "../write/ConflictResolver.js",
+        "../write/ForgetCascade.js",
+        "../write/FragmentFactory.js",
+        "../write/FragmentStore.js",
+        "../write/RememberPostProcessor.js",
+        "../write/WriteGate.js",
+        "../write/serverAnchorDeps.js",
+        "./RememberDuplicate.js",
+        "crypto"
+      ],
+      "named_exports_approx": [
+        "amendChanges",
+        "MemoryRememberer"
+      ]
+    },
+    {
+      "path": "lib/memory/processors/ReflectProcessor.js",
+      "subsystem": "lib/memory/processors",
+      "lines": 658,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../../config/memory.js",
+        "../../logger.js",
+        "../../redis.js",
+        "../../symbolic/errors.js",
+        "../../tools/db.js",
+        "../embedding/MorphemeIndex.js",
+        "../provenance.js",
+        "../schema.js",
+        "../write/WriteGate.js",
+        "./EpisodeContinuityService.js"
+      ],
+      "named_exports_approx": [
+        "isSelfContainedReflectItem",
+        "normalizeTaskEffectiveness",
+        "REFLECT_CATEGORIES",
+        "ReflectProcessor"
+      ]
+    },
+    {
+      "path": "lib/memory/processors/RememberDuplicate.js",
+      "subsystem": "lib/memory/processors",
+      "lines": 94,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../config.js",
+        "../../logger.js",
+        "../../metrics.js",
+        "../write/DedupScope.js"
+      ],
+      "named_exports_approx": [
+        "isDuplicateHit",
+        "classifyDuplicate",
+        "duplicateOfField",
+        "resolveDuplicateHit"
+      ]
+    },
+    {
+      "path": "lib/memory/processors/SessionActivityTracker.js",
+      "subsystem": "lib/memory/processors",
+      "lines": 181,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../logger.js",
+        "../../redis.js"
+      ],
+      "named_exports_approx": [
+        "SessionActivityTracker"
+      ]
+    },
+    {
+      "path": "lib/memory/provenance.js",
+      "subsystem": "lib/memory/core",
+      "lines": 304,
+      "review_status": "selected-source",
+      "imports_approx": [
+        "../rbac.js",
+        "./reviewState.js"
+      ],
+      "named_exports_approx": [
+        "ORIGINS",
+        "TRUST_TIER",
+        "DEFAULT_TRUST_TIER",
+        "MIN_INJECTABLE_TIER",
+        "ORIGIN_TIERS",
+        "CLAIM_ENTRIES",
+        "ENTRY_ORIGINS",
+        "CLIENT_NAME_MAX",
+        "PROVENANCE_COLUMNS",
+        "isOrigin",
+        "originLabel",
+        "claimedOrigin",
+        "originTier",
+        "keyTrustCap",
+        "resolveTrustTier",
+        "effectiveTrustTier",
+        "isInjectable",
+        "injectableTierSql",
+        "sanitizeClientName",
+        "clientNameFromInitialize",
+        "observedClient",
+        "provenanceContext",
+        "derivedTrustCap",
+        "provenanceStamp",
+        "hasProvenance",
+        "provenanceInsertParts"
+      ]
+    },
+    {
+      "path": "lib/memory/read/AgentScope.js",
+      "subsystem": "lib/memory/read",
+      "lines": 111,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../config.js",
+        "../../logger.js",
+        "../../metrics.js"
+      ],
+      "named_exports_approx": [
+        "isReservedAgentId",
+        "resolveAgentScope",
+        "isFragmentInAgentScope",
+        "agentScopeCondition",
+        "assertMasterPeerScope",
+        "assertAuthenticatedAgentScope"
+      ]
+    },
+    {
+      "path": "lib/memory/read/AnswerPack.js",
+      "subsystem": "lib/memory/read",
+      "lines": 304,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../provenance.js",
+        "./ContextLines.js"
+      ],
+      "named_exports_approx": [
+        "PACK_VERSION",
+        "PACK_POLICY_ID",
+        "PACK_ITEM_MAX_CHARS",
+        "PACK_META_MAX_CHARS",
+        "PACK_CHAIN_MAX_IDS",
+        "PACK_WARNINGS_MAX",
+        "PACK_HEADER",
+        "PACK_BLOCK_OPEN",
+        "PACK_BLOCK_CLOSE",
+        "PACK_POLICY",
+        "escapePackText",
+        "escapeAndCap",
+        "capCodePoints",
+        "packSourceLabel",
+        "buildAnswerPack"
+      ]
+    },
+    {
+      "path": "lib/memory/read/AnswerPackLoader.js",
+      "subsystem": "lib/memory/read",
+      "lines": 183,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../config.js",
+        "../../logger.js",
+        "../../tools/db.js",
+        "../schema.js",
+        "../write/FragmentFactory.js",
+        "./AnswerPack.js",
+        "./ProvenanceLoader.js",
+        "./ReviewVisibility.js"
+      ],
+      "named_exports_approx": [
+        "loadPackProvenance",
+        "withRecallProvenance",
+        "withRecallAnnotations",
+        "toPackResponse"
+      ]
+    },
+    {
+      "path": "lib/memory/read/BudgetSelector.js",
+      "subsystem": "lib/memory/read",
+      "lines": 587,
+      "review_status": "selected-source",
+      "imports_approx": [
+        "../../../config/memory.js",
+        "../write/FragmentFactory.js"
+      ],
+      "named_exports_approx": [
+        "RANK_CANDIDATE_LIMIT",
+        "MMR_LAMBDA",
+        "SECTION_ORDER",
+        "SELECTION_POOL_MAX",
+        "CONTENT_TOKEN_CACHE_LIMIT",
+        "clearTokenCaches",
+        "countContentTokens",
+        "fragmentTokens",
+        "estimateTokens",
+        "exceedsBudget",
+        "verifyExactBudget",
+        "selectForRecall",
+        "attachStoredTokens",
+        "partitionCandidates",
+        "sectionOf",
+        "keywordOverlap",
+        "pairSimilarity",
+        "trimInSearchOrder",
+        "selectWithinBudget"
+      ]
+    },
+    {
+      "path": "lib/memory/read/CaseRecall.js",
+      "subsystem": "lib/memory/read",
+      "lines": 204,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../logger.js",
+        "../../tools/db.js",
+        "../WorkingMemorySql.js",
+        "../keyScope.js",
+        "../schema.js",
+        "./AgentScope.js",
+        "./ReviewVisibility.js",
+        "./SearchScope.js",
+        "./WorkspaceScope.js"
+      ],
+      "named_exports_approx": [
+        "CaseRecall"
+      ]
+    },
+    {
+      "path": "lib/memory/read/ContextBuilder.js",
+      "subsystem": "lib/memory/read",
+      "lines": 1067,
+      "review_status": "selected-source",
+      "imports_approx": [
+        "../../../config/memory.js",
+        "../../config.js",
+        "../../logger.js",
+        "../../tools/db.js",
+        "../anchorPolicy.js",
+        "../keyScope.js",
+        "../processors/SessionActivityTracker.js",
+        "../schema.js",
+        "./AgentScope.js",
+        "./BudgetSelector.js",
+        "./ContextLines.js",
+        "./ContextTrust.js",
+        "./DeterministicRanking.js",
+        "./FragmentSearch.js",
+        "./ProvenanceLoader.js",
+        "./ReviewVisibility.js",
+        "./SearchScope.js",
+        "./WorkspaceScope.js",
+        "./provenance-metrics.js"
+      ],
+      "named_exports_approx": [
+        "DEFAULT_CONTEXT_TYPES",
+        "selectAnchorFragments",
+        "seedGuaranteed",
+        "collectExtras",
+        "byTemperature",
+        "fillWithinBudget",
+        "deduplicateContextSections",
+        "collectGuaranteedContextFragments",
+        "selectGuaranteedCoreFragments",
+        "ContextBuilder"
+      ]
+    },
+    {
+      "path": "lib/memory/read/ContextLines.js",
+      "subsystem": "lib/memory/read",
+      "lines": 142,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../provenance.js"
+      ],
+      "named_exports_approx": [
+        "ASSERTION_STATUSES",
+        "CONTEXT_ANNOTATION_MAX_CHARS",
+        "CONTEXT_ANNOTATION_TOKENS",
+        "CONTEXT_ANNOTATION_ORIGIN_CHARS",
+        "contextAnnotationTokens",
+        "formatUtcDate",
+        "assertionLabel",
+        "contextAnnotation",
+        "renderContextSectionLines"
+      ]
+    },
+    {
+      "path": "lib/memory/read/ContextTrust.js",
+      "subsystem": "lib/memory/read",
+      "lines": 69,
+      "review_status": "selected-source",
+      "imports_approx": [
+        "../provenance.js"
+      ],
+      "named_exports_approx": [
+        "anchorProvenanceSql",
+        "dropLowTrust",
+        "coreTrustSelection",
+        "withOriginMeta"
+      ]
+    },
+    {
+      "path": "lib/memory/read/DeterministicRanking.js",
+      "subsystem": "lib/memory/read",
+      "lines": 114,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "deterministicOrderBy",
+        "normalizeCreatedAt",
+        "compareTimestampDescThenId",
+        "compareDeterministicTies",
+        "compareRankedFragments",
+        "byDescendingScore",
+        "decodeRankingCursor",
+        "paginateRankedFragments"
+      ]
+    },
+    {
+      "path": "lib/memory/read/FragmentReader.js",
+      "subsystem": "lib/memory/read",
+      "lines": 1038,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../config.js",
+        "../../logger.js",
+        "../../tools/db.js",
+        "../../tools/embedding.js",
+        "../WorkingMemorySql.js",
+        "../keyScope.js",
+        "../schema.js",
+        "./AgentScope.js",
+        "./DeterministicRanking.js",
+        "./ReviewVisibility.js",
+        "./SearchScope.js",
+        "./WorkspaceScope.js"
+      ],
+      "named_exports_approx": [
+        "SEARCH_COLS_BASE",
+        "SEMANTIC_MIN_CANDIDATES",
+        "semanticThresholdMode",
+        "FragmentReader"
+      ]
+    },
+    {
+      "path": "lib/memory/read/FragmentSearch.js",
+      "subsystem": "lib/memory/read",
+      "lines": 1328,
+      "review_status": "selected-source",
+      "imports_approx": [
+        ", ",
+        "../../../config/memory.js",
+        "../../../config/symbolic.js",
+        "../../config.js",
+        "../../logger.js",
+        "../../redis.js",
+        "../../symbolic/CbrEligibility.js",
+        "../../symbolic/ExplanationBuilder.js",
+        "../../symbolic/SymbolicMetrics.js",
+        "../../tools/embedding.js",
+        "../FragmentIndex.js",
+        "../consolidate/decay.js",
+        "../embedding/EmbeddingCache.js",
+        "../embedding/MorphemeIndex.js",
+        "../signals/SearchEventRecorder.js",
+        "../signals/SearchMetrics.js",
+        "../signals/SearchParamAdaptor.js",
+        "../write/FragmentStore.js",
+        "./BudgetSelector.js",
+        "./DeterministicRanking.js",
+        "./GraphNeighborSearch.js",
+        "./HotCacheValidator.js",
+        "./KeyNameEnricher.js",
+        "./LexicalSearch.js",
+        "./QueryProfile.js",
+        "./RankFusion.js",
+        "./Reranker.js",
+        "./SearchLayerScope.js",
+        "./SearchScope.js",
+        "./SearchSideEffects.js",
+        "./SyntheticQuerySearch.js",
+        "./assistant-query.js"
+      ],
+      "named_exports_approx": [
+        "deriveImplicitKeywords",
+        "computeWorkspaceDecayFactor",
+        "lexicalMatchScore",
+        "FragmentSearch",
+        "applyImportanceCutoff",
+        "parseTimeRange",
+        "parseTemporalExpression"
+      ]
+    },
+    {
+      "path": "lib/memory/read/GraphNeighborSearch.js",
+      "subsystem": "lib/memory/read",
+      "lines": 148,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../../config/memory.js",
+        "../../tools/db.js",
+        "../WorkingMemorySql.js",
+        "../schema.js",
+        "./AgentScope.js",
+        "./DeterministicRanking.js",
+        "./ReviewVisibility.js",
+        "./WorkspaceScope.js"
+      ],
+      "named_exports_approx": [
+        "fetchGraphNeighbors"
+      ]
+    },
+    {
+      "path": "lib/memory/read/HistoryReconstructor.js",
+      "subsystem": "lib/memory/read",
+      "lines": 433,
+      "review_status": "selected-source",
+      "imports_approx": [
+        "../../logger.js",
+        "../../tools/db.js",
+        "../keyScope.js",
+        "../link/LinkStore.js",
+        "../schema.js",
+        "../write/FragmentStore.js",
+        "./AgentScope.js",
+        "./CaseEventStore.js",
+        "./ReviewVisibility.js",
+        "./WorkspaceScope.js"
+      ],
+      "named_exports_approx": [
+        "HistoryReconstructor"
+      ]
+    },
+    {
+      "path": "lib/memory/read/HotCacheValidator.js",
+      "subsystem": "lib/memory/read",
+      "lines": 34,
+      "review_status": "selected-source",
+      "imports_approx": [
+        "../../logger.js"
+      ],
+      "named_exports_approx": [
+        "validateHotCacheFragments"
+      ]
+    },
+    {
+      "path": "lib/memory/read/KeyNameEnricher.js",
+      "subsystem": "lib/memory/read",
+      "lines": 60,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../logger.js",
+        "../../tools/db.js",
+        "../schema.js"
+      ],
+      "named_exports_approx": [
+        "attachKeyNames",
+        "enrichWithKeyNames"
+      ]
+    },
+    {
+      "path": "lib/memory/read/LexicalSearch.js",
+      "subsystem": "lib/memory/read",
+      "lines": 282,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../config.js",
+        "../../logger.js",
+        "../../tools/db.js",
+        "../LexicalSchema.js",
+        "../WorkingMemorySql.js",
+        "../embedding/LexicalTokens.js",
+        "../keyScope.js",
+        "../lexical-metrics.js",
+        "../schema.js",
+        "./AgentScope.js",
+        "./DeterministicRanking.js",
+        "./FragmentReader.js",
+        "./SearchScope.js",
+        "./WorkspaceScope.js"
+      ],
+      "named_exports_approx": [
+        "LEXICAL_CANDIDATE_LIMIT",
+        "LEXICAL_MATCH_CAP",
+        "buildLexicalSearchSql",
+        "attachLexicalScores",
+        "LexicalSearch",
+        "searchLexicalCandidates",
+        "lexicalLayer",
+        "LEXICAL_ONLY_TIER",
+        "markLexicalOnly",
+        "lexicalOnlyLast",
+        "lexicalOnlyMeta",
+        "appendLexicalCandidates"
+      ]
+    },
+    {
+      "path": "lib/memory/read/LinkedFragmentLoader.js",
+      "subsystem": "lib/memory/read",
+      "lines": 79,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../tools/db.js",
+        "../WorkingMemorySql.js",
+        "../keyScope.js",
+        "../schema.js",
+        "./AgentScope.js",
+        "./ReviewVisibility.js",
+        "./WorkspaceScope.js"
+      ],
+      "named_exports_approx": [
+        "fetchLinkedFragments"
+      ]
+    },
+    {
+      "path": "lib/memory/read/ProvenanceLoader.js",
+      "subsystem": "lib/memory/read",
+      "lines": 74,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../config.js",
+        "../WorkingMemorySql.js",
+        "../keyScope.js",
+        "../provenance.js",
+        "../schema.js",
+        "./AgentScope.js",
+        "./WorkspaceScope.js"
+      ],
+      "named_exports_approx": [
+        "scopeClause",
+        "loadFragmentProvenance"
+      ]
+    },
+    {
+      "path": "lib/memory/read/QueryProfile.js",
+      "subsystem": "lib/memory/read",
+      "lines": 126,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../../config/memory.js",
+        "../signals/SearchEventRecorder.js"
+      ],
+      "named_exports_approx": [
+        "isProfileEnabled",
+        "resolveQueryProfile",
+        "applySimilarityDelta",
+        "applyProfileToConfig",
+        "resolveMorphemeThreshold"
+      ]
+    },
+    {
+      "path": "lib/memory/read/RankFusion.js",
+      "subsystem": "lib/memory/read",
+      "lines": 101,
+      "review_status": "selected-source",
+      "imports_approx": [
+        "./DeterministicRanking.js"
+      ],
+      "named_exports_approx": [
+        "mergeRRF",
+        "mergeHydratedCandidates"
+      ]
+    },
+    {
+      "path": "lib/memory/read/RecallSuggestionEngine.js",
+      "subsystem": "lib/memory/read",
+      "lines": 215,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../logger.js",
+        "../../tools/db.js",
+        "../schema.js",
+        "pg"
+      ],
+      "named_exports_approx": [
+        "RecallSuggestionEngine"
+      ]
+    },
+    {
+      "path": "lib/memory/read/Reranker.js",
+      "subsystem": "lib/memory/read",
+      "lines": 325,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../config.js",
+        "../../logger.js",
+        "./DeterministicRanking.js",
+        "@huggingface/transformers"
+      ],
+      "named_exports_approx": [
+        "isRerankerAvailable",
+        "computeRecencyBoost",
+        "rerank",
+        "applyRerankerScores",
+        "preloadReranker"
+      ]
+    },
+    {
+      "path": "lib/memory/read/ReviewVisibility.js",
+      "subsystem": "lib/memory/read",
+      "lines": 234,
+      "review_status": "selected-source",
+      "imports_approx": [
+        "../keyScope.js",
+        "../reviewState.js"
+      ],
+      "named_exports_approx": [
+        "HELD_REVIEW_STATES",
+        "REVIEW_VIEWER_NONE",
+        "isReviewHeld",
+        "reviewViewer",
+        "recallViewer",
+        "isReviewVisible",
+        "appendReviewVisibility",
+        "reviewVisibilityParts",
+        "reviewPointClause",
+        "reviewStateColumns",
+        "notPendingReviewSql",
+        "isReviewInjectable",
+        "toReviewView",
+        "dropPendingReview",
+        "withReviewMarkers"
+      ]
+    },
+    {
+      "path": "lib/memory/read/SearchLayerScope.js",
+      "subsystem": "lib/memory/read",
+      "lines": 27,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "layerScope"
+      ]
+    },
+    {
+      "path": "lib/memory/read/SearchScope.js",
+      "subsystem": "lib/memory/read",
+      "lines": 210,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./AgentScope.js",
+        "./workspace-read-policy.js"
+      ],
+      "named_exports_approx": [
+        "normalizeIsAnchor",
+        "SearchScope"
+      ]
+    },
+    {
+      "path": "lib/memory/read/SearchSideEffects.js",
+      "subsystem": "lib/memory/read",
+      "lines": 77,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../signals/SearchEventRecorder.js",
+        "../signals/SearchParamAdaptor.js"
+      ],
+      "named_exports_approx": [
+        "commitSearchSideEffects"
+      ]
+    },
+    {
+      "path": "lib/memory/read/StitchSourceLoader.js",
+      "subsystem": "lib/memory/read",
+      "lines": 169,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../tools/db.js",
+        "../WorkingMemorySql.js",
+        "../keyScope.js",
+        "../schema.js",
+        "./AgentScope.js",
+        "./ReviewVisibility.js",
+        "./WorkspaceScope.js"
+      ],
+      "named_exports_approx": [
+        "fetchCausalLinks",
+        "fetchSessionNeighbors"
+      ]
+    },
+    {
+      "path": "lib/memory/read/SyntheticQuerySearch.js",
+      "subsystem": "lib/memory/read",
+      "lines": 194,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../../config/memory.js",
+        "../../logger.js",
+        "../../tools/db.js",
+        "../WorkingMemorySql.js",
+        "../keyScope.js",
+        "../schema.js",
+        "./AgentScope.js",
+        "./DeterministicRanking.js",
+        "./ReviewVisibility.js",
+        "./SearchScope.js",
+        "./WorkspaceScope.js"
+      ],
+      "named_exports_approx": [
+        "normalizeKeyList",
+        "isSyntheticSearchEnabled",
+        "aggregateHits",
+        "selectNewCandidates",
+        "rankHydratedSyntheticRows",
+        "searchSyntheticQueries"
+      ]
+    },
+    {
+      "path": "lib/memory/read/TemporalContextStitcher.js",
+      "subsystem": "lib/memory/read",
+      "lines": 212,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "deltaMinutes",
+        "stitchFragment",
+        "estimateStitchTokens",
+        "applyStitchBudget",
+        "renderStitch"
+      ]
+    },
+    {
+      "path": "lib/memory/read/TopicResolver.js",
+      "subsystem": "lib/memory/read",
+      "lines": 172,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../tools/db.js",
+        "../../tools/embedding.js",
+        "../embedding/MorphemeIndex.js",
+        "../keyScope.js",
+        "../schema.js",
+        "./AgentScope.js",
+        "./ReviewVisibility.js",
+        "./WorkspaceScope.js"
+      ],
+      "named_exports_approx": [
+        "suggestTopics"
+      ]
+    },
+    {
+      "path": "lib/memory/read/WorkspaceReadAuthz.js",
+      "subsystem": "lib/memory/read",
+      "lines": 117,
+      "review_status": "selected-source",
+      "imports_approx": [
+        "../../admin/ApiKeyStore.js",
+        "../../config.js",
+        "../../logger.js",
+        "../ModeRegistry.js",
+        "./WorkspaceScope.js",
+        "./read-authz-metrics.js",
+        "./workspace-read-policy.js"
+      ],
+      "named_exports_approx": [
+        "authorizeWorkspaceRead",
+        "authorizeModePreset"
+      ]
+    },
+    {
+      "path": "lib/memory/read/WorkspaceScope.js",
+      "subsystem": "lib/memory/read",
+      "lines": 102,
+      "review_status": "selected-source",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "WORKSPACE_SCOPE_FORBIDDEN",
+        "resolveWorkspaceScope",
+        "workspaceReadTarget",
+        "workspaceCondition",
+        "assertAllWorkspacesAuthorized",
+        "appendWorkspaceCondition"
+      ]
+    },
+    {
+      "path": "lib/memory/read/assistant-query.js",
+      "subsystem": "lib/memory/read",
+      "lines": 104,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "isAssistantQuery",
+        "expandAssistantQuery",
+        "boostAssistantFragments"
+      ]
+    },
+    {
+      "path": "lib/memory/read/provenance-metrics.js",
+      "subsystem": "lib/memory/read",
+      "lines": 32,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../metrics.js",
+        "prom-client"
+      ],
+      "named_exports_approx": [
+        "coreTrustExcludedTotal",
+        "recordCoreTrustExcluded"
+      ]
+    },
+    {
+      "path": "lib/memory/read/quotaQueries.js",
+      "subsystem": "lib/memory/read",
+      "lines": 63,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../schema.js"
+      ],
+      "named_exports_approx": [
+        "countLiveFragments",
+        "countLiveAnchors"
+      ]
+    },
+    {
+      "path": "lib/memory/read/read-authz-metrics.js",
+      "subsystem": "lib/memory/read",
+      "lines": 53,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../metrics.js",
+        "./workspace-read-policy.js",
+        "prom-client"
+      ],
+      "named_exports_approx": [
+        "READ_AUTHZ_SURFACES",
+        "READ_AUTHZ_REASONS",
+        "READ_AUTHZ_OUTCOMES",
+        "workspaceReadAuthzTotal",
+        "recordWorkspaceReadAuthz"
+      ]
+    },
+    {
+      "path": "lib/memory/read/workspace-read-policy.js",
+      "subsystem": "lib/memory/read",
+      "lines": 134,
+      "review_status": "selected-source",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "WORKSPACE_READ_REASONS",
+        "WORKSPACE_READ_TOOLS",
+        "WORKSPACE_READ_EXEMPT",
+        "RESOURCE_READ_SURFACE",
+        "MODE_PRESET_SURFACE",
+        "MODE_PRESET_REASON",
+        "WorkspaceReadDeniedError",
+        "ModePresetRejectedError",
+        "isWorkspaceReadable",
+        "decideWorkspaceRead"
+      ]
+    },
+    {
+      "path": "lib/memory/reviewState.js",
+      "subsystem": "lib/memory/core",
+      "lines": 69,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "REVIEW_STATES",
+        "REVIEW_MODES",
+        "DEFAULT_REVIEW_MODE",
+        "REVIEW_MODE_PERMISSIONS",
+        "keyReviewMode",
+        "reviewModeOrNull",
+        "isPendingReview"
+      ]
+    },
+    {
+      "path": "lib/memory/schema.js",
+      "subsystem": "lib/memory/core",
+      "lines": 32,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "SCHEMA",
+        "T_FRAGMENTS",
+        "T_FRAGMENT_LINKS",
+        "T_FRAGMENT_HISTORY",
+        "T_SYNTHETIC_QUERY",
+        "T_IDEMPOTENCY"
+      ]
+    },
+    {
+      "path": "lib/memory/signals/CaseRewardBackprop.js",
+      "subsystem": "lib/memory/signals",
+      "lines": 80,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../logger.js",
+        "../../tools/db.js",
+        "../keyScope.js",
+        "../schema.js",
+        "../write/rowLock.js"
+      ],
+      "named_exports_approx": [
+        "CaseRewardBackprop",
+        "getBackprop"
+      ]
+    },
+    {
+      "path": "lib/memory/signals/EvaluationMetrics.js",
+      "subsystem": "lib/memory/signals",
+      "lines": 199,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../tools/db.js",
+        "../schema.js"
+      ],
+      "named_exports_approx": [
+        "computePrecisionAt",
+        "computeRollingPrecision",
+        "computeTaskSuccessRate",
+        "computeIrrelevanceBreakdown"
+      ]
+    },
+    {
+      "path": "lib/memory/signals/FeedbackSampler.js",
+      "subsystem": "lib/memory/signals",
+      "lines": 104,
+      "review_status": "selected-source",
+      "imports_approx": [
+        "../../../config/memory.js",
+        "../../redis.js"
+      ],
+      "named_exports_approx": [
+        "shouldSample",
+        "buildFeedbackHint",
+        "maybeFeedbackHint"
+      ]
+    },
+    {
+      "path": "lib/memory/signals/MemoryEvaluator.js",
+      "subsystem": "lib/memory/signals",
+      "lines": 176,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../gemini.js",
+        "../../llm/EgressPolicy.js",
+        "../../logger.js",
+        "../../redis.js",
+        "../MemoryManager.js",
+        "../workers/PollingWorker.js"
+      ],
+      "named_exports_approx": [
+        "MemoryEvaluator",
+        "getMemoryEvaluator"
+      ]
+    },
+    {
+      "path": "lib/memory/signals/NLIClassifier.js",
+      "subsystem": "lib/memory/signals",
+      "lines": 263,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../config.js",
+        "../../logger.js",
+        "@huggingface/transformers"
+      ],
+      "named_exports_approx": [
+        "isNLIAvailable",
+        "classifyNLI",
+        "detectContradiction",
+        "preloadNLI"
+      ]
+    },
+    {
+      "path": "lib/memory/signals/PairedBootstrap.js",
+      "subsystem": "lib/memory/signals",
+      "lines": 170,
+      "review_status": "selected-source",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "DEFAULT_ITERATIONS",
+        "DEFAULT_SEED",
+        "DEFAULT_CONFIDENCE",
+        "BootstrapInputError",
+        "createRng",
+        "pairedBootstrap",
+        "DEFAULT_MIN_N",
+        "COMPARE_METRICS",
+        "compareRuns"
+      ]
+    },
+    {
+      "path": "lib/memory/signals/RecallBenchmark.js",
+      "subsystem": "lib/memory/signals",
+      "lines": 631,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../logger.js",
+        "../../tools/db.js",
+        "../../tools/embedding.js",
+        "../MemoryManager.js",
+        "../embedding/EmbeddingWorker.js",
+        "../embedding/SyntheticQueryWorker.js",
+        "../keyScope.js",
+        "../schema.js",
+        "./RecallRankStats.js"
+      ],
+      "named_exports_approx": [
+        "QUERY_CLASSES",
+        "summarize",
+        "embeddingMismatch",
+        "compareToBaseline",
+        "validateGoldsetEntry",
+        "validateGoldset",
+        "medianMetrics",
+        "RecallBenchmark"
+      ]
+    },
+    {
+      "path": "lib/memory/signals/RecallEvalSet.js",
+      "subsystem": "lib/memory/signals",
+      "lines": 376,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "node:fs/promises",
+        "node:path"
+      ],
+      "named_exports_approx": [
+        "SUBSETS",
+        "TAGS",
+        "DOMAINS",
+        "GRADES",
+        "HUMAN_QUERY_TARGET",
+        "AUXILIARY_SUBSETS",
+        "PRIVATE_DIR",
+        "EXAMPLE_FILE",
+        "EvalSetError",
+        "parseJsonl",
+        "validateEvalEntry",
+        "validateEvalSet",
+        "splitLabeled",
+        "coverageReport",
+        "loadEvalDir"
+      ]
+    },
+    {
+      "path": "lib/memory/signals/RecallMetrics.js",
+      "subsystem": "lib/memory/signals",
+      "lines": 288,
+      "review_status": "selected-source",
+      "imports_approx": [
+        "./RecallRankStats.js"
+      ],
+      "named_exports_approx": [
+        "NDCG_UNIT_TOKENS",
+        "MetricInputError",
+        "dedupeReturned",
+        "firstRelevantRank",
+        "distractorAboveRelevant",
+        "tokenWeightedNdcgParts",
+        "tokenWeightedNdcg",
+        "scoreQuery",
+        "aggregateRows",
+        "aggregateBy",
+        "summarizeRows",
+        "latencySummary"
+      ]
+    },
+    {
+      "path": "lib/memory/signals/RecallRankStats.js",
+      "subsystem": "lib/memory/signals",
+      "lines": 49,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "computeRecallAt",
+        "computeMRR",
+        "percentile"
+      ]
+    },
+    {
+      "path": "lib/memory/signals/SearchEventAnalyzer.js",
+      "subsystem": "lib/memory/signals",
+      "lines": 186,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../tools/db.js",
+        "../schema.js"
+      ],
+      "named_exports_approx": [
+        "computeL1MissRate",
+        "computeFilterDistribution",
+        "getSearchObservability",
+        "getPathPerformance"
+      ]
+    },
+    {
+      "path": "lib/memory/signals/SearchEventRecorder.js",
+      "subsystem": "lib/memory/signals",
+      "lines": 330,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../logger.js",
+        "../../tools/db.js",
+        "../read/AgentScope.js",
+        "../schema.js"
+      ],
+      "named_exports_approx": [
+        "classifyQueryType",
+        "classifyQueryIntent",
+        "extractFilterKeys",
+        "buildSearchEvent",
+        "BUDGET_COLUMN_REPROBE_MS",
+        "budgetColumnState",
+        "resetBudgetColumnState",
+        "recordSearchEvent"
+      ]
+    },
+    {
+      "path": "lib/memory/signals/SearchMetrics.js",
+      "subsystem": "lib/memory/signals",
+      "lines": 99,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../redis.js"
+      ],
+      "named_exports_approx": [
+        "SearchMetrics",
+        "getSearchMetrics"
+      ]
+    },
+    {
+      "path": "lib/memory/signals/SearchParamAdaptor.js",
+      "subsystem": "lib/memory/signals",
+      "lines": 118,
+      "review_status": "selected-source",
+      "imports_approx": [
+        "../../../config/memory.js",
+        "../../logger.js",
+        "../../tools/db.js",
+        "../keyId.js",
+        "../schema.js"
+      ],
+      "named_exports_approx": [
+        "SearchParamAdaptor",
+        "getSearchParamAdaptor",
+        "_resetForTesting"
+      ]
+    },
+    {
+      "path": "lib/memory/signals/SpreadingActivation.js",
+      "subsystem": "lib/memory/signals",
+      "lines": 144,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../tools/db.js",
+        "../../tools/lock-retry.js",
+        "../keyScope.js",
+        "../read/GraphNeighborSearch.js",
+        "../read/WorkspaceScope.js",
+        "../schema.js",
+        "../write/FragmentFactory.js",
+        "../write/rowLock.js"
+      ],
+      "named_exports_approx": [
+        "activateByContext"
+      ]
+    },
+    {
+      "path": "lib/memory/transfer/FragmentExporter.js",
+      "subsystem": "lib/memory/transfer",
+      "lines": 223,
+      "review_status": "selected-source",
+      "imports_approx": [
+        "../schema.js",
+        "./exportFormat.js"
+      ],
+      "named_exports_approx": [
+        "EXPORT_BATCH_SIZE",
+        "readSchemaMigration"
+      ]
+    },
+    {
+      "path": "lib/memory/transfer/ImportReport.js",
+      "subsystem": "lib/memory/transfer",
+      "lines": 180,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./exportFormat.js"
+      ],
+      "named_exports_approx": [
+        "REJECT_REASONS",
+        "TRANSFORM_REASONS",
+        "MAX_REJECT_SAMPLES",
+        "ImportReport"
+      ]
+    },
+    {
+      "path": "lib/memory/transfer/ImportRunner.js",
+      "subsystem": "lib/memory/transfer",
+      "lines": 378,
+      "review_status": "selected-source",
+      "imports_approx": [
+        "../write/FragmentFactory.js",
+        "../write/FragmentImporter.js",
+        "./ImportReport.js",
+        "./exportFormat.js",
+        "./importErrors.js",
+        "pg"
+      ],
+      "named_exports_approx": [
+        "runImport"
+      ]
+    },
+    {
+      "path": "lib/memory/transfer/exportFormat.js",
+      "subsystem": "lib/memory/transfer",
+      "lines": 247,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        ", "
+      ],
+      "named_exports_approx": [
+        "FORMAT_NAME",
+        "CURRENT_VERSION",
+        "READABLE_VERSIONS",
+        "V1_ACCEPTED_UNTIL",
+        "RECORD",
+        "V1_FRAGMENT_COLUMNS",
+        "V2_FRAGMENT_COLUMNS",
+        "LINK_COLUMNS",
+        "VERSION_COLUMNS",
+        "LINK_RELATION_TYPES",
+        "UnsupportedFormatVersionError",
+        "ExportVersionError",
+        "negotiateExportVersion",
+        "migrationNumber",
+        "buildHeader",
+        "buildTrailer",
+        "readHeaderVersion",
+        "PARSE_FAILURE",
+        "classifyRecord",
+        "hasFragmentFields"
+      ]
+    },
+    {
+      "path": "lib/memory/transfer/importErrors.js",
+      "subsystem": "lib/memory/transfer",
+      "lines": 45,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./ImportReport.js"
+      ],
+      "named_exports_approx": [
+        "ImportOptionError",
+        "ImportAbortedError",
+        "ImportInputError"
+      ]
+    },
+    {
+      "path": "lib/memory/transfer/importRecords.js",
+      "subsystem": "lib/memory/transfer",
+      "lines": 52,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./exportFormat.js"
+      ],
+      "named_exports_approx": []
+    },
+    {
+      "path": "lib/memory/transfer/importRuntime.js",
+      "subsystem": "lib/memory/transfer",
+      "lines": 62,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../tools/db.js",
+        "../link/LinkStore.js",
+        "../schema.js",
+        "../write/FragmentImporter.js",
+        "../write/FragmentWriter.js",
+        "../write/WriteGate.js",
+        "../write/serverWriteGate.js"
+      ],
+      "named_exports_approx": [
+        "loadImportRuntime",
+        "targetKeyExists"
+      ]
+    },
+    {
+      "path": "lib/memory/workers/PollingWorker.js",
+      "subsystem": "lib/memory/workers",
+      "lines": 164,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../logger.js",
+        "../../tools/pool-gate.js",
+        "./registry.js",
+        "node:events"
+      ],
+      "named_exports_approx": [
+        "PollingWorker"
+      ]
+    },
+    {
+      "path": "lib/memory/workers/registry.js",
+      "subsystem": "lib/memory/workers",
+      "lines": 72,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../logger.js"
+      ],
+      "named_exports_approx": [
+        "registerWorker",
+        "unregisterWorker",
+        "listWorkers",
+        "drainAllWorkers",
+        "_resetRegistry"
+      ]
+    },
+    {
+      "path": "lib/memory/write/BatchRememberProcessor.js",
+      "subsystem": "lib/memory/write",
+      "lines": 733,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../../config/memory.js",
+        "../../config.js",
+        "../../redis.js",
+        "../../tools/db.js",
+        "../contentGuard.js",
+        "../keyId.js",
+        "../provenance.js",
+        "../read/quotaQueries.js",
+        "../schema.js",
+        "./ContentTokens.js",
+        "./DedupScope.js",
+        "./FragmentFactory.js",
+        "./ReviewQueue.js",
+        "./WriteGate.js",
+        "./anchorQuota.js",
+        "pg"
+      ],
+      "named_exports_approx": [
+        "BatchRememberProcessor"
+      ]
+    },
+    {
+      "path": "lib/memory/write/BatchRememberWorker.js",
+      "subsystem": "lib/memory/write",
+      "lines": 117,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../../config/memory.js",
+        "../../logger.js",
+        "../../redis.js",
+        "../workers/PollingWorker.js",
+        "./BatchRememberProcessor.js"
+      ],
+      "named_exports_approx": [
+        "BatchRememberWorker",
+        "getBatchRememberWorker"
+      ]
+    },
+    {
+      "path": "lib/memory/write/ConflictResolver.js",
+      "subsystem": "lib/memory/write",
+      "lines": 320,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../../config/symbolic.js",
+        "../../env-parse.js",
+        "../../logger.js",
+        "../../symbolic/ClaimConflictDetector.js",
+        "../../tools/db.js",
+        "../FragmentIndex.js",
+        "../keyScope.js",
+        "../link/ReconsolidationEngine.js",
+        "../read/FragmentSearch.js",
+        "../schema.js",
+        "./FragmentStore.js"
+      ],
+      "named_exports_approx": [
+        "ConflictResolver"
+      ]
+    },
+    {
+      "path": "lib/memory/write/ContentTokens.js",
+      "subsystem": "lib/memory/write",
+      "lines": 169,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../config.js",
+        "../../logger.js",
+        "../LexicalSchema.js",
+        "../embedding/LexicalTokens.js",
+        "../lexical-metrics.js"
+      ],
+      "named_exports_approx": [
+        "ContentTokensSqlError",
+        "contentTokensExpression",
+        "contentTokensForWrite",
+        "contentTokensForWrites",
+        "appendContentTokensColumn",
+        "appendContentTokensSet",
+        "withRowContentTokens"
+      ]
+    },
+    {
+      "path": "lib/memory/write/DedupScope.js",
+      "subsystem": "lib/memory/write",
+      "lines": 437,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../config.js",
+        "../../logger.js",
+        "../schema.js"
+      ],
+      "named_exports_approx": [
+        "DEDUP_SCOPES",
+        "DEDUP_INDEXES",
+        "DEDUP_INDEX_NAMES",
+        "DEDUP_INDEX_STATE_TTL_MS",
+        "LEGACY_INDEX_ALIASES",
+        "LEGACY_INDEX_DEFINITIONS",
+        "DEDUP_INDEX_LOOKUP_NAMES",
+        "legacyDefinitionMatches",
+        "indexStateFromRows",
+        "effectiveDedupScope",
+        "lookupRequired",
+        "conflictIndex",
+        "conflictClause",
+        "normalizeWorkspace",
+        "workspaceKey",
+        "pickDuplicate",
+        "foldKey",
+        "splitLookupHits",
+        "isDedupIndexError",
+        "canonicalDedupIndex",
+        "findContentHashMatches",
+        "resolveUniqueConflict",
+        "noteDedupIndexError",
+        "loadDedupIndexes",
+        "invalidateDedupIndexes"
+      ]
+    },
+    {
+      "path": "lib/memory/write/ForgetCascade.js",
+      "subsystem": "lib/memory/write",
+      "lines": 175,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../keyScope.js",
+        "../schema.js",
+        "./rowLock.js"
+      ],
+      "named_exports_approx": [
+        "DELETED_SUMMARY",
+        "CONTRADICTION_AUDIT_TOPIC",
+        "ORPHAN_PURGE_BATCH",
+        "CASCADE_DELETE_SQL",
+        "emptyPurge",
+        "addPurge",
+        "forgetReceipt",
+        "cascadeDeleteLock",
+        "summarizeCascade",
+        "purgeOrphanCaseSummaries"
+      ]
+    },
+    {
+      "path": "lib/memory/write/FragmentFactory.js",
+      "subsystem": "lib/memory/write",
+      "lines": 476,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        ", ",
+        "../../config.js",
+        "../../security/SensitiveScanner.js",
+        "./affect.js",
+        "crypto",
+        "js-tiktoken"
+      ],
+      "named_exports_approx": [
+        "countTokens",
+        "keywordText",
+        "normalizeKeywords",
+        "mergeKeywords",
+        "maskSensitiveText",
+        "limitContentLength",
+        "FragmentFactory"
+      ]
+    },
+    {
+      "path": "lib/memory/write/FragmentImporter.js",
+      "subsystem": "lib/memory/write",
+      "lines": 277,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../symbolic/errors.js",
+        "../transfer/ImportReport.js",
+        "../transfer/importErrors.js",
+        "./WriteGate.js",
+        "node:crypto",
+        "pg"
+      ],
+      "named_exports_approx": [
+        "IMPORT_DEFAULTS",
+        "importProfile",
+        "buildImportFragment",
+        "ignoredFields",
+        "UNIQUE_VIOLATION",
+        "isRowLevelDbError",
+        "checkImportRow",
+        "writeImportRow"
+      ]
+    },
+    {
+      "path": "lib/memory/write/FragmentStore.js",
+      "subsystem": "lib/memory/write",
+      "lines": 85,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../consolidate/FragmentGC.js",
+        "../link/LinkStore.js",
+        "../read/FragmentReader.js",
+        "../read/LexicalSearch.js",
+        "./FragmentWriter.js"
+      ],
+      "named_exports_approx": [
+        "FragmentStore"
+      ]
+    },
+    {
+      "path": "lib/memory/write/FragmentWriter.js",
+      "subsystem": "lib/memory/write",
+      "lines": 1149,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../config.js",
+        "../../logger.js",
+        "../../metrics.js",
+        "../../tools/db.js",
+        "../../tools/embedding.js",
+        "../FragmentIndex.js",
+        "../WorkingMemoryRows.js",
+        "../keyScope.js",
+        "../provenance.js",
+        "../read/AgentScope.js",
+        "../read/WorkspaceScope.js",
+        "../schema.js",
+        "./ContentTokens.js",
+        "./DedupScope.js",
+        "./ForgetCascade.js",
+        "./FragmentFactory.js",
+        "./ReviewQueue.js",
+        "./affect.js",
+        "./anchorQuota.js",
+        "./gateApproval.js",
+        "./rowLock.js",
+        "pg"
+      ],
+      "named_exports_approx": [
+        "SEMANTIC_COLUMNS",
+        "INTERNAL_COLUMNS",
+        "UngatedSemanticWriteError",
+        "InternalUpdateError",
+        "sanitizeInsertImportance",
+        "FragmentWriter"
+      ]
+    },
+    {
+      "path": "lib/memory/write/IdempotencyStore.js",
+      "subsystem": "lib/memory/write",
+      "lines": 184,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../logger.js",
+        "../../tools/db.js",
+        "../schema.js"
+      ],
+      "named_exports_approx": [
+        "findRecordedResponse",
+        "recordResponse",
+        "purgeExpired",
+        "CLAIM_RESULT",
+        "claimIdempotencyKey",
+        "completeIdempotencyClaim",
+        "releaseIdempotencyClaim"
+      ]
+    },
+    {
+      "path": "lib/memory/write/RememberPostProcessor.js",
+      "subsystem": "lib/memory/write",
+      "lines": 450,
+      "review_status": "selected-source",
+      "imports_approx": [
+        ", ",
+        "../../../config/memory.js",
+        "../../../config/symbolic.js",
+        "../../logger.js",
+        "../../redis.js",
+        "../../symbolic/ClaimConflictDetector.js",
+        "../../symbolic/ClaimExtractor.js",
+        "../../symbolic/ClaimStore.js",
+        "../../symbolic/SymbolicMetrics.js",
+        "../../symbolic/rules/v1/proactive-gate.js",
+        "../../tools/db.js",
+        "../embedding/EmbeddingWorker.js",
+        "../embedding/SyntheticQueryGenerator.js",
+        "../schema.js"
+      ],
+      "named_exports_approx": [
+        "RememberPostProcessor"
+      ]
+    },
+    {
+      "path": "lib/memory/write/ReviewQueue.js",
+      "subsystem": "lib/memory/write",
+      "lines": 294,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../provenance.js",
+        "../reviewState.js",
+        "./reviewRules.js"
+      ],
+      "named_exports_approx": [
+        "REVIEW_REASONS",
+        "ANCHOR_REQUEST_MARK",
+        "REVIEW_RULE_PREFIX",
+        "REVIEW_ENTRIES",
+        "ANCHOR_PERMISSION_RULE",
+        "DIRECTIVE_TYPES",
+        "REVIEW_TEXT_COLUMNS",
+        "REVIEW_COLUMNS",
+        "reviewReasons",
+        "decideReview",
+        "isReviewNotice",
+        "parseReviewReason",
+        "reviewStep",
+        "hasReviewState",
+        "reviewInsertParts",
+        "appendReviewAssignments"
+      ]
+    },
+    {
+      "path": "lib/memory/write/WriteGate.js",
+      "subsystem": "lib/memory/write",
+      "lines": 818,
+      "review_status": "selected-source",
+      "imports_approx": [
+        "../../../config/symbolic.js",
+        "../../config.js",
+        "../../logger.js",
+        "../../logging/audit-outbox.js",
+        "../../security/SensitiveScanner.js",
+        "../../symbolic/PolicyRules.js",
+        "../../symbolic/SymbolicMetrics.js",
+        "../../symbolic/errors.js",
+        "../anchorPolicy.js",
+        "../contentGuard.js",
+        "../provenance.js",
+        "./FragmentFactory.js",
+        "./ReviewQueue.js",
+        "./anchorQuota.js",
+        "./gateApproval.js",
+        "./write-gate-metrics.js"
+      ],
+      "named_exports_approx": [
+        "WRITE_ENTRIES",
+        "ANCHOR_REQUEST_ENTRIES",
+        "CONTENT_STEPS",
+        "VERDICT_STEPS",
+        "STEP_ORDER",
+        "LEGACY_STEPS",
+        "TEXT_FIELDS",
+        "WriteInputError",
+        "ruleName",
+        "normalizeStep",
+        "restoreNormalizeStep",
+        "passthroughStep",
+        "RESTORE_STEPS",
+        "sensitiveStep",
+        "lengthStep",
+        "policyStep",
+        "workspaceStep",
+        "anchorStep",
+        "provenanceStep",
+        "gateBlockAuditEvent",
+        "DEFAULT_STEPS",
+        "isGateEligible",
+        "WriteGate"
+      ]
+    },
+    {
+      "path": "lib/memory/write/affect.js",
+      "subsystem": "lib/memory/write",
+      "lines": 20,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "VALID_AFFECT_VALUES",
+        "sanitizeAffect"
+      ]
+    },
+    {
+      "path": "lib/memory/write/anchorAudit.js",
+      "subsystem": "lib/memory/write",
+      "lines": 46,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../logging/audit.js"
+      ],
+      "named_exports_approx": [
+        "formatAnchorAuditDetails",
+        "auditAnchorDecision"
+      ]
+    },
+    {
+      "path": "lib/memory/write/anchorQuota.js",
+      "subsystem": "lib/memory/write",
+      "lines": 169,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../config.js",
+        "../../logger.js",
+        "../../tools/db.js",
+        "../read/quotaQueries.js",
+        "../schema.js"
+      ],
+      "named_exports_approx": [
+        "ANCHOR_QUOTA_LOCK_SQL",
+        "attachAnchorQuota",
+        "anchorQuotaOf",
+        "lockAndCountAnchors",
+        "insertWithAnchorQuota",
+        "applyAnchorQuotaToUpdate",
+        "applyAnchorQuotaToBatch"
+      ]
+    },
+    {
+      "path": "lib/memory/write/gateApproval.js",
+      "subsystem": "lib/memory/write",
+      "lines": 33,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "approveGateValue",
+        "isGateApproved"
+      ]
+    },
+    {
+      "path": "lib/memory/write/reviewRules.js",
+      "subsystem": "lib/memory/write",
+      "lines": 105,
+      "review_status": "selected-source",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "normalizeForRules",
+        "INSTRUCTION_OVERRIDE_RULES",
+        "matchInstructionOverride"
+      ]
+    },
+    {
+      "path": "lib/memory/write/rowLock.js",
+      "subsystem": "lib/memory/write",
+      "lines": 43,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../schema.js"
+      ],
+      "named_exports_approx": [
+        "DELETE_LOCKED_SQL",
+        "LOCK_FOR_WRITE",
+        "LOCK_FOR_DELETE",
+        "fragmentRowLock"
+      ]
+    },
+    {
+      "path": "lib/memory/write/serverAnchorDeps.js",
+      "subsystem": "lib/memory/write",
+      "lines": 18,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../admin/ApiKeyStore.js",
+        "./anchorAudit.js"
+      ],
+      "named_exports_approx": [
+        "SERVER_ANCHOR_DEPS"
+      ]
+    },
+    {
+      "path": "lib/memory/write/serverWriteGate.js",
+      "subsystem": "lib/memory/write",
+      "lines": 21,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../admin/ApiKeyStore.js",
+        "./WriteGate.js"
+      ],
+      "named_exports_approx": [
+        "createServerWriteGate"
+      ]
+    },
+    {
+      "path": "lib/memory/write/write-gate-metrics.js",
+      "subsystem": "lib/memory/write",
+      "lines": 97,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../metrics.js",
+        "prom-client"
+      ],
+      "named_exports_approx": [
+        "writeGateTotal",
+        "recordWriteGate",
+        "reviewFlagTotal",
+        "recordReviewFlag",
+        "REVIEW_DECISION_LABELS",
+        "reviewDecisionTotal",
+        "recordReviewDecision",
+        "anchorDecisionTotal",
+        "recordAnchorDecision"
+      ]
+    },
+    {
+      "path": "lib/metrics.js",
+      "subsystem": "lib",
+      "lines": 728,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        ", ",
+        "./env-parse.js",
+        "./protocol-versions.js",
+        "prom-client"
+      ],
+      "named_exports_approx": [
+        "register",
+        "legacyUnboundAgentScopeTotal",
+        "httpRequestsTotal",
+        "httpRequestDuration",
+        "rpcMethodCalls",
+        "rpcMethodDuration",
+        "toolExecutionsTotal",
+        "toolExecutionDuration",
+        "activeSessionsStreamable",
+        "activeSessionsLegacy",
+        "anchorAutoPromotionEnabled",
+        "setAnchorAutoPromotionEnabled",
+        "oauthTokensIssued",
+        "oauthTokenValidations",
+        "errorsTotal",
+        "protocolVersionNegotiations",
+        "authenticationAttempts",
+        "updateSessionCounts",
+        "recordHttpRequest",
+        "recordRpcMethod",
+        "recordToolExecution",
+        "recordError",
+        "protocolVersionLabel",
+        "recordProtocolNegotiation",
+        "recordAuthenticationAttempt",
+        "authDeniedTotal",
+        "corsDeniedTotal",
+        "rbacDeniedTotal",
+        "tenantIsolationBlockedTotal",
+        "recordAuthDenied",
+        "recordCorsDenied",
+        "recordRbacDenied",
+        "recordTenantIsolationBlocked",
+        "redisSessionSaveFailureTotal",
+        "sessionRecoveryTotal",
+        "sessionRotationTotal",
+        "rotateRateLimitedTotal",
+        "sessionIdleReflectTotal",
+        "recordRedisSessionSaveFailure",
+        "recordSessionRecovery",
+        "recordSessionRotation",
+        "recordRotateRateLimited",
+        "recordSessionIdleReflect",
+        "recordOAuthTokenIssued",
+        "recordOAuthTokenValidation",
+        "oauthNonApiKeyRejectedTotal",
+        "oauthBoundClientRegisteredTotal",
+        "oauthBoundClientAuthorizedTotal",
+        "oauthBoundClientAuthenticatedTotal",
+        "oauthAutoRegisterBlockedTotal",
+        "recordOAuthNonApiKeyRejected",
+        "recordOAuthBoundClientRegistered",
+        "recordOAuthBoundClientAuthorized",
+        "recordOAuthBoundClientAuthenticated",
+        "recordOAuthAutoRegisterBlocked",
+        "sessionNotFoundTotal",
+        "authStoreErrorsTotal",
+        "recordAuthStoreError",
+        "apiKeyLookupTotal",
+        "recordApiKeyLookup",
+        "originRejectedTotal",
+        "protocolVersionRejectedTotal",
+        "protocolVersionReanchoredTotal",
+        "recordSession404",
+        "recordOriginRejected",
+        "recordProtocolVersionRejected",
+        "recordProtocolVersionReanchored",
+        "modernProtocolAttemptsTotal",
+        "recordModernProtocolAttempt",
+        "batchPoolActiveConnections",
+        "batchPoolIdleConnections",
+        "batchPoolWaitingCount",
+        "recordBatchPoolStats",
+        "backgroundGateActive",
+        "backgroundGateWaiting",
+        "backgroundGateCapacity",
+        "recordBackgroundGateStats",
+        "embeddingSemaphoreWaitExceededTotal",
+        "initializeIpRateLimitedTotal",
+        "sseRateLimitedTotal",
+        "quotaCachePassTotal",
+        "recordEmbeddingSemaphoreWaitExceeded",
+        "recordInitializeIpRateLimited",
+        "recordSseRateLimited",
+        "recordQuotaCachePass",
+        "rememberDuplicateTotal",
+        "recordRememberDuplicate"
+      ]
+    },
+    {
+      "path": "lib/oauth.js",
+      "subsystem": "lib",
+      "lines": 576,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./admin/ApiKeyStore.js",
+        "./admin/OAuthClientStore.js",
+        "./admin/key-lifecycle.js",
+        "./config.js",
+        "./logger.js",
+        "./metrics.js",
+        "./redis.js",
+        "./safe-compare.js",
+        "crypto"
+      ],
+      "named_exports_approx": [
+        "isAllowedRedirectUri",
+        "getAuthServerMetadata",
+        "getResourceMetadata",
+        "handleAuthorize",
+        "handleToken",
+        "validateAccessToken",
+        "buildConsentHtml",
+        "cleanupExpiredOAuthData"
+      ]
+    },
+    {
+      "path": "lib/openapi-review.js",
+      "subsystem": "lib",
+      "lines": 64,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "buildAdminReviewPaths"
+      ]
+    },
+    {
+      "path": "lib/openapi.js",
+      "subsystem": "lib",
+      "lines": 829,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./admin/admin-auth.js",
+        "./admin/key-policy.js",
+        "./openapi-review.js",
+        "./rbac.js",
+        "./tool-registry.js",
+        "./tools/memory-schemas.js",
+        "./tools/update-tools.js"
+      ],
+      "named_exports_approx": [
+        "buildSpec"
+      ]
+    },
+    {
+      "path": "lib/opencode.js",
+      "subsystem": "lib",
+      "lines": 12,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./llm/index.js",
+        "./llm/runners/opencode.js"
+      ],
+      "named_exports_approx": [
+        "isOpenCodeCLIAvailable"
+      ]
+    },
+    {
+      "path": "lib/outbox/Outbox.js",
+      "subsystem": "lib/outbox",
+      "lines": 221,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../config.js",
+        "../tools/db.js",
+        "./OutboxHandlers.js",
+        "./outbox-metrics.js",
+        "./outbox-sql.js",
+        "pg"
+      ],
+      "named_exports_approx": [
+        "PAYLOAD_MAX_BYTES",
+        "AGGREGATE_ID_MAX_LENGTH",
+        "MAX_DELAY_MS",
+        "OutboxValidationError",
+        "OutboxTransactionRequiredError",
+        "normalizeOutboxEvent",
+        "idempotencyKey",
+        "enqueue",
+        "enqueueAutocommit",
+        "enqueueStandalone"
+      ]
+    },
+    {
+      "path": "lib/outbox/OutboxHandlers.js",
+      "subsystem": "lib/outbox",
+      "lines": 162,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "TOPIC_PATTERN",
+        "TOPIC_MAX_LENGTH",
+        "OutboxHandlerRegistrationError",
+        "OutboxPermanentError",
+        "isValidTopic",
+        "registerOutboxHandler",
+        "getOutboxHandler",
+        "listOutboxTopics",
+        "_resetOutboxHandlers"
+      ]
+    },
+    {
+      "path": "lib/outbox/OutboxStore.js",
+      "subsystem": "lib/outbox",
+      "lines": 229,
+      "review_status": "selected-source",
+      "imports_approx": [
+        "../memory/schema.js"
+      ],
+      "named_exports_approx": [
+        "OutboxStore"
+      ]
+    },
+    {
+      "path": "lib/outbox/OutboxWorker.js",
+      "subsystem": "lib/outbox",
+      "lines": 444,
+      "review_status": "selected-source",
+      "imports_approx": [
+        "../config.js",
+        "../logger.js",
+        "../memory/workers/PollingWorker.js",
+        "../scheduler-registry.js",
+        "../tools/db.js",
+        "./Outbox.js",
+        "./OutboxHandlers.js",
+        "./OutboxStore.js",
+        "./outbox-metrics.js",
+        "node:crypto"
+      ],
+      "named_exports_approx": [
+        "OUTBOX_WORKER_DEFAULTS",
+        "OutboxHandlerTimeoutError",
+        "computeBackoffMs",
+        "decideFailure",
+        "canStartNext",
+        "errorSummary",
+        "OutboxWorker",
+        "getOutboxWorker"
+      ]
+    },
+    {
+      "path": "lib/outbox/outbox-metrics.js",
+      "subsystem": "lib/outbox",
+      "lines": 78,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../metrics.js",
+        "./OutboxHandlers.js",
+        "prom-client"
+      ],
+      "named_exports_approx": [
+        "outboxEnqueuedTotal",
+        "outboxProcessedTotal",
+        "outboxFailedTotal",
+        "outboxDeadLetterTotal",
+        "outboxLeaseLostTotal",
+        "outboxCleanedTotal",
+        "outboxUnhandledTotal",
+        "outboxPending",
+        "outboxDeadLetter",
+        "outboxLagSeconds",
+        "outboxStatsUpdated",
+        "outboxDeliverySeconds",
+        "topicLabel",
+        "setOutboxGauges"
+      ]
+    },
+    {
+      "path": "lib/outbox/outbox-sql.js",
+      "subsystem": "lib/outbox",
+      "lines": 17,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../memory/schema.js"
+      ],
+      "named_exports_approx": [
+        "OUTBOX_INSERT_SQL"
+      ]
+    },
+    {
+      "path": "lib/process-guards.js",
+      "subsystem": "lib",
+      "lines": 76,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "installProcessGuards",
+        "createShutdownGuard"
+      ]
+    },
+    {
+      "path": "lib/protocol-versions.js",
+      "subsystem": "lib",
+      "lines": 28,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "SUPPORTED_PROTOCOL_VERSIONS",
+        "DEFAULT_PROTOCOL_VERSION",
+        "PROTOCOL_VERSION_META_KEY"
+      ]
+    },
+    {
+      "path": "lib/qwen.js",
+      "subsystem": "lib",
+      "lines": 13,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./llm/index.js",
+        "./llm/runners/qwen.js"
+      ],
+      "named_exports_approx": [
+        "isQwenCLIAvailable",
+        "qwenCLIJson"
+      ]
+    },
+    {
+      "path": "lib/rate-limiter.js",
+      "subsystem": "lib",
+      "lines": 121,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "RateLimiter",
+        "DualRateLimiter"
+      ]
+    },
+    {
+      "path": "lib/rbac.js",
+      "subsystem": "lib",
+      "lines": 87,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "TOOL_PERMISSIONS",
+        "TRUSTED_ORIGIN_PERMISSION",
+        "trustedOriginGranted",
+        "checkPermission",
+        "ANCHOR_PERMISSION",
+        "hasAnchorPermission"
+      ]
+    },
+    {
+      "path": "lib/redis.js",
+      "subsystem": "lib",
+      "lines": 735,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./config.js",
+        "./logger.js",
+        "./logging/session-ref.js",
+        "./metrics.js",
+        "ioredis"
+      ],
+      "named_exports_approx": [
+        "redisClient",
+        "checkRedisHealth",
+        "getSessionKey",
+        "getOAuthCodeKey",
+        "getOAuthTokenKey",
+        "getDocCacheKey",
+        "getDbCacheKey",
+        "saveSession",
+        "getSession",
+        "deleteSession",
+        "extendSessionTTL",
+        "getTokenSessionKey",
+        "bindTokenToSession",
+        "getSessionIdByToken",
+        "unbindToken",
+        "saveOAuthCode",
+        "consumeOAuthCode",
+        "saveOAuthToken",
+        "getOAuthToken",
+        "deleteOAuthToken",
+        "extendOAuthToken",
+        "cacheDocument",
+        "getCachedDocument",
+        "invalidateDocumentCache",
+        "cacheDbQuery",
+        "getCachedDbQuery",
+        "invalidateCacheByPattern",
+        "pushToQueue",
+        "pushToQueuePriority",
+        "popFromQueue",
+        "__setRedisClientForTest",
+        "popFromQueueReliable",
+        "ackQueueItem",
+        "requeueProcessing",
+        "pushToQueueDead",
+        "getQueueLength",
+        "closeRedis",
+        "connectRedis",
+        "disconnectRedis",
+        "setBatchJobStatus",
+        "getBatchJobStatus"
+      ]
+    },
+    {
+      "path": "lib/safe-compare.js",
+      "subsystem": "lib",
+      "lines": 18,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "node:crypto"
+      ],
+      "named_exports_approx": [
+        "safeCompare"
+      ]
+    },
+    {
+      "path": "lib/scheduler-registry.js",
+      "subsystem": "lib",
+      "lines": 71,
+      "review_status": "interface-inventory",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "SchedulerRegistry",
+        "getSchedulerRegistry"
+      ]
+    },
+    {
+      "path": "lib/scheduler.js",
+      "subsystem": "lib",
+      "lines": 316,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../config/memory.js",
+        "./admin/ReviewStore.js",
+        "./config.js",
+        "./handlers/_common.js",
+        "./hooks/hook-reflect-consumer.js",
+        "./llm/egress-audit-handler.js",
+        "./logger.js",
+        "./logging/audit-consumer.js",
+        "./memory/FragmentIndex.js",
+        "./memory/MemoryManager.js",
+        "./memory/WorkingMemorySql.js",
+        "./memory/consolidate/MorphemeBackfill.js",
+        "./memory/consolidate/UtilityBaseline.js",
+        "./memory/embedding/EmbeddingWorker.js",
+        "./memory/embedding/SyntheticQueryWorker.js",
+        "./memory/link/GraphLinker.js",
+        "./memory/signals/MemoryEvaluator.js",
+        "./memory/signals/NLIClassifier.js",
+        "./memory/write/BatchRememberWorker.js",
+        "./metrics.js",
+        "./oauth.js",
+        "./outbox/OutboxWorker.js",
+        "./scheduler-registry.js",
+        "./sessions.js",
+        "./tools/db.js",
+        "./tools/index.js",
+        "./tools/pool-gate.js",
+        "pg"
+      ],
+      "named_exports_approx": [
+        "evaluateSchemaFitGate",
+        "getLastConsolidation",
+        "startSchedulers"
+      ]
+    },
+    {
+      "path": "lib/security/SensitiveScanner.js",
+      "subsystem": "lib/security",
+      "lines": 138,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./sensitivePatterns.js"
+      ],
+      "named_exports_approx": [
+        "SCANNED_TEXT_FIELDS",
+        "SCANNED_ARRAY_FIELDS",
+        "scanText",
+        "maskText",
+        "scanFields"
+      ]
+    },
+    {
+      "path": "lib/security/sensitivePatterns.js",
+      "subsystem": "lib/security",
+      "lines": 324,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "SENSITIVE_RULE_PREFIX",
+        "luhnValid",
+        "cardPrefixPlausible",
+        "rrnChecksumValid",
+        "createRrnValidator",
+        "rrnValid",
+        "cardValid",
+        "SENSITIVE_PATTERNS",
+        "patternsFor"
+      ]
+    },
+    {
+      "path": "lib/session-audit.js",
+      "subsystem": "lib",
+      "lines": 59,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./config.js",
+        "./logger.js",
+        "node:crypto",
+        "node:fs",
+        "node:path"
+      ],
+      "named_exports_approx": [
+        "logSessionRotate"
+      ]
+    },
+    {
+      "path": "lib/session-id.js",
+      "subsystem": "lib",
+      "lines": 37,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "http"
+      ],
+      "named_exports_approx": [
+        "readSessionId",
+        "isServerIssuedSessionId"
+      ]
+    },
+    {
+      "path": "lib/sessions.js",
+      "subsystem": "lib",
+      "lines": 796,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../config/memory.js",
+        "./config.js",
+        "./logger.js",
+        "./memory/processors/AutoReflect.js",
+        "./metrics.js",
+        "./redis.js",
+        "./tools/pool-gate.js",
+        "crypto"
+      ],
+      "named_exports_approx": [
+        "streamableSessions",
+        "legacySseSessions",
+        "createStreamableSessionWithId",
+        "createStreamableSession",
+        "reflectContextFor",
+        "currentSegmentId",
+        "peekCurrentSegmentId",
+        "validateStreamableSession",
+        "closeStreamableSession",
+        "closeSessionsByKeyId",
+        "createLegacySseSession",
+        "validateLegacySseSession",
+        "closeLegacySseSession",
+        "rotateSession",
+        "getSessionCounts",
+        "listAllSessions",
+        "getLegacySession",
+        "getAllSessionIds",
+        "cleanupExpiredSessions"
+      ]
+    },
+    {
+      "path": "lib/symbolic/CbrEligibility.js",
+      "subsystem": "lib/symbolic",
+      "lines": 95,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../memory/keyId.js",
+        "./SymbolicMetrics.js"
+      ],
+      "named_exports_approx": [
+        "CbrEligibility",
+        "cbrEligibility"
+      ]
+    },
+    {
+      "path": "lib/symbolic/ClaimConflictDetector.js",
+      "subsystem": "lib/symbolic",
+      "lines": 123,
+      "review_status": "selected-source",
+      "imports_approx": [
+        "./ClaimStore.js",
+        "./SymbolicMetrics.js"
+      ],
+      "named_exports_approx": [
+        "ClaimConflictDetector"
+      ]
+    },
+    {
+      "path": "lib/symbolic/ClaimExtractor.js",
+      "subsystem": "lib/symbolic",
+      "lines": 204,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../memory/embedding/MorphemeIndex.js"
+      ],
+      "named_exports_approx": [
+        "ClaimExtractor"
+      ]
+    },
+    {
+      "path": "lib/symbolic/ClaimStore.js",
+      "subsystem": "lib/symbolic",
+      "lines": 179,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../logger.js",
+        "../memory/keyId.js",
+        "../memory/schema.js",
+        "../tools/db.js"
+      ],
+      "named_exports_approx": [
+        "ClaimStore"
+      ]
+    },
+    {
+      "path": "lib/symbolic/ExplanationBuilder.js",
+      "subsystem": "lib/symbolic",
+      "lines": 52,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./rules/v1/explain.js"
+      ],
+      "named_exports_approx": [
+        "ExplanationBuilder",
+        "explanationBuilder"
+      ]
+    },
+    {
+      "path": "lib/symbolic/LinkIntegrityChecker.js",
+      "subsystem": "lib/symbolic",
+      "lines": 98,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../config/symbolic.js",
+        "./SymbolicMetrics.js"
+      ],
+      "named_exports_approx": [
+        "LinkIntegrityChecker"
+      ]
+    },
+    {
+      "path": "lib/symbolic/PolicyRules.js",
+      "subsystem": "lib/symbolic",
+      "lines": 121,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "PolicyRules"
+      ]
+    },
+    {
+      "path": "lib/symbolic/SymbolicMetrics.js",
+      "subsystem": "lib/symbolic",
+      "lines": 94,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../metrics.js",
+        "prom-client"
+      ],
+      "named_exports_approx": [
+        "symbolicWarningTotal",
+        "symbolicGateBlockedTotal",
+        "symbolicClaimExtractedTotal",
+        "symbolicOpLatencyMs",
+        "symbolicMetrics"
+      ]
+    },
+    {
+      "path": "lib/symbolic/errors.js",
+      "subsystem": "lib/symbolic",
+      "lines": 27,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "SymbolicPolicyViolationError"
+      ]
+    },
+    {
+      "path": "lib/symbolic/rules/v1/explain.js",
+      "subsystem": "lib/symbolic",
+      "lines": 106,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "buildReasonCodes"
+      ]
+    },
+    {
+      "path": "lib/symbolic/rules/v1/proactive-gate.js",
+      "subsystem": "lib/symbolic",
+      "lines": 128,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../ClaimConflictDetector.js"
+      ],
+      "named_exports_approx": [
+        "evaluateProactiveGate"
+      ]
+    },
+    {
+      "path": "lib/tool-registry.js",
+      "subsystem": "lib",
+      "lines": 250,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./tools/index.js",
+        "./tools/update-tools.js"
+      ],
+      "named_exports_approx": [
+        "TOOL_REGISTRY"
+      ]
+    },
+    {
+      "path": "lib/tools/context-response.js",
+      "subsystem": "lib/tools",
+      "lines": 39,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./serverTime.js"
+      ],
+      "named_exports_approx": [
+        "contextResponse"
+      ]
+    },
+    {
+      "path": "lib/tools/db.js",
+      "subsystem": "lib/tools",
+      "lines": 331,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../config.js",
+        "../env-parse.js",
+        "../logger.js",
+        "../memory/schema.js",
+        "./lock-retry.js",
+        "./pool-gate.js",
+        "pg"
+      ],
+      "named_exports_approx": [
+        "getPrimaryPool",
+        "getBatchPool",
+        "shutdownPool",
+        "getPoolStats",
+        "queryWithAgentVector",
+        "withTransaction"
+      ]
+    },
+    {
+      "path": "lib/tools/embedding.js",
+      "subsystem": "lib/tools",
+      "lines": 289,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../config.js",
+        "../embeddings/LocalTransformersEmbedder.js",
+        "../embeddings/normalize.js",
+        "../llm/util/semaphore.js",
+        "../metrics.js",
+        "crypto",
+        "openai"
+      ],
+      "named_exports_approx": [
+        "computeContentHash",
+        "prepareTextForEmbedding",
+        "generateEmbedding",
+        "generateBatchEmbeddings",
+        "extractDocumentMetadata",
+        "cosineSimilarity",
+        "vectorToSql"
+      ]
+    },
+    {
+      "path": "lib/tools/index.js",
+      "subsystem": "lib/tools",
+      "lines": 138,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./memory.js",
+        "./reconstruct.js",
+        "./stats.js",
+        "./update-tools.js"
+      ],
+      "named_exports_approx": [
+        "sortToolsDefinition",
+        "getToolsDefinition"
+      ]
+    },
+    {
+      "path": "lib/tools/lock-retry.js",
+      "subsystem": "lib/tools",
+      "lines": 163,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../config.js",
+        "../logger.js",
+        "../metrics.js",
+        "prom-client"
+      ],
+      "named_exports_approx": [
+        "RETRYABLE_LOCK_CODES",
+        "LOCK_RETRY_OPERATIONS",
+        "DEFAULT_LOCK_RETRY_MAX",
+        "LOCK_RETRY_BASE_MS",
+        "LOCK_RETRY_CEILING_MS",
+        "deadlockRetriesTotal",
+        "dbWriteFailuresTotal",
+        "UnknownLockOperationError",
+        "isRetryableLockError",
+        "lockRetryLimit",
+        "lockRetryDelayMs",
+        "assertLockOperation",
+        "withLockRetry",
+        "recordWriteFailure"
+      ]
+    },
+    {
+      "path": "lib/tools/memory-audit.js",
+      "subsystem": "lib/tools",
+      "lines": 257,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../logging/audit-event.js",
+        "../logging/audit-outbox.js",
+        "../utils.js"
+      ],
+      "named_exports_approx": [
+        "auditTool",
+        "AMEND_AUDIT_FIELDS",
+        "recordToolAudit",
+        "contentAuditDetail",
+        "auditErrorCode",
+        "fragmentTarget",
+        "rememberAuditEvents",
+        "forgetTarget",
+        "amendAuditEvents",
+        "failureEvent",
+        "rememberFailureEvent",
+        "forgetAuditEvent",
+        "linkAuditEvent",
+        "TOOL_AUDIT_COVERAGE",
+        "batchAuditEvent",
+        "reflectAuditEvent",
+        "auditConsolidate"
+      ]
+    },
+    {
+      "path": "lib/tools/memory-schemas.js",
+      "subsystem": "lib/tools",
+      "lines": 1340,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../memory/contentGuard.js",
+        "./origin-param.js",
+        "./recall-response-params.js",
+        "./tool-head.js"
+      ],
+      "named_exports_approx": [
+        "rememberDefinition",
+        "batchRememberDefinition",
+        "recallDefinition",
+        "forgetDefinition",
+        "linkDefinition",
+        "amendDefinition",
+        "reflectDefinition",
+        "contextDefinition",
+        "toolFeedbackDefinition",
+        "memoryStatsDefinition",
+        "memoryConsolidateDefinition",
+        "graphExploreDefinition",
+        "fragmentHistoryDefinition",
+        "getSkillGuideDefinition",
+        "reconstructHistoryDefinition",
+        "searchTracesDefinition",
+        "batchStatusDefinition",
+        "sessionRotateDefinition"
+      ]
+    },
+    {
+      "path": "lib/tools/memory.js",
+      "subsystem": "lib/tools",
+      "lines": 1169,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../admin/ApiKeyStore.js",
+        "../env-parse.js",
+        "../logger.js",
+        "../memory/MemoryManager.js",
+        "../memory/ModeRegistry.js",
+        "../memory/consolidate/UtilityBaseline.js",
+        "../memory/keyScope.js",
+        "../memory/link/ReconsolidationEngine.js",
+        "../memory/processors/SessionActivityTracker.js",
+        "../memory/read/AgentScope.js",
+        "../memory/read/AnswerPackLoader.js",
+        "../memory/read/LinkedFragmentLoader.js",
+        "../memory/read/StitchSourceLoader.js",
+        "../memory/read/TemporalContextStitcher.js",
+        "../memory/read/WorkspaceScope.js",
+        "../memory/schema.js",
+        "../memory/signals/EvaluationMetrics.js",
+        "../memory/signals/FeedbackSampler.js",
+        "../memory/signals/SearchEventAnalyzer.js",
+        "../memory/signals/SearchMetrics.js",
+        "../memory/write/IdempotencyStore.js",
+        "../redis.js",
+        "../session-audit.js",
+        "../sessions.js",
+        "./context-response.js",
+        "./db.js",
+        "./memory-audit.js",
+        "./memory-schemas.js",
+        "./serverTime.js",
+        "./skill-sections.js",
+        "./tool-error.js",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ],
+      "named_exports_approx": [
+        "tool_remember",
+        "tool_batchRemember",
+        "tool_recall",
+        "tool_forget",
+        "tool_link",
+        "tool_amend",
+        "tool_reflect",
+        "tool_context",
+        "tool_toolFeedback",
+        "tool_memoryStats",
+        "tool_memoryConsolidate",
+        "tool_graphExplore",
+        "tool_fragmentHistory",
+        "tool_getSkillGuide",
+        "tool_sessionRotate",
+        "tool_batchStatus"
+      ]
+    },
+    {
+      "path": "lib/tools/origin-param.js",
+      "subsystem": "lib/tools",
+      "lines": 22,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../memory/provenance.js"
+      ],
+      "named_exports_approx": [
+        "ORIGIN_PARAM"
+      ]
+    },
+    {
+      "path": "lib/tools/pool-gate.js",
+      "subsystem": "lib/tools",
+      "lines": 220,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../logger.js",
+        "node:async_hooks",
+        "pg"
+      ],
+      "named_exports_approx": [
+        "BackgroundGateTimeoutError",
+        "BackgroundGateClosedError",
+        "BackgroundGate",
+        "runInBackground",
+        "currentLane",
+        "gatePool"
+      ]
+    },
+    {
+      "path": "lib/tools/prompts.js",
+      "subsystem": "lib/tools",
+      "lines": 93,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "PROMPTS",
+        "getPrompt"
+      ]
+    },
+    {
+      "path": "lib/tools/recall-response-params.js",
+      "subsystem": "lib/tools",
+      "lines": 35,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "RECALL_FIELDS_PARAM",
+        "RECALL_FORMAT_PARAM"
+      ]
+    },
+    {
+      "path": "lib/tools/reconstruct.js",
+      "subsystem": "lib/tools",
+      "lines": 249,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../logger.js",
+        "../memory/MemoryManager.js",
+        "../memory/keyScope.js",
+        "../memory/read/AgentScope.js",
+        "../memory/read/ReviewVisibility.js",
+        "../memory/read/WorkspaceScope.js",
+        "../memory/schema.js",
+        "../utils.js",
+        "./db.js",
+        "./memory-schemas.js",
+        "./tool-error.js"
+      ],
+      "named_exports_approx": [
+        "tool_reconstructHistory",
+        "tool_searchTraces"
+      ]
+    },
+    {
+      "path": "lib/tools/resources.js",
+      "subsystem": "lib/tools",
+      "lines": 148,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../../config/memory.js",
+        "../memory/keyScope.js",
+        "../memory/processors/SessionActivityTracker.js",
+        "../memory/read/AgentScope.js",
+        "../memory/read/ReviewVisibility.js",
+        "../memory/read/WorkspaceScope.js",
+        "../memory/schema.js",
+        "./db.js"
+      ],
+      "named_exports_approx": [
+        "RESOURCES",
+        "readResource"
+      ]
+    },
+    {
+      "path": "lib/tools/serverTime.js",
+      "subsystem": "lib/tools",
+      "lines": 36,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "serverTimeMeta"
+      ]
+    },
+    {
+      "path": "lib/tools/skill-sections.js",
+      "subsystem": "lib/tools",
+      "lines": 30,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "SKILL_SECTIONS"
+      ]
+    },
+    {
+      "path": "lib/tools/stats.js",
+      "subsystem": "lib/tools",
+      "lines": 38,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../logger.js",
+        "fs",
+        "path"
+      ],
+      "named_exports_approx": [
+        "accessStats",
+        "updateAccessStats",
+        "saveAccessStats"
+      ]
+    },
+    {
+      "path": "lib/tools/tool-error.js",
+      "subsystem": "lib/tools",
+      "lines": 106,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./memory-schemas.js",
+        "pg"
+      ],
+      "named_exports_approx": [
+        "INTERNAL_TOOL_ERROR",
+        "toolErrorMessage",
+        "toolErrorResponse"
+      ]
+    },
+    {
+      "path": "lib/tools/tool-head.js",
+      "subsystem": "lib/tools",
+      "lines": 58,
+      "review_status": "inventory-only",
+      "imports_approx": [],
+      "named_exports_approx": [
+        "TOOL_HEAD"
+      ]
+    },
+    {
+      "path": "lib/tools/update-tools.js",
+      "subsystem": "lib/tools",
+      "lines": 78,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../config.js",
+        "../logging/audit-outbox.js",
+        "../updater/cache.js",
+        "../updater/install-detector.js",
+        "../updater/update-executor.js",
+        "../updater/version-checker.js",
+        "./tool-head.js"
+      ],
+      "named_exports_approx": [
+        "checkUpdateDefinition",
+        "applyUpdateDefinition",
+        "tool_checkUpdate",
+        "tool_applyUpdate"
+      ]
+    },
+    {
+      "path": "lib/updater/cache.js",
+      "subsystem": "lib/updater",
+      "lines": 35,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "node:fs",
+        "node:os",
+        "node:path"
+      ],
+      "named_exports_approx": [
+        "UpdateCache"
+      ]
+    },
+    {
+      "path": "lib/updater/install-detector.js",
+      "subsystem": "lib/updater",
+      "lines": 41,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "node:child_process",
+        "node:fs",
+        "node:path"
+      ],
+      "named_exports_approx": [
+        "detectInstallType"
+      ]
+    },
+    {
+      "path": "lib/updater/update-executor.js",
+      "subsystem": "lib/updater",
+      "lines": 117,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "../env-parse.js",
+        "node:child_process",
+        "node:path"
+      ],
+      "named_exports_approx": [
+        "UpdateExecutor"
+      ]
+    },
+    {
+      "path": "lib/updater/version-checker.js",
+      "subsystem": "lib/updater",
+      "lines": 63,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "node:module",
+        "node:path"
+      ],
+      "named_exports_approx": [
+        "parseVersion",
+        "compareSemver",
+        "findLatestTag",
+        "getCurrentVersion",
+        "checkForUpdate"
+      ]
+    },
+    {
+      "path": "lib/utils.js",
+      "subsystem": "lib",
+      "lines": 44,
+      "review_status": "inventory-only",
+      "imports_approx": [
+        "./http/helpers.js",
+        "./logging/audit.js",
+        "fs",
+        "path"
+      ],
+      "named_exports_approx": [
+        "listMarkdownFiles"
+      ]
+    }
+  ]
+}

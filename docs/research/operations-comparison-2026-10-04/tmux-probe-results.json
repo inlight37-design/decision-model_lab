@@ -1,0 +1,48 @@
+{
+  "observed_at": "2026-10-04",
+  "version": "tmux 3.7c",
+  "binary_sha256": "d190755c4dfdad036739aa7629bd408bf8f7db2b4cd6625973434d7cf33574e1",
+  "limits": "Linux cloud, isolated socket, ASCII screen fixtures; no WSL/Windows, crash recovery, slow-client stress, model CLI or whole-process-tree proof.",
+  "results": [
+    {
+      "id": "T01",
+      "note": "Control command has matching begin/end receipt identifiers",
+      "result": "pass"
+    },
+    {
+      "id": "T02",
+      "note": "Parse failure emits an error block",
+      "result": "pass"
+    },
+    {
+      "id": "T03",
+      "note": "wait-for emits end receipt before continuation; signal releases queued command",
+      "result": "pass"
+    },
+    {
+      "id": "T04",
+      "note": "Detach/reconnect and window rename preserve live-server pane identity",
+      "result": "pass"
+    },
+    {
+      "id": "T05",
+      "note": "Captured screen mixes stdout/stderr and contains rendered overwrite, not raw stream",
+      "result": "pass"
+    },
+    {
+      "id": "T06",
+      "note": "remain-on-exit retains dead pane with exit status 7; pane presence is not process success",
+      "result": "pass"
+    },
+    {
+      "id": "T07",
+      "note": "Signal before wait is retained in this live server",
+      "result": "pass"
+    },
+    {
+      "id": "T08",
+      "note": "Test server no longer answers has-session; control clients have exited",
+      "result": "pass"
+    }
+  ]
+}

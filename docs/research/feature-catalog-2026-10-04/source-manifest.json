@@ -1,0 +1,712 @@
+{
+  "reviewed_on": "2026-10-04",
+  "baseline": "6cfb78c5a91dc26a46d95229c89f6e2bbfb6830c",
+  "repositories": {
+    "hermes-agent": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e"
+    },
+    "anchormind": {
+      "repository": "JinHo-von-Choi/anchormind",
+      "commit": "cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb"
+    },
+    "codex-peek": {
+      "repository": "kimbyungsu/codex-peek",
+      "commit": "1baf5ccd360b50da57911401aeca1388e1b0c05e"
+    },
+    "worktrail": {
+      "repository": "jasonethicseo/worktrail",
+      "commit": "3fb48f980133fd2fb458362648c7bb04cfdbea2b"
+    },
+    "beads": {
+      "repository": "steveyegge/beads",
+      "commit": "2f1e8be3ca1fe990727858ccd8e4a78461b39c7c"
+    },
+    "backlog": {
+      "repository": "MrLesk/Backlog.md",
+      "commit": "69e7b15362337d6712783d9a685f6e4bb693fa9d"
+    },
+    "gastown": {
+      "repository": "gastownhall/gastown",
+      "commit": "649b832b7672bc7a2dbef26f5983aba6198b819b"
+    }
+  },
+  "source_groups": {
+    "H-UI": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "website/docs/user-guide/desktop.md",
+        "website/docs/user-guide/bot-mode.md"
+      ],
+      "review_scope": "세션/프로젝트·모델 선택·즐겨찾기·Artifacts·탭/분할·Simple mode·Subagents·Review/Worktrees·Memory Graph·Quick Entry 및 Bot Mode 도입.",
+      "limits": "UI 문서 확인. 실제 화면 조작·렌더링·접근성·각 플랫폼 지원을 시험하지 않음."
+    },
+    "H-SESSION": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "website/docs/user-guide/sessions.md",
+        "website/docs/reference/slash-commands.md"
+      ],
+      "review_scope": "세션 저장·문맥에 들어가는 내용·source 구분, 이름/재개/검색, retry/undo/snapshot 등 명령 표.",
+      "limits": "명령 이름이 Decision Lab에 존재한다는 뜻이 아님. 전체 삭제/복구 동작 미실행."
+    },
+    "H-CONTEXT": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "website/docs/user-guide/features/context-files.md",
+        "website/docs/user-guide/features/context-references.md"
+      ],
+      "review_scope": "발견하는 지침 파일과 범위, @file/줄 범위/folder/diff/git/URL·크기 상한·경로 제한.",
+      "limits": "자료 참고와 지침 로딩을 분리해서 적용. 문서의 잘못된 줄 범위 처리까지 그대로 채택하지 않음."
+    },
+    "H-MEMORY": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "website/docs/user-guide/features/memory.md",
+        "website/docs/user-guide/profiles.md",
+        "website/docs/user-guide/features/memory-providers.md",
+        "website/docs/user-guide/features/honcho.md"
+      ],
+      "review_scope": "bounded memory·USER·frozen snapshot·쓰기 승인/실제 저장 확인, profile별 분리, 외부 provider/Honcho의 도입 설명.",
+      "limits": "provider별 구현·사용자 모델링 품질·개인정보 처리 전체 미감사. profile은 적대적 OS 격리 보장이 아님."
+    },
+    "H-SKILL": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "website/docs/user-guide/features/skills.md"
+      ],
+      "review_scope": "progressive disclosure·website install·blank profile·stacking·/learn·external/project directories·scan·bundles·agent-managed skills·catalog.",
+      "limits": "스캐너가 안전을 증명하는 것으로 취급하지 않음. 개별 스킬 본문/스크립트 전수 미검토."
+    },
+    "H-CURATOR": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "website/docs/user-guide/features/curator.md"
+      ],
+      "review_scope": "실행 조건, deterministic stale/archive와 opt-in LLM consolidation, pin·cron 참조·미사용 유예·dry-run.",
+      "limits": "자동 정리와 모델 통합을 구분. 실제 실행 비용/효과 미측정."
+    },
+    "H-SKILL-CATALOG": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "website/docs/reference/skills-catalog.md",
+        "website/docs/reference/optional-skills-catalog.md"
+      ],
+      "review_scope": "목록의 분류·기술 방식과 분야 탐색 입구.",
+      "limits": "개별 스킬의 가용성·의존성·라이선스·실행은 설치 후보 선택 후 확인할 것."
+    },
+    "H-DELEGATE": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "website/docs/user-guide/features/delegation.md"
+      ],
+      "review_scope": "비동기 완료·handle·process 소유권·single/batch·output_schema·제한된 수정 요청, Desktop monitoring 설명과 대조.",
+      "limits": "격리된 대화와 OS 격리/독립성은 다름. 전체 lifecycle race 감사 아님."
+    },
+    "H-TEAM": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "website/docs/user-guide/features/mixture-of-agents.md"
+      ],
+      "review_scope": "preset·aggregator/참조 역할·one-shot·실행 주기·비용 안내.",
+      "limits": "문서 확인. 모든 payload builder 분기와 실제 provider 과금 미확인."
+    },
+    "H-GOAL": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "website/docs/user-guide/features/goals.md",
+        "website/docs/user-guide/features/loops.md",
+        "website/docs/user-guide/features/heartbeat.md"
+      ],
+      "review_scope": "도입·사용처·서로 다른 수명·명령/상한·중단 조건.",
+      "limits": "judge의 판단·자동 재개·반복 사용량은 미실험. 목표 완료 판정을 사실 검증으로 부르지 않음."
+    },
+    "H-KANBAN": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "website/docs/user-guide/features/kanban.md",
+        "website/docs/user-guide/features/kanban-worker-lanes.md",
+        "website/docs/user-guide/features/kanban-multi-gateway.md",
+        "website/docs/user-guide/features/kanban-tutorial.md"
+      ],
+      "review_scope": "board/worker 구분·checkpoint·PR 완료 계약·review handoff·소유권·multi-gateway 도입 및 tutorial 사용 흐름.",
+      "limits": "협력적 소유권 검사는 OS confinement이 아님. 전체 dispatcher·PR acceptance 코드는 감사하지 않음."
+    },
+    "H-CRON": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "website/docs/user-guide/features/cron.md"
+      ],
+      "review_scope": "할 수 있는 일·모델 pin·preflight·script-only·외부 event·전달·재귀 예약 제한.",
+      "limits": "실제 scheduler·시간대·재시작·인증·가격 미실험."
+    },
+    "H-HOOK": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "website/docs/user-guide/features/hooks.md",
+        "website/docs/developer-guide/observer-hooks.md"
+      ],
+      "review_scope": "gateway/plugin/shell/outbound hook 종류와 observer 표면 도입.",
+      "limits": "모든 훅이 passive가 아님. 개별 callback과 외부 전송은 실행하지 않음."
+    },
+    "H-DELIVERY": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "website/docs/developer-guide/completion-backlog-delivery.md",
+        "website/docs/user-guide/features/delegation.md"
+      ],
+      "review_scope": "완료 묶음·소유권·이미 소비한 결과·busy 재대기, queue admission과 실제 전달의 차이.",
+      "limits": "문서의 at-least-once 설명을 exactly-once로 확대하지 않음."
+    },
+    "H-ARTIFACT": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "website/docs/user-guide/features/deliverable-mode.md"
+      ],
+      "review_scope": "파일 attachment·지원 형식·응답에서 파일 찾기·Kanban 완료 첨부.",
+      "limits": "임의 경로 자동 업로드를 그대로 제안하지 않음. 우리 앱에서는 허용한 산출물 목록으로 연결."
+    },
+    "H-MCP": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "website/docs/user-guide/features/mcp.md"
+      ],
+      "review_scope": "stdio/HTTP·도구 발견·도구 필터·resources/prompts 개요.",
+      "limits": "연결·인증·도구 실행 미수행. 기존 blind 참여자에 자동 연결하지 않음."
+    },
+    "H-TOOLSEARCH": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "website/docs/user-guide/features/tool-search.md"
+      ],
+      "review_scope": "tool_search/describe/call·deferred schema·core/외부 도구 구분·묶음 호출·검색 실패 안내.",
+      "limits": "절감량과 검색 재현율 미측정. 도구 이름 발견이 호출 권한이 아님."
+    },
+    "H-PLUGIN": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "website/docs/user-guide/features/plugins.md",
+        "website/docs/user-guide/features/plugin-catalog.md",
+        "website/docs/user-guide/features/built-in-plugins.md",
+        "website/docs/user-guide/features/extending-the-dashboard.md"
+      ],
+      "review_scope": "manifest·discovery·catalog review·내장 plugin·theme/UI slot/backend router 개요.",
+      "limits": "plugin 코드를 실행하지 않음. 권한·제3자 유지비는 개별 검토 필요."
+    },
+    "H-NATIVE": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "website/docs/user-guide/features/codex-app-server-runtime.md"
+      ],
+      "review_scope": "opt-in native runtime·도구 소유·workflow·설정/MCP migration·auxiliary 호출 비용 설명.",
+      "limits": "현재 계정 권리·공식 지원과 설치 CLI 동작 미관측. 해당 직접 인증 경로를 우리 실행 허가로 취급하지 않음."
+    },
+    "H-API": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "website/docs/user-guide/features/acp.md",
+        "website/docs/user-guide/features/api-server.md",
+        "website/docs/user-guide/features/subscription-proxy.md"
+      ],
+      "review_scope": "ACP host 표면·agent API·Runs/Sessions/Jobs 개요·raw inference proxy와의 구분.",
+      "limits": "API 호환성·동시성·인증 코드 미감사. raw proxy는 기존 공식 CLI 우선 범위 밖."
+    },
+    "H-REMOTE": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "website/docs/user-guide/multi-connection-desktop.md",
+        "website/docs/user-guide/messaging/index.md",
+        "website/docs/user-guide/profiles.md"
+      ],
+      "review_scope": "다중 gateway·profile·platform 개요 및 연결 UI 도입.",
+      "limits": "개별 messaging adapter·외부 계정·원격 실행 검증 없음."
+    },
+    "H-DOC": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "website/docs/user-guide/features/document-extraction.md"
+      ],
+      "review_scope": "지원 형식·read_file 변환·크기/페이지·scan coverage·누락 경고.",
+      "limits": "표·수식·OCR 정확성 및 lazy converter 설치 미시험."
+    },
+    "H-WEB": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "website/docs/user-guide/features/web-search.md",
+        "website/docs/user-guide/features/x-search.md"
+      ],
+      "review_scope": "search/extract 분리·backend 표·캐시/긴 페이지 처리 안내·X 전용 read/write 표면 차이.",
+      "limits": "무료 구간·가격·계정 권리는 보장하지 않음. 웹 도구의 주장을 원문 사실로 승격하지 않음."
+    },
+    "H-BROWSER": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "website/docs/user-guide/features/browser.md",
+        "website/docs/user-guide/features/computer-use.md",
+        "website/docs/user-guide/features/bot-screen.md"
+      ],
+      "review_scope": "backend 종류·snapshot/조작·computer-use 도입·bot screen 및 사람이 제어받는 흐름.",
+      "limits": "실제 브라우저·OS·로그인·권한 미시험. 소비자 AI 앱 화면 자동화는 현재 제품 범위 밖."
+    },
+    "H-MEDIA": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "website/docs/user-guide/features/vision.md",
+        "website/docs/user-guide/features/image-generation.md"
+      ],
+      "review_scope": "clipboard vision·첨부·모델별 입력 경로와 이미지 생성 backend 도입.",
+      "limits": "품질·모델 제공 여부·가격 미측정."
+    },
+    "H-VOICE": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "website/docs/user-guide/features/voice-mode.md",
+        "website/docs/user-guide/features/tts.md",
+        "website/docs/user-guide/features/wake-word.md"
+      ],
+      "review_scope": "STT/TTS·dictation·local/remote 선택·wake word 동작.",
+      "limits": "한국어 음성·마이크·지연·개별 서비스 비용을 확인하지 않음."
+    },
+    "H-CODE": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "website/docs/user-guide/features/code-execution.md",
+        "website/docs/user-guide/features/lsp.md"
+      ],
+      "review_scope": "programmatic tool RPC·child execution·kernel·resource limit·LSP 도입/진단 표면.",
+      "limits": "실행 권한·sandbox·language server 설치/실행 미검증."
+    },
+    "H-OPS": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "website/docs/user-guide/features/web-dashboard.md",
+        "website/docs/user-guide/checkpoints-and-rollback.md",
+        "website/docs/reference/cli-commands.md"
+      ],
+      "review_scope": "dashboard 페이지와 API 항목·analytics/logs/resource pressure, checkpoint/rollback 도입·명령·shadow store, doctor 등 CLI 표.",
+      "limits": "전체 관리 API·복구·보안 감사가 아님. 미리보기와 실제 외부 동작을 분리."
+    },
+    "H-ONBOARD": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "website/docs/developer-guide/onboarding-recommendations.md",
+        "website/docs/getting-started/quickstart.md"
+      ],
+      "review_scope": "추천 목적/관측한 capability/연결 없는 대안의 원칙과 초기 설정 도입.",
+      "limits": "모든 onboarding 모델 프롬프트·설치 절차를 실행하지 않음."
+    },
+    "H-IMPORT": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "website/docs/user-guide/import-from-other-agents.md"
+      ],
+      "review_scope": "preview-first·dry-run 및 instructions/allowlist/MCP/skills/memory 이관 목록.",
+      "limits": "실제 사용자 파일·인증을 읽거나 복사하지 않음."
+    },
+    "H-STYLE": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "website/docs/user-guide/features/personality.md",
+        "website/docs/user-guide/features/skins.md",
+        "website/docs/user-guide/features/language-packs.md",
+        "website/docs/user-guide/features/pets.md"
+      ],
+      "review_scope": "persona/visual style 분리·locale overlay·상태 sprite·기본 opt-in 설명.",
+      "limits": "asset 라이선스·번역 완성도·화면 접근성 미검증."
+    },
+    "H-TOOLS": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "website/docs/user-guide/features/tools.md"
+      ],
+      "review_scope": "toolsets·terminal backend 분류와 process 관리 개요.",
+      "limits": "backend별 격리·비용·운영 지원을 우리 앱에 그대로 보장하지 않음."
+    },
+    "H-PROVIDER": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "website/docs/user-guide/features/provider-routing.md",
+        "website/docs/user-guide/features/fallback-providers.md",
+        "website/docs/user-guide/features/credential-pools.md",
+        "website/docs/user-guide/features/tool-gateway.md"
+      ],
+      "review_scope": "routing/fallback/pool 차이, cache 비용, 별도 Portal tool gateway.",
+      "limits": "API 자동 전환·인증 우회는 권고하지 않음. 계정별 사용 권리와 가격은 별도 확인."
+    },
+    "H-SECRET": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "website/docs/user-guide/features/credential-vault.md",
+        "website/docs/user-guide/secrets/index.md"
+      ],
+      "review_scope": "모델 밖 비밀 처리라는 UX·외부 secret provider 개요.",
+      "limits": "암호화·redaction·vault 구현을 감사하지 않았으며 우리 사용자 인증 상태도 미접근."
+    },
+    "H-DOMAIN": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "website/docs/user-guide/features/spotify.md",
+        "website/docs/user-guide/messaging/index.md",
+        "website/docs/reference/optional-skills-catalog.md"
+      ],
+      "review_scope": "음악·메신저·업무별 확장 종류와 필요한 계정 설명.",
+      "limits": "개별 플랫폼 기능 전체와 인증·외부 쓰기 미실행."
+    },
+    "H-BATCH": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "website/docs/user-guide/features/batch-processing.md"
+      ],
+      "review_scope": "dataset·batch runner·checkpoint/resume·trajectory 개요.",
+      "limits": "학습 데이터 생성량·성능·비용 재현 없음."
+    },
+    "H-COMPACT": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "website/docs/developer-guide/context-compression-and-caching.md",
+        "website/docs/developer-guide/micro-compaction.md"
+      ],
+      "review_scope": "압축 엔진/캐시·micro-compaction 동기와 호출/cache tradeoff 도입.",
+      "limits": "요약 보존율·지연·cache 절감 실측 없음. 매 턴 압축을 기본으로 권하지 않음."
+    },
+    "H-WORKTREE": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "website/docs/user-guide/git-worktrees.md",
+        "website/docs/user-guide/desktop.md"
+      ],
+      "review_scope": "작업 사본과 Desktop review/worktree UI 설명.",
+      "limits": "Git 작업 사본을 보안 sandbox로 취급하지 않음."
+    },
+    "H-SEARCH": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "tools/session_search_tool.py"
+      ],
+      "review_scope": "모듈 설명·1–140줄, _shape_message/_session_link/_title_match_result 주변(230–320줄), discovery/read/scroll 함수와 schema 선언을 검색해 대조. 검색 결과의 원문·잘림·계보와 숨김 source를 확인.",
+      "limits": "선택한 분기 정적 검토이며 DB 쿼리·권한·성능 전체 감사나 실행 시험 아님."
+    },
+    "H-CODE-CHECK": {
+      "repository": "NousResearch/hermes-agent",
+      "commit": "55bea1ddf1754dcacb87f13185df1eb1273c0a6e",
+      "paths": [
+        "tools/memory_tool.py",
+        "tools/skills_tool.py",
+        "agent/curator.py"
+      ],
+      "review_scope": "memory pending/apply entry 결속과 skills의 도구 위치를 검색. curator 210–258줄에서 pin·cron 참조 보호와 never-used 유예·archive 분기를 읽음.",
+      "limits": "함수 전체·동시성·실제 LLM consolidation을 실행하지 않음."
+    },
+    "A-SEARCH": {
+      "repository": "JinHo-von-Choi/anchormind",
+      "commit": "cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb",
+      "paths": [
+        "docs/features.md",
+        "lib/memory/read/RankFusion.js",
+        "lib/memory/read/BudgetSelector.js"
+      ],
+      "review_scope": "features ledger의 검색·범위·trace 설명, RankFusion 앞부분과 BudgetSelector의 알고리즘 설명·상수·함수 앞부분. 기존 AnchorMind 검토의 검색/예산 절을 함께 읽음.",
+      "limits": "현재 원본에서 부분 확인. 전체 DB 실행계획·recall 정확성·모든 ranking 분기 미실험."
+    },
+    "A-SCOPE": {
+      "repository": "JinHo-von-Choi/anchormind",
+      "commit": "cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb",
+      "paths": [
+        "docs/features.md",
+        "docs/architecture.md"
+      ],
+      "review_scope": "features ledger의 WorkspaceReadAuthz/SearchScope·scope 관련 행과 architecture 개요.",
+      "limits": "문서 확인. 실제 인증·전체 범위 집행 미감사."
+    },
+    "A-WRITE": {
+      "repository": "JinHo-von-Choi/anchormind",
+      "commit": "cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb",
+      "paths": [
+        "docs/features.md",
+        "lib/tool-registry.js"
+      ],
+      "review_scope": "쓰기/중복/anchor 관련 ledger 및 tool registry 기능 표면.",
+      "limits": "문서·목록 확인. 모든 write path 실행 검증 없음."
+    },
+    "A-HISTORY": {
+      "repository": "JinHo-von-Choi/anchormind",
+      "commit": "cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb",
+      "paths": [
+        "docs/features.md",
+        "docs/api-reference.md"
+      ],
+      "review_scope": "history/case/link/conflict 도구 설명과 ledger. 기존 10월 4일 검토의 사건 이력·모순 절 재독.",
+      "limits": "현재 모든 history/NLI 코드를 재검토한 것은 아님."
+    },
+    "A-LIFECYCLE": {
+      "repository": "JinHo-von-Choi/anchormind",
+      "commit": "cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb",
+      "paths": [
+        "docs/features.md"
+      ],
+      "review_scope": "AutoReflect·MemoryConsolidator·feedback·decay·graph 및 실험 플래그 표.",
+      "limits": "정책 기본값은 판 변경 때 재확인. “성장”·정확성 개선은 제작자 주장이지 우리 측정이 아님."
+    },
+    "A-EVAL": {
+      "repository": "JinHo-von-Choi/anchormind",
+      "commit": "cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb",
+      "paths": [
+        "docs/benchmark.md",
+        "tests/fixtures/recall-eval-v2/README.md"
+      ],
+      "review_scope": "평가 입구와 기존 조사에 연결된 recall fixture 설명.",
+      "limits": "벤치 재실행·품질 수치 전이 없음."
+    },
+    "A-OPS": {
+      "repository": "JinHo-von-Choi/anchormind",
+      "commit": "cdcdfaab9d1b9a64fa5f6af23354ac730c24c9fb",
+      "paths": [
+        "docs/features.md",
+        "docs/admin-console-guide.md"
+      ],
+      "review_scope": "export/import·outbox ledger 및 관리 화면 개요.",
+      "limits": "관리 권한·운영 DB·backup/restore 전수 미검증."
+    },
+    "P-REVIEW": {
+      "repository": "kimbyungsu/codex-peek",
+      "commit": "1baf5ccd360b50da57911401aeca1388e1b0c05e",
+      "paths": [
+        "README.md",
+        "docs/VERIFY-GOVERNANCE.md"
+      ],
+      "review_scope": "기능·검토 모드와 검토 경계 문서 도입/경계·판정 우선순위. 기존 검토의 처분/증명 한계와 함께 읽음.",
+      "limits": "이번에는 README/선택 설계의 문서 검토이며 새 엔진·훅·proof 전체 코드 감사/설치/모델 실행 없음. 설계 문서의 모든 항목이 현행 구현이라는 뜻이 아님."
+    },
+    "P-UI": {
+      "repository": "kimbyungsu/codex-peek",
+      "commit": "1baf5ccd360b50da57911401aeca1388e1b0c05e",
+      "paths": [
+        "README.md"
+      ],
+      "review_scope": "live strip·무결성 경고·설정/실제 모델·추론과 시각화 기능 절.",
+      "limits": "이번에는 README/선택 설계의 문서 검토이며 새 엔진·훅·proof 전체 코드 감사/설치/모델 실행 없음. 설계 문서의 모든 항목이 현행 구현이라는 뜻이 아님."
+    },
+    "P-SESSION": {
+      "repository": "kimbyungsu/codex-peek",
+      "commit": "1baf5ccd360b50da57911401aeca1388e1b0c05e",
+      "paths": [
+        "README.md"
+      ],
+      "review_scope": "세션 고정·ask-start/wait·작업 deadline·CLI/doctor·읽기 전용 원칙.",
+      "limits": "이번에는 README/선택 설계의 문서 검토이며 새 엔진·훅·proof 전체 코드 감사/설치/모델 실행 없음. 설계 문서의 모든 항목이 현행 구현이라는 뜻이 아님."
+    },
+    "P-MEMORY": {
+      "repository": "kimbyungsu/codex-peek",
+      "commit": "1baf5ccd360b50da57911401aeca1388e1b0c05e",
+      "paths": [
+        "docs/MEMORY-AUTHORITY-DESIGN.md",
+        "docs/MAP-RETRIEVAL-DESIGN.md",
+        "docs/ROADMAP.md"
+      ],
+      "review_scope": "기존 9월 26일 ANALYSIS/ADOPTION/EVIDENCE에 기록된 MAP·기억 권위·승인/주입 구분을 재독. 현재 문서는 탐색 위치로 연결.",
+      "limits": "이번에는 README/선택 설계의 문서 검토이며 새 엔진·훅·proof 전체 코드 감사/설치/모델 실행 없음. 설계 문서의 모든 항목이 현행 구현이라는 뜻이 아님."
+    },
+    "W-RECORD": {
+      "repository": "jasonethicseo/worktrail",
+      "commit": "3fb48f980133fd2fb458362648c7bb04cfdbea2b",
+      "paths": [
+        "README.md",
+        "casebook/core/worktrail.py",
+        "LICENSE"
+      ],
+      "review_scope": "README 전체·코어 1–130줄의 모델 없는 기록 책임·LICENSE, 기존 평가의 현재/근거/다음/배제 구조를 재독.",
+      "limits": "root 라이선스 조건을 기록. UI·서버·인증 실행과 전체 코어 감사를 하지 않음."
+    },
+    "X-BEADS": {
+      "repository": "steveyegge/beads",
+      "commit": "2f1e8be3ca1fe990727858ccd8e4a78461b39c7c",
+      "paths": [
+        "README.md"
+      ],
+      "review_scope": "README의 개요·Dolt·기능·ready/claim·의존성·기억·초기 설치 설명.",
+      "limits": "실제 Dolt·동시 claim·hook 실행 없음. 과거의 “git에 파일만 저장하는 도구” 설명으로 현재 운영 비용을 추정하지 않음."
+    },
+    "X-BACKLOG": {
+      "repository": "MrLesk/Backlog.md",
+      "commit": "69e7b15362337d6712783d9a685f6e4bb693fa9d",
+      "paths": [
+        "README.md"
+      ],
+      "review_scope": "README의 명세/계획/코드 검토, 기능·milestone/dependency·local UI·검색.",
+      "limits": "CLI·MCP·실제 board 조작 미시험."
+    },
+    "X-GASTOWN": {
+      "repository": "gastownhall/gastown",
+      "commit": "649b832b7672bc7a2dbef26f5983aba6198b819b",
+      "paths": [
+        "README.md"
+      ],
+      "review_scope": "Overview·역할/영속 상태·convoy·molecule·monitoring·refinery·escalation·scheduler 설명.",
+      "limits": "규모/성과 수치는 제작자 설명. 실제 다중 agent 실행·비용 미측정."
+    }
+  },
+  "web_documents": [
+    {
+      "name": "amp",
+      "url": "https://ampcode.com/news/neo",
+      "final_url": "https://ampcode.com/news/neo",
+      "sha256": "15af1a5f7ccfe1681e80f0e5ce5b985860baa22910ac661120fc28b106d620ae",
+      "chars": 9946,
+      "status": "fetched"
+    },
+    {
+      "name": "conductor",
+      "url": "https://www.conductor.build/docs/",
+      "final_url": "https://www.conductor.build/docs",
+      "sha256": "96df695ce530bdfb15a8bbcb1ea4e9a42a2e2146a013decdaf3a036c9ae2ef4a",
+      "chars": 1950,
+      "status": "fetched"
+    },
+    {
+      "name": "kiro",
+      "url": "https://kiro.dev/docs/specs/",
+      "final_url": "https://kiro.dev/docs/specs/",
+      "sha256": "a480102988128e78a06710123cbd8b837d2a97f01974d39c0d653f622d31a7bd",
+      "chars": 6891,
+      "status": "fetched"
+    },
+    {
+      "name": "cline",
+      "url": "https://docs.cline.bot/prompting/cline-memory-bank",
+      "final_url": "https://docs.cline.bot/best-practices/memory-bank",
+      "sha256": "1e70e7d768371de99d0dd6406bd90ce0ddec3c635018577e4a76d0887148fb71",
+      "chars": 7396,
+      "status": "fetched"
+    },
+    {
+      "name": "cursor",
+      "url": "https://cursor.com/changelog/2-0",
+      "final_url": "https://cursor.com/changelog/2-0",
+      "sha256": "b5444fb76aab9f53e49cd8a77ab4a465b439f0295d8a862cbafa274fb71e40b9",
+      "chars": 10879,
+      "status": "fetched"
+    },
+    {
+      "name": "devin",
+      "url": "https://cognition.com/blog/devin-can-now-manage-devins",
+      "final_url": "https://cognition.com/blog/devin-can-now-manage-devins",
+      "sha256": "7586a8b1ba514904d115832490279f62a5df996c9697e53a46274e4a94db398b",
+      "chars": 4211,
+      "status": "fetched"
+    },
+    {
+      "name": "copilot",
+      "url": "https://docs.github.com/en/copilot/concepts/agents/cloud-agent/about-cloud-agent",
+      "final_url": "https://docs.github.com/en/copilot/concepts/agents/cloud-agent/about-cloud-agent",
+      "sha256": "0dd7d7128da08f556b1036594a620fcd738b169b56519d379be0e33640b0fee0",
+      "chars": 26317,
+      "status": "fetched"
+    },
+    {
+      "name": "jules",
+      "url": "https://jules.google/docs/",
+      "final_url": "https://jules.google/docs/",
+      "status": "fetched",
+      "sha256": "3581655f604e1369d3f22d273e9fa51a8ceb218f0959030dfa865304de724c1d",
+      "chars": 3325
+    }
+  ],
+  "hermes_feature_doc_mapping": {
+    "acp": "H42",
+    "api-server": "H43",
+    "batch-processing": "H61",
+    "bot-screen": "H51",
+    "browser": "H48",
+    "built-in-plugins": "H40, H62",
+    "code-execution": "H52",
+    "codex-app-server-runtime": "H41",
+    "computer-use": "H51",
+    "context-files": "H12, H19",
+    "context-references": "H03",
+    "credential-pools": "H58",
+    "credential-vault": "H59",
+    "cron": "H33, H34, H35",
+    "curator": "H22",
+    "delegation": "H04, H25",
+    "deliverable-mode": "H07, H37",
+    "document-extraction": "H45, H46",
+    "extending-the-dashboard": "H08, H40",
+    "fallback-providers": "H58",
+    "goals": "H24",
+    "heartbeat": "H36",
+    "honcho": "H12",
+    "hooks": "H35, H62",
+    "image-generation": "H49",
+    "kanban-multi-gateway": "H26, H37, H44",
+    "kanban-tutorial": "H26, H27",
+    "kanban-worker-lanes": "H25, H27, H28",
+    "kanban": "H26, H27, H28, H29, H30",
+    "language-packs": "H11",
+    "loops": "H36",
+    "lsp": "H53",
+    "mcp": "H38",
+    "memory-providers": "H12, H13",
+    "memory": "H12, H13, H14",
+    "mixture-of-agents": "H02, H32",
+    "overview": "전체 탐색 입구",
+    "personality": "H11, H12",
+    "pets": "H11",
+    "plugin-catalog": "H40",
+    "plugins": "H40",
+    "provider-routing": "H58",
+    "skills": "H19, H20, H21, H23",
+    "skins": "H11",
+    "spotify": "H60",
+    "subscription-proxy": "H43, H58",
+    "tool-gateway": "H38, H58",
+    "tool-search": "H39",
+    "tools": "H38, H57",
+    "tts": "H50",
+    "vision": "H49",
+    "voice-mode": "H50",
+    "wake-word": "H50",
+    "web-dashboard": "H01, H08, H54, H55",
+    "web-search": "H47",
+    "x-search": "H47"
+  },
+  "limits": "Static documentation/selected code review only; no upstream install, user PC access, or additional provider model calls."
+}

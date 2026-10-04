@@ -2,7 +2,17 @@
 
 그동안 조사한 외부 프로젝트에서 **무엇을 읽었고, 우리 어디에 반영했는지** 찾는 입구다. 조사 문서의 추천은 구현 완료가 아니다. 아래의 패턴 적용은 우리 계약에 맞춰 작성한 코드이며, 원본 코드를 복사한 경우는 별도로 표시한다. 원문 URL·고정 commit·읽은 범위·제한은 각 조사 기록의 근거 문서가 기준이다.
 
+**“나중에 이런 기능도 써볼까”를 찾을 때는 [외부 기능 후보 목록](research/feature-catalog-2026-10-04/README.md)**을 연다. Hermes의 화면·검색·스킬·자동화·연동·자료 편의와 다른 프로젝트의 기능을 폭넓게 모았다. 사용자 불편으로 찾는 표, 적용 접점, 추가 호출·운영 조건, 작은 시험, 고정 출처가 있다. 아래 표는 현재 반영 위치이고, 후보 목록은 미구현 선택지까지 포함한다.
+
 ## 외부 프로젝트에서 우리 구현으로
+
+실제 책임 분리와 공개 검색·기억 선택 이유·공통 호출 조회는 [현재 실행 아키텍처](../app/ARCHITECTURE.md)와 [기능·가치 지도](FEATURES.md)에 있다. 외부 엔진을 도입한 것이 아니라 참고 원리를 기존 계약 위에 독자 구현했다.
+
+이 조사들을 우리 구조에 함께 배치한 곳은 [통합 개편 준비서](architecture/redesign-2026-10-04/README.md)다. [후보 배치](architecture/redesign-2026-10-04/CAPABILITY-MAP.md)에서 출처를 따라가고, [우선순위](architecture/redesign-2026-10-04/PRIORITIES.md)에서 효용·선행 조건을 비교한다. 전체 문서의 역할은 [문서 지도](DOCUMENT-MAP.md)에서 구별한다.
+
+기능 이름을 넘어 내부 책임과 적용 방법을 비교하려면 [부품별 후속 분석](research/component-comparison-2026-10-04/README.md)을 본다. AnchorMind의 저장·검색·수명·운영 경로와 Hermes·codex-peek·WorkTrail의 대응 기능을 비교하고, 우리 코드 접점·데이터 계약·작은 시험을 연결했다. 전체 파일 분류와 실제로 읽거나 실행한 범위를 구별한다.
+
+실행 연결·작업 배정·복구·편의 흐름은 [tmux와 운영 도구 심층 비교](research/operations-comparison-2026-10-04/README.md)에 있다. Beads·Backlog.md·Gas Town·Cline·Lite-Harness·Symphony의 선택 코드와 비공개 제품의 공식 문서를 구분하고, [기능 비교](research/operations-comparison-2026-10-04/COMPARISON.md)와 [적용 설계](research/operations-comparison-2026-10-04/ADOPTION.md)를 연결했다.
 
 | 출처 | 참고한 기능 | 현재 적용 상태와 위치 | 상세 조사와 원본 코드 위치 |
 |---|---|---|---|

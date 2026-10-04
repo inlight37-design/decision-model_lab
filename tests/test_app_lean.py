@@ -116,7 +116,7 @@ class ProjectionTests(unittest.TestCase):
 class DependencyBoundaryTests(unittest.TestCase):
     def test_runtime_stays_stdlib_only_and_core_does_not_import_app(self):
         root = Path(__file__).resolve().parents[1]
-        for path in [*root.glob("app/*.py"), *root.glob("core/*.py")]:
+        for path in [*root.glob("app/**/*.py"), *root.glob("core/*.py")]:
             for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
                 if isinstance(node, ast.Import):
                     names = [alias.name for alias in node.names]

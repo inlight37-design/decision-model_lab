@@ -1,0 +1,1347 @@
+path	read_scope	sha256	bytes
+.claude/agents/project-manager-backlog.md	inventory-only	dea52e4bfbc1f81032b8369710ead423ed7eecba4bedd4639f18cd289b39ef06	14081
+.claude/skills	inventory-only	not-regular-file	0
+.codex/.gitignore	inventory-only	cf237c7aff44efbe6e502e645c3e06da03a69d7bdeb43392108ef3348143417e	10
+.gitattributes	inventory-only	1a1dbe176bc233b499d35a57db7513f2941c99ab9759f177830c9149be99005b	66
+.github/5-minute-tour-256.png	inventory-only	b116ab0ee7711df5368618efc93fb557c5587c96fc71b3e8f8621c4f702ec9d7	22031
+.github/ISSUE_TEMPLATE/bug_report.md	inventory-only	bfa7b174457b3145dfe2d8e9a29510b51e732ca5b3acf3ce82b722f57fc1249b	497
+.github/ISSUE_TEMPLATE/feature_request.md	inventory-only	a58a2461b94367b698729db94dd47642662a15fe45008d14a351c30cae8471ec	429
+.github/PULL_REQUEST_TEMPLATE.md	inventory-only	004703be1dad40c3e9a8ca11a29b86adea236ca89a58192106eb3e4c36b277c4	1019
+.github/backlog-logo.png	inventory-only	bdced62c32b5cc490e1a7cf1aedc19475d6686de3be86ed94d5afdc24a45f6ff	167239
+.github/backlog-v1.40.gif	inventory-only	cb470f9895543c0be48fc6b1df9d2003801664ed03043ea6e39d1a6fb0186e0a	2632070
+.github/backlog.jpg	inventory-only	a94defa32cd590e0b4c1b02b8fe287715ee75979735569b39b95a2079becf4bf	210181
+.github/backlog.mp4	inventory-only	d0dddeafddcaa12145d9fe97e05106c29132637d148860a86bc963dd4f2bf04f	753506
+.github/cli-reference-256.png	inventory-only	28bce7db7d200e9bdbf541c2bd2c8282f0cf20f8a8e5a4b97300480150b545eb	17829
+.github/configuration-256.png	inventory-only	bc8c2c531855baff88c2d7b81ea9f3a1cf9ae2b3907c9ebff0988aaf99db587b	23875
+.github/copilot-instructions.md	inventory-only	da9d8a091136f696a3c7b16097a1a10907ea41012fa6abc4875733b9e20cae8a	1790
+.github/favicon.png	inventory-only	17cdb4193899d79dd42eee5440df0c454ed2fa00f42c67044f2cb678d08f60b9	1405793
+.github/sharing-export-256.png	inventory-only	2d5aa623ca58e4ad828b67ca32f54788dcd4b5e6a09678aa2297ec8c690dc0b4	15912
+.github/video-presentation.md	inventory-only	558cb8c3955527a0d260d0a1ae9c426724d44a649ce3a1d09aebe953c7e564de	83
+.github/web-interface-256.png	inventory-only	f708e64f30b757f9c8e060146d184e705f456c84e86a831e0498fa64ea887847	25232
+.github/web.jpeg	inventory-only	4409fca71725394655583d9a17e4bdaaffa9bedcae604066b7dffc00ea5c244e	119265
+.github/workflows/ci.yml	inventory-only	78eb0d9245c6845e9dc86a4c17897d87f3991d1e1d94d9e3a8d080fdba5fae7d	6736
+.github/workflows/release.yml	inventory-only	f29b3b913aff6b15b5c5ae9e0df298d274c1aa5e9ff6f8257f85bef7bdfcd1da	19259
+.gitignore	inventory-only	f70496fe29895d75e23c39926899cf45154edc4808de0ad95b8e5d7e09c6a33d	921
+.husky/pre-commit	inventory-only	bd4b8e930d3f71a55796fbe73fc76732358cf0edd6d065217411711080d6c659	119
+.npmignore	inventory-only	2311de22b63f075e3d0e71bd29c4a1aab5fe4f44ea768c350d737d404e9749e9	399
+ADVANCED-CONFIG.md	inventory-only	45acebd4f55b96b2e2b7a8fdf638b3bfc832adc06b49eb3172ddc24de5aac957	8493
+AGENTS.md	inventory-only	e85e312384c4388c10d49b152235ce62b0beb1ab6130144e36e45ab0b8ecd94b	7658
+CLAUDE.md	inventory-only	e85e312384c4388c10d49b152235ce62b0beb1ab6130144e36e45ab0b8ecd94b	7658
+CLI-INSTRUCTIONS.md	inventory-only	5c9391408ef942d035d689e3890c658dc060e2c5d9007c77e7168ec294631acc	30772
+CONTRIBUTING.md	inventory-only	e8a0bcc75d364976faf1ab092ec61b812573a8d4f2c0fc7c0b72caba9e086ca7	898
+DEVELOPMENT.md	inventory-only	8da35a4376b76233cc693ce0d57205a49f16bb3ac6c517de486566bee359d049	7953
+LICENSE	full	2039a3f558949ff32ce20b9a5a1dd36d01e5a7716a35dc0d0b7400bf68a1136e	1067
+MANIFESTO.md	inventory-only	7e6c40d5eb3be6a2647351e4248c799f583fb2b9c8950795b2054d2a2e7c4bef	8000
+README.md	inventory-only	aa684581008f1da1a760190f095cf3cd2f975d11e65910116b11896566c17873	18013
+backlog/archive/drafts/draft-41 - temporary-test-task.md	inventory-only	386b1701108b6fc5ebcbc6c15250a75b45a5867b4393f7edd2f538c944c070ed	164
+backlog/archive/drafts/readme.md	inventory-only	fd71c9f3bebd19481c22ab05592d2f6c8d14e2cee15aaf8d7698cc34f18ac0fe	93
+backlog/archive/milestones/m-0 - project-setup.md	inventory-only	7415550bee82c7b3a7f528af9a990426ef2a6b520e96e66b76ec5dd9e682255f	410
+backlog/archive/milestones/m-1 - cli.md	inventory-only	bb7e02d007a4b4eca0a5c949d9b4ad02965c604088b346afc46ec551060411c5	359
+backlog/archive/milestones/m-2 - cli-kanban.md	inventory-only	67b10a99e7a2e1855ddbb45faa9b47806ee7b3fac96277fd8f423f7f74841bed	218
+backlog/archive/milestones/m-3 - gui.md	inventory-only	5d93f63fe8fa07ce021ad55de3e6d36588903290fb9fa7bfa000431f61b56c21	159
+backlog/archive/milestones/m-4 - gui-kanban.md	inventory-only	68a58c84141a53661d42a3d3e060427fecb11cef2c216bd449429d3ae1915f48	191
+backlog/archive/milestones/m-5 - gui-advanced.md	inventory-only	82c0053f81112610a51ac5e35517789bcc1ae41bf43bc938e223e5c67fb5d272	357
+backlog/archive/readme.md	inventory-only	cc35fbfa535473129630022fcf5dc181864f23060a232f0e88188865dfb95184	793
+backlog/archive/tasks/back-100.9 - Integrate-TaskDetail-modal-with-Board-component.md	inventory-only	b2c8aa31f6fdf45b956e3c203d08a6f76100013c3b47449514fc619bd6ec9158	1785
+backlog/archive/tasks/back-102 - Consolidate-agent-guidelines-into-single-source.md	inventory-only	5aec6c47a2d8bd31df87aa3794ccc20b19a999abc64dcfc80ce38265b9051459	1369
+backlog/archive/tasks/back-102.1 - Add-copilot-instructions-file.md	inventory-only	195a829b07c267848ebd7b253b194d99691c0abe40efb96182f35a5f46688333	728
+backlog/archive/tasks/back-103 - update-guidelines-to-keep-tasks-focused-on-what-not-how.md	inventory-only	7cd93c7e5080b4865c5708c4863b57a9066b53734ee9e4f78b685e517081cc0d	974
+backlog/archive/tasks/back-113 - Test-web-UI-task.md	inventory-only	8dabdbcf4f79a841a1240aae05c07c468bb46c413fb6d131c8af0058a0c7a1de	143
+backlog/archive/tasks/back-117 - Always-return-file-path-when-running-task-view-with-plain-flag.md	inventory-only	f3b80117947ee5fefdc89091d1d288202d7d3a219f278c7ec06a83bff197ddb7	956
+backlog/archive/tasks/back-168 - Test-notes-functionality.md	inventory-only	910172ea3841d3b0ae26d63ab4a3d22755bc9af9c8b9d273f351930bc594a227	214
+backlog/archive/tasks/back-172 - Order-tasks-by-status-and-ID-in-both-web-and-CLI-lists.md	inventory-only	8df598ed4ebf25e3ab69b8bebbc0ea23de7fb53466c15bf63780a0c240e71042	1172
+backlog/archive/tasks/back-216 - Add-server-API-endpoints-for-sequences.md	inventory-only	24e9212a326467fd356403005dd889f79be1f460511338fb632e407464d447eb	2586
+backlog/archive/tasks/back-217 - Create-web-UI-for-sequences-with-drag-and-drop.md	inventory-only	ff30a4cc075d1195314d28a4d6828448f74fbcfd6157c1260c480130ebffdd3b	1512
+backlog/archive/tasks/back-217.02 - Sequences-web-UI-list-sequences.md	inventory-only	35bf19dd201d5d1f7782056f2f3decd54cb01d81a9c5c2d58f44ba0f964fcf2e	928
+backlog/archive/tasks/back-217.03 - Sequences-web-UI-move-tasks-and-update-dependencies.md	inventory-only	9973a77474913fd7ad96e9debcbcc180ddf3518568a3258e0fe32bbefdf6715c	960
+backlog/archive/tasks/back-217.04 - Sequences-web-UI-tests.md	inventory-only	1d893676a077b7f06e6ca568b339eea2e4bd2c037c73b46c750080dce16afe96	995
+backlog/archive/tasks/back-218 - Update-documentation-and-tests-for-sequences.md	inventory-only	165fc3dd564c9566fbc0c7fd5a56658cdd82951432e49a80f414fc6766727ee6	1871
+backlog/archive/tasks/back-228 - Replace-@uiw-react-md-editor-with-TOAST-UI-Editor-for-rich-text-editing.md	inventory-only	b00f202efa5f31a07ebc8de8b3284e0504953d82f9dfcad7d9bd13c6a6733e61	2624
+backlog/archive/tasks/back-273.07 - 273.07-Web-UI-status-and-priority-filters-on-All-Tasks-view.md	inventory-only	c63b74fe32edaf0e199eb3ac36610ab853b2feed927f6a01bd692bbc106ac362	1243
+backlog/archive/tasks/back-275 - Show-all-configured-status-columns-in-TUI-kanban-board.md	inventory-only	0383f40c39406c1d4288cf07a9b16699629c818b8974ab03961e7dd2b140dd34	1247
+backlog/archive/tasks/back-278 - Consolidate-task-forms-and-restore-archive-functionality.md	inventory-only	118fabf394cc301a3fd8d3eef565df0a293bb89217418ac30feae3f8800a5726	1717
+backlog/archive/tasks/back-349 - Publish-Backlog.md-as-an-Agent-Skill-with-bundled-guidance-no-MCP-resources-required-for-instructions.md	inventory-only	2513d82d8e9fd726ef65218796856d017b2314ffa99d0c899d92ebc53bfd7a2d	2661
+backlog/archive/tasks/back-37 - cli-board-view-open-tasks-in-ide.md	inventory-only	698498c642adab7b655f48ea129c146bc2ed01bd73dd158b9ae3b0729945ca91	491
+backlog/archive/tasks/back-41 - cli-migrate-terminal-ui-to-bblessed.md	inventory-only	7e516a4743b19c7a4f1482c2f28ce5dd84c8ce65d690081f88a551ca6fa8d957	511
+backlog/archive/tasks/back-411 - Prototype-a-Codex-plugin-for-Backlog-binary-and-MCP.md	inventory-only	a0825efdd86147ddabf637c2e2a2b0f9340c2abd1d47044d1aa927c67702a8e8	2019
+backlog/archive/tasks/back-569 - Make-browser-task-loading-asynchronous-and-idle-stable.md	inventory-only	9cfa17a344899304dc15e435bccccc536da2fd43c6825cfa0c9839bb1b6757d6	3423
+backlog/archive/tasks/back-60 - cli-migrate-terminal-ui-to-ink.md	inventory-only	092da9ce682671ee6250aa7e62fae78ed91efdb34cf44918289792f18b09f25b	515
+backlog/archive/tasks/back-60.1 - add-ink-and-react-dependencies.md	inventory-only	c52a1bb0600d0a333a95a395329c6d61be668b66f97c8719a01e52808e3dc2cd	423
+backlog/archive/tasks/back-60.2 - replace-scrollable-viewer-with-ink.md	inventory-only	256e6f06800797a2c7ef8fa8111d1cc5e2b6b46a0aae090e6e371b37bac64e05	452
+backlog/archive/tasks/back-60.3 - implement-ink-board-view.md	inventory-only	7f077c08157ba948e34bcfeaabbd8781d5a0114e6badd85439afdc27aea26547	446
+backlog/archive/tasks/back-60.4 - rewrite-task-viewer-with-ink.md	inventory-only	54c54c9c70baa3799c8586ed5c3105a07275e3160f8607ea3978b5177770b9b4	438
+backlog/archive/tasks/back-60.5 - convert-generic-list-component-to-ink.md	inventory-only	5bfd56dc0001c7c90296992e5cd843eb6e3c68296781af5f2211afa6bb73fdd8	447
+backlog/archive/tasks/back-60.6 - use-ink-spinner-for-loading.md	inventory-only	1d349958ac83de73627bccfb179c51459aba05ae27c515fc19f846ed44336676	421
+backlog/archive/tasks/back-60.7 - remove-blessed-dependency.md	inventory-only	a2180e88ca2ed0dc08eeb4f82a243d90643823c3aecdfe923098daba3e074e40	406
+backlog/archive/tasks/back-60.8 - document-ink-usage.md	inventory-only	637be770da32ab23751246fb1f21533e4557feea88b00b360e036ee674ed9602	408
+backlog/archive/tasks/back-67.1 - test-subtask-with-p-option.md	inventory-only	653c8627f0bed5a6d6fa54037f6706778863ed38355a88ed1b91166b6aaae598	179
+backlog/archive/tasks/back-76 - migrate-from-blessed-to-neo-neo-blessed-for-esm-support-and-tree-shaking.md	inventory-only	d1d83f7ead0da5f54b2c0f5e87d997c5598111ca7a4cf71ee3d71e080552ce83	4029
+backlog/archive/tasks/back-76.1 - assess-neo-neo-blessed-api-compatibility-and-differences.md	inventory-only	398a20f9793e08ceed7b0d2590093c7163d6efa69dcafff96b4c6e8df782bc89	3914
+backlog/archive/tasks/back-76.2 - update-package.json-and-install-neo-neo-blessed.md	inventory-only	51c8ccb43d7156f58611b1ce303892238a7c05cbca6a6b03892c4c8009d51b0d	1434
+backlog/archive/tasks/back-76.3 - migrate-ui-components-to-use-neo-neo-blessed.md	inventory-only	3c64601508794ded73a17af03bed3d14b701366b2d34c163d5cbb2af091813e4	1759
+backlog/archive/tasks/back-76.4 - update-build-system-and-remove-cjs-workarounds.md	inventory-only	5f9d2ff31583e43ea7dde71c3913761739538f47c8e318fe0af9617b15f3186a	1562
+backlog/archive/tasks/back-76.5 - test-and-verify-all-tui-functionality.md	inventory-only	b1e9fcc75a3049cb361bf627f2f7dde84ad4a1159891385453bdebf9c6c417bf	1630
+backlog/archive/tasks/back-76.6 - update-ci-cd-workflows-and-binary-packaging.md	inventory-only	d9cc112fd870e06d61391dd154fbf56d9b0385e13695b1874e28e96f18adb29a	1578
+backlog/archive/tasks/back-81 - test-mixed-case-filename.md	inventory-only	b39a3dad18fb422c1dede2c5527f0d7c506c517d7971a62d520d52168c2dd8e8	150
+backlog/archive/tasks/back-82 - UPDATED-Title-With-CAPS.md	inventory-only	1de1a464df0212000b1caef5ebaedfc0e8821c67e8e29f9b15cc48aed1a85bad	176
+backlog/archive/tasks/back-88 - Test-AC-Feature.md	inventory-only	efa862f7ab11a9a5af60586c6c035574f68f760e6be7b0b23f0f26ccf7c3cc85	232
+backlog/archive/tasks/back-89 - Test-AC-Feature-2.md	inventory-only	39c4e83f574496eb8c6701f38ad84f5c5b83f5a2aba68546cd8e10d3d6310a03	272
+backlog/archive/tasks/back-90 - Test-Full-Flag.md	inventory-only	bca39e278481ebdf33076c244d9be7ec16348f22ed643a367c816a3653575fb9	221
+backlog/archive/tasks/readme.md	inventory-only	3adeef99f2080fae4b86a81e2f82f42662239b5c33312752d7d1dbe1a1e4c5e4	92
+backlog/assets/images/web.jpeg	inventory-only	4409fca71725394655583d9a17e4bdaaffa9bedcae604066b7dffc00ea5c244e	119265
+backlog/completed/back-1 - cli-setup-core-project.md	inventory-only	bec856321f0856fa5096dea0813288302c02a8b5ff846f469510c8627ea414da	557
+backlog/completed/back-100 - Add-embedded-web-server-to-Backlog-CLI.md	inventory-only	dbf3fc7ab53f26f79d39438ad50d8a0d565c195315d96d4557c549e7e215c2d2	2490
+backlog/completed/back-100.1 - Setup-React-project-structure-with-shadcn-ui.md	inventory-only	53375abf5f8cddc9be44069a57d3ff51b950b1e138e1f0968a34b3e4f47494f8	4258
+backlog/completed/back-100.2 - Create-HTTP-server-module.md	inventory-only	15725754ddaea269c4afc7b0b027e9ee262ab0ff0159b4eac187ac966fb864f1	2756
+backlog/completed/back-100.3 - Implement-API-endpoints.md	inventory-only	3c81737495b6d9f4ebe4e7ed76f19d758fa6dd5419e2d4141d4a32fec5c473b8	3646
+backlog/completed/back-100.4 - Build-Kanban-board-component.md	inventory-only	0582c226a71485cd4656ff02c80e389ac9d6a0e43ac7b13af4f6729dfad82886	2551
+backlog/completed/back-100.5 - Create-task-management-components.md	inventory-only	8fd5a3f722ea173deb439a4365900a93350ed8f1fc57c8806301b4e881e2354d	4537
+backlog/completed/back-100.6 - Add-CLI-serve-command.md	inventory-only	6947e5b2fbe2ee3c18228d0ba23f22d3639bd07723a5f7fa63bac9384057483b	3026
+backlog/completed/back-100.7 - Bundle-web-assets-into-executable.md	inventory-only	4d49946ec172200d0c66d9646e9d6a07e0b61a6e9a1f0ff060a8468ef6ee4ab7	3723
+backlog/completed/back-100.8 - Add-documentation-and-examples.md	inventory-only	863d2a961ff24bd0175778d0d9196414fde1e17368337d690a3f3246eb9ebe4e	2658
+backlog/completed/back-101 - show-task-file-path-in-plain-view.md	inventory-only	bc243f7b4ae29eb0ba1fbae0b9dbe9fadd8da7520fb6082f0a3b018c43a3b766	2835
+backlog/completed/back-104 - Add-notes-flag-to-task-edit-command-for-implementation-notes.md	inventory-only	5a5a31b627991da9a5f15c9ab9de5598557180c2b13825a907c2f58da51a8738	1672
+backlog/completed/back-105 - Remove-dot-from-.backlog-folder-name.md	inventory-only	f7d8440f464f84fea380a9194cae9e4201d62f087879e3be82649ee27a381d33	3646
+backlog/completed/back-106 - Add-desc-alias-for-description-flag.md	inventory-only	906d469f44eb8819a760671fff446d29324a2ba3ce1cbafff70161dadda9a610	2283
+backlog/completed/back-107 - Add-agents-update-instructions-command.md	inventory-only	21e915ac47b1e2808b5844f01329742c37bebe078b97b4544c934ce34d203231	2599
+backlog/completed/back-108 - Fix-bug-Acceptance-criteria-removed-when-updating-description.md	inventory-only	4c0bbc0fd98aaa71564942305fef599662996943b3be5ddd27f97e8f4c75c427	2866
+backlog/completed/back-111 - Add-editor-shortcut-(E)-to-kanban-and-task-views.md	inventory-only	a5023895e91dfe32cc615fb1ab6b94ce937fc89e62a085bfbd6304456efaafe3	4248
+backlog/completed/back-112 - Add-Tab-key-switching-between-task-and-kanban-views-with-background-loading.md	inventory-only	1b5abef7b7c44b2eb98f2b023f645e1933ad742ba2d2e72aa1e876cfef9d82dc	5844
+backlog/completed/back-114 - cli-filter-task-list-by-parent-task.md	inventory-only	0d111074984dfef158662f3c5a94036d80da9c50141cfaec1ef7ffc7d19ea3fc	2661
+backlog/completed/back-115 - Add-live-health-check-system-to-web-UI.md	inventory-only	1d8d6e1699b5dea990cc145ac4a06fdfdaf905677e4230131300b8da252f1a44	3379
+backlog/completed/back-116 - Add-dark-mode-toggle-to-web-UI.md	inventory-only	f79dce3c0cb2909979cc2cb9f20646250aed25bd6f7429f0656c8442e59a5235	5630
+backlog/completed/back-118 - Add-side-navigation-menu-to-web-UI.md	inventory-only	709d81b4f9afa53dd1ae5733c163d96ec70c07efbd6eeacbe27bcd3ee3d88340	2275
+backlog/completed/back-118.1 - UI-UX-improvements-and-responsive-design-enhancements.md	inventory-only	c8738a621f395bf08f08fcc425653df5ed09826517e52fe0a66e69155f485815	1257
+backlog/completed/back-118.2 - Implement-health-check-API-endpoint-for-web-UI-monitoring.md	inventory-only	35e8277018a9f01f303c420c125c4fac7eda9d2663a38f32a77c5cfdff5bcd48	1244
+backlog/completed/back-118.3 - Advanced-search-and-navigation-features-beyond-basic-requirements.md	inventory-only	420ff8105dd2a91379394c2379466b3e646cbe65aad1dafcdd9aad03f34bd437	1471
+backlog/completed/back-119 - Add-documentation-and-decisions-pages-to-web-UI.md	inventory-only	d3d85998aa9f15a756cf53fd3668f9ec6ade152bf2d3e7261cfdd9b16cb5f12d	3490
+backlog/completed/back-119.1 - Fix-comprehensive-test-suite-for-data-model-consistency.md	inventory-only	23812dd160381f0b506b03111588ea4918f39bbfa582fd822f6db9f383574832	1417
+backlog/completed/back-119.2 - Core-architecture-improvements-and-ID-generation-enhancements.md	inventory-only	0bd63c0b1464eb3c8d0dec6999aba758a3042fd030d5ec5b0095182a4d2594e1	1447
+backlog/completed/back-120 - Add-offline-mode-configuration-for-remote-operations.md	inventory-only	5d1660b8099df8cb664ec56670db52a8d00414fb147e0893f3a2747ff0bcab25	3924
+backlog/completed/back-13.1 - cli-agent-instruction-file-selection.md	inventory-only	9f2ccbc14261102b8b63adb4b4b85a6461df288d3d7915341f7e70131de3ebc8	1445
+backlog/completed/back-163 - Fix-intermittent-git-failure-in-task-edit.md	inventory-only	35026f1d6f5305a38c43927590cb8fcee60b7dd393da8469aceb69ae4707c5dd	2633
+backlog/completed/back-164 - Add-auto_commit-config-option-with-default-false.md	inventory-only	1af38101d086e3c8c35ed9e7974a0f46b2957440df6bb63c3fcb7825b0d0adea	2289
+backlog/completed/back-165 - Fix-BUN_OPTIONS-environment-variable-conflict.md	inventory-only	1fcffaee5b0138b6b9ed088312cd3acd09f587349f2792c6a57e442b237bd37f	2530
+backlog/completed/back-166 - Audit-and-fix-autoCommit-behavior-across-all-commands.md	inventory-only	ae3ac1f29a80d602757c3e4b0ee8d7903686919d849b569cdd85cb24d2c4f0c0	2783
+backlog/completed/back-167 - Add-notes-option-to-task-create-command.md	inventory-only	3c33445d967c34521303c644c032c1bc6ef4ee6d2228c6e4484b386962f97734	2141
+backlog/completed/back-168 - Fix-editor-integration-issues-with-vim-nano.md	inventory-only	62af7357761cb44cf6974664500d4a77943f11acb6049574101a373ab5c615c0	2042
+backlog/completed/back-169 - Fix-browser-and-board-crashes.md	inventory-only	0c3e370d3bd99c935208cb6e09cde6802611cb9122cd9cda185e75087e300d3d	1889
+backlog/completed/back-171 - Implement-drafts-list-functionality-in-CLI-and-web-UI.md	inventory-only	5611e6a0ddb2aea84b5024c0d728b1724628ee817c99967244a306d41426739b	2172
+backlog/completed/back-173 - Add-CLI-command-to-export-Kanban-board-to-markdown.md	inventory-only	341193f87b4181bf96fff876f93c559b372e41219a75b631cdc3bbd5f27f2d28	3505
+backlog/completed/back-174 - Implement-backlog-cleanup-command-with-completed-folder-management.md	inventory-only	ab1a1deeda058c055f6e8c3050fc0732d95a5b900ea3ee9de1323b8c09a32407	3288
+backlog/completed/back-175 - Add-hour-and-minute-to-all-dates-in-drafts,-tasks,-documents,-decisions.md	inventory-only	816ecb7f83cf8b3d7ac4d35274aeefc56a229049d96ee528b22f31ad205e0341	4922
+backlog/completed/back-176 - Add-Priority-Filtering-Sorting-to-Task-List.-Especially-with-the-plain-flag..md	inventory-only	da4c76c542574846c1461c66c169b2e6eac6420521db51362a7785b0110b86f1	2129
+backlog/completed/back-177 - Automate-Kanban-board-updates-in-README.md-on-release.md	inventory-only	4b1fa2e3138c049a305f3daf1a7ad95380e06569a758d00006365b3459918c34	2856
+backlog/completed/back-178 - Enhance-backlog-init-with-comprehensive-configuration-and-re-initialization-support.md	inventory-only	5f44ceb0e2452b11dd6e5d64cdc58bf2f2aa9954829305418c48573a9527ebde	3486
+backlog/completed/back-179 - Add-Settings-page-to-web-UI-with-configuration-management.md	inventory-only	749104fd93d52a05e45fb5f8495a96e96e34555723e7b7aba96c56443ca94ce9	4587
+backlog/completed/back-180 - Add-statistics-overview-command-to-CLI-with-TUI-interface.md	inventory-only	b75fb42038d1b262aa2a9f8203267575701f1ec083044a149482610acf3985b8	4123
+backlog/completed/back-181 - Add-statistics-dashboard-to-web-UI.md	inventory-only	e36f7e31ace1b1e4b343c99f096b2483284ea950d4265e81c78672e8e6837a20	2335
+backlog/completed/back-182 - Document-agents-command-and-reorganize-README-CLI-reference-tables.md	inventory-only	6eef82b44a05117c88e518a7b93ef6536875aa8102a18d9f8421128ac04e76db	1686
+backlog/completed/back-183 - Add-ordinal-field-for-custom-task-ordering-in-web-UI.md	inventory-only	6aa54e64551e8ee3d9c5361c580688e366e2a4b4299ce1565795c8146e7059a0	5180
+backlog/completed/back-184 - Investigate-Windows-bug-with-task-edit-status-command.md	inventory-only	aaeaed2808b3408d38adf149b8314410fc1eed716df0c645c56a549810f28d85	2256
+backlog/completed/back-185 - Fix-task-listing-incorrectly-including-README.md-files.md	inventory-only	8f458aa2a320c046a159a9bf26ab26d309bf1ff012d23b2a6eff05e0575d91e6	1076
+backlog/completed/back-186 - Fix-unreliable-ID-generation-causing-duplicate-IDs-for-new-items.md	inventory-only	a405e324c18f73de692fbe759ffdb5b0002468a77be6e9c5ab9bef281aa785ca	1581
+backlog/completed/back-187 - Fix-autoCommit-setting-not-being-respected-by-all-CLI-commands.md	inventory-only	29a40cdb09212dbf38b7eff19a3450fa039c6ea28d40ceb2014a25489244fd1c	3404
+backlog/completed/back-188 - Add-zero-padded-IDs-configuration-option.md	inventory-only	acca0adea750642c9c3f5b2f71aa5953f66d9fcc7483400573b351394739cfc0	2818
+backlog/completed/back-189 - Fix-CLI-hang-due-to-infinite-loop-in-config-loading.md	inventory-only	f382ed5eb5948f426b63740957056075cfec8af8e8cefce28e2711d73c08c40a	1491
+backlog/completed/back-19 - cli-fix-default-task-status-and-remove-draft-from-statuses.md	inventory-only	c2c42bf7c55c4bf0310c4457530aabf89c0836b309c4ba6d009275ba65df4fec	2721
+backlog/completed/back-190 - Fix-Git-errors-and-TypeScript-compilation-issues.md	inventory-only	774624440bb577478d4d7af36fe04d55eb57471f2339a6520be2122077ea1771	1111
+backlog/completed/back-191 - Migrate-from-Bun.spawn-to-Bun-shell-API.md	inventory-only	0769be754363ea1c0f83b1509c4811d84026c2cda2a9574473f33d3f4d4a56e8	3587
+backlog/completed/back-192 - Fix-drag-and-drop-not-working-in-web-view.md	inventory-only	29732f0f8739dcc166a7b4629a42b8cb74b4d3c590a8046b0dda025686436447	2100
+backlog/completed/back-193 - Fix-custom-markdown-editor-styles-missing-in-compiled-build.md	inventory-only	6c5521a710e44b71b01e1f352ba5c0fb414d46127a6c540f491ae9a3245278a1	2498
+backlog/completed/back-194 - Add-graceful-port-handling-for-browser-command.md	inventory-only	d0b05b979f7d7a1ead3e878f1b5000e080cf090feabd706a7c2a6955dec7f5db	2176
+backlog/completed/back-195 - Fix-React-Router-deep-linking-for-documentation-and-decisions-pages.md	inventory-only	5b620ee633687e60e5a401c3c29d1938575f2f3187e7b387373d83f34d235bca	3843
+backlog/completed/back-196-add-nixos-packaging-support.md	inventory-only	cfd260533c33ea74c93357b41b4a8937562843504cf4fc805186a60ed8574b07	2208
+backlog/completed/back-197 - Fix-decision-page-refresh-showing-blank-screen.md	inventory-only	d74df2ccd3e4e189d11cea53d55e4a241fba07844b20e8ac738d0f2d2bd07f83	810
+backlog/completed/back-198 - Fix-markdown-content-overflow-beyond-screen-width.md	inventory-only	4310c590078987816854f16208c1e8e0dfa3b3fa03bf81e7150b4f8accd6e588	1744
+backlog/completed/back-199 - Add-version-parameter-to-board-export-command.md	inventory-only	15457bc5fcd072cc78194d5e6d0c6ee76621d9185b41c19aac202bee6ae13f48	1029
+backlog/completed/back-2 - cli-core-logic-library.md	inventory-only	19a0649626f53b730fa1a81a9142b6348a5b19e3c1e1221a4c30ed9460ce4435	873
+backlog/completed/back-20 - add-agent-guideline-to-mark-tasks-in-progress-on-start.md	inventory-only	316d9173d1ca3de03cff2607638b0824bad50324210832947f4b2e244ead7c94	1385
+backlog/completed/back-201 - Add-configurable-git-hooks-bypass-option.md	inventory-only	03ff3188a14b878a5698e16985a7107fa1d241df69d801c84ecc6a90a504f5b7	3382
+backlog/completed/back-202 - Fix-editor-integration-regression-with-Helix-and-other-interactive-editors.md	inventory-only	25d158cf146b8e9e64f75bccf2504ef4714ff5ae382cd91dfe407652668c3143	2006
+backlog/completed/back-203 - Show-meaningful-description-in-web-kanban.md	inventory-only	7e1815dab5f10fb71729acc7402b143ebe752a28e352454ed30fc91b43a804dc	2079
+backlog/completed/back-204 - Add-Claude-Code-backlog-agent-integration-to-init-command.md	inventory-only	d0c0b8937f1b65b6f65aab4fd24bb8c8223498aa6b8d39f63a654d30969d0a4e	1461
+backlog/completed/back-205 - Fix-Claude-Code-agent-trying-to-use-slash-commands-instead-of-backlog-CLI.md	inventory-only	eba3626c892c67c188719581a402c7dd4aa6b00a8694d16e04b6a7b09288d966	1336
+backlog/completed/back-206 - Order-done-column-by-updatedDate-in-board-export.md	inventory-only	21f7ecf04f737244a90d0968826f9a8dde9bef252e6ef430673915763ce348a4	2369
+backlog/completed/back-207 - Reorganize-backlog-init-command-questions-order.md	inventory-only	028b2aabcdea9f5f8c70f5a91bd66a38222641c119c76d51af79156b823009b0	1877
+backlog/completed/back-209 - Fix-cleanup-command-to-handle-non-standard-task-filenames.md	inventory-only	9ab93b292121ba5ab54f0639d47ae5162d030ca37cb330981e6d9271aa02184e	837
+backlog/completed/back-21 - kanban-board-vertical-layout.md	inventory-only	bd8e21cd881d17a5e69bd1be7d6d2008d3ed903be6827904e4d2e95a3b09977e	1099
+backlog/completed/back-210 - Refactor-Nix-packaging-to-build-node_modules-offline.md	inventory-only	93177810b36ef7ecc052186b48af5f996e8d8be247c7e2dc59bc82a41051f7ab	2347
+backlog/completed/back-211 - Add-version-number-display-to-browser-UI.md	inventory-only	5e4c66ee05ecf04298559416c81036f58cc74564a3149174577731ab935cc4ff	2366
+backlog/completed/back-212 - Improve-task-visualization-format-in-board-exports.md	inventory-only	284b979547d2db831433f6d4121feea1e10e845c71f3c91e50b510d90108980e	2598
+backlog/completed/back-213 - Compute-sequences-from-task-dependencies.md	inventory-only	c72344b1e585c405fa7b8065974f635c4a3deeeb2c29b977c3d991316dd95f93	2573
+backlog/completed/back-214 - Add-CLI-command-to-list-sequences.md	inventory-only	fc3a4d8c0e05b5c9065458b9cbec0abacbc485120bb7b21e55f4435b8ff5684d	2127
+backlog/completed/back-215 - Implement-TUI-view-for-sequences.md	inventory-only	27901ad9b4cc3bbe440eccf30d9f6dc53974e68c11f995c705f521ddfeb38e6f	4285
+backlog/completed/back-215.01 - TUI-sequences-read-only-view.md	inventory-only	4feb5230ce7089b36a45a7cca7eb0e4f03a041c4a9b6bb273e151eee71c36210	1956
+backlog/completed/back-215.02 - TUI-sequences-navigation-and-detail-view.md	inventory-only	2397dcfedc496a3e26231a087a55ed341b82115695d08eea2c620a0ee478bbaf	1899
+backlog/completed/back-215.03 - TUI-sequences-move-tasks-with-dependency-updates.md	inventory-only	a673d7033fa1a5a23e12ac18795b8df9b9e86fdc8d725dc0ce457b611f8ba859	2568
+backlog/completed/back-215.04 - TUI-sequences-create-new-sequences-via-drop-positions.md	inventory-only	0c21d9a1b466cfaa146f15a5da92b8d456c5936232d9b4aab1ece1c67b55be71	2013
+backlog/completed/back-215.05 - TUI-sequences-tests-and-stability.md	inventory-only	e8e1ec195554869d36a8cac29ad184832ba7ced5c02ed46cde792bdc453dc4b8	1678
+backlog/completed/back-217.01 - Sequences-server-endpoints-for-list-and-move.md	inventory-only	7c9f85c2c292979db1b29c317934540a18a0d2bd7e489f7742c6e1056fc66697	2141
+backlog/completed/back-219 - Refactor-server-component-to-fix-separation-of-concerns-violations.md	inventory-only	e628ace44d668b3d8a14c164383d3fe2e19fbeabf10b1b37fa75a5e9894a56f2	2272
+backlog/completed/back-22 - cli-prevent-double-dash-in-task-filenames.md	inventory-only	4b227a17d322e513b9ea138099837afe257c4a9cfa29eb8d525bfef825646560	622
+backlog/completed/back-220 - Fix-Helix-editor-integration-with-proper-TUI-suspension.md	inventory-only	9131e3713d2a34b0057440cf69efa0d94526c17eb85affd55703f2d270e1cd8d	2900
+backlog/completed/back-221 - Add-favicon-to-web-interface.md	inventory-only	366e19ff526ab05232596fb45e1ab9a5297672c9020f2e737de685737bd0508c	1999
+backlog/completed/back-222.1 - Show-parent-and-subtask-hierarchy-in-the-web-task-details-modal.md	inventory-only	8bfc1b56ff2f52662587983185310ef82c54c25ef3bbbf225332828267758521	5428
+backlog/completed/back-223 - Optimize-statistics-dashboard-loading-performance.md	inventory-only	fb7524e9d81a93e459d6edbfccc9483c380fa0759f933afc8fe58a2178ea8a3c	3246
+backlog/completed/back-224 - Add-non-interactive-flags-to-init-command-for-automation-support.md	inventory-only	0ccfea1756b689701e4e597b2459a6df945c65d6510f425549682cccc0a7184f	2773
+backlog/completed/back-225 - Fix-CLI-board-command-ignoring-checkActiveBranches-config-setting.md	inventory-only	203c8545fc790d55498e94a01497e956ece13309671660d5b2a113320144136f	3630
+backlog/completed/back-226 - CLI-per-index-add-remove-of-acceptance-criteria.md	inventory-only	d645d08fb6366105f8a781a53fbbfddfb761dbfc50e6f43d2657b4be727d0f6b	2556
+backlog/completed/back-227 - Web-UI-interactive-acceptance-criteria-editor.md	inventory-only	74e680d001a18c57d8bc13a41bab1cc72619583b4d8f25fd9a43afc08a8b7bb9	1848
+backlog/completed/back-23 - cli-kanban-board-order-tasks-by-id-asc.md	inventory-only	768630230dd8d8f638cbec1bf89e41066a9d539eac9772a338534211e74c8380	1340
+backlog/completed/back-230 - Add-plain-to-task-create-edit-and-print-plain-details-after-operation.md	inventory-only	e3141273881f917a6531a9c72bc96f03f1a49ad92f25c1e4d366b27f764b13c0	1889
+backlog/completed/back-231 - Fix-case-insensitive-status-grouping-and-status-normalization.md	inventory-only	787103da4c910457dca98aaf0d86c594ddf21486cff521f221444f67eb9f7c75	1037
+backlog/completed/back-232 - Nix-build-fails-due-to-missing-libstdc++.so.6.md	inventory-only	ee5df9b7210d0d858bb458bb32d9767b9bdd77b8429f8b9a625d76595481484a	1100
+backlog/completed/back-233 - MVP-Live-task-watcher-in-TUI-(Bun.watch).md	inventory-only	d6e25cd13fe5b90011fa866d1140c1c19f7e2a8ba865feda055ffd959c7b1e35	1958
+backlog/completed/back-234 - Investigate-newline-handling-in-CLI-descriptions.md	inventory-only	132c792d4967285745052a83c92eaa8eecb2be4bec04329641c9acbfacb1798d	2164
+backlog/completed/back-235 - Consolidate-duplicate-AC-sections-and-overwrite-Implementation-Notes.md	inventory-only	e4b76e2f18b87194c6e6e8f77b9bb77fe82d43760b1e949a3987d947b3238f5b	2890
+backlog/completed/back-236 - Fix-TUI-Unicode-rendering-for-CJK-(Chinese-shows-as-).md	inventory-only	7d5f04990c8670e19eb4f2cdd3b3d2136895827b1815e440304ef9762cf15bad	2337
+backlog/completed/back-237 - Fix-invalid-git-ref-'origin-origin'-during-remote-task-loading.md	inventory-only	2dec9cbb870801d982ea7abc5a1813f755815b878643ef6bd73f12896ae198dd	1999
+backlog/completed/back-238 - Fix-web-editor-selection-cursor-issues-(MDEditor-integration).md	inventory-only	b9b50b92864144d559bb31c05d20c62a27f38fa19ff46d6f5a9d4bb5ab789971	2590
+backlog/completed/back-24 - handle-subtasks-in-the-kanban-view.md	inventory-only	286c6e077e52b618ae80167625b129b95db2914c8069f882e59424c4a1771577	1822
+backlog/completed/back-24.02 - CLI-TUI-Add-milestone-swimlanes-to-interactive-board-view.md	inventory-only	68c92c7a8ebff61e1f5f0003bc507844bd3e4ddf14b253fc4b5a5184e05dd897	1057
+backlog/completed/back-24.1 - cli-kanban-board-milestone-view.md	inventory-only	cee5585cf0f3a8ffaf0b9a114562e1add4e26e3ad0984d2947eaef51695388cc	1356
+backlog/completed/back-240 - Improve-binary-resolution-on-Apple-Silicon-(Rosetta-arch-mismatch).md	inventory-only	835f0a50b5f7fec15d87216f479aeec6e0f310586fd5744f7fe19704ac368e90	7081
+backlog/completed/back-241 - Consolidate-assignee-normalization-into-helper.md	inventory-only	119b43a06ac8549eb35a645637a97bd9369195b1ac976d474230abfd2e718769	1471
+backlog/completed/back-242 - Centralize-task-filtering-logic-to-eliminate-duplication.md	inventory-only	8fba7f5cfa32b6ffb3ce4bfa55e83785d4b068c024457adcc5f3bb12808f7971	1158
+backlog/completed/back-245 - Fix-case-insensitive-priority-filtering.md	inventory-only	d82fdd50bbe2353995c412c70f30f9b0a19c258d578b444c18ea2b1664c85b7a	441
+backlog/completed/back-246 - Domain-split-Description-Plan-Notes-into-first-party-Task-fields.md	inventory-only	5f42bc90e872577139b37e753cc7ee1c3fddfbccbd42cb0b5bd010f2eb24bda9	2820
+backlog/completed/back-247 - Web-UI-Read-only-Description-with-Edit-Toggle-(Hide-Editor-Mode-Buttons).md	inventory-only	95fae166b4aa3d499f6269973cdc35da3c963e034f76a824b17dd41080a0e1fe	9096
+backlog/completed/back-248 - Circular-navigation-in-TUI-list-and-Kanban-board.md	inventory-only	e070ee0f38d720a5bd6989bae7b4c57d1d86f6b86db7f30808181a6f48b45814	1697
+backlog/completed/back-25 - cli-export-kanban-board-to-readme.md	inventory-only	17e73c8c204c6fa18f14e8e27ec44352258298a2afa811b50169607d6e4b6897	983
+backlog/completed/back-250 - Docs-fix-subpath-documents-listing-view-+-unique-IDs.md	inventory-only	b32483f6da3fd2ae213965f8db9c847b5c7ebc9000253107c031dbfe742b957a	2247
+backlog/completed/back-251 - Board-harden-remote-branch-normalization-to-avoid-origin-origin-refs.md	inventory-only	393cb579c7eeda418497126a6fc2006babf2e334512119c8b767a2c7c0a7f68d	2045
+backlog/completed/back-252 - Packaging-fix-local-install-bin-symlink-with-optional-platform-packages.md	inventory-only	7cdc51c48b4e63d8229d249a3db2e3b1bec5155aebff9803abf19be5eb297141	2991
+backlog/completed/back-253 - Web-Board-fix-layout-for-4+-columns-(horizontal-scroll).md	inventory-only	399e14f9d439c4df785f2048ea7ca14bfb374f49e44e035c0d07cc71d1916362	2339
+backlog/completed/back-254 - Init-default-'No'-for-Claude-agent-installation.md	inventory-only	4b8021d868f19a5f8acff0b89e8d8c2b8dec641d8e4faf3c7becd7b352e7e891	1689
+backlog/completed/back-255 - Add-TUI-splash-screen-for-bare-backlog-command.md	inventory-only	5618068c97abc3c7f277d266082a3ff5aa3829e239763e068dea7a355cbef690	3903
+backlog/completed/back-256 - Add-CLI-command-to-append-implementation-notes.md	inventory-only	daa40d3f14659c06402a837243c95fbf1da9f82ca51922c23d5675d4f805da10	4226
+backlog/completed/back-257 - Deep-link-URLs-for-tasks-in-board-and-list-views.md	inventory-only	c970dc4277c556ad55fec4eaa0e57b8b9cd003e8a6884310c411d34b24ddfbb0	27136
+backlog/completed/back-258 - Filesystem-ignore-leading-zeros-in-task-IDs.md	inventory-only	7a33b5545ff795021d591df74728a333d6a1394a8949fc122638504451189b3b	1966
+backlog/completed/back-259 - Add-task-list-filters-for-Status-and-Priority.md	inventory-only	11fe13705ddee4059bbb03d8e8b31e9a0c4e80459c6d291faef7f86219f531c2	2621
+backlog/completed/back-261 - Init-Handle-missing-git-origin-gracefully.md	inventory-only	30039ce0bbf560cc64db8460e87b99ce8feb80ce3176c48f8c371f383291b1f9	2259
+backlog/completed/back-262 - TUI-Show-all-configured-status-columns-in-Kanban.md	inventory-only	1865b5ae232468189c46a3ec284d1e76ed942615fb64f29ac89f7007de79f34f	2786
+backlog/completed/back-263 - Ensure-explicit-agent-instruction-selection-during-init.md	inventory-only	8b59e61d9b72863d4e9014aa1df4a715097bf7600e7d7e21e67ba9ed45719749	2704
+backlog/completed/back-264 - TUI-Fix-regression-in-task-popup-scrolling-with-arrow-keys.md	inventory-only	83fef7c3d9ebdd1fd09b6594766ae8b76d2ac3816b6b48810eed2227c9505ff2	2283
+backlog/completed/back-265 - Web-UI-Enhance-all-tasks-view-with-in-progress-highlighting-and-done-tasks-toggle.md	inventory-only	0c45981206ec97adc1c0ba160db2d000883d479fa8952b070b0b58375f6a8c2c	852
+backlog/completed/back-266 - Fix-Implementation-Notes-heading-truncation-in-web-UI.md	inventory-only	add0b40a26cea750f785fb9f2e5d7dcf11bb14e6c3f3a2074fcf23dd6848380e	2278
+backlog/completed/back-267 - Add-agent-instruction-version-metadata.md	inventory-only	e582c91e9cfa16dbeac4b97ef642d67be5f4cf4a13715c7a632140731eb46258	4110
+backlog/completed/back-269 - Refactor-backlog-init-agent-selection.md	inventory-only	0df40d22799930b2d82db8c485fc6f896e9b019c22533f8cbc662ccda53c5654	1644
+backlog/completed/back-27 - add-contributing-guidelines.md	inventory-only	a252f607dc203b6a59ac0fbd66d9a07fb637b15066061a11bc399af93a28aa04	665
+backlog/completed/back-270 - Prevent-command-substitution-in-task-creation-inputs.md	inventory-only	84579179dd56a90a04a91ec0bdf32c651befe02e0e8d3eaf28f86fddf7e8cfcb	2744
+backlog/completed/back-271 - Fix-acceptance-criteria-section-removal-when-list-emptied.md	inventory-only	c379bdf20f701adbb860c4c31dfe77e30997d483940db48f9008c49db0730d78	1356
+backlog/completed/back-272 - Adopt-npm-trusted-publishing-for-releases.md	inventory-only	2fdf619102d3a56f1fb3024e3231ca86057dc6cc11a92176414526734c3bdf7e	1972
+backlog/completed/back-273 - Refactor-search.md	inventory-only	32624d581482b14c78a40bfd7daf67ede615fc846685181e9a78dd8aca89dc6e	1264
+backlog/completed/back-273.01 - 273.01-Migrate-domain-types-to-rawContent.md	inventory-only	58d98a3ee93da80024a8ebe817ddaa08f8abe6a57dd6b0f8eed8a604e267b811	1566
+backlog/completed/back-273.02 - 273.02-Introduce-shared-content-store.md	inventory-only	d0b126de87222a44bb818c9ffccca83c92ebe4c593b9ada70e623e38f35d9e6e	1514
+backlog/completed/back-273.03 - 273.03-Build-core-Fuse-search-service.md	inventory-only	369b52c79a78e15991e24754d75d31563c77c3b31b3cfeb9b7f51d532e30649b	1471
+backlog/completed/back-273.04 - 273.04-CLI-&-TUI-search-integration.md	inventory-only	1a5c43872ee65cc0ba1bb0627fd360b3bfc155859d068307d456397934f096bc	3514
+backlog/completed/back-273.05 - 273.05-Server-endpoints-on-shared-store-search.md	inventory-only	463e175497b1476dedf645e29f72833af6ca87ee89616ddca1dc8fafe922261f	1407
+backlog/completed/back-273.06 - 273.06-Web-UI-on-centralized-search.md	inventory-only	2c34ab30e31efa49ef438fecfeb6b5f99d8c33c6e0287a9ec89d71bc6fa5e85c	2050
+backlog/completed/back-274 - Fix-Kanban-boards-missing-live-updates.md	inventory-only	8e09dd81b9fb6aac381fcc60d63abf8e8d834e1559ab5386d18c7a09592cc6e3	4148
+backlog/completed/back-275 - Extract-task-reordering-logic-to-core-module.md	inventory-only	2490f05a81b20d8a0ee57bffbe0e25b687a3518da7db9e2d052a18ee08296910	2939
+backlog/completed/back-279 - Add-cleanup-functionality-to-web-UI-for-managing-completed-tasks.md	inventory-only	3fced813ebfac83e9dd398a34c370ec423ff3f52ef3b904ce73bb04891e731e7	3451
+backlog/completed/back-280 - Fix-TUI-task-list-selection-and-detail-pane-synchronization-bug.md	inventory-only	96436e7cbfc99b6e7bd920af286a2cdf7d519051fab95cb8883534970d55a642	4957
+backlog/completed/back-281 - Fix-backlog-init-skip-option.md	inventory-only	10e5ca48fe087b28f9595cf95a8ff355cb61b81a573e572e75a35ee153b88dc4	2861
+backlog/completed/back-282 - Fix-TUI-detail-pane-loading-state-regression.md	inventory-only	ddaa5ff5281c9d2781ce06339843767dfb45234769c16f9897ad4dd2beea0bc9	2263
+backlog/completed/back-283 - Fix-TUI-board-duplicating-cards-after-external-status-changes.md	inventory-only	ca0b6ccd1b2b99056f900f431dcd395ad562dad3ffc4e9f14005e9b1750fb60d	1448
+backlog/completed/back-284 - Simplify-init-flow;-launch-advanced-settings-via-backlog-config.md	inventory-only	0eb899e64ed80d266fffcf2c1fa63f7ed06aa71ac3bec7a6ecb783b3ef6820a0	4080
+backlog/completed/back-285 - adjust-z-index-tooltip-style.md	inventory-only	a370b0934fc413217f2a9256f815ff56483048de5630dedac8a248a712ea6f85	1203
+backlog/completed/back-286 - Add-npm-script-and-shell-script-for-updating-bun.nix-via-Docker.md	inventory-only	458118aa2fc9ba15b9bfe41485a06a80f3888e527c4c9e5904f7caf844830052	2343
+backlog/completed/back-287 - Add-MCP-support-for-agent-integration.md	inventory-only	ea8d0ee2fca8ddca714f04b720ee28c6da51c9411d8f16c69ab93cc5335f2822	2969
+backlog/completed/back-288 - Fix-browser-UI-error-display-and-make-priority-optional.md	inventory-only	3e13e77f28938e5db3e7221653686e3562898d9a8951b1a151a546ff03562a76	2902
+backlog/completed/back-289 - Implement-resource-templates-list-handler-to-return-empty-list-instead-of-error.md	inventory-only	4f431adf94cdb2706f4e03558db5c4cd17a62550eb775d51887e97ab3b1bea9d	1457
+backlog/completed/back-29 - add-github-templates.md	inventory-only	f4416c04077e84bc86532296ef17bd13f5e05ca9b1b301884d8b91a092dba715	625
+backlog/completed/back-290 - Improve-MCP-status-field-to-use-enum-dropdown-with-config-values.md	inventory-only	60ed2bec449b9451447d8130c4400176e08519256f4f8aa3d0a2e99c49bdcb21	2611
+backlog/completed/back-297 - Fix-Windows-MCP-git-fetch-hang-during-task_create.md	inventory-only	47e28b55297afed320a2a2da4c635616faa76b2b54867380a746b539eb340782	1800
+backlog/completed/back-298 - Fix-document-title-renames.md	inventory-only	0666355e035c7df4aa853bd64f2b3be8a285fba463aa4d00bdfbb4215898dbd9	2243
+backlog/completed/back-299 - Fix-MCP-initialization-for-multiple-AI-coding-agents-(Codex,-Gemini,-Claude).md	inventory-only	2cc76f86d6c6cf773a69e15bcf61dbb8f53ce08831046e6e8ee04e128200594a	9167
+backlog/completed/back-3 - cli-implement-backlog-init.md	inventory-only	d32e6ae57bfcf26b66c0082a23219ef3a878b97540896d429a48ccc9a9a02a50	2090
+backlog/completed/back-300 - Fix-backlog-init-MCP-registration-flags-for-Claude-and-Gemini.md	inventory-only	187dffe06922b3a513459c2a246df5737a1d40675a00d25b40f3f8d919a45388	3312
+backlog/completed/back-301 - Feature-MCP-document-tools.md	inventory-only	2ebb114b78a35ce610766634e30b56d5c6bc62a46a11e9404afd3cba00ea43e7	3655
+backlog/completed/back-302 - Support-flexible-ID-formats-for-tasks-and-docs.md	inventory-only	0a0e41991be7aac3db24a23c21f35a2fb578ebd27062f5f2737406c7286344fd	2130
+backlog/completed/back-304 - Update-MCP-integration-documentation-and-CLI-client-commands.md	inventory-only	49cf516bc5fe71ad9e06e8f02b4d1d8d04c2de1c7490efafd3a56658ef8d2e96	1584
+backlog/completed/back-305 - Improve-MCP-guidelines-to-cross-link-workflows-and-clarify-documentation-notes.md	inventory-only	3db9cc183d8c1b14ecaa97ef4aeffe0bbb9ed0c1ce83920c79c100246d78f338	1123
+backlog/completed/back-307 - Add-dual-mode-MCP-guidance-for-workflow-docs.md	inventory-only	22f3ffdf8f3e74257d053b3d7c7d7788759e817b01cfd0f42576a65dc0a840e5	1989
+backlog/completed/back-308 - Add-shell-tab-completion-support-for-CLI-commands.md	inventory-only	53775230f8762ae4ad52d984b9527cf67f3460285d46f63da637b17eff3142e5	10768
+backlog/completed/back-308.01 - Research-shell-completion-frameworks-and-implementation-approaches.md	inventory-only	3956ecc6408de49e8dd3c17452d01c30ee1facd036ad2976e1f113cc051b8553	1103
+backlog/completed/back-308.02 - Implement-bash-completion-script.md	inventory-only	b38fa99550eeca3cf42092202f01976095eec4555217cf2e9e307bad9b67036d	2279
+backlog/completed/back-308.03 - Implement-zsh-completion-script.md	inventory-only	f5fa26c4b5b1f00bee5f0dc238c221f417855cc7915640ed9b489ba7d1102261	1050
+backlog/completed/back-308.04 - Implement-fish-completion-script.md	inventory-only	9967f6ecef9bbe6784a9df4abb15475bf26045e298d2922eef58a7bd2af24260	1032
+backlog/completed/back-308.05 - Add-dynamic-completions-for-task-IDs-and-config-values.md	inventory-only	dd795639bc3a52afd23bb3e11861785bdb9a3305f5c36931cb7e0db717d7ddbb	2355
+backlog/completed/back-308.06 - Add-completion-installation-command.md	inventory-only	ac894dd52133e050b7fb3e68cf7d96e42db47c3bec1722f2d7769f2418a8768e	2324
+backlog/completed/back-308.07 - Add-completion-documentation-and-tests.md	inventory-only	11c3087930b97e09ff63ae621a87b646b1b860d8fa7ab12b8848bfb59bf0ade6	2459
+backlog/completed/back-309 - Improve-TUI-empty-state-when-task-filters-return-no-results.md	inventory-only	0ed72d4e26574deb243cb86d1a80473f54ba32c0447099cebcae8fc0b9badd10	2867
+backlog/completed/back-31 - update-readme-for-open-source.md	inventory-only	253f22a264d076a6de8e8c79b59b5ef5b96da40e81b4a76a4b04939a8a51a215	728
+backlog/completed/back-310 - Strengthen-Backlog-workflow-overview-emphasis-on-reading-detailed-guides.md	inventory-only	d1acca189e094f910d18f0ed155cb6f0a3855cc6be8075fd3e3736fb077ef2c7	4593
+backlog/completed/back-311 - Rollback-CI-to-Bun-1.2.23.md	inventory-only	6779253591de1491c33ac8864e3864d60ad2f4b50ce2ea5404fe9de454be0763	2415
+backlog/completed/back-312 - Add-baseline-build-targets-for-older-CPUs-without-AVX2-support.md	inventory-only	819f8456a623653a90c212080cb3ff0e66c1391e4560140d73b29d2a9990c78c	2242
+backlog/completed/back-314 - Fix-release-workflow-to-use-Bun-1.2.23-with-baseline-targets.md	inventory-only	b6a356af6cb4e160bd0e295d42f82a02b75fd9c8028329abd215763d54be2ca9	1465
+backlog/completed/back-315 - Fix-NixOS-flake-to-use-baseline-Bun-for-build-process.md	inventory-only	bfee9e7f0096ecd717d0368608f1ca135e119181aaf5b701d7e1cb9fbe7e2ec6	5329
+backlog/completed/back-316 - Serve-backlog-images-and-static-assets-under-assets-backlog.md	inventory-only	aabd36881cb3e7a185cdc1c0afd8c84305ae3f5fcae8c59977dbbd0c210388ac	3894
+backlog/completed/back-317 - Add-Mermaid-diagram-rendering-in-web-UI.md	inventory-only	467a542133eb0e77ee522c790561fb24747a03cb98ea81dbafa3c21ba991636f	2277
+backlog/completed/back-318 - Fix-editor-stdio-inheritance-for-interactive-editors-(vim-neovim).md	inventory-only	57bc23b51e59b6771f33601162c2fc068cd0946228b0e9572c03a202006d20e6	3750
+backlog/completed/back-319 - Add-move-mode-keyboard-navigation-to-Kanban-board.md	inventory-only	a4243035483d758404b4c5838447ea53badeb9a78ebae9174a3d9d2e3d6e22a4	6063
+backlog/completed/back-32 - cli-hide-empty-'no-status'-column.md	inventory-only	80f68d181c3dc60f8c62af82cf48f78dda234d0f0c541da874acc4dee9a28ea7	1276
+backlog/completed/back-320 - Refactor-and-fix-move-mode-implementation.md	inventory-only	5a626b84b944a1a09dd10f344a3399df5a6353015b4e7623a3cb7210e2908cc5	2867
+backlog/completed/back-321 - Status-change-callbacks-in-task-frontmatter.md	inventory-only	ab89a06d9f872469129cee320ce5a21b55232ff241429ccba34db3e6afba9fbc	7297
+backlog/completed/back-322 - Fix-flake.nix-for-devenv-compatibility.md	inventory-only	15517bd0975fd237f8426f97b9d67881c9ec269714614c6e890d80aa54ceac38	2306
+backlog/completed/back-324 - Add-browser-UI-initialization-flow-for-uninitialized-projects.md	inventory-only	869a5f56dcfdbb25e1c49358fe8a5c42c1f7c2c318a4762cc9f2e3738496d42e	6089
+backlog/completed/back-326 - Add-local-branch-task-discovery-to-board-loading.md	inventory-only	5b4be90f8d30cba01781054bf98462d1919ebe8449a98c6bbc9bff8972a94333	1981
+backlog/completed/back-327 - Fix-loadTaskById-to-search-remote-branches.md	inventory-only	41904d5610aa9ab97dadecfcc07763e09f1d585bef80daf04bef13fa433faae6	2150
+backlog/completed/back-328 - Make-filename-sanitization-stricter-by-default.md	inventory-only	e276e1b3d346dab8c598b5af5cbe9b54621c2bd49dcb870962abb71cf9e4dfe6	2067
+backlog/completed/back-330 - Fix-browser-CLI-sync-issue-when-reordering-cross-branch-tasks.md	inventory-only	33688381d1bb1d38c4959f3dc499e6546f4ff5d62782ad6255164ca9e673d2a8	2718
+backlog/completed/back-331 - Fix-content-store-refresh-dropping-cross-branch-tasks.md	inventory-only	26cbd51fc07e5b5379395f607f67a108fd5c69bea12a196d5891b4b9252c0c33	1363
+backlog/completed/back-332 - Unify-CLI-task-list-board-loading-and-view-switching-UX.md	inventory-only	26edffd48d8203e2a39e44cec8e2e24e25e183a20dcff66aa5db160e362d9b30	2026
+backlog/completed/back-333 - Keep-cross-branch-tasks-out-of-plain-CLI-MCP-listings.md	inventory-only	cf3a4a581b82af414fe16ba790d733c064ea899fe93597fc12546f8e16febb34	1894
+backlog/completed/back-334 - Fix-task-numbering-reset-when-all-tasks-archived.md	inventory-only	2ed158fdedf096007dda846c2fa42c8c4df4191c55f7ed163edb0530ff8ed7d8	3449
+backlog/completed/back-335 - Fix-CLI-to-find-Backlog.md-root-from-subfolders.md	inventory-only	695019cc5e15c2559778e767cd5f43b6dca971c612f9656f8d402366450e6c32	4277
+backlog/completed/back-336 - Rollback-GitHub-workflows-to-Bun-1.2.x-to-avoid-websocket-CPU-regression.md	inventory-only	8137552b43b90199d70e558dbf4c45081257bdcc2aeac8233df98ffa6571f5a4	1951
+backlog/completed/back-337 - Add-label-filter-to-TUI-task-list.md	inventory-only	d15722e86996894393099860ce9028d8329ed03311215879407fd8ed30e67052	2812
+backlog/completed/back-338 - Add-label-filter-to-web-all-tasks-page-(core-backed).md	inventory-only	602068aa9d61ef07982acfeda011324defbd4de5328501afa292cf6a5dfbd84b	1619
+backlog/completed/back-339 - Investigate-GH-issue-#445-tasks-disappear-when-assignee-list-populated.md	inventory-only	d3abacceed0ae109a178b4d8ccde7c94bb0e4be591948c7b5925f066988dcc0a	2394
+backlog/completed/back-34 - split-readme.md-for-users-and-contributors.md	inventory-only	8aba713ac5bd7d9eaf560acc463fc025fffc3e4a33f3db13db822dc53c3e6f94	897
+backlog/completed/back-340 - Fix-nix-build-by-pinning-bun2nix-to-V1.md	inventory-only	8df12aec95459138ffa78e8072eb9e01124c6e92108fb26dc42804b3ae20b263	1434
+backlog/completed/back-341 - Web-UI-Milestones-overview-page.md	inventory-only	6d5895a1e099292c49fb4d478d66cc94ef16703a987b257bac361e69e8b327e7	3668
+backlog/completed/back-342 - Web-Kanban-add-swimlanes-milestone-MVP-to-board-view.md	inventory-only	d66ea5d99a120cb7bdb791c0347a17993f5797d3c675e52bf17021f066d3bf6a	2929
+backlog/completed/back-343 - Clarify-Done-vs-Archived-in-MCP-guidance-add-task_complete-tool.md	inventory-only	650ae1b5aea66f05ff0eaf4a673a9d5b474743a378c35f18c356edab29dec3e3	1947
+backlog/completed/back-344 - MCP-Manage-milestones-list-add-rename-remove-task-milestone-support.md	inventory-only	e5b611a6b8d189126493f082552398efc2127c34b8869e7ed182b1c1c1646a2e	1959
+backlog/completed/back-345 - Configurable-ID-prefix-system-task-draft-custom.md	inventory-only	55c5e3dc3fe58bdb8ba7e95290aea53ca92d0add1d677dc49653c38f07278f51	8074
+backlog/completed/back-345.01 - Create-PrefixConfig-abstraction-layer.md	inventory-only	4db49e106369e8ef2c8b6080472c54de30789f6da5f62e30e05325e6e35fe4f3	2379
+backlog/completed/back-345.02 - Update-ID-generation-and-normalization-utilities.md	inventory-only	a158eb6a0769b81209d6597992b7cf6c16c2ef39c4f3038ab7f13a3a65140e12	6945
+backlog/completed/back-345.03 - Update-file-system-operations-for-configurable-prefixes.md	inventory-only	066b4f9aac94ca2e3e0085b5cd767e7b9aae443ccac6cf14dd48943724e131e5	7574
+backlog/completed/back-345.04 - Update-task-loaders-for-configurable-prefixes.md	inventory-only	e0d3be9a3eba97ab650eba82d33fa1da53644f7b87e5b366a5b04ef4e0146bda	3228
+backlog/completed/back-345.05 - Update-sorting-content-store-and-search-for-configurable-prefixes.md	inventory-only	fad98ad8f9ea094b1cddba6a70c2cd1b6f288482d01b40f73ac1aa5e7760a156	3213
+backlog/completed/back-345.06 - Update-UI-components-and-CLI-for-configurable-prefixes.md	inventory-only	08b6dab349ff3c7b429f912b2989d8c09f30ebba819622ac1a332c9a16c96142	1760
+backlog/completed/back-345.07 - Implement-promote-demote-with-ID-reassignment.md	inventory-only	0837893b697a581f7e246fd445ea4382f14dbbab713b251fb8a126de90094b9b	1821
+backlog/completed/back-345.08 - Add-draft-prefix-migration-on-config-load.md	inventory-only	4b9f7cc355d4dbabf448dc25e2724a22b0f674c5197788e367b21f1e5cca36f7	2179
+backlog/completed/back-345.09 - Allow-configuring-task-prefix-during-backlog-init.md	inventory-only	09a5d5cf6016f77047270856e6897e579a7ee671688b7c4d1ca988f27b5c3973	7092
+backlog/completed/back-345.10 - Fix-ID-generation-bugs-and-cleanup-prefix-config-leftovers.md	inventory-only	3fe5ae792281a94566c324ee7dd0be1231661068d23b44169ee3aa464bafc098	6434
+backlog/completed/back-346 - Add-milestone-completion-archival-workflow.md	inventory-only	8ef360d2a9e18055cd6ef3a350e6758fd3b2e1e95da0b2a01d23a55e2dfa6624	8175
+backlog/completed/back-347 - Add-milestone-editing-in-Web-UI.md	inventory-only	690a855611cea4fa4c24bb444ebafb4df066c64359cbaea4c429271fa87f4c0a	6609
+backlog/completed/back-348 - Redesign-All-Tasks-page-with-table-layout.md	inventory-only	17c5d6b96252e0aaa8ce39288bf830bcbfce99a1d17378cabffedb5c8bd9d40d	12285
+backlog/completed/back-35 - finalize-package.json-metadata-for-publishing.md	inventory-only	fc91b1012a1a8afc3511c1c9a35cab44e2fcb647eb885ac018c8ca74c6c85982	550
+backlog/completed/back-350 - Fix-TUI-editor-launch-leaving-terminal-keypad-mode-enabled.md	inventory-only	7b86b17ce37999fb5038374e305e905072c3d037a8c906639fe78a3801d7e7d8	2435
+backlog/completed/back-351 - Strengthen-MCP-task-creation-guidance-for-standalone-tasks.md	inventory-only	cd89b1c1d9d0629b8fe0dbece3a6e2b9234d4fa7a75e4b4a4d119e0a94c3d246	3838
+backlog/completed/back-352 - Include-subtask-list-in-plain-task-output-CLI-MCP.md	inventory-only	5c27dfcadadf003982af0f8d583f6fba90fd747babf9cfbae05d1b0fff95655a	3827
+backlog/completed/back-353 - Add-documentation-field-to-task-domain-object.md	inventory-only	cd0560a90ee71ccc97b14de65b582d2221787fd91247a89841c0d06a330a6591	5149
+backlog/completed/back-354 - Project-Definition-of-Done-defaults.md	inventory-only	d3c6a35314c9572de6eb646443a9732d2ae4c771d02786102bf3bf1d8aac061b	3852
+backlog/completed/back-354.01 - Core-Definition-of-Done-defaults-and-persistence.md	inventory-only	54f9fbfd18899a9f2f44ccc26e07cf27018d7b7091f980e0ccdd572000a7b5e3	1787
+backlog/completed/back-354.02 - CLI-MCP-DoD-create-options-and-outputs.md	inventory-only	2fe6dba8a261dd27046450dbda2372a7962ef51c8a4491a0b4323514998d9644	1739
+backlog/completed/back-354.03 - Web-UI-DoD-in-task-modal-and-create-flow.md	inventory-only	3b4678fb8817a496dd7a684bce80b62bbce383537927c6c9918a69dd8ad349aa	1725
+backlog/completed/back-354.04 - TUI-DoD-in-task-detail-and-kanban-popup.md	inventory-only	937f21cf3b290880953593540e39e860b928bc9b1722504ff7032fbeff6fd8e5	1109
+backlog/completed/back-354.05 - Web-UI-edit-Definition-of-Done-defaults-in-Settings.md	inventory-only	33bc8ef5043304fd1b79ef5006883e1762ef295151671badc8dbb2964b5272d5	1516
+backlog/completed/back-355 - Add-task-type-field-bug-feature-enhancement-etc..md	inventory-only	6e9d272c21df7ced2dcd7889b308c7f74ec25307737ea9842a3c13d308c3ce63	3539
+backlog/completed/back-355.01 - Core-Add-type-field-to-task-domain-model-and-persistence.md	inventory-only	4f8212d48cf557e29d3b7fd8d72a3aefada3477c6353796162d2b873cf11de33	5453
+backlog/completed/back-355.02 - CLI-Add-type-flag-to-task-create-and-edit-commands.md	inventory-only	29f0f95730f3684cb43ac15e8f45af0e68325ee091117a07e591a61fecf531a5	5843
+backlog/completed/back-355.03 - MCP-Add-type-parameter-to-task_create-and-task_edit-tools.md	inventory-only	5e4ce29cba75e420fb9cea0285fb07c2cfefa9b7b8ef104ceb0b1782b8a1d270	4701
+backlog/completed/back-355.04 - Filtering-Add-type-based-filtering-to-task-list-and-search.md	inventory-only	24b269d353fc974aaf61eefd03e7382acd8168fadaed198fa1b6687514ad33e6	6291
+backlog/completed/back-355.05 - TUI-Display-task-type-in-board-and-detail-views.md	inventory-only	d617be345e9e4920b912e734c1e1dc51c7b445bf15604ccae5400355d03377a8	3693
+backlog/completed/back-355.06 - Web-UI-Display-and-edit-task-type.md	inventory-only	59ac1d5c3d73512771d77f73e9731e97b401b7e825eb028e021f33a62fd729d8	4217
+backlog/completed/back-356 - Add-references-field-to-task-domain-object.md	inventory-only	2b5d54cf4a2ab7b540d63fa16f87d92056dcc8fbacddfbd076a6abe14d098c32	2822
+backlog/completed/back-357 - Fix-Web-UI-acceptance-criteria-disappearing-after-save.md	inventory-only	5439a46962a4feb4e14b1616c2c4068a555524aedc5987edfae1bf5de2ba7996	2564
+backlog/completed/back-358 - Rename-Task-Completion-Guide-to-Task-Finalization-Guide.md	inventory-only	d1848ac31511212674d5f6df24af3fbabfeda19ba111c1d91af8a401e4170c9f	3111
+backlog/completed/back-359 - Pass-configured-task-prefix-to-cross-branch-loading-functions.md	inventory-only	58475f0d55e05934f7fdae7d4f4ae1d08bad9e091185bbab1ef0975de225010f	2755
+backlog/completed/back-36 - cli-prompt-for-project-name-in-init.md	inventory-only	f4254ca1567219cbf66d34c67d46cfdcc73dbbd72d934a22818edeecebbf5829	708
+backlog/completed/back-360 - Fix-cross-branch-index-case-mismatch-for-custom-prefixes.md	inventory-only	822471b4e175e50629d24cebab2e790e0fd5b9bbc9865e885e4f02b4d9909004	1687
+backlog/completed/back-361 - Add-label-based-filtering-to-TUI-and-web-UI-task-list-views.md	inventory-only	3e0c7db994950a6b31c9dc615fadb1ff87f3e0473dac0eb348df5615e0375ea7	3730
+backlog/completed/back-362 - Include-completed-tasks-in-MCP-task_search-results.md	inventory-only	7637a150c3aff85ca2ac92d41241d9fc042753d7e3bd9319b788702957886657	3662
+backlog/completed/back-363 - Fix-localById-case-mismatch-in-cross-branch-task-loading.md	inventory-only	de6f761e05719ae03196871349c420beaf183f67b6e9fb65dea1d9bc1bc714b4	4541
+backlog/completed/back-364 - Fix-getTask-to-use-configured-prefix-for-numeric-ID-lookups.md	inventory-only	79366392e96aa1045d1f8c893e1474ad6abe50dfee78706aff5120eb4218f2fc	3904
+backlog/completed/back-365 - Fix-acceptance-criteria-insertion-adding-blank-lines.md	inventory-only	47b520a0d98a24dfbe75a8b8649a4a27b313cdefe76570ecdb27768dd2fb6cff	2543
+backlog/completed/back-366 - Evaluate-and-replace-prompts-library-with-clack-in-CLI-wizards.md	inventory-only	d6c01e6ed81685976ffbc7712e58537505338350606f951cc9f8df9b87702aff	2342
+backlog/completed/back-366.01 - Refactor-init-wizard-prompts-to-clack.md	inventory-only	0396ec1029529990f0d97cb37af59e5edb9a01f72660c1cd2c215da5c2dd1b21	9833
+backlog/completed/back-366.02 - Refactor-advanced-config-wizard-prompts-to-clack.md	inventory-only	2bddb84537cd5f09ed3bdd842462de02eb869a12220af38fa01ae6eee2396166	2135
+backlog/completed/back-366.03 - Refactor-remaining-CLI-prompt-flows-and-tests-to-clack.md	inventory-only	1e13a8f52bcada8d2eab81d0d209415916a260029d77896d1f334872e5493190	1800
+backlog/completed/back-367 - Add-Final-Summary-field-to-tasks-for-PR-style-completion-notes.md	inventory-only	4a18b5fd89357c5f3e23fbc80d45b1c5095d226f4fc304d4e1e10c3f0f8e7314	9026
+backlog/completed/back-367.01 - CLI-and-plain-text-formatter-integration-for-Final-Summary-field.md	inventory-only	ee4374307d7f9d312ceffbc7e1a6ff93cda87dbf5afd08b2ba07cf9715c1df39	3715
+backlog/completed/back-367.02 - MCP-tools-and-schemas-integration-for-Final-Summary-field.md	inventory-only	2f96580f5873d879740eb5accd13b67e75202c2b72371e88f8bffb6433d86b95	4056
+backlog/completed/back-367.03 - Web-UI-integration-for-Final-Summary-field.md	inventory-only	76df11a58bcc814723eb0a16095d647ba0fc809b2d7d899c64f99da602b4362f	3877
+backlog/completed/back-367.04 - TUI-task-viewer-integration-for-Final-Summary-field.md	inventory-only	1a93e5fd8b422248a38d02820ac9397084faf50a79b4f75fbf49f92431c74060	2977
+backlog/completed/back-367.5 - Ignore-nested-section-markers-when-parsing-structured-sections.md	inventory-only	8834a9af6522089b2facffda40904a5af198a7610c9c5ca3d6f35e9ffcbfa4d7	3267
+backlog/completed/back-369 - Fix-web-UI-acceptance-criteria-toggle-flicker-via-ContentStore-sync.md	inventory-only	1ba6dc81d36009aa72b523e48ff38cac8eb1dc0cf7d493efca91661960e94ec0	2608
+backlog/completed/back-370 - Release-publish-platform-binaries-before-main-npm-package.md	inventory-only	88cb5e31b9627f956077c51724503f8b9e38717469399ba3bcd92406aba3082d	2098
+backlog/completed/back-371 - Investigate-flaky-CI-test-failure-in-PR-494.md	inventory-only	8485e76e9ce953bfa4d4cfde3565a270047c44df4ab97fe499123e277117072b	2358
+backlog/completed/back-372 - CI-drop-sourcemap-in-compile-and-smoke-test-to-avoid-InvalidSourceMap-flake.md	inventory-only	64c80e4a1a245d4afb98c762a7187252edabc418b1e4edc38b46b374701f9b81	1785
+backlog/completed/back-373 - Support-Drafts-via-MCP-task-tools-no-new-tools.md	inventory-only	98b48b592f9e265f10cab9741558d403754805f35c473ed98609abc3bd209607	3799
+backlog/completed/back-374 - Ensure-MCP-server-exits-when-stdio-closes-and-disposes-watchers.md	inventory-only	47a00f0eab6b6aa04a07edc49b56cb1b047b0deed00e790ca6abc6aa75e98c60	3127
+backlog/completed/back-375 - Fix-inconsistent-draft-IDs-for-`task-create-draft`.md	inventory-only	c8742baefbbe98575692c34128c89dac8f131b92c5803d17bb530bf8976d450d	2148
+backlog/completed/back-376 - Fix-web-task-creation-dropping-selected-milestone.md	inventory-only	75d6ab9f16c4353c8ddb6dbe9eb37ac3046c37b900ef5c2fbbc7d7d844687a80	1960
+backlog/completed/back-377 - Prevent-web-preview-crash-on-angle-bracket-type-strings.md	inventory-only	018dd954f4d6c0ebae396354aea876745f2a98a89daec96dc7ec49488d3130d1	2653
+backlog/completed/back-378 - Fix-timezone-configuration-docs-and-local-date-display-in-task-modal.md	inventory-only	be4f6a35a548fe6ca60d149d1bf7796b8746bf56377bfa09ffb56d0949071f6e	2007
+backlog/completed/back-379 - Auto-plain-output-when-stdout-is-not-a-TTY.md	inventory-only	44c2904f8b1efa6604de8b6e167357fcd4aa6b2e26733fa0621f231357f68f4d	1795
+backlog/completed/back-38 - cli-improved-agent-selection-for-init.md	inventory-only	c65a86f376744f22257002d92f322f14315a7f2831938dfe89edf0e328e7215b	863
+backlog/completed/back-380 - Fix-MCP-milestone-persistence-to-use-milestone-IDs.md	inventory-only	020315cec432c4874459d8e99bec62bdc4c9d1b1b6c28d40be5bcdf0b6c4b994	3500
+backlog/completed/back-381 - Fix-frontmatter-parsing-corruption-when-titles-contain-dollar-sign-sequences.md	inventory-only	9e09698877919c2cc604a1c0a9ba8acac398cb76968b44d86f8da648e58b41a9	3317
+backlog/completed/back-382 - Sanitize-dependencies-and-references-when-archiving-tasks.md	inventory-only	72c4fc364a9cbfe121ca399d57285f6c9c33d5f621459320c622220605b7eaa9	4790
+backlog/completed/back-383 - Restructure-README-into-two-usage-paths-MCP-spec-driven-vs-manual-CLI-based-on-conference-guidance.md	inventory-only	226bd88464ed128a6738b1391d4f52880c95e86920880bee55b718a10c60b046	3749
+backlog/completed/back-384 - Fix-milestone-rename-to-use-milestone-files-as-single-source-of-truth.md	inventory-only	5e65efdf80053f25c7ead2f9e215a814a055ecfa8ae444e1f9e0ef7b4b55c67a	4045
+backlog/completed/back-385 - Release-harden-npm-propagation-gates-for-platform-binaries-and-install-sanity.md	inventory-only	7b171d2896e488267ac44ad7657152b29567ac80163624f22f2f0f6c48c35835	2776
+backlog/completed/back-386 - Add-quick-milestone-search-on-Milestones-page-using-Fuse.js.md	inventory-only	4fe5cc202afdec7e6fe73ead2669d85170735b02c7f0a3acd1fe2f7ced07dea0	7372
+backlog/completed/back-387 - Hide-Done-tasks-from-Unassigned-group-on-Milestones-page.md	inventory-only	89f8ba41bff9ca68ca6abbc88cba2f0dd45b254f611b31b50c2c846d82ec2ddf	7248
+backlog/completed/back-388 - Remove-legacy-config.milestones-logic-and-keep-milestone-files-as-sole-source-of-truth.md	inventory-only	0a21a9acf9dfc5bf8c2e0b8d10a97ea09d680084317a620f214b0c379de91f26	2480
+backlog/completed/back-389 - Fix-TUI-editor-handoff-regression-for-issue-457-with-deterministic-interactive-tests.md	inventory-only	6dfc3893ec0926ad87cf1f69f416edfa77141ad23dc9d4e38cb2241e075d50f7	3722
+backlog/completed/back-39 - cli-fix-empty-agent-instruction-files-on-init.md	inventory-only	9012b80d54e8a9fba9a7dde81c1cd9f079983dfb2170c5092fae38dbe2d4bfc7	959
+backlog/completed/back-390 - Add-Kiro-support-in-initialization-flow-and-documentation.md	inventory-only	971eb6194c8e75f24f466d3cf8099d71ea8f5fd2440ba7fffe2d6601337e3787	1417
+backlog/completed/back-391 - Add-CWD-override-support-for-MCP-start-and-CLI-root-resolution.md	inventory-only	16dec370a1ca4cdaad0e882ea43b346293f346130fc473b826fea66235855630	2535
+backlog/completed/back-392 - CLI-advanced-config-interactive-Definition-of-Done-defaults-editor.md	inventory-only	6465c4352fb5762918c375bb640d69d2a5a6d9a90d2096e6b8828e2a6ba61d33	11029
+backlog/completed/back-393 - CLI-task-create-edit-unified-Clack-wizard-with-edit-prefill.md	inventory-only	ac683c9bac485141b1ec79450efd51b9b7f51e9be2e60f35a2956923b627c53e	17592
+backlog/completed/back-394 - MCP-clarify-DoD-semantics-and-add-DoD-default-management-tools.md	inventory-only	456027d4de7716228f3ad4099f77af8676a82d8bec0e14700a1887172640e223	4869
+backlog/completed/back-395 - Web-prevent-stale-SPA-loads-by-disabling-index.html-caching.md	inventory-only	1b0ddb7a9ce67e27ed1f73b4f0414d0cbeb1bcfd0026f457a097d26deb726617	5130
+backlog/completed/back-396 - Reproduce-and-permanently-fix-TUI-editor-key-passthrough-regression-in-shipped-builds.md	inventory-only	581a93d5cc4d70de29818c3c7c2b0c0bde02af67fff0101e0f9406ba4258f424	6803
+backlog/completed/back-397 - Fix-drag-and-drop-between-kanban-columns-when-target-column-is-shorter.md	inventory-only	40f35870c1daa7e874fb276cb7881068ba98f0911ff266544489fe2bb0355101	1838
+backlog/completed/back-398 - Add-Milestone-Filter-to-TUI-Board.md	inventory-only	be3d8cee2081bb6cf7c86be6cdf2c7dddf15c155564255066c0df6b9768c3fb0	2428
+backlog/completed/back-399 - Refactor-TUI-filter-UX-parity-between-task-list-and-kanban.md	inventory-only	a5785cce033cd0351b448a7e4013a3b0f95c18b3722ef4dfc3f57138d1513b92	7395
+backlog/completed/back-4 - cli-task-management-commands.md	inventory-only	29debf9718e5325b88a3a1188268a6399a3b226defaedb4d7fa9e3a5d8170cfe	1027
+backlog/completed/back-4.1 - cli-task-create.md	inventory-only	e4980f94e1b4dc75dd7f6d79fa60e4f06ad40841322e897c0d07d4f864f2f122	762
+backlog/completed/back-4.10 - use-cli-to-mark-tasks-done.md	inventory-only	6a766797cfe9323c358ed3510f72eba0cb0bcc17d645b319bef598b7cdf74e8e	2016
+backlog/completed/back-4.11 - docs-add-definition-of-done-to-agent-guidelines.md	inventory-only	c0cb108e0b3cb47e54ac9d6930f79a048d74ce1dd628e94af98c0805225dd4a7	654
+backlog/completed/back-4.12 - cli-handle-task-id-conflicts-across-branches.md	inventory-only	0c44a7814249f01daef51c9ecc1b5eacef30127d13f1d69c04104ff883d7f1d6	3045
+backlog/completed/back-4.13 - cli-fix-config-command-local-global-logic.md	inventory-only	d8d29132eb47e8245748e4a36a80aa24e064a1d424db85b441da6105d98fea82	2874
+backlog/completed/back-4.2 - cli-task-list-view.md	inventory-only	5e5b6d1d4b014c9ea98b39fe85a16f4a7fb9ebba96a9073a3a6febdf7e5a7525	592
+backlog/completed/back-4.3 - cli-task-edit.md	inventory-only	966699409a3c33d469bb833f4d1143ae32befb42b587043d08af4fe830c4092c	534
+backlog/completed/back-4.4 - cli-task-archive-transition.md	inventory-only	cce1288600589226c09c13363f438e1dc32ec18fee3744a856e20018ddcc0986	727
+backlog/completed/back-4.5 - cli-init-prompts-for-reporter-name-and-global-local-config.md	inventory-only	e0323339e5da8d70db8467b54221f7217c79bed985aa4f821b8defd4f5638352	905
+backlog/completed/back-4.6 - cli-add-empty-assignee-array-field-for-new-tasks.md	inventory-only	b1782476c1162da6811219a5906eb5cac41eb542d49ecd82f5f7086bd164f168	1786
+backlog/completed/back-4.7 - cli-parse-unquoted-created_date.md	inventory-only	339402050380d4b968c0762c02044ad2a4d056f012aa911601be4415c1155927	1702
+backlog/completed/back-4.8 - cli-enforce-description-header.md	inventory-only	850d8fe8a0616ba3afd5827e2314468ba070c848f5dc05570e477f4c2db209f5	2211
+backlog/completed/back-4.9 - cli-normalize-task-id-inputs.md	inventory-only	33b1d069e8c6e6e80d50ae9215f6d198e8b6d8027f8a92464569b6499fe701f0	3038
+backlog/completed/back-40 - cli-board-command-defaults-to-view.md	inventory-only	7288c73cc1e45bff6dd77fc989b33b30f27a41bbd159d286c5e74543fe0a7cc5	1468
+backlog/completed/back-400 - Add-milestone-filter-support-to-task-list-CLI-and-MCP.md	inventory-only	5ba0944308895b3b5b196fa9bbad2e290673b638c753cf8c04a1e852de5e9842	7488
+backlog/completed/back-401 - Add-dueDate-support-for-tasks-and-milestones-across-CLI-TUI-Web-and-MCP.md	inventory-only	3375d655d8ba54015d72e6929c6c7404a635b1fd49651c49300bcddaf9ecfa03	5593
+backlog/completed/back-402 - Support-project-local-custom-backlog-directories.md	inventory-only	225b41be11c3c1dd1b0b0adf5845feb15c9e995aa2812790a0a257055af81434	6038
+backlog/completed/back-403 - Expose-and-honor-task-ordinal-in-MCP-task-tools.md	inventory-only	6cc8fa45fc46715e620cc91854aca5408d36675fcb6bbc10229ab40065f78cde	6888
+backlog/completed/back-404 - Harden-task-ID-locking-for-concurrent-create-promote-demote-operations.md	inventory-only	caa7ad829fb6e66b1f387cf0ad3681e97a5edc78b9ab824aade1f912f67a8810	4269
+backlog/completed/back-404.1 - Converge-task-creation-into-a-single-canonical-core-pipeline.md	inventory-only	fe742c3ad8725f22394848d7eb5da44350f9e92d66e66dd4c16d93d4a7a88795	6672
+backlog/completed/back-406 - Use-MCP-roots-for-project-root-discovery-when-cwd-fails.md	inventory-only	10c7f846e8018075217f2986e72c8a050065f7721b8a4aa1a7248b1592595d6f	3071
+backlog/completed/back-407 - Align-MCP-server-with-latest-spec-annotations-logging-error-codes-roots-notifications.md	inventory-only	c7abf87993c23f7dd18a72d394914cfd38439990c25dfaeea1a10eff1914536d	2027
+backlog/completed/back-408 - Consolidate-MCP-workflow-guide-tools-into-get_backlog_instructions.md	inventory-only	c8df5e892b4940a15e9d246f808c6baccfbf025e23f899e75a0d8e59a99b578e	5112
+backlog/completed/back-409 - clarify-acceptance-criteria-format-in-task-creation-guide.md	inventory-only	eeba76aade5f8cda7e651b417a7f9c16b14576be5e38f6b833e7725ae680c577	1755
+backlog/completed/back-41 - cli-migrate-terminal-ui-to-bblessed.md	inventory-only	a578798853f2d8d287f6e16d26d1d6161bd36f3f207307f9a2a46920d8c93e3b	3986
+backlog/completed/back-41.1 - cli-bblessed-init-wizard.md	inventory-only	0f55c8de8d610d611b0e1f9a5ac0e27a7134b6e07301c553b2417892a9b761de	1622
+backlog/completed/back-41.2 - cli-bblessed-task-view.md	inventory-only	d5b0bc5409091b681c07338219fb72125623f3aab357a1415f7476d3eeca930d	1589
+backlog/completed/back-41.3 - cli-bblessed-doc-view.md	inventory-only	a4e4f70fae8636fa12802ba0fa4438eb9ac3b4cd2b382566ceb644b47fca4165	1574
+backlog/completed/back-41.4 - cli-bblessed-board-view.md	inventory-only	54b218ec7cdb7809b059b290bd0e47a60fb470490d1ba61b3c0b25e522988bbc	1977
+backlog/completed/back-41.5 - cli-audit-remaining-ui-for-bblessed.md	inventory-only	ce8dea8db1d700d8279e3efc6c01f043ba721e0bec6e4977dd9e807afbec92b0	1856
+backlog/completed/back-410 - Init-CLI-add-Cursor-as-a-native-first-party-agent-option.md	inventory-only	d1304c7d4363ffae7a1360992149b9e36ae37089cb5045eed3ec86f80469adb1	5142
+backlog/completed/back-412 - Add-touched-files-field-to-tasks-and-filename-based-search.md	inventory-only	d1d7d3b0b96fd28c8c6fb1d8100cc7197704197cbeb26caf5677751986615d08	3912
+backlog/completed/back-413 - Fix-browser-labels-filter-dropdown-stacking-over-task-table-header.md	inventory-only	bc510833ef84879ac1f1515a2dfaab477a711604e43bea29565b9775bf29b10b	4123
+backlog/completed/back-415 - Add-CLI-milestone-create-command.md	inventory-only	787ab5cc3d2a915a7cbcf0f33c379b25c15dedd9912c2e5344f080d87696b014	2501
+backlog/completed/back-416 - Add-full-content-task-view-output-mode.md	inventory-only	dbafbc214a98d15a7ea26d942e37ce0c8c9bdac3d7deaba4328025a8171398d9	2935
+backlog/completed/back-419 - Add-Web-UI-demote-to-draft-action.md	inventory-only	c200cc9c5eac1f62ba579cb22aec47d2512f3e497f78697b652284a9d66d6d9b	4635
+backlog/completed/back-42 - visual-hierarchy.md	inventory-only	20b45638b02ab8584695b5b7160d2d255f7b58567547753bbe9d136cf7644828	1942
+backlog/completed/back-421 - Resolve-dateFormat-config-behavior.md	inventory-only	4ca75119e8c6c6788ad1e08a94477a039626bf644301d4dd84376c69a18570b7	4881
+backlog/completed/back-423 - Add-folder-grouping-for-docs-in-Web-UI.md	inventory-only	6ba78917aeed4dce66a368a46c756771eb31a26a1bce927095e1820fa7f3e46b	4225
+backlog/completed/back-424 - Support-multiple-status-filters-in-Web-task-lists.md	inventory-only	aa417d6c64867657445bc5cdcf5734e1d2c041aad362b9a47548ca5f7d1f5714	2923
+backlog/completed/back-426 - Fix-in-document-markdown-hash-links.md	inventory-only	e0e1b1ce7bf7f30724311d1dec8110da5b7b5f8c637e928ebdbee8742f69286b	2834
+backlog/completed/back-427 - Support-unassigned-task-filtering-in-CLI-and-MCP.md	inventory-only	b9d0d332a7950a8ec3c204632f3a0a5b8cae29bd9ab1787c499f4610061fdb04	3677
+backlog/completed/back-428 - Document-npx-backlog.md-usage.md	inventory-only	139f271afa584f11873412c42ec31f6f3b77f1bd270abd3e8276c729fb090335	3622
+backlog/completed/back-429 - Preserve-unsaved-Web-drafts-across-file-refreshes.md	inventory-only	cb3449d6929479bee7cbf47a9b0154aae99696031098037df7f63df09b3e9b71	3028
+backlog/completed/back-43 - remove-duplicate-acceptance-criteria-and-style-metadata.md	inventory-only	dd955b95c1f20114acab2fcc74f415381b6da31b81db1a114dd4ef8faed1154a	1938
+backlog/completed/back-430 - Create-tasks-from-the-TUI-board.md	inventory-only	fc4cc46306cbf91e744f3bd79a47e5569eefde7a709a967fe8713ee045b312c4	16302
+backlog/completed/back-431 - Avoid-Claude-rejected-shell-forms-in-agent-guidance.md	inventory-only	9b5c9f3c7c808f97634b91a9c374e6ef7be576ad461561f1ca5b7e10f857729a	1736
+backlog/completed/back-432 - Parse-definition_of_done-with-standard-YAML-semantics.md	inventory-only	67ae7e0923fbf3bec0ab3861df7301654f9ce34eeeea5bb6e9bd3c99919678fc	3122
+backlog/completed/back-433 - Make-task-edit-preserve-unrelated-file-details.md	inventory-only	515d6272e8e25bf75a956cdc69c15af9ebb3ca07a9cd992e4664a19c005a60d0	2579
+backlog/completed/back-434 - Use-request-scoped-MCP-roots-discovery.md	inventory-only	e7ca12b39f133432d2597fd5c60f12ca0ba8f21340af43eceae3b4c05f72348e	5043
+backlog/completed/back-435 - Optimize-Mermaid-browser-bundle-loading.md	inventory-only	7fba569f592de1cc39599926e2f7f61857e7a0c1f602eb62397015f8281d398a	4340
+backlog/completed/back-436 - Align-document-management-across-CLI-Web-UI-and-MCP.md	inventory-only	18e74eece74666ec10275a4f79467244a2b8a9f6ff6c71e41967526cc0e05f99	14098
+backlog/completed/back-437 - Document-running-backlog-browser-as-a-background-service.md	inventory-only	d4fbacd5cf0866a1371a9cee888820c4208ba59f0fe26cfe5528be6137109a27	3408
+backlog/completed/back-439 - Allow-backdrop-click-to-close-task-modal.md	inventory-only	7df6f1c59c55b708613252dfe2b9719cedc52c2a428be2f133d2fd21858d0dab	1569
+backlog/completed/back-44 - checklist-alignment.md	inventory-only	125776960985a428252e2c5299a60c9dfdb481ccce8ef95fdce842b5b7ee10e0	538
+backlog/completed/back-440 - Handle-cancel-in-agents-update-prompt.md	inventory-only	d5911a0d2e4e448c4f56e26086e390523dfd3137a35fb2a039fa2a62e49bedfd	3068
+backlog/completed/back-441 - Add-kanban-board-filters-to-web-UI.md	inventory-only	2edac7f7f181c1d0fc1fb4f884eaf42a7ef45b7b976c4849bfdb8b7618756086	2151
+backlog/completed/back-442 - Prevent-DoD-defaults-config-injection.md	inventory-only	9f3692d8ff5b2a3ea467e017c2a2b7f8edff3ca9d47e7f230b63c87065d21b23	3331
+backlog/completed/back-443 - Add-PowerShell-completion-support.md	inventory-only	08d1ad75faa4b5c1c996aafc1a79f779074307c807553f8371aec9de4bb973b9	3692
+backlog/completed/back-444 - Support-filesystem-only-Backlog-projects-without-Git.md	inventory-only	ea1bec6719514de9cd91e8ea718659da39fba94a32113d767e1cda96c60a0997	4559
+backlog/completed/back-445 - Add-command-filters-to-web-search.md	inventory-only	c73859f58111c24d3f35cf8c66635c9da800881d341799d3cbae28b389ccc718	3286
+backlog/completed/back-447 - Add-No-milestone-option-to-TUI-milestone-filters.md	inventory-only	8d98e27932d089ada0756613b250069f0e90d9872338545b7e6699690cf351d6	3097
+backlog/completed/back-449 - Document-task-image-handling-and-docs-management-in-agent-guidelines.md	inventory-only	d0ce29fd7442530bfde2ae13cdd874116ea8f0c1ed087abbe1b4031bff333c0f	3251
+backlog/completed/back-45 - safe-line-wrapping.md	inventory-only	07b1613b5a8a5aa7441ecd3b9efc11ec514305c4c706a226c15e3f2c58158d03	503
+backlog/completed/back-450 - Add-CLI-document-update-command.md	inventory-only	ec0420e97700456315e97a2b3dc74aa02a69553d165b2b904485d62072c14616	3692
+backlog/completed/back-451 - Fix-Guard-cross-branch-loading-behind-checkActiveBranches-flag.md	inventory-only	abad17a73136d615faa6498344f85d3e16e9263cad0fc601ef36adb257b33f88	1802
+backlog/completed/back-452 - Add-TUI-keyboard-shortcuts-Yank-Archive-and-Help-Menu.md	inventory-only	1554ccdb69e18363d783996901a6881f3e4377d26c913a567eef30df1a0ee00f	1669
+backlog/completed/back-453 - Stabilize-Windows-CI-test-suite.md	inventory-only	98a018c33d6d09e89331a5a8f83181ba828c1162635f26e48d769eb33779bc1b	983
+backlog/completed/back-454 - Default-ordinals-for-created-tasks.md	inventory-only	1125b63e7dd60970c83945f714a38cd064ebc1bec6414bc2a807a7448b9c1f1c	1580
+backlog/completed/back-455 - Support-task-milestone-assignment-in-CLI-task-CRUD.md	inventory-only	0d780985f57a4be36a2f49a56048251dee3c122f46ffd5a30472abb90586b4da	2410
+backlog/completed/back-456 - Lock-milestone-ID-allocation-during-creation.md	inventory-only	c1b2f6d8ff96d023076497819a5f1b2f94faca6638b52b5250f415b7451af0d2	1797
+backlog/completed/back-457 - Avoid-stale-task-reads-after-milestone-mutations.md	inventory-only	efb47572294d4089b93f45861753b085d7afd9899da2870b8dbd0f3db2058032	2024
+backlog/completed/back-458 - Fix-promoted-draft-default-status.md	inventory-only	58b681177f4bd46fb46e3306c22dc4bdf2af6b9458f5b1a1e86b450dae0e38ba	2791
+backlog/completed/back-459 - Add-priority-sorting-to-Kanban-columns.md	inventory-only	3424e6c10f960fc8bedafa0a9ee83a30694de772cc7ea57f3d0920a255e486e0	1692
+backlog/completed/back-46 - split-pane-layout.md	inventory-only	c0399df4b91de73f23c66aa1b7da8f8cfc35c170a5bd30da9768aa9c6c50974b	570
+backlog/completed/back-460 - Fix-TUI-selected-row-readability-in-board-and-task-list.md	inventory-only	54ee08113f452f5bafadf959ec230e04dd72d561b9fb8afbecef4808fe1a790c	2078
+backlog/completed/back-461 - Add-community-tools-section-to-README.md	inventory-only	0d12f92c297896e92244164cc9aeacfed1ff65ca700dbe25ee6b01afd037d89f	2064
+backlog/completed/back-462 - Use-terminal-status-for-cleanup-instead-of-hardcoded-Done.md	inventory-only	b29f8bade96949ec4e69779d8ea14335c545fbc76714fe50e15d59f11f31462e	3865
+backlog/completed/back-463 - Align-web-task-filters-between-board-and-all-tasks.md	inventory-only	ea08d046b6876086fbaa2754ed332a24f1aca4e8774ceb1d5360aa7face4edcd	4172
+backlog/completed/back-464 - Use-shared-multi-label-filter-dropdown-on-board.md	inventory-only	e8cdda4db9018be53b57c5bc8a1be0da032f2efc85908edcd87b36e2de874465	4377
+backlog/completed/back-465 - Fix-Windows-MCP-document-tool-hangs.md	inventory-only	cd337e76bbd10bbd4bb7004af23145a8330702dfa5b73ade01f75e19038742da	5470
+backlog/completed/back-466 - Add-win32-arm64-Windows-on-ARM-prebuilt-binary.md	inventory-only	051ef374ab0603fec1535b15258bf26ccad912f5ca932736d687188bc7f82063	5231
+backlog/completed/back-467 - Build-win32-arm64-release-binary-on-a-Linux-runner.md	inventory-only	e19de881f887975ab2f39fe84a69f2f910b1d0893970a0076112a2de6dce8322	4658
+backlog/completed/back-468 - Update-GitHub-Actions-to-latest-versions-across-workflows.md	inventory-only	8ed21a59082856d2b58533e3e74ff969309fbad8b5039d01c2878243967db615	5879
+backlog/completed/back-469 - TUI-theme-adaptive-rendering-remove-hardcoded-colors-add-scroll-improvements.md	inventory-only	898f78a1904c124e1a1b4bdfd6942bae0c34fda64107206b78d231f116793194	7784
+backlog/completed/back-47 - sticky-header-in-detail-view.md	inventory-only	74dd08ebc342090a314ecab54aa9908ca1771322654ab4d7c4d9484a39cd0c6e	1861
+backlog/completed/back-470 - Add-task-comments-across-Backlog.md.md	inventory-only	50ea3aee3321957a16137418ce11d196d10416b01a6aedfb5422ca4149524ebe	5630
+backlog/completed/back-470.1 - Core-task-comment-model-and-markdown-persistence.md	inventory-only	f3f6de9c61d030273e92818a4a7999809a16c2b91acb80458f96f2ce073b951b	3340
+backlog/completed/back-470.2 - Expose-task-comments-in-CLI-and-MCP.md	inventory-only	40231317e6fe5e03acc3050baa1cecf148e812e6e56be1fdddc90fd6bf36cc19	2865
+backlog/completed/back-470.3 - Add-task-comments-to-server-API-and-Web-UI.md	inventory-only	22393e1f83d85d389c3919ce4efd3dfbb213de035e5abec5b400d251802ae75e	2958
+backlog/completed/back-470.4 - Render-task-comments-in-terminal-UI-and-update-public-guidance.md	inventory-only	9539ac21351abe81b9a9124fb30909071e3fd814e5c7cb682bb19c2f857ede86	3208
+backlog/completed/back-471 - Display-task-dates-consistently-as-UTC-in-TUI-plain-output-and-MCP.md	inventory-only	91ee1c3f5b48bcb2ba37f8a1b45ecd32e9afa2148ea63765e2163db5d78b2398	4001
+backlog/completed/back-473 - handle-port-congestion-for-backlog-browser.md	inventory-only	e7bbc8e2f8ac172c983b3db62bc2b004bf07e045e51c50ea740f8aa881e3a1da	4049
+backlog/completed/back-48 - footer-hint-line.md	inventory-only	de1f92be22a0081303cf36884b8508c09a36928b2bbcc567f97c2f7ca9d899b1	436
+backlog/completed/back-49 - status-styling.md	inventory-only	67dfa0da0bba9d4f8b24b51d53fc03548f1b3cb726abe2fc10b115c1972fc561	1676
+backlog/completed/back-5 - cli-docs-decisions.md	inventory-only	30b95fc1ce88534283bde0a0ea16e991bf8a10d7c67a9fb72553541c7a8b8c0a	2316
+backlog/completed/back-50 - borders-&-padding.md	inventory-only	9cafa4098230fcced53f1f27755b86b7b3ae939c697fc568304a5edef60d14cf	454
+backlog/completed/back-506 - Fix-Codex-MCP-connection-failure.md	inventory-only	795273358cd18e5ac4b4a4f42584daf944da0fc6b679eefad5c49e03c3a8c497	4174
+backlog/completed/back-507 - CLI-workflow-guidance-for-agents-and-humans.md	inventory-only	35471222b256743cc8d21f6f1cdafbb7c1151cc8c059578c72b56a9f258b4af6	17525
+backlog/completed/back-507.1 - Shared-workflow-instruction-registry-and-CLI-access.md	inventory-only	2386bb1fa33353838b64eebfe6897f2e84c28f67871f0bee543e285116507441	3116
+backlog/completed/back-507.10 - Task-complete-CLI-parity-with-MCP-cleanup-operation.md	inventory-only	3cb4b2a5cc1c47be3a61c98c5ef78cb60eae0380183dfe051bc46447ab13e73d	4380
+backlog/completed/back-507.11 - Concrete-CLI-help-values-for-agent-schemas.md	inventory-only	38b8aa6d47ea5e3093b47a9557e6430f334b091d50422d9cc18de9a6982c9ac5	3137
+backlog/completed/back-507.12 - Use-required-overview-nudge-and-configured-prefixes-in-CLI-guidance.md	inventory-only	ada099321bccc65f15288fcc33739b96681a8335211c106c8ee5021b11ceefdc	4383
+backlog/completed/back-507.13 - Restore-colorized-root-command-splash-for-TTY-output.md	inventory-only	f3efb9b46d1d3dbae84714b31df5d684636ba7bf93c9fa26c6a83acb43bb4477	3308
+backlog/completed/back-507.2 - Short-agent-nudge-and-init-default-migration.md	inventory-only	56295602310df46a0d423ab27e4398b6ac8cc0e8cac82afc785ed92659d76032	3581
+backlog/completed/back-507.3 - Text-input-schemas-in-public-command-help.md	inventory-only	0080e9eeff953f99ea92020b12f83622c553fc9750ab1cb6d7b7d6a906ad10cd	3341
+backlog/completed/back-507.4 - Self-correcting-CLI-errors-for-agents-and-humans.md	inventory-only	5eb8554f1c39443e2552d9410574f16daf9cae4e313ee3799fef1525702f44af	3108
+backlog/completed/back-507.5 - Documentation-and-MCP-compatibility-updates.md	inventory-only	de1b7d9c65b6b18674e5d440dac41ad7e2cec4aed1031c799140a86d93ff9542	2789
+backlog/completed/back-507.6 - Root-command-local-instruction-hub.md	inventory-only	254bc1c09c2027aef1282ef9ec98c0263ffa6b28a0f697e061e9a0bc959fdc70	4753
+backlog/completed/back-507.7 - Milestone-CLI-parity-with-MCP-operations.md	inventory-only	ac922eb4db54bf9c6a97db03deff56031dd8c0442b2e8357ca7f2dbf0ac7a15a	5572
+backlog/completed/back-507.8 - Document-search-CLI-parity-with-MCP-operation.md	inventory-only	cf5d513ffa545f551942b6650f98b58fe68aeb229b00fa0d4e032afd51c65c04	4979
+backlog/completed/back-507.9 - Task-list-CLI-parity-with-MCP-filters.md	inventory-only	41ffe37cdbce20681d32da164618cbdc2706b67cff8f1626169165853ccc7d45	5822
+backlog/completed/back-508 - Resolve-MCP-project-root-from-client-workspace-roots.md	inventory-only	1effbf0eb3bd6c836c85b01548788a81ab0235d4df68bb96c080978abb552766	4077
+backlog/completed/back-509 - Fix-CLI-auto-commit-for-doc-decision-task-create-commands.md	inventory-only	69d1ca055722f7db643d54e36094335c923fe9ba491877a182d2dfd81ba67bc3	3326
+backlog/completed/back-51 - code-path-styling.md	inventory-only	f58526754e553c7a4752757c2de090813409f23513b5d1b31792ccce6d30253b	547
+backlog/completed/back-510 - Fix-repeated-task-edit-label-flags.md	inventory-only	61006e315c06bd72d885fc363809fd20e13c3028e4d8239324c76fbf2a7a284d	4369
+backlog/completed/back-513 - Investigate-stale-worktree-branch-discovery.md	inventory-only	e11eb475e53509c8ffadb8c40d75649d24eba13647775e823d2caf80d4f1dc58	3496
+backlog/completed/back-515 - Fix-TUI-completion-status-update.md	inventory-only	3911217c6b1530158500d0a9cbea6b50d166a7f96bca7137efa115aede5bcded	4415
+backlog/completed/back-516 - Detect-and-warn-about-duplicate-task-IDs.md	inventory-only	a5a743e799dedaa17e66c449c576022f509b1645264cf83b16a8c7cdedaed0c4	8011
+backlog/completed/back-517 - Show-acceptance-criteria-numbers-in-browser-task-detail.md	inventory-only	cec2423d5e5a3a48158978b43b21db2cd154949c4726ac40e6b22d0afe96f6b2	3901
+backlog/completed/back-518 - Preserve-updated_date-for-ordinal-only-task-reorders.md	inventory-only	9bce6f6c9b428179781f68a566a793e1d76ad61f1b03db4211f3d20bdf324c92	2264
+backlog/completed/back-519 - Rework-README-into-a-landing-page-centered-on-the-review-surface-value-proposition.md	inventory-only	b7f597a772966442dd7124122908da5cfb18d701abe2bb76a027263b2e2b20d4	5204
+backlog/completed/back-52 - cli-filter-tasks-list-by-status-or-assignee.md	inventory-only	285e750ee4a5f0cbd2d6d97c4a4e8574323fb4ef9ab998fc8e0790c808141a68	816
+backlog/completed/back-520 - Remove-the-sequences-feature.md	inventory-only	314be0dc7e382d751f3ceabbf81bfb9b77a47c340eca9b074a88fe3995f6c1a0	4378
+backlog/completed/back-521 - Improve-agent-experience-for-weaker-local-models.md	inventory-only	a10d17bd44be38dffecf2bf677fd7af60671fe87eb7fafd6503077e5c1b609ae	17181
+backlog/completed/back-522 - Hide-empty-status-columns-on-Board-when-no-tasks.md	inventory-only	b4983cd36de343f3292fb073ebe2253422fa3b480cea6b19916ac056d41e8118	3487
+backlog/completed/back-523 - Add-plain-support-to-doc-view.md	inventory-only	caf4281f464670885493f7cd5d963753a464b56d862d7a1795be397a42547df8	2950
+backlog/completed/back-524 - Speed-up-CI-test-workflow.md	inventory-only	2dbd40a6e9e42dc3796825b8dff3e37ed2bbb7109af66ece2e547ff9c46b3fc1	7038
+backlog/completed/back-525 - Modernize-browser-UI-bundling-with-Bun-and-Tailwind.md	inventory-only	a839a56c7cdbeef19e699111ff22298208512da7969983d2867477421d78e82c	3727
+backlog/completed/back-526 - Sort-web-milestone-cards-in-creation-order.md	inventory-only	a80fb4e9101f0e36aed55b73e438c3d6c8fdded5304a7f2edcef52ae5da6b498	2011
+backlog/completed/back-527 - Add-ordinal-sorting-to-task-list-views.md	inventory-only	df2915e542da76aded0d62b1b4acc8bd101badc74716d5956ba31e9419695ce2	2078
+backlog/completed/back-528 - Fix-All-Tasks-ID-sorting-for-subtasks.md	inventory-only	fb857c5d9f5a86034d0febd2a2e52f40c4c5e85af803a9fab1f5d29a7a9374da	4002
+backlog/completed/back-529 - Sort-browser-label-filters-alphabetically.md	inventory-only	490259ca1183a65542ef1b4ca1f5cd9847522ecb577cb11256f9ff9d1ca11a88	4964
+backlog/completed/back-53 - fix-blessed-screen-bug-in-bun-install.md	inventory-only	446477d715c47c189c4075d70f55da63ce75afb51e19e92df44896ec654f2bf7	1038
+backlog/completed/back-530 - Support-user-defined-priority-values.md	inventory-only	04072c17b5d62d715a1014c67f05f5f7072ed0479eb4ff4598b9c77b6eb3c6b1	6500
+backlog/completed/back-531 - Add-creation-date-sorting-to-board-column-menu.md	inventory-only	cb7a05abc22737fd2beb5ca8be56fb6ce7336f3de7e2604dccb8cc6a5446c487	3102
+backlog/completed/back-532 - Add-exclude-status-filtering-to-task-list-and-search.md	inventory-only	67ef687ae726fd4d2f5669588ab92a091bfd2a2a9d5affef50f7d28116494564	10476
+backlog/completed/back-533 - Prevent-stale-ContentStore-refresh-from-overwriting-newer-state.md	inventory-only	73c0362a5db3e70ae66eef9b2d6e8fa893d7eb00cd3ea527d9e1b572ed315de0	15844
+backlog/completed/back-534 - Eliminate-MCP-milestone-mutation-CI-timeout.md	inventory-only	ab088addaccfc0fe54dae007d3c75e7430e69c71937a56eea191550d89ac4465	17914
+backlog/completed/back-535 - Audit-and-modernize-test-suite-reliability.md	inventory-only	5153b0c58e10cd2f9b04dbf640bda6646f637713c85fcd261ab56a319d31c078	10278
+backlog/completed/back-535.1 - Replace-simulated-CLI-tests-with-real-surface-coverage.md	inventory-only	7f014f27ae241567e4707e74156a448116ac518695bc3df4bd67596b36b34686	4547
+backlog/completed/back-535.10 - Split-CLI-contract-test-monolith-into-coherent-suites.md	inventory-only	ac12b82860970a699bc5e079148785b3a008b4cec2e3b2b36e26b832cb8c615e	6518
+backlog/completed/back-535.11 - Define-retention-for-tracked-temporary-diagnostics.md	inventory-only	24d12a1b57833c8e5ff6267a7654b73bb3e0fac5bf2442234f3a402a25e2b45f	7004
+backlog/completed/back-535.13 - Replace-overlap-refresh-polling-with-observable-synchronization.md	inventory-only	29c8f752ecf71813e0a93076186ca79c498bf4df4144a1c2a8519bf8e1fef0ef	4992
+backlog/completed/back-535.14 - Replace-deep-link-test-polling-with-observable-synchronization.md	inventory-only	461008719d0781f17a39bc46993749ea4d0c5c2c5337e61233223ee2dc37603d	10301
+backlog/completed/back-535.2 - Harden-test-lifecycle-timeout-and-cleanup-handling.md	inventory-only	fb47ec5e5f7bd192c5f659dcf82fd0a402ab6040ac68c36ee5586c4e7af26bb5	14858
+backlog/completed/back-535.3 - Make-filesystem-fixture-cleanup-fail-visible.md	inventory-only	b84ba351efa5d69f17c8b6f328b7c139f78a1cb0190e616298dfe4fd9f7a8893	10676
+backlog/completed/back-535.4 - Make-server-and-process-test-teardown-deterministic.md	inventory-only	badfc1c382b479fa07d297699cc36e72f3018c4fd5c7913eeb200295813161fc	10323
+backlog/completed/back-535.5 - Replace-vacuous-catch-based-test-assertions.md	inventory-only	b82fe66f2c4f54ac7e5375590ab4c07bceae39aa0d7038194b589673275fa48b	6979
+backlog/completed/back-535.6 - Consolidate-compiled-build-coverage-and-CI-diagnostics.md	inventory-only	725aa8ab2e9c17c24e6c36b122a386fe5a4ea326e359a26d768bd662ea0e4003	4922
+backlog/completed/back-535.7 - Isolate-compiled-smoke-fixtures-from-repository-remotes.md	inventory-only	ca5cb8949f268d689a5d3a666e0cf8d939c4a858204123ef07b2cee5f449c55c	9471
+backlog/completed/back-535.8 - Thin-duplicated-MCP-semantic-test-permutations.md	inventory-only	8781d3734c80d1854b514555e1226f68b5436c956222e360cd37b724aef62b0c	7507
+backlog/completed/back-535.9 - Replace-private-browser-and-server-test-assertions-with-observable-behavior.md	inventory-only	c7f335a9ed5fd71e1ab2667146772529f5212cabc9dc4fd57432a3c1a5a1e42d	10362
+backlog/completed/back-536 - Enforce-just-in-time-implementation-planning-in-workflow-guidance.md	inventory-only	d3b124dd833402add7f564ed90933a6de5348ae9a2cbca336e362a60d9644b6f	5822
+backlog/completed/back-537 - Make-checklist-edits-and-serialization-deterministic.md	inventory-only	37601da1c4302d085eb43b1ba834cf0eedeefc96c5ebf55b8c195be15834e005	5215
+backlog/completed/back-538 - Fix-port-availability-probe-so-browser-port-congestion-handling-works-on-macOS.md	inventory-only	9e763b5b2de2f2b480a5246a882ca42d2e29f4ca58f8d84a89ecb4f976523c65	3420
+backlog/completed/back-539 - Surface-duplicate-task-ID-warning-in-TUI-task-list-and-detail-views.md	inventory-only	05e2f31d826e20ff58137cc748e9e337e5208141b4c1832c008d7334dd37d800	3684
+backlog/completed/back-54 - fix-init-prompt-colors.md	inventory-only	35bd7c2009aed10c512b5d0541977544e08feada21f73372ad53a6fc20a0cf8f	846
+backlog/completed/back-540 - Parse-block-style-YAML-lists-in-config-and-fix-config-set-guidance-for-list-keys.md	inventory-only	a67ccce7dcd2bbb6f526131dcb2a56fb0166361d33ffa1072991fdcf38e8ffed	4030
+backlog/completed/back-541 - Archive-one-week-old-completed-backlog-tasks.md	inventory-only	0c8e834f777ea2ab4e93fc41b68f018a8828b29e0ca9cbe6754c6386286889a2	2495
+backlog/completed/back-545 - Add-stable-JSON-output-to-read-commands.md	inventory-only	d65a03bc393389d7ca8aec017947b4231e44310f96e05f2d6dddc041e2220c7d	7251
+backlog/completed/back-546 - Add-dependency-readiness-guidance-to-TUI-and-browser.md	inventory-only	09f6b5282bd90271105bc601705df98a0eb7d1418fc4c1835cb00cac8b8a61ca	20156
+backlog/completed/back-547 - Make-TUI-live-refresh-resilient-to-atomic-writes.md	inventory-only	79f3dd568f0a0b67d10a54b00e83838037faf1ea6b87e70b48b3d22f9b2021d6	6028
+backlog/completed/back-55 - simplify-init-text-prompt.md	inventory-only	faf3a8a88af02948b933d28ee4570824bf56fec518d7185952f4a41bd0672996	787
+backlog/completed/back-550 - Add-append-plan-option-to-task-edit-CLI.md	inventory-only	1ac7127205429233b97bf0fc28f95418be307cb27687eea335f9bacafd48f50b	4300
+backlog/completed/back-551 - Show-acceptance-criteria-completion-on-TUI-task-summaries.md	inventory-only	ba7257442057c7e22b38f1a440bd9f5e50b64592aaf2b97ad1200e241afeacc4	4531
+backlog/completed/back-552 - Show-acceptance-criteria-progress-on-browser-task-summaries.md	inventory-only	9fd6497de04b0710aba0787a8028f4d58365dac77c12058d04332b8d92201cad	4644
+backlog/completed/back-554 - Modernize-Nix-packaging-and-restore-runnable-builds.md	inventory-only	65b2b936a8d65d2771b31c8d32fce8b09e8622352ffcfa6ef196b56ae616e5c1	10033
+backlog/completed/back-557 - Treat-same-path-cross-branch-task-versions-as-one-identity.md	inventory-only	03a0b51bc3de624a60d371039e0508fa4ce6f7fe9af52a158f3824fa29e98764	8967
+backlog/completed/back-558 - Prevent-browser-shortcuts-from-intercepting-inline-task-fields.md	inventory-only	a5964401012bbf1294d31ecbf2965a7d5e0413f2e890f94de2bcf7d827d5ec99	9514
+backlog/completed/back-559 - Eliminate-repeated-task-corpus-scans-from-browser-updates.md	inventory-only	2d2dbe9bbb0efc4483ac976411385b1d301c54d3ea6ff5282ab798f1715c562b	12095
+backlog/completed/back-56 - simplify-tui-blessed-import.md	inventory-only	9b1a90cfaf437b03829619da19ec438acde3f9eb30fe6f2be13861a954274deb	589
+backlog/completed/back-560 - Bind-the-browser-server-to-loopback-only.md	inventory-only	aac4b8212d7c42ec08253506c78cf65909d1ea80d013a226bbd6b9e284bdc245	5164
+backlog/completed/back-561 - Normalize-acceptance-criteria-metadata-for-Done-tasks.md	inventory-only	562a378d2611226fb7c5350a169604f2a7e4588b75665c4addc07538cf4b5db9	3311
+backlog/completed/back-562 - Honor-BROWSER-for-devcontainer-browser-launch.md	inventory-only	6dac53fb1ed68e6699bcf7281afcd56096ba8215f2d7f3a4a15c035a4aeba217	2866
+backlog/completed/back-563 - Scope-autoCommit-to-exactly-the-files-each-write-touches.md	inventory-only	1556976225f469ce236c1ee37d007cc8e03c46a1bc3fdab02029282dbecbc181	5714
+backlog/completed/back-564 - Match-milestone-ID-queries-in-task-list-milestone-filtering.md	inventory-only	e8149581837f4c9a257a25f3d53f4b086e095d53df5bea7662be7e31ffd423f9	7160
+backlog/completed/back-565 - Fix-TUI-task-composer-navigation-with-directional-arrows.md	inventory-only	30713f570c6a99bce7934fedc8261acd6c0cc241d6ada864f2998bbb16b99bee	21509
+backlog/completed/back-566 - Temporarily-disable-TUI-task-creation-entrypoint.md	inventory-only	d81687841486e658a8940d8fab6616c9be75761447da74f804f56f0bd18d80ab	2949
+backlog/completed/back-567 - Stop-idle-browser-refresh-loop-from-duplicate-task-preview.md	inventory-only	b2c650ef765855afc086e5f85bb2099118e15d263a99b1b43ec166a58c009625	3271
+backlog/completed/back-568 - Preserve-genuine-task-publications-during-duplicate-preview-refresh.md	inventory-only	2c0c8846723c3aa9c9cd27bf279d973f534e596908cd52ce711634637e20b374	3993
+backlog/completed/back-569 - Bring-Windows-CI-tests-below-three-minutes.md	inventory-only	4d3462d14be58f17e22c14c5419174f34a2e114ec4da3ffb09ae4b5835b54d0a	9904
+backlog/completed/back-57 - fix-version-command-to-support-v-flag-and-display-correct-version.md	inventory-only	ac5467fd0b3e89428aeeae05095e98c5db5c6539a848e678c36788d8c34d66a7	2493
+backlog/completed/back-570 - Make-browser-task-loading-asynchronous-and-idle-stable.md	inventory-only	ef111cafa9b6605bef54d7f9c4f5535cad3fd1eacad019b4acd15acd273277f6	5173
+backlog/completed/back-571 - Show-genuine-loading-indicators-in-the-browser-board-and-sidebar.md	inventory-only	8ff6ce79a62a5a99ffd04a4b2666c57572da6ae4caf69d2606e7781c53ba3785	8059
+backlog/completed/back-572 - Clear-task-dependencies-through-the-CLI.md	inventory-only	44449a198dcf303891193a05efa5966c2f8b272ef1c824afa1b4814420ca4a57	3211
+backlog/completed/back-573 - Clear-shared-loading-ownership-after-terminal-browser-initialization-errors.md	inventory-only	e43c2dd219f232f07c45e6aa35e025778bf3d2ff19bd60776b5ee16c2c4f5bb4	3357
+backlog/completed/back-574 - Allow-clearing-defaultEditor.md	inventory-only	cb82b9426c1505fd7722f2978247df1ef8e928eb66755569c94a9d13156a1f7f	7882
+backlog/completed/back-575 - Fail-fast-instead-of-silently-losing-concurrent-task-edits.md	inventory-only	70e2e189ae17a7f22aa69b13e1f3942ef635eb7d39aea1a4f1f65dbfeb167d79	18898
+backlog/completed/back-576 - Multi-assignee-parity-for-task-create.md	inventory-only	d5c1ef792f02fb78d05f9e9c386ef80948e362aa77f037c66d43f3aaa0d13e6d	4669
+backlog/completed/back-577 - Include-the-project-name-in-TUI-window-titles.md	inventory-only	052abc0a20bf87b7ec9b332d407eada6a8ea0873b7c173ee228f4b8cc59a612b	9160
+backlog/completed/back-578 - Stop-the-Rosetta-sysctl-probe-from-leaking-stderr.md	inventory-only	07b11bba1e7cab195939396e9a8bc034341c71c4fb94191602beade63753467a	6435
+backlog/completed/back-579 - Document-real-newline-handling-for-every-multiline-Markdown-flag.md	inventory-only	6f145dcce457d6fc510b8e479496db71b7564980e1982a7e2c4d61263daffda8	8250
+backlog/completed/back-58 - unify-task-list-view-to-use-task-viewer-component.md	inventory-only	8531c336fb5b161eeed68bb960819b2d7f45cf143f901c1b94ae729008f5b2db	2354
+backlog/completed/back-580 - Fail-closed-on-ambiguous-document-and-decision-identity.md	inventory-only	54e57fce5ff70818f43b45558791fad677ce8d4c68c4f22a0bdb5984fb855977	12786
+backlog/completed/back-581 - Make-init-honor-BACKLOG_CWD.md	inventory-only	b1c52628905a1846063d8067431943f1dfca529b2595a77633380c0817c2e2af	9814
+backlog/completed/back-582 - Add-a-decision-list-command.md	inventory-only	04bdba800aaa3d9e1b8de9896c049e91ebde251ef59db4b5cf149d4254c427e0	8595
+backlog/completed/back-583 - Implement-defaultAssignee.md	inventory-only	ad0359842d9f8000f9b7e2fefc58d0f01f4a26daf4b49f24d1dca89dd475f56f	13387
+backlog/completed/back-584 - Keep-vim-keys-inside-the-list-at-navigation-boundaries.md	inventory-only	889ab61f83b6b707bce94e592f40e4ae206e1c244e0092c9a8252615d20b19b8	7528
+backlog/completed/back-585 - Diagnose-and-fix-the-ubuntu-latest-CI-test-runner-flake.md	inventory-only	29f0eb64ba5bd21f29a4cd728107f622ffeea8d45b6d925a7b74c9b251742f23	14967
+backlog/completed/back-586 - Clear-references-and-documentation-through-the-CLI.md	inventory-only	923571393c355e8f9e141b7e742604a01051725bd3b758d7242b4a60731477ce	6217
+backlog/completed/back-588 - Make-the-TUI-help-popup-robust-to-resize-and-wrapped-lines.md	inventory-only	ce489a33bf16129fafa51e172cbd3760e7a9280d31e13d4db677ce27b4410184	4348
+backlog/completed/back-589 - Improve-composer-usability-at-extreme-terminal-sizes.md	inventory-only	b8e35a6e40e521292fd8f9d9eca2fe135f61dd71a64ae36ad689f104658ed2c5	6017
+backlog/completed/back-59 - simplify-init-command-with-modern-cli.md	inventory-only	c6a17ee47cea0a3f3aa9d6b06c920478dbda37904ec82118b6b8a2deeb20c6ec	2375
+backlog/completed/back-590 - Support-mouse-clicks-in-the-TUI-task-composer.md	inventory-only	3052f856467ef3276f46845e5ac731fb6a49d08bf58e922e3e0b0de793ee5109	4960
+backlog/completed/back-592 - Make-TUI-text-field-insertion-Unicode-safe.md	inventory-only	ea0e859015e5c7cf9c52412f11fb8d2719d6e9054e2017dd2a29c62bd35aee48	4152
+backlog/completed/back-593 - Auto-link-task-IDs-in-web-markdown-to-task-deep-links.md	inventory-only	a21d00a0c7105d09d5a03fe6fd287e9281c3e4d8b35ca44479982523f05107e7	14399
+backlog/completed/back-597 - Add-incremental-reference-flags-to-task-edit.md	inventory-only	bdff0505bbf17a69c7131a463883422985dd395cf52e4e55a5600c7519805c35	9245
+backlog/completed/back-598 - Resolve-open-Dependabot-alerts.md	inventory-only	649b2655d5250f9f3f121bd1c22a12c03054308b99946be46472332b074dc1c6	9836
+backlog/completed/back-6 - cli-packaging.md	inventory-only	e2f6e939d94e4926e3a2af6446cc0db9ec243a8486241dd3728e837249dfa1c6	2618
+backlog/completed/back-6.1 - cli-local-installation-support-for-bunx-npx.md	inventory-only	f882da4abca150d9456b9d2f37f74a33df093fe9874180ff8ef3cb0d672c0c20	2005
+backlog/completed/back-6.2 - cli-github-actions-for-build-&-publish.md	inventory-only	e67e80413125e66c7555d9475452efb6bc09583a1ec59bea6d1e1d40fbd0ca27	3141
+backlog/completed/back-602 - Close-doctor-and-web-gaps-from-the-identity-review.md	inventory-only	c1c15dc2bf1b714654c0e5be776466d7d35fdc3cfb32be4140854dcbe8653e11	6843
+backlog/completed/back-603 - Align-create-and-draft-flag-handling-with-the-edit-path.md	inventory-only	ca5aab236c8d9f0c096b97d8a8744c0f1e055fdd1617af20a1e49b403ee3a6e8	7358
+backlog/completed/back-604 - Allow-explicit-unassign-in-CLI-and-TUI-when-defaultAssignee-is-set.md	inventory-only	89e47b8af5a2cf2e0be332cd617accc8d3d096daeddf8f5af3d98109797c45a7	10789
+backlog/completed/back-605 - Route-all-TUI-operations-through-shared-core-with-runtime-cwd.md	inventory-only	a4120381340aaab8d7d8264a852e5a535947a63074319d1c143b8972b68bf4f5	11495
+backlog/completed/back-606 - Fail-fast-with-a-clear-error-on-malformed-config-list-values.md	inventory-only	57b334b8e86698a3a4b3b0cf94b737683df00483d06506c39abd369fb35e895f	23341
+backlog/completed/back-607 - Resolve-bare-numeric-task-IDs-consistently-across-all-commands.md	inventory-only	2c94e85ff89783ca13b844fb7c8e88b4c04d77c0130a61043c796a1b9dacbce2	7689
+backlog/completed/back-608 - Remove-gray-matter-cache-poisoning-with-a-shared-no-cache-parse-wrapper.md	inventory-only	4580e1e210ceca9f56d164ef41cbab29773ff7dc1ab5db0305872b8f316c9dcc	6537
+backlog/completed/back-609 - Fix-small-CLI-and-TUI-polish-defects-from-the-Aug-2026-review-rounds.md	inventory-only	aa06201300f6c46e3e40bb3aab2ce62c0caabb9d06ccdf01bc8e469ef677d216	10670
+backlog/completed/back-61 - embed-blessed-in-standalone-binary.md	inventory-only	cd0ed86f2eb232281953a7252ce590b724d6b7e4c05c2f1c3a1bbb40677326c2	1691
+backlog/completed/back-610 - Fail-fast-on-wrong-typed-config-values.md	inventory-only	7dc08d1e8947860c4773fcd1634102b9c53856e3c2801d246fd1ae642e94f805	7797
+backlog/completed/back-611 - Remove-dead-TUI-view-files-and-duplicated-helpers.md	inventory-only	e6e005d27d890ac1f634e1625b1688f1a7cbe1b211fef9d3edadc71bcc8fc965	6814
+backlog/completed/back-612 - Deduplicate-generateNextDecisionId-and-remove-the-core-to-CLI-dynamic-import.md	inventory-only	f916222f04f23a03605e8b5cce5583ecf940d247b0a902b218b8d7448c4ef429	8521
+backlog/completed/back-613 - Fix-content-store-document-watcher-retry-and-rename-reconciliation.md	inventory-only	fc566a50170ba331a6a69aa08273f2f98cf4eade54b615f0c252900b3a3c0b28	11931
+backlog/completed/back-614 - Let-the-web-create-form-express-an-explicitly-unassigned-task.md	inventory-only	30382d0dc4295297692a57b2a40d5598676ab1efdc425e115ac2debf524e1be8	7081
+backlog/completed/back-615 - Take-over-PR-808-hide-empty-board-columns-in-the-TUI.md	inventory-only	373484f6439e7cb7bc05b95d724833bbf7d35727e87bb2a43c02519056ccb3cb	8681
+backlog/completed/back-616 - Salvage-vi-navigation-from-PR-809-for-TUI-filter-popups.md	inventory-only	b4396990a61f930d98bcb0293d92e514a46bd2cd591e1a946d896d4189cbd8c4	7284
+backlog/completed/back-617 - Fix-web-board-drag-and-drop-when-hideEmptyColumns-is-enabled.md	inventory-only	48cb607dd3d7f97eb1204d74e26037b347a5b0576107c2810ebb19a0105f16df	7949
+backlog/completed/back-618 - Accept-an-explicit-empty-value-as-a-clear-on-task-edit-list-flags.md	inventory-only	3e628f562932300544ca5329a9d43ddc75afcb14d5ffbe927b66ae2c5e2a719e	8254
+backlog/completed/back-619 - Fix-README-example-for-custom-backlog-directory-and-add-missing-config-key-reference.md	inventory-only	b471d292b8f572a792970241dec88628d12d7848f9c1ce7ef81a42ae62483f11	2817
+backlog/completed/back-620 - Align-the-filter-footer-hint-between-TUI-kanban-and-task-list.md	inventory-only	64a6b50338c02be52767b5f3fc2d4181ffce3bd7b28d601cee9c09926caeb803	8550
+backlog/completed/back-621 - Make-the-web-task-list-fit-without-horizontal-scroll-and-trim-page-padding.md	inventory-only	56ca3200a6944d26106bde53a55a12f08e233d9e13c0fd4c292757c2b84ee155	12474
+backlog/completed/back-622 - Return-acceptance-criteria-progress-in-task-JSON-outputs.md	inventory-only	9e8e4e1fe60b31bc5fb25713a4b8775159ebff6a6aa644e1facd65eb3d70815a	3143
+backlog/completed/back-623 - Make-common-task-commands-avoid-unnecessary-cross-branch-work.md	inventory-only	7c05015a689e78be2397c640abb53ac5da42e0f448d9dd71609dafa2bd164a9d	6201
+backlog/completed/back-624 - Make-shared-cross-branch-task-loading-fast-and-incremental.md	inventory-only	6b452ff2ce9d006453c128b5a24765a8b4ed036b7650a11dc67307a866bb09bf	7529
+backlog/completed/back-626 - Make-task-archive-complete-and-demote-local-first-like-view-and-edit.md	inventory-only	33cfc84c1d5319bb977e319df5eea7adf22ba4a41e135f023ba4b83a802b4123	3034
+backlog/completed/back-633 - Show-and-edit-modified-files-in-the-web-task-modal.md	inventory-only	b2cbccaeede6b604de0bb6d1484e460ce03fdb7c0266495474991ce8e5fed92c	7811
+backlog/completed/back-634 - Fix-web-UI-draft-editing.md	inventory-only	d587c3dd1e163e2810def9e27e97271df243091801811dbc7521899fb681ac23	6931
+backlog/completed/back-638 - Allow-task-list-status-to-accept-several-statuses.md	inventory-only	8e9e8f193fa88a3b388bb6d1ed870f504e442e545a781780264fe02bdd1412ac	4448
+backlog/completed/back-639 - Make-drafts-editable-from-the-CLI-and-TUI.md	inventory-only	08c451974bd515e7904322cb78ca7d8df5046b2d7feedeb16a764493b8f637c1	17215
+backlog/completed/back-643.1 - Core-Add-project-field-to-task-domain-model-and-persistence.md	inventory-only	22aa7a063920c1430df67b3dab06c917835efc131cf2f9e8eadc9812a244485d	6450
+backlog/completed/back-643.2 - CLI-Add-project-flag-to-task-create-edit-config-get-and-completions.md	inventory-only	dd9050257c39ff668d588e687e1ba88b1fc91937f4e676dbd791520dfb06d203	6766
+backlog/completed/back-643.3 - MCP-Add-project-parameter-to-task_create-and-task_edit-tools.md	inventory-only	c639ddb3e0129a7f894fcf575d6fc2a55276a602dccc82d4c52ee8d585c6468e	5553
+backlog/completed/back-643.4 - Add-project-based-filtering-to-task-list-search-and-server-API.md	inventory-only	8458f619c7f193b066c601459b99f107d0716270d88c2c5ab1955886ff6329a3	8101
+backlog/completed/back-643.5 - TUI-Display-and-filter-task-project-in-board-and-detail-views.md	inventory-only	1d0dde5ea7900b03f546c3ae25c83ac329c28747c7125074e273e4b4014855f0	6244
+backlog/completed/back-643.6 - Web-UI-Display-and-edit-task-project.md	inventory-only	4abb744067c443763101bd8b881a76f6186f5a07d61daa7dca7eb113927e8e05	6575
+backlog/completed/back-67 - add-p-shorthand-for-parent-option-in-task-create-command.md	inventory-only	21628da1c56310ffb3cfd35bc1e080841045b52defb891cbfbf8e16bbe02776b	1435
+backlog/completed/back-68 - verify-windows-binary-uses-.exe.md	inventory-only	a16157392efb19da6ae2f704c83bbd11997ebf78754233275bd17b0a85cf75ed	1645
+backlog/completed/back-69 - cli-start-tasks-ids-at-1.md	inventory-only	dac6aed72f406aed3aa8fc0fa9b871873d0e39bec51a727d6b9a36b675d729d2	869
+backlog/completed/back-7 - cli-kanban-view.md	inventory-only	dcc405f018f998f7f0252ee00fabb70cbcd9844d73ae5119cdabb6421d415490	2624
+backlog/completed/back-7.1 - cli-kanban-board-detect-remote-task-status.md	inventory-only	9dfca2a6232cfdd91c75f02d3dff2bb325e0b1a8439d6396dfa7adac7191cccb	3125
+backlog/completed/back-70 - ci-eliminate-extra-binary-download.md	inventory-only	ed022c48adf53feab6237cdd0a69f5813331b913f7376236f8941c2aa3790b5c	1731
+backlog/completed/back-71 - fix-single-task-view-regression.md	inventory-only	fd720bb502d8a8acbfe3f6fd377534aca74d8d9ba5271b7484f243016cbae391	1658
+backlog/completed/back-72 - fix-board-view-on-windows-without-terminfo.md	inventory-only	7ab1e8a42c0afdb30d7aba674e937aae8b67784c8d892027c1c5e57677ff988e	1259
+backlog/completed/back-73 - fix-windows-binary-package-name-resolution.md	inventory-only	c31c1e3a96a320ea8b71f46fd3b6920d739f9c3d9871500e402699b6045c3e70	1050
+backlog/completed/back-74 - fix-tui-crash-on-windows-by-disabling-blessed-tput.md	inventory-only	ad436c0471b74b8746be44d02fb0350d9bdea528436c7242c916cc93058c456d	846
+backlog/completed/back-75 - fix-task-selection-in-board-view-opens-wrong-task.md	inventory-only	da9210e9fe3bc9974d7c176c7f28c8d44da0bf01d1cb00f3b879b920509a6a39	3649
+backlog/completed/back-76 - add-implementation-plan-section.md	inventory-only	188d79ae56650efc3a01b4d4d6a697c673a0506e51cc05622b8cf79c03e58d89	2838
+backlog/completed/back-77 - migrate-from-blessed-to-bblessed-for-better-bun-and-windows-support.md	inventory-only	b29cb28d6637dd9eb9bde3618548e443af7d2914523f8ac58c886a87db4ee14f	3385
+backlog/completed/back-79 - fix-task-list-ordering-sort-by-decimal-id-not-string.md	inventory-only	d99d5187a2a05445536aa70150be9c3409cdbbc0d8b77fd94be3775c748e2ace	2427
+backlog/completed/back-80 - preserve-case-in-task-filenames-for-better-agent-discoverability.md	inventory-only	fc6b6b740e79cdd54c5eeb32ac377f8392a2a334789bf76e6a2d3279e0a23479	2364
+backlog/completed/back-81 - fix-task-list-navigation-skipping-issue.md	inventory-only	87c964a47bed6fad1086782dd4ad59e5b0ae248fc1496f7ea9fa3cee22a33756	2440
+backlog/completed/back-82 - Add-plain-flag-to-task-view-command-for-AI-agents.md	inventory-only	908c498096b069aeae0f691cacfc91e31a25fac65710b660bb627b74395cdd86	1650
+backlog/completed/back-83 - Add-case-insensitive-status-filter-support.md	inventory-only	d9fe98729be51ea9021b06eb5f345c425e98b214a1bce562008d9d9179ddc5a1	1156
+backlog/completed/back-84 - Add-ac-flag-for-acceptance-criteria-in-task-create-edit.md	inventory-only	4f3fa041c538414f9a893569dc37d87b8d380c90974ffa1ad86b2b580ee22540	1501
+backlog/completed/back-85 - Merge-and-consolidate-loading-screen-functions.md	inventory-only	f2b4466d8a17a7aa6342aca78af57aa3f4b5a8b5ccc9ceab74af8cf388509114	3209
+backlog/completed/back-86 - Update-agent-guidelines-to-emphasize-outcome-focused-acceptance-criteria.md	inventory-only	7c9d8e0972e0f1c8cd45a31417d7d3280222ed219385799cf792fa01e8584752	3755
+backlog/completed/back-87 - Make-agent-guideline-file-updates-idempotent-during-init.md	inventory-only	36b1f7b38130ab88cd298ddaba9f1c8cb59f7c5c9047e1922455bba1b764f0f5	4816
+backlog/completed/back-88 - Fix-missing-metadata-and-implementation-plan-in-task-view-command.md	inventory-only	b10005d48a97077074e73c155850945be5c679133a70451f4bf2c2a2764e2bf1	2688
+backlog/completed/back-89 - Add-dependency-parameter-for-task-create-and-edit-commands.md	inventory-only	b81c1108f954faf39a6e320259cea6f2aa6380e6c921c733c1064414336ab304	4713
+backlog/completed/back-90 - Fix-task-list-scrolling-behavior-selector-should-move-before-scrolling.md	inventory-only	a5c491cdf8b0743d5e44964a8c113e11d419044aed5c7489dc803c402d563e7f	2530
+backlog/completed/back-91 - Fix-Windows-issues-empty-task-list-and-weird-Q-character.md	inventory-only	c7209fe0546fe0c586647f655cd024a0a273abed50bd59cfe8c169589e91aab4	2310
+backlog/completed/back-92 - CI-Fix-intermittent-Windows-test-failures.md	inventory-only	c1cfa9bb4fcb08d6599954fda28e83f15c8e55602d879109518d1ad572ee1211	3419
+backlog/completed/back-93 - Fix-Windows-agent-instructions-file-reading-hang.md	inventory-only	8085d86b2e612db5bfd54bb86783587cfa529e1e4f76b57192fd4bcd45951b03	2123
+backlog/completed/back-94 - cli-show-created-task-file-path.md	inventory-only	286ed5a5bffdfc4992cadc1ce4e337b153156a7148b7b0b7f473d84ab691871a	3397
+backlog/completed/back-95 - Add-priority-field-to-tasks.md	inventory-only	1edc67988e11b8d2869ee0001ffe064e7cbaec1b8c99b6da8cbcfd9965972845	3055
+backlog/completed/back-96 - Fix-demoted-task-board-visibility-check-status-across-archive-and-drafts.md	inventory-only	1a0882076bf8c468cb8a56e942527bd69d4d34e071f816ee5160dc1a34bc76e9	2959
+backlog/completed/back-97 - Cross-branch-task-ID-checking-and-branch-info.md	inventory-only	03db3d47da1fad512324feeb64566ba47af4c74a7b5c3929cda29e9c6dc620a6	1667
+backlog/completed/back-98 - Invert-task-order-in-Done-column-only.md	inventory-only	b715242110435d74ad039bd2643533dd3a2729863d8cb1cf532877b5ee37bc05	942
+backlog/completed/back-99 - Fix-loading-screen-border-rendering-and-improve-UX.md	inventory-only	e51c5d751c88d23e8b073d3539c11e5305a36fbe71ae49dd8134a27807daadac	2684
+backlog/config.yml	inventory-only	825ee25250f946682d341fefce768afd3542049b119ab7296ea76b8a9c5f552a	551
+backlog/decisions/decision-1 - Use-Tailwind-CSS-v4-for-web-UI-development.md	inventory-only	f78a4ac2f98824688b600d554ab473a2bafaa3ac57774bfef66446d5f4fab831	2812
+backlog/decisions/readme.md	inventory-only	be1e6e5706765542421b91a2d6ac903a799a97278f1b36f3c57aa0ae61d8eba8	334
+backlog/docs/doc-001 - Testing-Style-Guide.md	inventory-only	0c47a9eb4fabc9d8e0e8edc1d89686ee91876e86cdbf01d06e482ef693e49e73	5815
+backlog/docs/doc-002 - Configuring-VIM-and-Neovim-as-Default-Editor.md	inventory-only	0b109367d649ae70d15e471c3c4fbc392b9f19defb91e48b90daec9d9c317ba2	7662
+backlog/docs/doc-003 - Running-Backlog-Browser-as-a-Service.md	inventory-only	7851da4980e2a1a9f1b6419ee91197aff3a4a7401b46af554461468343b4b1a9	3990
+backlog/docs/readme.md	inventory-only	5ae892bc557b93ba83c4b65e195a3a17fc00dfb74f16f23d83a526bf36f83a4a	953
+backlog/drafts/draft-1 - Agents-add-board-export-step-to-agent-DoD.md	inventory-only	4173ce44c45aadb1826610b268177f8ae92ca8a994a7dbfcbc5aaeae18ec1820	668
+backlog/drafts/draft-10 - CLI-Add-Agent-Instruction-Prompt.md	inventory-only	969fcc12612a97de6f45ae7f71b7edf01d14aa80edb21cdf860d294a6b30efc7	2501
+backlog/drafts/draft-11 - Improve-tasks-readme-with-generic-example-and-CLI-command-reference.md	inventory-only	e5d1da97b3ad69cd3cfe0a50394d878ffde35e8867127334c910dcf265f7b9f2	754
+backlog/drafts/draft-12 - GUI-introduction-screens.md	inventory-only	1fb65cff49f8eb96087e2d05487134a9d0525141653226a9d2256bcacd10e224	697
+backlog/drafts/draft-13 - Create-CHANGELOG.md	inventory-only	b73aed7c5e417af610837c4ed42552985d655e64eeed5534dc9f9fd24fdc45ce	488
+backlog/drafts/draft-14 - GUI-Implement-GUI-Task-Creation-Editing-Forms.md	inventory-only	1e038098e5bd86bac72a4eae98c4e88354c049cfa51ac0d80a773b1dc80bc107	727
+backlog/drafts/draft-15 - Improve-decisions-readme-with-generic-example-and-CLI-command-reference.md	inventory-only	9a14e978d6d1c49ef257a8809a5dfe088c9fec4c65718ab907362baabe79ccaf	625
+backlog/drafts/draft-2 - GUI-Implement-GUI-for-Drafts-Docs-Decisions.md	inventory-only	a3bae3df1e30ca8dc598d49f4bc31f971df386f4f24c8ec5f55bd797623a9e63	752
+backlog/drafts/draft-3 - Improve-drafts-readme-with-generic-example-and-CLI-command-reference.md	inventory-only	c9cf613f64701b320031732dc8c43d7330717574b5e2ead66b1cd521f1c60b91	624
+backlog/drafts/draft-4 - Add-CODE-OF-CONDUCT.md	inventory-only	44d0a1dec5c21c2b91183fe9f99b942db78156251f5305415bacbd6c999ed2c9	507
+backlog/drafts/draft-5 - GUI-Setup-GUI-Project-Structure.md	inventory-only	f1a24f38eec1e6e0b543b882161a1d2c03a6bbe38dfae20419af8c2941632db9	624
+backlog/drafts/draft-6 - GUI-Implement-GUI-Kanban-Board-Display-Interaction.md	inventory-only	77e0ffa21596f1c2970f6d8c07cc2677709f0e18976937486bee5c0aa970e7fa	845
+backlog/drafts/draft-7 - CLI-Export-milestones-board-as-roadmap.md	inventory-only	c6ea9e4695e292a44f2dbcc7e2028469ca3b95b3f738c5f5a10c26ed4b0bbf64	701
+backlog/drafts/draft-8 - GUI-Implement-`backlog-init`-in-GUI-GUI-Packaging.md	inventory-only	2ed0d1fe92af45bb9c17ae6c60719f95bc0edfc13e01070399483d1e13bacc9e	864
+backlog/drafts/draft-9 - Improve-docs-readme-with-generic-example-and-CLI-command-reference.md	inventory-only	6328a52fd2d550521737ac032f1d4bbb9200910799907d73b0b32af82782e41d	620
+backlog/drafts/readme.md	inventory-only	2c4e0fbb49c1a80ec8146791d9a02edfaa2080bc37a73bccbce95ca0277feeb8	128
+backlog/milestones/m-6 - new-milestones-ui.md	inventory-only	c0fd0450c7af14b4a4e5de98ba202893f3e74a1d385973ba29b29f4b75a95e0a	89
+backlog/milestones/m-7 - agent-cli-workflow.md	inventory-only	56304cc5783a83a7444278d8ddc7b73950673f47db0af82de40e5773fa9fe87f	251
+backlog/milestones/m-8 - tui-task-composer.md	inventory-only	43c799ba81dbf526c857b4f56cfb8ea2c2716a34c5475340434bd1123e3a1999	386
+backlog/milestones/readme.md	inventory-only	c2617ca4491529cd8309d0cdd0a3731e6cabf16d7da3a6b357873679ad236618	108
+backlog/readme.md	inventory-only	8ae97f5545c1deb260882d278c9c8b1f4fedcce98e9d0dba8095ce8829814a67	263
+backlog/tasks/back-200 - Add-Claude-Code-integration-with-workflow-commands-during-init.md	inventory-only	c68253df3c0b8fc82906c848b781c5e4cfac40f53ada0ffd78f0a6abc4b01d4f	1514
+backlog/tasks/back-208 - Add-paste-as-markdown-support-in-Web-UI.md	inventory-only	90488dc5e0cdd13e4d26ef1856c07748219172270988ce9a321fcfdd61384b53	1294
+backlog/tasks/back-222 - Improve-task-and-subtask-visualization-in-web-UI.md	inventory-only	37af2e250fbc46bf605c1d4e6ae711f38c56c489792f6071812834e076ba4639	2011
+backlog/tasks/back-239 - Feature-Auto-link-tasks-to-documents-decisions-+-backlinks.md	inventory-only	3294e5f3f0b6428174edfe04c63959f2973b8eadbfa9e6abd87218c4e3c48dc4	1730
+backlog/tasks/back-260 - Web-UI-Add-filtering-to-All-Tasks-view.md	inventory-only	47b85b8610caa6498dda885fb1f7fd45a1266a2149da37200ba78e4ca30ad757	2977
+backlog/tasks/back-268 - Show-agent-instruction-version-status.md	inventory-only	7711b57957364ff500db8b0a6249faf3aa010584e9224088c58e100a1d4ebb47	1167
+backlog/tasks/back-368 - TUI-Add-section-aware-navigation-for-task-popup-and-detail-pane.md	inventory-only	08d7156e129576812c0b8d6eb45a9759430b3ac78b4cbc8badfa4a8cf097c5d7	2033
+backlog/tasks/back-414 - Add-basic-Web-UI-theme-customization.md	inventory-only	391791da8dcff968513ff54dc9f93dfc941ecad8e5b9b470c70bc3466cd28d30	1011
+backlog/tasks/back-417 - Improve-Web-UI-content-viewer-sizing-and-mode-persistence.md	inventory-only	6faa17c4541197e29d9b82354bf3960771e74087da6fc69d07ed9d498b8db3a2	1048
+backlog/tasks/back-418 - Publish-supported-container-runtime-for-backlog-browser.md	inventory-only	b87ed2b5284b7881cfe8ca6fbe2aa441125c305b9a88302d178177ef3c0ef6ad	1031
+backlog/tasks/back-420 - Add-task-content-TOC-and-scrollspy-in-Web-UI.md	inventory-only	6b072703e635d8bf35b25907f421d84c74660639add382d5d5368c69fdba9855	1013
+backlog/tasks/back-422 - Support-XDG_CONFIG_HOME-for-global-user-config.md	inventory-only	27ef5cdeeaa14143551ba22627da530dee47cb32f9558a07a2a0e6d2089c3e92	1005
+backlog/tasks/back-425 - Add-compact-TUI-task-list-view.md	inventory-only	0471ad89faeaab1cf7b9d6c63deb49cffbad5a178245af0832db6a2d7d8b6919	990
+backlog/tasks/back-438 - Add-automatic-core-level-task-drift-detection.md	inventory-only	f9024506d4d531b8b06a6d13dceeb34cfda237e6255ffe1344c49646b69a0538	2683
+backlog/tasks/back-543 - Add-progressive-scope-and-metadata-to-the-TUI-task-composer.md	inventory-only	71fca76c127e68497ac655c8672e8f2afc24749ab83670da5e16b76289e048e1	2317
+backlog/tasks/back-544 - Add-structured-TUI-task-editing-with-a-raw-Markdown-power-path.md	inventory-only	2bab9a7a116a2a9b282f28f71fa3f981a37c0d00741266ca06d0d16a23ffd348	2728
+backlog/tasks/back-548 - Expose-bidirectional-dependency-graphs-in-task-details.md	inventory-only	d9a74743f2dd69c726c001c334731bd7d96013150fa4b68df26c5d0b79621e03	18442
+backlog/tasks/back-549 - Improve-parent-and-subtask-presentation-in-the-TUI.md	inventory-only	b657a9de1a27af27d1595e859792ad6dfb90dfc852866226bf1d0aa4216b498a	2160
+backlog/tasks/back-553 - Explore-task-dependencies-in-a-navigable-Web-graph.md	inventory-only	2a09a638e37d1ef710277e60126d7fabbb988034bf15b1769301ac4c232d8f4c	3318
+backlog/tasks/back-555 - Add-a-context-independent-handoff-check-to-task-creation-guidance.md	inventory-only	30299d34cf543d64eac566dbb2ce1663f53e3147ccc019f40dca33a6e4cab7c4	3703
+backlog/tasks/back-591 - Decide-how-board-task-creation-interacts-with-prefiltered-views.md	inventory-only	4599ce6c28bc55a992baebb70bd08452de9e6fd814c3e09eff7cd74f3d2d97c7	2292
+backlog/tasks/back-594 - Modernize-the-MCP-server-for-the-stateless-2026-07-28-protocol.md	inventory-only	12a4010242425cdb9bb66e3d662072b54ba78acf983d152eeb028bda444806b6	3506
+backlog/tasks/back-595 - Ship-Backlog.md-as-an-Agent-Plugin-with-skill-based-instructions.md	inventory-only	bff5393e436d39ffdbc788b3cd21a58b3faace25d1c5d7de87515c961f7e1eb3	3187
+backlog/tasks/back-596 - Explore-a-read-only-board-view-as-an-MCP-App.md	inventory-only	44c761b45dd3f7aae3b8891da61f1d6be5d716737342344b06b6484edfebcaae	2615
+backlog/tasks/back-599 - Align-web-task-link-identity-with-route-resolution-and-preserve-return-routes.md	inventory-only	e7e2f0f5e22f7712f1a2e90a2a2fca90b739eb3a663b3c45ceccadbd1957a99f	2768
+backlog/tasks/back-600 - Key-document-and-decision-writes-on-frontmatter-identity.md	inventory-only	3feea20bb75b6f035cad5df37ed53d84cf3e90c7846ba36d91945f21fd64ac12	2657
+backlog/tasks/back-601 - Readiness-follow-ups-draft-dependencies-board-filter-carry-cross-branch-graph.md	inventory-only	222d23cd56f4f7dc744ffc574d497a6cf015514bbce61bf865e1bdc0749d9062	4961
+backlog/tasks/back-625 - Align-MCP-task-reads-with-the-CLI-local-first-approach.md	inventory-only	0f22f0e4bc4fa776fbc64adaa6563fb67e1537528476f69dee6dfdd0f6c0cb9a	2023
+backlog/tasks/back-627 - Prevent-forced-allocation-refresh-from-joining-an-in-flight-stale-fetch.md	inventory-only	46f1676dd325bc23b0b0a48d83f7dfd43f49eca614880cbab24b9c04377b84ff	12610
+backlog/tasks/back-628 - Stop-findIdentity-rename-fallback-from-publishing-freshness-without-installing-the-corpus.md	inventory-only	d3d382effc7e71dc1ecc33ae05d16acac4d4d1e88001574f85aee9d4cd6ecdad	10112
+backlog/tasks/back-629 - Close-transient-staleness-windows-in-web-statistics-and-cold-store-initialization.md	inventory-only	6e8087e406467604518d4191c916466414c804de7eaa731cd3eb63af78058a65	1824
+backlog/tasks/back-630 - Filter-the-web-dependency-picker-to-locally-resolvable-tasks.md	inventory-only	d9a3bab3c079d2eeb23a69981a3bb706acd912a09ec9b54d8762e9299e306221	7281
+backlog/tasks/back-631 - Reconcile-local-vs-cross-branch-gaps-in-the-web-API-client-and-task-search.md	inventory-only	fb1e78ed40bf4b5a223f95e7b719a1001aa586019f5605944613222ee3ea98cb	1735
+backlog/tasks/back-632 - Decide-remote-freshness-policy-for-identity-sensitive-mutations-on-warm-web-and-MCP.md	inventory-only	b16a732d5b253a3db5edba35b673380f9c16e8934d687180d8d01ef067930e72	2140
+backlog/tasks/back-635 - Reserve-draft-doc-and-decision-prefixes-at-init.md	inventory-only	64c8082391d1dda086f2670edd00264b335d9c68b8520a16d485f7eded748e42	13460
+backlog/tasks/back-636 - Fail-closed-on-ambiguous-draft-identities.md	inventory-only	c6f8c9f272a90c39703428b849c2d6070dd9c8db0dafdafe9553fe14119874c7	10307
+backlog/tasks/back-637 - Preserve-consecutive-blank-lines-inside-fenced-code-blocks-in-notes-issue-930.md	inventory-only	b2de170508c5be4205587ce421f5c14738892d94b5d1b9008b77f27d0fa61ffc	5618
+backlog/tasks/back-640 - Use-one-identity-lookup-for-tasks-documents-decisions-and-drafts.md	inventory-only	17ad5408868485d906abdd4cfc66d3ba32977bbcefa5f46d1110b55de7555a86	1807
+backlog/tasks/back-641 - Add-`backlog-task-dependencies`-command-with-TUI-and-plain-graph-views.md	inventory-only	1a19146f3daa1822a4a612d89543f9c15993eda4159ce74a577661ac9232b63f	9378
+backlog/tasks/back-642 - Show-acceptance-criteria-progress-in-MCP-and-plain-task-lists.md	inventory-only	c05b63ca86d0a8a03e4db172d83ec977af1165e310de590c2e465e63c4c60eff	3900
+backlog/tasks/back-643 - Add-a-project-task-attribute-for-monorepo-backlogs.md	inventory-only	9c573a43d5ffd4cc43558600116d778839c39f1ebb8f3cad698ed59dada69c45	10495
+backlog/tasks/back-644 - Keep-the-board-task-popup-in-sync-with-live-task-state.md	inventory-only	6b37076c03370e48267ae3ffb765e25b9ef82cfc703ca1d8b894a9961d14bd3e	10452
+backlog/tasks/back-645 - Move-multiple-selected-tasks-between-statuses-in-one-action.md	inventory-only	fa5fdde29c66cfd8f1b01900105bd54dace471f56ff51a58415be3772df82495	13359
+backlog/tasks/back-646 - Count-emoji-as-double-width-in-the-TUI.md	inventory-only	bd8e01422ad3d7faa175bcb4952991f280fe973f7f6bf51410ff9fed7c4a9849	1330
+backlog/tasks/back-648 - Fall-back-to-a-placeholder-filename-for-punctuation-only-titles.md	inventory-only	df144e0b999465a985ccaaddfdd202f56033f40ee9ea9b3cac0d2fa5a419e2aa	5379
+backlog/tasks/back-649 - Single-source-task-search-config-and-filters-in-core.md	inventory-only	7cf8f838e2f67f7dbedc5a9f830aed559b555a1390868cca4791697745800dac	9679
+backlog/tasks/back-650 - Route-TUI-and-milestone-page-task-search-through-the-shared-core-search.md	inventory-only	2294e8b70b5ca8a957cac1feb7eeb5d1b9eb2e5267e37180af3a9291edf726b4	5910
+backlog/tasks/back-651 - Remove-the-temp-file-roundtrip-in-README-board-export.md	inventory-only	abfc47499a638536f02afd028ae7284579bc427480be59707c2e744fb1737c62	4855
+backlog/tasks/back-652 - Replace-the-ASCII-progress-bar-on-web-task-summaries-with-a-web-native-indicator.md	inventory-only	8e1cd9c1631eddf3a429ae987392013eb0c34488de77cef20e7c8149325995b8	4472
+backlog/tasks/back-653 - Update-web-views-in-place-instead-of-full-reload-on-data-changes.md	inventory-only	615c335ceda26fdb9bda77ca02f8fdb47a2ddc93fc52a16ed7066eb8dbbd9f25	7521
+backlog/tasks/back-654 - Polish-the-cross-branch-indexing-loading-indicator-in-the-web-UI.md	inventory-only	694cc37665dcb1f3014bd1bbaf96176c441b2b0d778da7c0fc6a5ee2e69e74d3	8465
+backlog/tasks/back-655 - Open-task-details-in-place-from-sidebar-dependency-chips.md	inventory-only	3308a1634adc2958713df4bd9fcb31e0788c617e3d9f08bd61e529ef4f836ba3	6184
+backlog/tasks/back-656 - Reject-self-referential-task-dependencies.md	inventory-only	4de40eb21b88bc10f70e4e28c404fbc54b38bacacb09fda7095cae65f08168ef	10830
+backlog/tasks/back-657 - Make-the-TUI-acceptance-criteria-bar-degrade-gracefully-without-Block-Element-glyphs.md	inventory-only	22ea362072768f98872d95d8177561a4b45158a69c01aed8c2b4597df3a42b44	3865
+backlog/tasks/back-658 - Resolve-dependency-targets-in-completed-and-archived-tasks.md	inventory-only	9340a7461ccb5b38563edcdb96eb61470752a6f4af7867ba871d098edbe7ab80	4602
+backlog/tasks/back-659 - Include-grandchild-subtasks-in-board-export-grouping.md	inventory-only	de5e15b6c3c65fa8f820cc2550ed85a1553b5d098aa0c692fce2ee2bfae7cd50	3264
+backlog/tasks/back-660 - Reject-nested-section-markers-in-notes-and-fix-append-truncation.md	inventory-only	7741026b7253074444ea8e2cb516c35e84545995982aa38f933ee7d48a092a9b	5647
+backlog/tasks/back-661 - TUI-multi-select-move-with-shift-arrow-recruitment.md	inventory-only	c56cb7ec3e2eb1d03e4888479198dfa437ed49cd2019f1a7f5ee2920d995a81b	12917
+backlog/tasks/back-662 - Add-references-and-modifiedFiles-to-task-list-json.md	inventory-only	6def50da9e5981596157c8df700affebbe71b9338860dfea806bf541859554ab	2185
+backlog/tasks/back-663 - Dependency-graph-follow-ups-from-BACK-548-review.md	inventory-only	222920e71594277aa6a1eff92c6a071b4532d575776a6258efcce5c7ede9252a	10064
+backlog/tasks/back-664 - Read-the-Backlog-overview-once-per-conversation-instead-of-per-request.md	inventory-only	132df3d6aa54ac4ed160b33bd47f2465aa225c283cdb54304004593909f64c63	2119
+backlog/tasks/back-665 - Polish-the-web-UI-initial-loading-state.md	inventory-only	598e83f2c986162b272dd5964ad9b32ccd1db727df832e9b050887c574634db7	6748
+backlog/tasks/back-666 - Compact-colored-acceptance-criteria-bar-in-the-TUI.md	inventory-only	45308e6a0de8431b17d6fda0e4a91dcc6a12caa4e0a279a9349a902daa15baee	4763
+backlog/tasks/back-667 - Fix-the-flaky-browser-corpus-loading-progress-test.md	inventory-only	35db772f6d26e44c4d382cb7d4af349e42c55dd7c11dd6046c2d1674e9a33a74	5907
+backlog/tasks/back-668 - Replace-dead-rounded-full-classes-across-the-web-UI.md	inventory-only	76ca20f07e2e2f56e244e9df1a6364f6d78b9095f3a30e97f17628aa50b1a182	1331
+backlog/tasks/back-669 - Close-residual-self-dependency-gaps-from-the-BACK-656-review.md	inventory-only	843ed1756ad5dfdc0b0dd4bf99af47d70908d6a4770bef8f0b00ffc9b8dba82c	4622
+backlog/tasks/back-670 - Remove-the-standalone-task-dependencies-command-and-its-TUI.md	inventory-only	dc561df4f72bebef44a482283f87a7b2967df52c02113b40db1c0460b31029ef	7635
+backlog/tasks/back-671 - Add-backlog-task-graph-for-a-dependency-ordered-view-of-the-backlog.md	inventory-only	dba8dec48f7e53b322cc678cbff175d101965397892302ffd754734cc2d3ac75	3026
+backlog/tasks/back-672 - Compute-task-readiness-once-in-core-and-carry-isReady-on-task-lists.md	inventory-only	a3d1b84bbc769b4c2f73113644d6f40dcac1e2bd264709cd2ffe2d6ab86ae634	26170
+backlog/tasks/back-673 - Clean-dependency-references-when-archiving-or-demoting-a-task.md	inventory-only	a828cd38411f8dc2fe722acb956c5eceee1b8e1873a7df5e7e3e7aea914066a9	25052
+backlog/tasks/back-674 - Sort-the-TUI-list-view-through-the-shared-task-ID-comparator.md	inventory-only	4af18f6abf2f91ce9189c48aebaf0bdaf5a5487fb5dde022bf67d4e62c78c48b	8309
+backlog/tasks/back-675 - Fix-Windows-TUI-keyboard-input-after-Tab-view-switch.md	inventory-only	16f9001afbe06c5de8463902ebb89e49fa6d04651658b9dd71b3f7035e58a382	3611
+backlog/tasks/back-676 - Make-agent-task-descriptions-carry-the-why.md	inventory-only	33213b1a6d5200315297367a0134d8fef918151273680d8bec0e928f31bd9bfe	8448
+backlog/tasks/back-677 - Show-local-time-in-the-web-UI-with-the-UTC-value-on-hover.md	inventory-only	5235aebf4f5b08a6b73b22a8975238325f09925d8c0484f278a8ea9e32587994	13355
+backlog/tasks/back-678 - Accept-local-time-in-web-due-date-entry.md	inventory-only	621913821a3bd0eafed16fcf1cad2367ab354087603f656928cc10119ded715b	8076
+backlog/tasks/back-679 - Quote-assignee-and-reporter-under-every-frontmatter-key-spelling.md	inventory-only	ae30884e5a34453ad409e7cb9321d93cd5190a7b79cb0ff3331c4edc3fe28132	1896
+backlog/tasks/back-680 - Stop-one-bad-draft-from-hiding-every-draft.md	inventory-only	6405225fe14483fde0b744756a5f3114cde4ae2ee94c0da327ec0bac1598bd15	1557
+backlog/tasks/back-681 - Show-due-dates-on-the-surfaces-that-omit-them.md	inventory-only	3453f1e082e05e272da09faef56b966f7cd189717eea841ed3ba79f8d513937d	1524
+backlog/tasks/back-682 - Make-frontmatter-preprocessing-robust-to-valid-YAML-shapes.md	inventory-only	4720e50274e559393c8aa48d59687ebd9fca5d1e1ebaa92eba9478cca1bdc526	2151
+backlog/tasks/back-683 - Render-TUI-acceptance-criteria-progress-as-a-pie-glyph.md	inventory-only	67bfb211c2ef65d6136071f3496d638bf937cfa7fedbab9df435968a8a4663c5	2345
+backlog/tasks/back-684 - Move-the-acceptance-criteria-ring-into-the-web-card-header.md	inventory-only	ff731bbae89efe682faa438325801e83951005e8db1095f7c0a202accc4ff1c7	4448
+backlog/tasks/back-686 - Watch-task-lists-with-the-existing-JSON-output.md	inventory-only	a4acc2ab844d828e75f2eeeacbfdf369e1d227d3638bada5e8624407c059d720	4975
+backlog/tasks/back-687 - Page-long-CLI-lists-with-grep-style-options.md	inventory-only	c195c437ffe9cfa0fd27960ac315a70bbbd8a8a63beb82419a55073e70088cb9	17551
+backlog/tasks/back-688 - Stop-task-list-watchers-when-the-process-that-started-them-exits.md	inventory-only	46c5045ddee67aab047c4013dfc0d021ded56af150a15795d25716cff1bb16ed	10786
+backlog/tasks/back-689 - Keep-idle-task-list-watchers-from-using-constant-CPU.md	inventory-only	c6869bdbb45650805bde490816ae0d2d25f659ff45d2e19ca6b07f00557cc64e	13192
+backlog/tasks/back-690 - Create-missing-storage-directories-at-mutation-boundaries.md	inventory-only	05a43856ea663aea587be5f336040bc5e64a347be777755a5de6547d8c9396ad	5545
+backlog/tasks/back-691 - Keep-finished-work-out-of-the-archive-and-clarify-task-lifecycle.md	inventory-only	fd5af87210d27cbafd6787c32d90b5cf02bbaaf4b4692622811dbc42afd701f6	7833
+backlog/tasks/back-692 - Preserve-complete-CLI-output-when-a-pipe-reader-is-slow.md	inventory-only	3671df2a64e8d7ce5d4dc66262af124e9e9a7d7f41adf7a54f4258ed6ddab784	6922
+backlog/tasks/back-696 - Reject-malformed-dependency-values-before-rewriting-task-files.md	inventory-only	5b06080175105a82ce3d8006cf5093e4dc4d8a2f99a9ee767adda4b228d29d5a	8801
+backlog/tasks/back-697 - Keep-the-Nix-AVX2-check-independent-of-the-selected-Bun-package.md	inventory-only	645641c7ebf918543d1eef0b11be532dfdb26de20a6ec5e1610dce587fbd4e3d	8418
+backlog/tasks/back-698 - Fail-clearly-when-initialization-requires-unavailable-input.md	inventory-only	d8c40b63336635fba1a627b6e4229229c603ff16dc001072c6f9b7cf005affc5	6059
+backlog/tasks/back-700 - Reject-unsupported-checklist-marks-before-indexed-edits.md	inventory-only	46e3ca3cfa52f0bc5ac40adfe002c3ae2701803c4d182963e578c2b61b6fc98b	8203
+backlog/tasks/back-702 - Reject-malformed-Definition-of-Done-indices-in-task-updates.md	inventory-only	b5b505d11c5eee92d7bac9f3b0a58aa348c128bc86463f7bcad9c79fbb6e8e13	9864
+backlog/tasks/back-706 - Remove-redundant-tests-while-preserving-shipped-behavior-coverage.md	inventory-only	eaecfe8b0e1113dea3a0697a840f1b4729cdfa02862593d28226415b60b60021	7827
+backlog/tasks/readme.md	inventory-only	0f36611fc28f373682eb1b1820f81fb5a776ee2053d4067562bd52bfea3cf3ef	1724
+biome.json	inventory-only	3cb60134d8a12107ecb7cab7079aa01b9352f9e6e275cf82128efdd5486a9518	1107
+bun.lock	inventory-only	744034cbb7e61713231002ea68074e5aa8201082c40ecb9c19aaad10de193b29	137374
+bun.nix	inventory-only	54e8c5ea3bbd5d37181e58fbb638e8f79b180db790fbc6b53b0fadf66cbd6067	138492
+bunfig.toml	inventory-only	aab32dc771ba907f0c210ad8d3137a8e4346b3c6e4a648b07b9ac927315412bc	318
+completions/.gitkeep	inventory-only	9df071381a19936348cc7a6cc08acc1a3ad646507bacab7df1c9d4115f153787	599
+completions/EXAMPLES.md	inventory-only	1581a5edc13cb5d6c61034a69653cf72b9a6c4c170ce1acb994b54b6c38d017f	4872
+completions/README.md	inventory-only	11130c65eee73dc0b007dea53150210a5b4d1ed29b019ae159b456dadc66f2a8	6208
+completions/_backlog	inventory-only	d9b8e3eca6e6deda048d1959a53fd2d11037e7bffa5e7f7a377d57b3e34583d5	1133
+completions/backlog.bash	inventory-only	d4a55040a1e20340848e73f2e0aab2cea0507a1ab0d28111a063f853d95f5172	2081
+completions/backlog.fish	inventory-only	5fc435d3be88d1259133482ffb5039687cdd18354ccd5dbc8c5f080debb5f4f5	1443
+completions/backlog.ps1	inventory-only	b2c5e2cc97be07b75649e4c50e0861bbc6c3f8baa23a6f6005e4dc8924357e0c	1395
+flake.lock	inventory-only	65d2e06f7b1cceceda1423a27896cb8038925fd2109f7d1e9ce04c09b7ed06d1	3625
+flake.nix	inventory-only	dc824a60f4d26fb33c2659ac4375849b1d171f3c47d544e54f210c3391d737b0	5601
+package.json	1-95	be3cc0605f4e67e169af7840a45b94114c5d8714807d06a42ff72da7c9466a88	2592
+scripts/benchmark-task-loading.ts	inventory-only	c64dd73bb36fdc9872cf6c24407815f310461d76a8f9802c8c81e0e59ee9c7d7	25726
+scripts/build.ts	inventory-only	c5034372a2c976200800a9a295a0354bb5424282c5915b36946a1e8bbf0d1036	1128
+scripts/cli.cjs	inventory-only	e2754d6213b3707e3bc603c85d9c94a8aa63d733068b1639f32d98da5fc7c1a2	4227
+scripts/postuninstall.cjs	inventory-only	347efe1abc69c35b3d6408fa809fb5b35c9570c3083e34e3e16484a8d8208d5d	989
+scripts/resolveBinary.cjs	inventory-only	234963301f268ca33ae1d4adb34a04b2b348c8a50930e453bb06ae865327bfb2	1997
+scripts/run-ci-tests.ts	inventory-only	e00996ecdd5cf3e6e72475eadcad513758e1a4be53017afa07612a8da6c5097f	4586
+scripts/run-tui-interactive-tests.sh	inventory-only	47877228f897ae219ee3bf3edb12453b4470f1b5ef8ba70cef38f0455f7acd3f	406
+scripts/smoke-compiled-build.ts	inventory-only	cbfaca2af2f8b01d49e00a8452087793238f7b73c36ee5dfb5203eca20507b10	12844
+scripts/smoke-parallel-task-locking.sh	inventory-only	baaa6e04e1d6d481a548b430905a84740fd3e53bb741bdcad62300dcb927fa5f	9433
+src/agent-instructions.ts	inventory-only	e3dd8bd16bcc69fe4bb21e5d730045c3c5f32413b79a3bcfb0bd0f96e09acfef	9360
+src/board.ts	inventory-only	0e302c8be413093fa64a0ba7e782ff8a951f74c3e43d2aadbbb8470d25a26b38	11190
+src/cli.ts	inventory-only	4088c936984f5f72122409b7f03637221456803414eac83e06031f4bc07af6f7	226773
+src/commands/advanced-config-wizard.ts	inventory-only	c11c9c15425b10fdd050d9257aa3d40db5be1f58ec84f908fc52488a9dbb8d95	17070
+src/commands/completion.test.ts	inventory-only	695518d4ff5c5cafdcf6c2b258cee93e4b20842e4c3239be4509364cb0738d89	4028
+src/commands/completion.ts	inventory-only	a2a111879bf701e749c8223464c5e32034e9f5bf900817477926827872f4f71c	15480
+src/commands/configure-advanced-settings.ts	inventory-only	96f746c193ca3588273e508d2948db07e732bf5531855747e858322695b40582	1274
+src/commands/help-schema.ts	inventory-only	074bf7fb779e03ed90cf602f78f9ccbb5b8b5db9f7b1e1e1de1e508cfac5cf73	9791
+src/commands/instructions.ts	inventory-only	fe0447d75254bea7362a1e1acbd4aa22c3b904a5e7a7f91c8ef8e591ebee4ae6	3032
+src/commands/mcp.ts	inventory-only	c37914e78be770ec1d58e1db646ae6f4149eb638a46ee831d494c25acf9669b9	3799
+src/commands/overview.ts	inventory-only	bef8577599fcd755eec899eaf4f6e27b042d93083ffce3cfc02d3f89ce939e25	1488
+src/commands/task-wizard.ts	inventory-only	d8c77802514c6582383bcfe2fdacd55a2e0d64bf5f07fbedb1d493af6ac0a93e	26706
+src/commands/watch-json.ts	inventory-only	7b503b8a3a3fe57d83c10c5df3b3cc68062cac01fff16667c929dd75b1e691b4	5970
+src/completions/command-structure.ts	inventory-only	e2aca3f73ac5d240f6c4fc61b3af90ece13a833a8d6dcbc179754963ebd80439	4312
+src/completions/data-providers.ts	inventory-only	79d73a44369d04369937807499f0b2618ccc5ebf68004384b4e25488347f83a3	3241
+src/completions/helper.test.ts	inventory-only	d4024cccc662191049b31ccfc42eed08c81ccb3d7f87911a3dce379d18dbc8a5	4420
+src/completions/helper.ts	inventory-only	c5f1595236ade29ba040ec04c9b30532ee8cb8b762b02a5f860363d56d9e799d	5605
+src/constants/index.ts	1-95	8d7a51262d353835a5fb9cf8a9780d3d1436b86c4ac7d82541b9a881374e4ae3	2147
+src/core/backlog.ts	inventory-only	b5cf2729b9a841a7ae7f29eff0a538f2aab5da242935961ed7927aff9d031d09	160827
+src/core/config-migration.ts	inventory-only	84ab8e223fbbe65b490f46e78dc8a4fa0980ee2a84d936618ba9bba5dd6abc48	1894
+src/core/content-store.ts	1-170 interface review	e836eb275ebded7a17f4c63fa63a8d852579b6e83fc2d5b56108ce73974cd301	72992
+src/core/cross-branch-tasks.ts	inventory-only	d17db27105ceb659339d6eaf80234132deac160f29240119c65f7fd44501598a	8639
+src/core/duplicate-task-repair.ts	inventory-only	32bf4a1523ab9ee1ce1623aa02c56858fe92f2cd28901cd5a83449ec1e696384	27642
+src/core/init.ts	inventory-only	07460bddcfcde6d89a6ee7664b08c22715fe65f87c641861d2edbea6dd1a2ce5	11769
+src/core/milestones.ts	inventory-only	081e92faf933e3ebdaf38c4c62cf5c47a0616e1f409bc7498b86d35ca40cc105	12299
+src/core/prefix-migration.ts	inventory-only	c985b7bfdfe8d3cd968d0b49627515dc9a1e93911a8724bfc008abf6d9f5ffd4	2949
+src/core/reorder.ts	inventory-only	9ea492b908ea987c2bd64726b1ce460e447e95170c17c6d76fc697778794088f	4570
+src/core/search-service.ts	1-140	5709abf44351db363c210e2be9f1c81b8beed53cc299dc9b739aec134473e1ce	6807
+src/core/statistics.ts	inventory-only	6f6d252237f74a7717ae8b53b627bd2f60e81f897630a6911dfcbcb91f14344e	4923
+src/core/task-detail.ts	1-80; interface/symbol scan	d9a53ffe4767a3fd6c7aa0952e0c00b36a9aad4c3e344d67f97700f2681c33f4	7027
+src/core/task-identity-index.ts	inventory-only	9cd77c5736e557096f605aa3ec9de69feac35cc9b8c7a48054a60b553acc246f	12146
+src/core/task-loader.ts	inventory-only	78c4690201963f2003e3e9ae8d61a118aa554cd3151f433222628b1d3cdc66ef	18975
+src/file-system/operations.ts	640-735;784-840	7e4399028bb3a235f21b41cdb3d3f6a852502278496c6b23da35b877c3e7ef38	83465
+src/formatters/dependency-graph-text.ts	inventory-only	70dc3fd1e001cb60cc2e9663ee0f09e4e3f0369ed3e7fc26bc8afae7afe0463d	5479
+src/formatters/json-output.ts	inventory-only	9822541db32de988f3fb9395043be6a657d8ca8bede29a817e836ece182a8e7b	9187
+src/formatters/task-plain-text.ts	inventory-only	54c9019a6580afd7f44fec86de8736ab74780b216de759496e6203691647639d	7740
+src/git/operations.ts	inventory-only	bd6a413d81b8a566036a3ab7e9d79060759ff44109825d4581c9850a54e7f28a	41507
+src/guidelines/agent-guidelines.md	inventory-only	904f97ba9dccd5e2f80d834e4b0d8f016c1961f5487aba3c9f022724558c78a0	35851
+src/guidelines/cli-agent-nudge.md	inventory-only	eead4cf34de1e82c9630560b36f03ef910a407e6096b550d549255edfd68af78	1139
+src/guidelines/cli-instructions/index.ts	inventory-only	0d0b983faf31904ff0a69c00529392863a76022a8363d1810d89a4706d125de3	651
+src/guidelines/cli-instructions/init-required.md	inventory-only	1fdea955d2ed4e8dfcf3eaab8a28c7706e51e14ca4e5a64a596d993e908a6c93	428
+src/guidelines/cli-instructions/overview.md	inventory-only	a1456989e869b824e16dccf5a43719d5c1587e46c897f6f15ec2112bf1d140ee	2216
+src/guidelines/cli-instructions/task-creation.md	inventory-only	2cc5a3f64e0008dc53691ae2341f1bd9de1efd66eadd531f22979ceb51d1e9df	6398
+src/guidelines/cli-instructions/task-execution.md	inventory-only	57d0b43517922e90f0063c9629db5ce2fd244d55596e77206641221da5d3cb52	4347
+src/guidelines/cli-instructions/task-finalization.md	inventory-only	8080386057fab41ed50a347b53bf7e676c04ac2f33d44376a4bb222e03fd6e71	1879
+src/guidelines/index.ts	inventory-only	105d8d9a1b14e94f1bfcbed66b09ee45a6792a04b3034fb17416b4c5e25dff22	804
+src/guidelines/mcp/agent-nudge.md	inventory-only	3ce3a0f39f66f60ddd90d2112ca31ed9bffccb426456f6ad2376b1b1cae27e02	1169
+src/guidelines/mcp/index.ts	inventory-only	18178cc4ed67de9069f6aff5e194e0a3e1ffd0de74c06c175badb8839a03114d	805
+src/guidelines/mcp/init-required.md	inventory-only	86633885da94a010ed573c56836ee914141b0ca656c1e89c3caf3ca3ac067aca	751
+src/guidelines/mcp/overview-tools.md	inventory-only	c63e410800395b9cc2b8f23b115de8cd410e521e2bec88d5c0c1b25ff78f2b9e	3355
+src/guidelines/mcp/overview.md	inventory-only	7f121266f4cf4cb451a7c01ee69ca2a716eb1930ddf8f8812e73e4e6a22d8d3f	3825
+src/guidelines/mcp/task-creation.md	inventory-only	de06ebf4aa230d1479d0d38e2f1bdb8a14aaf29de97cec3a77c766c577da44cd	9678
+src/guidelines/mcp/task-execution.md	inventory-only	b0699fa7223ddafe347786d38f334d1fd1185a82aaa119572c96ce713bc83b05	6629
+src/guidelines/mcp/task-finalization.md	inventory-only	9be809a589a95812f20896b1cb56daf2a2c2c86d9e763a95c34b9598908cae13	1752
+src/guidelines/project-manager-backlog.md	inventory-only	dea52e4bfbc1f81032b8369710ead423ed7eecba4bedd4639f18cd289b39ef06	14081
+src/index.ts	inventory-only	2442af813d3963f6b08aab29e71ac11a448bacf151416c089fea7dae374edcd7	855
+src/markdown/frontmatter.ts	inventory-only	d06a030573bb25131376ea495ec26fb7d28934513b072a79905b413852f6a977	968
+src/markdown/parser.ts	inventory-only	caa0314b355435c6aaa83bbcf3c124ce62a702d7b88511bb95feed5fd8a409f0	11198
+src/markdown/section-titles.ts	inventory-only	ce0fba15be9c43bf0c18628be21f3b42720be0639dcd3f53e43561b6fb1b30b7	902
+src/markdown/serializer.ts	inventory-only	550e51e1569df731749c76d07f1f0a3185170b1c1e207a809e1307536828014e	9253
+src/markdown/structured-sections.ts	inventory-only	9a1a2af5d7919ebad2dcf0200705801bd03316aa755b646b420cedd733e061d0	54994
+src/mcp/README.md	inventory-only	b7f8d38dd243e130d156506f942c4f6380c2f8fd7f69d2679ba81ae47fc44726	1655
+src/mcp/errors/mcp-errors.ts	inventory-only	dee881ff407b76b0c73a8fc9f9f91a99c8f5f255f0d85b42c7a04e1409ad3377	3338
+src/mcp/resources/init-required/index.ts	inventory-only	9ac5a15ad83741dfc85b8c2a51b94544beeec69d0d4d88ef4325fcf6c1629f4e	1024
+src/mcp/resources/workflow/index.ts	inventory-only	10898fb46bfae9603f858e7510fc18d8b4e11d251019d03a38177edb1c1ae448	624
+src/mcp/server.ts	inventory-only	818089cf50f226700820ecb8c7611b0bf941eaca9f7dae3018418e6935fbccf3	18647
+src/mcp/tools/definition-of-done/handlers.ts	inventory-only	de2ba1e6dd645f5df52dd1165599b67e43f82dd7fa670ae25ab7de6db1327d68	1873
+src/mcp/tools/definition-of-done/index.ts	inventory-only	05d9aaa56128b3448fcb2aba12afbb4a75d5c620f82acebe8a212dea60a41076	1692
+src/mcp/tools/definition-of-done/schemas.ts	inventory-only	c7819bdfe603d230f954e79e5ba0532c89c6f38c1c6983c29541b91238b9d3b8	647
+src/mcp/tools/documents/handlers.ts	inventory-only	f07611f17fdb35e91aa6cc4ed2491eda6cf983e50fcfe86db180545ebc7e8891	5250
+src/mcp/tools/documents/index.ts	inventory-only	f84732f8a9551bda34b55ebc1dfb0ff3b127b3deaabbb209f6e8b60f1fa91222	3315
+src/mcp/tools/documents/schemas.ts	inventory-only	cd692666d863ea97c82686f2c3b569dd27428c0195d926e3678c809cd5b82395	1905
+src/mcp/tools/milestones/handlers.ts	inventory-only	b85c8161ba9b7344f04dae805db8322daf40074b5b4ef12f2cf956eeec7f3590	25678
+src/mcp/tools/milestones/index.ts	inventory-only	de57e3c3a3f173053c728fee0f5d86fc8532a483ccbaee06ae7e23f59cfff506	2719
+src/mcp/tools/milestones/schemas.ts	inventory-only	c2b098dc0db51b92ac2cb64a08696a33fce8f6a1c8badcd15ac634db810bd6e8	2470
+src/mcp/tools/tasks/handlers.ts	inventory-only	027895dacd5a9fb9e79fd977786cd4b93bb22ca265e89ad30fe4fb7dcea75483	18785
+src/mcp/tools/tasks/index.ts	inventory-only	bad750bd94161e007e73f5a745ed9460da69c650c38eb8d6c7c6f8b23f401aef	4436
+src/mcp/tools/tasks/schemas.ts	inventory-only	86bbedf75b6d729ae5c5fb6ad74ba59b84d30eea83dfc812123db3327af761cc	1122
+src/mcp/tools/workflow/index.ts	inventory-only	8dceea5f824cc54ddc927be3acfd0e3448aecd02e49f0984aad888f9f228a602	2036
+src/mcp/types.ts	inventory-only	a623a1cb1d83c2ae85b8d7f114637ca365e1f9e40fb0fa1b4fa91b670080bda0	1045
+src/mcp/utils/document-response.ts	inventory-only	6be357a16f509d8335bb4c184580978cb090f204921d8067ca1c11426c8f7ad7	1556
+src/mcp/utils/milestone-resolution.ts	inventory-only	0b7d5b221ebec8f3146e48c0fe5cb57f7030c5a8388bf17cf473f7f63cd6a6fb	4383
+src/mcp/utils/schema-generators.ts	inventory-only	d4d47ac66a11e07baf433b357f3cb8aabc41ac693c880ab8b7224302b4655dbe	14622
+src/mcp/utils/task-response.ts	inventory-only	bf6ffa469885638f954f8abc0c7e19f172ffc48fb6ba21e71ce39ea78eedaa6d	756
+src/mcp/validation/tool-wrapper.ts	inventory-only	caed12b65b5c32dbdeae8fc6b98b3eec2aaa80d7bd614cbd849344ad8387cc1c	5092
+src/mcp/validation/validators.ts	inventory-only	d17b6a41b6301ddb46448c7e455a1a8c50824992c64bed100bf310e424d66cbc	7174
+src/mcp/workflow-guides.ts	inventory-only	a4ff7fde875932d45d0cb7b5f88d758c8a68a0010a20642e5579c231bfb39b81	3325
+src/readme.ts	inventory-only	ffa88c3d2b0efe86d31ddb5387bbacf371f5b19b746ce0d44e96771a55d9160d	2546
+src/server/index.ts	inventory-only	1f85568976bb7b21fcf459e972a5a2ddf56dc68340730eae22634db5d724ecd0	76050
+src/test/acceptance-criteria-manager.test.ts	inventory-only	084980aeba19b0409cbb1d70591c5a29176b7f9410856c7e198ce16dbe393d62	24878
+src/test/acceptance-criteria-structured.test.ts	inventory-only	904395bf903bf6efffa073784237c171c29e99d461936167fa403f923cead0a9	980
+src/test/acceptance-criteria.test.ts	inventory-only	bf42cbaa1491b41216b3bc758e2bf746112660dc6d4cfa518d433bb58c9cd9cb	25080
+src/test/agent-instructions.test.ts	inventory-only	1e59e6a592b62db54319d3a30ff1662d521744f9a8551e12918fbecf18a7192c	17078
+src/test/agent-selection.test.ts	inventory-only	044e52b46fc230425e75019cda94687824733fc337ed9643f7cebd3c55bac7c6	2620
+src/test/append-implementation-notes.test.ts	inventory-only	629cf8b8aa140450daf7b32837cb3d4941ae5daf156f52e0d23e81aaa21a54cd	4716
+src/test/append-implementation-plan.test.ts	inventory-only	81a156deb0f427f0c05007b3e95aa0a4bcf2c36514adfca12c5aeeaa6f5906c2	7878
+src/test/atomic-task-create.test.ts	inventory-only	087ceeb9df02c28a64411ba57ca6f805ee3b1f2cdcae59ac3ef3522daf1ce607	9203
+src/test/atomic-task-edit.test.ts	inventory-only	e5fd60f231e8215362b58a9a0efab9bf7449dff94a1cc7e523caab8dc61f686e	14845
+src/test/auto-commit.test.ts	inventory-only	cb2efa3e11f2d7fc062934b7f583e39de2731fd1df3a4ce084dcf487f707e747	8163
+src/test/backlog-directory.test.ts	inventory-only	7a08fe0ff0b5f48b102a95aad4683b3d64f66eaa01460818731462212f9d932f	4112
+src/test/board-hide-empty-columns.test.ts	inventory-only	8ea682966f4be2ab97f7ee0296b59cda49a04e9fa805096858d8171bf44870c7	9486
+src/test/board-loading.test.ts	inventory-only	02af55eea4191bde240aa085f30d3a355e581b8fc481617815975486fc41f2a6	9636
+src/test/board-popup-sync.test.ts	inventory-only	2168f5dd0ba8871cc36098396c38955c561f92562ef2d13c955a2948a9a3e17f	9220
+src/test/board-tui-move.test.ts	inventory-only	a4661b5ff616a5f06114d7803e611be130139d256c0321b5818bb83011951a93	20365
+src/test/board-tui-multi-move-pty.test.ts	inventory-only	701530b05f17294a7948dc7e53d8c7eb15a5987a9540d3770193c0aef1e3d7f8	5670
+src/test/board-ui.test.ts	inventory-only	f867cd997bfee57af530ab3ee9c97945e2b881ee8c9a50ea30a9f57e8cb7a729	3056
+src/test/board.test.ts	inventory-only	4e3149e67ce0cf1cb9669b1aeee6731069e17390822129b30c5c4ee5dfa1330d	11825
+src/test/branch-task-loader-resilience.test.ts	inventory-only	cad3aebd15dc0fc83e42146a473da999721161ef18cc175ca6e312d9caab1739	6975
+src/test/browser-loading-state.test.ts	inventory-only	c5543179176ec51d3b992939c2665a6d6ab9fe3b9aeb65b2177f6b760b0a39fd	679
+src/test/bun-options.test.ts	inventory-only	cca7f4b4098eab8ef45b4c49050e6912124ed4dab62894b1f5c9a383f1e1180c	2728
+src/test/checklist.test.ts	inventory-only	83a3caae320e5bcf8289e8e59efe45ab3ccdbee10e1021055f6326e0ff12503c	7990
+src/test/claude-agent-install.test.ts	inventory-only	fec5fa0e6232e538d48eefe0ab356cdd3a15e3e91b987b519f63f05b57f41b9a	2767
+src/test/cleanup.test.ts	inventory-only	2d404a007548967a5404f0e51af6b1e882ccd435db82101cdc5e8bca4f70d724	9112
+src/test/cli-agents.test.ts	inventory-only	ce08e3176509e7bfee546922ace33a664141f64b3874ba5ffb4c4e4dc135fdc5	2835
+src/test/cli-auto-plain-non-tty.test.ts	inventory-only	2564d4821c9635b70394021939aeb3e84b4860b5dc3c9df58bcc009e535b4ac6	2550
+src/test/cli-browser-port.test.ts	inventory-only	bb2e0815f2b374d0fc6d776a8c94a1bc478f811e80aa1a8766efe9ffbb665bd4	3400
+src/test/cli-commit-behaviour.test.ts	inventory-only	82641eca2e227b27444bd0aed8fd7738dc4356107341d148ca9f43ab28e3a0a6	5340
+src/test/cli-custom-prefix-id-resolution.test.ts	inventory-only	493d1ea7da05651eba16728e06a1799ceddc7d7101cab2ecfc77f9f20b83b22b	20765
+src/test/cli-dependency-graph.test.ts	inventory-only	aea9c4ebbc1823d01e1159a25383570cae17f7fb8011a775a57d8b5a80bfb055	11136
+src/test/cli-dependency.test.ts	inventory-only	58f6cae82b4ce16673076e19e897fcf65066dfe41985664fd55fba7d6f115524	10087
+src/test/cli-doc-decision-board.test.ts	inventory-only	aafbf6d9c71159b2978c49f2617617d1470a030cbec7f495ed9f60f4e74ae183	18504
+src/test/cli-doc-search.test.ts	inventory-only	1b43db9cc39367eaf9bd4dfd7f3963fd710da58a38f041bec2f5776b1efaa6dd	5484
+src/test/cli-doc-view.test.ts	inventory-only	c18142cc7575325030f4edb4b3746774e7dac795c3b9d404b7f3a9cb8ceb8dda	1674
+src/test/cli-doctor.test.ts	inventory-only	c1a13ea4ff58be2b132e1005904e9d946eb662697a9a48e8028a22ddfa62157c	27683
+src/test/cli-draft-edit.test.ts	inventory-only	e69b3552ca8c80a439fd587e0dae4d958c377fde9278d261dfaa294048f6ca07	38489
+src/test/cli-due-date.test.ts	inventory-only	16cc2ec8fcf838eae45ee6fe98d7555dcca9fe6f529af1041748d782f5d41ca5	2933
+src/test/cli-exclude-status-filtering.test.ts	inventory-only	c2f1ccd7ed3b66b93376aa948b93ba33e849f0abcd20b4a8447fe8ab233730d4	4004
+src/test/cli-final-summary.test.ts	inventory-only	93d8047090f371bc4352875b2b681b3e52ced4700df66acf268165786c391f00	3627
+src/test/cli-guidance.test.ts	inventory-only	53239e9bab9335aad1a2ef43bfb69a13d6f47c0fba714f3b9db2d103fa23d0e2	27841
+src/test/cli-incrementing-ids.test.ts	inventory-only	2d799d98c661a314be497231421067f5841c3e5f5a801e8dd34326a7704b77cb	2831
+src/test/cli-init-claude-default.test.ts	inventory-only	b00c0c4acde91d66972bf9b99d6479aa7cecfab899784cd530f8cf79f8997293	1534
+src/test/cli-init-create.test.ts	inventory-only	b01a99934513d88f687f1bb05308a5b6551639f8b4526c446371e57cb3134996	24753
+src/test/cli-init-cursor-pty.test.ts	inventory-only	e6c6654b67429372ef0ed8b1b5eb02a6ff023e55c9d7da0e7442db664813ab02	2910
+src/test/cli-init-input.test.ts	inventory-only	23a356e5e860a9001f560aa6bf8a1a2e90462d91fd56e5b8a481cb339ff70752	3520
+src/test/cli-init-no-git.test.ts	inventory-only	cb00d0000cfa818f367fd382bfe82defbc3b9a6434c54ca95b72943ac95038b2	6553
+src/test/cli-json-output.test.ts	inventory-only	147b6019b953fe4a2bf8cfbfb1b2cbb3d08d2385707fcda7f517039804f1925b	16418
+src/test/cli-json-watch.test.ts	inventory-only	c48f79a439a7ece2145595206a0bc0da6ad40319245d118baa575add2991125d	10909
+src/test/cli-launcher.test.ts	inventory-only	983e45cf03764c9f4d5a81ca1878ab1e4dcb3d23557def619178c1babb55826b	3393
+src/test/cli-list-window.test.ts	inventory-only	8b803717e2e7c076e4cc6d80af5cb694c2ded83846432d1dd0f199131ac06aaa	12791
+src/test/cli-milestone-filter.test.ts	inventory-only	74273329b0281c4d2a616eb705869914f5519682597ba3b5f759c1f81b7987ec	8024
+src/test/cli-milestone-management.test.ts	inventory-only	2c218c4412af3c2c740e51bdc3c5a7c0826e013775f76686bbf004c6a9e1eafd	10124
+src/test/cli-missing-storage-directories.test.ts	inventory-only	f7ea1bcaa6d3f71b4b74e2dbe1fe00c5ee249dcb0abdccde49019c02423aa9d4	4323
+src/test/cli-parent-filter.test.ts	inventory-only	d79c1c797c68225cd620e8b33a784c3279c022060fcae68bf05fa32c3a449067	7792
+src/test/cli-parent-shorthand.test.ts	inventory-only	00636844abcbbb2f2f1edf468a8b13e542c0a108834a7ba38bfaf658ae367168	2298
+src/test/cli-pipe-output.test.ts	inventory-only	2cc2b7c16305b529cce4890dacdd25b352a68fa2d738d07c1971bd782782ca31	3099
+src/test/cli-plain-create-edit.test.ts	inventory-only	ef2e927638e4b1c96cfd171b7cf699442e6ea676c46e9fcfe3fa460151421434	3934
+src/test/cli-plain-output.test.ts	inventory-only	bfb97b96c998e8507f28eb1cecfc71be8a4e63336c11a2ae0c1f1a295f4ef7e2	8666
+src/test/cli-refs-docs.test.ts	inventory-only	ec7ba897df2633d0df613cf2fc093efc57c826e89448dadfb3934d831c669a52	20622
+src/test/cli-root-entry.test.ts	inventory-only	d4a9a60a4ae3ce35f675847237ba64d2747c1c38a5b62f7a14ecb5968ea9eb95	4166
+src/test/cli-search-command.test.ts	inventory-only	b4e25e6388c444f2b7e44da6742a64c061484a219269603ae7ffd15ec4552732	4971
+src/test/cli-status-filtering.test.ts	inventory-only	b5f1b789f3f8f71110a0defa0fe27c448067017925966287b31e59e41ec7330e	5229
+src/test/cli-task-batch-edit.test.ts	inventory-only	93361636603a67049a4ac37a170e6ba15b44b55bba3d50657c6883cb7d5b10e7	7709
+src/test/cli-task-list-ordinal-sort.test.ts	inventory-only	ce497be90f0d8e26fa677a58f60d9cce999935b701e9d3ad951143d58a9c990a	2435
+src/test/cli-task-list.test.ts	inventory-only	2a830e555a15500e4bd432f3a4d56119886ba69b79b256d0fa54c151707043ce	25224
+src/test/cli-task-milestone.test.ts	inventory-only	7653f96eed0be6165676e929355e8848e961ff77c36acb18027f472cc8bcae51	3382
+src/test/cli-task-project.test.ts	inventory-only	85a7d2ced317d0125cb57cf004bf2a6b04b47311370dded0fc3d90dbe5ed3608	5715
+src/test/cli-task-state.test.ts	inventory-only	3c8e8d209246f987a5abfb047d2079f19dddf09cb99d366950bf4954d9f6a8a4	11215
+src/test/cli-task-type.test.ts	inventory-only	9fbaaceb0b647320faae014dc49b23cf82bca80b38219c4021be121139ec3574	5559
+src/test/cli-task-view-edit.test.ts	inventory-only	f4cd454d182d88f28c80a68e8754782f07c8ccaf91f81f1edc7504fda4bbd89c	17388
+src/test/cli-task-wizard.test.ts	inventory-only	6df4f45f6ee3121eb73160031b45429e92bc5186bc0fee3eecd4e00efea587e2	1747
+src/test/cli-zero-padded-ids.test.ts	inventory-only	66bdc7bf78b2a8d669d82c3a83d50f1cdc4dd79056efcaaa367fc0ed46690148	3221
+src/test/code-path.test.ts	inventory-only	a5d3a99cb58570aa4a84f64e5fc9c91b5bfb66a15cca187121b82a98d4d9aec6	7148
+src/test/comments.test.ts	inventory-only	1f1cc65d3c4ba53dd952df645675c238fe62e8524302b471dc8d5f56b0f098d7	12477
+src/test/config-commands.test.ts	inventory-only	d7c5f83cea42a2413fc5087df70223f4d896e652b93dea2451dba7c85c98dfcf	26438
+src/test/config-migration.test.ts	inventory-only	e63be85184a3e913e7d22b26d68e8cd10d177401308249055716b4461cc789eb	5912
+src/test/config-watcher.test.ts	inventory-only	37368d354d9b36663661231d6b01fc436137fa0972e7edc80c45cfa698ffc512	25127
+src/test/content-identity.test.ts	inventory-only	9b06ae6955286101dd66a3b4638e33376da2a86aa1f5ab2fd7752b1d174f4351	11851
+src/test/content-store.test.ts	inventory-only	9473196303a910fa0bd32a23dc15bc5551d9217130dee5c827e6f2e1b4047c6f	128462
+src/test/core-autocommit-scope.test.ts	inventory-only	826e56b6e39dd109b4e82f001ec464198b53f6c2c29005991581875fe4779f90	4708
+src/test/core-move-tasks-to-status.test.ts	inventory-only	8b1a2b02f29391b20d49c07fba99b45fe1c538b14ab8df93683a7ebf7a136475	17306
+src/test/core-task-corpus-regressions.test.ts	inventory-only	249cd4f4c57092a9ac79b413fe1e6436201560c4e6d030875e987af474e713a3	19537
+src/test/core.test.ts	inventory-only	531479c4fbebbb48c6d3eae5492a05c5195c99d62b090ac465185ad7cfbf317a	50199
+src/test/definition-of-done-cli.test.ts	inventory-only	722ccade48c3e314316375581f2c98cbfcf3b5bd8429af0b7d38359483531bda	4120
+src/test/definition-of-done.test.ts	inventory-only	e608e39b44fd67e61a2b4392587cffc7d9389b1005e317790763888e8ea255ae	9484
+src/test/dependency-graph-surfaces.test.tsx	inventory-only	3771627fc509d8dcb5fe4af5ac77f3cee23477c78189f8ed5b8451ec7088a38c	5004
+src/test/dependency-graph.test.ts	inventory-only	87f494922223e8d32065822945d8f31698cbd6e5f315c98cef5b752b287da894	16110
+src/test/dependency.test.ts	inventory-only	fde5a6b4b92ee3ab08cbd51c18da832a1b6d2c06c4575eed13714a332bf4ed8a	23570
+src/test/desc-alias.test.ts	inventory-only	1a85acc7e4ab36f978ad07c14ece6df0ec107546f97b5ea2f33d02ebcdbf8d7f	3426
+src/test/description-newlines.test.ts	inventory-only	c58cce305f1406cfdd0c777166cfb5ed4b7047d8b7d176ef162361acd0609ee9	2103
+src/test/docs-recursive.test.ts	inventory-only	6a598dd9997740927e51c43d361ec7e929d42682cfa41385541a7f41a3797568	4479
+src/test/documentation.test.ts	inventory-only	acb8ea576995dc445a6a21ad79d5e7614201f83b404e0f1e638dbd6607973e4e	2152
+src/test/draft-create-consistency.test.ts	inventory-only	72ab967824233c825c5abf41e5241f07d123d6d23d414a653fc524e6090f985a	3985
+src/test/draft-lifecycle-autocommit-scope.test.ts	inventory-only	81150f00861d36b099099d4eb4d5571c08542920853c382c4ff65e3478df7e46	6917
+src/test/due-date.test.ts	inventory-only	9a327feb7a55ce110c1f833d211cfbc81e5f0e1c34010c68680e79ea770ebfb8	9785
+src/test/duplicate-detection.test.ts	inventory-only	2d30ae3ff60b0c05872aea99eea51f263756c34155bc7415892f5c31d0d8ccbf	4265
+src/test/duplicate-task-repair.test.ts	inventory-only	2b4622287062b7e7a247fbac5474f437b61631d5f2e2cdb50791f646a907bb9b	25548
+src/test/editor.test.ts	inventory-only	c6476cdffbe94d748f39b50c637238ea9a3128a7af47989afe6414d4883a0a7f	6772
+src/test/enhanced-init.test.ts	inventory-only	6d4b551604a71a77f742d3401d8933c92ddb6d8ab9a36ffd421cf55a6d5ccc6d	20795
+src/test/filesystem-task-cache.test.ts	inventory-only	244cd9c3cfdc05465f8f0708712eab4f31943efdd66ce75fa51de3b33915f62e	12415
+src/test/filesystem.test.ts	inventory-only	41a276603cef1016796e0f56d43e047fe18b30e347b5a7a3f0d894e67fcce589	35313
+src/test/filter-header-navigation.test.ts	inventory-only	a85b72fe2a93906daefdf5232264e336758b7399844bad809f072b2e8a9b109e	865
+src/test/final-summary.test.ts	inventory-only	3697f686fd3e02cff07358b8ce3e7f52d65de869bfb5c6a769d28813676d2654	1708
+src/test/find-backlog-root.test.ts	inventory-only	b0df2f0b178733b73e4effbfc2ba70b7ae0762dc0859083abd83a17a8ae6eff7	6694
+src/test/footer-content.test.ts	inventory-only	df06b3a9ab6c66ae71dd1f639e92f31e683f668538981c155e8c271b8ccec673	4294
+src/test/generic-list-selection.test.ts	inventory-only	13cc38083b7fb26192c860f87c8c28fcbbeb6a3ac8138dad239971c49bc40af9	2538
+src/test/git.test.ts	inventory-only	6b2b8cedb00d0bd54e90bb35a35630df821fdf56350bcfe7334277decff7e707	15781
+src/test/heading.test.ts	inventory-only	94750e2b7cc1ce949e57fe09c814fc632d5496c248df53393db400fe311b84d3	1133
+src/test/help-popup.test.ts	inventory-only	64b3a209bab9eb01e005885e215f25a2df924bc39d1ac3fb9e39800c5a095eec	5641
+src/test/id-generation.test.ts	inventory-only	56d0bf4ccad663bcab654c463f0af425293f8324eb687f332547fa4453c027e1	6222
+src/test/implementation-notes.test.ts	inventory-only	5fa46ae18806d3cf17e51246aec2443286ac7ca2691742d09c9e15131f874c9d	15045
+src/test/implementation-plan.test.ts	inventory-only	dd957121d8ffd1c14424807b62652591abd56140a9c3768245e9cb69315b9453	7888
+src/test/kanban-tasks.test.ts	inventory-only	470792c08647208fdc728f5810f7e09680e609c1d03db7149bb156e8de624aa1	715
+src/test/label-filter.test.ts	inventory-only	2ef51837122a2e9ba71f823ebc9b8f0d9e937064b903a1c6d6a5819ed3ab9fca	1983
+src/test/list-window.test.ts	inventory-only	7466a35bc52d070855f2d6ad19fda21de9aa1607b172990a7705cd80b0475d0a	7234
+src/test/local-task-command-performance.test.ts	inventory-only	a033e8c09bbdaa430eb3c286ad8e721bc9142c2d65d91b5a3f9d68235e41fc55	12333
+src/test/malformed-checklist-marks.test.ts	inventory-only	4f97c33fa651acf7e9ab4e2d2c3431d3e860f40b0fd67320a7b32131a035621f	9076
+src/test/malformed-task-dependencies.test.ts	inventory-only	70c86a1bfcd8573261b16c077e1eeb987feda81da87f2791c1fd9bdd55ab049c	7654
+src/test/markdown.test.ts	inventory-only	5000d2ddc73712ebc6bddf1d3d1a5e98e9e95e6f604791f2a64e39e7e3289ad7	23146
+src/test/mcp-client-setup.test.ts	inventory-only	850dcf8416cfc6f558248a3f000fe0f55dff12727b1d41967e3680b62ea95f6e	863
+src/test/mcp-definition-of-done-defaults.test.ts	inventory-only	baa7a4581718be76267fea4fa3566f709a8af816393b4820b497575bc3c30854	6168
+src/test/mcp-documents.test.ts	inventory-only	ea36953ac8a809ca5ba941e28abb3a006c7fa1fd7487c5b999c06bfc2324e23b	15653
+src/test/mcp-drafts.test.ts	inventory-only	dfa5846d4ba169b400df5eafdc59355f0aae3aa078bd23f79122f9c85c1270c4	11430
+src/test/mcp-fallback.test.ts	inventory-only	2308e98f04d9f0235483bf5dc4f4a8ade7fc2b619ee8b52eca9e1a8d8d5e095e	2076
+src/test/mcp-final-summary.test.ts	inventory-only	b0eafc98456857fbbd4328fed73f374e3656a79147330191b707fbd9c02d3ded	3512
+src/test/mcp-milestones.test.ts	inventory-only	332fdfe318598d69fbea057638422c12f004a5d2c3b474a39458e6856a9e00c5	40642
+src/test/mcp-refs-docs.test.ts	inventory-only	63fe9639a28110e8f19d0326f1b63dffb2ff4235569a40407e410332029b74fa	5615
+src/test/mcp-roots-discovery.test.ts	inventory-only	5606bb94619b1545e503960587a936cfe7fce73f8ae366594e0cac7ee7a00f95	11452
+src/test/mcp-server.test.ts	inventory-only	dcb78f212dbd208a720e55c2168e5e3e57fbf5dfe198bd3c7ce18552b3b9a48b	13407
+src/test/mcp-stdio-exit.test.ts	inventory-only	f4ec8d7828984c8846a29a1f1081e8507f63315e7024c2a5265a6339c54f6232	7181
+src/test/mcp-task-complete.test.ts	inventory-only	2319fb069206592259b5bc98906505ada9857ceacac932606d758903bf776d28	4294
+src/test/mcp-task-project-filtering.test.ts	inventory-only	2788f36e65a7c38e0aa2a11799b2e4950f911a8cf681b8d4ac4e5529bc083d9f	5408
+src/test/mcp-task-type-filtering.test.ts	inventory-only	f1f6f4fc38e096989481107a50ec4dd5859ddf6779a87dbc5e73e83c6c3a03cd	5338
+src/test/mcp-tasks-local-filter.test.ts	inventory-only	7635b2f8c1315951a98f6c3b38bc88142aee9416c2e9b87234ad71baad7f45fd	2928
+src/test/mcp-tasks.test.ts	inventory-only	9f3e1750f27c7913c07cb9c7cf9b01ae24caa8693fcc6ad46f7b1c7799c69511	57108
+src/test/mcp-workspace-root.test.ts	inventory-only	60db758aaab98def938d010dd6b647bec65842117bebd5453eff4db7f7488f06	9989
+src/test/mermaid-markdown.test.tsx	inventory-only	ca03ed10f178efbda38ed4acc311cf88c01402f4ef29444f56af262e63d24e13	6356
+src/test/mermaid.test.ts	inventory-only	bcc172d3b2ac9a5585ccb96bffb0dae5f301d12d774c94bcc22356510900046e	3256
+src/test/milestone-filter.test.ts	inventory-only	da3fd18ec7668cceb6449d02e556776a917f89c3cb37e66abb99d10b698fc65a	9566
+src/test/no-remote-preflight.test.ts	inventory-only	1cd0a868966204eeced2972a8b7ec2c4395fe1980805ef12e2cf352041fab8f7	2803
+src/test/offline-integration.test.ts	inventory-only	ebed002b9bc90d322672076bd46c06161c24858dd8e1cdb335e992b2e187fc00	6373
+src/test/offline-mode.test.ts	inventory-only	c45e4d18f390af6b578d6784a47fd039b7257a6dfc698da582305351d5af30b9	5791
+src/test/packaging-bin.test.ts	inventory-only	a9229dcdd1f018785572346269c96b1d64ee04d4e97ae4bfb80cc3cee05ab942	412
+src/test/parent-id-normalization.test.ts	inventory-only	a86c90f0ce15f741c2149e62fa562df2425609f740f3d8a6c482492461109a41	3677
+src/test/pin-timezone.ts	inventory-only	b40b52f18510c507e5679dc18f28c8085d14a088856eaca3e927a6a719cc621b	629
+src/test/popup-chrome.test.ts	inventory-only	52eb03c038029db1a61d5b66daa278a961e5c90e782aeb14fcd93c6480a99138	1888
+src/test/prefix-config.test.ts	inventory-only	548f44c2eedd11b1151720542d982ae01e619eb37263f6d770a6c3d06175011c	14457
+src/test/prefix-migration.test.ts	inventory-only	6f977346b245579d6cad4116e65bd1c21a64c5865619afe6fe915c22dc8ca8ab	9026
+src/test/priority.test.ts	inventory-only	0f9efb2af0b5d70ac21228ebdda1645c9672cbcd1785d735bcb4ba505f10ef3b	4043
+src/test/react-dom-input.ts	inventory-only	531ce8fa674aca497c30cd1fb8d47408c9b87be63eccd542b927d6f825eb0e6e	1597
+src/test/react-dom-preload.test.ts	inventory-only	3109f5fa3cec07cd2d0283827194d3956302808de78352df8e89306018a21d27	1832
+src/test/react-dom-preload.ts	inventory-only	8a8eca52cfe26b63c413c8ecba23c189e97a1a5971c4323ed69673a7f2be32c4	1239
+src/test/readiness-surface-agreement.test.ts	inventory-only	d2184db2264ae3f24b9b9b3c17c0020a4849fef05cffed446c110055e44889fe	11350
+src/test/readiness.test.tsx	inventory-only	a803c24cd7982b23d2a4b7a9b36f37c7921f8ac2772a1e7a2d0ac662ed7e6491	14819
+src/test/readme-board.test.ts	inventory-only	4f5bb321a294f511539e19b92220a8d01ad52811f844da90100932a753b229a1	3801
+src/test/references.test.ts	inventory-only	62100c7ef303239ab5f19f401ab521bc5da5c44766d9a0c8092c48e6078c9460	3697
+src/test/remote-id-conflict.test.ts	inventory-only	4136473821a6795c83a8433075452284be3fb4e747d0e8e13350a8a6883e4328	2067
+src/test/reorder-utils.test.ts	inventory-only	170d08e1a8395437e30d7b09443c092c219c23dde091ca45390a8d8c93bc2902	9134
+src/test/resolveBinary.test.ts	inventory-only	67fca59f50dfa0b7e84d51d101f2d7e893ac45e8ff85d4ab95e14307fd6a8e4f	5806
+src/test/runtime-cwd.test.ts	inventory-only	a99a66c52ef65c534edd148e13ed32861a7401bdf1815fa3dff75decc8c0cd8d	6568
+src/test/search-command-query.test.ts	inventory-only	f1be24e37074153364377abb0c6535ed69f5bcf68e7b2eec941c29d95face81e	1917
+src/test/search-service.test.ts	inventory-only	b0e315c297e61a5e4f9b39e9c64a279789c0c9343d60ee2d3b05340148304674	8967
+src/test/section-marker-safety.test.ts	inventory-only	ba5d2b3467c07f6c74ff51aeb8cad65e9707317bc2fae5dfcd3d9d8eb5a0a9b9	9498
+src/test/server-assets.test.ts	inventory-only	5fe8d4d0f635da904f307f290bd3b5086af38310b071796ecccdfb2d4370c71b	3402
+src/test/server-browser-open.test.ts	inventory-only	4ff4aef4cedbb98ca3779e65b200419480d75c51771e53286733e86a30577387	4120
+src/test/server-cache.test.ts	inventory-only	33ca19251855c386a446f19c24ba004e2352880b503df0d074014fe9d4586086	1646
+src/test/server-cleanup-endpoint.test.ts	inventory-only	6e42313044189858850e9ca3c34196301240dd352be9060639082deddda3d711	5173
+src/test/server-definition-of-done-endpoint.test.ts	inventory-only	266f2183defedbc1f67c11827808ebba4819846c4e91ece89441e8e0455ed09c	5558
+src/test/server-demote-endpoint.test.ts	inventory-only	0e154cbb99671959e6d681590a0e0abb2e77c8a6a901be73fa1ca4adb0c49c50	3978
+src/test/server-dependency-error-copy.test.ts	inventory-only	abb943317433b9264201048ac952936a8ea2a2b2d9cc8043fc7beb6afdaa3399	4044
+src/test/server-documents-endpoint.test.ts	inventory-only	8a4db2fd0bd833769a946eb8c44fc08c727f707cb6f22e35be05652833ab9a54	12145
+src/test/server-drafts-endpoint.test.ts	inventory-only	c484b93efba657ecf40f553d71a940dbe8867f58f3b0f13b9d6082cea112db7f	8610
+src/test/server-due-date-endpoint.test.ts	inventory-only	78f283296a8cdd3184a29d41c3a38a997e73d315f37aded63685eb80abf4590a	6131
+src/test/server-duplicate-repair.test.ts	inventory-only	42106d49bbf2220d5885dad0cf7cb724c560edbe8d2b51cd96f7f1f87b745947	10416
+src/test/server-hostname.test.ts	inventory-only	808ebe14e513a14962ced75ad639787990e7ae80f2da89aa66bc5e9b0cdba034	4229
+src/test/server-init.test.ts	inventory-only	7f4b7ebe5aabc5c34f93278c802a4856b76a19a5469ef5d98ce320aaf665d613	2377
+src/test/server-loading-progress.test.ts	inventory-only	e86db297a748d080e718f4ed53ab2ae6276d10965bff61d9764bad908a2fb813	6392
+src/test/server-milestone-broadcast.test.ts	inventory-only	f051e6cdc40cf59228e02ba81413c28051ea4740af02ee1166054145c4001790	2827
+src/test/server-move-tasks-endpoint.test.ts	inventory-only	d87b00cf7c96d2895012aa1e348bfb9c443ad53b0278ab27412520833f4d2527	4255
+src/test/server-port.test.ts	inventory-only	424c5b28eb21d507cbd2d0854d0f23c27fb620c8f7f7e1968455e7ccd85649f7	2610
+src/test/server-reorder-publication.test.ts	inventory-only	4c48833bd1537b0732ce12d2b0b077edf8fb958ecceeff5c70d96f541885eb92	4386
+src/test/server-search-endpoint.test.ts	inventory-only	867c247723e62413bf699f17613930506f7e0023c46847aa311807aaab6a9a4f	30668
+src/test/server-search-project-filter.test.ts	inventory-only	18228b7731cf4d97e073f6323d4e883871c0c170c01ab8ac827dbb39080d732a	3934
+src/test/server-statistics-endpoint.test.ts	inventory-only	bd3ee52b535bb943b07d4367a913ead96e7eb7e99a49b34cf1be4c85ae32bf44	12082
+src/test/server-task-detail-dependency-graph.test.ts	inventory-only	c9adc02f703a530750ce29301ae6cdc01047131376eb42bbc494be18b614e505	4839
+src/test/server-task-project-endpoint.test.ts	inventory-only	6227c7f8d301ac8476333c8c042d4c724bdceee01b4af5738f181eba689cbe21	2938
+src/test/server-tasks-spa-fallback.test.ts	inventory-only	685b80b2abb538f8fcd40309c7a4196c5b883fc7e118f7f6d44cfe0b2882cc37	42273
+src/test/shared-branch-task-loader.test.ts	inventory-only	e9f8757f06825aa1ef923e3a7df8ef4cde9dcd61e36387bc2de05bc318c3a5ca	40866
+src/test/start-id.test.ts	inventory-only	fb2caf866b1d9f20f9fd6891113f2997ca86be2bb463d3572fc2c12678da998a	1085
+src/test/statistics.test.ts	inventory-only	cadb40acbfda6852716f903979ad00886885dd090170daa8e79bb81de6749b36	8579
+src/test/status-callback.test.ts	inventory-only	bf8d0c3a072df1d0d63e83e959e77c531cb65bd33cb52f0c2cb91b30d108b0ff	8528
+src/test/status-filter.test.ts	inventory-only	3a495054aac9a681b52d7b16f367d68418e0c2e9db71772c8c9cb31ed67df2e5	1480
+src/test/status-icon.test.ts	inventory-only	d2c37c1aba5dac9b4144df70bc9b0f62e48b7cf8b2f447a84c9b4cdc7c078151	2127
+src/test/strip-tags.test.ts	inventory-only	f34199a5c065464fae2cc963a3d16ba57dd6300e95f6351f920b2187f7867463	2355
+src/test/structured-sections-code-fences.test.ts	inventory-only	095ec72f7a74fb3142797dc6be5f4c96680e98e4704aff34ced024fdc0a0b120	6684
+src/test/subtask-ordering-consistency.test.ts	inventory-only	68da196c170b9455bdaeda5f5e6a2f2645c642b4885e9df59a61e2df09234948	4118
+src/test/subtask-progress.test.ts	inventory-only	23bf3f07bb8eca58a62f3c781215f66c13c5d6faee0fcb3451d9e13510173e05	3956
+src/test/symlink-backlog-root.test.ts	inventory-only	31e8a8fe0e384774626ba61fea410b70a342fa34c5895e4d43e06f0379c484da	3879
+src/test/task-autocommit-index-scope.test.ts	inventory-only	487f632de4832cf114cea022749289ae483e8a819eb97125fc54380acc6de276	4299
+src/test/task-edit-preservation.test.ts	inventory-only	d072148217b7948644139b3f90a2f20251cf8e8d7da5e24d24cf5019784a7bd8	8484
+src/test/task-id-resolution.test.ts	inventory-only	11b63cfe237a948ab232ab66a13719895182c22beca6e77324ae3868d844d159	3227
+src/test/task-identity-index.test.ts	inventory-only	18ec823400232ce29c13027b89f97571678639729c8e4e53d9227689bd90590b	3867
+src/test/task-path.test.ts	inventory-only	4fabc40b844e724b5858f11fdcca252d3dca695c59a8ed8de70cdbb88e06e806	13964
+src/test/task-project-filtering.test.ts	inventory-only	eaf5cc6f0da2656cedd4bb3599dc826c4988549be264deeb5f0bb0a2c8a5dd28	7313
+src/test/task-project.test.ts	inventory-only	ab8e5a2b4aed6eb8b7381902dee18611c8bbf5970343726bcccf61c58ca9ce77	6618
+src/test/task-search-label-filter.test.ts	inventory-only	348b033f8e005b5e83a3d08e060c4b15a5f9172b25322c1fbc62217285e320ea	1983
+src/test/task-search-parity.test.ts	inventory-only	ea3b64ba1863f71bf4444b5559f598e5bc3ba544cd72eec13f266956d75237ab	14033
+src/test/task-sorting.test.ts	inventory-only	c3c652c3b10e65b19798237536646c59ae6131e8f163e2383bfe876e7597c100	8763
+src/test/task-type-config.test.ts	inventory-only	227e5ae68d5fd8fe7f3ccf2b091290cb87bcd89e4d60c0b62454bc5512fd1276	816
+src/test/task-type-filtering.test.ts	inventory-only	85ad85ccad91e05f5f9dc732733286e1024c8c9ea68f08d26e256296b04d5ab6	8074
+src/test/task-type.test.ts	inventory-only	5f0e99b9bfc4e446c41ae10bdcd05eb7894f59ad4247a2cd1699607ef9644883	5258
+src/test/task-updated-date.test.ts	inventory-only	7ef4132f2d1825fde90b0b8888feef388b33f089d25fd2d2855e1c14482bc157	1723
+src/test/task-viewer-boundary-navigation.test.ts	inventory-only	e6ad7e2e5137acf5d038080cde933dfdefbf7653b900ad6348c515474bf7ac0c	3619
+src/test/task-viewer-milestone-filter-model.test.ts	inventory-only	e010a6b00af53aea5000d8a9c0130eac3dc8082129d7d99401290be94414ed00	1635
+src/test/task-watcher.test.ts	inventory-only	90422741d223ea946b25f3073bfd5cb7851d0fc1efe033f31c666b594714dc93	11659
+src/test/task-wizard.test.ts	inventory-only	c06cc36e77873cefdd630edba1735f67247774df3df3f2a28ac9b0356542738f	14993
+src/test/terminal-status.test.ts	inventory-only	fbe91df242c098028df37912701ba2630f4526985799dfa25297c2d03eb6dc19	922
+src/test/test-cli.ts	inventory-only	09ea0f9e63629d8337060f8c2c171f6421b8759213788ad1de3a26b51fcdf403	173
+src/test/test-preload.ts	inventory-only	b52be0b256d3d718ca32e227634fc454993c8cd0ba3c0fed6589f33c33fa9c41	897
+src/test/test-utils.test.ts	inventory-only	00fbf56bedc1c1ef1bd50843553f63d89a16176ae9498994b0f96c6e0a53379d	1154
+src/test/test-utils.ts	inventory-only	20490c6b721b25780c28039f7a41ce6419ec245f97d939033b4115fdb6cf0ca7	10847
+src/test/tui-acceptance-criteria-progress.test.ts	inventory-only	5aacead9661c7010c067fa53ae625332996efd3cad70c013d582858424078b4b	4897
+src/test/tui-definition-of-done.test.ts	inventory-only	9c8e6b4164d235d047be678d78f60244d8c1501a88f3834c7b50f0873c3a822e	1676
+src/test/tui-documentation.test.ts	inventory-only	0bfb4a7b14bdf49cda9bfca0ebcb1b0684fbf02d7b36410e985a91a762dc7969	1585
+src/test/tui-draft-edit.test.ts	inventory-only	012d650661944bd7fb252b915378abc26dd0d712b873745a7431eee5bbb00d70	14578
+src/test/tui-edit-session.test.ts	inventory-only	528eeb8d9ce00b3bd8522b6dfaebde9165f05608219be6a43dabbdfb6e17019b	4192
+src/test/tui-emoji-width.test.ts	inventory-only	265a25e920be4e69ae1fea7174988c400cde3942c6f0c7a276582263e0fc2fc8	1569
+src/test/tui-final-summary.test.ts	inventory-only	9a49a09e84d90e5d7c0e66c59626ce6cb0d4e47d1fe3cdb965096d38494f85c9	2645
+src/test/tui-input-lifecycle.test.ts	inventory-only	d2efd459d724bd0f3ab9aab2c383da225f8b8847088b33c258903a205c64cb57	1379
+src/test/tui-interactive-editor-handoff.test.ts	inventory-only	574bdbc50ef9a6f32555ffe053cdb3c26957571688415a608d2aedc9e440aff9	13591
+src/test/tui-ready-filter-pty.test.ts	inventory-only	99a3b06f486dc77f95bab183f3fc50350bd3162e65244f0fdb55a6dc1ea7619e	4479
+src/test/tui-runtime-cwd.test.ts	inventory-only	7a0c30c1977a830bc80e0ae142c781f2a3a10e3a684d53c0c2edc505b4d9d36a	3964
+src/test/tui-screenshot-compare-script.test.ts	inventory-only	d8a6406bd5f351e5b891f7b6e7101fce667e451f36d1d319ec3339e221c8f2b0	446
+src/test/tui-startup-warning.test.ts	inventory-only	14e18e69e32b313ea114a96c9b83e38d891ef9c65d2172eea1f6d527e48f2ac7	1020
+src/test/tui-task-composer.test.ts	inventory-only	e03d7e8a3c225e576f239103237fe004724abeed8c69865d1760f486c8b2d002	92135
+src/test/tui-task-lifecycle.test.ts	inventory-only	fb5d6c1186f28709af6a6561100f04a4f12c495cc92c843d600a9e2d54bad103	3366
+src/test/tui-task-project.test.ts	inventory-only	592023ca8bd1909cc1b2641f79a2dd83fde7ccb1214f820da6e7b20f8516a6bf	3254
+src/test/tui-task-type.test.ts	inventory-only	f90176d875cd096f3f280536d9464c86f082e378918bfc1218aeb1f2d7b61457	2586
+src/test/tui-vim-boundary-navigation.test.ts	inventory-only	7cf9b5f0ca91a2c230fdb88e40f66a8e5f13ff6d396fd11f74e579d3c964f072	8621
+src/test/tui-window-title.test.ts	inventory-only	6f481b70f8e61f85e5fa7e900ea6bafe0f5b17e7a416738b586e7dcae6aae9c6	7167
+src/test/unicode-rendering.test.ts	inventory-only	af25b897ac5240f2c91fca2b7861d277d97b932ada78b33e01cb15a4a5bd6253	516
+src/test/unified-view-filters.test.ts	inventory-only	61fc004c7e2969b4c70b88ed45b846a0b935717149aee382accd8d7b3c3a9a0b	15820
+src/test/unified-view-loading.test.ts	inventory-only	9f20dff3d0398b8ae78120e3e054a83a7c8f5c59c1e2cc0f673a1c474d3cf37c	6484
+src/test/update-task-description.test.ts	inventory-only	0c0e3e93f7ae8b5120161a3917673c2aa7f73cc03204677f1e726b14c34024cc	3234
+src/test/utc-date-display.test.ts	inventory-only	a445184437139fbe09b5c1d81434ba9e9287e72734fab09d3070c545519cd964	4574
+src/test/vacated-task-references.test.ts	inventory-only	969b8332989e27902e7b0b68af6ec257e339aa12a3c1714ab30fd24316c4d80f	24002
+src/test/view-switcher.test.ts	inventory-only	03cff97173ca0517b444d733f835a179da24267aef39404f24320081ab79108a	4845
+src/test/watch-json.test.ts	inventory-only	b5242a5687a493a0558d1ba3b206d7b0ee94de8147438ee33e50062734267be7	7572
+src/test/web-ambiguous-id.test.tsx	inventory-only	ecaa65d50c4933417a905a2f04f63dee6f7beb7dff0efa024acd8940fa1880a8	7584
+src/test/web-api-demote.test.ts	inventory-only	9db704ca6cdf69fd3a09e9e20c198f28ce2d175468c69ebcde37d270d0546642	892
+src/test/web-api-error.test.ts	inventory-only	9ef4fe435ef8d097dfe8b41f7702f5bbae2a0e4596703560088de0dd5ea6e2b9	767
+src/test/web-app-open-detail-refresh.test.tsx	inventory-only	085ddacc82baac8fae9e486e26d96f9ad422123891addf530668f91e6b45c6c0	19496
+src/test/web-board-batch-move.test.tsx	inventory-only	2e1ddf96cfee1a7e3872f1876a3ce8860598cc02ccff5685afab7808f4cbe849	30329
+src/test/web-board-drag-hidden-columns.test.tsx	inventory-only	8b8a030e450645b0579e53626e07d72fc344321f0296528e6f49a203f5af3755	7102
+src/test/web-board-filters.test.tsx	inventory-only	d30e667130f16aa53bc074c5fbb352ac69dc5beff2302625eec1bf018a356432	20468
+src/test/web-board-loading-skeleton.test.tsx	inventory-only	e21e457c6a631e9918989961af1b7f0ffd09ab4028f511658e4cc4846199fb4a	4705
+src/test/web-branch-indexing-indicator.test.tsx	inventory-only	f5d72d5d0a8be59f16778685245ef4ba8003070e8f64fba61749d34c83c92bfa	4195
+src/test/web-dependency-cleanup-notice.test.tsx	inventory-only	8de8c600860bb376eabdc3530ba8091b16de024a346a11aed12844f2cac2529a	12889
+src/test/web-dependency-graph-section.test.tsx	inventory-only	bc0f639c5d03bfcbd43ca29b61589f025e20545991f7254e31c6ead5bfc38a68	7648
+src/test/web-dependency-input-links.test.tsx	inventory-only	ef35ce4c73154aa6c76cfe2f51f7955b8d3dfed87cbf4f004060f4797dac10b5	5533
+src/test/web-dependency-picker-local-only.test.tsx	inventory-only	68d5221c24773e332efa5d38ab22807e6543b2fef15a14d0918d6096c0710f22	4878
+src/test/web-draft-editing.test.tsx	inventory-only	6f221c4851495e80738e33e69b8bd731e93b77dfd1a215b07c1fe9127931d4a5	6420
+src/test/web-duplicate-id-repair.test.tsx	inventory-only	a494f1ffd37498b10093e8b9a3bd54db8c21dab1acf1137bfaf14e1e6e182d33	8578
+src/test/web-in-place-refresh.test.tsx	inventory-only	bf43df99767fc4d1d58447fd621a2976ddf7208be30dfdd846e5d69cbfff8d69	14726
+src/test/web-initialization-cursor.test.tsx	inventory-only	dbec3a52c052f0eb21ffe0ba5056f5903cd9ca626dfadef027058da74806d17e	4086
+src/test/web-milestones-page-search.test.tsx	inventory-only	abcf4ddb061429be00fabe01b6c00d750ca5e64dee7369b5493ce8bb58ff964c	13555
+src/test/web-milestones-page-unassigned-filter.test.tsx	inventory-only	a9ed219e86de7d9a24d0a54b79a0be9f04dd1899f6a3a128d1f3be0496e95ea5	2677
+src/test/web-side-navigation-loading.test.tsx	inventory-only	293882b69638e6c25dc7807047c230b3c88a1faa4efa1d12ae9fb857ae8e5adf	4035
+src/test/web-task-acceptance-progress.test.tsx	inventory-only	a1b5d41f40f162aa4adbb5f04a736a04c658a865206f64cedeb31e9fb5d73718	8370
+src/test/web-task-column-sort.test.tsx	inventory-only	85f91a392646af9d751061938c4c905e297b4f3b7248dbaa346643866b4c895d	7580
+src/test/web-task-detail-deeplink.test.tsx	inventory-only	872d6b987da7f76c3310b4aa49c719319fa9c8fdf9f420ffde845b8a04013433	60044
+src/test/web-task-details-modal-acceptance-criteria.test.tsx	inventory-only	e7e3aec2dc0045ec545c5e3bb80115a05d396c02f876b24cc8c37734d07812d8	2474
+src/test/web-task-details-modal-default-assignee.test.tsx	inventory-only	d7ea0b65b534fb0306534399fdc7b6db3c08e5a69a2120a15ba69cc4d4342c71	10607
+src/test/web-task-details-modal-demote.test.tsx	inventory-only	bf10fdbb58ebb90f88a5cd2204c4e0f6567525e9e2103c273f4e67a252872229	9461
+src/test/web-task-details-modal-documentation.test.tsx	inventory-only	bf5e776b60c5b151768af792558df167c0317cd31c4187f4aef9915e580cc2ed	2108
+src/test/web-task-details-modal-final-summary.test.tsx	inventory-only	0fd57c96803f8b7ec5a23c0ef9e33dce7a4ebc67d0faf179c1ebabb81284fc38	18699
+src/test/web-task-details-modal-keyboard-shortcuts.test.tsx	inventory-only	d135590b9cd2950cf84e08b465bbafd356b120f235baa93796d6cc8f3274e03b	10330
+src/test/web-task-details-modal-modified-files.test.tsx	inventory-only	89b521ac9501efeb58cc917c9e5fb20204fdbe0a571ad89c4dc8faaa0e8729da	3844
+src/test/web-task-details-modal-subtasks.test.tsx	inventory-only	1d673ab9f817ba5253d2ffc610e084b3ad761371fa838f248e767181030bcd3b	5594
+src/test/web-task-details-modal-unsaved-navigation.test.tsx	inventory-only	13ac045654705f42c3c734de0c91dc91bd73ad842e07254bd207033a0721cab8	8486
+src/test/web-task-list-labels-menu.test.tsx	inventory-only	893fee3e478a9d21b2b274906ee266301a504dc145e09544a1bd90abc820ff00	24359
+src/test/web-task-list-table-width.test.tsx	inventory-only	f20fe86883c198881b0f57d31d24488df5a9bf7e5104cfbd2e1526c520660022	5448
+src/test/web-task-project.test.tsx	inventory-only	7d3411334750d39621133607418499ea9caf1a3db590c096442f8d2ccd01f12f	12181
+src/test/web-task-readiness-badge.test.tsx	inventory-only	d3de173beaff228ed88b74a4284c69d0d630000130bcf548efe7aa3d7e7ab941	5190
+src/test/web-task-types.test.tsx	inventory-only	d34586b1d258f29ca7411f51acca68dc2c0cd1c83caf8824ca7b2c0a0236ecf4	20788
+src/test/worktree-refresh.test.ts	inventory-only	164f5037f2b2fcc896e35f76c72894008a583efa2c69ab719fcb1d5da67ce60e	9183
+src/test/worktree-task-id-allocation.test.ts	inventory-only	d0b7be4d0d5770edb8a1b2489bed7ba03bf0623872504cf963774916d8d5c7e0	5454
+src/types/index.ts	inventory-only	25d5d0a013969355bd245dddc5cc2aa73790da2c209c8048508386cb4662ffd8	11004
+src/types/markdown.d.ts	inventory-only	c36f951010f5337e575a1177f15dc7883162d20cf3326a43061551e36c8e5ba6	75
+src/types/mermaid-dist.d.ts	inventory-only	5963a5a57ee746fe01886c75d5dcaafff65dc7a39fb1f4298dfe0b81c6eab0b7	128
+src/types/neo-neo-bblessed.d.ts	inventory-only	cc5bad87803bd1edb639d9464f6171901a151c3f31b739bdbe7700401dcfacc0	3801
+src/types/proper-lockfile.d.ts	inventory-only	187f6c37eacb931dc7d21eb2c298495f61a60aa51aa5c8abf1024a7f88f33d85	581
+src/types/raw.d.ts	inventory-only	7739a5ae18213d472a8ee1a66342328d50b282da8011b5f692b44ec634f7f0b1	79
+src/types/task-edit-args.ts	inventory-only	abc5fb8626254b8ec89fa1232fda9924e7f2729000cb4ac70a4c7f252a971532	1255
+src/ui/acceptance-criteria-progress.ts	inventory-only	4bcf0d0060bc77ae2a798e89d65410c95f1eeb1210d66d4b21f2ea09ff5abe69	2746
+src/ui/board.ts	inventory-only	db2c74c573deb8a91bde29eea716b030680c4fd4f558ccc5085f288a1860608b	77306
+src/ui/checklist.ts	inventory-only	725867f6c4bfe1ecdd22dadacf01dc3237100bcef16ead90ca1cc3980e04b4ca	2744
+src/ui/code-path.ts	inventory-only	5a4f5425bce9c78988c13c3d0d20d21a43626e6d71ca49e6e28799718544ee7e	3099
+src/ui/components/confirm-popup.ts	inventory-only	19683ab07c1eb81d32bfc8f578952991fbc25a364bdbacdb2ceec7cea92f5c64	1190
+src/ui/components/filter-header.ts	inventory-only	e6e49779cce571f05038893f51e4b7f2289f7602b191389fc1f40aeb212c795e	19668
+src/ui/components/filter-popup.ts	inventory-only	6bc5aa0863baf776e00fa079e6a055bc26caee8f917d359347320beadca4f4ad	10427
+src/ui/components/generic-list.ts	inventory-only	4f082ded0c9df54e7e818704032687589370a8149aa35d1e6c058c3cda312f6b	19714
+src/ui/components/help-popup.ts	inventory-only	a0fde0cf50ec9c4e03ae70cfaf5df5a4e326580f3767dee4358e0fddf04a0686	5518
+src/ui/components/task-composer.ts	inventory-only	6719d0beaf19a0684b652f13b69470c3c4b50496ddf36702a96ee67983338699	37600
+src/ui/footer-content.ts	inventory-only	8ffeeee813bd4185ad7ae6f4202ca54b7f26c6d8fb1cc95852fa2c67c289d1aa	3232
+src/ui/heading.ts	inventory-only	174ea4f454a9758c423ea1187621731ad52c93c128f3ccb631f50832cffb22c3	1954
+src/ui/loading.ts	inventory-only	761a340e6ee8ab51313209499af439065a56d76b3db1c2d4e5eef072925f7375	7769
+src/ui/overview-tui.ts	inventory-only	a6421973ccef46909cd8107c684259391b205721ddcd0f90c62c21b75fde39a7	8695
+src/ui/project.ts	inventory-only	ab0259838f9bf863ba3c8235f19cf4fab41f8b9ee59b1cbeb096c7c7ebb8ab23	242
+src/ui/root-entry.ts	inventory-only	b37ab4d3594357cc93a678339b72828c73c348581cbdef322a0982107fe9823b	4108
+src/ui/status-icon.ts	inventory-only	1d0f2df50fd37f51ff7e46f6c624c25b35346c8cca53911efa9a1f000a9d5b7f	1776
+src/ui/task-lifecycle.ts	inventory-only	28d12047e83818d4d6fc60f1c9903b441f4ac99149acf78ff3c4533d3621a0b4	1665
+src/ui/task-type.ts	inventory-only	c2fc87736e6fd367b59ce0aa0cbf985ded709709682aa55972931c31d66164f6	168
+src/ui/task-viewer-with-search.ts	inventory-only	a8e0a6c48c2c85fe0c3dada57576b72b5bb31f5cf13e956838cf36d4bee15be3	62181
+src/ui/tui.ts	inventory-only	a2fec39c4d559b63e3a4d98727701eee83b2cbf63bb8eb4db7227a9105e58848	8876
+src/ui/unified-view.ts	inventory-only	a6fa30f4f71a0130947cd7e33540a308583c0258061d78e72f781d6489e53d41	19504
+src/ui/utils/strip-tags.ts	inventory-only	10bb885e080ea35ef0b4884dc4c40b8b7ba595bf1aa1d01b0ec9aa2c35b22de6	1544
+src/ui/view-switcher.ts	inventory-only	09bc02ad8de04b1ba1fee28cd9ca9e1ed7f93656bcde458c413c04e92d58f2a2	8798
+src/utils/agent-selection.ts	inventory-only	7efc8995b18c56bde861b1fbc91fae2bb93ca23b8f613c41d56f8d35238b389f	1719
+src/utils/app-info.ts	inventory-only	e1b4a4d76daac99dd67976e7a6b162a9c9fe4451ea4b9b467a056d41c0858346	245
+src/utils/assignee.ts	inventory-only	71cd3a73a80970abb05e2d9db31c2babe2c0394f58eaa6f7c7d556acff5e5920	231
+src/utils/backlog-directory.ts	inventory-only	0c4b9aa6fc71b39bdd398b17c481a6345d629614b5f8e508c64630c3b39b0522	6495
+src/utils/browser-launch.ts	inventory-only	d1ac2dfe222078bc5803f2f4b2c8bc46f316cdff458568fefc72038f78f75ce2	833
+src/utils/browser-loading-state.ts	inventory-only	32cae3f14b981a54e85d8ae0a7f9bbbef3c3025e68c767bd1aa27accd4a20437	742
+src/utils/clipboard.ts	inventory-only	d64d6c6294e651436b6e69668ddc343129fc39d5d3838378271d75bfbac8fdff	1251
+src/utils/config-watcher.ts	inventory-only	6b3e5cd33e9d785d00ae964ce8d41f8e3f571da53b1a8fe7894e221c233bea07	6926
+src/utils/decision-id.ts	inventory-only	f400451fe3f120b53a7c47ec69ac60aab26b5b77869af7f641ae77c8ef2db5a7	606
+src/utils/dependency-graph.ts	1-275	461aea3e356b810a42b1bfd8adf91ccae78c4899a185446da5a3b31619b12ba4	13791
+src/utils/document-id.ts	inventory-only	9f354f641e039fe6c4740b74201bc6cbb98ea66435cc57e0f091b28f56d97240	875
+src/utils/document-path.ts	inventory-only	d150ff3a2d2694fa43dd93d58a3c806b47c667f3fe220cfdddc962e17ec2cf5e	1201
+src/utils/due-date.ts	inventory-only	40fd17154db8c78e2fc65aa691b7bf03c4ceeea654e3ed94b6e27eed0e79ae83	2938
+src/utils/duplicate-detection.ts	inventory-only	8251dd1516ff6c5bc3d5a046d98a60e2f96a3604d668d1907703cd70d7babc9f	3718
+src/utils/editor.ts	inventory-only	65583f8e53b7263630cdd48c2043a8364c36cb7c5ada92e09aab3863f26378d1	2456
+src/utils/entity-id.ts	inventory-only	ccfc82b9148a81bdb2401739c60e49b697dbfbb7a1fa13b834f09a2924c813de	2427
+src/utils/find-backlog-root.ts	inventory-only	500518792e26e48040663bd52dd766bc70c8417110ced4c4fd25cc6430975293	2558
+src/utils/id-generators.ts	inventory-only	6b11e34b1852ef68077b7458b67839e72348e62ad4a473f77806694e869018fc	4291
+src/utils/label-filter.ts	inventory-only	027750d538bb54d1509b3cb44473cd685c8f11d403be0859e4f015479986b64c	2441
+src/utils/list-window.ts	inventory-only	d6097a0bb67feddc454c492dfa759961d5a3f0ff57fdd47c3fbc3a8a874e1839	8165
+src/utils/mcp-client-setup.ts	inventory-only	b2dd36bafa14091497fd86be99f2afec179b4c3c970a68a2e9a59ca68c3c4fd8	2267
+src/utils/milestone-filter.ts	inventory-only	2c0eb643804a110f84d5986340fda74fe713a853af5c2feba8fd23455dd2af9a	6795
+src/utils/milestone-storage.ts	inventory-only	ac69e0939b6de8fe3b15565d035d4c91b827c31a1959389e9260470a38955617	3977
+src/utils/modified-files.ts	inventory-only	88c663b1d90fa1a5df8de8488f91a3c3e741056010c2b89784ce0ef05ac28458	825
+src/utils/prefix-config.ts	1-125; selected normalization bodies	6737b65057797c10a940f4fa7aa8c469ef81375ca07ffcaee9c95f54978123d3	15589
+src/utils/priority-config.ts	inventory-only	8096e78c0547a743ac013d46df826a4d2d01cb1704d951834f9435b767d86476	3301
+src/utils/project-config.ts	inventory-only	f142a1b56b141e754eb65d95ae6b5ebb8527b24521433579e84f43cba8ee915a	2989
+src/utils/read-output-mode.test.ts	inventory-only	7c12ad56b8155f07f635844a831a75c3f78056deeff61c1f270eaa4644f86926	816
+src/utils/read-output-mode.ts	inventory-only	bff1f62d4a0f24c634ced222cae8be73ba87a2213d735c0bdc626190115530d2	492
+src/utils/readiness.ts	full	5782d88ba3ae2ceedf4fb68bcf5a8a0b35d344ccee8d6d75963e61fd6bb42f49	4840
+src/utils/runtime-cwd.ts	inventory-only	9a66747b3de22cd3f7f86951fbbc70759dde15ad4b37e3db374f51c2221128b2	1498
+src/utils/status-callback.ts	inventory-only	5510a14f77bb0b4e75f107653ed12710149f8154df34aa1b7c9900aa93ecc14d	1657
+src/utils/status-filter.ts	inventory-only	8baa126367ddaec4ef462f880235a13acd21cf4edfa9eb58b5ddf4afb0909d97	981
+src/utils/status.ts	inventory-only	24d8c3d246fc7c54ca9fed8b9799e682265a1c3f6bac7915b757fc6668146996	3046
+src/utils/task-builders.ts	inventory-only	80fa42ba7471e420f28578ea31bd419d978c342743f052ba11ce50fb2048be43	13880
+src/utils/task-edit-builder.ts	inventory-only	71163b573004e3406bf2eb3b222fb3297519865c6ea17583d417b38aad29f22b	7395
+src/utils/task-id-search.ts	inventory-only	b765c33aff8f7351604c1d6ed8ab0db545aa400cdb775537bfc6a344f0be7098	985
+src/utils/task-id.ts	1-90	8bfd099e9865e32b56c995c5f5c4a0ff3e8c9150f6f6bbb671f7c6718f7cfad8	4215
+src/utils/task-links.ts	inventory-only	062710f6e0801f3f54d8f8ab79a53d61b0a0a56be6c52e5bb2bef4b77be556e0	2158
+src/utils/task-path.ts	inventory-only	2e84a71e95300786208a51ec6b72a24574a460ce4715293d8d45ded1800b0c93	7515
+src/utils/task-record-index.ts	full	722522330cc74e50f5a4ddf9d643d2b61d7574bcc2f5add2330ed300d1397bdf	3933
+src/utils/task-search.ts	inventory-only	3bc9c8eed131797ed276d6b49abb8c1e28ec4a12309d3998349220f0349c9019	9275
+src/utils/task-sorting.ts	selected comparison bodies	2c774f5c614b81824a4fd89baa0c19beb716de75e5995800a39c9e61b10a7c2e	6077
+src/utils/task-subtasks.ts	inventory-only	388c3d121f1e3fa89dbff9507721790996230f83bde75eca556a1e41bb2af13c	2268
+src/utils/task-type-config.ts	inventory-only	51603864b59d5b53edaa9e080964616d117b4d24fe4c24e538d07685bdb7bdfe	2638
+src/utils/task-updated-date.ts	inventory-only	aec767854ed1efa28fa7d025d15f012fa3fb82cb3fb5a21450a2244cec9b39f0	1396
+src/utils/task-watcher.ts	inventory-only	70263cd742a81d24b6606d63903acfa6d9a24737f3d3242d7d3d72c9048b9d94	8131
+src/utils/terminal-status.ts	full	077c40e0adc6b3c42a876f6b40d098252288e4d8911d1201d703353c00afe942	686
+src/utils/utc-date-display.ts	inventory-only	5d0cce8cc62ed360b678e01b6867b13e7325bc7a69aa4c8383a35579b37e129a	5140
+src/utils/version.ts	inventory-only	1d44f1d70d951e5f33b3640c874989faaeca240f7c40199776a6bc55b5f4d51a	665
+src/web/App.tsx	inventory-only	8f75ddeece7c2195c5fa8c865c4796940e87d525c63d785b791d155fa3e708c4	46748
+src/web/components/AcceptanceCriteriaEditor.tsx	inventory-only	37f95a822623d8c38d530852e02a2fde3019861a726624cc6f87ad9749578388	5105
+src/web/components/AcceptanceCriteriaProgress.tsx	inventory-only	cb34d528ceccbc77ac515f35fff0df56081778d47411168bff7e9341edcb25e9	2248
+src/web/components/AmbiguousIdNotice.tsx	inventory-only	9b94120565de02ce17ed2d8b3298ec37cba7955222024cd3fe886ca34fcd4374	858
+src/web/components/Board.tsx	inventory-only	10524856bac706c29c80906c0b61c3b797b6056adfa54fbab5208937eb2cbe38	41527
+src/web/components/BoardLoadingSkeleton.tsx	inventory-only	6cf8fa08b3163b1da76e84788a7a961720d48ebbd51ae843ae0e95d79f41d551	2503
+src/web/components/BoardPage.tsx	inventory-only	17d9f9e855210ad73d2d6b620f887145feedc7a005fe01f9c56e577842f86b8b	6748
+src/web/components/BranchIndexingIndicator.tsx	inventory-only	76e23d4f89323cfa21316b0fb2ed4e6dccbacf5f036510410ea91c11669b2246	2679
+src/web/components/ChipInput.tsx	inventory-only	e04b6e4019a00aa56a0675378bf8c6b69feff504af5ee411980dfb3862e51132	3992
+src/web/components/CleanupModal.tsx	inventory-only	738bdb61f8f4e46c1db920ba748d7fdf4d5046cec6c716f9e65c81bd14a858b2	7581
+src/web/components/DecisionDetail.tsx	inventory-only	5ec52a25c94f0c2855aef3231c56c007f60a2431353a45bca22e276582d7f418	15574
+src/web/components/DependencyGraphSection.tsx	inventory-only	be4f272c92ca4f93ac10f2a70cbe8a578b1f6b29dc656cc5a95981cdc48a8354	5628
+src/web/components/DependencyInput.tsx	inventory-only	4a18ed682c3251ebac896061dc548826f354162c4eab758926115d991092f9a6	10032
+src/web/components/DocumentationDetail.tsx	inventory-only	7b64c500e2422a89c35fd096415c78bf9b820c405b70b5789202d636ff046ee4	24696
+src/web/components/DraftsList.tsx	inventory-only	5dadf163909aeb11569aa07c4423f8e4628e68197af171eec2ed1f4686f0d420	8492
+src/web/components/DuplicateIdRepairModal.tsx	inventory-only	03daff727b402e6d300a10dd166df3351e5551819b1024816c4a134a94b2c518	6802
+src/web/components/DuplicateIdWarning.tsx	inventory-only	f160cf51ae82d2fc659f4a6e6b87821f48829844e228eb272548e61ea5ab3676	2881
+src/web/components/ErrorBoundary.tsx	inventory-only	aea8e705e50182fce957d6fde762764a007becc2a4aa6220b812062bb542d34d	3181
+src/web/components/HealthIndicator.tsx	inventory-only	1fe2020e74bef80c0f3438478904f29bed7ed3050ca7455338dc2daf9bd80760	1268
+src/web/components/InitializationScreen.tsx	inventory-only	2a46508374997df78117d9a8b561481ac3614b26baa09dcc67a18e55f701ebc5	35751
+src/web/components/LabelFilterDropdown.tsx	inventory-only	2f68524c0ce3be6d79587804a9efdb68f0ad2b706f21fec024d7dc62cebde362	3677
+src/web/components/Layout.tsx	inventory-only	48cf36d6ac02aacb19a476f834442dbcf5f9bc88282ffbdb1be2a2c504b18d67	1793
+src/web/components/LoadingSpinner.tsx	inventory-only	d8665d8d5360fc8d940eb7800aaa780d3bebed287db8a61bc4e2bfb0770f1c01	2724
+src/web/components/MermaidMarkdown.tsx	inventory-only	90fd0a82d0816fb7c4b260362718f5d75b44ee9fdf13ae76e18baa3895b32a8f	1946
+src/web/components/MilestoneTaskRow.tsx	inventory-only	af4235fa54e38756f3d592d5dd79f61c13887d85bd047b31c00457de3a266d1c	2228
+src/web/components/MilestonesPage.tsx	inventory-only	67c9ef5c00ef15ea9a0d586b69c3f50a675a0dd411f176890c52ea070b160fac	44737
+src/web/components/Modal.tsx	inventory-only	bc059cc5fadd30211b5d67875b62fbf01760af0a2741a33ab32e5de78d6bec6c	4918
+src/web/components/Navigation.tsx	inventory-only	5f5a5b87ed019d100814dd50e3cab5c21f5cc90bcd8ad3ea872a24e511569e9e	1525
+src/web/components/ProjectBadge.tsx	inventory-only	996ff43d5c841a038fa36abf1bbf422947e2fe522283669c2dcbc97946ac28c0	1940
+src/web/components/Settings.tsx	inventory-only	b5f62351c1365d502580abce38af713673d57d574cb3ef865f6c5dfa99008980	20948
+src/web/components/SideNavigation.tsx	inventory-only	2cfd485c9094385d14abccc1a75b0c033ff709d15865a53b65736890f89f0de6	42014
+src/web/components/Statistics.tsx	inventory-only	abe3e2f4e71f7f44d2bf87d4b4b3c063ddfd206b15d389c07c26138890a2210e	21566
+src/web/components/StoredDate.tsx	inventory-only	48214337bee974efc268dddb2869e00abde1f642b59f4a1df5ac9ec4040f5635	872
+src/web/components/SuccessToast.tsx	inventory-only	03b65494b73c5e9d8118bccb207735052fc5077f466978f6f1b496c5da152c7b	1065
+src/web/components/TaskCard.tsx	inventory-only	8dc106a241c55d9592f5dc3f34b338b0adab43d0a86b1885f4f02eb75bb04be8	13340
+src/web/components/TaskColumn.tsx	inventory-only	a7aa57856fe673e756adef67b50d0301ad863d7e85c7026e98d9deaf61dd379b	18432
+src/web/components/TaskDetailsModal.tsx	inventory-only	2316fc8918fa714dd7fabffdf0e2bfdc3b6d34935d4b96134983df1db1615533	91738
+src/web/components/TaskList.tsx	inventory-only	dfdb56d7056bd1425d7270e160ae17bc6177fc4f64df93849e5270e3ea70e949	38180
+src/web/components/TaskTypeBadge.tsx	inventory-only	10bbc2476ee33092d020aeac7253565495f1f778505e62d3ebb04bec8a478084	2924
+src/web/components/ThemeToggle.tsx	inventory-only	aa082699d6feabc2ae48781cb7bba26cd585a85aded5f1e89061095d2c380e5d	2014
+src/web/contexts/HealthCheckContext.tsx	inventory-only	abcdddaa97fe4d3de1adff847b02d1150f8a5f8213db47575704c0746f2825c2	793
+src/web/contexts/TaskIdIndexContext.tsx	inventory-only	fc94c5138b539710eae05b7a6713070adef033472c653abacd98fa4db064e009	791
+src/web/contexts/ThemeContext.tsx	inventory-only	a5656b14bfa2ad52f76c6570a77d9ab159113280d60b01deb95455992d036f03	1539
+src/web/favicon.png	inventory-only	3fd9e867f854efd0ba9cbf0ba7a763af02c9fa901deffec8c152fcc0ec8daf70	30987
+src/web/hooks/useHealthCheck.tsx	inventory-only	166cf6cddb886c3775e2d075f8234ca4cded76334f0b794ede20e67e808a4501	2639
+src/web/index.html	inventory-only	cf6a11bde4b140315d7e979217b06a2bf25381254d762db7e819a31df83678f7	4311
+src/web/lib/api.ts	inventory-only	2161341c5dbf135cc724383b2e698418c339ab96aa4e9399b9d9704d68183595	21305
+src/web/lib/docs-tree.test.ts	inventory-only	6a140ebd3b03fd290f13558fddf8bebceec8b3c213685e28ecb80222c4e1101f	6392
+src/web/lib/docs-tree.ts	inventory-only	0abfcfff320ef4a8506e73b680a5babc81f0ff08af09ddd6d083958d1f9e3083	2536
+src/web/lib/lanes.test.ts	inventory-only	ddc6e93bc13e31592dd7aef7b67990f913ea2ea1ddb01daca4b99e48a58cb4a2	7407
+src/web/lib/lanes.ts	inventory-only	dc8871027df28295137d33d9be26a0e5ae0998b2fec6383d4db4efc0cb405990	11874
+src/web/main.tsx	inventory-only	355b39aaacd5cd8d7cedc0bef5a9f26871424426d595635dbf362cffaa08374f	371
+src/web/styles/source.css	inventory-only	e99c3d9a4dda3ee0df04e5feed7860c70cadf4229840118f088ec3f246ffb1ca	7946
+src/web/utils/date-display.test.ts	inventory-only	4a956cfcafe74777654f55fa80deb412550f2d9281b47d6e9c9fbbfb41dc28b3	6804
+src/web/utils/date-display.ts	inventory-only	2cb3b92a4a5cb2bbc358bf20bf2eefdadceb1dfb69504609e63979267bae9dbb	7008
+src/web/utils/kanban-tasks.ts	inventory-only	edacebfd15287753a053adc98dc4d57f87b2db6631121d530a8ba7982ae5964d	277
+src/web/utils/mermaid.ts	inventory-only	c24b93eb56935b4ab83ae77f38036a302a7c375f211f2506260a47447e5f46f6	3931
+src/web/utils/milestones.test.ts	inventory-only	5c3f4bcd873fa46bf9c6b0339881125c024ac91edf7d1ce66bc85a5fd9138f55	7134
+src/web/utils/milestones.ts	inventory-only	9ab640aa65f347821e883a4499648414f418d52984adb2d2366e8f5f7e94483c	491
+src/web/utils/reconcile.test.ts	inventory-only	f641b26e1686347b7b819f0dfb7a28b68a928994401736cce4bf359173f7077a	1692
+src/web/utils/reconcile.ts	inventory-only	058c75204fbe2ebc9c5b790512e0e03ce574b8310f65096aa19c4d08d9d36726	1741
+src/web/utils/search-command-query.ts	inventory-only	761db6120f12b126f0a05f4156b1a1f41b187a0b07fcd6bf240c3323dcf312c6	3482
+src/web/utils/task-id-links.ts	inventory-only	ecb2f2870e8c34dc97dfbd5381ccaa57331d38573af5de073a5fded995e17d45	3863
+src/web/utils/urlHelpers.test.ts	inventory-only	00d039223525737b11e465c875c1ac9e599ca2b288651096a21300c36ab45abd	1031
+src/web/utils/urlHelpers.ts	inventory-only	dbd86bad4ca9cbb60f8704575ada01c488a0ec1fa46a26d66b48a1651de891c9	1025
+src/web/utils/version.ts	inventory-only	ac68efde9be0820e989509201932e0d7a489ebcbbf4c1e8b5ec34121e8acdf2a	310
+tools/tui-screenshot-compare.sh	inventory-only	c699088925fa5adb0dacc9867e8393d9a284914e80688e1073a186eeb210aec3	17070
+tsconfig.json	inventory-only	ca7c05b14119265859fd94faf6504b6cda9ba233e17123bfd8f075ae99323bb2	742

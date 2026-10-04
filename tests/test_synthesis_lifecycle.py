@@ -103,7 +103,7 @@ class SynthesisLifecycleTests(support.Base):
         with self.assertRaises(c.ControllerError):
             ctl.synthesize_with_model(rid, "claude-code")
         ctl.paused = False
-        with patch.object(ctl, "unsettled", return_value=ctl.unsettled_limit):
+        with patch.object(ctl.invocations, "unsettled", return_value=ctl.unsettled_limit):
             with self.assertRaises(c.ControllerError):
                 ctl.synthesize_with_model(rid, "claude-code")
         self.assertEqual(ctl.call_budget()["used"], 2)

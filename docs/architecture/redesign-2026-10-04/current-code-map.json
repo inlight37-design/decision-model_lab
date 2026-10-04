@@ -1,0 +1,2527 @@
+{
+  "date": "2026-10-04",
+  "baseline_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+  "meaning": "Static declarations are navigation, not proof that every body was inspected. Product implementation remains the baseline except separately recorded UI navigation change.",
+  "files": [
+    {
+      "path": "app/controller.py",
+      "sha256": "8a7d300c6518745d5fcc75e93dd102d00b278be688d152da48106c39981423ba",
+      "url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/app/controller.py",
+      "inspection": "390-514 prepare/constructor;813-998 dispatch/finish/reveal;1103-1125 recovery;1904-2010 selected view; method inventory",
+      "declarations": [
+        {
+          "name": "storable",
+          "line": 79,
+          "end_line": 86,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_storable_meta",
+          "line": 89,
+          "end_line": 98,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_checked_sources",
+          "line": 101,
+          "end_line": 123,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_bundle_digest",
+          "line": 126,
+          "end_line": 129,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_source_footer",
+          "line": 132,
+          "end_line": 136,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_flags",
+          "line": 155,
+          "end_line": 161,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_card",
+          "line": 164,
+          "end_line": 166,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_seat_result",
+          "line": 169,
+          "end_line": 173,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_Seat",
+          "line": 183,
+          "end_line": 206,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "ParticipantSpec",
+          "line": 238,
+          "end_line": 246,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "Executor",
+          "line": 249,
+          "end_line": 261,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "MockExecutor",
+          "line": 264,
+          "end_line": 300,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "_check",
+          "line": 303,
+          "end_line": 308,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_not_started",
+          "line": 311,
+          "end_line": 314,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_bwrap_trusted",
+          "line": 317,
+          "end_line": 322,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "packet",
+          "line": 325,
+          "end_line": 327,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_marker_echo",
+          "line": 330,
+          "end_line": 345,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "acceptance",
+          "line": 348,
+          "end_line": 370,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_quorum_label",
+          "line": 373,
+          "end_line": 379,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "ControllerError",
+          "line": 382,
+          "end_line": 383,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "_CapReached",
+          "line": 386,
+          "end_line": 387,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "Controller",
+          "line": 390,
+          "end_line": 2218,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "match",
+          "line": 202,
+          "end_line": 203,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "label",
+          "line": 205,
+          "end_line": 206,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "plan",
+          "line": 257,
+          "end_line": 258,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "run",
+          "line": 260,
+          "end_line": 261,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "__init__",
+          "line": 273,
+          "end_line": 276,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "plan",
+          "line": 278,
+          "end_line": 289,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "run",
+          "line": 291,
+          "end_line": 300,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "__init__",
+          "line": 391,
+          "end_line": 411,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "prepare_run",
+          "line": 414,
+          "end_line": 512,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_general_manifest",
+          "line": 514,
+          "end_line": 561,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "create_run",
+          "line": 563,
+          "end_line": 644,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_source_root",
+          "line": 646,
+          "end_line": 648,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "sources",
+          "line": 650,
+          "end_line": 653,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_source_dir",
+          "line": 655,
+          "end_line": 665,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_member_source_root",
+          "line": 667,
+          "end_line": 669,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_assignment",
+          "line": 671,
+          "end_line": 675,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_member_source_dir",
+          "line": 677,
+          "end_line": 704,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_attempt_input",
+          "line": 706,
+          "end_line": 711,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_snapshot",
+          "line": 713,
+          "end_line": 735,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_synthesis_attempts",
+          "line": 737,
+          "end_line": 743,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_seat_count",
+          "line": 745,
+          "end_line": 749,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_slots_used",
+          "line": 751,
+          "end_line": 756,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_budget_exhausted",
+          "line": 758,
+          "end_line": 762,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_unknown_slots",
+          "line": 764,
+          "end_line": 769,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "unsettled",
+          "line": 771,
+          "end_line": 773,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "call_budget",
+          "line": 775,
+          "end_line": 783,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "claude_account_limit",
+          "line": 785,
+          "end_line": 811,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "pump",
+          "line": 813,
+          "end_line": 882,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "resume",
+          "line": 884,
+          "end_line": 890,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_attempt",
+          "line": 892,
+          "end_line": 908,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_finish_unstored",
+          "line": 911,
+          "end_line": 922,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_finish",
+          "line": 924,
+          "end_line": 969,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_maybe_reveal",
+          "line": 971,
+          "end_line": 995,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "cancel_run",
+          "line": 998,
+          "end_line": 1021,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "submit_manual",
+          "line": 1023,
+          "end_line": 1064,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "withdraw_manual",
+          "line": 1066,
+          "end_line": 1076,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "approve_reduction",
+          "line": 1078,
+          "end_line": 1089,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "acknowledge_unknown",
+          "line": 1091,
+          "end_line": 1100,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_recover",
+          "line": 1103,
+          "end_line": 1123,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "synthesize",
+          "line": 1125,
+          "end_line": 1138,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "synthesize_with_model",
+          "line": 1140,
+          "end_line": 1211,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_synthesis_attempt",
+          "line": 1213,
+          "end_line": 1252,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_select_memory",
+          "line": 1255,
+          "end_line": 1263,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_run_memory",
+          "line": 1265,
+          "end_line": 1269,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "refine",
+          "line": 1271,
+          "end_line": 1331,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_start_seat",
+          "line": 1333,
+          "end_line": 1364,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_seat_attempt",
+          "line": 1366,
+          "end_line": 1385,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_settle_seat",
+          "line": 1387,
+          "end_line": 1416,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_acknowledge_seat",
+          "line": 1418,
+          "end_line": 1425,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "acknowledge_refine_unknown",
+          "line": 1427,
+          "end_line": 1431,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_supervisor_busy",
+          "line": 1433,
+          "end_line": 1437,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_upper_call_gate",
+          "line": 1439,
+          "end_line": 1451,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_cli_card",
+          "line": 1453,
+          "end_line": 1456,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "propose_next",
+          "line": 1459,
+          "end_line": 1501,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "acknowledge_proposal_unknown",
+          "line": 1503,
+          "end_line": 1508,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_proposal_view",
+          "line": 1510,
+          "end_line": 1515,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_approved_proposal",
+          "line": 1517,
+          "end_line": 1536,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "propose_split",
+          "line": 1539,
+          "end_line": 1589,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "collate",
+          "line": 1592,
+          "end_line": 1639,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "acknowledge_collation_unknown",
+          "line": 1641,
+          "end_line": 1646,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_collation_view",
+          "line": 1648,
+          "end_line": 1653,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "cross_review",
+          "line": 1656,
+          "end_line": 1713,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_advance_reviews",
+          "line": 1715,
+          "end_line": 1747,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_close_reviews",
+          "line": 1749,
+          "end_line": 1755,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "acknowledge_review_unknown",
+          "line": 1757,
+          "end_line": 1762,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "set_review_disposition",
+          "line": 1764,
+          "end_line": 1779,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_cross_review_view",
+          "line": 1781,
+          "end_line": 1818,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "acknowledge_split_unknown",
+          "line": 1820,
+          "end_line": 1822,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_split_view",
+          "line": 1824,
+          "end_line": 1831,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_approved_split",
+          "line": 1833,
+          "end_line": 1859,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_refinement_view",
+          "line": 1861,
+          "end_line": 1871,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_approved_refinement",
+          "line": 1873,
+          "end_line": 1901,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "view",
+          "line": 1904,
+          "end_line": 2051,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_check_role_synthesizer",
+          "line": 2054,
+          "end_line": 2063,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_review_state",
+          "line": 2065,
+          "end_line": 2082,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "mark_reviewed",
+          "line": 2084,
+          "end_line": 2113,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_model_synthesis_state",
+          "line": 2115,
+          "end_line": 2137,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "acknowledge_synthesis_unknown",
+          "line": 2139,
+          "end_line": 2147,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_gate",
+          "line": 2149,
+          "end_line": 2152,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_transition",
+          "line": 2155,
+          "end_line": 2172,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_run",
+          "line": 2174,
+          "end_line": 2178,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_part",
+          "line": 2180,
+          "end_line": 2184,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "shutdown",
+          "line": 2186,
+          "end_line": 2204,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "wait_idle",
+          "line": 2206,
+          "end_line": 2218,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "insert",
+          "line": 1320,
+          "end_line": 1327,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "insert",
+          "line": 1493,
+          "end_line": 1497,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "insert",
+          "line": 1576,
+          "end_line": 1585,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "insert",
+          "line": 1630,
+          "end_line": 1635,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "insert",
+          "line": 1735,
+          "end_line": 1738,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "path": "app/store.py",
+      "sha256": "de4dc85c5d858a73a9592a1c7581bc744ec7f89856399df213f82bb86d285e83",
+      "url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/app/store.py",
+      "inspection": "1-200 schema/lock/migration;334-390 transaction/events",
+      "declarations": [
+        {
+          "name": "LedgerBusy",
+          "line": 121,
+          "end_line": 122,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "StoreError",
+          "line": 125,
+          "end_line": 126,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "_lock",
+          "line": 129,
+          "end_line": 142,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_unlock",
+          "line": 145,
+          "end_line": 153,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "Store",
+          "line": 156,
+          "end_line": 331,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "_Tx",
+          "line": 334,
+          "end_line": 373,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "events",
+          "line": 376,
+          "end_line": 378,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "__init__",
+          "line": 157,
+          "end_line": 170,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_columns",
+          "line": 172,
+          "end_line": 173,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_migrate",
+          "line": 175,
+          "end_line": 267,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "close",
+          "line": 269,
+          "end_line": 275,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "tx",
+          "line": 277,
+          "end_line": 278,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "bind_call_budget",
+          "line": 280,
+          "end_line": 323,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "rows",
+          "line": 325,
+          "end_line": 327,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "row",
+          "line": 329,
+          "end_line": 331,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "__init__",
+          "line": 340,
+          "end_line": 341,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "__enter__",
+          "line": 343,
+          "end_line": 351,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "__exit__",
+          "line": 353,
+          "end_line": 363,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "execute",
+          "line": 365,
+          "end_line": 367,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "event",
+          "line": 369,
+          "end_line": 373,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "path": "app/state.py",
+      "sha256": "f14b0e1bb9e2442828b3f1ff3614bd56c27663c75cb065b2b5ff9d8d786d1b68",
+      "url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/app/state.py",
+      "inspection": "1-120 gate/phase contract; symbol inventory",
+      "declarations": [
+        {
+          "name": "confirmed",
+          "line": 29,
+          "end_line": 31,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "RunGate",
+          "line": 35,
+          "end_line": 64,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "mode_of",
+          "line": 67,
+          "end_line": 69,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "gate",
+          "line": 72,
+          "end_line": 108,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_general_gate",
+          "line": 111,
+          "end_line": 125,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "synthesis_attempts",
+          "line": 128,
+          "end_line": 156,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "can_reveal",
+          "line": 48,
+          "end_line": 49,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "can_collect",
+          "line": 52,
+          "end_line": 53,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "can_approve_reduction",
+          "line": 56,
+          "end_line": 57,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "public",
+          "line": 59,
+          "end_line": 64,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "path": "app/memory.py",
+      "sha256": "e310eae2b4add418ab28dd7bcaf5be05d090855854205985bb980198705952c3",
+      "url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/app/memory.py",
+      "inspection": "full",
+      "declarations": [
+        {
+          "name": "encoded",
+          "line": 21,
+          "end_line": 22,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "digest",
+          "line": 25,
+          "end_line": 26,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "terms",
+          "line": 29,
+          "end_line": 33,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "empty",
+          "line": 36,
+          "end_line": 38,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "footer",
+          "line": 41,
+          "end_line": 52,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "select",
+          "line": 55,
+          "end_line": 115,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "path": "app/roles.py",
+      "sha256": "73234b4b6eff5ac291e337202b7dba5457366a95ff43d5b1b71bae4499c568ff",
+      "url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/app/roles.py",
+      "inspection": "symbol inventory; app README responsibility",
+      "declarations": [
+        {
+          "name": "freeze",
+          "line": 11,
+          "end_line": 54,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_freeze_general",
+          "line": 57,
+          "end_line": 72,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "task_projection",
+          "line": 75,
+          "end_line": 146,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_general_status",
+          "line": 149,
+          "end_line": 167,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "path": "app/cli_executor.py",
+      "sha256": "00f424af02dbf4e242feab3fa43cbd4597af11fda45f3a25516ec0c066e8cb0e",
+      "url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/app/cli_executor.py",
+      "inspection": "1-105 contracts/check entry; app/core README",
+      "declarations": [
+        {
+          "name": "installed_version",
+          "line": 46,
+          "end_line": 56,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "CliExecutor",
+          "line": 59,
+          "end_line": 197,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "__init__",
+          "line": 64,
+          "end_line": 91,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_check_context",
+          "line": 93,
+          "end_line": 106,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_check_eligible",
+          "line": 108,
+          "end_line": 127,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "plan",
+          "line": 129,
+          "end_line": 169,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "check",
+          "line": 171,
+          "end_line": 177,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "run",
+          "line": 179,
+          "end_line": 197,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "path": "app/wiring.py",
+      "sha256": "1427246e7c6d9f14ac755d1dc51fe0f57096f4ecabf37a9335a64b717da8b00d",
+      "url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/app/wiring.py",
+      "inspection": "responsibility/interface inventory plus existing documented contracts; not full fresh body audit",
+      "declarations": [
+        {
+          "name": "pid_of",
+          "line": 38,
+          "end_line": 43,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "model_choices",
+          "line": 46,
+          "end_line": 48,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "live_setup",
+          "line": 51,
+          "end_line": 81,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "new_controller",
+          "line": 84,
+          "end_line": 89,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "path": "app/server.py",
+      "sha256": "d48a09964ecfa119dbb61b56fa71cad630289505a46489e156c1fe261118bcde",
+      "url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/app/server.py",
+      "inspection": "130-235 guard/GET entry; symbol inventory",
+      "declarations": [
+        {
+          "name": "chosen_models",
+          "line": 56,
+          "end_line": 74,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "RequestError",
+          "line": 80,
+          "end_line": 83,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "_text",
+          "line": 86,
+          "end_line": 90,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "make_handler",
+          "line": 93,
+          "end_line": 368,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_Server",
+          "line": 371,
+          "end_line": 413,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "_write_token",
+          "line": 416,
+          "end_line": 426,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "serve",
+          "line": 429,
+          "end_line": 462,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "main",
+          "line": 465,
+          "end_line": 543,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "serve_until_stopped",
+          "line": 546,
+          "end_line": 568,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "__init__",
+          "line": 81,
+          "end_line": 83,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "supervisor_spec",
+          "line": 103,
+          "end_line": 113,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "split_request",
+          "line": 115,
+          "end_line": 124,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "Handler",
+          "line": 126,
+          "end_line": 366,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "__init__",
+          "line": 380,
+          "end_line": 382,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "process_request",
+          "line": 384,
+          "end_line": 397,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "process_request_thread",
+          "line": 399,
+          "end_line": 413,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "handle",
+          "line": 130,
+          "end_line": 134,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "log_message",
+          "line": 136,
+          "end_line": 137,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_send",
+          "line": 139,
+          "end_line": 152,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_json",
+          "line": 154,
+          "end_line": 155,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_guard",
+          "line": 157,
+          "end_line": 171,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_read_json",
+          "line": 173,
+          "end_line": 197,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "do_GET",
+          "line": 199,
+          "end_line": 236,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "do_POST",
+          "line": 238,
+          "end_line": 366,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "expire",
+          "line": 400,
+          "end_line": 404,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "path": "app/run.py",
+      "sha256": "02131b96977fd9b19e2bb5563f6dce888d55b34f81938de37dd59d8344b29bb8",
+      "url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/app/run.py",
+      "inspection": "responsibility/interface inventory plus existing documented contracts; not full fresh body audit",
+      "declarations": [
+        {
+          "name": "read_sources",
+          "line": 41,
+          "end_line": 45,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "parse",
+          "line": 48,
+          "end_line": 90,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "main",
+          "line": 93,
+          "end_line": 136,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_run",
+          "line": 139,
+          "end_line": 184,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "path": "app/launch.py",
+      "sha256": "50871e98b3dfbbfbeb80dd0857499aca3adb0f20d5a5f3f039b59f80834f9449",
+      "url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/app/launch.py",
+      "inspection": "symbol inventory and README lifecycle; no fresh PC execution",
+      "declarations": [
+        {
+          "name": "state_dir",
+          "line": 63,
+          "end_line": 68,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_paths",
+          "line": 71,
+          "end_line": 74,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_write_state",
+          "line": 77,
+          "end_line": 84,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_acquire_owner",
+          "line": 90,
+          "end_line": 106,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_owner_record",
+          "line": 109,
+          "end_line": 119,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_request_stop",
+          "line": 122,
+          "end_line": 130,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_lost",
+          "line": 133,
+          "end_line": 135,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_lost_owner",
+          "line": 138,
+          "end_line": 146,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "read_state",
+          "line": 149,
+          "end_line": 154,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_alive",
+          "line": 157,
+          "end_line": 165,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_listening",
+          "line": 168,
+          "end_line": 173,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "pick_manifest",
+          "line": 176,
+          "end_line": 187,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_has_room",
+          "line": 190,
+          "end_line": 212,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "pick_ledger",
+          "line": 215,
+          "end_line": 224,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_empty_dir",
+          "line": 227,
+          "end_line": 231,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_watch",
+          "line": 234,
+          "end_line": 251,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_interrupt",
+          "line": 254,
+          "end_line": 255,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "free_ports",
+          "line": 258,
+          "end_line": 267,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "serve",
+          "line": 270,
+          "end_line": 351,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "url",
+          "line": 354,
+          "end_line": 392,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "stop",
+          "line": 395,
+          "end_line": 415,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "status",
+          "line": 418,
+          "end_line": 426,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "cancel_stop",
+          "line": 429,
+          "end_line": 432,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "main",
+          "line": 435,
+          "end_line": 468,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "path": "app/report.py",
+      "sha256": "5ba3f94e34d0812e82c2d0bf687ba4b68f999b8dfe50d9275d10be1ccd50a0e1",
+      "url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/app/report.py",
+      "inspection": "responsibility/interface inventory plus existing documented contracts; not full fresh body audit",
+      "declarations": [
+        {
+          "name": "ReportError",
+          "line": 37,
+          "end_line": 38,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "build_report",
+          "line": 41,
+          "end_line": 88,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_cross_review",
+          "line": 91,
+          "end_line": 107,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "decision_report",
+          "line": 110,
+          "end_line": 121,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "path": "app/usage.py",
+      "sha256": "61fcacbea607533540c422578ce8aa60fc42ca7aec7d614dceff88d77b8f8d06",
+      "url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/app/usage.py",
+      "inspection": "responsibility/interface inventory plus existing documented contracts; not full fresh body audit",
+      "declarations": [
+        {
+          "name": "_number",
+          "line": 29,
+          "end_line": 30,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "calls",
+          "line": 33,
+          "end_line": 64,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_seat",
+          "line": 67,
+          "end_line": 73,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_empty",
+          "line": 80,
+          "end_line": 83,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_add_estimate",
+          "line": 86,
+          "end_line": 88,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "total",
+          "line": 91,
+          "end_line": 110,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "for_run",
+          "line": 113,
+          "end_line": 114,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "combine",
+          "line": 117,
+          "end_line": 133,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "path": "app/cross_review.py",
+      "sha256": "ec1ca0b02cb77a844d3994fc73c88d591fc2382d5ca8f901f4d429c64d26473a",
+      "url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/app/cross_review.py",
+      "inspection": "responsibility/interface inventory plus existing documented contracts; not full fresh body audit",
+      "declarations": [
+        {
+          "name": "CrossReviewError",
+          "line": 38,
+          "end_line": 39,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "prompt",
+          "line": 42,
+          "end_line": 49,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_text",
+          "line": 52,
+          "end_line": 53,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "check",
+          "line": 56,
+          "end_line": 82,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "path": "app/reply.py",
+      "sha256": "eedcdbe8353695d478186b895eac2a884cffd80a7b62691d8e67414db1cc01c0",
+      "url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/app/reply.py",
+      "inspection": "responsibility/interface inventory plus existing documented contracts; not full fresh body audit",
+      "declarations": [
+        {
+          "name": "boundary",
+          "line": 18,
+          "end_line": 27,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "block",
+          "line": 30,
+          "end_line": 32,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "json_object",
+          "line": 35,
+          "end_line": 65,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "check_text",
+          "line": 68,
+          "end_line": 79,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "check_items",
+          "line": 82,
+          "end_line": 88,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "failed_reply",
+          "line": 91,
+          "end_line": 101,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "unique",
+          "line": 41,
+          "end_line": 47,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "path": "app/synthesis.py",
+      "sha256": "0c79afb86af33497a3c4ca5f9cd23bb9df36a4b71324da6cd424ae009e756f45",
+      "url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/app/synthesis.py",
+      "inspection": "responsibility/interface inventory plus existing documented contracts; not full fresh body audit",
+      "declarations": [
+        {
+          "name": "SynthesisError",
+          "line": 45,
+          "end_line": 46,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "_sources",
+          "line": 49,
+          "end_line": 64,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "compare_claims",
+          "line": 67,
+          "end_line": 87,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "mock_synthesize",
+          "line": 90,
+          "end_line": 130,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "unavailable",
+          "line": 133,
+          "end_line": 138,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "label_order",
+          "line": 141,
+          "end_line": 143,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "model_prompt",
+          "line": 146,
+          "end_line": 154,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_json_object",
+          "line": 157,
+          "end_line": 158,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_text",
+          "line": 161,
+          "end_line": 162,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_items",
+          "line": 165,
+          "end_line": 166,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "check_model_synthesis",
+          "line": 169,
+          "end_line": 238,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "model_unavailable",
+          "line": 241,
+          "end_line": 253,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "quotes",
+          "line": 181,
+          "end_line": 201,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "entry",
+          "line": 203,
+          "end_line": 209,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "path": "app/refine.py",
+      "sha256": "0f02402d32ab3f22140295bdf74db0b60c457a116e9ffee141980e4ecf7309d6",
+      "url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/app/refine.py",
+      "inspection": "responsibility/interface inventory plus existing documented contracts; not full fresh body audit",
+      "declarations": [
+        {
+          "name": "RefineError",
+          "line": 30,
+          "end_line": 31,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "prompt",
+          "line": 34,
+          "end_line": 50,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_text",
+          "line": 53,
+          "end_line": 54,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "check",
+          "line": 57,
+          "end_line": 71,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "rejected_reply",
+          "line": 74,
+          "end_line": 76,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "path": "app/split.py",
+      "sha256": "5325b688c4996330d0be107f2f0fd6230be6f5407a026b8fbbdf6c4444158de3",
+      "url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/app/split.py",
+      "inspection": "responsibility/interface inventory plus existing documented contracts; not full fresh body audit",
+      "declarations": [
+        {
+          "name": "SplitError",
+          "line": 29,
+          "end_line": 30,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "prompt",
+          "line": 33,
+          "end_line": 38,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_text",
+          "line": 41,
+          "end_line": 42,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "check",
+          "line": 45,
+          "end_line": 69,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "path": "app/collate.py",
+      "sha256": "06a8be721e98561b4a5dd1af2690cdd58f45d0502519124964aff644a310d7ce",
+      "url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/app/collate.py",
+      "inspection": "responsibility/interface inventory plus existing documented contracts; not full fresh body audit",
+      "declarations": [
+        {
+          "name": "CollateError",
+          "line": 33,
+          "end_line": 34,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "prompt",
+          "line": 37,
+          "end_line": 48,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_text",
+          "line": 51,
+          "end_line": 52,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_list",
+          "line": 55,
+          "end_line": 56,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "check",
+          "line": 59,
+          "end_line": 88,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "path": "app/next_step.py",
+      "sha256": "6bbef6f724286a81736e6df1b1045a3647555956bb02642715f99a537ca2421a",
+      "url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/app/next_step.py",
+      "inspection": "responsibility/interface inventory plus existing documented contracts; not full fresh body audit",
+      "declarations": [
+        {
+          "name": "NextStepError",
+          "line": 35,
+          "end_line": 36,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "prompt",
+          "line": 39,
+          "end_line": 44,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_text",
+          "line": 47,
+          "end_line": 48,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "check",
+          "line": 51,
+          "end_line": 73,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "path": "app/registration.py",
+      "sha256": "c6bc6a753f30d4922e1a371fdb1baf175adb2b9080e64d26a1c4606f64ed521a",
+      "url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/app/registration.py",
+      "inspection": "responsibility/interface inventory plus existing documented contracts; not full fresh body audit",
+      "declarations": [
+        {
+          "name": "registry_path",
+          "line": 38,
+          "end_line": 43,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "fingerprint",
+          "line": 46,
+          "end_line": 58,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "digest",
+          "line": 61,
+          "end_line": 62,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_load",
+          "line": 65,
+          "end_line": 72,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "problem",
+          "line": 75,
+          "end_line": 94,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "register",
+          "line": 97,
+          "end_line": 120,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "main",
+          "line": 123,
+          "end_line": 145,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "path": "app/live_config.py",
+      "sha256": "77282503e29f2e0b11d69d5e2b4b77d55161bbb0eb1ddf2c7331ca89ba021f9a",
+      "url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/app/live_config.py",
+      "inspection": "responsibility/interface inventory plus existing documented contracts; not full fresh body audit",
+      "declarations": [
+        {
+          "name": "ModelChoice",
+          "line": 27,
+          "end_line": 43,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "credit_billed",
+          "line": 46,
+          "end_line": 49,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "classified",
+          "line": 52,
+          "end_line": 57,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "refusal",
+          "line": 60,
+          "end_line": 74,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "Provider",
+          "line": 78,
+          "end_line": 111,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "validate",
+          "line": 114,
+          "end_line": 120,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "load",
+          "line": 123,
+          "end_line": 149,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "__post_init__",
+          "line": 33,
+          "end_line": 36,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "usable",
+          "line": 39,
+          "end_line": 40,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "public",
+          "line": 42,
+          "end_line": 43,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "__post_init__",
+          "line": 87,
+          "end_line": 108,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "choice",
+          "line": 110,
+          "end_line": 111,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "path": "app/static/index.html",
+      "sha256": "0af168f4fd173767b6c6b3ac491bff3ded4b8796bc1209236ae770d3cdfd4f25",
+      "url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/app/static/index.html",
+      "inspection": "function/fetch inventory; prior S3/S6 documented scope"
+    },
+    {
+      "path": "app/static/role-board.js",
+      "sha256": "5e239acefbc932d77140b63e75225583bd8e8516e9c91bcbd08c20b7ba76d798",
+      "url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/app/static/role-board.js",
+      "inspection": "526-578 project guidance; function inventory"
+    },
+    {
+      "path": "core/runner.py",
+      "sha256": "25d28010e95d7d4a5a407d406fe582a9ca72a3060e8c49a0a14dacf866c1ae3d",
+      "url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/core/runner.py",
+      "inspection": "responsibility/interface inventory plus existing documented contracts; not full fresh body audit",
+      "declarations": [
+        {
+          "name": "RunnerError",
+          "line": 75,
+          "end_line": 76,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "RunResult",
+          "line": 80,
+          "end_line": 110,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "validate_argv",
+          "line": 113,
+          "end_line": 123,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_MarkCounter",
+          "line": 126,
+          "end_line": 142,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "_Reader",
+          "line": 145,
+          "end_line": 183,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "_Writer",
+          "line": 186,
+          "end_line": 215,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "lingering",
+          "line": 227,
+          "end_line": 235,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_Tree",
+          "line": 238,
+          "end_line": 309,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "_check_pid_namespace",
+          "line": 312,
+          "end_line": 320,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "run",
+          "line": 323,
+          "end_line": 334,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_execute",
+          "line": 337,
+          "end_line": 465,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "tree_confirmed_empty",
+          "line": 104,
+          "end_line": 110,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "__init__",
+          "line": 133,
+          "end_line": 136,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "feed",
+          "line": 138,
+          "end_line": 142,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "__init__",
+          "line": 153,
+          "end_line": 159,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "run",
+          "line": 161,
+          "end_line": 180,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "text",
+          "line": 182,
+          "end_line": 183,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "__init__",
+          "line": 193,
+          "end_line": 197,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "run",
+          "line": 199,
+          "end_line": 215,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "__init__",
+          "line": 241,
+          "end_line": 257,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "active",
+          "line": 259,
+          "end_line": 269,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "kill",
+          "line": 271,
+          "end_line": 292,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "confirm_empty",
+          "line": 294,
+          "end_line": 304,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "close",
+          "line": 306,
+          "end_line": 309,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_BasicLimit",
+          "line": 472,
+          "end_line": 477,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "_IoCounters",
+          "line": 479,
+          "end_line": 482,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "_ExtendedLimit",
+          "line": 484,
+          "end_line": 487,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "_Accounting",
+          "line": 489,
+          "end_line": 493,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "_WindowsJob",
+          "line": 512,
+          "end_line": 547,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "__init__",
+          "line": 513,
+          "end_line": 523,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "assign",
+          "line": 525,
+          "end_line": 532,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "active_processes",
+          "line": 534,
+          "end_line": 539,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "terminate",
+          "line": 541,
+          "end_line": 542,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "close",
+          "line": 544,
+          "end_line": 547,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "path": "core/contract.py",
+      "sha256": "8d11b1e1f6b4c510b6c4440664f1ddf5d0137b1112219c623987d383a3155ffd",
+      "url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/core/contract.py",
+      "inspection": "responsibility/interface inventory plus existing documented contracts; not full fresh body audit",
+      "declarations": [
+        {
+          "name": "Plan",
+          "line": 36,
+          "end_line": 58,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "template",
+          "line": 61,
+          "end_line": 90,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "revision",
+          "line": 93,
+          "end_line": 95,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "covers",
+          "line": 98,
+          "end_line": 101,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "__post_init__",
+          "line": 49,
+          "end_line": 51,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "record",
+          "line": 53,
+          "end_line": 58,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "config",
+          "line": 80,
+          "end_line": 81,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "path": "core/eligibility.py",
+      "sha256": "c7b5f9285dfcb6cd847dd148498464e574f7beecf913952ce3982ddd21a8ce92",
+      "url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/core/eligibility.py",
+      "inspection": "responsibility/interface inventory plus existing documented contracts; not full fresh body audit",
+      "declarations": [
+        {
+          "name": "Verdict",
+          "line": 42,
+          "end_line": 44,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "load",
+          "line": 47,
+          "end_line": 48,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "parse",
+          "line": 51,
+          "end_line": 53,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "observed_on",
+          "line": 56,
+          "end_line": 64,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_text",
+          "line": 67,
+          "end_line": 68,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "row_problems",
+          "line": 71,
+          "end_line": 89,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "eligibility",
+          "line": 92,
+          "end_line": 146,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "path": "core/env.py",
+      "sha256": "4086b24a6f1c34ef3225ec7b81a6a140e726f5d008686deff25c774c1fbbf8f1",
+      "url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/core/env.py",
+      "inspection": "responsibility/interface inventory plus existing documented contracts; not full fresh body audit",
+      "declarations": [
+        {
+          "name": "EnvError",
+          "line": 61,
+          "end_line": 62,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "fresh_environment",
+          "line": 65,
+          "end_line": 88,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "is_windows_binary",
+          "line": 91,
+          "end_line": 93,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "child_env",
+          "line": 96,
+          "end_line": 113,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_is_pe",
+          "line": 116,
+          "end_line": 122,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "resolve",
+          "line": 125,
+          "end_line": 142,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "path": "core/isolation.py",
+      "sha256": "5710bb36d944152cedadb5268f8d11b77e524ef28e6be8d7855405eaad768dd0",
+      "url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/core/isolation.py",
+      "inspection": "responsibility/interface inventory plus existing documented contracts; not full fresh body audit",
+      "declarations": [
+        {
+          "name": "IsolationError",
+          "line": 60,
+          "end_line": 61,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "_require",
+          "line": 64,
+          "end_line": 66,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "Sandbox",
+          "line": 70,
+          "end_line": 83,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "cli_mounts",
+          "line": 86,
+          "end_line": 99,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "participant_mounts",
+          "line": 106,
+          "end_line": 119,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_within",
+          "line": 122,
+          "end_line": 124,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_Mount",
+          "line": 128,
+          "end_line": 143,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "_mount_plan",
+          "line": 146,
+          "end_line": 167,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_validate_mounts",
+          "line": 170,
+          "end_line": 188,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "plan",
+          "line": 191,
+          "end_line": 226,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_trusted_bwrap",
+          "line": 229,
+          "end_line": 238,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "run",
+          "line": 241,
+          "end_line": 249,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "__post_init__",
+          "line": 80,
+          "end_line": 83,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "host",
+          "line": 135,
+          "end_line": 136,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "argv",
+          "line": 138,
+          "end_line": 143,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "path": "core/adapters.py",
+      "sha256": "6f043f05b2b29c6f5080cd17f36296f448a5e2dad9ea42dda606ace17953c179",
+      "url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/core/adapters.py",
+      "inspection": "responsibility/interface inventory plus existing documented contracts; not full fresh body audit",
+      "declarations": [
+        {
+          "name": "AdapterSpec",
+          "line": 39,
+          "end_line": 43,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "AdapterError",
+          "line": 128,
+          "end_line": 129,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "ExecutionSpec",
+          "line": 133,
+          "end_line": 161,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "_require",
+          "line": 164,
+          "end_line": 166,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "codex_permissions",
+          "line": 169,
+          "end_line": 179,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "codex_global_instructions",
+          "line": 182,
+          "end_line": 190,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "codex_user_hooks",
+          "line": 193,
+          "end_line": 207,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_check",
+          "line": 210,
+          "end_line": 222,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "build_spec",
+          "line": 225,
+          "end_line": 294,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "Outcome",
+          "line": 298,
+          "end_line": 311,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "_amount",
+          "line": 314,
+          "end_line": 317,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_usage",
+          "line": 320,
+          "end_line": 321,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_model_match",
+          "line": 324,
+          "end_line": 325,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_single_json",
+          "line": 328,
+          "end_line": 333,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "interpret",
+          "line": 336,
+          "end_line": 367,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_Shape",
+          "line": 370,
+          "end_line": 371,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "claude_stream",
+          "line": 374,
+          "end_line": 404,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "claude_rate_limit",
+          "line": 407,
+          "end_line": 424,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_typed",
+          "line": 427,
+          "end_line": 434,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_parse",
+          "line": 437,
+          "end_line": 515,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "record",
+          "line": 148,
+          "end_line": 158,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "__repr__",
+          "line": 160,
+          "end_line": 161,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "spec",
+          "line": 254,
+          "end_line": 256,
+          "kind": "FunctionDef"
+        }
+      ]
+    }
+  ]
+}
