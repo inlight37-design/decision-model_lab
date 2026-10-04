@@ -183,7 +183,7 @@ class LayerTests(unittest.TestCase):
         root = Path(__file__).resolve().parents[1] / 'app'
         for folder in ('application', 'context', 'execution', 'queries'):
             for path in (root / folder).glob('*.py'):
-                module = ast.parse(path.read_text())
+                module = ast.parse(path.read_text(encoding='utf-8'))
                 for n in ast.walk(module):
                     if isinstance(n, ast.ImportFrom):
                         self.assertNotIn(n.module, ('app.controller', 'app.server', 'app.run'), str(path))

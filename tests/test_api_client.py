@@ -8,7 +8,7 @@ import unittest
 @unittest.skipUnless(shutil.which('node'), 'Node required')
 class RequestOwnershipTests(unittest.TestCase):
     def test_auth_stays_local_and_superseded_reads_cannot_claim_current_state(self):
-        source = (Path(__file__).resolve().parents[1] / 'app/static/api.js').read_text()
+        source = (Path(__file__).resolve().parents[1] / 'app/static/api.js').read_text(encoding='utf-8')
         program = source + r'''
 const assert = require('node:assert/strict');
 (async () => {
@@ -38,5 +38,5 @@ const assert = require('node:assert/strict');
   await assert.rejects(bad('/api/state'), /blocked/);
 })().catch(error => { console.error(error); process.exitCode=1; });
 '''
-        result = subprocess.run(['node', '-e', program], capture_output=True, text=True, timeout=10)
+        result = subprocess.run(['node', '-e', program], capture_output=True, text=True, encoding='utf-8', timeout=10)
         self.assertEqual(result.returncode, 0, result.stderr)
