@@ -54,7 +54,7 @@
 
 **확인한 사실.** `InvocationLedger._unknown_slots`는 현재 Store의 참여자·SEATS·합성 시도를 센다. `shutdown`의 성공은 worker가 반환했다는 뜻이며 자손 종료 증명이 아니라는 계약도 분명하다. [`invocations.py:130–140`](https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/execution/invocations.py#L130-L140), [`coordinator.py:519–552`](https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/execution/coordinator.py#L519-L552)
 
-launcher의 `_has_room`은 provider별 예약 여유만 검사하며, 최신 원장의 어느 provider라도 cap이 소진되면 `pick_ledger`는 새 폴더를 선택한다. 이전 원장의 `running`/`unknown`이나 미완료 합성은 이 선택 조건에 없다. 서버는 선택한 한 원장만 연다. [`launch.py:190–224`](https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/launch.py#L190-L224), [`launch.py:315–345`](https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/launch.py#L315-L345)
+launcher의 `_has_room`은 provider별 예약 여유만 검사하며, 최신 원장의 어느 provider라도 cap이 소진되면 다음 앱 시작 때 `pick_ledger`는 새 폴더를 선택한다. 이전 원장의 `running`/`unknown`이나 미완료 합성은 이 선택 조건에 없다. 서버는 선택한 한 원장만 연다. [`launch.py:190–224`](https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/launch.py#L190-L224), [`launch.py:315–345`](https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/launch.py#L315-L345)
 
 **해석.** 소진된 원장에 종료 미확인이 남았다면 다음 원장에서 그 점유가 보이지 않는다. 예전 파일을 삭제하는 동작은 아니며, 원장당 호출 cap 자체를 위반하는 것도 아니다. launcher의 소유 잠금도 있으므로 단순히 서버 두 개가 동시에 뜬다고 주장해서는 안 된다. 이번 세션에서 실제 고아 프로세스가 살아 있었다는 관측은 없다. 문제는 **원장 교체가 종료 미확인에 대한 판단까지 초기화하는 효과**다.
 
