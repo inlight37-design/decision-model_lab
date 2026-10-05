@@ -66,7 +66,7 @@
 
 일은 `card` 라벨 이슈에서 [협업 규칙](docs/COLLABORATION.md) 3절의 보드 규칙대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #163](https://github.com/inlight37-design/decision-model_lab/pull/163)(`codex/work-templates-20261004`) — [카드 #162](https://github.com/inlight37-design/decision-model_lab/issues/162)의 팀·작업 템플릿. 적용·검증 범위는 PR에 있다.
+- **이 판을 들인 PR:** [PR #165](https://github.com/inlight37-design/decision-model_lab/pull/165)(`codex/revision-cycle-20261004`) — [카드 #164](https://github.com/inlight37-design/decision-model_lab/issues/164)의 수정·재검토. 템플릿 PR #163 위에 쌓았다. 적용·검증 범위는 PR에 있다.
 
 | 사용자만 할 수 있는 것 | 지금 |
 |---|---|
