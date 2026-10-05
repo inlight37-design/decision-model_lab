@@ -38,6 +38,7 @@ LIVING_DOCS = (
     "docs/DOCUMENT-MAP.md",
     "app/ARCHITECTURE.md",
     "docs/architecture/README.md",
+    "docs/architecture/general-team-review/README.md",
     "docs/architecture/v0.4/README.md",
     "docs/reviews/README.md",
     "docs/handoff/README.md",

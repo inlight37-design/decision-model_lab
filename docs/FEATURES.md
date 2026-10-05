@@ -21,8 +21,8 @@
 | 이전 작업 기억 쓰기 | 같은 작업의 공개 이력 자동 선택, 일반 팀원·상위 역할에 전달, 기본 켬·실행별 끄기 | [memory](../app/memory.py), 아래 동작 설명 | [기억 검사](../tests/test_memory.py). 실제 모델 품질 효과는 미측정 |
 | 원본 앱 답 참여시키기 | 사람이 전달문을 옮기고 답을 붙여 넣음. 입력·독립성·사용량은 자동 검증하지 않음 | [실행 조정](../app/execution/coordinator.py), [화면](../app/static/index.html) | [앱 사용법](../app/README.md) |
 | 결과를 모으고 비교하기 | 일반 결과 취합·격리 결과 합성, 원문 인용 대조, 미확인 주장 표시 | [검토 명령](../app/application/reviews.py), [합성 명령](../app/application/synthesis.py) | [취합 검사](../tests/test_collate.py), [합성 검사](../tests/test_model_synthesis.py) |
-| 서로의 답을 검토시키기 | 공개 뒤 한 라운드, 원문 인용 대조, 지적별 처분·미해결 보존, 보고서 반영 | [검토 명령](../app/application/reviews.py), [cross_review 형식](../app/cross_review.py), [report](../app/report.py) | [교차검토 검사](../tests/test_cross_review.py), 실제 관측은 인계 |
-| 검토 지적으로 답 고치기 | 입력 확인→원래 작성자의 별도 수정 판→다른 팀원 재검토. 원본·반례 보존과 전후 비교 | [수정 명령](../app/application/revisions.py), [화면](../app/static/revisions.js) | [수정·복구 검사](../tests/test_revisions.py). 수정/재검토 각 상한, 사실 검증 아님 |
+| 서로의 답을 검토시키기 | 격리 실행의 공개 뒤 한 라운드, 원문 인용 대조, 지적별 처분·미해결 보존, 보고서 반영 | [검토 명령](../app/application/reviews.py), [cross_review 형식](../app/cross_review.py), [report](../app/report.py) | [교차검토 검사](../tests/test_cross_review.py), 실제 관측은 인계. 일반 팀원은 아래 설계 단계 |
+| 검토 지적으로 답 고치기 | 격리 실행에서 입력 확인→원래 작성자의 별도 수정 판→다른 팀원 재검토. 원본·반례 보존과 전후 비교 | [수정 명령](../app/application/revisions.py), [화면](../app/static/revisions.js) | [수정·복구 검사](../tests/test_revisions.py). 수정/재검토 각 상한, 사실 검증 아님 |
 | 다음 단계를 제안받기 | 슈퍼바이저가 공개 결과를 보고 계속/종료·다음 질문 제안. 자동 실행은 안 함 | [계획 명령](../app/application/planning.py), [next_step 형식](../app/next_step.py) | [앱 사용법](../app/README.md) |
 | 사람이 판단하고 기록하기 | 결과 판을 확인해 메모·판단 완료 저장, 새 결과는 다시 확인 | [검토 명령](../app/application/reviews.py), [행·판 계약](../app/repository.py) | [일반 팀원 검사](../tests/test_general_team.py), [역할판 검사](../tests/test_role_board.py) |
 | 비용과 상태 보기 | 호출 예약·사용량·실패·종료 미확인, 계정 한도 조회와 오래된 값 표시 | [usage](../app/usage.py), [account_quota](../app/account_quota.py) | [사용량](../tests/test_usage.py), [한도](../tests/test_account_quota.py) 검사. 토큰 추정과 구독 차감량은 다름 |
@@ -61,7 +61,8 @@
 | 반영 | 자동 기억 선택 평가·근거 발췌 — OP08 | 오래된 공개 이력·판단/지적·원래 답 본문을 찾고 약한 일치의 동반 선택을 줄임 | [확장 평가·누락/오선택/비용](reviews/2026-10-05-recall-expansion/README.md). 동의어·약한 근거 탈락·발췌 밖 반례는 남음 |
 | 반영 | 목표·완료 기준·선행 조건·수신함 — OP04/05/10/11 일부 | 현재 계획과 결과 판을 연결하고 다음 행동/차단 이유를 설명 | [계획·선행·입력·화면 검증](reviews/2026-10-05-workflow-inbox/README.md). 자동 scheduler·원격 카드 동기화·읽음/outbox는 도입하지 않음 |
 | 반영 | 작업·타임라인·내 차례 페이지화 | 표시/전송량 제한, 변경 없는 주기적 조회의 집계 재사용, 목록 밖 선행 선택과 직접 링크 | [페이지화 검증·부하](reviews/2026-10-05-list-pagination/README.md). 첫 조회/변경 후 집계는 선형이며 실행 관문은 캐시하지 않음 |
-| 다음 검토 | 실제 사용 흐름 관측, 일반 팀원 검토 설계 | 현재 합성 사례 밖의 부담·누락과 사용자 불편 확인 | 실사용 입력/분포로 판단. FTS·의미 검색·일반 팀원 검토는 필요성과 비용을 먼저 비교 |
+| P1 다음 구현 | 일반 팀원의 검토 → 자기 자료로 수정·다른 팀원 재검토 — H28, O11/12, OP06 | 분담 사이 충돌·누락을 원문과 연결. 공통 실행·예약·복구 재사용 | [구현 전 설계](architecture/general-team-review/README.md): 과제/자료 범위·입력 확인·상태/보고서 변경·호출 비용·GR-1/2 완료 조건. 아직 일반 실행에서는 사용할 수 없음 |
+| P2 | 선택한 수정 판 취합·실제 사용 흐름 관측 | 어떤 판으로 판단했는지 연결하고 합성 사례 밖 부담·누락 확인 | 위 설계 GR-3과 실사용 입력/분포로 판단. FTS·의미 검색은 검색 비용·누락 근거를 모아 별도 선택 |
 | P3 조건부 | 지속 실행·예약·원격/코딩·고급 검색 — OP02, H33–60, O31/33 | 장기 작업·실제 파일 변경·다른 도구 연결 | 기기 관측, writer 소유권, 파일/원장/지출 복구 구별, 효과·운영 부담 근거 |
 
 이 순서는 모든 외부 기능을 이미 채택했다는 뜻이 아니다. 입력·실행·검토·명시적 수정은 동작하고, DAG engine·자동 수정 loop·새 invocation table·전역 memory·원격 worker는 후속 선택지다.
