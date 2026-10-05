@@ -16,7 +16,19 @@ class Evaluation(unittest.TestCase):
                 if not case.get('known_limit'):
                     self.assertTrue(result['passed'], result)
                 if case['id'] == 'older-than-window':
-                    self.assertEqual(result['selection_scope']['older_runs_not_considered'], 3)
+                    self.assertEqual(result['selection_scope']['older_runs_not_considered'], 0)
+                    self.assertIn('wanted', result['selected'])
+
+    def test_additional_labelled_cases_report_precision_recall_and_known_limits(self):
+        path = CASES.with_name('memory_expanded_cases.json')
+        for case in json.loads(path.read_text(encoding='utf-8'))['cases']:
+            with self.subTest(case=case['id']):
+                result = evaluate(case)
+                self.assertTrue(result['within_cap'])
+                self.assertFalse(result['forbidden'])
+                self.assertEqual(result['retrieval']['hits'], len(set(result['selected']) & set(case['relevant_runs'])))
+                if not case.get('known_limit'):
+                    self.assertTrue(result['passed'], result)
 
     def test_bounded_excerpts_share_room_across_findings_and_report_every_cut(self):
         sections = {'question': ['긴 질문' * 3000], 'judgment': ['메모' * 2000],
@@ -30,6 +42,22 @@ class Evaluation(unittest.TestCase):
 
 
 class FrozenEvidence(support.Base):
+    def test_query_cap_and_answer_matching_preserve_scope_and_frozen_hash(self):
+        case = {'query': 'needle', 'history': [{'id': 'wanted', 'question': '이전 기록', 'answer': 'needle 근거'}],
+                'required_runs': ['wanted']}
+        seed_case(self.store, case)
+        pack = memory.select(self.store, 'task', case['query'])
+        self.assertEqual(pack['entries'][0]['selection']['matched_fields'], ['answers'])
+        before = memory.footer(pack)
+        with self.store.tx() as tx:
+            tx.execute("INSERT INTO tasks VALUES ('other', '다른 작업', 2)")
+            tx.execute("UPDATE runs SET task_id = 'other' WHERE run_id = 'wanted'")
+        self.assertEqual(memory.select(self.store, 'task', case['query'])['entries'], [])
+        self.assertEqual(memory.footer(pack), before)
+        bounded = memory.select(self.store, 'other', ' '.join('keyword' + str(i) for i in range(100)))
+        self.assertEqual(bounded['selection_scope']['query_terms_omitted'], 100 - memory.QUERY_TERMS)
+        self.assertLessEqual(len(memory.footer(bounded).encode()), memory.MAX_BYTES)
+
     def test_selection_and_omissions_are_hash_bound_and_no_legacy_pack_is_rewritten(self):
         case = next(c for c in json.loads(CASES.read_text(encoding='utf-8'))['cases'] if c['id'] == 'finding-only')
         seed_case(self.store, case)

@@ -1,0 +1,28 @@
+{
+  "scope": "synthetic cloud ledger; no model calls",
+  "runs_per_task": 1000,
+  "results": [
+    {
+      "runs": 100,
+      "measurements": {
+        "memory_recall": {
+          "median_ms": 14.65,
+          "peak_bytes": 339267,
+          "response_bytes": 8482,
+          "statements": 421
+        }
+      }
+    },
+    {
+      "runs": 1000,
+      "measurements": {
+        "memory_recall": {
+          "median_ms": 78.69,
+          "peak_bytes": 2116111,
+          "response_bytes": 8488,
+          "statements": 3121
+        }
+      }
+    }
+  ]
+}

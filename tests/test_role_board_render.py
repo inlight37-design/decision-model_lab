@@ -297,6 +297,13 @@ assert.ok(text(remembered).includes("오래된 실행 6개"));
 assert.ok(text(remembered).includes("검토 지적 300 bytes"));
 assert.ok(text(remembered).includes("승인되지 않았다"));
 assert.ok(!text(remembered).includes("전체 기록"));
+const expandedRecall = memoryPreview({memory:{enabled:true, selection_scope:{scanned_runs:80, considered_runs:1,
+  below_score_floor_runs:2, query_terms_omitted:3, unselected_runs:0}, entries:[{run_id:"a",created_at:1,excerpt:"본문 근거",
+  selection:{overlap_terms:["etag"],matched_fields:["answers"],recent_fallback:false}}]}});
+assert.ok(text(expandedRecall).includes("공개 이력 80개를 검색"));
+assert.ok(text(expandedRecall).includes("공개 답"));
+assert.ok(text(expandedRecall).includes("약한 표현 일치 2개"));
+assert.ok(text(expandedRecall).includes("표현 3개를 제외"));
 assert.ok(text(memoryPreview({memory:{enabled:true,entries:[{run_id:"old",created_at:1,excerpt:"옛 발췌"}]}}))
   .includes("선택 이유가 저장되기 전"));
 // 두 번 눌러도 요청은 하나이고, 응답 전에 원문으로 돌아가면(창을 새로 연 것과 같다) 늦은 응답을 붙이지 않는다
