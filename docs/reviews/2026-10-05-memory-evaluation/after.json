@@ -1,0 +1,1051 @@
+{
+  "schema": "decision-memory-evaluation/1",
+  "model_calls": 0,
+  "cases_sha256": "7e6bd3e848dbccf68238cd254d57837dab8b141fd94b7db41cf24bd82d5dc8ad",
+  "results": [
+    {
+      "id": "korean-particle",
+      "known_limit": false,
+      "selected": [
+        "wanted",
+        "other"
+      ],
+      "missing_runs": [],
+      "missing_text": [],
+      "forbidden": [],
+      "appendix_bytes": 2823,
+      "within_cap": true,
+      "passed": true,
+      "selection_scope": {
+        "policy": "task-public-evidence-v2",
+        "eligible_runs": 2,
+        "considered_runs": 2,
+        "candidate_limit": 24,
+        "older_runs_not_considered": 0,
+        "selection_limit": 3,
+        "unselected_runs": 0,
+        "skipped_for_budget": 0
+      },
+      "omissions": {
+        "wanted": {
+          "question": {
+            "source_bytes": 31,
+            "included_bytes": 31,
+            "omitted_bytes": 0
+          },
+          "judgment": {
+            "source_bytes": 45,
+            "included_bytes": 45,
+            "omitted_bytes": 0
+          },
+          "reviews": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "revisions": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "answers": {
+            "source_bytes": 148,
+            "included_bytes": 148,
+            "omitted_bytes": 0
+          }
+        },
+        "other": {
+          "question": {
+            "source_bytes": 28,
+            "included_bytes": 28,
+            "omitted_bytes": 0
+          },
+          "judgment": {
+            "source_bytes": 45,
+            "included_bytes": 45,
+            "omitted_bytes": 0
+          },
+          "reviews": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "revisions": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "answers": {
+            "source_bytes": 148,
+            "included_bytes": 148,
+            "omitted_bytes": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "korean-spacing",
+      "known_limit": false,
+      "selected": [
+        "wanted",
+        "other"
+      ],
+      "missing_runs": [],
+      "missing_text": [],
+      "forbidden": [],
+      "appendix_bytes": 2818,
+      "within_cap": true,
+      "passed": true,
+      "selection_scope": {
+        "policy": "task-public-evidence-v2",
+        "eligible_runs": 2,
+        "considered_runs": 2,
+        "candidate_limit": 24,
+        "older_runs_not_considered": 0,
+        "selection_limit": 3,
+        "unselected_runs": 0,
+        "skipped_for_budget": 0
+      },
+      "omissions": {
+        "wanted": {
+          "question": {
+            "source_bytes": 34,
+            "included_bytes": 34,
+            "omitted_bytes": 0
+          },
+          "judgment": {
+            "source_bytes": 45,
+            "included_bytes": 45,
+            "omitted_bytes": 0
+          },
+          "reviews": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "revisions": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "answers": {
+            "source_bytes": 148,
+            "included_bytes": 148,
+            "omitted_bytes": 0
+          }
+        },
+        "other": {
+          "question": {
+            "source_bytes": 28,
+            "included_bytes": 28,
+            "omitted_bytes": 0
+          },
+          "judgment": {
+            "source_bytes": 45,
+            "included_bytes": 45,
+            "omitted_bytes": 0
+          },
+          "reviews": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "revisions": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "answers": {
+            "source_bytes": 148,
+            "included_bytes": 148,
+            "omitted_bytes": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "decision-negation",
+      "known_limit": false,
+      "selected": [
+        "wanted",
+        "noise-3",
+        "noise-2"
+      ],
+      "missing_runs": [],
+      "missing_text": [],
+      "forbidden": [],
+      "appendix_bytes": 3977,
+      "within_cap": true,
+      "passed": true,
+      "selection_scope": {
+        "policy": "task-public-evidence-v2",
+        "eligible_runs": 5,
+        "considered_runs": 5,
+        "candidate_limit": 24,
+        "older_runs_not_considered": 0,
+        "selection_limit": 3,
+        "unselected_runs": 2,
+        "skipped_for_budget": 0
+      },
+      "omissions": {
+        "wanted": {
+          "question": {
+            "source_bytes": 28,
+            "included_bytes": 28,
+            "omitted_bytes": 0
+          },
+          "judgment": {
+            "source_bytes": 94,
+            "included_bytes": 94,
+            "omitted_bytes": 0
+          },
+          "reviews": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "revisions": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "answers": {
+            "source_bytes": 148,
+            "included_bytes": 148,
+            "omitted_bytes": 0
+          }
+        },
+        "noise-3": {
+          "question": {
+            "source_bytes": 28,
+            "included_bytes": 28,
+            "omitted_bytes": 0
+          },
+          "judgment": {
+            "source_bytes": 45,
+            "included_bytes": 45,
+            "omitted_bytes": 0
+          },
+          "reviews": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "revisions": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "answers": {
+            "source_bytes": 148,
+            "included_bytes": 148,
+            "omitted_bytes": 0
+          }
+        },
+        "noise-2": {
+          "question": {
+            "source_bytes": 28,
+            "included_bytes": 28,
+            "omitted_bytes": 0
+          },
+          "judgment": {
+            "source_bytes": 45,
+            "included_bytes": 45,
+            "omitted_bytes": 0
+          },
+          "reviews": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "revisions": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "answers": {
+            "source_bytes": 148,
+            "included_bytes": 148,
+            "omitted_bytes": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "finding-only",
+      "known_limit": false,
+      "selected": [
+        "wanted",
+        "noise-3",
+        "noise-2"
+      ],
+      "missing_runs": [],
+      "missing_text": [],
+      "forbidden": [],
+      "appendix_bytes": 4120,
+      "within_cap": true,
+      "passed": true,
+      "selection_scope": {
+        "policy": "task-public-evidence-v2",
+        "eligible_runs": 5,
+        "considered_runs": 5,
+        "candidate_limit": 24,
+        "older_runs_not_considered": 0,
+        "selection_limit": 3,
+        "unselected_runs": 2,
+        "skipped_for_budget": 0
+      },
+      "omissions": {
+        "wanted": {
+          "question": {
+            "source_bytes": 28,
+            "included_bytes": 28,
+            "omitted_bytes": 0
+          },
+          "judgment": {
+            "source_bytes": 45,
+            "included_bytes": 45,
+            "omitted_bytes": 0
+          },
+          "reviews": {
+            "source_bytes": 145,
+            "included_bytes": 145,
+            "omitted_bytes": 0
+          },
+          "revisions": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "answers": {
+            "source_bytes": 148,
+            "included_bytes": 148,
+            "omitted_bytes": 0
+          }
+        },
+        "noise-3": {
+          "question": {
+            "source_bytes": 28,
+            "included_bytes": 28,
+            "omitted_bytes": 0
+          },
+          "judgment": {
+            "source_bytes": 45,
+            "included_bytes": 45,
+            "omitted_bytes": 0
+          },
+          "reviews": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "revisions": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "answers": {
+            "source_bytes": 148,
+            "included_bytes": 148,
+            "omitted_bytes": 0
+          }
+        },
+        "noise-2": {
+          "question": {
+            "source_bytes": 28,
+            "included_bytes": 28,
+            "omitted_bytes": 0
+          },
+          "judgment": {
+            "source_bytes": 45,
+            "included_bytes": 45,
+            "omitted_bytes": 0
+          },
+          "reviews": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "revisions": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "answers": {
+            "source_bytes": 148,
+            "included_bytes": 148,
+            "omitted_bytes": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "long-question-memo",
+      "known_limit": false,
+      "selected": [
+        "wanted"
+      ],
+      "missing_runs": [],
+      "missing_text": [],
+      "forbidden": [],
+      "appendix_bytes": 4611,
+      "within_cap": true,
+      "passed": true,
+      "selection_scope": {
+        "policy": "task-public-evidence-v2",
+        "eligible_runs": 1,
+        "considered_runs": 1,
+        "candidate_limit": 24,
+        "older_runs_not_considered": 0,
+        "selection_limit": 3,
+        "unselected_runs": 0,
+        "skipped_for_budget": 0
+      },
+      "omissions": {
+        "wanted": {
+          "question": {
+            "source_bytes": 28028,
+            "included_bytes": 298,
+            "omitted_bytes": 27730
+          },
+          "judgment": {
+            "source_bytes": 28035,
+            "included_bytes": 2405,
+            "omitted_bytes": 25630
+          },
+          "reviews": {
+            "source_bytes": 137,
+            "included_bytes": 137,
+            "omitted_bytes": 0
+          },
+          "revisions": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "answers": {
+            "source_bytes": 148,
+            "included_bytes": 148,
+            "omitted_bytes": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "second-finding",
+      "known_limit": false,
+      "selected": [
+        "wanted"
+      ],
+      "missing_runs": [],
+      "missing_text": [],
+      "forbidden": [],
+      "appendix_bytes": 4595,
+      "within_cap": true,
+      "passed": true,
+      "selection_scope": {
+        "policy": "task-public-evidence-v2",
+        "eligible_runs": 1,
+        "considered_runs": 1,
+        "candidate_limit": 24,
+        "older_runs_not_considered": 0,
+        "selection_limit": 3,
+        "unselected_runs": 0,
+        "skipped_for_budget": 0
+      },
+      "omissions": {
+        "wanted": {
+          "question": {
+            "source_bytes": 28,
+            "included_bytes": 28,
+            "omitted_bytes": 0
+          },
+          "judgment": {
+            "source_bytes": 45,
+            "included_bytes": 45,
+            "omitted_bytes": 0
+          },
+          "reviews": {
+            "source_bytes": 28214,
+            "included_bytes": 2769,
+            "omitted_bytes": 25445
+          },
+          "revisions": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "answers": {
+            "source_bytes": 148,
+            "included_bytes": 148,
+            "omitted_bytes": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "opposing-decisions",
+      "known_limit": false,
+      "selected": [
+        "deny",
+        "allow",
+        "other"
+      ],
+      "missing_runs": [],
+      "missing_text": [],
+      "forbidden": [],
+      "appendix_bytes": 3963,
+      "within_cap": true,
+      "passed": true,
+      "selection_scope": {
+        "policy": "task-public-evidence-v2",
+        "eligible_runs": 3,
+        "considered_runs": 3,
+        "candidate_limit": 24,
+        "older_runs_not_considered": 0,
+        "selection_limit": 3,
+        "unselected_runs": 0,
+        "skipped_for_budget": 0
+      },
+      "omissions": {
+        "deny": {
+          "question": {
+            "source_bytes": 35,
+            "included_bytes": 35,
+            "omitted_bytes": 0
+          },
+          "judgment": {
+            "source_bytes": 63,
+            "included_bytes": 63,
+            "omitted_bytes": 0
+          },
+          "reviews": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "revisions": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "answers": {
+            "source_bytes": 148,
+            "included_bytes": 148,
+            "omitted_bytes": 0
+          }
+        },
+        "allow": {
+          "question": {
+            "source_bytes": 35,
+            "included_bytes": 35,
+            "omitted_bytes": 0
+          },
+          "judgment": {
+            "source_bytes": 45,
+            "included_bytes": 45,
+            "omitted_bytes": 0
+          },
+          "reviews": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "revisions": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "answers": {
+            "source_bytes": 148,
+            "included_bytes": 148,
+            "omitted_bytes": 0
+          }
+        },
+        "other": {
+          "question": {
+            "source_bytes": 28,
+            "included_bytes": 28,
+            "omitted_bytes": 0
+          },
+          "judgment": {
+            "source_bytes": 45,
+            "included_bytes": 45,
+            "omitted_bytes": 0
+          },
+          "reviews": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "revisions": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "answers": {
+            "source_bytes": 148,
+            "included_bytes": 148,
+            "omitted_bytes": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "sealed-is-not-memory",
+      "known_limit": false,
+      "selected": [],
+      "missing_runs": [],
+      "missing_text": [],
+      "forbidden": [],
+      "appendix_bytes": 0,
+      "within_cap": true,
+      "passed": true,
+      "selection_scope": {
+        "policy": "task-public-evidence-v2",
+        "eligible_runs": 0,
+        "considered_runs": 0,
+        "candidate_limit": 24,
+        "older_runs_not_considered": 0,
+        "selection_limit": 3,
+        "unselected_runs": 0,
+        "skipped_for_budget": 0
+      },
+      "omissions": {}
+    },
+    {
+      "id": "corrupt-answer",
+      "known_limit": false,
+      "selected": [
+        "wanted"
+      ],
+      "missing_runs": [],
+      "missing_text": [],
+      "forbidden": [],
+      "appendix_bytes": 1595,
+      "within_cap": true,
+      "passed": true,
+      "selection_scope": {
+        "policy": "task-public-evidence-v2",
+        "eligible_runs": 1,
+        "considered_runs": 1,
+        "candidate_limit": 24,
+        "older_runs_not_considered": 0,
+        "selection_limit": 3,
+        "unselected_runs": 0,
+        "skipped_for_budget": 0
+      },
+      "omissions": {
+        "wanted": {
+          "question": {
+            "source_bytes": 28,
+            "included_bytes": 28,
+            "omitted_bytes": 0
+          },
+          "judgment": {
+            "source_bytes": 45,
+            "included_bytes": 45,
+            "omitted_bytes": 0
+          },
+          "reviews": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "revisions": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "answers": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "utf8-and-escaping",
+      "known_limit": false,
+      "selected": [
+        "wanted"
+      ],
+      "missing_runs": [],
+      "missing_text": [],
+      "forbidden": [],
+      "appendix_bytes": 5178,
+      "within_cap": true,
+      "passed": true,
+      "selection_scope": {
+        "policy": "task-public-evidence-v2",
+        "eligible_runs": 1,
+        "considered_runs": 1,
+        "candidate_limit": 24,
+        "older_runs_not_considered": 0,
+        "selection_limit": 3,
+        "unselected_runs": 0,
+        "skipped_for_budget": 0
+      },
+      "omissions": {
+        "wanted": {
+          "question": {
+            "source_bytes": 28,
+            "included_bytes": 28,
+            "omitted_bytes": 0
+          },
+          "judgment": {
+            "source_bytes": 45,
+            "included_bytes": 45,
+            "omitted_bytes": 0
+          },
+          "reviews": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "revisions": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "answers": {
+            "source_bytes": 52113,
+            "included_bytes": 2919,
+            "omitted_bytes": 49194
+          }
+        }
+      }
+    },
+    {
+      "id": "older-than-window",
+      "known_limit": true,
+      "selected": [
+        "noise-25",
+        "noise-24",
+        "noise-23"
+      ],
+      "missing_runs": [
+        "wanted"
+      ],
+      "missing_text": [],
+      "forbidden": [],
+      "appendix_bytes": 3860,
+      "within_cap": true,
+      "passed": false,
+      "selection_scope": {
+        "policy": "task-public-evidence-v2",
+        "eligible_runs": 27,
+        "considered_runs": 24,
+        "candidate_limit": 24,
+        "older_runs_not_considered": 3,
+        "selection_limit": 3,
+        "unselected_runs": 21,
+        "skipped_for_budget": 0
+      },
+      "omissions": {
+        "noise-25": {
+          "question": {
+            "source_bytes": 35,
+            "included_bytes": 35,
+            "omitted_bytes": 0
+          },
+          "judgment": {
+            "source_bytes": 45,
+            "included_bytes": 45,
+            "omitted_bytes": 0
+          },
+          "reviews": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "revisions": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "answers": {
+            "source_bytes": 148,
+            "included_bytes": 148,
+            "omitted_bytes": 0
+          }
+        },
+        "noise-24": {
+          "question": {
+            "source_bytes": 35,
+            "included_bytes": 35,
+            "omitted_bytes": 0
+          },
+          "judgment": {
+            "source_bytes": 45,
+            "included_bytes": 45,
+            "omitted_bytes": 0
+          },
+          "reviews": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "revisions": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "answers": {
+            "source_bytes": 148,
+            "included_bytes": 148,
+            "omitted_bytes": 0
+          }
+        },
+        "noise-23": {
+          "question": {
+            "source_bytes": 35,
+            "included_bytes": 35,
+            "omitted_bytes": 0
+          },
+          "judgment": {
+            "source_bytes": 45,
+            "included_bytes": 45,
+            "omitted_bytes": 0
+          },
+          "reviews": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "revisions": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "answers": {
+            "source_bytes": 148,
+            "included_bytes": 148,
+            "omitted_bytes": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "semantic-synonym",
+      "known_limit": true,
+      "selected": [
+        "noise-3",
+        "noise-2",
+        "noise-1"
+      ],
+      "missing_runs": [
+        "wanted"
+      ],
+      "missing_text": [],
+      "forbidden": [],
+      "appendix_bytes": 3830,
+      "within_cap": true,
+      "passed": false,
+      "selection_scope": {
+        "policy": "task-public-evidence-v2",
+        "eligible_runs": 5,
+        "considered_runs": 5,
+        "candidate_limit": 24,
+        "older_runs_not_considered": 0,
+        "selection_limit": 3,
+        "unselected_runs": 2,
+        "skipped_for_budget": 0
+      },
+      "omissions": {
+        "noise-3": {
+          "question": {
+            "source_bytes": 28,
+            "included_bytes": 28,
+            "omitted_bytes": 0
+          },
+          "judgment": {
+            "source_bytes": 45,
+            "included_bytes": 45,
+            "omitted_bytes": 0
+          },
+          "reviews": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "revisions": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "answers": {
+            "source_bytes": 148,
+            "included_bytes": 148,
+            "omitted_bytes": 0
+          }
+        },
+        "noise-2": {
+          "question": {
+            "source_bytes": 28,
+            "included_bytes": 28,
+            "omitted_bytes": 0
+          },
+          "judgment": {
+            "source_bytes": 45,
+            "included_bytes": 45,
+            "omitted_bytes": 0
+          },
+          "reviews": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "revisions": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "answers": {
+            "source_bytes": 148,
+            "included_bytes": 148,
+            "omitted_bytes": 0
+          }
+        },
+        "noise-1": {
+          "question": {
+            "source_bytes": 28,
+            "included_bytes": 28,
+            "omitted_bytes": 0
+          },
+          "judgment": {
+            "source_bytes": 45,
+            "included_bytes": 45,
+            "omitted_bytes": 0
+          },
+          "reviews": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "revisions": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "answers": {
+            "source_bytes": 148,
+            "included_bytes": 148,
+            "omitted_bytes": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "answer-only-term",
+      "known_limit": true,
+      "selected": [
+        "noise-3",
+        "noise-2",
+        "noise-1"
+      ],
+      "missing_runs": [
+        "wanted"
+      ],
+      "missing_text": [],
+      "forbidden": [],
+      "appendix_bytes": 3830,
+      "within_cap": true,
+      "passed": false,
+      "selection_scope": {
+        "policy": "task-public-evidence-v2",
+        "eligible_runs": 5,
+        "considered_runs": 5,
+        "candidate_limit": 24,
+        "older_runs_not_considered": 0,
+        "selection_limit": 3,
+        "unselected_runs": 2,
+        "skipped_for_budget": 0
+      },
+      "omissions": {
+        "noise-3": {
+          "question": {
+            "source_bytes": 28,
+            "included_bytes": 28,
+            "omitted_bytes": 0
+          },
+          "judgment": {
+            "source_bytes": 45,
+            "included_bytes": 45,
+            "omitted_bytes": 0
+          },
+          "reviews": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "revisions": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "answers": {
+            "source_bytes": 148,
+            "included_bytes": 148,
+            "omitted_bytes": 0
+          }
+        },
+        "noise-2": {
+          "question": {
+            "source_bytes": 28,
+            "included_bytes": 28,
+            "omitted_bytes": 0
+          },
+          "judgment": {
+            "source_bytes": 45,
+            "included_bytes": 45,
+            "omitted_bytes": 0
+          },
+          "reviews": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "revisions": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "answers": {
+            "source_bytes": 148,
+            "included_bytes": 148,
+            "omitted_bytes": 0
+          }
+        },
+        "noise-1": {
+          "question": {
+            "source_bytes": 28,
+            "included_bytes": 28,
+            "omitted_bytes": 0
+          },
+          "judgment": {
+            "source_bytes": 45,
+            "included_bytes": 45,
+            "omitted_bytes": 0
+          },
+          "reviews": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "revisions": {
+            "source_bytes": 0,
+            "included_bytes": 0,
+            "omitted_bytes": 0
+          },
+          "answers": {
+            "source_bytes": 148,
+            "included_bytes": 148,
+            "omitted_bytes": 0
+          }
+        }
+      }
+    }
+  ]
+}

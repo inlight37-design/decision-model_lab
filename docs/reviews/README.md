@@ -78,6 +78,7 @@
 | [`2026-10-05-revisions/`](2026-10-05-revisions/README.md) | 지적→별도 수정 판→재검토, 원문 보존·공통 호출 수명·검색/기억/내보내기·브라우저 검증 |
 | [`2026-10-05-source-extraction/`](2026-10-05-source-extraction/README.md) | PDF/공개 URL 추출·선택 미리보기·출처/누락 결속, 템플릿/자료/보고 연결과 전체 흐름 검증 |
 | [`2026-10-05-query-scale/`](2026-10-05-query-scale/README.md) | 합성 대량 원장 baseline, 목록/선택 상세 분리, 검색 필터 선적용·동등성·브라우저 확인 |
+| [`2026-10-05-memory-evaluation/`](2026-10-05-memory-evaluation/README.md) | 한국어·부정·반대 근거의 고정 선택 평가, 판단/지적 검색과 균형 발췌, 후보/발췌 누락 표시 |
 
 ## 읽는 순서
 

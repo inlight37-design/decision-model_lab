@@ -286,6 +286,17 @@ roleBoard={...roleBoard,orchestrator:[]}; renderAssignments();
 assert.ok(!nodes.assignments.kids.map(text).join(" ").includes("분담 제안 받기"));   // 오케스트레이터가 나면 버튼 없음
 assert.ok(generalPreview({...gpreview,split:{as_proposed:false}}).map(text).join(" ").includes("내가 고쳤습니다"));
 resetSplit(); state.splits=[]; picked=[]; roleBoard=emptyBoard(); assignDraft={};
+const remembered = memoryPreview({memory:{enabled:true, task_id:"t", selection_scope:{eligible_runs:30, considered_runs:24,
+  older_runs_not_considered:6, unselected_runs:21}, entries:[{run_id:"r",created_at:1,excerpt:"승인되지 않았다",
+  excerpt_policy:"section-balanced-v2", truncated:true,source_sha256:"hash",selection:{overlap_terms:["승인"],
+  matched_fields:["human_judgment","reviews"],recent_fallback:false},omissions:{reviews:{omitted_bytes:300}}}]}});
+assert.ok(text(remembered).includes("판단 메모·검토 지적"));
+assert.ok(text(remembered).includes("오래된 실행 6개"));
+assert.ok(text(remembered).includes("검토 지적 300 bytes"));
+assert.ok(text(remembered).includes("승인되지 않았다"));
+assert.ok(!text(remembered).includes("전체 기록"));
+assert.ok(text(memoryPreview({memory:{enabled:true,entries:[{run_id:"old",created_at:1,excerpt:"옛 발췌"}]}}))
+  .includes("선택 이유가 저장되기 전"));
 // 두 번 눌러도 요청은 하나이고, 응답 전에 원문으로 돌아가면(창을 새로 연 것과 같다) 늦은 응답을 붙이지 않는다
 let pending=[], apiCalls=0;
 function api(path, body) { apiCalls++; return new Promise(resolve => pending.push(() => resolve({refine_id:"late"}))); }

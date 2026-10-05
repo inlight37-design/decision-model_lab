@@ -1,0 +1,271 @@
+{
+  "schema": "decision-memory-evaluation/1",
+  "model_calls": 0,
+  "cases_sha256": "7e6bd3e848dbccf68238cd254d57837dab8b141fd94b7db41cf24bd82d5dc8ad",
+  "results": [
+    {
+      "id": "korean-particle",
+      "known_limit": false,
+      "selected": [
+        "wanted",
+        "other"
+      ],
+      "missing_runs": [],
+      "missing_text": [],
+      "forbidden": [],
+      "appendix_bytes": 1691,
+      "within_cap": true,
+      "passed": true,
+      "selection_scope": null,
+      "omissions": {
+        "wanted": null,
+        "other": null
+      }
+    },
+    {
+      "id": "korean-spacing",
+      "known_limit": false,
+      "selected": [
+        "wanted",
+        "other"
+      ],
+      "missing_runs": [],
+      "missing_text": [],
+      "forbidden": [],
+      "appendix_bytes": 1703,
+      "within_cap": true,
+      "passed": true,
+      "selection_scope": null,
+      "omissions": {
+        "wanted": null,
+        "other": null
+      }
+    },
+    {
+      "id": "decision-negation",
+      "known_limit": false,
+      "selected": [
+        "noise-3",
+        "noise-2",
+        "noise-1"
+      ],
+      "missing_runs": [
+        "wanted"
+      ],
+      "missing_text": [
+        "NEGATED-DECISION",
+        "승인이 없다"
+      ],
+      "forbidden": [],
+      "appendix_bytes": 2330,
+      "within_cap": true,
+      "passed": false,
+      "selection_scope": null,
+      "omissions": {
+        "noise-3": null,
+        "noise-2": null,
+        "noise-1": null
+      }
+    },
+    {
+      "id": "finding-only",
+      "known_limit": false,
+      "selected": [
+        "noise-3",
+        "noise-2",
+        "noise-1"
+      ],
+      "missing_runs": [
+        "wanted"
+      ],
+      "missing_text": [
+        "COUNTER-CACHE"
+      ],
+      "forbidden": [],
+      "appendix_bytes": 2303,
+      "within_cap": true,
+      "passed": false,
+      "selection_scope": null,
+      "omissions": {
+        "noise-3": null,
+        "noise-2": null,
+        "noise-1": null
+      }
+    },
+    {
+      "id": "long-question-memo",
+      "known_limit": false,
+      "selected": [
+        "wanted"
+      ],
+      "missing_runs": [],
+      "missing_text": [
+        "COUNTER-AFTER-LONG-MEMO"
+      ],
+      "forbidden": [],
+      "appendix_bytes": 3825,
+      "within_cap": true,
+      "passed": false,
+      "selection_scope": null,
+      "omissions": {
+        "wanted": null
+      }
+    },
+    {
+      "id": "second-finding",
+      "known_limit": false,
+      "selected": [
+        "wanted"
+      ],
+      "missing_runs": [],
+      "missing_text": [
+        "COUNTER-SECOND"
+      ],
+      "forbidden": [],
+      "appendix_bytes": 3857,
+      "within_cap": true,
+      "passed": false,
+      "selection_scope": null,
+      "omissions": {
+        "wanted": null
+      }
+    },
+    {
+      "id": "opposing-decisions",
+      "known_limit": false,
+      "selected": [
+        "deny",
+        "allow",
+        "other"
+      ],
+      "missing_runs": [],
+      "missing_text": [],
+      "forbidden": [],
+      "appendix_bytes": 2355,
+      "within_cap": true,
+      "passed": true,
+      "selection_scope": null,
+      "omissions": {
+        "deny": null,
+        "allow": null,
+        "other": null
+      }
+    },
+    {
+      "id": "sealed-is-not-memory",
+      "known_limit": false,
+      "selected": [],
+      "missing_runs": [],
+      "missing_text": [],
+      "forbidden": [],
+      "appendix_bytes": 0,
+      "within_cap": true,
+      "passed": true,
+      "selection_scope": null,
+      "omissions": {}
+    },
+    {
+      "id": "corrupt-answer",
+      "known_limit": false,
+      "selected": [
+        "wanted"
+      ],
+      "missing_runs": [],
+      "missing_text": [],
+      "forbidden": [],
+      "appendix_bytes": 932,
+      "within_cap": true,
+      "passed": true,
+      "selection_scope": null,
+      "omissions": {
+        "wanted": null
+      }
+    },
+    {
+      "id": "utf8-and-escaping",
+      "known_limit": false,
+      "selected": [
+        "wanted"
+      ],
+      "missing_runs": [],
+      "missing_text": [],
+      "forbidden": [],
+      "appendix_bytes": 4473,
+      "within_cap": true,
+      "passed": true,
+      "selection_scope": null,
+      "omissions": {
+        "wanted": null
+      }
+    },
+    {
+      "id": "older-than-window",
+      "known_limit": true,
+      "selected": [
+        "noise-25",
+        "noise-24",
+        "noise-23"
+      ],
+      "missing_runs": [
+        "wanted"
+      ],
+      "missing_text": [],
+      "forbidden": [],
+      "appendix_bytes": 2303,
+      "within_cap": true,
+      "passed": false,
+      "selection_scope": null,
+      "omissions": {
+        "noise-25": null,
+        "noise-24": null,
+        "noise-23": null
+      }
+    },
+    {
+      "id": "semantic-synonym",
+      "known_limit": true,
+      "selected": [
+        "noise-3",
+        "noise-2",
+        "noise-1"
+      ],
+      "missing_runs": [
+        "wanted"
+      ],
+      "missing_text": [],
+      "forbidden": [],
+      "appendix_bytes": 2276,
+      "within_cap": true,
+      "passed": false,
+      "selection_scope": null,
+      "omissions": {
+        "noise-3": null,
+        "noise-2": null,
+        "noise-1": null
+      }
+    },
+    {
+      "id": "answer-only-term",
+      "known_limit": true,
+      "selected": [
+        "noise-3",
+        "noise-2",
+        "noise-1"
+      ],
+      "missing_runs": [
+        "wanted"
+      ],
+      "missing_text": [],
+      "forbidden": [],
+      "appendix_bytes": 2276,
+      "within_cap": true,
+      "passed": false,
+      "selection_scope": null,
+      "omissions": {
+        "noise-3": null,
+        "noise-2": null,
+        "noise-1": null
+      }
+    }
+  ]
+}
