@@ -20,6 +20,22 @@ NEXT_MARKER = "[다음 단계 제안 요청]"   # app/next_step.py의 MARKER와 
 SPLIT_MARKER = "[분담 제안 요청]"   # app/split.py의 MARKER와 같은 줄
 COLLATE_MARKER = "[결과 모으기 요청]"   # app/collate.py의 MARKER와 같은 줄
 REVIEW_MARKER = "[교차검토 요청]"   # app/cross_review.py의 MARKER와 같은 줄
+REVISION_MARKER = '[수정 답 요청]'
+RECHECK_MARKER = '[수정 답 재검토 요청]'
+
+
+def revision_reply(question):
+    recheck = question.startswith(RECHECK_MARKER)
+    label = '재검토 근거' if recheck else '수정 근거'
+    nonce = question.split('이번 경계 표식: ', 1)[1].split('\n', 1)[0]
+    data = json.loads(question.split(f'<<<{label} 시작 {nonce}>>>\n', 1)[1].split(f'\n<<<{label} 끝 {nonce}>>>', 1)[0])
+    snapshot = data['source'] if recheck else data
+    responses = [{'finding': f['id'], 'status': 'uncertain' if recheck else 'unresolved',
+                  'detail': '모의: 반례를 유지함. 실제 개선·검증 아님'} for f in snapshot['findings']]
+    reply = {'assessments': responses, 'findings': []} if recheck else {
+        'answer': '[모의 수정 · 모델 호출 없음]\n' + snapshot['base']['text'] + '\n조건과 반례는 미해결입니다.',
+        'responses': responses}
+    return json.dumps(reply, ensure_ascii=False)
 
 
 def review_reply(question: str) -> str:
@@ -88,6 +104,8 @@ def refine_reply(question: str) -> str:
 
 
 def answer(flavor: str, question: str) -> str:
+    if question.startswith((REVISION_MARKER, RECHECK_MARKER)):
+        return revision_reply(question)
     if question.startswith(REFINE_MARKER):
         return refine_reply(question)
     if question.startswith(NEXT_MARKER):

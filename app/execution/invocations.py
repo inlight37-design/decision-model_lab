@@ -70,8 +70,7 @@ class InvocationLedger:
                     add('participants', {'run_id': run_id, 'pid': row['pid']}, run_id, 'draft', row,
                         spec.get('adapter_id'))
             for seat in SEATS:
-                card = {'refine': 'supervisor', 'next_step': 'supervisor', 'split': 'orchestrator',
-                        'collate': 'orchestrator', 'cross_review': 'reviewer'}[seat.purpose]
+                card = seat.card_column
                 if seat.purpose == 'refine':
                     query = ('SELECT t.refine_id, t.turn, t.attempt, t.kind, t.state, f.supervisor '
                              'FROM refine_turns t JOIN refinements f USING (refine_id) '

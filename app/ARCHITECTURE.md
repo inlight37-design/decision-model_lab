@@ -11,6 +11,7 @@ flowchart TD
   F --> W[WorkService / 작업 생성]
   F --> P[PlanningService / 다듬기·분담·다음 단계]
   F --> R[ReviewService / 취합·검토·처분]
+  F --> V[RevisionService / 수정·재검토]
   F --> S[SynthesisService / 합성]
   F --> Q[PublicQueries / 공개 조회]
   W --> I[InputBuilder / 입력 고정]
@@ -19,6 +20,7 @@ flowchart TD
   W --> E[ExecutionCoordinator / 실행·종료·복구]
   P --> E
   R --> E
+  V --> E
   S --> E
   E --> L[InvocationLedger / 예약·자리·호출 조회]
   Q --> L
@@ -43,6 +45,7 @@ flowchart TD
 | [application/templates.py](application/templates.py), [static/templates.js](static/templates.js) | 재사용 설정·자료 사본 저장/복원, 현재 모델 재검사, 파일 이동 | 실행·승인·예산·과거 기억 pack 복사 |
 | [application/planning.py](application/planning.py) | 질문 다듬기, 다음 단계·분담 제안 명령 | 모델에게 실행 시작 권한 부여 |
 | [application/reviews.py](application/reviews.py) | 취합·교차검토 라운드·지적 처분·사람의 판단 | 인용 일치를 사실 검증으로 승격 |
+| [application/revisions.py](application/revisions.py), [revisions.py](revisions.py), [static/revisions.js](static/revisions.js) | 고정 근거로 별도 수정 판·재검토, 원본 비교와 이력 | 초안 덮어쓰기, 자동 반복·독립 정족수 추가 |
 | [application/synthesis.py](application/synthesis.py) | 공개 후 모의/모델 합성의 입력·조건·예약 | 직접 thread 생성·executor 실행 |
 | [execution/coordinator.py](execution/coordinator.py) | 초안/상위 역할/합성 worker, 수용·공개·취소·복구·종료 | UI 렌더, 검색, HTTP 경로 |
 | [execution/invocations.py](execution/invocations.py) | 모든 실제 호출의 예약 쓰기, 공통 budget/자리/unknown 조회, 역할별 저장의 Invocation 읽기 adapter | 과거 시도 생성·환불, 새 schema인 것처럼 표 변경 |
@@ -76,8 +79,14 @@ flowchart TD
 | `GET /api/runs/{id}/memory` | 그 실행에서 고정한 pack·선택 근거·출처 가용성. 지금 다시 선택하지 않음 |
 | `GET/POST /api/templates`, `GET /api/templates/{id}` | 설정 목록/저장/복원. 목록은 자료 본문을 읽지 않고 복원은 현재 카드·모델을 재검사 |
 | `POST /api/templates/{id}/delete`, `GET /api/templates/{id}/export`, `POST /api/templates/import` | 확인한 템플릿 삭제, 해시 결속 파일 내보내기/가져오기. 실행·관측·예산은 옮기지 않음 |
+| `POST /api/runs/{id}/revisions/preview`, `POST /api/runs/{id}/revisions` | 수정 근거·작성자·입력 미리보기와 hash 확인 후 호출 |
+| `POST /api/revisions/{id}/recheck` | 해당 판을 원래 다른 CLI 팀원에게 재검토 요청 |
+| `POST /api/{revisions,rechecks}/{id}/acknowledge` | 자손 종료를 직접 확인한 사용자가 unknown 자리 해제. 재호출·환불 없음 |
+| `GET /api/runs/{id}/revision-report` | 원본·수정·재검토 hash를 확인한 `decision-revision-history/1` 내보내기 |
 
-템플릿은 schema 15의 `work_templates`에 별도로 저장하며 기존 실행 행/event 의미는 유지한다. 역할별 저장을 읽는 adapter가 공통 Invocation을 만들며 manual·아직 시작 안 한 review·모델 없는 합성을 호출로 발명하지 않는다. 합성의 미확정/사용자 종료 확인도 기존 사건 해석을 사용한다. 별도 전역 event revision이나 command receipt table은 아직 추가하지 않았다.
+schema 16은 `work_templates`와 별도의 `answer_revisions`·`revision_checks`를 둔다. 기존 실행 행/event 의미는 유지한다. 역할별 저장 adapter가 공통 Invocation을 만들며 manual·미시작 review·모델 없는 합성을 호출로 발명하지 않는다. 전역 event revision이나 command receipt table은 아직 없다.
+
+수정은 원래 CLI 작성자·원본 hash·앞 판·지적과 당시 처분을 고정한다. 미리보기 이후 근거가 바뀌면 시작을 거절한다. 작성자는 원래 자료 사본을 읽고 재검토자는 고정 지적과 수정 답을 받는다. 팀원/실행당 수정, 판당 재검토는 각각 최대 2회이며 실패도 포함한다. 다음 판은 앞 판의 재검토 이후 가능하다. 모든 호출은 SEATS를 통해 공통 예약·수용·종료·복구를 쓰고 원래 초안/정족수를 바꾸지 않는다. 검색·호출·사용량·기억·판단 완료에 연결하며 기존 draft/decision report와 합성은 원래 초안을 유지한다.
 
 새 기억에는 일치 표현·순위·최근 기록 대체 여부를 hash 안에 저장한다. 이것도 전달문 크기 상한에 포함된다. 옛 pack은 그대로 읽으며 기록하지 않은 과거 선택 이유를 추측해서 채우지 않는다. 선택 점수는 사실의 신뢰도가 아니다.
 
@@ -86,8 +95,8 @@ flowchart TD
 - 구독 경로·기기 관측·최종 plan 고정, 전체 tree/input/native outcome 수용 의미를 유지한다.
 - 격리 초안과 자동 기억의 역할 범위, 같은 원장의 호출 상한·unknown 슬롯, 한 writer를 유지한다.
 - 취소·시작 실패·결과 저장 실패·재시작·늦은 결과를 분리하고 소비 기록을 지우지 않는다.
-- 템플릿 추가는 schema 15 이행이며 이전 전에 자동 backup을 만든다. 이전 버전 코드는 새 원장을 거절한다. 실제 호출 뒤 코드·DB를 되돌릴 때 원장을 과거 backup으로 덮어 소비 기록을 지우지 않는다.
+- schema 16 이행 전에 자동 backup을 만든다. 이전 버전 코드는 새 원장을 거절한다. 실제 호출 뒤 코드·DB를 되돌릴 때 원장을 과거 backup으로 덮어 소비 기록을 지우지 않는다.
 
 새 기능을 넣을 때는 담당 service와 순수 형식 모듈에 넣고, 실제 실행은 coordinator와 InvocationLedger를 통과시킨다. 공개 경로는 PublicQueries를 재사용한다. 기존 회귀와 [새 경계 검사](../tests/test_foundation.py), [전송 검사](../tests/test_api_client.py)가 기준이며, 실제 기기 계약을 바꾸면 PC 관측을 별도로 갖춘다.
 
-템플릿은 편집 가능한 설정을 복원하며 새 입력 확인 뒤에만 화면에서 시작한다. 같은 원장 안에서 유지되고, 다른 원장에는 명시적인 파일 내보내기/가져오기로 복사한다. 다듬기 모드를 저장해도 승인 차례를 복사하지 않아 다시 다듬고 승인한다. 후속 workflow·검토 후 수정·고급 검색·지속 실행의 원리는 [통합 후보 지도](../docs/architecture/redesign-2026-10-04/CAPABILITY-MAP.md), 순서는 [현재 기능 지도](../docs/FEATURES.md#후속-우선순위)를 본다.
+템플릿은 편집 가능한 설정을 복원하며 새 입력 확인 뒤에만 시작한다. 다른 원장에는 파일로 복사하며 다듬기 승인 차례는 옮기지 않는다. 후속 자료 추출·workflow·고급 검색·지속 실행의 원리는 [통합 후보 지도](../docs/architecture/redesign-2026-10-04/CAPABILITY-MAP.md), 순서는 [현재 기능 지도](../docs/FEATURES.md#후속-우선순위)를 본다.

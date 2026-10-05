@@ -40,11 +40,24 @@ from typing import Any, Iterator
 # 14: reviews·review_dispositions — 공개 뒤 한 라운드 교차검토(카드 #140). 검토자마다 차례·받은 이름표·대상 답(원문·
 #    sha256)·보낸 입력·결과·상태를 고정하고, 지적마다 사람이 고른 처분과 그 시각을 둔다.
 # 15: immutable work_templates, separate from live runs and their approvals/budgets.
-SCHEMA_VERSION = 15
+# 16: answer_revisions/revision_checks preserve post-review variants separately from blind drafts.
+SCHEMA_VERSION = 16
 # 스키마 5 이전 시도의 종류는 시작 사건에 남은 실행기 이름에서만 복원한다. 모의 실행기의 이름은 격리 방식이었다.
 # 근거가 없으면 NULL로 두고, 화면은 "실행 종류 기록 없음"으로 보인다.
 LEGACY_EXECUTORS = {"bubblewrap": "mock", "job_object": "mock", "process_group": "mock", "cli": "real"}
 SCHEMA = """
+CREATE TABLE IF NOT EXISTS answer_revisions (
+  revision_id TEXT PRIMARY KEY, run_id TEXT NOT NULL, pid TEXT NOT NULL, parent_id TEXT, created_at REAL NOT NULL,
+  author TEXT NOT NULL, snapshot TEXT NOT NULL, snapshot_sha256 TEXT NOT NULL,
+  prompt TEXT NOT NULL, input_sha256 TEXT NOT NULL, attempt TEXT NOT NULL,
+  kind TEXT, state TEXT NOT NULL, status TEXT, result TEXT
+);
+CREATE TABLE IF NOT EXISTS revision_checks (
+  check_id TEXT PRIMARY KEY, revision_id TEXT NOT NULL, run_id TEXT NOT NULL, created_at REAL NOT NULL,
+  reviewer TEXT NOT NULL, snapshot TEXT NOT NULL, answer TEXT NOT NULL, answer_sha256 TEXT NOT NULL,
+  prompt TEXT NOT NULL, input_sha256 TEXT NOT NULL, attempt TEXT NOT NULL,
+  kind TEXT, state TEXT NOT NULL, status TEXT, result TEXT
+);
 CREATE TABLE IF NOT EXISTS work_templates (
   template_id TEXT PRIMARY KEY, name TEXT NOT NULL, created_at REAL NOT NULL,
   payload TEXT NOT NULL, sha256 TEXT NOT NULL

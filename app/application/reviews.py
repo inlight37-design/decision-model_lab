@@ -236,6 +236,9 @@ class ReviewService:
                               run_id, QUEUED, RUNNING, UNKNOWN):
                 raise ControllerError("교차검토 라운드가 끝나거나 그 종료를 확인한 뒤에 판단 완료를 누르세요.")
             current, reviewed, _ = self.repository._review_state(run_id)
+            for table in ('answer_revisions', 'revision_checks'):
+                if self.store.row(f'SELECT 1 FROM {table} WHERE run_id = ? AND state IN (?, ?)', run_id, RUNNING, UNKNOWN):
+                    raise ControllerError('수정·재검토의 종료를 확인한 뒤 판단 완료를 누르세요.')
             if revision != current:
                 raise ControllerError("화면에 보인 뒤 새 결과가 나왔습니다. 새 결과를 확인하고 다시 판단 완료를 누르세요.")
             if not reviewed:

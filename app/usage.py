@@ -61,6 +61,10 @@ def calls(run: dict[str, Any]) -> list[dict[str, Any]]:
         found.extend(_seat("collate", item, (item.get("orchestrator") or {}).get("adapter_id")))
     for item in (run.get("cross_review") or {}).get("reviews", []):
         found.extend(_seat("cross_review", item, (item.get("reviewer") or {}).get("adapter_id")))
+    for item in run.get('answer_revisions', []):
+        found.extend(_seat('answer_revision', item, item['author']['adapter_id']))
+        for check in item['rechecks']:
+            found.extend(_seat('revision_recheck', check, check['reviewer']['adapter_id']))
     return found
 
 

@@ -212,6 +212,7 @@ class PublicQueries:
                         "SELECT * FROM proposals WHERE run_id = ? ORDER BY created_at", run["run_id"])]
                     # 공개 뒤 교차검토 라운드(#140). 없으면 None
                     runs[-1]["cross_review"] = self._cross_review_view(run["run_id"], drafts)
+                    runs[-1]['answer_revisions'] = self._revisions_view(run['run_id'])
                     artifact = self.store.row("SELECT payload FROM events WHERE run_id = ? "
                                               "AND kind = 'synthesis_completed' ORDER BY seq DESC LIMIT 1", run["run_id"])
                     if artifact:
@@ -282,6 +283,18 @@ class PublicQueries:
                 return {**limit, "observed_at": int(event["at"])}
         return None
 
+
+    def _revisions_view(self, run_id):
+        variants = []
+        for row in self.store.rows('SELECT * FROM answer_revisions WHERE run_id = ? ORDER BY created_at, revision_id', run_id):
+            checks = [{**{k: r[k] for k in ('check_id', 'created_at', 'state', 'status', 'answer_sha256', 'input_sha256', 'prompt')},
+                       'execution': r['kind'], 'reviewer': _card(json.loads(r['reviewer'])), **_seat_result(r)}
+                      for r in self.store.rows('SELECT * FROM revision_checks WHERE revision_id = ? ORDER BY created_at, check_id', row['revision_id'])]
+            variants.append({**{k: row[k] for k in ('revision_id', 'pid', 'parent_id', 'created_at', 'state', 'status',
+                                                    'snapshot_sha256', 'input_sha256', 'prompt')},
+                             'execution': row['kind'], 'author': _card(json.loads(row['author'])),
+                             'snapshot': json.loads(row['snapshot']), 'rechecks': checks, **_seat_result(row)})
+        return variants
 
     def _proposal_view(self, row) -> dict[str, Any]:
         return {"proposal_id": row["proposal_id"], "run_id": row["run_id"], "created_at": row["created_at"],

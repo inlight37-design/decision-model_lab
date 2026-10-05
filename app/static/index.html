@@ -397,6 +397,7 @@ button.is-pressed { background-image: linear-gradient(color-mix(in oklch, curren
 <script src="/catalog.js"></script>
 <script src="/role-board.js"></script>
 <script src="/templates.js"></script>
+<script src="/revisions.js"></script>
 <script>
 "use strict";
 const TOKEN = controlToken();
@@ -1188,7 +1189,7 @@ function renderRun(run) {
   const revealed = run.phase === "revealed";
   // 일반 실행: 결과 모음은 처음부터, 판단은 모두 끝난 뒤. 합성·원문 보고는 공개된 격리 실행에만 있다.
   const body = run.mode === "general" ? [generalResults(run), collationIsland(run), (run.gate || {}).collected ? reviewIsland(run) : null, usageIsland(run)]
-    : revealed ? [...synthesisPanel(run), proposalIsland(run), crossReviewIsland(run), reviewIsland(run), saveIsland(run), usageIsland(run)] : [];
+    : revealed ? [...synthesisPanel(run), proposalIsland(run), crossReviewIsland(run), revisionIsland(run), reviewIsland(run), saveIsland(run), usageIsland(run)] : [];
   $("mainCol").replaceChildren(questionIsland(run),
     island("기록 탐색", [h("div", {class: "row"},
       h("button", {type: "button", class: "btn", onclick: openCatalog}, "기록 찾기"),

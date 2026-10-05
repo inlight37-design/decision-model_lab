@@ -94,6 +94,8 @@ def task_projection(tasks, runs, held=None):
             asked = {p["state"] for p in run.get("proposals", [])}
             # 교차검토(#140)도 같다. 대기 중인 검토자는 멈춘 원장이면 내가 이어서 시작하고, 아니면 차례를 기다린다
             reviews = (run.get("cross_review") or {}).get("reviews", [])
+            variants = run.get('answer_revisions', [])
+            reviews = [*reviews, *variants, *(c for v in variants for c in v['rechecks'])]
             checked = {r["state"] for r in reviews}
             if run.get("mode") == "general":
                 status, action = _general_status(run, states, held)

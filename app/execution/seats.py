@@ -4,6 +4,7 @@ from dataclasses import dataclass
 import json
 from typing import Any
 from app import collate as collating, cross_review as cross, next_step, refine as refining, split as splitting
+from app import revisions
 from app.state import ACCEPTED, REJECTED, UNKNOWN
 
 @dataclass(frozen=True)
@@ -24,6 +25,7 @@ class _Seat:
     event_column: str = ""           # 사건을 남기는 키가 든 열(다듬기: refine_id, 제안·모으기: run_id, 분담: split_id)
     plan_pid: str = "supervisor"     # 계획·예약 사건에 쓰는 참여자 ID와 이름(교차검토는 검토자)
     plan_label: str = "슈퍼바이저"
+    card_column: str = "supervisor"
 
     @property
     def match(self) -> str:
@@ -49,13 +51,13 @@ SPLIT_SEAT = _Seat("splits", ("split_id",), (), "split", "split_started",
                    {ACCEPTED: "split_completed", REJECTED: "split_failed", UNKNOWN: "split_unknown"},
                    "split_result_ignored", "split_result_not_stored", "split_unknown_acknowledged",
                    lambda text, row: splitting.check(text, json.loads(row["members"]),
-                                                     [s["name"] for s in json.loads(row["sources"])]), "split_id")
+                                                     [s["name"] for s in json.loads(row["sources"])]), "split_id", card_column="orchestrator")
 
 
 COLLATE_SEAT = _Seat("collations", ("collation_id",), ("collation_id",), "collate", "collation_started",
                      {ACCEPTED: "collation_completed", REJECTED: "collation_failed", UNKNOWN: "collation_unknown"},
                      "collation_result_ignored", "collation_result_not_stored", "collation_unknown_acknowledged",
-                     lambda text, row: collating.check(text, json.loads(row["drafts"])), "run_id")
+                     lambda text, row: collating.check(text, json.loads(row["drafts"])), "run_id", card_column="orchestrator")
 
 
 REVIEW_SEAT = _Seat("reviews", ("review_id",), ("review_id",), "cross_review", "review_started",
@@ -63,7 +65,18 @@ REVIEW_SEAT = _Seat("reviews", ("review_id",), ("review_id",), "cross_review", "
                     "review_result_ignored", "review_result_not_stored", "review_unknown_acknowledged",
                     lambda text, row: cross.check(text, {label: item["text"] for label, item
                                                          in json.loads(row["targets"]).items()}),
-                    "run_id", "reviewer", "교차검토자")
+                    "run_id", "reviewer", "교차검토자", "reviewer")
+
+REVISION_SEAT = _Seat('answer_revisions', ('revision_id',), ('revision_id',), 'answer_revision', 'revision_started',
+    {ACCEPTED: 'revision_completed', REJECTED: 'revision_failed', UNKNOWN: 'revision_unknown'},
+    'revision_result_ignored', 'revision_result_not_stored', 'revision_unknown_acknowledged',
+    lambda text, row: revisions.check(text, json.loads(row['snapshot'])), 'run_id', 'revision-author', '수정 작성자', 'author')
+
+RECHECK_SEAT = _Seat('revision_checks', ('check_id',), ('check_id',), 'revision_recheck', 'recheck_started',
+    {ACCEPTED: 'recheck_completed', REJECTED: 'recheck_failed', UNKNOWN: 'recheck_unknown'},
+    'recheck_result_ignored', 'recheck_result_not_stored', 'recheck_unknown_acknowledged',
+    lambda text, row: revisions.check_recheck(text, json.loads(row['snapshot']), row['answer']),
+    'run_id', 'revision-reviewer', '수정 재검토자', 'reviewer')
 
 
-SEATS = (REFINE_SEAT, NEXT_SEAT, SPLIT_SEAT, COLLATE_SEAT, REVIEW_SEAT)
+SEATS = (REFINE_SEAT, NEXT_SEAT, SPLIT_SEAT, COLLATE_SEAT, REVIEW_SEAT, REVISION_SEAT, RECHECK_SEAT)
