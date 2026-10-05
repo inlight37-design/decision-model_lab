@@ -214,6 +214,17 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                 self._send(200, (STATIC / name).read_bytes(), kind)
             elif path == "/api/state":
                 self._json(200, controller.view())
+            elif path == '/api/overview':
+                try:
+                    params = parse_qs(urlsplit(self.path).query, keep_blank_values=True, max_num_fields=2)
+                    if set(params) - {'run'} or any(len(v) != 1 or not v[0] for v in params.values()):
+                        raise ControllerError('invalid overview parameters')
+                    self._json(200, controller.queries.overview(params.get('run', [None])[0]))
+                except ValueError as exc:
+                    self._json(400, {'error': str(exc)})
+            elif len(parts) == 3 and parts[:2] == ['api', 'runs']:
+                result = controller.view(parts[2])['runs']
+                self._json(200 if result else 404, result[0] if result else {'error': 'run not found'})
             elif len(parts) == 5 and parts[:2] == ['api', 'runs'] and parts[3] == 'sources':
                 try:
                     self._json(200, controller.queries.source(parts[2], unquote(parts[4])))

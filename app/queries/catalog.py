@@ -4,7 +4,7 @@ import json
 from app.domain import ControllerError, storable
 
 
-def search(snapshot, query, *, task_id=None, kind=None, limit=30):
+def validate(query, *, task_id=None, kind=None, limit=30):
     if not isinstance(query, str) or not storable(query) or not 1 <= len(query.strip()) <= 200:
         raise ControllerError("검색어는 1~200자의 글로 적습니다.")
     if type(limit) is not int or not 1 <= limit <= 100:
@@ -14,6 +14,10 @@ def search(snapshot, query, *, task_id=None, kind=None, limit=30):
     kinds = ('question', 'answer', 'review', 'decision', 'synthesis', 'source')
     if kind is not None and kind not in kinds:
         raise ControllerError("지원하지 않는 검색 종류입니다.")
+
+
+def search(snapshot, query, *, task_id=None, kind=None, limit=30):
+    validate(query, task_id=task_id, kind=kind, limit=limit)
     needle = query.strip().casefold()
     result, total = [], 0
     titles = {t['task_id']: t['title'] for t in snapshot['tasks']}

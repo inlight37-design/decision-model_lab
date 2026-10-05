@@ -152,7 +152,7 @@ class RoleBoardTests(Base):
         ctl.shutdown(); self.store.close()
         path = self.tmp / "store" / "journal.db"
         db = sqlite3.connect(path)
-        db.executescript("ALTER TABLE runs DROP COLUMN task_id; ALTER TABLE runs DROP COLUMN role_config; "
+        db.executescript("DROP INDEX runs_by_task; ALTER TABLE runs DROP COLUMN task_id; ALTER TABLE runs DROP COLUMN role_config; "
                          "DROP TABLE tasks; PRAGMA user_version = 7;")
         db.close()
         reopened = Store(path)

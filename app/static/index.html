@@ -425,7 +425,7 @@ const TOKEN = controlToken();
 const api = createAPI(TOKEN);
 window.addEventListener("hashchange", () => location.reload());   // 열린 탭에 토큰 주소를 붙여 넣어도 동작한다
 
-let state = null;            // /api/state
+let state = null;            // /api/overview: task summaries and selected detail
 let selected = new URLSearchParams(location.search).get("run");
 let liveMode = false;        // 실제 CLI 연결일 때만 실제 합성 버튼을 보인다
 let contextUnverified = false;
@@ -1231,7 +1231,13 @@ function render() {
   const run = state.runs.find(r => r.run_id === selected) || null;
   if (run) taskSelected = run.task_id;
   renderTaskNavigation();
-  if (run) renderRun(run); else renderTaskPage();
+  if (run) renderRun(run);
+  else if (selected) {
+    runSig = null; taskPageSig = null;
+    $("mainCol").replaceChildren(island("실행 조회", h("p", {class: "sm muted"},
+      "선택한 실행을 조회하고 있습니다. 계속 표시되면 연결 상태와 실행 주소를 확인하세요.")));
+    $("asideCol").replaceChildren();
+  } else renderTaskPage();
 }
 
 // ---- 동작 ------------------------------------------------------------------------------------------
@@ -1265,21 +1271,21 @@ async function refresh(timer = false) {
   // 갱신과 타이머를 붙잡지 않고, 실패는 한도 칸에만 적는다. 이 함수는 상태를 적용하면 돌아온다.
   if (timer && refreshBusy) return false;
   const seq = ++refreshSent;
-  const statePromise = api("/api/state");
+  const requestedRun = selected;
+  const statePromise = api("/api/overview" + (requestedRun ? "?run=" + encodeURIComponent(requestedRun) : ""));
   api("/api/account-quota").then(data => showQuota(seq, data), () => showQuota(seq, null));
   refreshBusy++;
   let next;
   try { next = await statePromise; }
   catch (e) {
-    if (seq > stateShown) { connection = String(e.message); renderHeader(); }
+    if (seq > stateShown && selected === requestedRun) { connection = String(e.message); renderHeader(); }
     return false;
   } finally { refreshBusy--; }
-  if (seq <= stateShown) return false;
+  if (seq <= stateShown || selected !== requestedRun) return false;
   stateShown = seq;
   connection = ""; state = next; render();
   // 실제 CLI 시도가 끝나면 계정 사용량이 바뀌었으니 Codex 값을 새로 받는다
-  const settled = next.runs.reduce((n, r) => n + r.participants.filter(p => p.execution === "real" &&
-    ["accepted", "rejected"].includes(p.state)).length, 0);
+  const settled = next.settled_real;
   if (settledSeen !== null && settled > settledSeen) autoQuota("run");
   settledSeen = settled;
   return true;
