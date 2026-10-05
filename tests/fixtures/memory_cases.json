@@ -1,0 +1,19 @@
+{
+  "schema": "decision-memory-cases/1",
+  "scope": "Synthetic retrieval and excerpt coverage; not semantic or model-quality evaluation",
+  "cases": [
+    {"id": "korean-particle", "query": "검색을 개선하려면", "history": [{"id": "wanted", "question": "검색의 개선", "memo": "검색 조건 보존"}, {"id": "other", "question": "화면 색상"}], "required_runs": ["wanted"]},
+    {"id": "korean-spacing", "query": "자동 기억 범위", "history": [{"id": "wanted", "question": "자동기억 범위"}, {"id": "other", "question": "출력 파일"}], "required_runs": ["wanted"]},
+    {"id": "decision-negation", "query": "검색 도입 금지 근거", "history": [{"id": "wanted", "question": "최종 판단", "memo": "검색 도입 금지: 라이선스 승인이 없다. NEGATED-DECISION"}, {"id": "noise", "question": "검색 도입", "repeat": 4}], "required_runs": ["wanted"], "required_text": ["NEGATED-DECISION", "승인이 없다"]},
+    {"id": "finding-only", "query": "캐시 삭제 정보 유출", "history": [{"id": "wanted", "question": "최종 검토", "findings": ["캐시 삭제 뒤에도 정보 유출이 남는다. COUNTER-CACHE"]}, {"id": "noise", "question": "캐시 설정", "repeat": 4}], "required_runs": ["wanted"], "required_text": ["COUNTER-CACHE"]},
+    {"id": "long-question-memo", "query": "격리 반례", "history": [{"id": "wanted", "question": "격리 반례", "question_padding": 2000, "memo": "검토 중", "memo_padding": 2000, "findings": ["격리가 입증되지 않았다. COUNTER-AFTER-LONG-MEMO"]}], "required_runs": ["wanted"], "required_text": ["COUNTER-AFTER-LONG-MEMO"]},
+    {"id": "second-finding", "query": "격리 검토", "history": [{"id": "wanted", "question": "격리 검토", "findings": ["앞선 관측", "종료 확인이 없다. COUNTER-SECOND"], "first_finding_padding": 2000}], "required_runs": ["wanted"], "required_text": ["COUNTER-SECOND"]},
+    {"id": "opposing-decisions", "query": "외부 검색 허용 금지", "history": [{"id": "allow", "question": "외부 검색 허용", "memo": "허용 제안일 뿐"}, {"id": "deny", "question": "외부 검색 금지", "memo": "금지 조건 미해결. DO-NOT-ENABLE"}, {"id": "other", "question": "화면 정리"}], "required_runs": ["allow", "deny"], "required_text": ["DO-NOT-ENABLE"]},
+    {"id": "sealed-is-not-memory", "query": "비공개 답", "history": [{"id": "sealed", "question": "비공개 답", "phase": "drafting", "answer": "SEALED-SECRET"}], "required_runs": [], "forbidden_runs": ["sealed"], "forbidden_text": ["SEALED-SECRET"]},
+    {"id": "corrupt-answer", "query": "자료 해시", "history": [{"id": "wanted", "question": "자료 해시", "answer": "CORRUPT-ANSWER", "corrupt": true}], "required_runs": ["wanted"], "forbidden_text": ["CORRUPT-ANSWER"]},
+    {"id": "utf8-and-escaping", "query": "한글 자료", "history": [{"id": "wanted", "question": "한글 자료", "answer": "한글😀\"\\\n", "answer_repeat": 4000}], "required_runs": ["wanted"]},
+    {"id": "older-than-window", "known_limit": true, "query": "오래된 예외 계약", "history": [{"id": "wanted", "question": "오래된 예외 계약"}, {"id": "noise", "question": "최근 다른 주제", "repeat": 26}], "required_runs": ["wanted"]},
+    {"id": "semantic-synonym", "known_limit": true, "query": "비용절감", "history": [{"id": "wanted", "question": "저렴한 가격"}, {"id": "noise", "question": "화면 모양", "repeat": 4}], "required_runs": ["wanted"]},
+    {"id": "answer-only-term", "known_limit": true, "query": "고유원인", "history": [{"id": "wanted", "question": "초기 논의", "answer": "고유원인에 대한 설명"}, {"id": "noise", "question": "최근 화면", "repeat": 4}], "required_runs": ["wanted"]}
+  ]
+}

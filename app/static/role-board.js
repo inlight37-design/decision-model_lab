@@ -410,12 +410,20 @@ function memoryPreview(config, id = "preview-memory", expanded = true) {
     h("p", { class: "sm" }, !pack?.enabled ? "자동 기억 꺼짐" : entries.length
       ? "일반 팀원·상위 역할에만 전달합니다. 과거 답의 사실 여부는 검증하지 않았습니다."
       : "같은 작업에 가져올 공개 이력이 없습니다."),
+    pack?.selection_scope ? h("p", {class: "cap muted"},
+      `공개 이력 ${pack.selection_scope.eligible_runs}개 중 최근 ${pack.selection_scope.considered_runs}개를 비교했습니다. ` +
+      (pack.selection_scope.older_runs_not_considered ? `범위 밖의 오래된 실행 ${pack.selection_scope.older_runs_not_considered}개는 검색하지 않았습니다. ` : "") +
+      `후보 중 ${pack.selection_scope.unselected_runs}개는 전달하지 않습니다. 표현이 다른 기록도 놓칠 수 있습니다.`) : null,
     ...entries.map((e, index) => h("section", { class: "stack" },
-      h("p", { class: "sm strong" }, `이전 실행 · ${fmtTime(e.created_at)} · ${e.truncated ? "일부 발췌" : "전체 기록"}`),
+      h("p", { class: "sm strong" }, `이전 실행 · ${fmtTime(e.created_at)} · ${e.excerpt_policy ? "선택 항목 발췌" : e.truncated ? "일부 발췌" : "전체 기록"}`),
       h("pre", { class: "input-full" }, e.excerpt),
       h("p", {class: "cap muted"}, !e.selection ? "선택 이유가 저장되기 전의 기록입니다."
-        : e.selection.recent_fallback ? "질문에 일치하는 단어가 없어 최근 공개 기록을 참고로 골랐습니다."
-        : `질문과 일치한 표현: ${e.selection.overlap_terms.join(", ")} · 같은 작업의 공개 기록`),
+        : e.selection.recent_fallback ? "일치하는 표현이 없어 최근 공개 기록을 참고로 골랐습니다."
+        : `일치한 표현: ${e.selection.overlap_terms.join(", ")} · ` +
+          (e.selection.matched_fields || ["question"]).map(k => ({question: "질문", human_judgment: "판단 메모", reviews: "검토 지적"}[k] || k)).join("·")),
+      e.omissions && Object.values(e.omissions).some(v => v.omitted_bytes > 0) ? h("p", {class: "sm muted"},
+        "발췌에서 빠진 내용: " + Object.entries(e.omissions).filter(([,v]) => v.omitted_bytes > 0).map(([k,v]) =>
+          `${({question: "질문", judgment: "판단 메모", reviews: "검토 지적", revisions: "수정·재검토", answers: "답"}[k] || k)} ${v.omitted_bytes} bytes`).join(" · ") + " — 출처에서 전체를 확인하세요.") : null,
       collapsible(`${id}-source-${index}`, "출처 확인", h("div", {class: "stack"},
         h("p", { class: "cap muted input-full" }, `${e.run_id} · 원본 sha256 ${e.source_sha256}`),
         h("button", {type: "button", class: "btn", onclick: () => {
