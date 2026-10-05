@@ -370,6 +370,15 @@ class Store:
         with self._lock:
             return list(self._db.execute(sql, args))
 
+    def iter_rows(self, sql: str, *args: Any):
+        """Stream a read under the reentrant store lock; close the cursor on exit."""
+        with self._lock:
+            cursor = self._db.execute(sql, args)
+            try:
+                yield from cursor
+            finally:
+                cursor.close()
+
     def row(self, sql: str, *args: Any) -> sqlite3.Row | None:
         found = self.rows(sql, *args)
         return found[0] if found else None

@@ -17,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from app.controller import Controller
 from app.domain import ParticipantSpec
 from app.store import Store
+from app import memory
 
 
 class NoCalls:
@@ -73,6 +74,7 @@ def main():
     parser.add_argument('--runs', nargs='+', type=int, default=[100, 1000])
     parser.add_argument('--repeats', type=int, default=3)
     parser.add_argument('--runs-per-task', type=int, default=10)
+    parser.add_argument('--memory', action='store_true', help='also measure task-local public answer recall')
     args = parser.parse_args()
     if args.repeats < 1 or args.runs_per_task < 1 or any(n < 1 or n > 10000 for n in args.runs):
         parser.error('runs must be 1..10000 and repeats positive')
@@ -97,6 +99,8 @@ def main():
                         return ctl.queries.pages.browse()
                     functions.update(browse_cold=cold, browse_warm=ctl.queries.pages.browse,
                                      timeline_warm=lambda: ctl.queries.pages.browse(task='t-000000'))
+                if args.memory:
+                    functions['memory_recall'] = lambda: memory.select(store, 't-000000', '검색 기준 needle')
                 results.append(dict(runs=count, measurements={
                     name: measure(store, function, args.repeats) for name, function in functions.items()}))
             finally:

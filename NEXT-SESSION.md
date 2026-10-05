@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-10-05** · 작성 세션: codex(클라우드·GitHub — 목록·타임라인 페이지화, 사용자 PC·CLI 미확인, 모델 호출 없음) · 브랜치 `codex/list-pagination-20261005`.
+최종 갱신 **2026-10-05** · 작성 세션: codex(클라우드·GitHub — 공개 이력 기억 검색 확장, 사용자 PC·CLI 미확인, 모델 호출 없음) · 브랜치 `codex/recall-expansion-20261005`.
 
 이 파일은 **지금 상태와 다음 일만** 담는다. 끝난 일의 경위는 PR·git 이력과 날짜가 붙은 기록에 있고, 옛 판은 [docs/handoff/](docs/handoff/README.md)에 있다. **3절에는 진행 중인 일과 "이 판을 들인 PR" 한 줄만 둔다** — 새 PR은 그 줄을 자기 PR로 바꾸고, 병합 전에도 뒤에도 맞는 말만 쓴다("병합했다"고 미리 적지 않는다). 크기 상한과 3절의 모양은 CI가 본다. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있는 규칙은 여기 다시 적지 않는다 — 쌓임을 막는 원칙은 협업 규칙 7절이다.
 
@@ -66,7 +66,7 @@
 
 일은 `card` 라벨 이슈에서 [협업 규칙](docs/COLLABORATION.md) 3절의 보드 규칙대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #175](https://github.com/inlight37-design/decision-model_lab/pull/175)(`codex/list-pagination-20261005`) — [카드 #174](https://github.com/inlight37-design/decision-model_lab/issues/174)의 목록·타임라인·내 차례 페이지화. 적용·검증 범위는 PR에 있다.
+- **이 판을 들인 PR:** [PR #177](https://github.com/inlight37-design/decision-model_lab/pull/177)(`codex/recall-expansion-20261005`) — [카드 #176](https://github.com/inlight37-design/decision-model_lab/issues/176)의 기억 누락·오선택 평가와 검색 보강. 페이지화 PR #175 위에 쌓았다. 적용·검증 범위는 PR에 있다.
 
 | 사용자만 할 수 있는 것 | 지금 |
 |---|---|
@@ -77,7 +77,7 @@
 
 ## 4. 다음 작업
 
-**조회·기억·작업 흐름 PR을 main에 순차 통합했고 통합 CI를 확인했다.** [문서 지도](docs/DOCUMENT-MAP.md) → [현재 구조](app/ARCHITECTURE.md) → [후속 우선순위](docs/FEATURES.md#후속-우선순위)로 찾는다. 화면의 목록·타임라인·내 차례는 페이지로 나누며 상태·선행 완료는 전체 이력을 본다. [페이지화 검증](docs/reviews/2026-10-05-list-pagination/README.md)은 최초/변경 후 집계와 변경 없는 반복 조회를 구분한다. 다음은 기억의 별도 평가 사례 확대·누락/오선택 보강, 일반 팀원 교차검토의 공유 구조·입력 범위·호출 비용 설계다. schema 17과 기존 소비 기록을 유지하며 사용자 PC 반영·실제 모델 품질은 별도 관측이다.
+**조회·기억·작업 흐름 PR을 main에 순차 통합했고 통합 CI를 확인했다.** [문서 지도](docs/DOCUMENT-MAP.md) → [현재 구조](app/ARCHITECTURE.md) → [후속 우선순위](docs/FEATURES.md#후속-우선순위)로 찾는다. [페이지화](docs/reviews/2026-10-05-list-pagination/README.md)는 전송/반복 조회를 제한하며 전체 이력의 준비 상태를 유지한다. [기억 확장 평가](docs/reviews/2026-10-05-recall-expansion/README.md)는 오래된 공개 이력·원래 답 검색의 누락/오선택 개선과 선형 검색 비용을 함께 기록한다. 동의어·약한 근거 탈락·발췌 누락은 남아 있다. 다음은 일반 팀원 교차검토의 공유 구조·입력 범위·호출 비용 설계다. 병합 순서는 페이지화 PR #175 → 기억 PR #177이며 schema 17·기존 소비 기록을 유지한다. 사용자 PC 반영·실제 모델 품질은 별도 관측이다.
 
 1. **2026-10-27 전 — 주 PC 재관측**([SETUP 4절](docs/SETUP.md)의 절차, 모델 호출 Claude 2·Codex 3). main-pc-wsl은 10월 27일부터 만료이고, 이 PC의 세션만 관측·등록할 수 있다. 참여자 계획이나 CLI 판이 바뀌면 그때 바로 한다. 관측 기록은 `tools/w2/assemble.py`가 조립한다. 추론 강도를 연결하는 PR은 그 계획으로 바로 관측한다 — 이 날짜를 기다리지 않는다([역할판 검토](docs/reviews/2026-09-26-role-board-review/README.md) RB-01). S4(카드 #111)로 `~/.codex/hooks.json`이 있으면 Codex 참여자 계획을 거절한다 — 재관측 때 그 검사와 훅 표면을 함께 확인한다([훅 관측](docs/reviews/2026-09-27-codex-hooks/README.md)). 파일 하나 검사로 전체 문맥 검증을 대신하지 않는다.
 2. **역할판 후속.** 일반 작업의 교차검토·혼합 배치, P7 절약 규칙, 문서함 공유, 일반 칸의 원본 앱 카드, 다듬은 문장 직접 편집, 팀 구성 제안은 필요할 때 카드로 연다. 완료 조건은 [역할판 검토](docs/reviews/2026-09-26-role-board-review/README.md) §6와 [리뷰 통합](docs/reviews/2026-09-26-review-consolidation/README.md) §6에서 가져온다. CLI 스키마 출력 전환은 [프롬프트 감사](docs/reviews/2026-09-29-prompt-audit/README.md) §4, 합성의 공통 자리 편입은 [전체 점검](docs/reviews/2026-09-29-health-review/README.md) §4를 따른다. **추론 강도는 연결하지 않았다.** 관측한 값만 넣고 그 계획으로 재관측해야 한다(RB-01).

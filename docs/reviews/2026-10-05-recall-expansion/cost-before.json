@@ -1,0 +1,28 @@
+{
+  "scope": "synthetic public task history; no model calls",
+  "runs_per_task": 1000,
+  "results": [
+    {
+      "runs": 100,
+      "measurements": {
+        "memory_recall": {
+          "median_ms": 8.57,
+          "peak_bytes": 517144,
+          "response_bytes": 8181,
+          "statements": 98
+        }
+      }
+    },
+    {
+      "runs": 1000,
+      "measurements": {
+        "memory_recall": {
+          "median_ms": 10.53,
+          "peak_bytes": 508396,
+          "response_bytes": 8185,
+          "statements": 98
+        }
+      }
+    }
+  ]
+}

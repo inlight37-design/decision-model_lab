@@ -93,7 +93,8 @@ class MemoryTests(support.Base):
             self.general(ctl, task_id=task, question=q)
             self.assertTrue(ctl.wait_idle())
         pack = memory.select(self.store, task, "검색 위험")
-        self.assertEqual(len(pack["entries"]), memory.MAX_RUNS)
+        self.assertLessEqual(len(pack["entries"]), memory.MAX_RUNS)
+        self.assertTrue(all(not e['selection']['recent_fallback'] for e in pack['entries']))
         self.assertIn("검색 위험", pack["entries"][0]["excerpt"])
         with self.store.tx() as tx:
             text = '한글😀"\\\n' * 2000
