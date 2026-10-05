@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-10-05** · 작성 세션: codex(클라우드·GitHub — 요청 PR 병합과 완료 작업·다음 구현 인계, 사용자 PC·CLI 미확인, 모델 호출 없음) · 브랜치 `codex/merge-handoff-20261005`.
+최종 갱신 **2026-10-05** · 작성 세션: codex(클라우드·GitHub — 전체 문서·현재 코드 대조와 누락 정리, 사용자 PC·CLI 미확인, 모델 호출 없음) · 브랜치 `codex/docs-completeness-20261005`.
 
 이 파일은 **지금 상태와 다음 일만** 담는다. 끝난 일의 경위는 PR·git 이력과 날짜가 붙은 기록에 있고, 옛 판은 [docs/handoff/](docs/handoff/README.md)에 있다. **3절에는 진행 중인 일과 "이 판을 들인 PR" 한 줄만 둔다** — 새 PR은 그 줄을 자기 PR로 바꾸고, 병합 전에도 뒤에도 맞는 말만 쓴다("병합했다"고 미리 적지 않는다). 크기 상한과 3절의 모양은 CI가 본다. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있는 규칙은 여기 다시 적지 않는다 — 쌓임을 막는 원칙은 협업 규칙 7절이다.
 
@@ -66,7 +66,7 @@
 
 일은 `card` 라벨 이슈에서 [협업 규칙](docs/COLLABORATION.md) 3절의 보드 규칙대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #181](https://github.com/inlight37-design/decision-model_lab/pull/181)(`codex/merge-handoff-20261005`) — [카드 #180](https://github.com/inlight37-design/decision-model_lab/issues/180)의 병합 뒤 문서 정리. 완료 작업·다음 순서·검증 범위를 연결했다. 제품 기능 추가는 없으며 최종 CI와 병합 상태는 PR에서 확인한다.
+- **이 판을 들인 PR:** [PR #183](https://github.com/inlight37-design/decision-model_lab/pull/183)(`codex/docs-completeness-20261005`) — [카드 #182](https://github.com/inlight37-design/decision-model_lab/issues/182)의 전체 문서 점검. 오래된 사용 설명·빠진 진입점·보류 아이디어를 정리했다. 제품 기능 추가는 없으며 최종 CI와 병합 상태는 PR에서 확인한다.
 
 | 사용자만 할 수 있는 것 | 지금 |
 |---|---|
@@ -77,7 +77,7 @@
 
 ## 4. 다음 작업
 
-**페이지화·기억 확장·일반 팀원 검토 설계까지 main에 병합했다.** [완료 작업·병합 근거](docs/reviews/2026-10-05-cloud-integration/README.md)에 조사부터 구현까지 연결했다. 현재 기능·남은 제한은 [FEATURES](docs/FEATURES.md), 위치는 [문서 지도](docs/DOCUMENT-MAP.md)와 [현재 구조](app/ARCHITECTURE.md)가 기준이다. schema 17·기존 소비 기록을 유지한다. 다음 클라우드 구현은 아래 순서이며 일반 팀원 검토는 아직 설계 단계다.
+**다음 구현은 일반 팀원 검토다.** [완료 작업·병합 근거](docs/reviews/2026-10-05-cloud-integration/README.md)와 [문서 전체 점검](docs/reviews/2026-10-05-document-audit/README.md)을 연결했다. 현재 기능·남은 제한은 [FEATURES](docs/FEATURES.md), 위치는 [문서 지도](docs/DOCUMENT-MAP.md)와 [현재 구조](app/ARCHITECTURE.md)가 기준이다. schema 17·기존 소비 기록을 유지한다. 일반 팀원 검토는 아직 설계 단계이며 아래 순서로 구현한다.
 
 1. **GR-1 — 일반 팀원 교차검토.** [설계](docs/architecture/general-team-review/README.md) §2/3/7의 코드 지도·입력 계약·실패 확인표부터 읽는다. 과제·답·자료 범위·호출 수 확인, 순차 검토, 공개 조회·상태·화면·검색/사용량을 한 경로로 완성한다. 일반 `collected`를 격리 `revealed`로 바꾸지 않는다. 모의/HTTP/JavaScript 검증은 클라우드에서 가능하다.
 2. **GR-2 — 일반 작성자 수정·다른 작성자 재검토.** 자기 배정 자료만 사용하고 원본·지적·앞 판·상한·복구·일반 수정 보고를 연결한다. 완료 조건은 같은 설계 §6/7이다.
@@ -86,7 +86,7 @@
 5. **그 밖의 역할판 후속.** 혼합 배치, P7 절약 규칙, 문서함 공유, 일반 칸의 원본 앱 카드, 다듬은 문장 직접 편집, 팀 구성 제안은 필요할 때 카드로 연다. 완료 조건은 [역할판 검토](docs/reviews/2026-09-26-role-board-review/README.md) §6와 [리뷰 통합](docs/reviews/2026-09-26-review-consolidation/README.md) §6에서 가져온다. CLI 스키마 출력 전환은 [프롬프트 감사](docs/reviews/2026-09-29-prompt-audit/README.md) §4, 합성의 공통 자리 편입은 [전체 점검](docs/reviews/2026-09-29-health-review/README.md) §4를 따른다. **추론 강도는 연결하지 않았다.** 관측한 값만 넣고 그 계획으로 재관측해야 한다(RB-01).
 6. 새 카드가 필요하면 [카드 양식](.github/ISSUE_TEMPLATE/card.md)으로 만든다. 멈추거나 넘길 때는 체크포인트 다섯 줄을 쓴다.
 
-새 실험은 **헤드리스 실행** `python -m app.run`으로 한다 — 서버와 같은 준비 조회·원장·상한을 쓰고 결과 JSON 하나를 낸다([app 안내](app/README.md)의 "헤드리스 실행", 먼저 `--mock`으로 흐름 확인). 설정 파일의 모양은 같은 안내에, 만드는 예는 [D 후속의 make_configs.py](docs/experiments/2026-09-25-d-followup/make_configs.py)에 있다. 앞선 실험 폴더의 `drive.py`들은 그 기록으로 남는다.
+격리 초안·합성 실험은 **헤드리스 실행** `python -m app.run`으로 한다 — 서버와 같은 준비 조회·원장·상한을 쓰고 결과 JSON 하나를 낸다([app 안내](app/README.md)의 "헤드리스 실행", 먼저 `--mock`으로 흐름 확인). 일반 팀원·검토/수정 흐름은 화면/API를 쓴다. 설정 파일의 모양은 같은 안내에, 만드는 예는 [D 후속의 make_configs.py](docs/experiments/2026-09-25-d-followup/make_configs.py)에 있다. 앞선 실험 폴더의 `drive.py`들은 그 기록으로 남는다.
 
 ### 남은 범위 — 닫지 않은 것
 
