@@ -82,6 +82,7 @@
 | [`2026-10-05-workflow-inbox/`](2026-10-05-workflow-inbox/README.md) | 목표·완료 기준·선행 계획, 입력/생성 거래 재확인, 단계·다음 행동·종료 확인과 통합 부하 |
 | [`2026-10-05-list-pagination/`](2026-10-05-list-pagination/README.md) | 작업·타임라인·내 차례 cursor, 목록 밖 선행/실행, disposable 공개 집계와 최초/반복 조회 부하 |
 | [`2026-10-05-recall-expansion/`](2026-10-05-recall-expansion/README.md) | 별도 관련성 라벨·전후 누락/오선택/검색 비용, 오래된 공개 이력·답 본문 검색. 앞 기억 평가의 최근 후보·답 본문 한계를 보강했으며 동의어/발췌 한계는 유지 |
+| [`2026-10-05-cloud-integration/`](2026-10-05-cloud-integration/README.md) | #175·#177·#179 순차 병합, 조사·기반·기능의 완료 이력과 검증 범위 연결, 일반 검토→수정/재검토→선택 판 취합의 인계 |
 
 ## 읽는 순서
 
