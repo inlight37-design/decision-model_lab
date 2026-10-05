@@ -279,6 +279,19 @@ class Store:
                         self._db.execute("ALTER TABLE runs ADD COLUMN mode TEXT NOT NULL DEFAULT 'isolated'")
                 if version != SCHEMA_VERSION:
                     self._db.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
+                # Additive lookup indexes; after column migration so legacy ledgers
+                # can open. No new stored semantics or schema-version change.
+                for name, table, columns in (
+                        ('runs_by_task', 'runs', 'task_id, created_at DESC'),
+                        ('refinements_by_run', 'refinements', 'run_id'),
+                        ('proposals_by_run', 'proposals', 'run_id, created_at'),
+                        ('proposals_by_use', 'proposals', 'used_by'),
+                        ('splits_by_use', 'splits', 'used_by'),
+                        ('collations_by_run', 'collations', 'run_id, created_at'),
+                        ('reviews_by_run', 'reviews', 'run_id, seq'),
+                        ('revisions_by_run', 'answer_revisions', 'run_id, created_at, revision_id'),
+                        ('checks_by_revision', 'revision_checks', 'revision_id, created_at, check_id')):
+                    self._db.execute(f'CREATE INDEX IF NOT EXISTS {name} ON {table} ({columns})')
                 self._db.execute("COMMIT")
             except BaseException:
                 self._db.execute("ROLLBACK")

@@ -1,5 +1,5 @@
 "use strict";
-// 역할판 화면만의 상태. 저장된 작업·역할은 /api/state에서 받으며 브라우저에 보관하지 않는다.
+// 역할판 화면만의 상태. 저장된 작업·역할은 /api/overview에서 받으며 브라우저에 보관하지 않는다.
 const ROLE_LABELS = { supervisor: "슈퍼바이저", orchestrator: "오케스트레이터", isolated: "팀원(격리)", general: "팀원(일반)" };
 const TASK_LABELS = { working: "작업 중", my_turn: "내 차례", done: "끝남", problem: "문제" };
 const MEMBER_STATE = { queued: "대기", running: "작업 중", accepted: "받음", rejected: "실패", unknown: "종료 미확인" };
@@ -490,6 +490,7 @@ async function confirmRun() {
   // 고른다 — 창의 오류 칸에 쓰거나 다시 시작하게 하지 않는다(구조 검토 AH-05). 작업은 조회가 그 실행을 가져오면
   // render()가 채운다. 기존 작업에 붙인 실행이면 그 작업은 처음부터 안다.
   closeNewRun(); picked = []; renderPicked("");
+  selected = created.run_id;
   await refresh().catch(() => false);
   const run = ((state && state.runs) || []).find(r => r.run_id === created.run_id);
   navigateTask(run ? run.task_id : (body.task_id || null), created.run_id);
@@ -508,6 +509,7 @@ function navigateTask(taskId = null, runId = null) {
   if (runId) query.set("run", runId);
   history.replaceState(null, "", "/" + (query.size ? "?" + query : ""));
   render();
+  refresh();
 }
 function taskCard(task) {
   return h("button", { type: "button", class: "task-card cell", onclick: () => navigateTask(task.task_id) },

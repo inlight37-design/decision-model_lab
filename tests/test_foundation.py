@@ -168,12 +168,17 @@ class QueryHttpTests(support.Base):
             finally:
                 con.close()
 
-        for endpoint in ['/api/search?q=' + quote('한글'), f'/api/runs/{rid}/activity', f'/api/runs/{rid}/memory']:
+        for endpoint in ['/api/search?q=' + quote('한글'), f'/api/runs/{rid}/activity', f'/api/runs/{rid}/memory',
+                         '/api/overview', f'/api/overview?run={rid}', f'/api/runs/{rid}']:
             self.assertEqual(get(endpoint, False)[0], 401)
             self.assertEqual(get(endpoint)[0], 200)
-        for endpoint in ['/api/search', '/api/search?q=q&limit=0', '/api/search?q=a&q=b', '/api/search?q=a&other=b']:
+        for endpoint in ['/api/search', '/api/search?q=q&limit=0', '/api/search?q=a&q=b', '/api/search?q=a&other=b',
+                         '/api/overview?run=a&run=b', '/api/overview?run=', '/api/overview?other=a']:
             self.assertEqual(get(endpoint)[0], 400)
         self.assertEqual(get('/api/runs/missing/activity')[0], 409)
+        self.assertEqual(get('/api/runs/missing')[0], 404)
+        self.assertEqual(json.loads(get('/api/overview')[1])['runs'], [])
+        self.assertEqual(json.loads(get(f'/api/overview?run={rid}')[1])['runs'], ctl.view(rid)['runs'])
         self.assertEqual(get('/api.js')[0], 200)
         self.assertEqual(get('/catalog.js')[0], 200)
 

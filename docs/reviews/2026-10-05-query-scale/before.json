@@ -1,0 +1,75 @@
+{
+  "scope": "synthetic cloud ledger; no model calls",
+  "results": [
+    {
+      "runs": 100,
+      "measurements": {
+        "full_snapshot": {
+          "median_ms": 21.56,
+          "peak_bytes": 3034864,
+          "response_bytes": 2565681,
+          "statements": 1231
+        },
+        "one_detail": {
+          "median_ms": 0.58,
+          "peak_bytes": 59039,
+          "response_bytes": 26546,
+          "statements": 43
+        },
+        "search_all": {
+          "median_ms": 18.04,
+          "peak_bytes": 3161352,
+          "response_bytes": 24921,
+          "statements": 1231
+        },
+        "search_task": {
+          "median_ms": 13.79,
+          "peak_bytes": 3132740,
+          "response_bytes": 8381,
+          "statements": 1231
+        },
+        "search_question": {
+          "median_ms": 13.42,
+          "peak_bytes": 3041072,
+          "response_bytes": 7281,
+          "statements": 1231
+        }
+      }
+    },
+    {
+      "runs": 1000,
+      "measurements": {
+        "full_snapshot": {
+          "median_ms": 255.5,
+          "peak_bytes": 30099416,
+          "response_bytes": 25656621,
+          "statements": 12031
+        },
+        "one_detail": {
+          "median_ms": 0.61,
+          "peak_bytes": 59626,
+          "response_bytes": 26546,
+          "statements": 43
+        },
+        "search_all": {
+          "median_ms": 183.42,
+          "peak_bytes": 30189878,
+          "response_bytes": 24922,
+          "statements": 12031
+        },
+        "search_task": {
+          "median_ms": 151.52,
+          "peak_bytes": 30256522,
+          "response_bytes": 8381,
+          "statements": 12031
+        },
+        "search_question": {
+          "median_ms": 152.79,
+          "peak_bytes": 30234784,
+          "response_bytes": 7282,
+          "statements": 12031
+        }
+      }
+    }
+  ]
+}

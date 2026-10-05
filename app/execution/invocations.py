@@ -93,9 +93,12 @@ class InvocationLedger:
                     start.get('adapter_id'))
             return tuple(found)
 
-    def _synthesis_attempts(self, run_id: str | None = None) -> dict:
+    def _synthesis_attempts(self, run_id: str | None = None, *, summary=False) -> dict:
         """한 사건 투영을 호출 제한·자리·종료 확인·화면이 같이 사용한다. controller.lock 안에서 읽는다."""
-        rows = self.store.rows("SELECT run_id, kind, payload FROM events WHERE kind IN "
+        payload = ("json_object('attempt', json_extract(payload, '$.attempt'), 'result', "
+                   "json_object('status', json_extract(payload, '$.result.status'), "
+                   "'synthesizer', json_extract(payload, '$.result.synthesizer'))) AS payload") if summary else 'payload'
+        rows = self.store.rows(f"SELECT run_id, kind, {payload} FROM events WHERE kind IN "
                                "('synthesis_started', 'synthesis_failed', 'synthesis_completed', "
                                "'synthesis_unknown_acknowledged')" + (" AND run_id = ?" if run_id else "") +
                                " ORDER BY run_id, seq", *((run_id,) if run_id else ()))

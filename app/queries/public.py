@@ -70,9 +70,32 @@ class PublicQueries:
         self.repository = repository
 
     def search(self, query, *, task_id=None, kind=None, limit=30):
-        # A single public snapshot feeds every search category. No raw ledger text
-        # is queried by the catalog, including for counts and snippets.
-        return catalog.search(self.view(), query, task_id=task_id, kind=kind, limit=limit)
+        # Keep the same public projection, but do not materialize the whole ledger.
+        # Validation precedes all reads; counts and snippets still see public data only.
+        catalog.validate(query, task_id=task_id, kind=kind, limit=limit)
+        with self.runtime.lock:
+            rows = self.store.rows('SELECT run_id, task_id, question, phase FROM runs' +
+                                   (' WHERE task_id = ?' if task_id is not None else '') +
+                                   ' ORDER BY created_at DESC', *((task_id,) if task_id is not None else ()))
+            def public_runs():
+                for row in rows:
+                    if kind in ('question', 'source'):
+                        # Questions and source metadata are already public before reveal.
+                        yield {**dict(row), 'sources': self.repository.sources(row['run_id'])
+                               if kind == 'source' else [], 'participants': []}
+                    else:
+                        yield self.view(row['run_id'], _global=False)['runs'][0]
+            return catalog.search({'tasks': self.store.rows('SELECT task_id, title FROM tasks'),
+                                   'runs': public_runs()}, query, task_id=task_id, kind=kind, limit=limit)
+
+    def overview(self, run_id=None):
+        """List projection plus only the selected detail, from one locked snapshot."""
+        with self.runtime.lock:
+            result = self.view(_summary=True)
+            result['settled_real'] = self.store.row("SELECT COUNT(*) AS n FROM participants "
+                                                   "WHERE kind = 'real' AND state IN ('accepted', 'rejected')")['n']
+            result['runs'] = self.view(run_id, _global=False)['runs'] if run_id else []
+            return result
 
     def source(self, run_id, name):
         with self.runtime.lock:
@@ -112,7 +135,7 @@ class PublicQueries:
             return {"run_id": run_id, "pack": pack, "entries": entries,
                     "policy": "frozen_task_history", "current_sources_reselected": False}
 
-    def view(self, run_id: str | None = None) -> dict[str, Any]:
+    def view(self, run_id: str | None = None, *, _summary=False, _global=True) -> dict[str, Any]:
         """화면에 넘기는 것. 공개 전에는 제출 여부와 실행 상태의 고정된 필드만 넘긴다(BlindBarrier 계약).
 
         초안의 내용·길이·digest, 토큰 수, 걸린 시간은 공개 뒤에 넘긴다. CLI가 쓴 오류 설명과 runner 메모는 모든
@@ -123,10 +146,15 @@ class PublicQueries:
             runs = []
             # 합성 이력은 요청 하나에서 한 번만 만들어 실행별·전역 투영이 나눠 쓴다(카드 #121, S6). 같은 lock 안이라
             # 요청 사이의 캐시가 아니다 — 매 요청 새로 읽는다
-            every = self.invocations._synthesis_attempts()
-            query = "SELECT * FROM runs" + (" WHERE run_id = ?" if run_id is not None else "")
+            every = self.invocations._synthesis_attempts(None if _global else run_id, summary=_summary)
+            columns = ("run_id, created_at, question, task_id, mode, phase, min_independent, roster, "
+                       "reduction_approved, cancel_requested, quorum_policy, '' AS prompt, '' AS input_sha256, "
+                       "0 AS input_bytes, json_remove(role_config, '$.memory') AS role_config") if _summary else '*'
+            query = f"SELECT {columns} FROM runs" + (" WHERE run_id = ?" if run_id is not None else "")
             for run in self.store.rows(query + " ORDER BY created_at DESC", *(() if run_id is None else (run_id,))):
-                rows = self.store.rows("SELECT * FROM participants WHERE run_id = ? ORDER BY rowid", run["run_id"])
+                part_columns = ("pid, spec, state, status, NULL AS detail, kind, "
+                                "json_object('usage', json_extract(result, '$.usage')) AS result") if _summary else '*'
+                rows = self.store.rows(f"SELECT {part_columns} FROM participants WHERE run_id = ? ORDER BY rowid", run["run_id"])
                 current_gate = gate(run, rows)
                 general = current_gate.general
                 # 일반 팀원은 봉인하지 않는다(요청서 P6): 답·진단·실행 정보를 끝나는 대로 보인다. 다른 실행의 봉인된
@@ -134,11 +162,11 @@ class PublicQueries:
                 revealed, settled = current_gate.revealed, current_gate.settled or current_gate.revealed or general
                 keep = SEALED_VIEW_KEYS | (DIAGNOSTIC_KEYS if settled else frozenset())
                 assigned = {row["pid"]: row for row in self.store.rows(
-                    "SELECT * FROM assignments WHERE run_id = ?", run["run_id"])} if general else {}
+                    "SELECT * FROM assignments WHERE run_id = ?", run["run_id"])} if general and not _summary else {}
                 parts, calls = [], {"succeeded": 0, "failed": 0, "unknown": 0}
                 # 받은 답은 실행마다 한 번에 읽는다(참여자마다 읽지 않는다, S6). 공개 뒤·일반 실행에만 싣는다
                 drafts = {d["pid"]: d for d in self.store.rows(
-                    "SELECT pid, source, sha256, text FROM drafts WHERE run_id = ?", run["run_id"])}                     if revealed or general else {}
+                    "SELECT pid, source, sha256, text FROM drafts WHERE run_id = ?", run["run_id"])} if (revealed or general) and not _summary else {}
                 for p in rows:
                     spec = ParticipantSpec(**json.loads(p["spec"]))
                     result = json.loads(p["result"]) if p["result"] else None
@@ -164,7 +192,7 @@ class PublicQueries:
                         item["assignment"] = {"task": work["task"], "prompt": work["prompt"],
                                               "input_sha256": work["input_sha256"], "input_bytes": work["input_bytes"],
                                               "sources": json.loads(work["sources"])}
-                    if current_gate.accepting and spec.transport == MANUAL and p["state"] == AWAITING_USER:
+                    if not _summary and current_gate.accepting and spec.transport == MANUAL and p["state"] == AWAITING_USER:
                         item["packet"] = packet(run["run_id"], spec.pid, run["input_sha256"], run["prompt"])
                     if (revealed or general) and p["state"] == ACCEPTED:
                         draft = drafts.get(spec.pid)
@@ -183,7 +211,7 @@ class PublicQueries:
                              "reviewed": judged and reviewed,   # 지금 결과 판을 판단 완료했는가(AH-01)
                              "review_memo": memo if judged and reviewed else None,
                              "prompt": run["prompt"], "input_sha256": run["input_sha256"],
-                             "input_bytes": run["input_bytes"], "sources": self.repository.sources(run["run_id"]),
+                             "input_bytes": run["input_bytes"], "sources": [] if _summary else self.repository.sources(run["run_id"]),
                              "phase": run["phase"],
                              "min_independent": run["min_independent"], "note": current_gate.note,
                              "quorum": quorum, "gate": current_gate.public(),
@@ -199,29 +227,31 @@ class PublicQueries:
                                                      if any(p["execution"] == contract.REAL for p in parts) else 0),
                                         "manual": sum(1 for p in parts if p["transport"] == MANUAL)},
                              "participants": parts,
-                             "events": [e["kind"] for e in reversed(self.store.rows(
+                             "events": [] if _summary else [e["kind"] for e in reversed(self.store.rows(
                                  "SELECT kind FROM events WHERE run_id = ? ORDER BY seq DESC LIMIT 12", run["run_id"]))]})
                 refined = self.store.row("SELECT * FROM refinements WHERE run_id = ?", run["run_id"])
                 # 원래 목표(원문)와 실제로 보낸 질문을 나란히 보이려고 싣는다(P9). 다듬기는 실행 전의 일이라 봉인과 무관하다
-                runs[-1]["refinement"] = self._refinement_view(refined) if refined else None
+                runs[-1]["refinement"] = self._refinement_view(refined, summary=_summary) if refined else None
                 came = self.store.row("SELECT proposal_id, run_id FROM proposals WHERE used_by = ?", run["run_id"])
                 runs[-1]["proposal"] = {"proposal_id": came["proposal_id"], "source_run": came["run_id"]} if came else None
-                divided = self.store.row("SELECT * FROM splits WHERE used_by = ?", run["run_id"])
-                runs[-1]["split"] = self._split_view(divided) if divided else None   # 일반 실행의 분담 제안(#135)
+                divided = self.store.row(f"SELECT {self._seat_columns('splits') if _summary else '*'} FROM splits WHERE used_by = ?", run["run_id"])
+                runs[-1]["split"] = (self._seat_summary(divided, 'orchestrator') if _summary else self._split_view(divided)) if divided else None
                 if judged:
                     runs[-1]["result_revision"] = revision   # 판단 완료 버튼이 이 판을 함께 보낸다. 공개·모음 뒤에만 싣는다
                 if general and current_gate.collected:
                     # 결과 모으기는 모두 끝난 일반 실행의 일이다(#137). 그 전에는 부를 수도 없고 목록도 비어 있다
-                    runs[-1]["collations"] = [self._collation_view(row) for row in self.store.rows(
-                        "SELECT * FROM collations WHERE run_id = ? ORDER BY created_at", run["run_id"])]
+                    runs[-1]["collations"] = [(self._seat_summary(row, 'orchestrator') if _summary else self._collation_view(row)) for row in self.store.rows(
+                        f"SELECT {self._seat_columns('collations') if _summary else '*'} FROM collations WHERE run_id = ? ORDER BY created_at", run["run_id"])]
                 if revealed:
                     # 다음 단계 제안은 공개 뒤의 일이다. 봉인 중에는 부를 수도 없고 목록도 비어 있다
-                    runs[-1]["proposals"] = [self._proposal_view(row) for row in self.store.rows(
-                        "SELECT * FROM proposals WHERE run_id = ? ORDER BY created_at", run["run_id"])]
+                    runs[-1]["proposals"] = [(self._seat_summary(row, 'supervisor') if _summary else self._proposal_view(row)) for row in self.store.rows(
+                        f"SELECT {self._seat_columns('proposals') if _summary else '*'} FROM proposals WHERE run_id = ? ORDER BY created_at", run["run_id"])]
                     # 공개 뒤 교차검토 라운드(#140). 없으면 None
-                    runs[-1]["cross_review"] = self._cross_review_view(run["run_id"], drafts)
-                    runs[-1]['answer_revisions'] = self._revisions_view(run['run_id'])
-                    artifact = self.store.row("SELECT payload FROM events WHERE run_id = ? "
+                    runs[-1]["cross_review"] = ({'reviews': [self._seat_summary(row, 'reviewer') for row in self.store.rows(
+                        f"SELECT {self._seat_columns('reviews')} FROM reviews WHERE run_id = ? ORDER BY seq", run['run_id'])]}
+                        if _summary else self._cross_review_view(run["run_id"], drafts))
+                    runs[-1]['answer_revisions'] = self._revisions_view(run['run_id'], summary=_summary)
+                    artifact = None if _summary else self.store.row("SELECT payload FROM events WHERE run_id = ? "
                                               "AND kind = 'synthesis_completed' ORDER BY seq DESC LIMIT 1", run["run_id"])
                     if artifact:
                         runs[-1]["synthesis"] = json.loads(artifact["payload"])["result"]
@@ -233,6 +263,8 @@ class PublicQueries:
                 # 실행의 토큰 합계(카드 #141). 봉인 중에는 싣지 않는다 — 참여자가 볼 수 있는 채널로 새지 않게
                 # (2026-09-24 검토 8번). 일반 실행은 봉인이 없어 처음부터 싣는다
                 runs[-1]["usage"] = token_usage.for_run(runs[-1]) if revealed or general else None
+            if not _global:
+                return {'runs': runs}
             unsettled = self.invocations.unsettled(every)
             # 대기 시도를 controller가 지금 시작하지 않고, 사람이 무언가 해야 풀리는 이유(N3). pump()가 멈추는 두 조건에
             # 더해, 종료 미확인 시도가 병렬 자리를 모두 쥔 경우도 같다 — 진행 중인 시도가 끝나서 풀리는 자리가 아니다.
@@ -261,6 +293,20 @@ class PublicQueries:
                     "slots": {"used": self.invocations._slots_used(every), "cap": self.runtime.max_parallel},
                     "unsettled": {"count": unsettled, "limit": self.runtime.unsettled_limit},
                     "paused": self.runtime.paused, "runs": runs}
+
+    @staticmethod
+    def _seat_columns(table):
+        # Only status and usage are needed for the overview. Never fetch prompt,
+        # answer, raw result or copied targets just to render a task row.
+        card = {'splits': 'orchestrator', 'collations': 'orchestrator', 'proposals': 'supervisor',
+                'reviews': 'reviewer', 'answer_revisions': 'author', 'revision_checks': 'reviewer'}[table]
+        identity = 'revision_id, ' if table == 'answer_revisions' else ''
+        return identity + f"state, status, kind, {card}, json_object('observation', json_extract(result, '$.observation')) AS result"
+
+    @staticmethod
+    def _seat_summary(row, card):
+        return {'state': row['state'], 'status': row['status'], 'execution': row['kind'],
+                card: _card(json.loads(row[card])), **_seat_result(row)}
 
 
     def claude_account_limit(self) -> dict[str, Any] | None:
@@ -292,7 +338,13 @@ class PublicQueries:
         return None
 
 
-    def _revisions_view(self, run_id):
+    def _revisions_view(self, run_id, *, summary=False):
+        if summary:
+            return [{**self._seat_summary(row, 'author'), 'rechecks': [self._seat_summary(check, 'reviewer')
+                     for check in self.store.rows(f"SELECT {self._seat_columns('revision_checks')} FROM revision_checks "
+                                                  'WHERE revision_id = ? ORDER BY created_at, check_id', row['revision_id'])]}
+                    for row in self.store.rows(f"SELECT {self._seat_columns('answer_revisions')} FROM answer_revisions "
+                                               'WHERE run_id = ? ORDER BY created_at, revision_id', run_id)]
         variants = []
         for row in self.store.rows('SELECT * FROM answer_revisions WHERE run_id = ? ORDER BY created_at, revision_id', run_id):
             checks = [{**{k: r[k] for k in ('check_id', 'created_at', 'state', 'status', 'answer_sha256', 'input_sha256', 'prompt')},
@@ -370,10 +422,12 @@ class PublicQueries:
                 **_seat_result(row)}
 
 
-    def _refinement_view(self, row) -> dict[str, Any]:
+    def _refinement_view(self, row, *, summary=False) -> dict[str, Any]:
         """다듬기 한 건의 화면 투영. 원문·차례별 보낸 입력·받은 답(또는 실패 이유와 원문)·사람이 쓴 말을 그대로 보인다."""
         turns = []
-        for turn in self.store.rows("SELECT * FROM refine_turns WHERE refine_id = ? ORDER BY turn", row["refine_id"]):
+        columns = ("turn, '' AS note, state, status, kind, '' AS prompt, '' AS input_sha256, "
+                   "json_object('observation', json_extract(result, '$.observation')) AS result") if summary else '*'
+        for turn in self.store.rows(f"SELECT {columns} FROM refine_turns WHERE refine_id = ? ORDER BY turn", row["refine_id"]):
             turns.append({"turn": turn["turn"], "note": turn["note"], "state": turn["state"], "status": turn["status"],
                           "execution": turn["kind"], "prompt": turn["prompt"], "input_sha256": turn["input_sha256"],
                           **_seat_result(turn)})

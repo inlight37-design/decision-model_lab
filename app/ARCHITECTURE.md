@@ -68,7 +68,9 @@ flowchart TD
 
 **명령:** 기존 facade → 담당 application service → 입력·gate 확인 → 같은 SQLite 거래의 상태/예약/시작 사건 → coordinator thread → native 관측 → 조건부 결과 저장·공개 → 후속 검토 배정. 실행이 끝나도 저장에 실패하면 그 사실을 남기고 재호출로 덮지 않는다.
 
-**조회:** facade → PublicQueries의 동일 lock 안 snapshot → 허용 필드 → 화면/보고서/검색. 검색 건수와 미리보기도 공개 snapshot에서 계산한다. 검색을 위해 원장을 쓰거나 모델을 부르지 않는다. 검색은 현재 로컬 원장의 문구 일치 방식이며 전체 공개 snapshot을 읽는다. 응답은 제한하지만 큰 원장의 처리량 최적화나 FTS 효과를 입증한 것은 아니다.
+**조회:** facade → PublicQueries의 동일 lock 안 projection → 허용 필드 → 화면/보고서/검색. 화면은 답·입력·자료 전문을 읽지 않는 작업 목록과 선택한 실행의 상세만 받는다. 작업 상태·호출·사용량은 기존 gate와 task projection으로 계산한다. 검색은 작업 필터를 먼저 적용하고 실행별 공개 projection을 순서대로 소비한다. 질문/자료 종류만 찾을 때는 답을 읽지 않는다. 전체 문구 검색은 여전히 선형 순회이며 FTS·의미 검색은 없다. [합성 부하 기록](../docs/reviews/2026-10-05-query-scale/README.md)은 사용자 PC 실측과 구분한다.
+
+조회 변경 시 `python tools/benchmark_queries.py --runs 100 1000`으로 임시 합성 원장의 시간·응답 크기·Python 메모리·SQL 횟수를 비교한다. 실제 원장·모델을 사용하지 않으며 실행 후 임시 원장을 지운다. 시간은 CI 합격 기준으로 고정하지 않는다. 전체 작업 타임라인은 아직 모두 읽으므로 아주 큰 원장의 페이지화는 후속 후보다.
 
 **검토 배정:** 실행 coordinator는 조립 때 받은 `advance_reviews` callback으로 다음 준비된 검토자를 알린다. callback은 같은 lock과 호출 관문을 이용한다. 서비스 import의 순환이나 새 daemon은 없다. 사용자 확인·한 라운드·종료 미확정 중단 조건은 유지된다.
 
@@ -78,6 +80,7 @@ flowchart TD
 
 | API | 반환·용도 |
 |---|---|
+| `GET /api/overview?run=…`, `GET /api/runs/{id}` | 목록과 선택한 상세를 같은 lock에서 조회, 또는 실행 상세만 조회. 기존 `/api/state` 전체 형식은 호환 유지 |
 | `GET /api/search?q=…&task=…&kind=…&limit=…` | 질문·답·검토·판단·합성·자료 이름/해시 검색. task/kind 선택, 최대 응답 한도, 잘린 결과 표시 |
 | `GET /api/runs/{id}/activity` | 실제 attempt가 있는 역할들의 공통 호출 기록. 입력·답·시간·usage·digest 없이 ID/종류/상태/원본 key만 |
 | `GET /api/runs/{id}/memory` | 그 실행에서 고정한 pack·선택 근거·출처 가용성. 지금 다시 선택하지 않음 |
