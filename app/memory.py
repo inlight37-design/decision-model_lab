@@ -94,6 +94,18 @@ def select(store, task_id, query, *, enabled=True):
         lines = ["이전 질문: " + context["question"], "사람의 판단 메모: " +
                  ((judgment.get("memo") or "판단 완료 · 메모 없음") if judgment else "판단 기록 없음"),
                  "교차검토: " + (json.dumps(context["reviews"], ensure_ascii=False) if reviews else "기록 없음")]
+        variants = []
+        for v in store.rows('SELECT * FROM answer_revisions WHERE run_id = ? ORDER BY created_at, revision_id', rid):
+            reply = json.loads(v['result'] or '{}').get('reply')
+            if v['state'] != 'accepted' or not reply or digest(reply['answer'].encode('utf-8')) != reply['sha256']:
+                continue
+            checks = [{'id': c['check_id'], 'state': c['state'], 'reply': json.loads(c['result'] or '{}').get('reply')}
+                      for c in store.rows('SELECT * FROM revision_checks WHERE revision_id = ? ORDER BY created_at, check_id', v['revision_id'])
+                      if c['answer_sha256'] == reply['sha256'] and digest(c['answer'].encode('utf-8')) == reply['sha256']]
+            variants.append({'id': v['revision_id'], 'pid': v['pid'], 'parent_id': v['parent_id'], 'sha256': reply['sha256']})
+            lines += ['수정 답 · 공개 뒤 작성 · 사실 검증 안 함: ' + json.dumps(variants[-1], ensure_ascii=False),
+                      '지적별 대응: ' + json.dumps(reply['responses'], ensure_ascii=False),
+                      '재검토: ' + json.dumps(checks, ensure_ascii=False), reply['answer']]
         for answer in context["answers"]:
             lines += [f"답변 {answer['pid']} · 실행 종류 {answer['execution']} · 원본 sha256 {answer['sha256']}",
                       answer["text"]]
@@ -106,6 +118,8 @@ def select(store, task_id, query, *, enabled=True):
                  "selection": {"policy": "task-public-lexical-v1", "rank": rank,
                                "overlap_count": len(matched), "overlap_terms": matched[:32],
                                "recent_fallback": not matched}}
+        if variants:
+            entry['revision_sources'] = variants  # Locate omitted variants even when the excerpt hits its cap.
         body = {k: v for k, v in pack.items() if k != "sha256"}
         body["entries"] = [*pack["entries"], entry]
         candidate = {**body, "sha256": digest(encoded(body))}

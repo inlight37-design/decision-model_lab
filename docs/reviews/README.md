@@ -75,6 +75,7 @@
 | [`2026-10-04-anchormind/`](2026-10-04-anchormind/README.md) | codex(사용자 PC)의 AnchorMind 기능·저장/검색/회고 파이프라인 코드 검토. 출처 포함 고정 자료, 검색 예산·평가, 사건 이력의 선택적 적용안과 strict 참여자 연결·실행기 이식의 제약. 제품 코드 변경·추가 모델 호출 없음 |
 | [`2026-10-04-foundation/`](2026-10-04-foundation/README.md) | codex(클라우드)의 개편 전 최종 대조·서비스 기반 재구성, 공개 검색·기억 근거·호출 기록. 기존 snapshot/사건 비교·경계 회귀·Chromium 확인과 실제 PC 미검증 범위. 후속 Windows CI에서 새 검사의 UTF-8 지정 누락을 발견·수정했으며 최종 결과는 [PR #161](https://github.com/inlight37-design/decision-model_lab/pull/161)에 기록 |
 | [`2026-10-04-templates/`](2026-10-04-templates/README.md) | 기반 전체 흐름 확인과 사용자 지시에 따른 통합, 팀·작업 템플릿·자료 사본·새 확인·파일 이동·원장 이전 검증 |
+| [`2026-10-05-revisions/`](2026-10-05-revisions/README.md) | 지적→별도 수정 판→재검토, 원문 보존·공통 호출 수명·검색/기억/내보내기·브라우저 검증 |
 
 ## 읽는 순서
 

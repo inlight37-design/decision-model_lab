@@ -50,6 +50,13 @@ def search(snapshot, query, *, task_id=None, kind=None, limit=30):
             if participant.get('draft') is not None:
                 add(run, 'answer', participant['pid'], participant['label'], participant['draft'])
         review = run.get('cross_review')
+        for variant in run.get('answer_revisions', []):
+            if variant.get('reply'):
+                add(run, 'answer', variant['revision_id'], '수정 답 · ' + variant['author']['label'], variant['reply']['answer'])
+                add(run, 'review', variant['revision_id'], '수정 대응 · ' + run['question'], variant['reply']['responses'])
+            for check in variant['rechecks']:
+                if check.get('reply'):
+                    add(run, 'review', check['check_id'], '재검토 · ' + run['question'], check['reply'])
         if review:
             add(run, 'review', run['run_id'], '교차검토 · ' + run['question'], review)
         if run.get('reviewed'):

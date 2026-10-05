@@ -9,6 +9,7 @@ from __future__ import annotations
 from copy import deepcopy
 import hashlib
 from typing import Any
+from app import revisions
 
 # 3: 참여자마다 시도에 저장한 실행 종류(execution)를 싣고, 출처의 "지금 붙은 실행기"는 뺐다(G6).
 # 4: 입력에 실행을 만들 때 고정한 공통 자료 목록(이름·sha256·크기)을 싣는다. 자료 내용은 원장에만 둔다.
@@ -119,3 +120,35 @@ def decision_report(run: dict[str, Any], draft_report: dict[str, Any]) -> dict[s
         return None
     return {"schema": DECISION_SCHEMA, "draft_report": draft_report, "synthesis": synthesis,
             "model_syntheses": attempts, "usage": run.get("usage")}
+
+
+def revision_report(view, run_id):
+    """Separate post-review history; legacy draft/synthesis inputs stay immutable."""
+    original = build_report(view, run_id)
+    run = next(r for r in view['runs'] if r['run_id'] == run_id)
+    drafts = {p['pid']: p for p in original['participants'] if p['state'] == 'accepted'}
+    prior, variants = {}, []
+    for v in run.get('answer_revisions', []):
+        source = v['snapshot']
+        initial = drafts.get(v['pid'], {})
+        base = prior.get(v['parent_id']) if v['parent_id'] else {'answer': initial.get('draft'), 'sha256': initial.get('draft_sha256')}
+        if (revisions.digest(revisions.encoded(source)) != v['snapshot_sha256'] or
+                revisions.digest(v['prompt']) != v['input_sha256'] or not base or
+                source['original'] != {'text': initial.get('draft'), 'sha256': initial.get('draft_sha256')} or
+                source['base'] != {'revision_id': v['parent_id'], 'text': base['answer'], 'sha256': base['sha256']}):
+            raise ReportError('revision input or parent digest mismatch')
+        if v['reply']:
+            if revisions.digest(v['reply']['answer']) != v['reply']['sha256']:
+                raise ReportError('revision answer digest mismatch')
+            prior[v['revision_id']] = v['reply']
+        for check in v['rechecks']:
+            if (not v['reply'] or check['answer_sha256'] != v['reply']['sha256'] or
+                    revisions.digest(check['prompt']) != check['input_sha256']):
+                raise ReportError('recheck input digest mismatch')
+        # Explicit new schema; no future projection fields leak into this export.
+        variants.append({k: deepcopy(v[k]) for k in ('revision_id', 'pid', 'parent_id', 'created_at', 'state', 'status',
+            'snapshot', 'snapshot_sha256', 'input_sha256', 'author', 'execution', 'reply', 'reason', 'raw', 'rechecks')})
+    return {'schema': 'decision-revision-history/1', 'draft_report': original, 'revisions': variants,
+            'human_judgment': {'reviewed': run['reviewed'], 'memo': run.get('review_memo')},
+            'factual_check': 'not_performed', 'independence': 'post_reveal_not_independent',
+            'synthesis_scope': 'original_drafts_only'}

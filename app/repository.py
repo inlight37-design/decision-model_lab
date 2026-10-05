@@ -61,7 +61,9 @@ class RunRepository:
             "'proposal_completed', 'proposal_failed', 'collation_completed', 'collation_failed', "
             "'review_completed', 'review_failed', 'review_skipped', "
             # 종료 미확인도 새 결과다 — 종료 확인이 판단을 대신하지 않게 판을 올린다(Codex 교차검토, PR #144)
-            "'proposal_unknown', 'collation_unknown', 'review_unknown') "
+            "'proposal_unknown', 'collation_unknown', 'review_unknown', "
+            "'revision_completed', 'revision_failed', 'revision_unknown', 'revision_result_not_stored', "
+            "'recheck_completed', 'recheck_failed', 'recheck_unknown', 'recheck_result_not_stored') "
             "THEN seq END), 0) AS revision, "
             "COALESCE(MAX(CASE WHEN kind = 'human_reviewed' THEN seq END), 0) AS reviewed "
             "FROM events WHERE run_id = ?", run_id)

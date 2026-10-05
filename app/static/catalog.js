@@ -3,7 +3,8 @@
 const CATALOG_KIND = {question: "질문·작업", answer: "답변", review: "교차검토", decision: "사람의 판단",
                       synthesis: "합성·결과 모음", source: "자료 이름·해시"};
 const CALL_KIND = {draft: "팀원 답변", refine: "질문 다듬기", next_step: "다음 단계", split: "분담 제안",
-                   collate: "결과 모음", cross_review: "교차검토", synthesis: "합성"};
+                   collate: "결과 모음", cross_review: "교차검토", synthesis: "합성",
+                   answer_revision: "수정 답", revision_recheck: "수정 답 재검토"};
 const CALL_STATE = {running: "실행 중", accepted: "수용", rejected: "실패·거절", unknown: "종료 미확인",
                     completed: "완료", failed: "실패", acknowledged: "종료를 사람이 확인함"};
 const catalogRequest = new LatestRequest();

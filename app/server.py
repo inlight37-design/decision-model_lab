@@ -34,7 +34,7 @@ if __package__ in (None, ""):  # `python app/server.py`로 실행해도 저장�
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.controller import CLI, Controller, ControllerError, ParticipantSpec
-from app.report import ReportError, build_report, decision_report
+from app.report import ReportError, build_report, decision_report, revision_report
 from app.store import LedgerBusy, Store, StoreError
 from app.live_config import Provider, load as load_live_config
 from app.account_quota import AccountQuota
@@ -48,6 +48,7 @@ ASSETS = {"/island-ui/themes.css": ("island-ui/themes.css", "text/css; charset=u
           "/api.js": ("api.js", "text/javascript; charset=utf-8"),
           "/catalog.js": ("catalog.js", "text/javascript; charset=utf-8"),
           "/templates.js": ("templates.js", "text/javascript; charset=utf-8"),
+          "/revisions.js": ("revisions.js", "text/javascript; charset=utf-8"),
           "/role-board.js": ("role-board.js", "text/javascript; charset=utf-8"),
           "/role-board.css": ("role-board.css", "text/css; charset=utf-8"),
           "/island-ui/base.css": ("island-ui/base.css", "text/css; charset=utf-8"),
@@ -249,6 +250,11 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                                  "behaviors": list(behaviors), "live": live,
                                  "context_unverified": bool(getattr(controller.executor,
                                                                      "allow_context_unverified", False))})
+            elif len(parts) == 4 and parts[:2] == ['api', 'runs'] and parts[3] == 'revision-report':
+                try:
+                    self._json(200, revision_report(controller.view(parts[2]), parts[2]))
+                except (ReportError, KeyError, ValueError, TypeError) as exc:
+                    self._json(409, {'error': str(exc)})
             elif len(parts) == 4 and parts[:2] == ["api", "runs"] and parts[3] == "report":
                 try:
                     self._json(200, build_report(controller.view(parts[2]), parts[2]))
@@ -402,6 +408,16 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                 elif len(parts) == 4 and parts[:2] == ["api", "reviews"] and parts[3] == "disposition":
                     controller.set_review_disposition(parts[2], body.get("finding"), body.get("disposition"))
                     self._json(200, {"ok": True})
+                elif len(parts) == 5 and parts[:2] == ['api', 'runs'] and parts[3:] == ['revisions', 'preview']:
+                    self._json(200, controller.revisions.prepare(parts[2], _text(body, 'pid')))
+                elif len(parts) == 4 and parts[:2] == ['api', 'runs'] and parts[3] == 'revisions':
+                    self._json(200, {'revision_id': controller.revisions.revise(parts[2], _text(body, 'pid'),
+                        _text(body, 'revision_id'), _text(body, 'confirmation'))})
+                elif len(parts) == 4 and parts[:2] == ['api', 'revisions'] and parts[3] == 'recheck':
+                    self._json(200, {'check_id': controller.revisions.recheck(parts[2], _text(body, 'reviewer_pid'))})
+                elif len(parts) == 4 and parts[0] == 'api' and parts[1] in ('revisions', 'rechecks') and parts[3] == 'acknowledge':
+                    controller.revisions.acknowledge(parts[2], recheck=parts[1] == 'rechecks')
+                    self._json(200, {'ok': True})
                 elif parts == ["api", "resume"]:
                     controller.resume()
                     self._json(200, {"ok": True})
