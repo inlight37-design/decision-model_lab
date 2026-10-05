@@ -9,6 +9,7 @@
 | 문서 | 역할 |
 |---|---|
 | [개편 준비서](redesign-2026-10-04/README.md) / [우선순위](redesign-2026-10-04/PRIORITIES.md) | 현재 코드와 격차, 목표 책임·상태 계약·교체 순서·기대 효용 |
+| [일반 팀원 교차검토 설계](general-team-review/README.md) | 미구현 후속: 팀원별 과제·자료 경계, 공유 실행 구조, 호출 비용, 구현 순서·완료 조건 |
 | [v0.4 사례와 반례](v0.4/01-cases-and-findings.md) | 실제 council/critique 제품, 공개 코드 검토, 성과와 실패 근거 |
 | [v0.4 상급 협업 설계](v0.4/02-frontier-architecture.md) | 네 실행 모드, 독립 초안·제한 검토·검증·미합의, D10–D18 |
 | [v0.4 평가·ticket](v0.4/03-evaluation-and-roadmap.md) | 같은 예산 단일 모델/ensemble 대조군, 오류 전이, 단계별 구현 |

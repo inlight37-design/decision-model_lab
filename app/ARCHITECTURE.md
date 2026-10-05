@@ -81,6 +81,8 @@ flowchart TD
 
 **검토 배정:** 실행 coordinator는 조립 때 받은 `advance_reviews` callback으로 다음 준비된 검토자를 알린다. callback은 같은 lock과 호출 관문을 이용한다. 서비스 import의 순환이나 새 daemon은 없다. 사용자 확인·한 라운드·종료 미확정 중단 조건은 유지된다.
 
+현재 교차검토·수정·재검토는 격리 실행의 공개 이후에만 가능하다. 일반 팀원으로 넓히는 [구현 전 설계](../docs/architecture/general-team-review/README.md)는 기존 실행·예약을 재사용하면서 팀원별 과제·자료, 공개 조회·상태·보고서 경계를 함께 바꾸는 순서를 정한다. 일반 실행은 `collected`를 유지하며 이 제안은 아직 명령/API·schema에 반영하지 않았다.
+
 ## API와 호환
 
 기존 `/api/state`, 실행/다듬기/검토/합성 명령, 보고서, `python -m app.run`은 계속 같은 facade를 사용한다. 추가한 읽기는 다음과 같다. 모두 기존 Host/Origin/token 검사를 통과해야 한다.
