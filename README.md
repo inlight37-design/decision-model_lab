@@ -11,7 +11,7 @@ Jev류 판단 모델은 교체 가능한 선택 부품이며, 전체 시스템�
 
 ## 이어서 작업한다면
 
-**[NEXT-SESSION.md](NEXT-SESSION.md)부터 읽습니다.** 환경, 확정된 방침, 열린 결정, 다음 작업이 한 장에 있습니다. **새 컴퓨터에서 처음 연다면 [docs/SETUP.md](docs/SETUP.md)를 먼저 합니다** — PowerShell 명령 한 줄이 도구·clone·WSL·Ubuntu·CLI·로그인·확인을 순서대로 진행하고, 사람은 관리자 승인·Ubuntu 사용자·브라우저 로그인 승인만 합니다. 남은 일·못 고치는 것·조사 거리는 [검토 요청서](docs/reviews/2026-09-25-review-request/README.md)에 모았습니다.
+**[NEXT-SESSION.md](NEXT-SESSION.md)부터 읽습니다.** 환경, 확정된 방침, 열린 결정, 다음 작업이 한 장에 있습니다. **새 컴퓨터에서 처음 연다면 [docs/SETUP.md](docs/SETUP.md)를 먼저 합니다** — PowerShell 명령 한 줄이 도구·clone·WSL·Ubuntu·CLI·로그인·확인을 순서대로 진행하고, 사람은 관리자 승인·Ubuntu 사용자·브라우저 로그인 승인만 합니다. 현재 남은 일은 [후속 우선순위](docs/FEATURES.md#후속-우선순위)와 인계 4절이 기준입니다. [9월 25일 검토 요청서](docs/reviews/2026-09-25-review-request/README.md)는 당시 문제와 판단의 근거로 보존합니다.
 
 | 갈래 | 위치 |
 |---|---|
@@ -27,7 +27,7 @@ Jev류 판단 모델은 교체 가능한 선택 부품이며, 전체 시스템�
 
 ## 지금 읽을 문서
 
-구조를 손볼 때는 **[통합 개편 준비서](docs/architecture/redesign-2026-10-04/README.md)**에서 시작합니다. 아래 [v0.4](docs/architecture/v0.4/README.md)는 협업 설계의 기반입니다. 지금 상태와 다음 일은 **[NEXT-SESSION.md](NEXT-SESSION.md)**에 있습니다([v0.4 HANDOFF](docs/architecture/v0.4/HANDOFF.md)는 2026-09-22 판).
+구조를 손볼 때는 **[현재 실행 아키텍처](app/ARCHITECTURE.md)**에서 실제 책임을 확인하고, 목표·대안·개편 전 격차는 [통합 개편 준비서](docs/architecture/redesign-2026-10-04/README.md)로 내려갑니다. 아래 [v0.4](docs/architecture/v0.4/README.md)는 협업 설계의 기반입니다. 지금 상태와 다음 일은 **[NEXT-SESSION.md](NEXT-SESSION.md)**에 있습니다([v0.4 HANDOFF](docs/architecture/v0.4/HANDOFF.md)는 2026-09-22 판).
 
 | 문서 | 내용 |
 |---|---|

@@ -22,7 +22,7 @@
 | 원본 앱 답 참여시키기 | 사람이 전달문을 옮기고 답을 붙여 넣음. 입력·독립성·사용량은 자동 검증하지 않음 | [실행 조정](../app/execution/coordinator.py), [화면](../app/static/index.html) | [앱 사용법](../app/README.md) |
 | 결과를 모으고 비교하기 | 일반 결과 취합·격리 결과 합성, 원문 인용 대조, 미확인 주장 표시 | [검토 명령](../app/application/reviews.py), [합성 명령](../app/application/synthesis.py) | [취합 검사](../tests/test_collate.py), [합성 검사](../tests/test_model_synthesis.py) |
 | 서로의 답을 검토시키기 | 격리 실행의 공개 뒤 한 라운드, 원문 인용 대조, 지적별 처분·미해결 보존, 보고서 반영 | [검토 명령](../app/application/reviews.py), [cross_review 형식](../app/cross_review.py), [report](../app/report.py) | [교차검토 검사](../tests/test_cross_review.py), 실제 관측은 인계. 일반 팀원은 아래 설계 단계 |
-| 검토 지적으로 답 고치기 | 격리 실행에서 입력 확인→원래 작성자의 별도 수정 판→다른 팀원 재검토. 원본·반례 보존과 전후 비교 | [수정 명령](../app/application/revisions.py), [화면](../app/static/revisions.js) | [수정·복구 검사](../tests/test_revisions.py). 수정/재검토 각 상한, 사실 검증 아님 |
+| 검토 지적으로 답 고치기 | 격리 실행에서 입력 확인→원래 작성자의 별도 수정 판→다른 팀원 재검토. 원본·반례 보존과 전후 비교 | [수정 명령](../app/application/revisions.py), [화면](../app/static/revisions.js) | [사용 순서](../app/README.md#검토-지적으로-답-고치기), [수정·복구 검사](../tests/test_revisions.py). 수정/재검토 각 상한, 사실 검증 아님 |
 | 다음 단계를 제안받기 | 슈퍼바이저가 공개 결과를 보고 계속/종료·다음 질문 제안. 자동 실행은 안 함 | [계획 명령](../app/application/planning.py), [next_step 형식](../app/next_step.py) | [앱 사용법](../app/README.md) |
 | 사람이 판단하고 기록하기 | 결과 판을 확인해 메모·판단 완료 저장, 새 결과는 다시 확인 | [검토 명령](../app/application/reviews.py), [행·판 계약](../app/repository.py) | [일반 팀원 검사](../tests/test_general_team.py), [역할판 검사](../tests/test_role_board.py) |
 | 비용과 상태 보기 | 호출 예약·사용량·실패·종료 미확인, 계정 한도 조회와 오래된 값 표시 | [usage](../app/usage.py), [account_quota](../app/account_quota.py) | [사용량](../tests/test_usage.py), [한도](../tests/test_account_quota.py) 검사. 토큰 추정과 구독 차감량은 다름 |
@@ -98,3 +98,7 @@
 실행 기반은 [core 안내](../core/README.md)에 모았다. shell 없는 CLI runner, 환경 변수 정책, 읽기 전용·PID 격리, 자손 종료 확인, 입력 전달·CLI 출력 해석, 정족수, 취소·재시작, SQLite 예약·상한이 이에 해당한다. 모의 실행과 실제 구독 실행은 명시적으로 구분한다.
 
 일반 작업과 격리 작업의 혼합 배치, 일반 작업의 교차검토, 추론 강도 선택, 자동 원본 앱 조작, 전역 기억, 유료 API 자동 대체는 현재 기능으로 소개하지 않는다. 진행 중 작업과 남은 관측 한계는 [인계](../NEXT-SESSION.md), 설계 제안은 [v0.4](architecture/v0.4/README.md), 외부 아이디어의 출처와 적용 여부는 [참고 지도](REFERENCE-MAP.md)에서 찾는다.
+
+## 보류한 아이디어
+
+[카드 #127 — 곁가지 질문 세션](https://github.com/inlight37-design/decision-model_lab/issues/127)은 본 대화의 맥락을 제한해서 빌려 별도 질문에 답하는 구상이다. 사용자가 “나중에 생각하고 아이디어만 보관”하기로 했으므로 GR-1의 선행 작업이나 자동 착수 대상으로 넣지 않는다. 시작할 때 기존 fork/곁가지 기능과의 중복·개인 대화 범위·호출 비용·완료 조건을 다시 정한다.

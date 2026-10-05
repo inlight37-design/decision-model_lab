@@ -46,6 +46,8 @@ irm https://raw.githubusercontent.com/inlight37-design/decision-model_lab/main/t
 | Ubuntu | Codex CLI, Claude Code + 구독 로그인 | 실제 참여자(유료 API 아님) |
 | — | Antigravity `agy` | 기본 꺼짐(인계 2절 14) — 설치하지 않는다 |
 
+PDF 추출에는 **서버를 실행하는 환경**에 Poppler의 `pdfinfo`·`pdftotext`가 별도로 필요하다. 기본 설치/`check_setup.py` 성공에는 이 선택 기능이 포함되지 않는다. Ubuntu/WSL에서는 `sudo apt install poppler-utils`, Windows 서버에서는 해당 실행 파일의 PATH 설정을 사용한다. 없으면 텍스트 첨부로 진행할 수 있다([자료 추출 사용법](../app/README.md#공통-자료)). Ubuntu에서 화면 JavaScript 시험도 돌리려면 `setup-wsl.sh --with-node`로 Node를 포함한다. Windows에 설치한 Node가 Linux-native 시험 준비를 대신하지 않는다.
+
 **끝난 뒤 오프라인 검사:** Windows에서 `python -m unittest discover -s tests`, Ubuntu에서 `DML_REQUIRE_BWRAP=1 python3 -m unittest discover -s tests`. 종료 코드를 직접 본다(출력을 `tail`로 거르면 실패를 놓친다). skip은 통과가 아니다. 나머지 검증 도구는 [인계 6절](../NEXT-SESSION.md)에 있다. Ubuntu 쪽만 따로 준비하거나 확인하려면 `bash tools/setup/setup-wsl.sh [--check]`, 확인만 하려면 `python tools\setup\check_setup.py`(Ubuntu에서는 `python3`).
 
 ## 3. 사람만 하는 것과 이유
