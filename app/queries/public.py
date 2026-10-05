@@ -7,6 +7,7 @@ from app import memory, refine as refining, usage as token_usage
 from app import source_document
 from app import workflow
 from app.queries import catalog
+from app.queries.pages import BrowserPages
 from app.roles import task_projection
 from app.state import CLI, MANUAL, QUEUED, RUNNING, AWAITING_USER, ACCEPTED, REJECTED, UNKNOWN, NOT_STARTED, INDEPENDENT_ONLY, gate, confirmed
 from core import contract
@@ -69,6 +70,7 @@ class PublicQueries:
         self.store = runtime.store
         self.invocations = invocations
         self.repository = repository
+        self.pages = BrowserPages(self)
 
     def search(self, query, *, task_id=None, kind=None, limit=30):
         # Keep the same public projection, but do not materialize the whole ledger.

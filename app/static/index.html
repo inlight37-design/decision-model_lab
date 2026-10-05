@@ -420,6 +420,7 @@ button.is-pressed { background-image: linear-gradient(color-mix(in oklch, curren
 <script src="/revisions.js"></script>
 <script src="/extraction.js"></script>
 <script src="/workflow.js"></script>
+<script src="/paging.js"></script>
 <script>
 "use strict";
 const TOKEN = controlToken();
@@ -1205,7 +1206,7 @@ function questionIsland(run) {
   return island(null, parts);
 }
 function renderRun(run) {
-  const progress = (state?.tasks || []).find(t => t.task_id === run.task_id)?.runs.find(r => r.run_id === run.run_id);
+  const progress = state?.focus_run || currentTask(run.task_id)?.runs.find(r => r.run_id === run.run_id);
   const sig = JSON.stringify([run, progress, firstView, liveMode, synthesizers.length]);
   if (sig === runSig) return;
   // 입력 중에는 다시 그리지 않는다(글자·커서가 사라진다). 다음 새로고침에 그린다.
@@ -1273,17 +1274,17 @@ async function refresh(timer = false) {
   // 갱신과 타이머를 붙잡지 않고, 실패는 한도 칸에만 적는다. 이 함수는 상태를 적용하면 돌아온다.
   if (timer && refreshBusy) return false;
   const seq = ++refreshSent;
-  const requestedRun = selected;
-  const statePromise = api("/api/overview" + (requestedRun ? "?run=" + encodeURIComponent(requestedRun) : ""));
+  const requestedLocation = browseUrl();
+  const statePromise = api(requestedLocation);
   api("/api/account-quota").then(data => showQuota(seq, data), () => showQuota(seq, null));
   refreshBusy++;
   let next;
   try { next = await statePromise; }
   catch (e) {
-    if (seq > stateShown && selected === requestedRun) { connection = String(e.message); renderHeader(); }
+    if (seq > stateShown && browseUrl() === requestedLocation) { connection = String(e.message); renderHeader(); }
     return false;
   } finally { refreshBusy--; }
-  if (seq <= stateShown || selected !== requestedRun) return false;
+  if (seq <= stateShown || browseUrl() !== requestedLocation) return false;
   stateShown = seq;
   connection = ""; state = next; render();
   // 실제 CLI 시도가 끝나면 계정 사용량이 바뀌었으니 Codex 값을 새로 받는다
@@ -1324,7 +1325,7 @@ function openNewRun(taskId = null) {
   $("composeTitle").textContent = taskId ? "이 작업에 새 실행" : "새 작업";
   $("taskTitleField").hidden = !!taskId;
   $("taskTitle").value = ""; $("question").value = ""; picked = []; renderPicked("");
-  const plan = (state?.tasks || []).find(t => t.task_id === taskId)?.plan;
+  const plan = currentTask(taskId)?.plan;
   if (plan) $("question").value = plan.goal + "\n\n완료 기준: " + plan.done_when;
   $("composeDialog").showModal(); $("newRunBtn").setAttribute("aria-expanded", "true");
   $("templateName").value = ""; $("templateStatus").textContent = ""; refreshTemplates();

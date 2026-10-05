@@ -1,0 +1,65 @@
+{
+  "scope": "synthetic cloud ledger; no model calls",
+  "runs_per_task": 1000,
+  "results": [
+    {
+      "runs": 1000,
+      "measurements": {
+        "full_snapshot": {
+          "median_ms": 216.67,
+          "peak_bytes": 31674023,
+          "response_bytes": 26288100,
+          "statements": 12033
+        },
+        "one_detail": {
+          "median_ms": 0.58,
+          "peak_bytes": 59071,
+          "response_bytes": 27600,
+          "statements": 45
+        },
+        "search_all": {
+          "median_ms": 175.4,
+          "peak_bytes": 2975011,
+          "response_bytes": 24922,
+          "statements": 14002
+        },
+        "search_task": {
+          "median_ms": 181.0,
+          "peak_bytes": 2979625,
+          "response_bytes": 24922,
+          "statements": 14002
+        },
+        "search_question": {
+          "median_ms": 4.11,
+          "peak_bytes": 299721,
+          "response_bytes": 7282,
+          "statements": 2
+        },
+        "overview": {
+          "median_ms": 95.55,
+          "peak_bytes": 10468681,
+          "response_bytes": 1151231,
+          "statements": 8034
+        },
+        "browse_cold": {
+          "median_ms": 92.67,
+          "peak_bytes": 10441333,
+          "response_bytes": 6272,
+          "statements": 8035
+        },
+        "browse_warm": {
+          "median_ms": 0.19,
+          "peak_bytes": 13037,
+          "response_bytes": 6272,
+          "statements": 1
+        },
+        "timeline_warm": {
+          "median_ms": 0.94,
+          "peak_bytes": 89068,
+          "response_bytes": 31177,
+          "statements": 1
+        }
+      }
+    }
+  ]
+}

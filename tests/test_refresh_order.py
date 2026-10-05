@@ -19,6 +19,7 @@ class RefreshOrderTests(unittest.TestCase):
         html = (ROOT / "app/static/index.html").read_text(encoding="utf-8")
         board = (ROOT / "app/static/role-board.js").read_text(encoding="utf-8")
         refresh = html[html.index("async function refresh("):html.index("async function loadOptions()")]
+        refresh = (ROOT / 'app/static/paging.js').read_text(encoding='utf-8') + '\n' + refresh
         manual = html[html.index("async function refreshQuota()"):html.index('$("quotaRefresh").onclick')]
         confirm = board[board.index("async function confirmRun()"):board.index("function closeNewRun()")]
         script = r'''
@@ -29,7 +30,7 @@ const deferred = () => { let resolve, reject; const promise = new Promise((a, b)
 const settle = () => new Promise(r => setTimeout(r, 0));   // 한도 응답은 따로 적용된다 — 다음 차례까지 기다린다
 function page(api, extra = {}) {
   const nodes = {}, seen = {headers: 0, quotas: [], toasts: [], navigated: null, closed: false};
-  const context = {selected: null, state: {version: "old", runs: []}, connection: "", settledSeen: null, quotaSignature: null, seen, nodes,
+  const context = {URLSearchParams, taskSelected: null, selected: null, state: {version: "old", runs: []}, connection: "", settledSeen: null, quotaSignature: null, seen, nodes,
     refreshSent: 0, stateShown: 0, quotaShown: 0, refreshBusy: 0,   // 제품에서는 index.html 위쪽의 let
     api, render() {}, renderHeader() { seen.headers++; }, renderQuota(q) { seen.quotas.push(q); }, autoQuota() {},
     $: id => nodes[id] ||= {textContent: "", disabled: false, replaceChildren(...kids) { this.kids = kids; }},
@@ -93,7 +94,7 @@ assert.deepEqual(ctx.seen.navigated, ["t-new", "new-run"]);
         self.run_node(r'''
 for (const order of [["poll", "button"], ["button", "poll"]]) {
   const quota = {}, stateReply = Promise.resolve({version: "s", runs: []});
-  const ctx = page(url => url.startsWith("/api/overview") ? stateReply
+  const ctx = page(url => url.startsWith("/api/browse") ? stateReply
     : (quota[url === "/api/account-quota" ? "poll" : "button"] = deferred()).promise);
   const poll = ctx.refresh(), button = ctx.refreshQuota();        // 1초 조회가 먼저, 조회 버튼이 나중
   for (const which of order) { quota[which].resolve({which}); await settle(); }
@@ -111,7 +112,7 @@ assert.equal(failed.nodes.quotaRefresh.textContent, "조회");
 
     def test_a_quota_failure_does_not_block_the_run_state(self):
         self.run_node(r'''
-const ctx = page(url => url.startsWith("/api/overview") ? Promise.resolve({version: "new", runs: []})
+const ctx = page(url => url.startsWith("/api/browse") ? Promise.resolve({version: "new", runs: []})
                                               : Promise.reject(new Error("quota endpoint unavailable")));
 assert.equal(await ctx.refresh(), true);
 assert.equal(ctx.state.version, "new");
@@ -135,8 +136,8 @@ const second = ctx.refresh();
 pending[2].resolve({version: "new-detail", runs: [], settled_real: 4}); pending[3].resolve({});
 assert.equal(await second, true);
 assert.equal(ctx.settledSeen, 4);
-assert.equal(urls[0], "/api/overview?run=old");
-assert.equal(urls[2], "/api/overview?run=new");
+assert.equal(urls[0], "/api/browse?run=old");
+assert.equal(urls[2], "/api/browse?run=new");
 ''')
 
     def test_the_timer_skips_while_busy_but_an_action_refresh_is_never_dropped(self):
@@ -156,10 +157,30 @@ ctx.refresh(true);
 assert.equal(calls, 6);                                         // 끝난 뒤에는 타이머가 다시 돈다
 ''')
 
+    def test_task_or_cursor_navigation_discards_late_page_and_previous_restores_position(self):
+        self.run_node(r'''
+const pending = [], urls = [];
+const ctx = page(url => { urls.push(url); const d = deferred(); pending.push(d); return d.promise; });
+const first = ctx.refresh();
+ctx.taskSelected = "another";
+pending[0].resolve({version: "home", runs: []}); pending[1].resolve({});
+assert.equal(await first, false);
+ctx.state = {version:"old", pages:{tasks:{next:"cursor-one"}}};
+const next = ctx.movePage("tasks", "next");
+assert.equal(urls[2], "/api/browse?task=another&tasks_after=cursor-one");
+const back = ctx.movePage("tasks", "previous");
+pending[2].resolve({version:"late-next",runs:[]}); pending[3].resolve({});
+assert.equal(await next, false);
+pending[4].resolve({version:"back",runs:[]}); pending[5].resolve({});
+assert.equal(await back, true);
+assert.equal(ctx.state.version, "back");
+assert.equal(urls[4], "/api/browse?task=another");
+''')
+
     def test_a_started_run_is_kept_when_the_following_refresh_fails(self):
         self.run_node(r'''
 const failing = url => url === "/api/runs" ? Promise.resolve({run_id: "new-run"})
-  : url.startsWith("/api/overview") ? Promise.reject(new Error("temporary state failure")) : Promise.resolve({});
+  : url.startsWith("/api/browse") ? Promise.reject(new Error("temporary state failure")) : Promise.resolve({});
 for (const [task, expected] of [[undefined, null], ["t-old", "t-old"]]) {
   const ctx = page(failing, {previewRequest: {question: "q", ...(task ? {task_id: task} : {})}, picked: ["x"]});
   await ctx.confirmRun();
@@ -172,7 +193,7 @@ for (const [task, expected] of [[undefined, null], ["t-old", "t-old"]]) {
 // 조회가 새 실행을 가져오면 그 작업으로 간다
 const run = {run_id: "new-run", task_id: "t-new", participants: []};
 const ok = page(url => url === "/api/runs" ? Promise.resolve({run_id: "new-run"})
-  : url.startsWith("/api/overview") ? Promise.resolve({runs: [run]}) : Promise.resolve({}), {previewRequest: {question: "q"}});
+  : url.startsWith("/api/browse") ? Promise.resolve({runs: [run]}) : Promise.resolve({}), {previewRequest: {question: "q"}});
 await ok.confirmRun();
 assert.deepEqual(ok.seen.navigated, ["t-new", "new-run"]);
 assert.ok(ok.seen.toasts.at(-1).includes("모두 끝나면"));

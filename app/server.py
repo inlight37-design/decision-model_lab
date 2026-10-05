@@ -52,6 +52,7 @@ ASSETS = {"/island-ui/themes.css": ("island-ui/themes.css", "text/css; charset=u
           "/revisions.js": ("revisions.js", "text/javascript; charset=utf-8"),
           "/extraction.js": ("extraction.js", "text/javascript; charset=utf-8"),
           "/workflow.js": ("workflow.js", "text/javascript; charset=utf-8"),
+          "/paging.js": ("paging.js", "text/javascript; charset=utf-8"),
           "/role-board.js": ("role-board.js", "text/javascript; charset=utf-8"),
           "/role-board.css": ("role-board.css", "text/css; charset=utf-8"),
           "/island-ui/base.css": ("island-ui/base.css", "text/css; charset=utf-8"),
@@ -222,6 +223,17 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                         raise ControllerError('invalid overview parameters')
                     self._json(200, controller.queries.overview(params.get('run', [None])[0]))
                 except ValueError as exc:
+                    self._json(400, {'error': str(exc)})
+            elif path in ('/api/browse', '/api/task-choices'):
+                try:
+                    params = parse_qs(urlsplit(self.path).query, keep_blank_values=True, max_num_fields=8)
+                    allowed = ({'task', 'run', 'tasks_after', 'runs_after', 'inbox_after', 'limit'}
+                               if path == '/api/browse' else {'query', 'after', 'limit'})
+                    if set(params) - allowed or any(len(v) != 1 or not v[0] for v in params.values()):
+                        raise ControllerError('invalid page parameters')
+                    method = controller.queries.pages.browse if path == '/api/browse' else controller.queries.pages.choices
+                    self._json(200, method(**{k: v[0] for k, v in params.items()}))
+                except (ControllerError, ValueError) as exc:
                     self._json(400, {'error': str(exc)})
             elif len(parts) == 3 and parts[:2] == ['api', 'runs']:
                 result = controller.queries.view(parts[2], _global=False)['runs']

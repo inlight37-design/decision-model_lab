@@ -24,7 +24,7 @@ class NoCalls:
     adapter_ids = ()
 
 
-def seed(store, count):
+def seed(store, count, *, runs_per_task=10):
     """Public manual answers plus sources, grouped in tasks. Nothing is executed."""
     spec = asdict(ParticipantSpec('manual', '수동 답', 'test', 'manual'))
     roles = json.dumps(dict(source='board', input_mode='original', supervisor=None,
@@ -33,8 +33,8 @@ def seed(store, count):
     data = ('자료 본문 ' * 2000).encode()
     with store.tx() as tx:
         for i in range(count):
-            task, rid = f't-{i // 10:06}', f'r-{i:06}'
-            tx.execute('INSERT OR IGNORE INTO tasks VALUES (?, ?, ?)', task, '합성 작업 ' + task, i // 10)
+            task, rid = f't-{i // runs_per_task:06}', f'r-{i:06}'
+            tx.execute('INSERT OR IGNORE INTO tasks VALUES (?, ?, ?)', task, '합성 작업 ' + task, i // runs_per_task)
             tx.execute('INSERT INTO runs (run_id, created_at, question, prompt, input_sha256, input_bytes, '
                        'min_independent, roster, quorum_policy, phase, task_id, role_config) '
                        "VALUES (?, ?, ?, ?, ?, ?, 1, '{}', 'include_unverified', 'revealed', ?, ?)",
@@ -72,8 +72,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--runs', nargs='+', type=int, default=[100, 1000])
     parser.add_argument('--repeats', type=int, default=3)
+    parser.add_argument('--runs-per-task', type=int, default=10)
     args = parser.parse_args()
-    if args.repeats < 1 or any(n < 1 or n > 10000 for n in args.runs):
+    if args.repeats < 1 or args.runs_per_task < 1 or any(n < 1 or n > 10000 for n in args.runs):
         parser.error('runs must be 1..10000 and repeats positive')
     results = []
     for count in args.runs:
@@ -81,7 +82,7 @@ def main():
             store = Store(Path(directory) / 'journal.db')
             ctl = None
             try:
-                seed(store, count)
+                seed(store, count, runs_per_task=args.runs_per_task)
                 ctl = Controller(store, NoCalls(), max_parallel=0)
                 functions = {'full_snapshot': ctl.view,
                              'one_detail': lambda: ctl.view('r-000000'),
@@ -90,13 +91,20 @@ def main():
                              'search_question': lambda: ctl.search('질문', kind='question')}
                 if hasattr(ctl.queries, 'overview'):
                     functions['overview'] = ctl.queries.overview
+                if hasattr(ctl.queries, 'pages'):
+                    def cold():
+                        ctl.queries.pages.key = None
+                        return ctl.queries.pages.browse()
+                    functions.update(browse_cold=cold, browse_warm=ctl.queries.pages.browse,
+                                     timeline_warm=lambda: ctl.queries.pages.browse(task='t-000000'))
                 results.append(dict(runs=count, measurements={
                     name: measure(store, function, args.repeats) for name, function in functions.items()}))
             finally:
                 if ctl is not None:
                     ctl.shutdown()
                 store.close()
-    print(json.dumps({'scope': 'synthetic cloud ledger; no model calls', 'results': results}, indent=2))
+    print(json.dumps({'scope': 'synthetic cloud ledger; no model calls', 'runs_per_task': args.runs_per_task,
+                      'results': results}, indent=2))
 
 
 if __name__ == '__main__':
