@@ -11,7 +11,7 @@
 | 유지할 설계 | 현재 구현과 의미 |
 |---|---|
 | 한 원장 소유자·원자적 예약 | `Store._lock`/`Store.__init__`가 같은 원장을 동시에 여는 두 Store를 막는다. `_Tx`는 `BEGIN IMMEDIATE`와 상태·사건의 동시 commit을 제공한다. [`store.py:152–193`](https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/store.py#L152-L193), [`store.py:387–426`](https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/store.py#L387-L426) |
-| 실제 호출의 공통 예약 | `InvocationLedger.reserve`가 모든 모델 역할의 `live_call_reserved`를 쓰는 단일 위치다. 예약을 기록한 뒤 worker를 시작하고, 취소·실패·재시작으로 환불하지 않는다. 전체·provider별 상한도 함께 본다. [`invocations.py:34–46`](https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/execution/invocations.py#L34-L46), [`coordinator.py:71–99`](https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/execution/coordinator.py#L71-L99) |
+| 실제 호출의 공통 예약 | **정상 공식 배선에서** `InvocationLedger.reserve`가 모든 모델 역할의 `live_call_reserved`를 쓰는 단일 위치다. 예약을 기록한 뒤 worker를 시작하고, 취소·실패·재시작으로 환불하지 않는다. 전체·provider별 상한도 함께 본다. 직접 embedding의 경계는 RT-01에서 별도로 확인했다. [`invocations.py:34–46`](https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/execution/invocations.py#L34-L46), [`coordinator.py:71–99`](https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/execution/coordinator.py#L71-L99) |
 | 마지막 한 칸의 경쟁·늦은 답 방어 | 참여자 전이는 이전 상태와 시도 ID를 모두 조건으로 삼는다. 오래된 worker가 돌아와도 새 상태의 답을 덮지 않는다. [`repository.py:35–53`](https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/repository.py#L35-L53), [`coordinator.py:165–189`](https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/execution/coordinator.py#L165-L189) |
 | 보수적인 결과 수용 | `acceptance`는 전체 자손 종료, adapter 결과, 완전한 stdin 전달, 빈 답, 보고 모델 불일치를 따로 본다. `unit_confirmed_empty`만으로 통과하지 않는다. [`domain.py:75–97`](https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/domain.py#L75-L97), [`runner.py:103–110`](https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/core/runner.py#L103-L110) |
 | 실행 계획과 관측의 결속 | `CliExecutor.plan`이 만든 계획을 기록하고 그대로 실행한다. `run`에서 기록의 적격성·등록·개인 지시문을 다시 확인한다. 설치 버전·관측 기간·명세 판·구독 로그인도 허가 조건이다. [`cli_executor.py:108–127`](https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/cli_executor.py#L108-L127), [`cli_executor.py:129–197`](https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/cli_executor.py#L129-L197), [`eligibility.py:92–146`](https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/core/eligibility.py#L92-L146) |
@@ -35,13 +35,13 @@
 
 ### RT-01. 실제 호출 예산의 마지막 방어가 호출자의 배선에 의존한다
 
-**확인한 사실.** 정상 서버·헤드리스 입구의 `wiring.live_setup`과 `new_controller`는 제한된 provider 설정을 만들고 cap을 넘긴다. `Store.bind_call_budget`도 한 원장을 재시작하며 cap을 올리거나 없애는 요청을 거절한다. 이 방어는 존재한다. [`wiring.py:51–89`](https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/wiring.py#L51-L89), [`store.py:317–360`](https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/store.py#L317-L360)
+**확인한 사실.** 정상 서버·헤드리스 입구의 `wiring.live_setup`과 `new_controller`는 제한된 provider 설정을 만들고 cap을 넘긴다. `Store.bind_call_budget`는 기존 원장의 상한 변경을 거절하며, cap을 지정하지 않고 재개하면 저장된 상한을 상속한다. 이 방어는 존재한다. [`wiring.py:51–89`](https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/wiring.py#L51-L89), [`store.py:317–360`](https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/store.py#L317-L360)
 
 그러나 `Controller.__init__`는 `max_real_calls=None`을 허용하고, 호환 API의 setter가 저장 원장과 재결합하지 않고 `runtime.max_real_calls`·`provider_call_caps`를 바꾼다. 예약 writer는 runtime cap이 `None`이면 그냥 반환하며, 호출 측도 `plan.kind == REAL and max_real_calls is not None`일 때만 예약한다. [`controller.py:53–58`](https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/controller.py#L53-L58), [`controller.py:256–270`](https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/controller.py#L256-L270), [`invocations.py:34–46`](https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/execution/invocations.py#L34-L46)
 
 **이번 재현.** 네트워크와 프로세스를 쓰지 않는 기존 `SyntheticExecutor`의 계획 종류만 `REAL`로 표시해 두 경계를 시험했다.
 
-- cap 없이 직접 Controller를 만들면 합성 실행은 두 번 수행됐으나 예약 사건은 없고 조회 예산은 `used=0, cap=None`이었다.
+- 빈 신규 원장에서 cap 없이 직접 Controller를 만들면 합성 실행은 두 번 수행됐으나 예약 사건은 없고 조회 예산은 `used=0, cap=None`이었다.
 - cap을 1로 고정한 뒤 첫 실행을 끝내고 `ctl.max_real_calls = 3`을 쓰면 두 번째 실행이 허용됐다. 저장 cap은 1인 채 runtime cap은 3, 예약은 2가 됐다.
 
 현재 HTTP 요청이 이 setter에 닿는다는 결과가 아니다. 외부 SDK·자동 실행 기능을 Controller에 직접 붙일 때 현재의 안전한 배선을 생략할 수 있다는 **통합 계약의 구멍**이다.
@@ -211,7 +211,33 @@ print(json.dumps({
 PYTHONPATH=tests python -m unittest test_app_contract test_synthesis_lifecycle test_claude_limits test_core_adapters test_runner_cancel
 ```
 
-실행 결과는 완료 후 이 절에 기록한다. 이 검증은 합성 fixture와 모의 프로세스의 계약 확인이며, 실제 provider 과금·계정 한도·사용자 PC의 격리 동작·모델 품질을 증명하지 않는다.
+위 전체 묶음은 **완료하지 못했다.** 테스트 수집 중 `test_synthesis_lifecycle → test_model_synthesis → test_live_cli → test_app_cli_executor`의 import가 `bwrap_usable()`로 들어가 대기했다. 첫 실행은 중단했고, 원인 확인용 재실행은 35초 `faulthandler` 종료로 아래 stack을 확보했다. `test_app_cli_executor.py:33`의 `subprocess.run`에 timeout이 없으며, L216의 decorator에서 시험 실행 전에 호출된다. 이 결과는 시험의 assertion 실패가 아니라 이 컨테이너에서의 수집 지연이다. [`test_app_cli_executor.py:26–33`](https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/tests/test_app_cli_executor.py#L26-L33), [`test_app_cli_executor.py:216–220`](https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/tests/test_app_cli_executor.py#L216-L220)
+
+```text
+Timeout (0:00:35)!
+selectors.py:415 select
+subprocess.py:2115 _communicate
+subprocess.py:1209 communicate
+subprocess.py:550 run
+tests/test_app_cli_executor.py:33 bwrap_usable
+tests/test_app_cli_executor.py:216 <module>
+tests/test_live_cli.py:19 <module>
+tests/test_model_synthesis.py:22 <module>
+tests/test_synthesis_lifecycle.py:10 <module>
+```
+
+프로세스 격리 probe를 import하지 않는 범위는 별도로 완료했다. 실제 사용한 명령은 장기 대기를 막기 위한 timeout·traceback wrapper를 포함한다.
+
+```bash
+PYTHONPATH=tests timeout 40s python -u -c 'import faulthandler, unittest; faulthandler.dump_traceback_later(15, exit=True); unittest.main(module=None, argv=["unittest", "-v", "test_app_contract"])'
+PYTHONPATH=tests timeout 50s python -u -c 'import faulthandler, unittest; faulthandler.dump_traceback_later(35, exit=True); unittest.main(module=None, argv=["unittest", "-v", "test_core_adapters", "test_runner_cancel"])'
+```
+
+결과: 기준 `48ab4bd6f0e297587707aecb83ebc0cd9968892f`에서 `test_app_contract`는 5개, 0.359초, `OK`; `test_core_adapters`+`test_runner_cancel`은 42개, 0.109초, `OK`. 이 완료 묶음에는 skip이 없었다. `test_synthesis_lifecycle`·`test_claude_limits`는 이번 세션의 통과 목록에 넣지 않는다.
+
+테스트 도구의 작은 후속 개선은 capability probe에 짧은 timeout을 두고 import 단계에서 격리 프로세스를 시작하지 않도록 분리하는 것이다. 그래야 합성 lifecycle 검사도 bubblewrap 가능 여부와 독립해서 수집된다. 제품 코드나 CI의 격리 검사를 끄는 제안이 아니다.
+
+이 검증은 합성 fixture와 모의 프로세스의 계약 확인이며, 실제 provider 과금·계정 한도·사용자 PC의 격리 동작·모델 품질을 증명하지 않는다.
 
 ## 5. 읽은 범위와 남은 확인
 
