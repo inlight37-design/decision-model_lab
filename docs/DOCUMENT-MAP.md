@@ -7,6 +7,7 @@
 | 하고 싶은 일 | 먼저 볼 곳 | 이어서 볼 곳 |
 |---|---|---|
 | 지금 할 일과 환경·확정 방침 확인 | [현재 인계](../NEXT-SESSION.md) | [협업 규칙](COLLABORATION.md), [설치](SETUP.md) |
+| 개편 이후 무엇을 완료했고 어디까지 병합했는지 확인 | [10월 5일 통합·완료 작업 기록](reviews/2026-10-05-cloud-integration/README.md) | 조사→기반→기능→검증의 원문 연결, 미구현/실측 필요 구분. 이후 변경은 현재 인계·PR 기준 |
 | 지금 되는 기능·가치와 코드 찾기 | [기능·용도·효용](FEATURES.md) | [실제 서비스 구조](../app/ARCHITECTURE.md), [앱 실행](../app/README.md), [실행 기반](../core/README.md) |
 | 자료 준비부터 수정·재검토까지 따라가기 | [앱 사용 흐름](../app/README.md#모의-실행과-화면), [자료 추출](../app/README.md#공통-자료) | [현재 명령·조회 경계](../app/ARCHITECTURE.md#명령과-조회의-흐름), [검증 기록](reviews/README.md) |
 | 기록이 많아질 때 조회 비용 비교 | [조회 구조·측정 명령](../app/ARCHITECTURE.md#명령과-조회의-흐름) | [합성 원장 측정](reviews/2026-10-05-query-scale/README.md), [조회 회귀](../tests/test_query_projections.py) |
