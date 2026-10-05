@@ -40,6 +40,7 @@ flowchart TD
 | [context/inputs.py](context/inputs.py) | 역할/자료/승인 확인, manifest·확인 hash, 입력 사본, 이전 기억 고정 | thread 시작, 실행 결과의 진실 판정 |
 | [memory.py](memory.py) | 공개 완료 이력 선택·발췌·크기 상한·선택 이유 | 과거 pack 재계산, 전역 기억·의미 검색 |
 | [application/work.py](application/work.py) | 작업/실행/배정/승인 사용을 같은 거래로 생성 | 전송 방식·worker 내부 turn |
+| [application/templates.py](application/templates.py), [static/templates.js](static/templates.js) | 재사용 설정·자료 사본 저장/복원, 현재 모델 재검사, 파일 이동 | 실행·승인·예산·과거 기억 pack 복사 |
 | [application/planning.py](application/planning.py) | 질문 다듬기, 다음 단계·분담 제안 명령 | 모델에게 실행 시작 권한 부여 |
 | [application/reviews.py](application/reviews.py) | 취합·교차검토 라운드·지적 처분·사람의 판단 | 인용 일치를 사실 검증으로 승격 |
 | [application/synthesis.py](application/synthesis.py) | 공개 후 모의/모델 합성의 입력·조건·예약 | 직접 thread 생성·executor 실행 |
@@ -73,8 +74,10 @@ flowchart TD
 | `GET /api/search?q=…&task=…&kind=…&limit=…` | 질문·답·검토·판단·합성·자료 이름/해시 검색. task/kind 선택, 최대 응답 한도, 잘린 결과 표시 |
 | `GET /api/runs/{id}/activity` | 실제 attempt가 있는 역할들의 공통 호출 기록. 입력·답·시간·usage·digest 없이 ID/종류/상태/원본 key만 |
 | `GET /api/runs/{id}/memory` | 그 실행에서 고정한 pack·선택 근거·출처 가용성. 지금 다시 선택하지 않음 |
+| `GET/POST /api/templates`, `GET /api/templates/{id}` | 설정 목록/저장/복원. 목록은 자료 본문을 읽지 않고 복원은 현재 카드·모델을 재검사 |
+| `POST /api/templates/{id}/delete`, `GET /api/templates/{id}/export`, `POST /api/templates/import` | 확인한 템플릿 삭제, 해시 결속 파일 내보내기/가져오기. 실행·관측·예산은 옮기지 않음 |
 
-원장 schema와 기존 행/event 의미는 유지했다. 역할별 저장을 읽는 adapter가 공통 Invocation을 만들며 manual·아직 시작 안 한 review·모델 없는 합성을 호출로 발명하지 않는다. 합성의 미확정/사용자 종료 확인도 기존 사건 해석을 사용한다. 별도 전역 event revision이나 command receipt table은 아직 추가하지 않았다.
+템플릿은 schema 15의 `work_templates`에 별도로 저장하며 기존 실행 행/event 의미는 유지한다. 역할별 저장을 읽는 adapter가 공통 Invocation을 만들며 manual·아직 시작 안 한 review·모델 없는 합성을 호출로 발명하지 않는다. 합성의 미확정/사용자 종료 확인도 기존 사건 해석을 사용한다. 별도 전역 event revision이나 command receipt table은 아직 추가하지 않았다.
 
 새 기억에는 일치 표현·순위·최근 기록 대체 여부를 hash 안에 저장한다. 이것도 전달문 크기 상한에 포함된다. 옛 pack은 그대로 읽으며 기록하지 않은 과거 선택 이유를 추측해서 채우지 않는다. 선택 점수는 사실의 신뢰도가 아니다.
 
@@ -83,8 +86,8 @@ flowchart TD
 - 구독 경로·기기 관측·최종 plan 고정, 전체 tree/input/native outcome 수용 의미를 유지한다.
 - 격리 초안과 자동 기억의 역할 범위, 같은 원장의 호출 상한·unknown 슬롯, 한 writer를 유지한다.
 - 취소·시작 실패·결과 저장 실패·재시작·늦은 결과를 분리하고 소비 기록을 지우지 않는다.
-- 이번 변경은 schema 이행이 없다. 이전 코드도 같은 DB를 읽고 새 기억 metadata를 포함한 hash를 검증할 수 있다. 되돌릴 때도 원장을 과거 backup으로 덮지 않는다.
+- 템플릿 추가는 schema 15 이행이며 이전 전에 자동 backup을 만든다. 이전 버전 코드는 새 원장을 거절한다. 실제 호출 뒤 코드·DB를 되돌릴 때 원장을 과거 backup으로 덮어 소비 기록을 지우지 않는다.
 
 새 기능을 넣을 때는 담당 service와 순수 형식 모듈에 넣고, 실제 실행은 coordinator와 InvocationLedger를 통과시킨다. 공개 경로는 PublicQueries를 재사용한다. 기존 회귀와 [새 경계 검사](../tests/test_foundation.py), [전송 검사](../tests/test_api_client.py)가 기준이며, 실제 기기 계약을 바꾸면 PC 관측을 별도로 갖춘다.
 
-이 기반은 후속 workflow·검토 후 수정·템플릿·고급 검색·지속 실행을 붙일 자리다. 그 기능 전체가 구현된 것은 아니다. 후보별 원리는 [통합 후보 지도](../docs/architecture/redesign-2026-10-04/CAPABILITY-MAP.md)에 보존하며 후속 순서는 [현재 기능 지도](../docs/FEATURES.md#후속-우선순위)를 본다.
+템플릿은 편집 가능한 설정을 복원하며 새 입력 확인 뒤에만 화면에서 시작한다. 같은 원장 안에서 유지되고, 다른 원장에는 명시적인 파일 내보내기/가져오기로 복사한다. 다듬기 모드를 저장해도 승인 차례를 복사하지 않아 다시 다듬고 승인한다. 후속 workflow·검토 후 수정·고급 검색·지속 실행의 원리는 [통합 후보 지도](../docs/architecture/redesign-2026-10-04/CAPABILITY-MAP.md), 순서는 [현재 기능 지도](../docs/FEATURES.md#후속-우선순위)를 본다.

@@ -74,6 +74,7 @@
 | [`2026-09-29-health-review/`](2026-09-29-health-review/README.md) | claude(사용자 PC Windows 쪽)의 전체 점검 — 내 조사·부하 에이전트·Codex(medium) 독립 검토를 겹쳐 봄. 뼈대는 건강, 재작성 불요. 고친 것: 상위 자리 답 검사·경계 블록·오류 문구 바꿔치기를 `app/reply.py` 하나로, 서버·헤드리스 배선을 `app/wiring.py`로, controller의 상위 호출 관문 5중 복사와 자리 투영을 헬퍼로, 검사 도구 넷의 JSON 로더를 `tools/strict_json.py`로, 죽은 상수·흩어진 상수, 살아 있는 문서의 낡은 상태 서술. 일부러 둔 것과 이유도 적음. 참여자 계획·원장 스키마 불변. 모델 호출 없음 |
 | [`2026-10-04-anchormind/`](2026-10-04-anchormind/README.md) | codex(사용자 PC)의 AnchorMind 기능·저장/검색/회고 파이프라인 코드 검토. 출처 포함 고정 자료, 검색 예산·평가, 사건 이력의 선택적 적용안과 strict 참여자 연결·실행기 이식의 제약. 제품 코드 변경·추가 모델 호출 없음 |
 | [`2026-10-04-foundation/`](2026-10-04-foundation/README.md) | codex(클라우드)의 개편 전 최종 대조·서비스 기반 재구성, 공개 검색·기억 근거·호출 기록. 기존 snapshot/사건 비교·경계 회귀·Chromium 확인과 실제 PC 미검증 범위. 후속 Windows CI에서 새 검사의 UTF-8 지정 누락을 발견·수정했으며 최종 결과는 [PR #161](https://github.com/inlight37-design/decision-model_lab/pull/161)에 기록 |
+| [`2026-10-04-templates/`](2026-10-04-templates/README.md) | 기반 전체 흐름 확인과 사용자 지시에 따른 통합, 팀·작업 템플릿·자료 사본·새 확인·파일 이동·원장 이전 검증 |
 
 ## 읽는 순서
 

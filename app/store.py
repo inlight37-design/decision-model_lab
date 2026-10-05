@@ -39,11 +39,16 @@ from typing import Any, Iterator
 #    상태를 고정한다. 인용 대조는 저장한 그 원문과 한다.
 # 14: reviews·review_dispositions — 공개 뒤 한 라운드 교차검토(카드 #140). 검토자마다 차례·받은 이름표·대상 답(원문·
 #    sha256)·보낸 입력·결과·상태를 고정하고, 지적마다 사람이 고른 처분과 그 시각을 둔다.
-SCHEMA_VERSION = 14
+# 15: immutable work_templates, separate from live runs and their approvals/budgets.
+SCHEMA_VERSION = 15
 # 스키마 5 이전 시도의 종류는 시작 사건에 남은 실행기 이름에서만 복원한다. 모의 실행기의 이름은 격리 방식이었다.
 # 근거가 없으면 NULL로 두고, 화면은 "실행 종류 기록 없음"으로 보인다.
 LEGACY_EXECUTORS = {"bubblewrap": "mock", "job_object": "mock", "process_group": "mock", "cli": "real"}
 SCHEMA = """
+CREATE TABLE IF NOT EXISTS work_templates (
+  template_id TEXT PRIMARY KEY, name TEXT NOT NULL, created_at REAL NOT NULL,
+  payload TEXT NOT NULL, sha256 TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS runs (
   run_id TEXT PRIMARY KEY, created_at REAL NOT NULL, question TEXT NOT NULL, prompt TEXT NOT NULL,
   input_sha256 TEXT NOT NULL, input_bytes INTEGER NOT NULL, min_independent INTEGER NOT NULL,
