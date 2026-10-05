@@ -10,6 +10,7 @@ class RoleBoardRenderTests(unittest.TestCase):
     def test_placement_keyboard_buttons_human_roles_and_safe_task_cards(self):
         root = Path(__file__).resolve().parents[1]
         source = (root / "app/static/role-board.js").read_text(encoding="utf-8")
+        source += (root / 'app/static/workflow.js').read_text(encoding='utf-8')
         html = (root / "app/static/index.html").read_text(encoding="utf-8")
         script = r'''
 const assert = require("node:assert/strict");

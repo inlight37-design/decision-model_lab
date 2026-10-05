@@ -9,6 +9,7 @@ flowchart TD
   HTTP[server / HTTP] --> F[Controller 호환 입구·조립]
   CLI[run / headless] --> F
   F --> W[WorkService / 작업 생성]
+  F --> T[TaskService / 목표·완료 기준·선행 조건]
   F --> P[PlanningService / 다듬기·분담·다음 단계]
   F --> R[ReviewService / 취합·검토·처분]
   F --> V[RevisionService / 수정·재검토]
@@ -29,6 +30,7 @@ flowchart TD
   Q --> L
   E --> X[Executor port / core native runtime]
   Q --> C[Catalog / 공개 검색]
+  Q --> WF[workflow / 단계·준비 상태·다음 행동]
   I --> DB[RunRepository + Store / 같은 SQLite 거래]
   E --> DB
   Q --> DB
@@ -46,6 +48,7 @@ flowchart TD
 | [ingestion/extract.py](ingestion/extract.py), [ingestion/url_fetch.py](ingestion/url_fetch.py), [source_document.py](source_document.py) | 제한된 PDF/공개 URL 추출, 출처·원본/변환/선택 hash와 누락을 텍스트에 결속 | 자동 첨부·모델 호출·OCR·페이지 렌더·로그인 |
 | [memory.py](memory.py) | 공개 완료 이력 선택·발췌·크기 상한·선택 이유 | 과거 pack 재계산, 전역 기억·의미 검색 |
 | [application/work.py](application/work.py) | 작업/실행/배정/승인 사용을 같은 거래로 생성 | 전송 방식·worker 내부 turn |
+| [application/tasks.py](application/tasks.py), [workflow.py](workflow.py), [static/workflow.js](static/workflow.js) | 계획 판·선행 참조·CAS 편집, 현재 결과의 준비 상태·단계·다음 행동 | 자동 실행, 새 결과 상태 복제, 알림 전달 큐 |
 | [application/templates.py](application/templates.py), [static/templates.js](static/templates.js) | 재사용 설정·자료 사본 저장/복원, 현재 모델 재검사, 파일 이동 | 실행·승인·예산·과거 기억 pack 복사 |
 | [application/planning.py](application/planning.py) | 질문 다듬기, 다음 단계·분담 제안 명령 | 모델에게 실행 시작 권한 부여 |
 | [application/reviews.py](application/reviews.py) | 취합·교차검토 라운드·지적 처분·사람의 판단 | 인용 일치를 사실 검증으로 승격 |
@@ -81,6 +84,7 @@ flowchart TD
 | API | 반환·용도 |
 |---|---|
 | `GET /api/overview?run=…`, `GET /api/runs/{id}` | 목록과 선택한 상세를 같은 lock에서 조회, 또는 실행 상세만 조회. 기존 `/api/state` 전체 형식은 호환 유지 |
+| `POST /api/tasks`, `POST /api/tasks/{id}/plan` | 목표·완료 기준·선행 작업 계획 생성/편집. 현재 판 확인, 존재/순환/진행 중 상태 검사. 모델 호출 없음 |
 | `GET /api/search?q=…&task=…&kind=…&limit=…` | 질문·답·검토·판단·합성·자료 이름/해시 검색. task/kind 선택, 최대 응답 한도, 잘린 결과 표시 |
 | `GET /api/runs/{id}/activity` | 실제 attempt가 있는 역할들의 공통 호출 기록. 입력·답·시간·usage·digest 없이 ID/종류/상태/원본 key만 |
 | `GET /api/runs/{id}/memory` | 그 실행에서 고정한 pack·선택 근거·출처 가용성. 지금 다시 선택하지 않음 |
@@ -93,7 +97,13 @@ flowchart TD
 | `POST /api/sources/extract` | PDF 파일 또는 공개 URL의 선택 범위를 추출. 원장 쓰기·실행 없음 |
 | `GET /api/runs/{id}/sources/{name}` | 해시 확인 후 저장한 자료 사본과 추출 출처 조회. 입력 자료이며 모델 답은 반환하지 않음 |
 
-schema 16은 `work_templates`와 별도의 `answer_revisions`·`revision_checks`를 둔다. 기존 실행 행/event 의미는 유지한다. 역할별 저장 adapter가 공통 Invocation을 만들며 manual·미시작 review·모델 없는 합성을 호출로 발명하지 않는다. 전역 event revision이나 command receipt table은 아직 없다.
+schema 17은 기존 템플릿·수정/재검토 표에 선택적 `task_plans`를 더한다. 기존 실행 행/event 의미는 유지한다. 역할별 저장 adapter가 공통 Invocation을 만들며 manual·미시작 review·모델 없는 합성을 호출로 발명하지 않는다. 전역 event revision이나 command receipt table은 아직 없다.
+
+계획은 목표·완료 기준·선행 작업과 자체 revision을 가진다. 편집은 예상 판을 조건으로 쓰고 사건에 새 판을 남긴다. 선행 작업은 현재 계획에 속한 실행들의 사람 판단 완료와 진행/종료 미확정 부재로 준비 상태를 계산한다. 계획 없는 기존 작업은 기존 전체 타임라인의 완료 기준을 유지한다. 순환/누락은 거절한다. 입력 미리보기와 실제 생성 거래에서 계획/선행 결과를 다시 검사하고 role_config에 그 판·근거 실행 ID/결과 판을 고정한다. 다듬기·분담 제안도 시작 전에 조건을 본다. 이미 시작한 실행은 선행 조건이 바뀌어도 소급 취소하거나 입력을 고치지 않는다.
+
+계획 편집은 해당 작업의 진행 중/종료 미확정 호출이 있을 때 거절한다. 새 계획은 새 실행을 요구하고 과거 판의 결과·소비·취소는 타임라인에 보존한다. 종료가 확인된 취소/실패 뒤에는 새 계획으로 다시 준비할 수 있지만 unknown은 먼저 정리해야 한다. 목표·완료 기준은 화면이 실행 질문의 초안으로 채우며 편집 가능하다. 선행 작업의 답 본문을 자동으로 전달하지 않는다. 준비 확인은 사실 검증이 아니고, 실행 조건·provider 예산의 최종 판단은 기존 서비스가 한다.
+
+수신함은 공개 작업 projection에서 매번 계산한다. 실행별 typed 단계와 선행 연결, 멈춤·종료 미확정·자리·상한 이유, 연결 전 다듬기/분담의 종료 확인을 표시한다. 읽음 상태·자동 완료·새 scheduler·outbox는 없다. 항목을 읽거나 이동해도 호출하거나 문제를 해결한 것으로 기록하지 않는다. [흐름 검증](../docs/reviews/2026-10-05-workflow-inbox/README.md)을 본다.
 
 수정은 원래 CLI 작성자·원본 hash·앞 판·지적과 당시 처분을 고정한다. 미리보기 이후 근거가 바뀌면 시작을 거절한다. 작성자는 원래 자료 사본을 읽고 재검토자는 고정 지적과 수정 답을 받는다. 팀원/실행당 수정, 판당 재검토는 각각 최대 2회이며 실패도 포함한다. 다음 판은 앞 판의 재검토 이후 가능하다. 모든 호출은 SEATS를 통해 공통 예약·수용·종료·복구를 쓰고 원래 초안/정족수를 바꾸지 않는다. 검색·호출·사용량·기억·판단 완료에 연결하며 기존 draft/decision report와 합성은 원래 초안을 유지한다.
 
@@ -108,7 +118,7 @@ PDF는 로컬 Poppler를 shell 없이 호출하며 원본 1 MiB, 한 번에 20�
 - 구독 경로·기기 관측·최종 plan 고정, 전체 tree/input/native outcome 수용 의미를 유지한다.
 - 격리 초안과 자동 기억의 역할 범위, 같은 원장의 호출 상한·unknown 슬롯, 한 writer를 유지한다.
 - 취소·시작 실패·결과 저장 실패·재시작·늦은 결과를 분리하고 소비 기록을 지우지 않는다.
-- schema 16 이행 전에 자동 backup을 만든다. 이전 버전 코드는 새 원장을 거절한다. 실제 호출 뒤 코드·DB를 되돌릴 때 원장을 과거 backup으로 덮어 소비 기록을 지우지 않는다.
+- schema 17 이행 전에 자동 backup을 만든다. 이전 버전 코드는 새 원장을 거절한다. 실제 호출 뒤 코드·DB를 되돌릴 때 원장을 과거 backup으로 덮어 소비 기록을 지우지 않는다.
 
 새 기능을 넣을 때는 담당 service와 순수 형식 모듈에 넣고, 실제 실행은 coordinator와 InvocationLedger를 통과시킨다. 공개 경로는 PublicQueries를 재사용한다. 기존 회귀와 [새 경계 검사](../tests/test_foundation.py), [전송 검사](../tests/test_api_client.py)가 기준이며, 실제 기기 계약을 바꾸면 PC 관측을 별도로 갖춘다.
 

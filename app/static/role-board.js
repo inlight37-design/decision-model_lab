@@ -1,7 +1,7 @@
 "use strict";
 // 역할판 화면만의 상태. 저장된 작업·역할은 /api/overview에서 받으며 브라우저에 보관하지 않는다.
 const ROLE_LABELS = { supervisor: "슈퍼바이저", orchestrator: "오케스트레이터", isolated: "팀원(격리)", general: "팀원(일반)" };
-const TASK_LABELS = { working: "작업 중", my_turn: "내 차례", done: "끝남", problem: "문제" };
+const TASK_LABELS = { working: "작업 중", my_turn: "내 차례", done: "끝남", problem: "문제", blocked: "선행 작업 대기" };
 const MEMBER_STATE = { queued: "대기", running: "작업 중", accepted: "받음", rejected: "실패", unknown: "종료 미확인" };
 let roleOptions = null, roleBoard = null, chosenCard = null, previewRequest = null, composeTask = null;
 let previewGeneration = 0;
@@ -459,11 +459,12 @@ function showInputPreview(preview, body) {
   const calls = preview.calls, orchestrator = preview.role_config.orchestrator;
   $("inputPreview").hidden = false;
   if (preview.mode === "general") {
-    $("inputPreview").replaceChildren(...generalPreview(preview));
+    $("inputPreview").replaceChildren(...taskPlanPreview(preview.role_config), ...generalPreview(preview));
     pressAll($("inputPreview")); $("confirmStart").focus();
     return;
   }
   $("inputPreview").replaceChildren(h("h3", { class: "block-title" }, "보낼 입력 확인"),
+    ...taskPlanPreview(preview.role_config),
     memoryPreview(preview.role_config),
     h("p", { class: "sm strong" }, roleSummary(preview.role_config)),
     h("p", { class: "cap muted" }, MODEL_NOTE),
@@ -555,16 +556,16 @@ function stuckRefinements() {
 function renderTaskPage() {
   const tasks = state.tasks || [], task = tasks.find(t => t.task_id === taskSelected);
   const stuck = stuckRefinements();
-  const sig = JSON.stringify([taskSelected, tasks, ((state && state.refinements) || []).map(r => r.turns.map(t => t.state))]);
+  const sig = JSON.stringify([taskSelected, tasks, state.inbox, state.admission,
+    ((state && state.refinements) || []).map(r => r.turns.map(t => t.state))]);
   if (sig === taskPageSig) return;
   taskPageSig = sig; runSig = null; $("asideCol").replaceChildren();
   if (!task) {
-    const turns = tasks.filter(t => t.runs.some(r => r.status === "my_turn"));
-    $("mainCol").replaceChildren(island("내 차례", [h("p", { class: "sm muted" }, "원본 앱 답을 붙여넣거나, 공개된 답을 보고 다음 일을 정하세요."),
-      h("div", { class: "task-grid island-part" }, turns.length ? turns.map(taskCard) : h("p", { class: "sm muted" }, "지금 기다리는 일이 없습니다."))]),
+    $("mainCol").replaceChildren(workInbox(),
     island("모든 작업", [h("div", { class: "row between" }, h("p", { class: "sm muted" }, "질문부터 결과까지, 한 작업에서 이어 갑니다."),
       h("div", {class: "row"},
         h("button", {type: "button", class: "btn", onclick: () => openCatalog()}, "기록 찾기"),
+        h("button", {type: "button", class: "btn", onclick: () => openTaskPlan()}, "계획부터 만들기"),
         h("button", { type: "button", class: "btn btn-brand", onclick: () => openNewRun() }, "새 작업"))),
       h("div", { class: "task-grid island-part" }, tasks.length ? tasks.map(taskCard) : h("p", { class: "sm muted" }, "아직 작업이 없습니다."))]),
     island("프로젝트 안내", [h("p", { class: "sm muted" }, "현재 기능과 개편 제안, 참고 근거를 구분해 찾아봅니다."),
@@ -579,7 +580,8 @@ function renderTaskPage() {
     $("mainCol").replaceChildren(island(task.title, [h("p", { class: "sm muted" }, roleSummary(task.role_config)),
       tokens.length ? h("p", { class: "cap muted" }, "토큰(이 작업 전체): " + tokens.join(" / ")) : null,
       h("div", { class: "row island-part" }, badge(TASK_LABELS[task.status]), h("span", { class: "sm" }, `쓴 CLI 호출 ${task.calls_used}`),
-        h("button", { type: "button", class: "btn btn-brand", onclick: () => openNewRun(task.task_id) }, "이 작업에 새 실행"))]),
+        h("button", { type: "button", class: "btn btn-brand", disabled: task.readiness && !task.readiness.dependencies_met,
+          onclick: () => openNewRun(task.task_id) }, "이 작업에 새 실행"))]), taskPlanPanel(task),
     island("실행 타임라인", h("ol", { class: "task-timeline stack-lg" }, task.runs.map((run, i) => h("li", {},
       h("button", { type: "button", class: "task-card cell", onclick: () => navigateTask(task.task_id, run.run_id) },
         h("span", { class: "row between" }, h("span", { class: "strong" }, `실행 ${i + 1} · ${run.question}`), badge(TASK_LABELS[run.status])),

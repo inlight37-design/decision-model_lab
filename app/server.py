@@ -51,6 +51,7 @@ ASSETS = {"/island-ui/themes.css": ("island-ui/themes.css", "text/css; charset=u
           "/templates.js": ("templates.js", "text/javascript; charset=utf-8"),
           "/revisions.js": ("revisions.js", "text/javascript; charset=utf-8"),
           "/extraction.js": ("extraction.js", "text/javascript; charset=utf-8"),
+          "/workflow.js": ("workflow.js", "text/javascript; charset=utf-8"),
           "/role-board.js": ("role-board.js", "text/javascript; charset=utf-8"),
           "/role-board.css": ("role-board.css", "text/css; charset=utf-8"),
           "/island-ui/base.css": ("island-ui/base.css", "text/css; charset=utf-8"),
@@ -223,7 +224,7 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                 except ValueError as exc:
                     self._json(400, {'error': str(exc)})
             elif len(parts) == 3 and parts[:2] == ['api', 'runs']:
-                result = controller.view(parts[2])['runs']
+                result = controller.queries.view(parts[2], _global=False)['runs']
                 self._json(200 if result else 404, result[0] if result else {'error': 'run not found'})
             elif len(parts) == 5 and parts[:2] == ['api', 'runs'] and parts[3] == 'sources':
                 try:
@@ -299,6 +300,10 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                 parts = urlsplit(self.path).path.strip("/").split("/")
                 if parts == ["api", "account-quota", "refresh"]:
                     self._json(200, account_quota.refresh())
+                elif parts == ['api', 'tasks']:
+                    self._json(200, controller.tasks.save(body))
+                elif len(parts) == 4 and parts[:2] == ['api', 'tasks'] and parts[3] == 'plan':
+                    self._json(200, controller.tasks.save(body, task_id=parts[2]))
                 elif parts == ['api', 'sources', 'extract']:
                     self._json(200, extract(body))
                 elif parts == ['api', 'templates']:

@@ -5,6 +5,7 @@ import json
 from typing import Any
 from app import memory, refine as refining, usage as token_usage
 from app import source_document
+from app import workflow
 from app.queries import catalog
 from app.roles import task_projection
 from app.state import CLI, MANUAL, QUEUED, RUNNING, AWAITING_USER, ACCEPTED, REJECTED, UNKNOWN, NOT_STARTED, INDEPENDENT_ONLY, gate, confirmed
@@ -149,7 +150,8 @@ class PublicQueries:
             every = self.invocations._synthesis_attempts(None if _global else run_id, summary=_summary)
             columns = ("run_id, created_at, question, task_id, mode, phase, min_independent, roster, "
                        "reduction_approved, cancel_requested, quorum_policy, '' AS prompt, '' AS input_sha256, "
-                       "0 AS input_bytes, json_remove(role_config, '$.memory') AS role_config") if _summary else '*'
+                       "0 AS input_bytes, json_remove(role_config, '$.memory', '$.task_plan.goal', "
+                       "'$.task_plan.done_when', '$.task_plan.dependency_evidence') AS role_config") if _summary else '*'
             query = f"SELECT {columns} FROM runs" + (" WHERE run_id = ?" if run_id is not None else "")
             for run in self.store.rows(query + " ORDER BY created_at DESC", *(() if run_id is None else (run_id,))):
                 part_columns = ("pid, spec, state, status, NULL AS detail, kind, "
@@ -271,7 +273,16 @@ class PublicQueries:
             unknown_slots = self.invocations._unknown_slots(every)
             held = "paused" if self.runtime.paused else ("unsettled" if unsettled >= self.runtime.unsettled_limit or (
                 unknown_slots and unknown_slots >= self.runtime.max_parallel) else None)
-            tasks = task_projection(self.store.rows("SELECT * FROM tasks ORDER BY created_at DESC"), runs, held=held)
+            specifications = workflow.plans(self.store)
+            if run_id is not None and specifications:
+                # Legacy per-run snapshots still expose honest dependency status,
+                # while the detail-only read avoids this global projection entirely.
+                wanted = {r['task_id'] for r in runs}
+                tasks = [t for t in self.view(_summary=True)['tasks'] if t['task_id'] in wanted]
+            else:
+                tasks = workflow.project_tasks(task_projection(self.store.rows("SELECT * FROM tasks ORDER BY created_at DESC"),
+                                                                runs, held=held, plans=specifications), specifications,
+                                               workflow.planning_states(self.store))
             # 실행에 쓰지 않은 다듬기: 최근 것과, 끝나지 않았거나 종료 미확인인 차례가 있는 것(오래돼도 정리할 수 있게)
             open_rows = {row["refine_id"]: row for row in self.store.rows(
                 "SELECT * FROM refinements WHERE run_id IS NULL ORDER BY created_at DESC LIMIT 20")}
@@ -287,12 +298,15 @@ class PublicQueries:
                 "SELECT * FROM splits WHERE used_by IS NULL AND state IN (?, ?)", RUNNING, UNKNOWN)})
             splits = sorted((self._split_view(row) for row in open_splits.values()),
                             key=lambda item: item["created_at"], reverse=True)
-            return {"executor": self.runtime.executor.name, "live_call_budget": self.invocations.call_budget(), "tasks": tasks,
+            result = {"executor": self.runtime.executor.name, "live_call_budget": self.invocations.call_budget(), "tasks": tasks,
                     "refinements": refinements, "splits": splits,
                     "provider_call_budgets": {aid: self.invocations.call_budget(aid) for aid in self.runtime.provider_call_caps},
                     "slots": {"used": self.invocations._slots_used(every), "cap": self.runtime.max_parallel},
                     "unsettled": {"count": unsettled, "limit": self.runtime.unsettled_limit},
                     "paused": self.runtime.paused, "runs": runs}
+            result['inbox'] = [*workflow.unattached_inputs(refinements, splits), *workflow.inbox(tasks)]
+            result['admission'] = workflow.admission(result)
+            return result
 
     @staticmethod
     def _seat_columns(table):

@@ -72,6 +72,7 @@ class PlanningService:
             self.invocations._upper_call_gate("다듬기는")
             key = refine_id or f"q{time.strftime('%m%d-%H%M%S')}-{uuid.uuid4().hex}"
             turn = len(previous) + 1
+            self.inputs.task_policy((remembered or {}).get('task_id'))
             text = refining.prompt(original, previous, note) + memory.footer(remembered)
 
             def insert(tx, attempt, kind):
@@ -168,6 +169,7 @@ class PlanningService:
             self.invocations._cli_card(orchestrator, "오케스트레이터")
             if task_id is not None and not self.store.row("SELECT 1 FROM tasks WHERE task_id = ?", task_id):
                 raise ControllerError("작업을 찾을 수 없습니다.")
+            self.inputs.task_policy(task_id)
             self.invocations._upper_call_gate("분담 제안은")
             key = f"s{time.strftime('%m%d-%H%M%S')}-{uuid.uuid4().hex}"
             labels = {f"M{index}": p.pid for index, p in enumerate(members, 1)}

@@ -11,6 +11,7 @@
 | 자료 준비부터 수정·재검토까지 따라가기 | [앱 사용 흐름](../app/README.md#모의-실행과-화면), [자료 추출](../app/README.md#공통-자료) | [현재 명령·조회 경계](../app/ARCHITECTURE.md#명령과-조회의-흐름), [검증 기록](reviews/README.md) |
 | 기록이 많아질 때 조회 비용 비교 | [조회 구조·측정 명령](../app/ARCHITECTURE.md#명령과-조회의-흐름) | [합성 원장 측정](reviews/2026-10-05-query-scale/README.md), [조회 회귀](../tests/test_query_projections.py) |
 | 자동 기억이 무엇을 놓치는지 확인 | [기억 범위·선택·누락](FEATURES.md#자동-기억의-범위) | [고정 사례 평가](reviews/2026-10-05-memory-evaluation/README.md), [평가 데이터](../tests/fixtures/memory_cases.json) |
+| 목표·선행 조건에서 다음 행동 찾기 | [작업 계획과 내 차례](../app/README.md#작업-계획과-내-차례) | [계획/단계 구조](../app/ARCHITECTURE.md), [흐름 검증](reviews/2026-10-05-workflow-inbox/README.md) |
 | 크게 고치기 전 전체 구조 판단 | [통합 개편 준비서](architecture/redesign-2026-10-04/README.md) | [현재와 격차](architecture/redesign-2026-10-04/CURRENT.md), [목표 구조·대안](architecture/redesign-2026-10-04/TARGET.md) |
 | 어떤 기능을 먼저 넣을지 선택 | [구현 후 우선순위](FEATURES.md#후속-우선순위) | [개편 전 전체 효용 비교](architecture/redesign-2026-10-04/PRIORITIES.md), [후보 배치 지도](architecture/redesign-2026-10-04/CAPABILITY-MAP.md), [누락·충돌 검토](architecture/redesign-2026-10-04/REVIEW.md) |
 | 구현 카드로 쪼개기 | [이행 단계·완료 기준](architecture/redesign-2026-10-04/MIGRATION.md) | [파이프라인](architecture/redesign-2026-10-04/PIPELINES.md), [데이터·상태 계약](architecture/redesign-2026-10-04/DATA-CONTRACTS.md) |

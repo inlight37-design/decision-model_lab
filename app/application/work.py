@@ -37,6 +37,8 @@ class WorkService:
         with self.runtime.lock, self.store.tx() as tx:
             if self.runtime.closing:
                 raise ControllerError("controller is shutting down")
+            if self.inputs.task_policy(task_id) != prepared['role_config'].get('task_plan'):
+                raise ControllerError('작업 계획이나 선행 결과가 바뀌었습니다. 보낼 입력을 다시 확인하세요.')
             if self.store.row("SELECT 1 FROM runs WHERE run_id = ?", run_id):
                 raise ControllerError("이미 시작한 실행입니다. 같은 확인으로 다시 부르지 않습니다.")
             if role_board is not None and (self.store.row(
