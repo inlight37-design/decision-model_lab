@@ -4,6 +4,7 @@ import json
 from typing import Any
 from app.state import QUEUED, RUNNING, AWAITING_USER, ACCEPTED, REJECTED, UNKNOWN, RunGate, gate
 from app.domain import ControllerError
+from app import source_document
 
 
 class RunRepository:
@@ -76,8 +77,21 @@ class RunRepository:
 
     def sources(self, run_id: str) -> list[dict[str, Any]]:
         """화면·보고에 보일 목록. 내용은 넘기지 않는다."""
-        return [{"name": row["name"], "sha256": row["sha256"], "bytes": row["bytes"]} for row in self.store.rows(
-            "SELECT name, sha256, bytes FROM sources WHERE run_id = ? ORDER BY name", run_id)]
+        prefix = source_document.PREFIX.encode('utf-8')
+        rows = self.store.rows('SELECT name, sha256, bytes, CASE WHEN substr(content, 1, ?) = ? '
+                               'THEN substr(content, 1, 32100) END AS header FROM sources WHERE run_id = ? ORDER BY name',
+                               len(prefix), prefix, run_id)
+        result = []
+        for row in rows:
+            item = {k: row[k] for k in ('name', 'sha256', 'bytes')}
+            if row['header'] is not None:
+                try:
+                    meta = source_document.metadata(row['header'], header_only=True)
+                    item.update(kind='extracted', range='selected', provenance=meta)
+                except ControllerError:
+                    item.update(kind='extracted', provenance_error=True)
+            result.append(item)
+        return result
 
 
     def _check_role_synthesizer(self, run_id, adapter_id=None):

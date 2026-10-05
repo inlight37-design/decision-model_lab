@@ -4,6 +4,7 @@ from dataclasses import asdict
 import json
 from typing import Any
 from app import memory, refine as refining, usage as token_usage
+from app import source_document
 from app.queries import catalog
 from app.roles import task_projection
 from app.state import CLI, MANUAL, QUEUED, RUNNING, AWAITING_USER, ACCEPTED, REJECTED, UNKNOWN, NOT_STARTED, INDEPENDENT_ONLY, gate, confirmed
@@ -72,6 +73,13 @@ class PublicQueries:
         # A single public snapshot feeds every search category. No raw ledger text
         # is queried by the catalog, including for counts and snippets.
         return catalog.search(self.view(), query, task_id=task_id, kind=kind, limit=limit)
+
+    def source(self, run_id, name):
+        with self.runtime.lock:
+            row = self.store.row('SELECT content, sha256 FROM sources WHERE run_id = ? AND name = ?', run_id, name)
+            if row is None or source_document.digest(row['content']) != row['sha256']:
+                raise ControllerError('자료를 찾을 수 없거나 저장한 해시와 다릅니다.')
+            return {**source_document.listing(name, row['content']), 'text': row['content'].decode('utf-8')}
 
     def activity(self, run_id):
         with self.runtime.lock:

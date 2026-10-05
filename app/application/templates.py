@@ -9,6 +9,7 @@ import uuid
 from app.context.inputs import _checked_sources
 from app.domain import ControllerError, storable
 from app.roles import freeze
+from app import source_document
 
 
 FIELDS = {'question', 'task_title', 'role_board', 'models', 'min_independent',
@@ -99,8 +100,7 @@ class TemplateService:
         except (ValueError, TypeError, KeyError) as exc:
             raise ControllerError('저장된 템플릿이 손상되었거나 지원하지 않는 형식입니다.') from exc
         return {'template_id': row['template_id'], 'name': row['name'], 'sha256': row['sha256'], **data,
-                'sources': [{'name': name, 'bytes': len(raw), 'sha256': hashlib.sha256(raw).hexdigest()}
-                            for name, raw in sources]}
+                'sources': [source_document.listing(name, raw) for name, raw in sources]}
 
     def delete(self, key, digest):
         with self.runtime.lock, self.store.tx() as tx:

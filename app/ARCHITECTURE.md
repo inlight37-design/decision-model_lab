@@ -14,6 +14,9 @@ flowchart TD
   F --> V[RevisionService / 수정·재검토]
   F --> S[SynthesisService / 합성]
   F --> Q[PublicQueries / 공개 조회]
+  HTTP --> A[ingestion / PDF·URL 추출]
+  A --> D[source_document / 출처·범위 결속]
+  D --> I
   W --> I[InputBuilder / 입력 고정]
   P --> I
   S --> I
@@ -40,6 +43,7 @@ flowchart TD
 | [controller.py](controller.py), [wiring.py](wiring.py) | 서비스 조립, 기존 메서드/설정 접근 호환, 두 실행 입구 연결 | 새 업무 로직이나 화면 projection 추가 |
 | [domain.py](domain.py), [state.py](state.py) | 참여자 값, 오류, Unicode·입력 표식·수용·정족수 정책 | HTTP·저장·모델 실행 |
 | [context/inputs.py](context/inputs.py) | 역할/자료/승인 확인, manifest·확인 hash, 입력 사본, 이전 기억 고정 | thread 시작, 실행 결과의 진실 판정 |
+| [ingestion/extract.py](ingestion/extract.py), [ingestion/url_fetch.py](ingestion/url_fetch.py), [source_document.py](source_document.py) | 제한된 PDF/공개 URL 추출, 출처·원본/변환/선택 hash와 누락을 텍스트에 결속 | 자동 첨부·모델 호출·OCR·페이지 렌더·로그인 |
 | [memory.py](memory.py) | 공개 완료 이력 선택·발췌·크기 상한·선택 이유 | 과거 pack 재계산, 전역 기억·의미 검색 |
 | [application/work.py](application/work.py) | 작업/실행/배정/승인 사용을 같은 거래로 생성 | 전송 방식·worker 내부 turn |
 | [application/templates.py](application/templates.py), [static/templates.js](static/templates.js) | 재사용 설정·자료 사본 저장/복원, 현재 모델 재검사, 파일 이동 | 실행·승인·예산·과거 기억 pack 복사 |
@@ -83,12 +87,18 @@ flowchart TD
 | `POST /api/revisions/{id}/recheck` | 해당 판을 원래 다른 CLI 팀원에게 재검토 요청 |
 | `POST /api/{revisions,rechecks}/{id}/acknowledge` | 자손 종료를 직접 확인한 사용자가 unknown 자리 해제. 재호출·환불 없음 |
 | `GET /api/runs/{id}/revision-report` | 원본·수정·재검토 hash를 확인한 `decision-revision-history/1` 내보내기 |
+| `POST /api/sources/extract` | PDF 파일 또는 공개 URL의 선택 범위를 추출. 원장 쓰기·실행 없음 |
+| `GET /api/runs/{id}/sources/{name}` | 해시 확인 후 저장한 자료 사본과 추출 출처 조회. 입력 자료이며 모델 답은 반환하지 않음 |
 
 schema 16은 `work_templates`와 별도의 `answer_revisions`·`revision_checks`를 둔다. 기존 실행 행/event 의미는 유지한다. 역할별 저장 adapter가 공통 Invocation을 만들며 manual·미시작 review·모델 없는 합성을 호출로 발명하지 않는다. 전역 event revision이나 command receipt table은 아직 없다.
 
 수정은 원래 CLI 작성자·원본 hash·앞 판·지적과 당시 처분을 고정한다. 미리보기 이후 근거가 바뀌면 시작을 거절한다. 작성자는 원래 자료 사본을 읽고 재검토자는 고정 지적과 수정 답을 받는다. 팀원/실행당 수정, 판당 재검토는 각각 최대 2회이며 실패도 포함한다. 다음 판은 앞 판의 재검토 이후 가능하다. 모든 호출은 SEATS를 통해 공통 예약·수용·종료·복구를 쓰고 원래 초안/정족수를 바꾸지 않는다. 검색·호출·사용량·기억·판단 완료에 연결하며 기존 draft/decision report와 합성은 원래 초안을 유지한다.
 
 새 기억에는 일치 표현·순위·최근 기록 대체 여부를 hash 안에 저장한다. 이것도 전달문 크기 상한에 포함된다. 옛 pack은 그대로 읽으며 기록하지 않은 과거 선택 이유를 추측해서 채우지 않는다. 선택 점수는 사실의 신뢰도가 아니다.
+
+추출은 InputBuilder 앞의 명시적인 준비 단계다. `DECISION-SOURCE/1` 텍스트에 출처·시각·원본/변환/선택 hash·쪽/줄 범위·누락·글을 묶어 기존 자료 사본과 템플릿으로 전달한다. 새 DB table은 없으며 일반 자료의 기존 형식은 그대로다. 목록 조회는 추출 자료의 제한된 header만 읽고 사본 조회 때 전체 hash를 맞춘다. 추출 자료가 있는 draft report만 `/6`으로 출처 정보를 추가하고, 일반 자료의 `/5`와 기존 기억은 유지한다. 합성은 두 보고 형식 모두 받는다.
+
+PDF는 로컬 Poppler를 shell 없이 호출하며 원본 1 MiB, 한 번에 20쪽·글 190 KiB로 제한한다. URL은 stdlib 자식 프로세스의 시간·출력 상한 안에서 읽는다. 각 redirect의 공개 IP를 검사한 뒤 그 IP에 연결하고 TLS는 원래 hostname을 검증한다. 환경 프록시도 검증한 IP로 CONNECT하며 거절 시 우회하지 않는다. 인증·쿠키·외부 리소스·JavaScript를 사용하지 않는다. 원본 바이너리/HTTP 응답은 임시 처리 후 지우며 출처 정보는 진위 보장이 아니다. 변환기 자체의 격리 안전성을 입증한 것은 아니다.
 
 ## 유지할 계약과 되돌리기
 

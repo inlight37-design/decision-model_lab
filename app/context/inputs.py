@@ -9,6 +9,7 @@ import time
 import uuid
 from typing import Any
 from app import memory
+from app import source_document
 from app.roles import freeze as freeze_roles
 from app.state import CLI, MANUAL, RUNNING, ACCEPTED, UNKNOWN, INDEPENDENT_ONLY, QUORUM_POLICIES, ISOLATED, GENERAL, NO_QUORUM, confirmed
 from core import contract, membership as m
@@ -61,6 +62,7 @@ def _checked_sources(items) -> list[tuple[str, bytes]]:
         total += len(data)
         if len(data) > MAX_SOURCE_BYTES or total > MAX_SOURCES_TOTAL:
             raise ControllerError(f"sources are limited to {MAX_SOURCE_BYTES} bytes each and {MAX_SOURCES_TOTAL} in total")
+        source_document.metadata(data)
         seen.add(name.lower())
         checked.append((name, data))
     return sorted(checked)
@@ -171,8 +173,7 @@ class InputBuilder:
                     "mode": ISOLATED, "question": question, "prompt": prompt, "input_sha256": hashlib.sha256(data).hexdigest(),
                     "input_bytes": len(data), "role_config": roles,
                     "min_independent": min_independent, "quorum_policy": quorum_policy,
-                    "sources": [{"name": name, "bytes": len(content), "sha256": hashlib.sha256(content).hexdigest()}
-                                for name, content in checked_sources],
+                    "sources": [source_document.listing(name, content) for name, content in checked_sources],
                     "calls": {"draft_cli": sum(p.transport == CLI for p in participants),
                               "model_calls": 0 if self.runtime.executor.kind != contract.REAL else None,
                               "live_cap": self.runtime.max_real_calls, "provider_caps": dict(self.runtime.provider_call_caps)},
@@ -206,8 +207,7 @@ class InputBuilder:
                     or len(set(names)) != len(names)):
                 raise ControllerError(f"{p.label}: 받을 자료는 이번에 붙인 자료의 이름을 한 번씩만 적습니다.")
             used.update(names)
-            listed = [{"name": n, "bytes": len(contents[n]), "sha256": hashlib.sha256(contents[n]).hexdigest(),
-                       "kind": SOURCE_KIND_ORIGINAL, "range": SOURCE_RANGE_WHOLE} for n in sorted(names)]
+            listed = [source_document.listing(n, contents[n], assignment=True) for n in sorted(names)]
             prompt = GENERAL_PROMPT.format(question=question, task=task)
             if listed:
                 prompt += _source_footer(self._member_source_root(run_id, p.pid), listed)
@@ -222,8 +222,7 @@ class InputBuilder:
                     "mode": GENERAL, "question": question, "prompt": "",
                     "input_sha256": _bundle_digest(members), "input_bytes": sum(v["input_bytes"] for v in members.values()),
                     "role_config": roles, "min_independent": 0, "quorum_policy": NO_QUORUM,
-                    "sources": [{"name": name, "bytes": len(content), "sha256": hashlib.sha256(content).hexdigest()}
-                                for name, content in checked_sources],
+                    "sources": [source_document.listing(name, content) for name, content in checked_sources],
                     "assignments": members,
                     "calls": {"draft_cli": len(participants),
                               "model_calls": 0 if self.runtime.executor.kind != contract.REAL else None,
@@ -291,7 +290,8 @@ class InputBuilder:
         rows = [self.store.row("SELECT name, sha256, bytes, content FROM sources WHERE run_id = ? AND name = ?",
                                run_id, source["name"]) for source in listed]
         if any(row is None or (row["sha256"], row["bytes"]) != (source["sha256"], source["bytes"])
-               or source.get("kind") != SOURCE_KIND_ORIGINAL for row, source in zip(rows, listed)):
+               or source != source_document.listing(row['name'], row['content'], assignment=True)
+               for row, source in zip(rows, listed)):
             raise ControllerError("the source snapshot changed after the run was created; no call was started")
         return self._snapshot(root, rows)
 

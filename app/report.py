@@ -16,6 +16,8 @@ from app import revisions
 # 5: 공개 뒤 교차검토(cross_review, 카드 #152)를 싣는다 — 검토 질문, 검토자마다의 상태와 지적(대상·인용·원문 일치·
 #    종류·설명), 사람이 고른 처분과 시각, 검토하지 않은 관계, 독립 아님. 검토자 지시문 전문은 싣지 않고 해시만 싣는다.
 SCHEMA = "a1-draft-report/5"
+# 6 applies only to extracted inputs, adding their provenance and omission ranges.
+EXTRACTED_SCHEMA = 'a1-draft-report/6'
 # 공개 투영에 나중에 필드가 늘어도 원장·토큰·자유 메타데이터를 통째로 내보내지 않는다.
 PARTICIPANT_FIELDS = ("pid", "label", "provider", "transport", "independence", "state", "status", "dropped",
                       "contamination", "execution")
@@ -64,13 +66,21 @@ def build_report(view: dict[str, Any], run_id: str) -> dict[str, Any]:
         item["observation"] = {key: deepcopy(observation[key]) for key in OBSERVATION_FIELDS if key in observation}
         participants.append(item)
     budget = run["budget"]
+    sources = []
+    for item in run.get('sources', []):
+        if item.get('provenance_error'):
+            raise ReportError('source provenance is corrupt')
+        source = {key: deepcopy(item[key]) for key in ('name', 'sha256', 'bytes')}
+        if item.get('provenance'):
+            source.update(kind='extracted', range='selected', provenance=deepcopy(item['provenance']))
+        sources.append(source)
     return {
-        "schema": SCHEMA,
+        "schema": EXTRACTED_SCHEMA if any(s.get('provenance') for s in sources) else SCHEMA,
         "disposition": "report_without_synthesis",
         "source": {"run_id": run_id, "created_at": run["created_at"], "phase": run["phase"]},
         "input": {"question": run["question"], "prompt": run["prompt"], "sha256": run["input_sha256"],
                   "bytes": run["input_bytes"],
-                  "sources": [{key: item[key] for key in ("name", "sha256", "bytes")} for item in run.get("sources", [])]},
+                  "sources": sources},
         "quorum": {key: deepcopy(run["quorum"][key]) for key in QUORUM_FIELDS},
         "reduction_approved": run["reduction_approved"],
         "synthesis": {"status": "not_included", "additional_model_calls": 0},

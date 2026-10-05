@@ -35,6 +35,7 @@ async function saveTemplate() {
   try {
     const draft = await templateDraft();
     if (generation !== previewGeneration || !$('composeDialog').open) return;
+    clearExtraction();
     await api('/api/templates', {name, draft});
     if (generation !== previewGeneration || !$('composeDialog').open) return;
     await refreshTemplates();
