@@ -9,6 +9,8 @@
 | 하고 싶은 일 | 현재 동작 | 코드 | 확인 근거 |
 |---|---|---|---|
 | 작업을 만들고 이어서 실행 | 홈·작업 목록·타임라인, 같은 작업에 새 실행, 역할·입력 확인 후 시작 | [역할판](../app/static/role-board.js), [역할 계약](../app/roles.py) | [역할판 검사](../tests/test_role_board.py), [화면 검사](../tests/test_role_board_render.py) |
+| 목표와 선행 작업 정하기 | 실행 전 계획 저장, 현재 판의 목표·완료 기준·먼저 끝낼 작업. 선행 판단 완료 후 새 입력 준비 | [계획 서비스](../app/application/tasks.py), [흐름 projection](../app/workflow.py), [화면](../app/static/workflow.js) | [계획·경쟁·재시작 검사](../tests/test_workflow.py), [사용 흐름](../app/README.md#작업-계획과-내-차례) |
+| 지금 할 일과 막힌 이유 확인 | 내 차례·선행 대기·종료 미확정으로 이동, 입력→수집→검토/수정→판단 단계와 실행 용량 표시 | [흐름 projection](../app/workflow.py), [공개 조회](../app/queries/public.py) | 같은 공개 상태에서 계산하며 자동 실행·자동 해결 없음 |
 | 모델과 역할 고르기 | 슈퍼바이저·오케스트레이터·일반·격리 칸, 허용한 모델 선택. 빈 상위 칸은 사람 | [서버](../app/server.py), [역할 계약](../app/roles.py) | [앱 사용법](../app/README.md). 추론 강도 연결은 아직 없음 |
 | 서로 보지 않고 풀게 하기 | 격리 초안을 봉인하고 정족수·종료 관문 뒤 공개. 자동 기억 제외 | [실행 조정](../app/execution/coordinator.py), [상태 관문](../app/state.py) | [controller 검사](../tests/test_app_controller.py), [실제 관측 위치](../NEXT-SESSION.md) |
 | 일을 나눠 맡기기 | 일반 팀원마다 맡길 일·자료를 고정하고 결과가 오는 대로 표시 | [입력 구성](../app/context/inputs.py), [작업 명령](../app/application/work.py), [역할판](../app/static/role-board.js) | [일반 팀원 검사](../tests/test_general_team.py) |
@@ -57,7 +59,8 @@
 | 반영 | 자료 추출·부분 첨부 — H03/45/47 | PDF/URL 준비 부담 감소. InputBuilder 앞 추출·미리보기 | 원본/변환/선택 hash·출처·누락 범위를 사본에 결속. PDF/HTML·실패·주소/redirect 경계 검사. OCR·동적 페이지 제외 |
 | 반영 | 목록/상세 query·작업/종류 필터 선적용 — D05, OP01/03 | 목록의 답·입력 전문 제외, 검색의 전체 결과 동시 적재 감소 | [합성 부하·동등성 기록](reviews/2026-10-05-query-scale/README.md). 전체 검색·작업 타임라인은 선형; 실제 PC 부하는 미측정 |
 | 반영 | 자동 기억 선택 평가·근거 발췌 — OP08 | 질문 밖 판단/지적을 찾고 긴 메모 뒤 반례 누락을 줄임 | [고정 사례 평가](reviews/2026-10-05-memory-evaluation/README.md). 오래된 후보·동의어·답 본문만의 표현은 미해결 |
-| P2 | 명세·의존성·수신함·설정 설명 — OP04/05/10/11 | 다음 할 일과 막힌 이유를 한 흐름으로 표시 | 현재 command/service 경계 위 typed step, 전역 revision/receipt/outbox 필요성 별도 확정 |
+| 반영 | 목표·완료 기준·선행 조건·수신함 — OP04/05/10/11 일부 | 현재 계획과 결과 판을 연결하고 다음 행동/차단 이유를 설명 | [계획·선행·입력·화면 검증](reviews/2026-10-05-workflow-inbox/README.md). 자동 scheduler·원격 카드 동기화·읽음/outbox는 도입하지 않음 |
+| 다음 검토 | 실제 사용 흐름 관측, 큰 작업 목록 페이지화, 더 넓은 기억 평가 | 현재 합성 사례 밖의 부담·누락과 사용자 불편 확인 | 실사용 입력/분포로 판단. FTS·의미 검색·일반 팀원 검토는 필요성과 비용을 먼저 비교 |
 | P3 조건부 | 지속 실행·예약·원격/코딩·고급 검색 — OP02, H33–60, O31/33 | 장기 작업·실제 파일 변경·다른 도구 연결 | 기기 관측, writer 소유권, 파일/원장/지출 복구 구별, 효과·운영 부담 근거 |
 
 이 순서는 모든 외부 기능을 이미 채택했다는 뜻이 아니다. 입력·실행·검토·명시적 수정은 동작하고, DAG engine·자동 수정 loop·새 invocation table·전역 memory·원격 worker는 후속 선택지다.

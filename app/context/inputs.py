@@ -82,10 +82,11 @@ def _source_footer(folder: str, sources) -> str:
 
 
 class InputBuilder:
-    def __init__(self, runtime, repository):
+    def __init__(self, runtime, repository, task_policy=None):
         self.runtime = runtime
         self.store = runtime.store
         self.repository = repository
+        self.task_policy = task_policy or (lambda task_id: None)
 
     def prepare_run(self, question: str, participants: list[ParticipantSpec], *, min_independent: int,
                     quorum_policy: str = INDEPENDENT_ONLY, sources=None, task_id=None, task_title=None,
@@ -158,6 +159,9 @@ class InputBuilder:
         elif task_title is not None and (not isinstance(task_title, str) or not task_title.strip()
                                          or len(task_title.strip()) > 120 or not storable(task_title)):
             raise ControllerError("작업 제목은 1~120자의 올바른 글이어야 합니다.")
+        plan = self.task_policy(task_id)
+        if plan is not None:
+            roles['task_plan'] = plan
         roles["memory"] = self._select_memory(task_id, question, use_memory)
         suggested = self._approved_proposal(proposal, roles, question, task_id) if proposal is not None else None
         if general:

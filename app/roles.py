@@ -6,6 +6,7 @@ from dataclasses import asdict
 
 from app import usage as token_usage
 from app.state import CLI
+from app import workflow
 
 
 def freeze(board, participants, roster):
@@ -72,7 +73,7 @@ def _freeze_general(board, participants, result, roster):
             "orchestrator": asdict(orchestrator) if orchestrator else None}
 
 
-def task_projection(tasks, runs, held=None):
+def task_projection(tasks, runs, held=None, plans=None):
     """controller.view의 공개 투영만 받는다. 초안·결과·진행 시간은 목록으로 복사하지 않는다.
 
     held는 controller가 대기 시도를 지금 시작하지 않는 이유다 — "paused"(재시작 뒤 사용자가 이어서 시작하라고 할
@@ -104,6 +105,8 @@ def task_projection(tasks, runs, held=None):
                 status, action = "problem", "종료·실패 확인"
             elif run["cancel_requested"] or gate["status"] == "quorum_blocked":
                 status, action = "problem", "실행 확인"
+            elif "queued" in checked and held == "unsettled":
+                status, action = "problem", "종료 미확인 정리 뒤 검토 시작"
             elif "queued" in checked and held == "paused":
                 status, action = "my_turn", "멈춘 교차검토 이어서 시작"
             elif synth == "running" or "running" in asked or checked & {"running", "queued"}:
@@ -125,6 +128,12 @@ def task_projection(tasks, runs, held=None):
             timeline.append({"run_id": run["run_id"], "question": run["question"],
                              "created_at": run["created_at"], "role_config": run["role_config"],
                              "status": status, "action": action,
+                             'result_revision': run.get('result_revision'), 'steps': workflow.steps(run, held),
+                             'unsettled': 'unknown' in (states | asked | checked) or synth == 'unknown' or
+                                          any(c['state'] == 'unknown' for c in run.get('collations', [])),
+                             'active': (not run['cancel_requested'] and bool(states & {'running', 'queued', 'awaiting_user'})) or
+                                       synth == 'running' or bool((asked | checked) & {'running', 'queued'}) or
+                                       any(c['state'] == 'running' for c in run.get('collations', [])),
                              # 실행에 묶인 다듬기 차례와 다음 단계 제안도 이 작업이 쓴 호출이다(2026-09-27 실제 확인에서
                              # 다듬기 차례가 빠진 것을 봄). 제안·결과 모으기의 실제 예약은 그 실행의 예약(reserved)에도
                              # 들어 있다
@@ -135,13 +144,13 @@ def task_projection(tasks, runs, held=None):
                                            + len((run.get("refinement") or {}).get("turns", []))
                                            + (1 if run.get("split") else 0)})   # 일반 실행에 묶인 분담 제안(#135)
         latest = timeline[-1] if timeline else None
-        if latest is None:
+        if latest is None and task['task_id'] not in (plans or {}):
             continue  # 단일 실행 보고에는 그 실행의 작업만 싣는다.
         mine = grouped.get(task["task_id"], [])
         # 작업의 토큰 합계(카드 #141). 봉인 중인 실행은 합계가 없어 sealed_runs로만 센다
         tokens = token_usage.combine((r.get("usage") for r in mine), sealed=sum(r.get("usage") is None for r in mine))
         status = next((s for s in ("problem", "my_turn", "working")
-                       if any(r["status"] == s for r in timeline)), "done")
+                       if any(r["status"] == s for r in timeline)), "done" if timeline else 'my_turn')
         projected.append({"task_id": task["task_id"], "title": task["title"], "created_at": task["created_at"],
                           "status": status, "role_config": latest["role_config"] if latest else None,
                           "calls_used": sum(r["calls_used"] for r in timeline), "usage": tokens, "runs": timeline})

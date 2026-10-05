@@ -1,0 +1,87 @@
+{
+  "scope": "synthetic cloud ledger; no model calls",
+  "results": [
+    {
+      "runs": 100,
+      "measurements": {
+        "full_snapshot": {
+          "median_ms": 20.39,
+          "peak_bytes": 3174314,
+          "response_bytes": 2637259,
+          "statements": 1233
+        },
+        "one_detail": {
+          "median_ms": 0.45,
+          "peak_bytes": 59071,
+          "response_bytes": 27600,
+          "statements": 45
+        },
+        "search_all": {
+          "median_ms": 18.29,
+          "peak_bytes": 490123,
+          "response_bytes": 24921,
+          "statements": 1402
+        },
+        "search_task": {
+          "median_ms": 2.06,
+          "peak_bytes": 201536,
+          "response_bytes": 8381,
+          "statements": 142
+        },
+        "search_question": {
+          "median_ms": 0.29,
+          "peak_bytes": 46084,
+          "response_bytes": 7281,
+          "statements": 2
+        },
+        "overview": {
+          "median_ms": 10.32,
+          "peak_bytes": 1059328,
+          "response_bytes": 123690,
+          "statements": 834
+        }
+      }
+    },
+    {
+      "runs": 1000,
+      "measurements": {
+        "full_snapshot": {
+          "median_ms": 231.44,
+          "peak_bytes": 31727644,
+          "response_bytes": 26370259,
+          "statements": 12033
+        },
+        "one_detail": {
+          "median_ms": 0.77,
+          "peak_bytes": 60603,
+          "response_bytes": 27600,
+          "statements": 45
+        },
+        "search_all": {
+          "median_ms": 187.42,
+          "peak_bytes": 3000897,
+          "response_bytes": 24922,
+          "statements": 14002
+        },
+        "search_task": {
+          "median_ms": 2.09,
+          "peak_bytes": 220278,
+          "response_bytes": 8381,
+          "statements": 142
+        },
+        "search_question": {
+          "median_ms": 3.64,
+          "peak_bytes": 321766,
+          "response_bytes": 7282,
+          "statements": 2
+        },
+        "overview": {
+          "median_ms": 102.11,
+          "peak_bytes": 10449910,
+          "response_bytes": 1233390,
+          "statements": 8034
+        }
+      }
+    }
+  ]
+}

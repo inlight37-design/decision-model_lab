@@ -35,6 +35,7 @@ from app.application.synthesis import SynthesisService
 from app.application.work import WorkService
 from app.application.templates import TemplateService
 from app.application.revisions import RevisionService
+from app.application.tasks import TaskService
 
 
 class Controller:
@@ -57,8 +58,9 @@ class Controller:
                                work_root or os.path.join(tempfile.gettempdir(), "dml-work"), cap, providers)
         self.repository = RunRepository(self.runtime)
         self.invocations = InvocationLedger(self.runtime)
-        self.inputs = InputBuilder(self.runtime, self.repository)
         self.queries = PublicQueries(self.runtime, self.invocations, self.repository)
+        self.tasks = TaskService(self.runtime, self.queries)
+        self.inputs = InputBuilder(self.runtime, self.repository, self.tasks.require_ready)
         self.execution = ExecutionCoordinator(self.runtime, self.inputs, self.invocations, self.repository)
         self.planning = PlanningService(self.runtime, self.execution, self.inputs, self.invocations, self.queries, self.repository)
         self.reviews = ReviewService(self.runtime, self.execution, self.inputs, self.invocations, self.repository)

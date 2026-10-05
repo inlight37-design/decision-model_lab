@@ -18,7 +18,9 @@
 .catalog-dialog { width: min(720px, calc(100vw - 32px)); backdrop-filter: var(--surface-blur); }
 #newRunPanel { position: relative; inset: auto; max-height: none; padding: 0; overflow: visible; background: none; box-shadow: none; backdrop-filter: none; }
 #newRunPanel .close-x { top: 0; right: 0; }
-#taskTitle, #templateName { font: inherit; border: 1px solid var(--line); border-radius: var(--r-cell); background: var(--surface-2); color: var(--text); padding: var(--s-3); }
+#taskTitle, #templateName, #planTitle { font: inherit; border: 1px solid var(--line); border-radius: var(--r-cell); background: var(--surface-2); color: var(--text); padding: var(--s-3); }
+#planDependencies { border: 1px solid var(--line); border-radius: var(--r-cell); padding: var(--s-3); min-width: 0; }
+#planDependencies label { overflow-wrap: anywhere; }
 #inputPreview { margin-top: var(--s-5); border-top: 1px solid var(--line); padding-top: var(--s-5); }
 #inputPreview[hidden], #taskTitleField[hidden] { display: none; }
 #newRunPanel fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }

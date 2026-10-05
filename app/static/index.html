@@ -419,6 +419,7 @@ button.is-pressed { background-image: linear-gradient(color-mix(in oklch, curren
 <script src="/templates.js"></script>
 <script src="/revisions.js"></script>
 <script src="/extraction.js"></script>
+<script src="/workflow.js"></script>
 <script>
 "use strict";
 const TOKEN = controlToken();
@@ -1204,7 +1205,8 @@ function questionIsland(run) {
   return island(null, parts);
 }
 function renderRun(run) {
-  const sig = JSON.stringify([run, firstView, liveMode, synthesizers.length]);
+  const progress = (state?.tasks || []).find(t => t.task_id === run.task_id)?.runs.find(r => r.run_id === run.run_id);
+  const sig = JSON.stringify([run, progress, firstView, liveMode, synthesizers.length]);
   if (sig === runSig) return;
   // 입력 중에는 다시 그리지 않는다(글자·커서가 사라진다). 다음 새로고침에 그린다.
   const active = document.activeElement;
@@ -1215,7 +1217,7 @@ function renderRun(run) {
   // 일반 실행: 결과 모음은 처음부터, 판단은 모두 끝난 뒤. 합성·원문 보고는 공개된 격리 실행에만 있다.
   const body = run.mode === "general" ? [generalResults(run), collationIsland(run), (run.gate || {}).collected ? reviewIsland(run) : null, usageIsland(run)]
     : revealed ? [...synthesisPanel(run), proposalIsland(run), crossReviewIsland(run), revisionIsland(run), reviewIsland(run), saveIsland(run), usageIsland(run)] : [];
-  $("mainCol").replaceChildren(questionIsland(run),
+  $("mainCol").replaceChildren(questionIsland(run), ...[workflowSteps(run)].filter(Boolean),
     island("기록 탐색", [h("div", {class: "row"},
       h("button", {type: "button", class: "btn", onclick: openCatalog}, "기록 찾기"),
       h("button", {type: "button", class: "btn", onclick: () => openActivity(run)}, "호출 기록"))]),
@@ -1322,6 +1324,8 @@ function openNewRun(taskId = null) {
   $("composeTitle").textContent = taskId ? "이 작업에 새 실행" : "새 작업";
   $("taskTitleField").hidden = !!taskId;
   $("taskTitle").value = ""; $("question").value = ""; picked = []; renderPicked("");
+  const plan = (state?.tasks || []).find(t => t.task_id === taskId)?.plan;
+  if (plan) $("question").value = plan.goal + "\n\n완료 기준: " + plan.done_when;
   $("composeDialog").showModal(); $("newRunBtn").setAttribute("aria-expanded", "true");
   $("templateName").value = ""; $("templateStatus").textContent = ""; refreshTemplates();
   (taskId ? $("question") : $("taskTitle")).focus();
