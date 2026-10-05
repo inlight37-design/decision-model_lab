@@ -80,6 +80,7 @@
 | [`2026-10-05-query-scale/`](2026-10-05-query-scale/README.md) | 합성 대량 원장 baseline, 목록/선택 상세 분리, 검색 필터 선적용·동등성·브라우저 확인 |
 | [`2026-10-05-memory-evaluation/`](2026-10-05-memory-evaluation/README.md) | 한국어·부정·반대 근거의 고정 선택 평가, 판단/지적 검색과 균형 발췌, 후보/발췌 누락 표시 |
 | [`2026-10-05-workflow-inbox/`](2026-10-05-workflow-inbox/README.md) | 목표·완료 기준·선행 계획, 입력/생성 거래 재확인, 단계·다음 행동·종료 확인과 통합 부하 |
+| [`2026-10-05-list-pagination/`](2026-10-05-list-pagination/README.md) | 작업·타임라인·내 차례 cursor, 목록 밖 선행/실행, disposable 공개 집계와 최초/반복 조회 부하 |
 
 ## 읽는 순서
 

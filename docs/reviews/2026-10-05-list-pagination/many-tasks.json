@@ -1,0 +1,124 @@
+{
+  "scope": "synthetic cloud ledger; no model calls",
+  "runs_per_task": 10,
+  "results": [
+    {
+      "runs": 100,
+      "measurements": {
+        "full_snapshot": {
+          "median_ms": 28.71,
+          "peak_bytes": 3174394,
+          "response_bytes": 2637259,
+          "statements": 1233
+        },
+        "one_detail": {
+          "median_ms": 0.46,
+          "peak_bytes": 59103,
+          "response_bytes": 27600,
+          "statements": 45
+        },
+        "search_all": {
+          "median_ms": 18.86,
+          "peak_bytes": 490203,
+          "response_bytes": 24921,
+          "statements": 1402
+        },
+        "search_task": {
+          "median_ms": 2.25,
+          "peak_bytes": 201536,
+          "response_bytes": 8381,
+          "statements": 142
+        },
+        "search_question": {
+          "median_ms": 0.42,
+          "peak_bytes": 46084,
+          "response_bytes": 7281,
+          "statements": 2
+        },
+        "overview": {
+          "median_ms": 13.27,
+          "peak_bytes": 1059408,
+          "response_bytes": 123690,
+          "statements": 834
+        },
+        "browse_cold": {
+          "median_ms": 10.37,
+          "peak_bytes": 1052884,
+          "response_bytes": 12875,
+          "statements": 835
+        },
+        "browse_warm": {
+          "median_ms": 0.34,
+          "peak_bytes": 32341,
+          "response_bytes": 12875,
+          "statements": 1
+        },
+        "timeline_warm": {
+          "median_ms": 0.69,
+          "peak_bytes": 59867,
+          "response_bytes": 23338,
+          "statements": 1
+        }
+      }
+    },
+    {
+      "runs": 1000,
+      "measurements": {
+        "full_snapshot": {
+          "median_ms": 282.29,
+          "peak_bytes": 31801444,
+          "response_bytes": 26370259,
+          "statements": 12033
+        },
+        "one_detail": {
+          "median_ms": 0.68,
+          "peak_bytes": 60603,
+          "response_bytes": 27600,
+          "statements": 45
+        },
+        "search_all": {
+          "median_ms": 223.55,
+          "peak_bytes": 2997224,
+          "response_bytes": 24922,
+          "statements": 14002
+        },
+        "search_task": {
+          "median_ms": 2.14,
+          "peak_bytes": 220278,
+          "response_bytes": 8381,
+          "statements": 142
+        },
+        "search_question": {
+          "median_ms": 3.58,
+          "peak_bytes": 321846,
+          "response_bytes": 7282,
+          "statements": 2
+        },
+        "overview": {
+          "median_ms": 105.04,
+          "peak_bytes": 10482878,
+          "response_bytes": 1233390,
+          "statements": 8034
+        },
+        "browse_cold": {
+          "median_ms": 94.47,
+          "peak_bytes": 10598338,
+          "response_bytes": 23946,
+          "statements": 8035
+        },
+        "browse_warm": {
+          "median_ms": 0.64,
+          "peak_bytes": 68486,
+          "response_bytes": 23946,
+          "statements": 1
+        },
+        "timeline_warm": {
+          "median_ms": 1.19,
+          "peak_bytes": 106760,
+          "response_bytes": 34409,
+          "statements": 1
+        }
+      }
+    }
+  ]
+}

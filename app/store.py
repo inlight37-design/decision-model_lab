@@ -288,6 +288,7 @@ class Store:
                 # can open. No new stored semantics or schema-version change.
                 for name, table, columns in (
                         ('runs_by_task', 'runs', 'task_id, created_at DESC'),
+                        ('tasks_by_created', 'tasks', 'created_at DESC, task_id DESC'),
                         ('refinements_by_run', 'refinements', 'run_id'),
                         ('proposals_by_run', 'proposals', 'run_id, created_at'),
                         ('proposals_by_use', 'proposals', 'used_by'),
@@ -357,6 +358,13 @@ class Store:
             if fixed is not None and not saved:
                 tx.execute("INSERT INTO live_budget VALUES (1, ?, ?)", fixed, json.dumps(fixed_caps, sort_keys=True))
         return fixed, fixed_caps
+
+    def read_token(self):
+        """Invalidate disposable query caches, including external commits and rollback writes."""
+        with self._lock:
+            if self._db.in_transaction:
+                return None
+            return self._db.total_changes, self._db.execute('PRAGMA data_version').fetchone()[0]
 
     def rows(self, sql: str, *args: Any) -> list[sqlite3.Row]:
         with self._lock:

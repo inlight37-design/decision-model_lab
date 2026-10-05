@@ -500,6 +500,7 @@ async function confirmRun() {
   // render()가 채운다. 기존 작업에 붙인 실행이면 그 작업은 처음부터 안다.
   closeNewRun(); picked = []; renderPicked("");
   selected = created.run_id;
+  taskSelected = body.task_id || null; resetPages("runs");
   await refresh().catch(() => false);
   const run = ((state && state.runs) || []).find(r => r.run_id === created.run_id);
   navigateTask(run ? run.task_id : (body.task_id || null), created.run_id);
@@ -512,6 +513,7 @@ function closeNewRun() {
   invalidatePreview();
 }
 function navigateTask(taskId = null, runId = null) {
+  if (taskId !== taskSelected) resetPages("runs");
   taskSelected = taskId; selected = runId; taskPageSig = null; runSig = null; listSig = null;
   const query = new URLSearchParams();
   if (taskId) query.set("task", taskId);
@@ -524,11 +526,11 @@ function taskCard(task) {
   return h("button", { type: "button", class: "task-card cell", onclick: () => navigateTask(task.task_id) },
     h("span", { class: "row between" }, h("span", { class: "strong lg" }, task.title), badge(TASK_LABELS[task.status])),
     h("span", { class: "sm muted" }, roleSummary(task.role_config)),
-    h("span", { class: "cap muted" }, `실행 ${task.runs.length}개 · 쓴 CLI 호출 ${task.calls_used} · 구독 차감량이 아님`));
+    h("span", { class: "cap muted" }, `실행 ${task.run_count ?? task.runs.length}개 · 쓴 CLI 호출 ${task.calls_used} · 구독 차감량이 아님`));
 }
 function renderTaskNavigation() {
-  const tasks = state.tasks || [], task = tasks.find(t => t.task_id === taskSelected);
-  const sig = JSON.stringify([taskSelected, selected, tasks]);
+  const tasks = state.tasks || [], task = currentTask();
+  const sig = JSON.stringify([taskSelected, selected, tasks, task?.title, state.pages]);
   if (sig === listSig) return;
   listSig = sig;
   // replaceChildren은 h()와 달리 null·배열을 거르지 않고 글자("null", "[object HTMLButtonElement]")로 넣는다.
@@ -538,7 +540,8 @@ function renderTaskNavigation() {
   $("runListIsland").replaceChildren(h("h2", { class: "block-title" }, "작업"),
     ...(tasks.length ? tasks.map(t => h("button", { type: "button", class: "run-row", "aria-current": String(t.task_id === taskSelected),
       onclick: () => navigateTask(t.task_id) }, h("span", { class: "sm strong" }, t.title), h("span", { class: "cap muted" }, TASK_LABELS[t.status]))) :
-      [h("p", { class: "sm muted" }, "새 작업에서 첫 질문을 시작하세요.")]));
+      [h("p", { class: "sm muted" }, "이 위치에 작업이 없습니다. 처음으로 돌아가거나 새 작업을 만드세요.")]),
+    ...[pageControls("tasks")].filter(Boolean));
   pressAll($("runTabs")); pressAll($("runListIsland"));
 }
 // 창을 닫아도 남는, 끝났는지 모르는 다듬기 차례. 자리를 쥐고 있으므로 홈에서도 정리할 수 있게 한다.
@@ -554,9 +557,14 @@ function stuckRefinements() {
       } }, "종료를 직접 확인했음")))]) : null;
 }
 function renderTaskPage() {
-  const tasks = state.tasks || [], task = tasks.find(t => t.task_id === taskSelected);
+  const tasks = state.tasks || [], task = currentTask();
+  if (taskSelected && state.pages && state.focus_task?.task_id !== taskSelected) {
+    taskPageSig = null;
+    $("mainCol").replaceChildren(island("작업 조회", h("p", {class: "sm muted"}, "선택한 작업을 조회하고 있습니다.")));
+    $("asideCol").replaceChildren(); return;
+  }
   const stuck = stuckRefinements();
-  const sig = JSON.stringify([taskSelected, tasks, state.inbox, state.admission,
+  const sig = JSON.stringify([taskSelected, tasks, task, state.pages, state.inbox, state.admission,
     ((state && state.refinements) || []).map(r => r.turns.map(t => t.state))]);
   if (sig === taskPageSig) return;
   taskPageSig = sig; runSig = null; $("asideCol").replaceChildren();
@@ -567,7 +575,7 @@ function renderTaskPage() {
         h("button", {type: "button", class: "btn", onclick: () => openCatalog()}, "기록 찾기"),
         h("button", {type: "button", class: "btn", onclick: () => openTaskPlan()}, "계획부터 만들기"),
         h("button", { type: "button", class: "btn btn-brand", onclick: () => openNewRun() }, "새 작업"))),
-      h("div", { class: "task-grid island-part" }, tasks.length ? tasks.map(taskCard) : h("p", { class: "sm muted" }, "아직 작업이 없습니다."))]),
+      h("div", { class: "task-grid island-part" }, tasks.length ? tasks.map(taskCard) : h("p", { class: "sm muted" }, "이 위치에 작업이 없습니다.")), pageControls("tasks")]),
     island("프로젝트 안내", [h("p", { class: "sm muted" }, "현재 기능과 개편 제안, 참고 근거를 구분해 찾아봅니다."),
       h("div", { class: "row island-part" },
         h("a", { class: "btn", href: "https://github.com/inlight37-design/decision-model_lab/blob/main/docs/DOCUMENT-MAP.md", target: "_blank", rel: "noopener" }, "문서 지도 (새 탭)"),
@@ -582,12 +590,13 @@ function renderTaskPage() {
       h("div", { class: "row island-part" }, badge(TASK_LABELS[task.status]), h("span", { class: "sm" }, `쓴 CLI 호출 ${task.calls_used}`),
         h("button", { type: "button", class: "btn btn-brand", disabled: task.readiness && !task.readiness.dependencies_met,
           onclick: () => openNewRun(task.task_id) }, "이 작업에 새 실행"))]), taskPlanPanel(task),
-    island("실행 타임라인", h("ol", { class: "task-timeline stack-lg" }, task.runs.map((run, i) => h("li", {},
+    island("실행 타임라인", [h("p", {class: "cap muted"}, "최근 실행부터 표시합니다."),
+      h("ol", { class: "task-timeline stack-lg" }, task.runs.map(run => h("li", {},
       h("button", { type: "button", class: "task-card cell", onclick: () => navigateTask(task.task_id, run.run_id) },
-        h("span", { class: "row between" }, h("span", { class: "strong" }, `실행 ${i + 1} · ${run.question}`), badge(TASK_LABELS[run.status])),
+        h("span", { class: "row between" }, h("span", { class: "strong" }, run.question), badge(TASK_LABELS[run.status])),
         h("span", { class: "cap muted" }, `${fmtTime(run.created_at)} · CLI 호출 ${run.calls_used}`),
         h("span", { class: "sm muted" }, roleSummary(run.role_config)),
-        run.action ? h("span", { class: "sm strong" }, run.action + " →") : null))))));
+        run.action ? h("span", { class: "sm strong" }, run.action + " →") : null)))), pageControls("runs")]));
   }
   pressAll($("mainCol"));
 }
