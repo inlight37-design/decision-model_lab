@@ -8,8 +8,9 @@
 |---|---|---|
 | 지금 할 일과 환경·확정 방침 확인 | [현재 인계](../NEXT-SESSION.md) | [협업 규칙](COLLABORATION.md), [설치](SETUP.md) |
 | 개편 이후 무엇을 완료했고 어디까지 병합했는지 확인 | [10월 5일 통합·완료 작업 기록](reviews/2026-10-05-cloud-integration/README.md) | 조사→기반→기능→검증의 원문 연결, 미구현/실측 필요 구분. 이후 변경은 현재 인계·PR 기준 |
+| 문서 누락·오래된 안내의 최종 대조 결과 | [문서 전체 점검](reviews/2026-10-05-document-audit/README.md) | 문서 연결·코드 대조·보류 아이디어·검증 범위와 남은 일 |
 | 지금 되는 기능·가치와 코드 찾기 | [기능·용도·효용](FEATURES.md) | [실제 서비스 구조](../app/ARCHITECTURE.md), [앱 실행](../app/README.md), [실행 기반](../core/README.md) |
-| 자료 준비부터 수정·재검토까지 따라가기 | [앱 사용 흐름](../app/README.md#모의-실행과-화면), [자료 추출](../app/README.md#공통-자료) | [현재 명령·조회 경계](../app/ARCHITECTURE.md#명령과-조회의-흐름), [검증 기록](reviews/README.md) |
+| 자료 준비부터 수정·재검토까지 따라가기 | [앱 사용 흐름](../app/README.md#모의-실행과-화면), [자료 추출](../app/README.md#공통-자료), [수정·재검토 사용법](../app/README.md#검토-지적으로-답-고치기) | [현재 명령·조회 경계](../app/ARCHITECTURE.md#명령과-조회의-흐름), [검증 기록](reviews/README.md) |
 | 기록이 많아질 때 조회 비용 비교 | [조회 구조·측정 명령](../app/ARCHITECTURE.md#명령과-조회의-흐름) | [합성 원장 측정](reviews/2026-10-05-query-scale/README.md), [조회 회귀](../tests/test_query_projections.py) |
 | 목록·타임라인 페이지와 전체 상태의 관계 | [페이지 조회](../app/queries/pages.py), [화면 사용법](../app/README.md#작업-계획과-내-차례) | [페이지화 검증·부하](reviews/2026-10-05-list-pagination/README.md), [회귀](../tests/test_pages.py) |
 | 자동 기억이 무엇을 놓치는지 확인 | [기억 범위·선택·누락](FEATURES.md#자동-기억의-범위) | [확장 평가·검색 비용](reviews/2026-10-05-recall-expansion/README.md), [추가 관련성 라벨](../tests/fixtures/memory_expanded_cases.json), [기존 사례](reviews/2026-10-05-memory-evaluation/README.md) |
@@ -20,6 +21,7 @@
 | 구현 카드로 쪼개기 | [이행 단계·완료 기준](architecture/redesign-2026-10-04/MIGRATION.md) | [파이프라인](architecture/redesign-2026-10-04/PIPELINES.md), [데이터·상태 계약](architecture/redesign-2026-10-04/DATA-CONTRACTS.md) |
 | 다른 프로젝트 기능을 다시 찾아보기 | [외부 참고 지도](REFERENCE-MAP.md) | 아래 원본 조사 지도, 각 기록의 고정 출처 |
 | 화면·개념·계약 확인 | [작업 개념도](concept/README.md), [디자인](../design/README.md) | [계약](../contracts/README.md), [아키텍처 버전 지도](architecture/README.md) |
+| 브랜드북의 결정·처분·근거 부품 의미 확인 | [DecisionCard](../design/project/components/DecisionCard/README.md), [DispositionBadge](../design/project/components/DispositionBadge/README.md), [EvidenceChip](../design/project/components/EvidenceChip/README.md) | 디자인 참고 정의다. 실제 화면의 모양·움직임은 [island-ui](../app/static/island-ui/README.md) 기준 |
 | 검증과 과거 결정 추적 | [검토 목록](reviews/README.md), [실험](experiments/) | [보관 인계](handoff/README.md), [CI](https://github.com/inlight37-design/decision-model_lab/actions/workflows/checks.yml), 관련 PR |
 
 ## 조사에서 설계·구현으로 이어지는 길

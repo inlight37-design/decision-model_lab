@@ -36,7 +36,14 @@ LIVING_DOCS = (
     "docs/COLLABORATION.md",
     "docs/SETUP.md",
     "docs/DOCUMENT-MAP.md",
+    "docs/FEATURES.md",
+    "docs/REFERENCE-MAP.md",
+    "app/README.md",
     "app/ARCHITECTURE.md",
+    "core/README.md",
+    "tools/setup/README.md",
+    "tools/v04-01/README.md",
+    "tools/w2/README.md",
     "docs/architecture/README.md",
     "docs/architecture/general-team-review/README.md",
     "docs/architecture/v0.4/README.md",
@@ -245,7 +252,7 @@ class ResearchIntegrityTests(unittest.TestCase):
     def test_markdown_relative_link_targets_exist(self):
         # Inline Markdown file links only; external URLs and heading anchors are not checked.
         paths = list(ROOT.glob("*.md"))
-        for folder in ("docs", "contracts"):
+        for folder in ("docs", "contracts", "app", "core", "tools", "design"):
             paths.extend((ROOT / folder).rglob("*.md"))
         for path in paths:
             # 보관한 인계 문서는 루트에서 쓴 원문을 바이트 그대로 둔다(docs/handoff/README.md).
