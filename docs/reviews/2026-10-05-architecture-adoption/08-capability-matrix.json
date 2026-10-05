@@ -1,0 +1,4875 @@
+{
+  "schema": "decision-capability-review/1",
+  "review_date": "2026-10-05",
+  "baseline_sha": "48ab4bd6f0e297587707aecb83ebc0cd9968892f",
+  "inventory": {
+    "path": "docs/architecture/redesign-2026-10-04/capability-map.json",
+    "sha256": "e8494ca63cdf0cfcf5f825084e33ea23214e205e684643e2491ad7c489aaca76",
+    "source_commit_recorded_in_inventory": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a"
+  },
+  "status_definitions": {
+    "있음": "후보의 핵심 사용자 기능이 현재 범위에서 코드로 존재; 실사용 품질/운영 안정성 보장 아님",
+    "부분": "후보의 일부 사용자 기능은 있으나 조합 전체 또는 확장 계약은 미구현",
+    "미구현": "후보의 주 기능을 실행하는 제품 경로를 이번 확인 범위에서 찾지 못함; 명시된 기존 코드는 후속 접점",
+    "운영 채택": "개발 카드/PR/문서/공식 로그인 절차로 사용; 앱 내 자동화 구현을 의미하지 않음"
+  },
+  "recommendation_definitions": {
+    "유지": "이미 구현/운영한 범위를 사용하며 별도 engine을 추가하지 않음",
+    "좁혀도입": "현재 담당 서비스에 적힌 다음 범위만 선택 구현; 즉시 전량 착수 지시 아님",
+    "조건부": "실제 반복 불편·자료/기기 요구·선행 기능이 확인된 뒤 최소 실험",
+    "보류": "현재 핵심 목표의 선행이 아니므로 가까운 구현 대상으로 확대하지 않음"
+  },
+  "runtime_boundary": {
+    "applies_to": [
+      "H30",
+      "OP04",
+      "E09"
+    ],
+    "meaning": "호출 상한·unknown 차단은 정상 공식 배선과 현재 원장 안의 보호를 뜻한다. 직접 Controller 통합의 예산 불변성과 원장 교체 시 미확정 종료는 별도 제한이다.",
+    "references": [
+      {
+        "id": "RT-01",
+        "url": "02-runtime.md#rt-01-실제-호출-예산의-마지막-방어가-호출자의-배선에-의존한다"
+      },
+      {
+        "id": "RT-02",
+        "url": "02-runtime.md#rt-02-종료-미확인의-점유는-현재-원장-안에서만-이어진다"
+      }
+    ]
+  },
+  "read_scope": {
+    "surface": "웹 컨테이너의 기준 tree 정적 읽기",
+    "inventory_read": [
+      "docs/architecture/redesign-2026-10-04/capability-map.json",
+      "docs/architecture/redesign-2026-10-04/CAPABILITY-MAP.md"
+    ],
+    "current_guides_read": [
+      "AGENTS.md",
+      "NEXT-SESSION.md",
+      "docs/COLLABORATION.md",
+      "docs/FEATURES.md",
+      "app/ARCHITECTURE.md"
+    ],
+    "catalogs_read": [
+      "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md",
+      "docs/research/component-comparison-2026-10-04/ADOPTION.md",
+      "docs/research/operations-comparison-2026-10-04/ADOPTION.md"
+    ],
+    "direct_code_scope": "evidence의 파일/함수/줄 범위를 직접 읽고 app/core의 파일 목록·기능 검색으로 보완; 저장소와 upstream 전체 코드의 전수 감사가 아님",
+    "upstream_check": "원 조사 원문 링크를 보존; 이번 매트릭스 담당의 새 upstream 검증 없음",
+    "not_executed": [
+      "사용자 PC 접근",
+      "공식 CLI/모델 호출",
+      "실제 계정/관측 갱신",
+      "사용자 실제 원장 부하",
+      "브라우저 사용성 시험",
+      "제품 회귀 시험 실행"
+    ],
+    "mutations": "이 날짜 매트릭스 JSON/Markdown만 작성; 제품 코드·기존 설계·git 상태 조작 없음"
+  },
+  "summary": {
+    "status_counts": {
+      "부분": 76,
+      "미구현": 29,
+      "운영 채택": 8,
+      "있음": 5
+    },
+    "recommendation_counts": {
+      "좁혀도입": 36,
+      "유지": 27,
+      "조건부": 39,
+      "보류": 16
+    },
+    "interpretation": "후보는 서로 중복되므로 수치는 기능 완성률·작업량·가치 점수가 아니다. 로컬 D는 이전 ADR namespace와 다르다."
+  },
+  "coverage": {
+    "baseline_sha": "48ab4bd6f0e297587707aecb83ebc0cd9968892f",
+    "original_count": 118,
+    "source_markdown_count": 118,
+    "matrix_count": 118,
+    "namespace_counts": {
+      "H": 62,
+      "O": 34,
+      "D": 10,
+      "OP": 12
+    },
+    "missing_ids": [],
+    "unexpected_ids": [],
+    "duplicate_original_ids": [],
+    "duplicate_source_markdown_ids": [],
+    "duplicate_matrix_ids": [],
+    "source_markdown_missing_ids": [],
+    "source_markdown_unexpected_ids": [],
+    "same_order_as_original": true,
+    "same_titles_as_original": true,
+    "source_urls_preserved": true,
+    "output_markdown_count": 118,
+    "output_markdown_one_to_one": true
+  },
+  "evidence": {
+    "E01": {
+      "meaning": "공개 문구 검색·발췌·원래 실행 연결",
+      "references": [
+        {
+          "path": "app/queries/catalog.py",
+          "symbol": "validate/search",
+          "line_start": 7,
+          "line_end": 78,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/queries/catalog.py#L7-L78"
+        },
+        {
+          "path": "app/queries/public.py",
+          "symbol": "PublicQueries.search/overview",
+          "line_start": 75,
+          "line_end": 101,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/queries/public.py#L75-L101"
+        }
+      ]
+    },
+    "E02": {
+      "meaning": "편집 가능한 작업 설정 템플릿·현재 모델 재검사·해시 결속 파일 이동",
+      "references": [
+        {
+          "path": "app/application/templates.py",
+          "symbol": "FIELDS/TemplateService",
+          "line_start": 15,
+          "line_end": 124,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/application/templates.py#L15-L124"
+        }
+      ]
+    },
+    "E03": {
+      "meaning": "입력 준비와 같은 거래의 실행 생성·분담 사본·중복 실행 거절",
+      "references": [
+        {
+          "path": "app/application/work.py",
+          "symbol": "WorkService.create_run",
+          "line_start": 20,
+          "line_end": 103,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/application/work.py#L20-L103"
+        }
+      ]
+    },
+    "E04": {
+      "meaning": "계획 판·선행 조건·준비 상태·단계·로컬 수신함",
+      "references": [
+        {
+          "path": "app/application/tasks.py",
+          "symbol": "TaskService.save/require_ready",
+          "line_start": 14,
+          "line_end": 92,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/application/tasks.py#L14-L92"
+        },
+        {
+          "path": "app/workflow.py",
+          "symbol": "steps/project_tasks/inbox/admission/unattached_inputs",
+          "line_start": 24,
+          "line_end": 163,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/workflow.py#L24-L163"
+        }
+      ]
+    },
+    "E05": {
+      "meaning": "격리 공개 뒤 교차검토·지적 처분·사람 판단",
+      "references": [
+        {
+          "path": "app/application/reviews.py",
+          "symbol": "cross_review/_advance_reviews/set_review_disposition/mark_reviewed",
+          "line_start": 84,
+          "line_end": 246,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/application/reviews.py#L84-L246"
+        }
+      ]
+    },
+    "E06": {
+      "meaning": "격리 답변의 별도 수정 판·근거 고정·재검토·상한",
+      "references": [
+        {
+          "path": "app/application/revisions.py",
+          "symbol": "RevisionService._context/prepare/revise/recheck",
+          "line_start": 28,
+          "line_end": 165,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/application/revisions.py#L28-L165"
+        },
+        {
+          "path": "app/static/revisions.js",
+          "symbol": "revisionIsland",
+          "line_start": 44,
+          "line_end": 71,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/static/revisions.js#L44-L71"
+        }
+      ]
+    },
+    "E07": {
+      "meaning": "같은 작업 공개 이력의 어휘 선택·발췌·반례·고정 pack",
+      "references": [
+        {
+          "path": "app/memory.py",
+          "symbol": "select/_context/_findings/_fair_parts/_excerpt",
+          "line_start": 60,
+          "line_end": 243,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/memory.py#L60-L243"
+        }
+      ]
+    },
+    "E08": {
+      "meaning": "사용한 기억 사본의 이유·누락·출처 조회",
+      "references": [
+        {
+          "path": "app/queries/public.py",
+          "symbol": "PublicQueries.memory_sources",
+          "line_start": 115,
+          "line_end": 139,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/queries/public.py#L115-L139"
+        },
+        {
+          "path": "app/static/role-board.js",
+          "symbol": "memoryPreview",
+          "line_start": 406,
+          "line_end": 438,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/static/role-board.js#L406-L438"
+        }
+      ]
+    },
+    "E09": {
+      "meaning": "정상 공식 배선·현재 원장 안의 실제 호출 예약·예산·동시성·종료 미확정 자리",
+      "references": [
+        {
+          "path": "app/execution/invocations.py",
+          "symbol": "Invocation/reserve/_slots_used/call_budget/_upper_call_gate",
+          "line_start": 12,
+          "line_end": 179,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/execution/invocations.py#L12-L179"
+        }
+      ]
+    },
+    "E10": {
+      "meaning": "고정 계획·조건부 시작·취소·재시작 unknown 처리",
+      "references": [
+        {
+          "path": "app/execution/coordinator.py",
+          "symbol": "pump/resume",
+          "line_start": 29,
+          "line_end": 108,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/execution/coordinator.py#L29-L108"
+        },
+        {
+          "path": "app/execution/coordinator.py",
+          "symbol": "cancel_run",
+          "line_start": 219,
+          "line_end": 242,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/execution/coordinator.py#L219-L242"
+        },
+        {
+          "path": "app/execution/coordinator.py",
+          "symbol": "_recover",
+          "line_start": 328,
+          "line_end": 348,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/execution/coordinator.py#L328-L348"
+        }
+      ]
+    },
+    "E11": {
+      "meaning": "PDF·공개 URL 추출, 빈 쪽 경고, 명시적 범위",
+      "references": [
+        {
+          "path": "app/ingestion/extract.py",
+          "symbol": "from_url/from_pdf/extract",
+          "line_start": 76,
+          "line_end": 158,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/ingestion/extract.py#L76-L158"
+        }
+      ]
+    },
+    "E12": {
+      "meaning": "상위 역할의 다음 단계·일반 분담 제안; 자동 실행 없음",
+      "references": [
+        {
+          "path": "app/application/planning.py",
+          "symbol": "propose_next",
+          "line_start": 99,
+          "line_end": 141,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/application/planning.py#L99-L141"
+        },
+        {
+          "path": "app/application/planning.py",
+          "symbol": "propose_split",
+          "line_start": 152,
+          "line_end": 207,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/application/planning.py#L152-L207"
+        }
+      ]
+    },
+    "E13": {
+      "meaning": "공개 뒤 선택적 합성·동일 예산 예약",
+      "references": [
+        {
+          "path": "app/application/synthesis.py",
+          "symbol": "synthesize/synthesize_with_model",
+          "line_start": 25,
+          "line_end": 102,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/application/synthesis.py#L25-L102"
+        }
+      ]
+    },
+    "E14": {
+      "meaning": "실제 관측 준비 조회와 기기 등록 대조",
+      "references": [
+        {
+          "path": "app/readiness.py",
+          "symbol": "check",
+          "line_start": 15,
+          "line_end": 62,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/readiness.py#L15-L62"
+        }
+      ]
+    },
+    "E15": {
+      "meaning": "읽기 전용 공식 CLI 명세·명시 모델·세션 비영속·도구 제한",
+      "references": [
+        {
+          "path": "core/adapters.py",
+          "symbol": "build_spec",
+          "line_start": 225,
+          "line_end": 286,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/core/adapters.py#L225-L286"
+        }
+      ]
+    },
+    "E16": {
+      "meaning": "요청/보고 모델 구분·provider별 사용량 합계",
+      "references": [
+        {
+          "path": "core/adapters.py",
+          "symbol": "Outcome/_model_match",
+          "line_start": 297,
+          "line_end": 325,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/core/adapters.py#L297-L325"
+        },
+        {
+          "path": "app/usage.py",
+          "symbol": "calls/total/combine",
+          "line_start": 33,
+          "line_end": 137,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/usage.py#L33-L137"
+        }
+      ]
+    },
+    "E17": {
+      "meaning": "원장 재사용 선택과 종료 대기; 별도 지속 실행 기능과 다름",
+      "references": [
+        {
+          "path": "app/launch.py",
+          "symbol": "_has_room/pick_ledger/_watch",
+          "line_start": 190,
+          "line_end": 251,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/launch.py#L190-L251"
+        }
+      ]
+    },
+    "E18": {
+      "meaning": "schema 이행 전 자동 백업; 일반 복구 UI와 다름",
+      "references": [
+        {
+          "path": "app/store.py",
+          "symbol": "Store._migrate",
+          "line_start": 198,
+          "line_end": 218,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/store.py#L198-L218"
+        }
+      ]
+    },
+    "E19": {
+      "meaning": "페이지화와 변경 없는 공개 projection 재사용; cold 조회는 선형",
+      "references": [
+        {
+          "path": "app/queries/pages.py",
+          "symbol": "BrowserPages._snapshot/browse/choices",
+          "line_start": 61,
+          "line_end": 142,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/queries/pages.py#L61-L142"
+        },
+        {
+          "path": "app/static/index.html",
+          "symbol": "refresh/timer",
+          "line_start": 1270,
+          "line_end": 1294,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/static/index.html#L1270-L1294"
+        },
+        {
+          "path": "app/static/index.html",
+          "symbol": "setInterval(refresh)",
+          "line_start": 1367,
+          "line_end": 1370,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/static/index.html#L1367-L1370"
+        }
+      ]
+    },
+    "E20": {
+      "meaning": "원래 답 나란히 비교·한국어 테마·감소 모션 기반",
+      "references": [
+        {
+          "path": "app/static/role-board.js",
+          "symbol": "humanComparison",
+          "line_start": 830,
+          "line_end": 835,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/static/role-board.js#L830-L835"
+        },
+        {
+          "path": "app/static/index.html",
+          "symbol": "document language/theme/assets",
+          "line_start": 1,
+          "line_end": 15,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/static/index.html#L1-L15"
+        },
+        {
+          "path": "app/static/island-ui/motion.js",
+          "symbol": "createSpring",
+          "line_start": 10,
+          "line_end": 29,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/static/island-ui/motion.js#L10-L29"
+        }
+      ]
+    },
+    "E21": {
+      "meaning": "고정 합성 기억 평가·관련 기록 포함률·누락·입력 크기",
+      "references": [
+        {
+          "path": "tools/evaluate_memory.py",
+          "symbol": "evaluate/main",
+          "line_start": 53,
+          "line_end": 103,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/tools/evaluate_memory.py#L53-L103"
+        }
+      ]
+    },
+    "E22": {
+      "meaning": "HTTP guard와 기존 controller API 입구",
+      "references": [
+        {
+          "path": "app/server.py",
+          "symbol": "Handler._guard/do_GET",
+          "line_start": 165,
+          "line_end": 220,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/server.py#L165-L220"
+        }
+      ]
+    },
+    "E23": {
+      "meaning": "개발 협업 카드·수동 소유권·PR·체크포인트 운영",
+      "references": [
+        {
+          "path": "docs/COLLABORATION.md",
+          "symbol": "작업 카드",
+          "line_start": 74,
+          "line_end": 90,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/docs/COLLABORATION.md#L74-L90"
+        }
+      ]
+    },
+    "E24": {
+      "meaning": "개발 문서의 관측/문서/전달 구분·정정·현재와 이력 분리",
+      "references": [
+        {
+          "path": "docs/COLLABORATION.md",
+          "symbol": "출처 등급/정정/문서의 두 종류",
+          "line_start": 45,
+          "line_end": 99,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/docs/COLLABORATION.md#L45-L99"
+        }
+      ]
+    },
+    "E25": {
+      "meaning": "동일 controller를 쓰는 단일 과제 headless 실행·순차 합성·결과 JSON",
+      "references": [
+        {
+          "path": "app/run.py",
+          "symbol": "main/_run",
+          "line_start": 93,
+          "line_end": 188,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/run.py#L93-L188"
+        }
+      ]
+    },
+    "E26": {
+      "meaning": "island-ui 부품의 출처와 원본 우선 수정 절차",
+      "references": [
+        {
+          "path": "app/static/island-ui/README.md",
+          "symbol": "고칠 때",
+          "line_start": 1,
+          "line_end": 15,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/static/island-ui/README.md#L1-L15"
+        }
+      ]
+    },
+    "E27": {
+      "meaning": "일반/격리 전달문·자료·기억·입력 확인 hash와 실제 미리보기",
+      "references": [
+        {
+          "path": "app/context/inputs.py",
+          "symbol": "prepare_run/_general_manifest",
+          "line_start": 164,
+          "line_end": 239,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/context/inputs.py#L164-L239"
+        },
+        {
+          "path": "app/static/role-board.js",
+          "symbol": "generalPreview/showInputPreview",
+          "line_start": 439,
+          "line_end": 494,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/app/static/role-board.js#L439-L494"
+        }
+      ]
+    },
+    "E28": {
+      "meaning": "기기·설치 버전·plan revision에 결속한 설치/인증/전송/문맥/권한 관측 계약",
+      "references": [
+        {
+          "path": "core/eligibility.py",
+          "symbol": "runtime-inventory/2/FIELDS/SPEC_BOUND",
+          "line_start": 1,
+          "line_end": 38,
+          "url": "https://github.com/inlight37-design/decision-model_lab/blob/48ab4bd6f0e297587707aecb83ebc0cd9968892f/core/eligibility.py#L1-L38"
+        }
+      ]
+    }
+  },
+  "verification_gates": {
+    "G01": {
+      "name": "공개 조회",
+      "criterion": "봉인 중 답·토큰·시간·원시 출력이 검색/목록/상세/직접 ID/새 화면에 나오지 않고 기존 공개 결과와 동일하다.",
+      "existing_tests": [
+        "tests/test_foundation.py",
+        "tests/test_query_projections.py"
+      ]
+    },
+    "G02": {
+      "name": "입력과 이동",
+      "criterion": "입력·자료·모델·역할을 재검사하고 확인 hash가 달라지면 새 확인을 요구한다; 과거 승인·실행 권한·소비를 복사하지 않는다.",
+      "existing_tests": [
+        "tests/test_templates.py",
+        "tests/test_sources.py",
+        "tests/test_foundation.py"
+      ]
+    },
+    "G03": {
+      "name": "호출 수명",
+      "criterion": "예약과 시작 상태는 같은 거래, 동시 마지막 자리 중복 없음, 실패/취소/재시작에 소비 환불 없음, unknown 종료 전 자리 재사용 없음.",
+      "existing_tests": [
+        "tests/test_app_controller.py",
+        "tests/test_foundation.py",
+        "tests/test_synthesis_lifecycle.py"
+      ]
+    },
+    "G04": {
+      "name": "검토와 판",
+      "criterion": "원본·입력·지적·처분·수정 판 hash·부모 판을 연결하고 상한/늦은 결과/재시작을 보존한다; 일반 collected와 격리 revealed를 구분한다.",
+      "existing_tests": [
+        "tests/test_cross_review.py",
+        "tests/test_revisions.py",
+        "tests/test_general_team.py"
+      ]
+    },
+    "G05": {
+      "name": "기억 품질",
+      "criterion": "한글·코드명·동의어·무관 질문·긴 반례의 포함/누락과 실제 전달 bytes를 비교하고 오래된 고정 pack을 재계산하지 않는다.",
+      "existing_tests": [
+        "tests/test_memory.py",
+        "tests/test_memory_evaluation.py"
+      ],
+      "existing_tools": [
+        "tools/evaluate_memory.py",
+        "tools/benchmark_queries.py"
+      ]
+    },
+    "G06": {
+      "name": "화면과 재연결",
+      "criterion": "대상 실행/원장 일치, 늦은 응답 폐기, 재연결 후 실제 상태 회복, 키보드·좁은 화면·모션 감소를 확인한다.",
+      "existing_tests": [
+        "tests/test_api_client.py",
+        "tests/test_role_board_render.py",
+        "tests/test_app_launch.py"
+      ]
+    },
+    "G07": {
+      "name": "계획과 선행",
+      "criterion": "계획 CAS·순환/누락·과거 판·선행 결과 변경·종료 미확정에서 admission과 표시가 일치하고 조회로 실행하지 않는다.",
+      "existing_tests": [
+        "tests/test_workflow.py"
+      ]
+    },
+    "G08": {
+      "name": "자료 변환",
+      "criterion": "원본/변환/선택 hash·범위·누락을 결속하고 변환 실패·공개 주소/redirect·크기/시간 제한을 확인한다.",
+      "existing_tests": [
+        "tests/test_extraction.py",
+        "tests/test_sources.py"
+      ]
+    },
+    "G09": {
+      "name": "실제 CLI 계약",
+      "criterion": "추가 capability/옵션/기기/세션 생명주기는 해당 PC의 관측·등록·입력·취소·자손 종료와 구독 경로를 다시 확인한다.",
+      "existing_tests": [
+        "tests/test_core_adapters.py",
+        "tests/test_live_config.py"
+      ],
+      "runtime_observation": "이번 검토에서는 사용자 PC·공식 CLI를 실행하지 않음"
+    },
+    "G10": {
+      "name": "도입 효과",
+      "criterion": "실제 반복 불편 또는 과제를 먼저 지정하고 현재 방법과 결과 누락·사용자 시간·전체 호출/토큰·복구 부담을 비교한다.",
+      "existing_tests": [],
+      "note": "모델 품질과 실제 사용자 효용은 정적 코드·모의 통과로 대체하지 않음"
+    },
+    "G11": {
+      "name": "개발 운영",
+      "criterion": "기존 GitHub 카드·브랜치·PR·CI·체크포인트 기록으로 책임과 완료 근거를 찾는다; 앱 원장과 두 개의 정본을 만들지 않는다.",
+      "existing_tests": [],
+      "note": "운영 채택을 앱의 자동화 구현으로 세지 않음"
+    },
+    "G12": {
+      "name": "외부 확장",
+      "criterion": "필요한 작업 하나의 권한·입력·출력·소유권·실패 복구를 먼저 고정하고 별도 엔진/계정/서버 운영 비용을 비교한다.",
+      "existing_tests": [],
+      "note": "새 외부 도구·제품 설치를 현재 결정으로 승인하거나 실행하지 않음"
+    }
+  },
+  "items": [
+    {
+      "id": "H01",
+      "namespace": "catalog-hermes",
+      "title": "이름·검색·즐겨찾기",
+      "current_status": "부분",
+      "current_implementation": "작업 제목·공개 문구·작업/종류 검색과 페이지 목록은 있으나 즐겨찾기·날짜/모델/상태 필터는 없다.",
+      "recommendation": "좁혀도입",
+      "next_scope": "OP03과 함께 현재 검색에 저장된 필터·고정 항목만 필요 순서로 더한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E01",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E19",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G06",
+        "specific": "비슷한 제목·목록 밖 실행·필터 복귀에서 같은 대상을 찾기.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "D02",
+        "OP03"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L11",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 11,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 5,
+      "original_priority": "P1",
+      "original_migration_phase": "R1"
+    },
+    {
+      "id": "H02",
+      "namespace": "catalog-hermes",
+      "title": "팀·모델 프리셋",
+      "current_status": "부분",
+      "current_implementation": "팀·모델·질문·자료·기억 설정 템플릿은 있으나 모델별 추론 강도는 연결하지 않았다.",
+      "recommendation": "유지",
+      "next_scope": "기존 템플릿을 반복 과제에 사용하고 추론 연결은 실제 관측을 거친 별도 변경으로 둔다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E02",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E15",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G02",
+        "specific": "복원 시 현재 카드/모델 재검사와 승인·예산 비복제.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "D07",
+        "O32"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L12",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 12,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 6,
+      "original_priority": "P1",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "H03",
+      "namespace": "catalog-hermes",
+      "title": "파일·폴더·diff·URL 참조",
+      "current_status": "부분",
+      "current_implementation": "UTF-8 자료 사본과 PDF/URL 쪽·줄 추출은 있으나 폴더 수집·Git diff 참조는 없다.",
+      "recommendation": "좁혀도입",
+      "next_scope": "기존 추출 앞단에 텍스트 줄 선택을 우선 연결하고 폴더/diff는 코딩 요구가 생길 때 분리한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E03",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E11",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G08",
+        "specific": "선택 범위 오류를 전체 자료 첨부로 확장하지 않기.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H45",
+        "H47",
+        "H31"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L13",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 13,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 8,
+      "original_priority": "P1",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "H04",
+      "namespace": "catalog-hermes",
+      "title": "중단·방향 수정",
+      "current_status": "부분",
+      "current_implementation": "drafting 단계의 참여자 취소는 저장 뒤 신호를 보내지만 진행 중 모델에 방향을 전달하는 채널은 없다.",
+      "recommendation": "조건부",
+      "next_scope": "먼저 취소 뒤 바뀐 지시로 새 실행을 준비하고 실시간 steer는 일반 역할의 필요가 확인될 때 검토한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E10",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E03",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G03",
+        "specific": "취소 신호·종료 확인·새 지시 반영의 구분과 기존 고정 입력 보존.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "OP07",
+        "H24"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L14",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 14,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 12,
+      "original_priority": "P2",
+      "original_migration_phase": "R4"
+    },
+    {
+      "id": "H05",
+      "namespace": "catalog-hermes",
+      "title": "재시도·갈라서 비교·되돌리기",
+      "current_status": "부분",
+      "current_implementation": "같은 작업의 새 실행과 격리 답 수정 전후 비교는 있으나 범용 fork·undo·파일 rollback은 없다.",
+      "recommendation": "좁혀도입",
+      "next_scope": "OP06에 원 실행/판을 가리키는 명시적 새 실행 복제부터 묶는다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E03",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E06",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G02",
+        "specific": "원본·소비·판단을 보존하고 이전 입력 승인 재사용 금지.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "OP06",
+        "H56"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L15",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 15,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 10,
+      "original_priority": "P1",
+      "original_migration_phase": "R4"
+    },
+    {
+      "id": "H06",
+      "namespace": "catalog-hermes",
+      "title": "나를 기다리는 일·완료 알림",
+      "current_status": "부분",
+      "current_implementation": "현재 계획/실행에서 내 차례·문제·선행 대기를 계산하지만 브라우저 완료 알림이나 전달 ACK는 없다.",
+      "recommendation": "유지",
+      "next_scope": "OP11의 로컬 수신함을 사용해 누락 사례를 모은 뒤 알림만 선택적으로 추가한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E04",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E19",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G06",
+        "specific": "새로고침·재연결에서 대상과 다음 행동을 다시 찾기.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H37",
+        "OP11"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L16",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 16,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 11,
+      "original_priority": "P1",
+      "original_migration_phase": "R5"
+    },
+    {
+      "id": "H07",
+      "namespace": "catalog-hermes",
+      "title": "결과물 서랍",
+      "current_status": "부분",
+      "current_implementation": "공개 답·수정 이력·보고서와 원 실행 이동은 있으나 생성 파일을 묶는 artifact registry는 없다.",
+      "recommendation": "좁혀도입",
+      "next_scope": "기존 보고서·첨부 사본을 읽는 결과 목록부터 만들고 파일 생성 엔진은 별개로 둔다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E01",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E06",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E20",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G01",
+        "specific": "동명 자료·사라진 참조·봉인 실행을 구분.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "OP12",
+        "O30"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L17",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 17,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 9,
+      "original_priority": "P1",
+      "original_migration_phase": "R1"
+    },
+    {
+      "id": "H08",
+      "namespace": "catalog-hermes",
+      "title": "화면 배치·간단 모드",
+      "current_status": "부분",
+      "current_implementation": "상세 접기와 원문/수정 전후 나란히 보기는 있으나 사용자 배치 저장·범용 탭 편집은 없다.",
+      "recommendation": "유지",
+      "next_scope": "현재 비교 화면을 실제 과제로 사용하며 불편이 반복되는 배치만 고친다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E06",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E20",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G06",
+        "specific": "좁은 화면·키보드·실행 전환에서 내용 혼합 없음.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "O24",
+        "OP12"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L18",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 18,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 9,
+      "original_priority": "P1",
+      "original_migration_phase": "R1"
+    },
+    {
+      "id": "H09",
+      "namespace": "catalog-hermes",
+      "title": "빠른 명령·입력 초안",
+      "current_status": "미구현",
+      "current_implementation": "검색 대화상자는 있지만 명령 palette·지속 입력 초안 복구 경로는 확인되지 않았다.",
+      "recommendation": "조건부",
+      "next_scope": "OP03의 접근 동작을 재사용하는 읽기/이동 명령만 먼저 추가한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E01",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E19",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G06",
+        "specific": "입력 중 단축키 충돌과 의도치 않은 실행 방지.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "OP03"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L19",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 19,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 5,
+      "original_priority": "P1",
+      "original_migration_phase": "R1"
+    },
+    {
+      "id": "H10",
+      "namespace": "catalog-hermes",
+      "title": "목적별 시작 안내",
+      "current_status": "부분",
+      "current_implementation": "readiness 조회와 작업 템플릿은 있으나 목적별 시작 안내는 별도 기능이 아니다.",
+      "recommendation": "좁혀도입",
+      "next_scope": "사용자가 저장한 비교/검토 템플릿에 현재 준비되지 않은 이유를 함께 표시한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E02",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E14",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G09",
+        "specific": "지원하지 않는 모델·만료 관측을 사용 가능한 양식으로 제시하지 않기.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H55"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L20",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 20,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 14,
+      "original_priority": "P1",
+      "original_migration_phase": "R1"
+    },
+    {
+      "id": "H11",
+      "namespace": "catalog-hermes",
+      "title": "테마·한국어·상태 마스코트",
+      "current_status": "부분",
+      "current_implementation": "한국어 화면·테마·감소 모션 처리는 있으나 상태 마스코트/언어팩 시스템은 없다.",
+      "recommendation": "유지",
+      "next_scope": "용어와 상태 의미를 유지하고 마스코트는 사용자가 원할 때 시각 요소로만 추가한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E20",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G06",
+        "specific": "장식/색/움직임 없이도 성공·실패·미확인을 읽기.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "O34"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L21",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 21,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 9,
+      "original_priority": "P2",
+      "original_migration_phase": "R1"
+    },
+    {
+      "id": "H12",
+      "namespace": "catalog-hermes",
+      "title": "짧은 선호·프로젝트 기억",
+      "current_status": "부분",
+      "current_implementation": "자동 기억은 같은 원장·같은 작업의 공개 이력이며 선호·프로젝트 사실 저장소가 아니다.",
+      "recommendation": "조건부",
+      "next_scope": "O04/D04에서 명시적 범위와 사용 중인 판을 정한 뒤 수동 선호 항목부터 검토한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E07",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E08",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G05",
+        "specific": "다른 작업으로 새는 기억·오래된 선호·격리 주입 없음.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "O04",
+        "D04"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L27",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 27,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 7,
+      "original_priority": "P1",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "H13",
+      "namespace": "catalog-hermes",
+      "title": "과거 세션 원문 검색",
+      "current_status": "부분",
+      "current_implementation": "공개 답·검토·판단·자료 메타데이터의 원문 문구 검색은 있으나 FTS·세션 메시지 전체 검색은 없다.",
+      "recommendation": "좁혀도입",
+      "next_scope": "D02의 동의어/한국어 실패 사례를 쌓고 현재 선형 검색이 부족한 범위만 개선한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E01",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E19",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G05",
+        "specific": "오래된 핵심 답과 반복 로그를 함께 넣어 누락·응답 비용 확인.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "D02",
+        "D05",
+        "O01"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L28",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 28,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 5,
+      "original_priority": "P1",
+      "original_migration_phase": "R1"
+    },
+    {
+      "id": "H14",
+      "namespace": "catalog-hermes",
+      "title": "검색 뒤 필요한 부분만 펼치기",
+      "current_status": "부분",
+      "current_implementation": "기억 발췌·생략 bytes·원 실행 이동은 있으나 메시지 주변 문맥을 도구로 추가 조회하지는 않는다.",
+      "recommendation": "좁혀도입",
+      "next_scope": "선택한 발췌에서 해당 지적/답 위치로 이동하는 UI를 우선 붙인다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E08",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E01",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G01",
+        "specific": "발췌 밖 반례를 원문에서 찾고 봉인 범위는 유지.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "D01",
+        "O03"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L29",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 29,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 4,
+      "original_priority": "P1",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "H15",
+      "namespace": "catalog-hermes",
+      "title": "현재 상태와 긴 이력 분리",
+      "current_status": "부분",
+      "current_implementation": "공개 목록/상세·단계·타임라인과 고정 기억 창은 분리했으나 현재 결론의 의미 요약은 없다.",
+      "recommendation": "유지",
+      "next_scope": "O17/D03의 현재·다음·막힘 표시를 사용하고 의미 요약은 근거 연결을 갖춘 별도 선택으로 둔다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E04",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E07",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E19",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G07",
+        "specific": "새 계획 뒤 옛 완료를 현재 결론으로 표시하지 않기.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "D03",
+        "O17",
+        "O31"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L30",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 30,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 7,
+      "original_priority": "P1",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "H16",
+      "namespace": "catalog-hermes",
+      "title": "기억 지도·사용 흔적",
+      "current_status": "부분",
+      "current_implementation": "실행별 사용한 기억·선택 이유·출처는 조회하지만 전역 기억 그래프는 없다.",
+      "recommendation": "유지",
+      "next_scope": "현재 출처 목록을 유지하고 여러 실행에서의 역방향 사용처가 필요할 때만 조회를 더한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E08",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G05",
+        "specific": "기억의 연관과 사실 근거를 구분하고 옛 pack 이유를 추정하지 않기.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "D01",
+        "O03"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L31",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 31,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 4,
+      "original_priority": "P1",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "H17",
+      "namespace": "catalog-hermes",
+      "title": "내보내기·가져오기",
+      "current_status": "부분",
+      "current_implementation": "템플릿 export/import는 있으나 작업 이력·기억·agent 설정 전체 이동은 없다.",
+      "recommendation": "조건부",
+      "next_scope": "D06/O10에서 사용자가 고른 공개 자료 묶음만 설계하고 인증·승인·원장 소비는 이동 대상에서 제외한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E02",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E08",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G02",
+        "specific": "다른 원장 ID·중복 import·손상 hash·비밀 값 혼입 대조.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "D06",
+        "O10"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L32",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 32,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 7,
+      "original_priority": "P1",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "H18",
+      "namespace": "catalog-hermes",
+      "title": "긴 대화 압축·요약 방식 선택",
+      "current_status": "미구현",
+      "current_implementation": "기억은 원문 발췌이며 긴 대화를 모델로 압축하거나 요약 전략을 고르는 기능은 없다.",
+      "recommendation": "보류",
+      "next_scope": "OP08의 원문 발췌 평가로 부족한 긴 일반 대화가 확인될 때 압축 한 방식만 비교한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E07",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E21",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G10",
+        "specific": "반례 손실·요약 추가 호출·캐시 변화를 원문 방식과 비교.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "OP08",
+        "O31"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L33",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 33,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 13,
+      "original_priority": "P3",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "H19",
+      "namespace": "catalog-hermes",
+      "title": "필요할 때 읽는 스킬 서랍",
+      "current_status": "미구현",
+      "current_implementation": "템플릿은 설정을 저장할 뿐 SKILL 검색·버전·필요 시 본문 로딩은 구현하지 않았다.",
+      "recommendation": "좁혀도입",
+      "next_scope": "D07에 선택한 절차 문서 하나의 버전/hash를 입력 자료로 고정하는 최소 서랍부터 검토한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E02",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E03",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G02",
+        "specific": "선택하지 않은 절차 미주입·역할/자료 충돌·본문 크기 확인.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "D07",
+        "H20",
+        "H22"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L39",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 39,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 6,
+      "original_priority": "P1",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "H20",
+      "namespace": "catalog-hermes",
+      "title": "스킬 묶음·작업 양식",
+      "current_status": "부분",
+      "current_implementation": "작업 양식 템플릿은 있지만 skill bundle의 의존성·여러 실행 단계 계약은 없다.",
+      "recommendation": "좁혀도입",
+      "next_scope": "H02의 양식과 H19의 선택 절차를 연결하고 다단계 엔진은 H27로 분리한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E02",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E04",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G02",
+        "specific": "중복 지시·미지원 도구·빠진 의존 자료를 시작 전에 표시.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H02",
+        "H19",
+        "H27"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L40",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 40,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 6,
+      "original_priority": "P1",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "H21",
+      "namespace": "catalog-hermes",
+      "title": "자료·성공 경험에서 절차 만들기",
+      "current_status": "미구현",
+      "current_implementation": "완료 작업에서 절차를 추출하거나 실패 사례를 함께 학습해 저장하는 명령은 없다.",
+      "recommendation": "보류",
+      "next_scope": "반복 성공/실패 과제가 모이면 사람이 고르는 절차 초안만 만들고 자동 게시·자동 실행은 분리한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E02",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E07",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G10",
+        "specific": "원 실행/조건/실패를 보존하며 다른 과제에서 재사용 효과 확인.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H19",
+        "H22"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L41",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 41,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 6,
+      "original_priority": "P1",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "H22",
+      "namespace": "catalog-hermes",
+      "title": "스킬 정리·핀·보관함",
+      "current_status": "미구현",
+      "current_implementation": "템플릿 삭제는 있으나 절차 사용 흔적·핀·보관·복원 기능은 없다.",
+      "recommendation": "조건부",
+      "next_scope": "H19를 도입해 실제 절차가 쌓인 뒤 수동 보관/복원만 추가한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E02",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G02",
+        "specific": "참조 중인 절차와 원문/부속 자료를 함께 보존.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H19",
+        "O08"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L42",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 42,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 6,
+      "original_priority": "P1",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "H23",
+      "namespace": "catalog-hermes",
+      "title": "다른 분야의 절차 라이브러리",
+      "current_status": "미구현",
+      "current_implementation": "범용 문서·디자인·업무 절차 라이브러리는 조사 목록에 있고 제품에는 없다.",
+      "recommendation": "보류",
+      "next_scope": "H19로 반복 사용한 소수 절차만 가져오며 분야별 도구/스크립트는 따로 검토한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E02",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E15",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G12",
+        "specific": "선택한 절차의 입력·출력·실행 도구·라이선스 확인.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H19",
+        "H40"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L43",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 43,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 6,
+      "original_priority": "P1",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "H24",
+      "namespace": "catalog-hermes",
+      "title": "목표가 끝날 때까지 제한 반복",
+      "current_status": "부분",
+      "current_implementation": "완료 기준·선행 확인과 제한된 다음 단계 제안은 있으나 목표 달성까지 자동 반복하지 않는다.",
+      "recommendation": "조건부",
+      "next_scope": "GR-1/2 이후 검사 가능한 작은 일반 과제에 명시적 단계/호출 상한을 붙여 비교한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E04",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E12",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E09",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G03",
+        "specific": "반복 실패·unknown·상한에서 정지하고 판정 호출도 예약.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H27",
+        "O27"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L51",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 51,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 12,
+      "original_priority": "P2",
+      "original_migration_phase": "R4"
+    },
+    {
+      "id": "H25",
+      "namespace": "catalog-hermes",
+      "title": "비동기 분담·구조화 결과",
+      "current_status": "부분",
+      "current_implementation": "일반 분담·비동기 결과 수집은 있으나 child 질문/진행 메시지·범용 handle API는 없다.",
+      "recommendation": "좁혀도입",
+      "next_scope": "먼저 일반 팀원 검토 GR-1의 과제/자료/대상 계약을 완성한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E03",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E12",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E10",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G04",
+        "specific": "팀원별 자료 경계·형식 실패 원문·취소 책임 유지.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H28",
+        "O29"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L52",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 52,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 12,
+      "original_priority": "P2",
+      "original_migration_phase": "R4"
+    },
+    {
+      "id": "H26",
+      "namespace": "catalog-hermes",
+      "title": "의존성이 있는 작업판",
+      "current_status": "부분",
+      "current_implementation": "앱의 선행 조건/막힌 이유·invocation queued→running CAS와 개발 GitHub 카드는 있으나 다중 기기/worker의 lease·heartbeat 기반 작업 claim은 없다.",
+      "recommendation": "유지",
+      "next_scope": "OP04의 현재 계획/준비 상태를 유지하고 앱·GitHub 카드의 동기화는 추가하지 않는다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E04",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E10",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E23",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G07",
+        "specific": "계획 판·선행 변경·순환·missing 상태와 시작 gate 일치.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "O25",
+        "OP04"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L53",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 53,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 12,
+      "original_priority": "P2",
+      "original_migration_phase": "R4"
+    },
+    {
+      "id": "H27",
+      "namespace": "catalog-hermes",
+      "title": "재사용 가능한 다단계 작업",
+      "current_status": "부분",
+      "current_implementation": "작업 템플릿·의존성·단계 projection은 있으나 재사용 DAG 실행 engine은 없다.",
+      "recommendation": "조건부",
+      "next_scope": "H24에 앞서 두 단계의 입출력·완료 근거·명시 시작을 기존 서비스로 표현한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E02",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E04",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E12",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G03",
+        "specific": "재연결/중복 명령에 단계 재호출·소비 삭제 없음.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H24",
+        "OP05"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L54",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 54,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 12,
+      "original_priority": "P2",
+      "original_migration_phase": "R4"
+    },
+    {
+      "id": "H28",
+      "namespace": "catalog-hermes",
+      "title": "같은 작업에서 검토·수정·재검토",
+      "current_status": "부분",
+      "current_implementation": "격리 공개 뒤 검토→별도 수정 판→다른 작성자 재검토는 구현됐으나 일반 팀원 검토는 아직 설계다.",
+      "recommendation": "좁혀도입",
+      "next_scope": "기존 GR-1→GR-2→GR-3 순서로 일반 검토·수정·선택 판 취합까지 각각 완성한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E05",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E06",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G04",
+        "specific": "일반 collected 유지·자기 자료 범위·선택 판/hash·미해결 연결.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "O11",
+        "O12",
+        "OP06"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L55",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 55,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 10,
+      "original_priority": "P1",
+      "original_migration_phase": "R4"
+    },
+    {
+      "id": "H29",
+      "namespace": "catalog-hermes",
+      "title": "남은 예산·체크포인트·질문",
+      "current_status": "부분",
+      "current_implementation": "호출 예산과 상태/질문 대기는 보이지만 모델의 중간 체크포인트를 저장·회수하는 계약은 없다.",
+      "recommendation": "좁혀도입",
+      "next_scope": "우선 남은 원장 예산·차단 이유를 같은 화면에서 읽고 체크포인트는 긴 일반 작업에만 검토한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E09",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E04",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G03",
+        "specific": "진행 표시·체크포인트 저장 완료·자손 종료를 구분.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "O15",
+        "OP04"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L56",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 56,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 3,
+      "original_priority": "P0",
+      "original_migration_phase": "R2"
+    },
+    {
+      "id": "H30",
+      "namespace": "catalog-hermes",
+      "title": "용량·동시성·재시도 제어",
+      "current_status": "부분",
+      "current_implementation": "정상 공식 배선의 현재 원장에는 공통 호출 상한·동시 자리·unknown 차단이 있으나 자동 재시도 정책/circuit breaker는 없다.",
+      "recommendation": "유지",
+      "next_scope": "현재 무환불·unknown 보유를 유지하고 새 재시도는 검증된 시작 전 실패 등 좁은 경우만 검토한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E09",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E10",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G03",
+        "specific": "마지막 슬롯 경쟁·시작 전 거절·호출 후 실패·미확정 종료 구분.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "OP04",
+        "OP09"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L57",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 57,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 3,
+      "original_priority": "P0",
+      "original_migration_phase": "R2"
+    },
+    {
+      "id": "H31",
+      "namespace": "catalog-hermes",
+      "title": "작업별 Git 사본·변경 검토",
+      "current_status": "운영 채택",
+      "current_implementation": "개발 세션은 브랜치/PR로 작업하지만 앱에는 코드 writer·worktree 생성/병합 executor가 없다.",
+      "recommendation": "조건부",
+      "next_scope": "코딩 모드가 필요할 때 한 writer의 사본·diff·PR 연결만 별도 실행 계약으로 붙인다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E23",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E15",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G12",
+        "specific": "사용자 미커밋 변경·충돌·writer 소유권·프로세스 격리를 별도로 확인.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "O28",
+        "H53",
+        "H56"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L58",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 58,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 15,
+      "original_priority": "P3",
+      "original_migration_phase": "R6"
+    },
+    {
+      "id": "H32",
+      "namespace": "catalog-hermes",
+      "title": "여러 관점 프리셋·조언 주기",
+      "current_status": "부분",
+      "current_implementation": "독립 초안·선택적 합성·저장 템플릿은 있으나 자동 조언 주기나 동적 MoA 정책은 없다.",
+      "recommendation": "유지",
+      "next_scope": "빠른 비교/반례 우선 등 이름 있는 설정을 현재 템플릿으로 표현한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E02",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E13",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E15",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G10",
+        "specific": "독립 초안과 공개 뒤 조언을 구분해 단독 대비 비용/효과 확인.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "O32",
+        "O33"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L59",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 59,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 6,
+      "original_priority": "P1",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "H33",
+      "namespace": "catalog-hermes",
+      "title": "일회·반복 예약",
+      "current_status": "미구현",
+      "current_implementation": "사용자 작업을 일회/반복 예약하는 scheduler와 예약 실행 기록은 없다.",
+      "recommendation": "보류",
+      "next_scope": "지속 실행 OP02의 수요·기기 운영이 정해진 뒤 예약 한 종류만 검토한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E17",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E04",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G03",
+        "specific": "시간대·꺼진 PC·누락 예약·중복 실행·관측 만료·누적 상한 확인.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "OP02",
+        "H34"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L65",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 65,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 14,
+      "original_priority": "P2",
+      "original_migration_phase": "R5"
+    },
+    {
+      "id": "H34",
+      "namespace": "catalog-hermes",
+      "title": "모델 없는 예약 작업",
+      "current_status": "미구현",
+      "current_implementation": "readiness/주기적 상태 조회는 모델 없이 돌지만 사용자가 정한 무모델 작업 예약기는 없다.",
+      "recommendation": "조건부",
+      "next_scope": "실제 필요한 관측 만료/CI 확인은 기존 운영 도구를 먼저 사용하고 앱 예약기를 필수화하지 않는다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E14",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E19",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E23",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G10",
+        "specific": "반복할 작업·실패 후 행동·운영 소유자를 지정하고 모델 호출 0 유지.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H33",
+        "H62"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L66",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 66,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 14,
+      "original_priority": "P2",
+      "original_migration_phase": "R5"
+    },
+    {
+      "id": "H35",
+      "namespace": "catalog-hermes",
+      "title": "이벤트로 시작하기",
+      "current_status": "미구현",
+      "current_implementation": "외부 webhook이 앱 작업을 생성하는 경로는 없다.",
+      "recommendation": "보류",
+      "next_scope": "외부 자료/PR 변경이 반복 업무가 될 때 실행 대신 검토 대기 항목 수신부터 검토한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E22",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E04",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G12",
+        "specific": "서명·중복 delivery·다른 저장소 오배정·입력 자료 권한 확인.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "OP07",
+        "O30"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L67",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 67,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 14,
+      "original_priority": "P2",
+      "original_migration_phase": "R5"
+    },
+    {
+      "id": "H36",
+      "namespace": "catalog-hermes",
+      "title": "세션 감시·반복 프롬프트",
+      "current_status": "부분",
+      "current_implementation": "코드 기반 polling·종료 대기 감시는 있으나 모델의 loop/heartbeat 반복 프롬프트는 없다.",
+      "recommendation": "유지",
+      "next_scope": "현 상태 감시를 유지하고 해석 호출은 실제 변화와 별도 예산이 있을 때만 추가한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E17",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E19",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G03",
+        "specific": "변화 없는 감시가 모델 호출·중복 후속 실행을 만들지 않기.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H24",
+        "H34"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L68",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 68,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 14,
+      "original_priority": "P2",
+      "original_migration_phase": "R5"
+    },
+    {
+      "id": "H37",
+      "namespace": "catalog-hermes",
+      "title": "결과 전달·수신함 복구",
+      "current_status": "부분",
+      "current_implementation": "로컬 수신함은 현재 원장의 문제/내 차례를 재계산하지만 전달 ACK·재전달·파일 배달 기록은 없다.",
+      "recommendation": "조건부",
+      "next_scope": "OP11에서 놓친 결과가 확인될 때 로컬 읽음/대기 처리 필요부터 판단한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E04",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E19",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G06",
+        "specific": "다시 열 때 같은 항목·현재 판·다음 행동 회복; 읽음을 해결로 세지 않기.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H06",
+        "OP11"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L69",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 69,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 11,
+      "original_priority": "P1",
+      "original_migration_phase": "R5"
+    },
+    {
+      "id": "H38",
+      "namespace": "catalog-hermes",
+      "title": "선택한 MCP·toolset",
+      "current_status": "미구현",
+      "current_implementation": "제품의 작업별 MCP/toolset 선택은 없고 현 논의자 계약은 도구 표면을 제한한다.",
+      "recommendation": "조건부",
+      "next_scope": "일반 역할의 자료 수집 하나에 필요한 도구만 별도 계약/관측으로 연결한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E15",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E03",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G09",
+        "specific": "도구 권한·설정 변화·기억 범위·격리 참여자 계약을 각각 재검증.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H39",
+        "H40"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L75",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 75,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 16,
+      "original_priority": "P3",
+      "original_migration_phase": "R6"
+    },
+    {
+      "id": "H39",
+      "namespace": "catalog-hermes",
+      "title": "필요한 도구만 검색·설명 로딩",
+      "current_status": "미구현",
+      "current_implementation": "앱에 도구 검색→설명→호출 registry가 없다.",
+      "recommendation": "보류",
+      "next_scope": "H38의 연결 도구가 실제로 많아지고 설명 비용이 측정된 뒤 선택 로딩을 검토한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E15",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E03",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G10",
+        "specific": "검색 누락·미설치·왕복 지연·전달 토큰의 변화를 함께 비교.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H38"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L76",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 76,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 16,
+      "original_priority": "P3",
+      "original_migration_phase": "R6"
+    },
+    {
+      "id": "H40",
+      "namespace": "catalog-hermes",
+      "title": "플러그인·화면 확장 슬롯",
+      "current_status": "미구현",
+      "current_implementation": "서비스 분리는 되었지만 외부 플러그인 manifest·화면 slot·권한 SDK는 없다.",
+      "recommendation": "보류",
+      "next_scope": "확장 한 종류가 필요할 때 기존 ingestion/보고서 경계에 작은 내부 인터페이스부터 둔다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E11",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E22",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G12",
+        "specific": "버전 불일치·해제·실패가 기존 입력/공개/호출을 깨지 않기.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H23",
+        "H38"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L77",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 77,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 16,
+      "original_priority": "P3",
+      "original_migration_phase": "R6"
+    },
+    {
+      "id": "H41",
+      "namespace": "catalog-hermes",
+      "title": "native runtime adapter",
+      "current_status": "부분",
+      "current_implementation": "공식 CLI 일회 실행 adapter는 있지만 대화 thread/turn을 유지하는 native app-server runtime은 없다.",
+      "recommendation": "조건부",
+      "next_scope": "일반 역할의 긴 세션·resume가 필요한 경우에만 현재 exec와 비교한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E15",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E10",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G09",
+        "specific": "새 session 수명·입력 전달·중복 재개·취소·사용량을 해당 PC에서 관측.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "O15",
+        "OP09"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L78",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 78,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 3,
+      "original_priority": "P3",
+      "original_migration_phase": "R6"
+    },
+    {
+      "id": "H42",
+      "namespace": "catalog-hermes",
+      "title": "편집기 연결 ACP",
+      "current_status": "미구현",
+      "current_implementation": "편집기 ACP 연결과 편집기 승인/diff 경로는 없다.",
+      "recommendation": "보류",
+      "next_scope": "코딩 모드 H31이 실제 요구가 될 때 먼저 공개 결과 읽기 연동만 검토한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E22",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E15",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G12",
+        "specific": "controller 상태 정본·writer 소유권·protocol 판·취소의 책임 구분.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H31",
+        "O28"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L79",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 79,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 16,
+      "original_priority": "P3",
+      "original_migration_phase": "R6"
+    },
+    {
+      "id": "H43",
+      "namespace": "catalog-hermes",
+      "title": "다른 UI를 위한 API",
+      "current_status": "부분",
+      "current_implementation": "로컬 HTTP API와 Host/Origin/token 경계는 있으나 타 UI용 버전 계약/SDK는 없다.",
+      "recommendation": "조건부",
+      "next_scope": "실제 두 번째 UI가 필요하면 공개 읽기 계약부터 고정하고 원시 모델 proxy는 만들지 않는다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E22",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E01",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G01",
+        "specific": "직접 ID·동시/중복 요청·봉인·출력 제한·실행 상한 대조.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "OP01",
+        "OP09"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L80",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 80,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 16,
+      "original_priority": "P3",
+      "original_migration_phase": "R6"
+    },
+    {
+      "id": "H44",
+      "namespace": "catalog-hermes",
+      "title": "원격 실행·여러 기기·메신저",
+      "current_status": "미구현",
+      "current_implementation": "다른 기기의 worker/원장·메신저 원격 조작은 연결하지 않았다.",
+      "recommendation": "보류",
+      "next_scope": "원격 수요가 생기면 읽기 전용 상태/보고서 열람을 먼저 비교한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E14",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E22",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G12",
+        "specific": "기기·원장·관측 등록을 구분하고 다른 PC 기록으로 실행 허가하지 않기.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H57",
+        "OP02"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L81",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 81,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 16,
+      "original_priority": "P3",
+      "original_migration_phase": "R6"
+    },
+    {
+      "id": "H45",
+      "namespace": "catalog-hermes",
+      "title": "PDF·Office·노트북 추출",
+      "current_status": "부분",
+      "current_implementation": "쪽/줄 지정 PDF 추출은 있지만 Office·노트북 전용 변환은 없다.",
+      "recommendation": "좁혀도입",
+      "next_scope": "반복 사용하는 문서 형식 하나만 기존 ingestion 계약으로 추가한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E11",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G08",
+        "specific": "원본/도구/위치/누락·표/수식/한글 추출 오류를 함께 표시.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H03",
+        "H46"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L87",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 87,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 8,
+      "original_priority": "P1",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "H46",
+      "namespace": "catalog-hermes",
+      "title": "스캔 누락 경고·선택 OCR",
+      "current_status": "부분",
+      "current_implementation": "PDF의 글 없는 쪽 목록과 전부 비면 거절하는 경고는 있으나 OCR 실행은 없다.",
+      "recommendation": "조건부",
+      "next_scope": "스캔 자료가 반복될 때 사용자가 고른 쪽의 OCR만 추가하고 원 추출과 구분한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E11",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G08",
+        "specific": "빈 쪽과 스캔 누락 구분·수식/표/한글 오독·선택 쪽 비용 확인.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H45"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L88",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 88,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 16,
+      "original_priority": "P3",
+      "original_migration_phase": "R6"
+    },
+    {
+      "id": "H47",
+      "namespace": "catalog-hermes",
+      "title": "웹 검색·본문 추출·캐시",
+      "current_status": "부분",
+      "current_implementation": "사람이 지정한 공개 URL의 본문/범위/출처 고정은 있으나 웹 검색 backend·공용 캐시는 없다.",
+      "recommendation": "좁혀도입",
+      "next_scope": "현재 추출의 실패/누락을 먼저 보완하고 검색은 자료 선택 요구가 생긴 범위만 연결한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E11",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G08",
+        "specific": "검색 요약을 원문으로 취급하지 않고 redirect·변경 시각·누락 확인.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H03",
+        "H48"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L89",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 89,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 8,
+      "original_priority": "P1",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "H48",
+      "namespace": "catalog-hermes",
+      "title": "브라우저로 자료 선택",
+      "current_status": "미구현",
+      "current_implementation": "앱이 브라우저 요소를 조작하거나 화면에서 자료를 선택하는 기능은 없다.",
+      "recommendation": "보류",
+      "next_scope": "동적 자료가 URL 추출로 부족한 실제 경우에 사람이 확인한 자료 첨부부터 유지한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E11",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E03",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G12",
+        "specific": "세션 권한·캡처 범위·개인 자료를 확인하고 소비자 AI 앱 자동 조작과 분리.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H47"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L90",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 90,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 16,
+      "original_priority": "P3",
+      "original_migration_phase": "R6"
+    },
+    {
+      "id": "H49",
+      "namespace": "catalog-hermes",
+      "title": "이미지 입력·시각 결과",
+      "current_status": "미구현",
+      "current_implementation": "실행 입력과 답 계약은 텍스트 중심이며 이미지 입력/시각 결과 pipeline은 없다.",
+      "recommendation": "조건부",
+      "next_scope": "도표·설계 이미지 판단이 실제 과제일 때 한 입력 형식과 모델 계약부터 관측한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E03",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E15",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G09",
+        "specific": "이미지 bytes/hash·전달 지원·출력 취급·보고서 원문 보존 확인.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H45"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L91",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 91,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 16,
+      "original_priority": "P3",
+      "original_migration_phase": "R6"
+    },
+    {
+      "id": "H50",
+      "namespace": "catalog-hermes",
+      "title": "말로 입력·답 읽어주기",
+      "current_status": "미구현",
+      "current_implementation": "음성 입력·TTS 출력은 제품 경로에 없다.",
+      "recommendation": "보류",
+      "next_scope": "접근성 또는 음성 사용 요구가 있을 때 텍스트 입력 전후 변환으로만 검토한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E03",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E22",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G12",
+        "specific": "전사 오독 수정·실행 전 입력 확인·재생/전송 범위 확인.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H49"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L92",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 92,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 16,
+      "original_priority": "P3",
+      "original_migration_phase": "R6"
+    },
+    {
+      "id": "H51",
+      "namespace": "catalog-hermes",
+      "title": "작업 화면 보기·사람에게 넘기기",
+      "current_status": "미구현",
+      "current_implementation": "원본 앱 답 수동 참여와 달리 컴퓨터 화면 관찰/조작 handoff 기능은 없다.",
+      "recommendation": "보류",
+      "next_scope": "화면을 통한 외부 작업이 필요한지 먼저 정하고 사람 인계와 실행 권한을 분리한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E15",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E22",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G12",
+        "specific": "현재 대상·진행 작업·권한 인계·중단 후 책임을 확인.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H48",
+        "H52"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L93",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 93,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 16,
+      "original_priority": "P3",
+      "original_migration_phase": "R6"
+    },
+    {
+      "id": "H52",
+      "namespace": "catalog-hermes",
+      "title": "코드로 자료 가공",
+      "current_status": "미구현",
+      "current_implementation": "앱에는 자료 가공용 범용 코드 실행/산출물 계약이 없고 변환은 제한된 ingestion 경로다.",
+      "recommendation": "조건부",
+      "next_scope": "반복 전처리 한 종류를 무모델 변환기로 붙인 뒤 코드 executor의 필요를 판단한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E11",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E15",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G12",
+        "specific": "입력/출력 상한·도구 판·파일 소유권·실패 격리·산출물 hash 확인.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H40",
+        "H45"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L94",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 94,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 16,
+      "original_priority": "P3",
+      "original_migration_phase": "R6"
+    },
+    {
+      "id": "H53",
+      "namespace": "catalog-hermes",
+      "title": "편집 직후 진단",
+      "current_status": "운영 채택",
+      "current_implementation": "개발 시 CI/검토를 쓰지만 앱이 파일을 편집한 직후 진단하는 제품 기능은 없다.",
+      "recommendation": "조건부",
+      "next_scope": "H31의 writer를 추가할 때 변경 범위에 해당하는 기존 검사 결과를 연결한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E23",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E15",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G11",
+        "specific": "실제 검사 실행·대상 commit·실패 원문을 연결하며 체크 표시를 품질 보증으로 쓰지 않기.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H31",
+        "O28"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L95",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 95,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 15,
+      "original_priority": "P3",
+      "original_migration_phase": "R6"
+    },
+    {
+      "id": "H54",
+      "namespace": "catalog-hermes",
+      "title": "사용량·시간 분석",
+      "current_status": "부분",
+      "current_implementation": "provider별 호출/토큰·미보고와 역할별 원장은 있으나 기간·실패·기억 영향의 종합 분석 화면은 없다.",
+      "recommendation": "좁혀도입",
+      "next_scope": "기존 usage projection에 작업/역할/실패 비교만 추가해 중복 수집을 피한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E16",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E09",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G10",
+        "specific": "구독 차감·CLI 토큰·정가 추정·미보고를 분리하고 추가 호출 0 유지.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "OP12",
+        "O13"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L101",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 101,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 9,
+      "original_priority": "P1",
+      "original_migration_phase": "R1"
+    },
+    {
+      "id": "H55",
+      "namespace": "catalog-hermes",
+      "title": "진단·설정 UI·업데이트 안내",
+      "current_status": "부분",
+      "current_implementation": "기기/모델/관측 readiness와 설정 검증은 있으나 통합 doctor·업데이트/설정 UI는 없다.",
+      "recommendation": "좁혀도입",
+      "next_scope": "사용 불가 이유와 SETUP의 다음 행동을 하나의 조회 화면으로 연결한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E14",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E17",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G09",
+        "specific": "설치/관측 등록/실행 가능을 구분하고 민감 경로·계정 값 노출 없음.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "OP10",
+        "H10",
+        "H62"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L102",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 102,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 14,
+      "original_priority": "P1",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "H56",
+      "namespace": "catalog-hermes",
+      "title": "스냅숏·복구·보관",
+      "current_status": "부분",
+      "current_implementation": "schema 변경 전 원장 백업은 있지만 파일/설정 부분 rollback·보관/복구 미리보기는 없다.",
+      "recommendation": "조건부",
+      "next_scope": "먼저 백업 위치/대상 판과 읽기 전용 복구 검토를 마련하고 소비 원장은 과거 상태로 덮지 않는다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E18",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E09",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G03",
+        "specific": "모델 호출 후 복구가 소비 기록을 지우지 않고 실행 중 복구를 차단.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "OP06",
+        "H31"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L103",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 103,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 15,
+      "original_priority": "P3",
+      "original_migration_phase": "R6"
+    },
+    {
+      "id": "H57",
+      "namespace": "catalog-hermes",
+      "title": "실행 backend 선택",
+      "current_status": "부분",
+      "current_implementation": "mock/native와 관측된 Linux/WSL 실행 경계는 있으나 Docker/SSH/서버리스 backend 선택은 없다.",
+      "recommendation": "보류",
+      "next_scope": "원격 기기 요구가 정해지기 전 현 executor를 유지한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E15",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E14",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G09",
+        "specific": "backend별 입력/인증/격리/자손 종료/관측을 각각 갖추기.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H44",
+        "OP09"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L104",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 104,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 16,
+      "original_priority": "P3",
+      "original_migration_phase": "R6"
+    },
+    {
+      "id": "H58",
+      "namespace": "catalog-hermes",
+      "title": "대체 모델·계정·provider 선택",
+      "current_status": "부분",
+      "current_implementation": "허용 목록에서 모델을 고를 수 있지만 자동 fallback·계정 pool·자격증명 routing은 없다.",
+      "recommendation": "조건부",
+      "next_scope": "한도 후 다른 구독 구성으로 새 실행을 준비하는 명시적 안내만 우선 검토한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E02",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E09",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E15",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G09",
+        "specific": "새 입력 동등성·보고 모델·새 원장 상한·자동 유료 전환 없음.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "O32",
+        "O33"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L105",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 105,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 16,
+      "original_priority": "P3",
+      "original_migration_phase": "R6"
+    },
+    {
+      "id": "H59",
+      "namespace": "catalog-hermes",
+      "title": "비밀을 모델 밖에서 취급",
+      "current_status": "운영 채택",
+      "current_implementation": "공식 CLI 로그인과 제한된 참여자 환경을 사용하며 앱의 비밀번호 금고는 만들지 않았다.",
+      "recommendation": "유지",
+      "next_scope": "로그인 필요 상태와 사용자가 공식 경로로 해결하는 안내를 유지한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E14",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E15",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G09",
+        "specific": "모델 입력/공개 보고에 비밀을 넣지 않고 새 credential pool을 만들지 않기.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H55",
+        "H58"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L106",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 106,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 16,
+      "original_priority": "P3",
+      "original_migration_phase": "R6"
+    },
+    {
+      "id": "H60",
+      "namespace": "catalog-hermes",
+      "title": "음악·홈 자동화·메신저 업무",
+      "current_status": "미구현",
+      "current_implementation": "음악·홈 자동화·메일/캘린더 업무 adapter는 제품에 없다.",
+      "recommendation": "보류",
+      "next_scope": "의사결정의 후속 외부 행동이 반복 과제가 될 때 서비스 하나만 따로 검토한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E22",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G12",
+        "specific": "대상 계정·전송/수정 내용·완료 확인·실패 재처리 책임을 먼저 고정.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H35",
+        "H44"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L107",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 107,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 16,
+      "original_priority": "P3",
+      "original_migration_phase": "R6"
+    },
+    {
+      "id": "H61",
+      "namespace": "catalog-hermes",
+      "title": "여러 과제 비교 실행·재개",
+      "current_status": "부분",
+      "current_implementation": "단일 과제 headless 실행·순차 합성·결과 JSON은 있으나 batch 상태/이어하기 관리자는 없다.",
+      "recommendation": "좁혀도입",
+      "next_scope": "기존 app.run을 작은 고정 과제 묶음의 비교 절차로 사용하고 재개 표식만 필요에 따라 더한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E25",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E09",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G10",
+        "specific": "과제/설정/실패/시간/소비를 같은 기준으로 비교하고 재개 중 중복 호출 없음.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "O09",
+        "O33"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L108",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 108,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 13,
+      "original_priority": "P1",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "H62",
+      "namespace": "catalog-hermes",
+      "title": "서비스 건강·관측 이벤트",
+      "current_status": "부분",
+      "current_implementation": "원장 events·readiness·상태 polling은 있으나 지연/조회 오류/자원 압박의 통합 관측 화면은 없다.",
+      "recommendation": "좁혀도입",
+      "next_scope": "기존 사건과 측정 도구로 드러난 장애의 다음 행동만 모델 없이 표시한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E09",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E14",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E19",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G06",
+        "specific": "본문/인증을 로그에 더 싣지 않고 stale 값·접속 실패·실행 상태를 구분.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H34",
+        "H55"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/HERMES.md#L109",
+      "source_file": "docs/research/feature-catalog-2026-10-04/HERMES.md",
+      "source_line": 109,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 14,
+      "original_priority": "P1",
+      "original_migration_phase": "R1"
+    },
+    {
+      "id": "O01",
+      "namespace": "catalog-other",
+      "title": "여러 방식으로 기억 찾기",
+      "current_status": "부분",
+      "current_implementation": "한국어 부분 일치·완전 표현·희귀 표현 가중치를 쓰지만 FTS/형태소/embedding/RRF 다중 검색은 없다.",
+      "recommendation": "조건부",
+      "next_scope": "D05의 동의어·식별자 누락을 현재 lexical과 비교한 뒤 한 채널씩 도입한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E07",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E21",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G05",
+        "specific": "관련 기록 누락·무관 기록·검색 지연을 같은 질의로 비교.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "D02",
+        "D05",
+        "D10"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md#L11",
+      "source_file": "docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md",
+      "source_line": 11,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 13,
+      "original_priority": "P3",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "O02",
+      "namespace": "catalog-other",
+      "title": "입력 예산 안의 다양한 근거",
+      "current_status": "부분",
+      "current_implementation": "기억의 section별/지적별 예산과 미해결 우선 발췌는 있으나 의미적 중복 제거·다양성 최적화는 없다.",
+      "recommendation": "유지",
+      "next_scope": "현재 균등 발췌를 유지하며 긴 반례·중복 답의 실제 누락 사례로 다음 변경을 결정한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E07",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E21",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G05",
+        "specific": "12,000 bytes 안에서 원문 반례와 처분의 포함 여부 확인.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "D01",
+        "OP08"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md#L12",
+      "source_file": "docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md",
+      "source_line": 12,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 4,
+      "original_priority": "P1",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "O03",
+      "namespace": "catalog-other",
+      "title": "왜 이 기억인가·다음 조회 안내",
+      "current_status": "부분",
+      "current_implementation": "선택 표현·일치 위치·생략·recent fallback·원 실행은 보이지만 추천 재질의/범위 확대는 없다.",
+      "recommendation": "좁혀도입",
+      "next_scope": "D01/H14에서 누락이 큰 섹션으로 바로 이동하는 안내를 더한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E08",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G05",
+        "specific": "미검색·약한 일치·상한 탈락·원문 unavailable을 구분.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "D01",
+        "H14"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md#L13",
+      "source_file": "docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md",
+      "source_line": 13,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 4,
+      "original_priority": "P1",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "O04",
+      "namespace": "catalog-other",
+      "title": "프로젝트·사건·세션 범위",
+      "current_status": "부분",
+      "current_implementation": "현재 자동 기억은 원장/작업 경계만 지원하고 프로젝트·사건·phase별 공유 정책은 없다.",
+      "recommendation": "조건부",
+      "next_scope": "명시적 대상 작업의 자료 공유 D06부터 비교하고 전역 자동 범위는 넓히지 않는다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E07",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E08",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G02",
+        "specific": "검색·직접 ID·가져오기·격리 역할에서 같은 범위 적용.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H12",
+        "D06"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md#L14",
+      "source_file": "docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md",
+      "source_line": 14,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 7,
+      "original_priority": "P2",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "O05",
+      "namespace": "catalog-other",
+      "title": "남길 기억·검토 대기",
+      "current_status": "미구현",
+      "current_implementation": "사용자가 결론을 선택해 기억 후보/보류/승인으로 저장하는 별도 write gate는 없다.",
+      "recommendation": "조건부",
+      "next_scope": "D03의 구조화 결정이 필요해지면 수동 저장 미리보기부터 추가한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E07",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E05",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G02",
+        "specific": "저장 승인·실제 저장·새 실행 주입을 구분하고 과거 pack 보존.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "D03",
+        "D04"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md#L15",
+      "source_file": "docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md",
+      "source_line": 15,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 7,
+      "original_priority": "P1",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "O06",
+      "namespace": "catalog-other",
+      "title": "결정의 교체·사건 이력",
+      "current_status": "부분",
+      "current_implementation": "사람 판단 사건·검토 처분·수정 부모 판은 있지만 결정을 대체하는 supersedes 객체는 없다.",
+      "recommendation": "좁혀도입",
+      "next_scope": "D03에 현재 결정·대체 이유·유효 범위의 명시적 기록만 먼저 도입한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E05",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E06",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E24",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G07",
+        "specific": "옛 결론 보존·동시 교체·대체 순환·근거 없는 새 결론 확인.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "D03",
+        "D08"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md#L16",
+      "source_file": "docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md",
+      "source_line": 16,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 7,
+      "original_priority": "P1",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "O07",
+      "namespace": "catalog-other",
+      "title": "모순·보류·미해결 기억",
+      "current_status": "부분",
+      "current_implementation": "수용한 검토의 unresolved/qualified를 기억에 남기지만 시점이 다른 결정의 모순 탐지/충돌함은 없다.",
+      "recommendation": "조건부",
+      "next_scope": "D03의 결정 참조가 생긴 뒤 D08에서 양쪽 근거를 사람이 비교하는 화면부터 만든다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E07",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E05",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G05",
+        "specific": "범위/기간 차이를 모순으로 단정하거나 반례를 자동 폐기하지 않기.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "D08",
+        "O06"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md#L17",
+      "source_file": "docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md",
+      "source_line": 17,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 7,
+      "original_priority": "P1",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "O08",
+      "namespace": "catalog-other",
+      "title": "기억 정리·망각·피드백",
+      "current_status": "미구현",
+      "current_implementation": "기억의 pin·수동 보관·복원·도움/무관 피드백·회고 통합은 없다.",
+      "recommendation": "조건부",
+      "next_scope": "D04에서 선택 제외와 되돌리기부터 도입하고 자동 망각은 평가 뒤 결정한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E07",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E08",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G05",
+        "specific": "오래됨/미사용이 진실성 판단을 대신하지 않고 과거 입력은 불변.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "D04",
+        "H22"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md#L18",
+      "source_file": "docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md",
+      "source_line": 18,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 7,
+      "original_priority": "P1",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "O09",
+      "namespace": "catalog-other",
+      "title": "검색 품질 시험 세트",
+      "current_status": "있음",
+      "current_implementation": "고정 합성 검색 질의·정답 출처·금지 원문·관련/무관 기록·bytes/시간 평가가 구현돼 있다.",
+      "recommendation": "유지",
+      "next_scope": "기존 평가셋에 사용자 과제의 실패를 비식별 사례로 추가하고 별도 평가 engine은 만들지 않는다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E21",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G05",
+        "specific": "합성 이득과 실사용 품질을 구분하며 알려진 한계는 제외 은폐하지 않기.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "D05",
+        "H61"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md#L19",
+      "source_file": "docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md",
+      "source_line": 19,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 13,
+      "original_priority": "P3",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "O10",
+      "namespace": "catalog-other",
+      "title": "기억 내보내기·관리 화면·동기화",
+      "current_status": "미구현",
+      "current_implementation": "템플릿 파일 이동은 가능하지만 기억 항목 export/import·관리 console·동기화 outbox는 없다.",
+      "recommendation": "조건부",
+      "next_scope": "D06의 선택 공개 기억 묶음부터 만들고 외부 서비스 동기화는 필요가 생긴 뒤 별도 검토한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E02",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E08",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G02",
+        "specific": "중복/충돌/부분 실패/스키마와 대상 작업 범위 확인.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "D06",
+        "H17"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md#L20",
+      "source_file": "docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md",
+      "source_line": 20,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 7,
+      "original_priority": "P1",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "O11",
+      "namespace": "catalog-other",
+      "title": "지적별 수정·반박·보류와 근거",
+      "current_status": "부분",
+      "current_implementation": "격리 실행에서 지적 처분·별도 수정·지적별 대응·재검토는 있지만 일반 팀원 대상은 없다.",
+      "recommendation": "좁혀도입",
+      "next_scope": "H28과 같은 GR-1/2 작업으로 진행해 기능을 별도로 중복 구현하지 않는다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E05",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E06",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G04",
+        "specific": "지적 ID·원문 hash·작성자·부모 판·남은 문제를 연결.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H28",
+        "OP06"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md#L28",
+      "source_file": "docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md",
+      "source_line": 28,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 10,
+      "original_priority": "P1",
+      "original_migration_phase": "R4"
+    },
+    {
+      "id": "O12",
+      "namespace": "catalog-other",
+      "title": "검토 범위·강도·멈춤 조건",
+      "current_status": "부분",
+      "current_implementation": "검토 질문·한 라운드·순차 실행·실패 정지/수정 상한은 있으나 core/integrity 프로필·추론 강도 연결은 없다.",
+      "recommendation": "좁혀도입",
+      "next_scope": "먼저 GR-1의 검토 범위를 입력 미리보기로 명확히 하고 프로필은 반복 사용 후 템플릿으로 추가한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E05",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E06",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E15",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G04",
+        "specific": "범위 밖 지적·필수 수정·상한·미실행 검토자를 구분.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H28",
+        "H02"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md#L29",
+      "source_file": "docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md",
+      "source_line": 29,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 10,
+      "original_priority": "P1",
+      "original_migration_phase": "R4"
+    },
+    {
+      "id": "O13",
+      "namespace": "catalog-other",
+      "title": "요청한 모델과 실제 응답 대조",
+      "current_status": "부분",
+      "current_implementation": "Outcome은 요청/보고 모델과 미보고를 구분하며 사용량도 미상을 유지하지만 새 CLI 필드/추론 설정은 미연결이다.",
+      "recommendation": "유지",
+      "next_scope": "기존 관측값만 표시하고 화면 필드 확장은 PC 관측에 맞춘다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E16",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E15",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G09",
+        "specific": "미보고를 일치/불일치로 추측하지 않고 requested/reported 원자료 대조.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H54",
+        "OP09"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md#L30",
+      "source_file": "docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md",
+      "source_line": 30,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 9,
+      "original_priority": "P1",
+      "original_migration_phase": "R1"
+    },
+    {
+      "id": "O14",
+      "namespace": "catalog-other",
+      "title": "검토 중·반영 중·미완 표시",
+      "current_status": "부분",
+      "current_implementation": "실행·검토·수정·재검토의 단계/미확정은 보이지만 일반 검토 왕복은 아직 없다.",
+      "recommendation": "좁혀도입",
+      "next_scope": "GR-1을 공개 조회·단계·검색·사용량까지 한 사용자 흐름으로 완성한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E04",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E05",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E06",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G04",
+        "specific": "옛 검토를 새 답 완료로 재사용하지 않고 미실행/미완을 표시.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H28",
+        "OP12"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md#L31",
+      "source_file": "docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md",
+      "source_line": 31,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 9,
+      "original_priority": "P1",
+      "original_migration_phase": "R1"
+    },
+    {
+      "id": "O15",
+      "namespace": "catalog-other",
+      "title": "세션 연결·긴 검토 회수",
+      "current_status": "부분",
+      "current_implementation": "실행/attempt ID와 restart unknown 회수는 있지만 verifier 세션 유지·native resume는 없다.",
+      "recommendation": "조건부",
+      "next_scope": "GR-1의 재연결은 기존 원장으로 해결하고 긴 대화 resume는 H41의 별도 관측으로 검토한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E09",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E10",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E15",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G03",
+        "specific": "화면 timeout·실제 종료·새 호출을 구분하고 재시작에 재호출하지 않기.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H41",
+        "OP01"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md#L32",
+      "source_file": "docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md",
+      "source_line": 32,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 3,
+      "original_priority": "P0",
+      "original_migration_phase": "R2"
+    },
+    {
+      "id": "O16",
+      "namespace": "catalog-other",
+      "title": "규칙·지식 지도·출처 재확인",
+      "current_status": "운영 채택",
+      "current_implementation": "개발용 규칙·기능/코드 지도·SHA 고정 출처는 있지만 앱의 규칙 후보/승인/동적 freshness engine은 없다.",
+      "recommendation": "좁혀도입",
+      "next_scope": "기존 문서 지도와 출처를 사용하고 H19에 필요한 짧은 절차만 명시적으로 선택한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E24",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E02",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G11",
+        "specific": "현재 코드와 날짜 설계를 구분하고 읽지 않은 전역 지식을 자동 주입하지 않기.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H19",
+        "D03"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md#L33",
+      "source_file": "docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md",
+      "source_line": 33,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 7,
+      "original_priority": "P1",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "O17",
+      "namespace": "catalog-other",
+      "title": "세 줄 작업 요약",
+      "current_status": "부분",
+      "current_implementation": "작업 단계·다음 행동·막힘은 projection으로 보이고 개발 카드 체크포인트도 있지만 의미적 세 줄 요약은 없다.",
+      "recommendation": "유지",
+      "next_scope": "기존 현재/다음/막힘 표시를 유지하고 원문 근거 이동만 보완한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E04",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E23",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G07",
+        "specific": "계획 변경·새 결과·unknown 뒤에도 현재 행동이 원문 상태와 일치.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H15",
+        "D03"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md#L41",
+      "source_file": "docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md",
+      "source_line": 41,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 7,
+      "original_priority": "P1",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "O18",
+      "namespace": "catalog-other",
+      "title": "관측·해석·결정 분리",
+      "current_status": "부분",
+      "current_implementation": "CLI 관측·모델 답·사람 판단/처분은 분리하지만 범용 관측/해석/결정 지식 객체는 없다.",
+      "recommendation": "유지",
+      "next_scope": "새 필드를 만들기 전에 기존 사건/판정 이름으로 현재 근거와 해석을 표시한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E16",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E05",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E24",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G01",
+        "specific": "AI 답/인용 일치를 관측 사실·사람 판단 완료를 사실 검증으로 승격하지 않기.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "D03",
+        "O06"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md#L42",
+      "source_file": "docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md",
+      "source_line": 42,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 7,
+      "original_priority": "P1",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "O19",
+      "namespace": "catalog-other",
+      "title": "실패한 가설·배제 이유 재사용",
+      "current_status": "운영 채택",
+      "current_implementation": "실패 가설·배제 이유는 개발 날짜 기록에 보존하지만 앱에 구조화된 ruled_out 기억은 없다.",
+      "recommendation": "좁혀도입",
+      "next_scope": "D03이 필요할 때 배제 조건·다시 볼 계기·근거를 사람 기록으로 추가한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E24",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E07",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G11",
+        "specific": "OS·버전·과제가 바뀌었는데 예전 배제를 영구 규칙으로 주입하지 않기.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "D03",
+        "O16"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md#L43",
+      "source_file": "docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md",
+      "source_line": 43,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 7,
+      "original_priority": "P1",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "O20",
+      "namespace": "catalog-other",
+      "title": "다음 행동·담당·입력 계약",
+      "current_status": "부분",
+      "current_implementation": "개발 카드와 앱의 분담 사본/선행/내 차례에는 담당·입력·다음 행동이 있으나 일반 메시지 인계는 없다.",
+      "recommendation": "유지",
+      "next_scope": "현재 클릭 가능한 다음 행동을 유지하며 전달/소비 상태는 OP07로 분리한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E03",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E04",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E23",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G07",
+        "specific": "미정 담당·누락 자료·새 계획에서 잘못된 실행을 시작하지 않기.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "OP07",
+        "OP11"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md#L44",
+      "source_file": "docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md",
+      "source_line": 44,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 7,
+      "original_priority": "P1",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "O21",
+      "namespace": "catalog-other",
+      "title": "현재 요약에서 증거로 확대",
+      "current_status": "있음",
+      "current_implementation": "작업/타임라인/수신함은 페이지로 읽고 선택한 실행 상세에서 원문을 펼친다.",
+      "recommendation": "유지",
+      "next_scope": "기존 공개 조회를 모든 새 화면에서 재사용하고 cold 집계의 선형 비용은 측정으로 관리한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E01",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E19",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G01",
+        "specific": "목록이 답/자료 전문을 싣지 않고 페이지 밖 선택과 전체 상태를 유지.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "OP01",
+        "OP12"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md#L45",
+      "source_file": "docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md",
+      "source_line": 45,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 2,
+      "original_priority": "P0",
+      "original_migration_phase": "R1"
+    },
+    {
+      "id": "O22",
+      "namespace": "catalog-other",
+      "title": "화면을 닫아도 작업 찾기",
+      "current_status": "부분",
+      "current_implementation": "원장 기록은 남지만 현재 launcher는 닫기 요청 후 호출이 끝나면 서버를 종료한다.",
+      "recommendation": "조건부",
+      "next_scope": "지속 실행이 필요하면 OP02의 명시적 별도 모드를 설계하고 현재 자동 종료 기본값은 유지한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E17",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E10",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G06",
+        "specific": "같은 원장/실행 재연결과 crash/unknown/완료 구분.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "OP02"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md#L53",
+      "source_file": "docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md",
+      "source_line": 53,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 14,
+      "original_priority": "P2",
+      "original_migration_phase": "R5"
+    },
+    {
+      "id": "O23",
+      "namespace": "catalog-other",
+      "title": "상태 구독·변경분·출력 억제",
+      "current_status": "부분",
+      "current_implementation": "선택 상세 조회·페이지·변경 없는 projection 재사용·늦은 응답 폐기는 있지만 SSE/변경 cursor 구독은 없다.",
+      "recommendation": "유지",
+      "next_scope": "먼저 polling 비용/사용 불편을 측정하고 필요한 경우에만 revision/변경분을 도입한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E19",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G06",
+        "specific": "구독으로 확대할 때 초기 snapshot과 변경 replay 사이의 누락 없음.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "OP01"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md#L54",
+      "source_file": "docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md",
+      "source_line": 54,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 2,
+      "original_priority": "P0",
+      "original_migration_phase": "R1"
+    },
+    {
+      "id": "O24",
+      "namespace": "catalog-other",
+      "title": "찾기·여러 창·문맥별 조작",
+      "current_status": "부분",
+      "current_implementation": "작업 이동·검색·원문 비교는 있으나 범용 여러 창/분할 상태 저장은 없다.",
+      "recommendation": "조건부",
+      "next_scope": "H08/OP03에서 기존 선택 실행을 고정하는 비교 편의만 추가한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E20",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E19",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E01",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G06",
+        "specific": "다른 실행으로 전환 중 명령이 잘못된 대상에 적용되지 않기.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H08",
+        "OP03"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md#L55",
+      "source_file": "docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md",
+      "source_line": 55,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 9,
+      "original_priority": "P1",
+      "original_migration_phase": "R1"
+    },
+    {
+      "id": "O25",
+      "namespace": "catalog-other",
+      "title": "막히지 않은 일·원자적 가져가기",
+      "current_status": "운영 채택",
+      "current_implementation": "GitHub 카드의 수동 가져가기 절차와 앱 선행 확인은 있으나 다중 세션 원자적 claim은 없다.",
+      "recommendation": "조건부",
+      "next_scope": "충돌 사례가 반복될 때만 GitHub 원본 상태와 양립하는 claim 방법을 좁게 검토한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E23",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E04",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G11",
+        "specific": "두 세션 경쟁을 실제로 검증하며 GitHub 두 요청을 로컬 거래처럼 취급하지 않기.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H26",
+        "OP04"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md#L63",
+      "source_file": "docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md",
+      "source_line": 63,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 12,
+      "original_priority": "P2",
+      "original_migration_phase": "R4"
+    },
+    {
+      "id": "O26",
+      "namespace": "catalog-other",
+      "title": "명세·계획·완료 기준 양식",
+      "current_status": "있음",
+      "current_implementation": "개발 카드 양식과 앱 목표·완료 기준·선행 계획 저장은 구현/운영 중이다.",
+      "recommendation": "유지",
+      "next_scope": "간단한 일은 현재 양식을 사용하고 요구별 자동 검증/증거 객체는 OP05의 별도 범위로 둔다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E04",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E23",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G07",
+        "specific": "완료 조건 변경 시 새 계획/실행을 요구하고 과거 근거를 조용히 재사용하지 않기.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "OP05",
+        "D07"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md#L64",
+      "source_file": "docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md",
+      "source_line": 64,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 6,
+      "original_priority": "P1",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "O27",
+      "namespace": "catalog-other",
+      "title": "대규모 작업의 의존성·병합·감시",
+      "current_status": "부분",
+      "current_implementation": "작은 작업의 의존성/막힘 projection은 있지만 대규모 convoy·병합·자동 감시 engine은 없다.",
+      "recommendation": "보류",
+      "next_scope": "앱의 두 provider 읽기 전용 실행에 필요한 선행 목록과 개발 협업의 한 writer 원칙을 유지하며, 규모 근거 전에는 엔진을 확대하지 않는다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E04",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E09",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E23",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G10",
+        "specific": "작업 수가 아닌 반복 병목·복구 부담·총 호출 비용으로 확대 판단.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H24",
+        "H27",
+        "O25"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md#L65",
+      "source_file": "docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md",
+      "source_line": 65,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 12,
+      "original_priority": "P2",
+      "original_migration_phase": "R4"
+    },
+    {
+      "id": "O28",
+      "namespace": "catalog-other",
+      "title": "병렬 사본과 한곳의 diff 검토",
+      "current_status": "운영 채택",
+      "current_implementation": "개발 브랜치/PR/diff 검토는 하지만 앱에서 병렬 worktree·수정 실행·PR 생성은 지원하지 않는다.",
+      "recommendation": "조건부",
+      "next_scope": "H31의 코딩 확장에서 사본/변경 검토를 하나의 범위로 묶는다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E23",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E15",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G12",
+        "specific": "동시 파일 수정·이중 commit·미커밋/ignored 파일 보존·한 writer 확인.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H31",
+        "H53"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md#L66",
+      "source_file": "docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md",
+      "source_line": 66,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 15,
+      "original_priority": "P3",
+      "original_migration_phase": "R6"
+    },
+    {
+      "id": "O29",
+      "namespace": "catalog-other",
+      "title": "조정자와 작은 작업자·직접 교정",
+      "current_status": "부분",
+      "current_implementation": "일반 팀원 분담과 상위 역할의 제안/취합은 있으나 실행 중 질문/직접 교정 경로는 없다.",
+      "recommendation": "좁혀도입",
+      "next_scope": "GR-1의 일반 결과 검토를 먼저 끝낸 뒤 OP07의 다음 입력 메시지를 검토한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E03",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E12",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E04",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G04",
+        "specific": "과제 소유권·취소·자료 범위·호출 회계를 같은 원장으로 확인.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H25",
+        "H28",
+        "OP07"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md#L67",
+      "source_file": "docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md",
+      "source_line": 67,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 9,
+      "original_priority": "P1",
+      "original_migration_phase": "R1"
+    },
+    {
+      "id": "O30",
+      "namespace": "catalog-other",
+      "title": "한 작업·한 산출물·비동기 검토",
+      "current_status": "운영 채택",
+      "current_implementation": "개발 카드→브랜치/PR→CI 연결은 운영하지만 앱의 cloud coding agent/PR 산출물 pipeline은 없다.",
+      "recommendation": "좁혀도입",
+      "next_scope": "현재 카드의 실행/문서/PR 링크를 분명히 하고 앱 산출물 목록은 H07로 연결한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E23",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E04",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G11",
+        "specific": "작업/산출물/검토/CI가 같은 기준 commit을 가리키는지 확인.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H07",
+        "OP11"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md#L68",
+      "source_file": "docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md",
+      "source_line": 68,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 11,
+      "original_priority": "P1",
+      "original_migration_phase": "R5"
+    },
+    {
+      "id": "O31",
+      "namespace": "catalog-other",
+      "title": "짧은 현재 문맥과 필요할 때 읽는 이력",
+      "current_status": "부분",
+      "current_implementation": "현재 상태와 긴 원문을 나누고 제한 기억 발췌를 보내지만 모델 요약/다른 thread 자동 참조는 없다.",
+      "recommendation": "조건부",
+      "next_scope": "H15/D03을 유지하며 장문 일반 세션에서만 OP08 압축 비교를 검토한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E07",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E19",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G05",
+        "specific": "반례/최근 조건 손실·중복 읽기·추가 요약 비용을 비교.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H18",
+        "OP08"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md#L69",
+      "source_file": "docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md",
+      "source_line": 69,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 13,
+      "original_priority": "P3",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "O32",
+      "namespace": "catalog-other",
+      "title": "계획 모델과 실행 모델을 따로",
+      "current_status": "부분",
+      "current_implementation": "상위 계획 역할과 일반/격리 팀원은 구분하고 모델 선택을 저장하지만 자동 가격/품질 라우팅은 없다.",
+      "recommendation": "유지",
+      "next_scope": "실제 검증한 모델 조합을 H02 템플릿으로 사용한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E02",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E12",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E15",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G10",
+        "specific": "저가 모델의 재시도/검토까지 포함한 전체 비용과 품질 비교.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H02",
+        "H32",
+        "O33"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md#L70",
+      "source_file": "docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md",
+      "source_line": 70,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 6,
+      "original_priority": "P1",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "O33",
+      "namespace": "catalog-other",
+      "title": "선택적 라우터·후보 답 합성",
+      "current_status": "부분",
+      "current_implementation": "선택적 공개 후 합성은 있으나 Jev/Lite-Harness형 router·자동 단독/ensemble 선택은 없다.",
+      "recommendation": "조건부",
+      "next_scope": "H61의 과제별 비교로 합성이 유용한 조건을 정한 뒤 단순 선택 정책만 검토한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E13",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E25",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G10",
+        "specific": "단독/독립 초안/합성을 같은 과제에서 비용·누락·오답으로 비교.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H32",
+        "H58",
+        "H61"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md#L71",
+      "source_file": "docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md",
+      "source_line": 71,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 13,
+      "original_priority": "P3",
+      "original_migration_phase": "R6"
+    },
+    {
+      "id": "O34",
+      "namespace": "catalog-other",
+      "title": "디자인 부품과 반복 UI 양식",
+      "current_status": "있음",
+      "current_implementation": "island-ui의 테마·간격·모션 부품을 실제 화면에서 사용하고 원본 우선 수정 절차가 있다.",
+      "recommendation": "유지",
+      "next_scope": "검색·검토·수신함의 새 UI도 같은 부품을 사용한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E20",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E26",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G06",
+        "specific": "테마 대비·모션 감소·작은 화면을 확인하고 복사본만 따로 변경하지 않기.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H11",
+        "OP12"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md#L72",
+      "source_file": "docs/research/feature-catalog-2026-10-04/OTHER-PROJECTS.md",
+      "source_line": 72,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 9,
+      "original_priority": "P1",
+      "original_migration_phase": "R1"
+    },
+    {
+      "id": "D01",
+      "namespace": "component-adoption",
+      "title": "선택 이유와 실제 입력 미리보기",
+      "current_status": "있음",
+      "current_implementation": "새 pack의 선택 이유·생략·원 실행·실제 보낼 입력과 hash를 미리 볼 수 있다.",
+      "recommendation": "유지",
+      "next_scope": "현재 서랍을 유지하며 위치 이동/제외 같은 후속은 H14/D04에서 별도로 다룬다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E08",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E27",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G05",
+        "specific": "옛 이유 추정 없음·미리보기 이후 변경 재확인·일반/격리 입력 차이 유지.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H14",
+        "O03",
+        "D04"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/component-comparison-2026-10-04/ADOPTION.md#L22",
+      "source_file": "docs/research/component-comparison-2026-10-04/ADOPTION.md",
+      "source_line": 22,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 4,
+      "original_priority": "P1",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "D02",
+      "namespace": "component-adoption",
+      "title": "원문 검색과 최신성",
+      "current_status": "부분",
+      "current_implementation": "공개 원문/검토 검색과 원 실행 이동은 있으나 FTS 인덱스·stale 재구축·검색 결과 직접 첨부는 없다.",
+      "recommendation": "좁혀도입",
+      "next_scope": "현재 lexical 검색의 실제 실패를 D05에 추가하고 오래된/누락 근거 표시부터 개선한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E01",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E08",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E19",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G05",
+        "specific": "선택한 snippet이 같은 원문을 가리키고 손상/삭제/다른 task를 구분.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H13",
+        "O01",
+        "OP03"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/component-comparison-2026-10-04/ADOPTION.md#L32",
+      "source_file": "docs/research/component-comparison-2026-10-04/ADOPTION.md",
+      "source_line": 32,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 5,
+      "original_priority": "P1",
+      "original_migration_phase": "R1"
+    },
+    {
+      "id": "D03",
+      "namespace": "component-adoption",
+      "title": "작업 복귀 요약과 결정 이력",
+      "current_status": "부분",
+      "current_implementation": "상태·다음 행동·판단 사건·수정 lineage는 있으나 decision/constraint/ruled_out/supersedes 선언은 없다.",
+      "recommendation": "좁혀도입",
+      "next_scope": "반복 인계에 필요한 현재 결정·근거·대체 이유의 수동 기록부터 추가한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E04",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E05",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E06",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G07",
+        "specific": "A→B 교체·B 보류·동시 선언·근거 누락·순환을 구분.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "O06",
+        "O17",
+        "O19"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/component-comparison-2026-10-04/ADOPTION.md#L42",
+      "source_file": "docs/research/component-comparison-2026-10-04/ADOPTION.md",
+      "source_line": 42,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 7,
+      "original_priority": "P1",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "D04",
+      "namespace": "component-adoption",
+      "title": "기억 관리: 핀·제외·수정·되돌리기",
+      "current_status": "미구현",
+      "current_implementation": "기억 사용 전체 켜기/끄기는 있으나 항목별 pin·제외·교체·되돌리기는 없다.",
+      "recommendation": "조건부",
+      "next_scope": "자동 선택 오류가 반복되면 먼저 항목 제외/되돌리기와 누락 이유만 도입한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E07",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E08",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G05",
+        "specific": "동시 변경·pin/제외 충돌·예산 초과·과거 pack 불변 확인.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "O08",
+        "H12"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/component-comparison-2026-10-04/ADOPTION.md#L52",
+      "source_file": "docs/research/component-comparison-2026-10-04/ADOPTION.md",
+      "source_line": 52,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 7,
+      "original_priority": "P1",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "D05",
+      "namespace": "component-adoption",
+      "title": "검색 평가와 단계적 개선",
+      "current_status": "부분",
+      "current_implementation": "합성 평가/확장 fixture와 lexical 개선은 반영됐으나 사용자 피드백 UI·형태소/RRF 비교·실사용 정답셋은 없다.",
+      "recommendation": "유지",
+      "next_scope": "기존 평가 도구에 실패 사례를 더하고 새 알고리즘은 한 번에 한 변수만 비교한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E21",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E07",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G05",
+        "specific": "known_limit을 숨기지 않고 합성셋 향상을 실사용 품질로 확대하지 않기.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "O09",
+        "O01",
+        "OP08"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/component-comparison-2026-10-04/ADOPTION.md#L62",
+      "source_file": "docs/research/component-comparison-2026-10-04/ADOPTION.md",
+      "source_line": 62,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 13,
+      "original_priority": "P1",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "D06",
+      "namespace": "component-adoption",
+      "title": "명시적 공유와 이동 가능한 기억 묶음",
+      "current_status": "미구현",
+      "current_implementation": "템플릿 이동과 달리 다른 작업에 결정/기억/관계를 선택 공유하는 bundle은 없다.",
+      "recommendation": "조건부",
+      "next_scope": "여러 작업 간 재사용 수요가 확인되면 target_task 필수의 읽기 미리보기부터 만든다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E02",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E08",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G02",
+        "specific": "new/duplicate/conflict/rejected와 누락 relation·부분 실패를 구분.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "O04",
+        "O10",
+        "H17"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/component-comparison-2026-10-04/ADOPTION.md#L72",
+      "source_file": "docs/research/component-comparison-2026-10-04/ADOPTION.md",
+      "source_line": 72,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 7,
+      "original_priority": "P2",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "D07",
+      "namespace": "component-adoption",
+      "title": "팀·작업 양식과 스킬 서랍",
+      "current_status": "부분",
+      "current_implementation": "팀·작업·자료 템플릿 저장/복원은 있지만 skill_refs·source slot·pin·사용 흔적을 갖춘 서랍은 없다.",
+      "recommendation": "좁혀도입",
+      "next_scope": "기존 템플릿에 H19의 명시 선택 절차 하나를 연결하는 정도로 제한한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E02",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E27",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G02",
+        "specific": "오래된 카드/모델·변경된 절차·누락 자료를 재검사하고 과거 실행 유지.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H02",
+        "H19",
+        "H20"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/component-comparison-2026-10-04/ADOPTION.md#L82",
+      "source_file": "docs/research/component-comparison-2026-10-04/ADOPTION.md",
+      "source_line": 82,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 6,
+      "original_priority": "P1",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "D08",
+      "namespace": "component-adoption",
+      "title": "결정 충돌함",
+      "current_status": "미구현",
+      "current_implementation": "교차검토 지적 처분은 있어도 서로 다른 시점의 결정 간 conflict 객체/화면은 없다.",
+      "recommendation": "조건부",
+      "next_scope": "D03의 명시 결정과 근거 참조 뒤 같은 대상의 충돌 후보를 사람이 비교한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E05",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E07",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G05",
+        "specific": "시간/범위 차이·표현 차이·실제 충돌·근거 손상을 구분.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "O06",
+        "O07",
+        "D03"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/component-comparison-2026-10-04/ADOPTION.md#L92",
+      "source_file": "docs/research/component-comparison-2026-10-04/ADOPTION.md",
+      "source_line": 92,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 7,
+      "original_priority": "P1",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "D09",
+      "namespace": "component-adoption",
+      "title": "필요한 백그라운드 작업만 관리하기",
+      "current_status": "부분",
+      "current_implementation": "로컬 수신함/unknown 표시는 있지만 인덱싱·알림 job용 durable queue/outbox는 없다.",
+      "recommendation": "조건부",
+      "next_scope": "OP11의 읽기 수신함을 유지하고 실제 비동기 부수 작업이 생길 때만 작은 큐를 검토한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E04",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E19",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G03",
+        "specific": "기존 CLI 실행을 새 큐에서 이중 관리하지 않고 stale 완료/재시도 중복 방지.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "OP11",
+        "H37"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/component-comparison-2026-10-04/ADOPTION.md#L102",
+      "source_file": "docs/research/component-comparison-2026-10-04/ADOPTION.md",
+      "source_line": 102,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 11,
+      "original_priority": "P1",
+      "original_migration_phase": "R5"
+    },
+    {
+      "id": "D10",
+      "namespace": "component-adoption",
+      "title": "규모가 커질 때 선택하는 확장",
+      "current_status": "미구현",
+      "current_implementation": "임베딩·생성 질문 인덱스·회고·관계 그래프·외부 기억 서버는 제품에 없다.",
+      "recommendation": "보류",
+      "next_scope": "D05로 드러난 구체적인 검색/공유 한계를 풀 때 해당 확장 하나만 비교한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E07",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E21",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G10",
+        "specific": "검색 이득·메모리/지연·갱신/복구·추가 모델/서버 비용을 함께 확인.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "O01",
+        "D05",
+        "D06"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/component-comparison-2026-10-04/ADOPTION.md#L112",
+      "source_file": "docs/research/component-comparison-2026-10-04/ADOPTION.md",
+      "source_line": 112,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 13,
+      "original_priority": "P3",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "OP01",
+      "namespace": "operations-adoption",
+      "title": "원장에 다시 붙기와 처리 단계 표시",
+      "current_status": "부분",
+      "current_implementation": "선택 실행/페이지·늦은 응답 폐기·재조회는 있지만 ledger_id+전역 revision·명령 receipt 계약은 없다.",
+      "recommendation": "좁혀도입",
+      "next_scope": "현재 원장/실행 식별을 명확히 하고 중복/재접속이 실제 문제인 명령부터 receipt를 검토한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E19",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E22",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E10",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G06",
+        "specific": "원장 전환·끊긴 응답·중복 요청에서 같은 작업을 조회하고 모델 재호출 없음.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "O21",
+        "O23",
+        "O15"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/operations-comparison-2026-10-04/ADOPTION.md#L24",
+      "source_file": "docs/research/operations-comparison-2026-10-04/ADOPTION.md",
+      "source_line": 24,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 2,
+      "original_priority": "P0",
+      "original_migration_phase": "R1"
+    },
+    {
+      "id": "OP02",
+      "namespace": "operations-adoption",
+      "title": "명시적인 지속 실행 모드",
+      "current_status": "미구현",
+      "current_implementation": "창 닫기 후 호출 종료를 기다려 서버를 내리는 동작과 별개인 지속 실행 모드는 없다.",
+      "recommendation": "조건부",
+      "next_scope": "오래 걸리는 일반 작업의 재접속 필요가 확인되면 명시적 모드와 discovery/owner 수명을 설계한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E17",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E10",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G09",
+        "specific": "browser/server crash·stale owner·같은 원장 중복 소유·종료 중 재접속을 PC에서 확인.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "O22",
+        "H33"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/operations-comparison-2026-10-04/ADOPTION.md#L34",
+      "source_file": "docs/research/operations-comparison-2026-10-04/ADOPTION.md",
+      "source_line": 34,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 14,
+      "original_priority": "P2",
+      "original_migration_phase": "R5"
+    },
+    {
+      "id": "OP03",
+      "namespace": "operations-adoption",
+      "title": "작업 탐색·저장된 필터·명령 palette",
+      "current_status": "부분",
+      "current_implementation": "작업/종류/문구 검색과 페이지 이동은 있으나 저장 필터·상태/기간 필터·명령 palette는 없다.",
+      "recommendation": "좁혀도입",
+      "next_scope": "H01/H09와 같은 UI 작업으로 저장된 조회와 대상에 맞는 읽기/이동 명령부터 추가한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E01",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E19",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G06",
+        "specific": "오래된 필터 빈 결과·한글 조합 입력·대상 전환 중 명령 오류 확인.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H01",
+        "H09",
+        "O24"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/operations-comparison-2026-10-04/ADOPTION.md#L42",
+      "source_file": "docs/research/operations-comparison-2026-10-04/ADOPTION.md",
+      "source_line": 42,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 5,
+      "original_priority": "P1",
+      "original_migration_phase": "R1"
+    },
+    {
+      "id": "OP04",
+      "namespace": "operations-adoption",
+      "title": "준비·담당·용량을 나눈 작업판",
+      "current_status": "부분",
+      "current_implementation": "정상 공식 배선의 현재 원장에는 선행 readiness·슬롯/상한/unknown·배정 사본·invocation 시작 CAS가 있지만 다중 기기/worker의 lease·heartbeat 기반 작업 claim·원격 카드 동기화는 없다.",
+      "recommendation": "유지",
+      "next_scope": "현재 준비/용량 projection을 유지하고 자동 소유권은 실제 경쟁 사례 뒤에만 도입한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E04",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E09",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E10",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G03",
+        "specific": "준비/소유/용량을 구분하며 unknown·CAS 실패·저장 실패 후 재호출 없음.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H26",
+        "H30",
+        "O25"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/operations-comparison-2026-10-04/ADOPTION.md#L50",
+      "source_file": "docs/research/operations-comparison-2026-10-04/ADOPTION.md",
+      "source_line": 50,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 3,
+      "original_priority": "P0",
+      "original_migration_phase": "R2"
+    },
+    {
+      "id": "OP05",
+      "namespace": "operations-adoption",
+      "title": "명세와 완료 증거가 연결된 작업 양식",
+      "current_status": "부분",
+      "current_implementation": "목표·완료 기준·계획 판·선행 결과 근거는 있지만 요구별 evidence_refs/verification_state 연결은 없다.",
+      "recommendation": "좁혀도입",
+      "next_scope": "반복 중요 과제에 한해 완료 조건에서 공개 결과/검토 근거로 이동하는 연결을 추가한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E04",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E27",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G07",
+        "specific": "요구 변경 뒤 옛 증거·모델의 done·사람 판단 완료를 각각 구분.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "O26",
+        "D07"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/operations-comparison-2026-10-04/ADOPTION.md#L60",
+      "source_file": "docs/research/operations-comparison-2026-10-04/ADOPTION.md",
+      "source_line": 60,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 6,
+      "original_priority": "P1",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "OP06",
+      "namespace": "operations-adoption",
+      "title": "판 비교·실행 fork·복구 미리보기",
+      "current_status": "부분",
+      "current_implementation": "격리 수정의 부모 판/원문 hash/전후 비교는 있지만 run fork·입력 diff·파일 복구 계획은 없다.",
+      "recommendation": "좁혀도입",
+      "next_scope": "GR-1/2/3 이후 필요한 실행 복제와 읽기 비교를 H05와 묶고 파일 복구는 H31로 분리한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E06",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E03",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G04",
+        "specific": "선택 판·원본/새 입력·소비 보존·오래된 검토 판의 재사용 방지.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H05",
+        "H28",
+        "H56"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/operations-comparison-2026-10-04/ADOPTION.md#L68",
+      "source_file": "docs/research/operations-comparison-2026-10-04/ADOPTION.md",
+      "source_line": 68,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 10,
+      "original_priority": "P1",
+      "original_migration_phase": "R4"
+    },
+    {
+      "id": "OP07",
+      "namespace": "operations-adoption",
+      "title": "다음 단계 메시지와 전달 상태",
+      "current_status": "미구현",
+      "current_implementation": "다음 단계 제안을 새 실행에 묶을 수 있지만 사용자 메시지의 pending/consumed/withdrawn/expiry 계약은 없다.",
+      "recommendation": "조건부",
+      "next_scope": "일반 팀원 검토 이후 추가 조건을 다음 입력에 넣는 필요가 확인되면 입력 hash에 결속된 대기 메시지부터 만든다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E12",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E03",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G03",
+        "specific": "소비 직후 crash·중복 전달·입력 고정 후 편집·격리 답 유입 방지.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H04",
+        "O20",
+        "O29"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/operations-comparison-2026-10-04/ADOPTION.md#L76",
+      "source_file": "docs/research/operations-comparison-2026-10-04/ADOPTION.md",
+      "source_line": 76,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 12,
+      "original_priority": "P2",
+      "original_migration_phase": "R4"
+    },
+    {
+      "id": "OP08",
+      "namespace": "operations-adoption",
+      "title": "문맥 예산과 압축 실험",
+      "current_status": "부분",
+      "current_implementation": "기억 bytes/생략·섹션 발췌·평가셋은 있지만 tokenizer 기반 보장이나 모델 압축 실험 pipeline은 없다.",
+      "recommendation": "유지",
+      "next_scope": "현 pack 범위의 반례 보존 평가를 유지하고 긴 일반 세션에서만 H18의 별도 압축을 비교한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E07",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E21",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E27",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G05",
+        "specific": "bytes와 measured tokens 구분·CLI 내부 문맥 미통제·원문 재조회 가능성 확인.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "D05",
+        "H18",
+        "O31"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/operations-comparison-2026-10-04/ADOPTION.md#L84",
+      "source_file": "docs/research/operations-comparison-2026-10-04/ADOPTION.md",
+      "source_line": 84,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 13,
+      "original_priority": "P3",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "OP09",
+      "namespace": "operations-adoption",
+      "title": "어댑터의 공통 계약과 capability 표",
+      "current_status": "부분",
+      "current_implementation": "runtime-inventory/2에는 기기/version/plan revision에 묶인 설치·인증·전송·문맥·권한 관측이 있으나 resume/steer/stream 등 세부 capability 지원표와 범용 frame schema는 없다.",
+      "recommendation": "좁혀도입",
+      "next_scope": "기존 관측을 재사용해 세부 capability의 지원/미지원/미관측을 연결하는 얇은 표부터 만들고 새 runtime 도입 시 검증한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E09",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E14",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E15",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E16",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E28",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G09",
+        "specific": "누락 usage·EOF·native 오류·stderr 거절·잔류 child를 adapter와 acceptance 단계로 구분.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H41",
+        "H57",
+        "O13"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/operations-comparison-2026-10-04/ADOPTION.md#L92",
+      "source_file": "docs/research/operations-comparison-2026-10-04/ADOPTION.md",
+      "source_line": 92,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 3,
+      "original_priority": "P0",
+      "original_migration_phase": "R2"
+    },
+    {
+      "id": "OP10",
+      "namespace": "operations-adoption",
+      "title": "실제 적용 설정과 마지막 정상판",
+      "current_status": "부분",
+      "current_implementation": "고정 입력/모델·템플릿 검증·schema 백업은 있으나 config provenance/last-good 활성화 관리자는 없다.",
+      "recommendation": "조건부",
+      "next_scope": "readiness와 현재 설정의 불일치 사례가 반복되면 적용판/hash·유효값 출처 조회부터 추가한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E02",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E14",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E18",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E27",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G09",
+        "specific": "검사 성공과 실제 CLI 적용을 구분하고 실행 manifest는 설정 변경 후에도 불변.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H55",
+        "H56"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/operations-comparison-2026-10-04/ADOPTION.md#L100",
+      "source_file": "docs/research/operations-comparison-2026-10-04/ADOPTION.md",
+      "source_line": 100,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 14,
+      "original_priority": "P1",
+      "original_migration_phase": "R3"
+    },
+    {
+      "id": "OP11",
+      "namespace": "operations-adoption",
+      "title": "다음 행동이 있는 수신함",
+      "current_status": "부분",
+      "current_implementation": "현재 작업에서 문제·내 차례·선행·미연결 unknown과 다음 행동을 계산하지만 read/delivery/outbox 상태는 없다.",
+      "recommendation": "유지",
+      "next_scope": "기존 읽기 수신함을 사용하며 누락 사례가 생기면 H37/D09 범위만 좁혀 추가한다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E04",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E19",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G06",
+        "specific": "읽기/이동이 해결·전달 완료·모델 재시도를 의미하지 않기.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H06",
+        "H37",
+        "D09"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/operations-comparison-2026-10-04/ADOPTION.md#L108",
+      "source_file": "docs/research/operations-comparison-2026-10-04/ADOPTION.md",
+      "source_line": 108,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 11,
+      "original_priority": "P1",
+      "original_migration_phase": "R5"
+    },
+    {
+      "id": "OP12",
+      "namespace": "operations-adoption",
+      "title": "공개 결과·작업자·산출물 비교 화면",
+      "current_status": "부분",
+      "current_implementation": "공개 답·수정 전후·검토/사용량을 비교하지만 일반 수정 판 취합·코딩 artifact/PR drawer는 없다.",
+      "recommendation": "좁혀도입",
+      "next_scope": "GR-1/2/3의 공개 결과/판을 같은 화면에 연결하고 artifact 확대는 실제 산출물 유형에 맞춘다.",
+      "code_touchpoint": [
+        {
+          "evidence_id": "E06",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E16",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        },
+        {
+          "evidence_id": "E20",
+          "relation": "현재 근거 또는 확장할 기존 경계"
+        }
+      ],
+      "verification_gate": {
+        "id": "G01",
+        "specific": "봉인 비노출·비교 중 새 결과·선택 판 hash·미관측 비용·다른 기기 관측을 구분.",
+        "execution_status": "후속 도입 합격 조건; 이번 매트릭스 작업에서 실행한 시험이 아님"
+      },
+      "related_ids": [
+        "H07",
+        "O14",
+        "O34"
+      ],
+      "source_url": "https://github.com/inlight37-design/decision-model_lab/blob/892c5ebe8c53ebba23c9f8e452c67306f35f0c8a/docs/research/operations-comparison-2026-10-04/ADOPTION.md#L116",
+      "source_file": "docs/research/operations-comparison-2026-10-04/ADOPTION.md",
+      "source_line": 116,
+      "source_commit": "892c5ebe8c53ebba23c9f8e452c67306f35f0c8a",
+      "original_work_package": 9,
+      "original_priority": "P1",
+      "original_migration_phase": "R1"
+    }
+  ]
+}

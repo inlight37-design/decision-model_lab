@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-10-05** · 작성 세션: codex(클라우드·GitHub — 전체 문서·현재 코드 대조와 누락 정리, 사용자 PC·CLI 미확인, 모델 호출 없음) · 브랜치 `codex/docs-completeness-20261005`.
+최종 갱신 **2026-10-05** · 작성 세션: chatgpt(웹 컨테이너·GitHub — 아키텍처·흐름·외부 기능 이식 검토, 사용자 PC·CLI 미확인, 실제 모델 호출 없음) · 브랜치 `chatgpt/architecture-adoption-20261005`.
 
 이 파일은 **지금 상태와 다음 일만** 담는다. 끝난 일의 경위는 PR·git 이력과 날짜가 붙은 기록에 있고, 옛 판은 [docs/handoff/](docs/handoff/README.md)에 있다. **3절에는 진행 중인 일과 "이 판을 들인 PR" 한 줄만 둔다** — 새 PR은 그 줄을 자기 PR로 바꾸고, 병합 전에도 뒤에도 맞는 말만 쓴다("병합했다"고 미리 적지 않는다). 크기 상한과 3절의 모양은 CI가 본다. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있는 규칙은 여기 다시 적지 않는다 — 쌓임을 막는 원칙은 협업 규칙 7절이다.
 
@@ -21,7 +21,7 @@
 | 참여자 계획·허가 | Codex `codex@5bed42d05320`(연결 앱·플러그인 끔)·Claude `claude-code@a35129c5a1dc`(입력 폴더 하나). 두 provider 모두 strict 허가. 실제 모드는 **이 기기에 등록된 기록만** 쓴다(`python3 -m app.registration status <기록>`): main-pc-wsl은 [2026-09-26 기록](docs/reviews/2026-09-26-main-pc-observe/manifest.v2.json)으로 **2026-10-27부터 만료**(aux-pc-wsl은 10월 26일, 갱신하지 않음). 다시 관측하는 법은 [SETUP 4절](docs/SETUP.md) | [재관측](docs/reviews/2026-09-25-reobserve/README.md) · [주 PC 관측](docs/reviews/2026-09-26-main-pc-observe/README.md) · [E2](docs/reviews/2026-09-25-context-independence/README.md) |
 | 사용자 입구 | 바탕 화면 **Decision Lab** 아이콘(`app\start.ps1`) → WSL에서 준비 조회·원장 고르기·서버 → Edge 앱 창. 창을 닫으면 돌던 호출이 끝난 뒤 서버가 꺼진다. 화면 모양은 사용자가 [ai_unslop](https://github.com/inlight37-design/ai_unslop)에서 고른 island-ui다([부품](app/static/island-ui/README.md)). 아이콘은 사용자의 clone(main) `C:\AI\Projects\decision-model_lab`을 쓴다. **병합한 세션은 그 폴더에서 `git pull --ff-only`** 해야 앱에 반영된다. | [app 안내](app/README.md) "바탕 화면 아이콘으로 열기" |
 | 실제 실행 | 병렬·봉인·공개, 공통 자료, strict 독립 정족수, 실제 중도 취소와 자손 종료 확인, 실제 합성(실행마다 켬, 형식 실패 원문 보존, 이름표 순서는 실행마다 섞음). 자료 합계 약 490 KB는 둘 다 시간 안, **약 1 MiB는 Claude가 180초를 넘겼다**(Codex 24초) | [병렬](docs/reviews/2026-09-24-windows-live-completion/README.md) · [자료](docs/reviews/2026-09-24-source-snapshot/README.md) · [strict·취소](docs/reviews/2026-09-25-strict-live-run/README.md) · [합성](docs/reviews/2026-09-24-model-synthesis/README.md) · [1 MiB](docs/experiments/2026-09-25-1mib-sources/RESULTS.md) |
-| 계정 한도 | provider별 카드에 한도 창마다 쓴 비율의 게이지. Codex는 모델 없는 조회(버튼, 그리고 창을 보는 동안 값이 2~5분 지나면 화면이 저절로 — 서버는 1분에 한 번), Claude는 모델 없이 묻는 통로가 없어 마지막으로 끝난 실제 실행의 `rate_limit_event`. 봉인 중·모의 값은 쓰지 않는다 | [A·F](docs/reviews/2026-09-24-account-limits/README.md) |
+| 계정 한도 | provider별 카드에 한도 창마다 쓴 비율의 게이지. Codex는 모델 없는 조회(버튼, 그리고 창을 보는 동안 값이 2~5분 지나면 화면이 저절로 — 서버는 1분에 한 번), Claude는 공개 조건을 만족하는 실제 초안·합성의 최근 `rate_limit_event`(상위 역할 미반영). 봉인 중·모의 값은 쓰지 않는다 | [현재 한도 안내](app/README.md#계정-한도와-문맥-진단) |
 | 원장 | 실험은 aux-pc-wsl의 `~/.local/state/dml-*` — 모두 상한까지 썼고 새 실험은 새 원장. 앱 아이콘은 `~/.local/state/decision-model-lab/app/live/`의 원장을 호출이 남은 동안 이어 쓴다(원장당 Codex 5·Claude 5) | 각 기록 · [app 안내](app/README.md) |
 | 작업·역할판 A–E1 | 홈·작업 타임라인·역할판·입력 확인·결과. 상위 칸이 비면 나. CLI 카드마다 허용 목록의 모델(추론 강도 미연결). 격리 칸(봉인·정족수), 일반 칸(내가 나누고 모음), 슈퍼바이저(다듬기·공개 뒤 다음 단계 제안), 일반 작업의 오케스트레이터(분담 제안·결과 모으기), 공개 뒤 한 라운드 교차검토(지적의 처분은 내가). 상위 모델은 제안·모음·지적만 하고 시작과 판단은 내가 한다 | [화면·원장 안내](app/README.md)(카드 번호도 거기). 모의 흐름과 C1–D3의 실제 모드를 2026-09-27 한 번씩 확인([C1·D1](docs/reviews/2026-09-27-c1-d1-live/README.md) · [D2·D3](docs/reviews/2026-09-27-d2-d3-live/README.md) · [D4](docs/reviews/2026-09-27-d4-live/README.md) · [E1](docs/reviews/2026-09-27-e1-live/README.md)). CLI 호출 중 이 PC의 GPU 사용은 없고 CPU 증가도 거의 없었다(D4·E1 기록) |
 | 비교 실험 | L1: 같은 provider의 틀린 초안 대신 맞는 초안을 고른 사례 관측, 다른 과제는 보류. 합성의 일반적 이득은 미확립 | [L1](docs/experiments/2026-09-25-l1/RESULTS.md) · [D](docs/experiments/2026-09-24-comparison-pilot/RESULTS.md) · [D 후속](docs/experiments/2026-09-25-d-followup/RESULTS.md) |
@@ -66,7 +66,7 @@
 
 일은 `card` 라벨 이슈에서 [협업 규칙](docs/COLLABORATION.md) 3절의 보드 규칙대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #183](https://github.com/inlight37-design/decision-model_lab/pull/183)(`codex/docs-completeness-20261005`) — [카드 #182](https://github.com/inlight37-design/decision-model_lab/issues/182)의 전체 문서 점검. 오래된 사용 설명·빠진 진입점·보류 아이디어를 정리했다. 제품 기능 추가는 없으며 최종 CI와 병합 상태는 PR에서 확인한다.
+- **이 판을 들인 PR:** [PR #184](https://github.com/inlight37-design/decision-model_lab/pull/184)(`chatgpt/architecture-adoption-20261005`) — 아키텍처·파이프라인·워크플로우와 외부 기능 이식 심층 검토. 제품 기능 변경은 없으며 최종 CI와 병합 상태는 PR에서 확인한다.
 
 | 사용자만 할 수 있는 것 | 지금 |
 |---|---|
@@ -77,7 +77,7 @@
 
 ## 4. 다음 작업
 
-**다음 구현은 일반 팀원 검토다.** [완료 작업·병합 근거](docs/reviews/2026-10-05-cloud-integration/README.md)와 [문서 전체 점검](docs/reviews/2026-10-05-document-audit/README.md)을 연결했다. 현재 기능·남은 제한은 [FEATURES](docs/FEATURES.md), 위치는 [문서 지도](docs/DOCUMENT-MAP.md)와 [현재 구조](app/ARCHITECTURE.md)가 기준이다. schema 17·기존 소비 기록을 유지한다. 일반 팀원 검토는 아직 설계 단계이며 아래 순서로 구현한다.
+**다음 구현은 일반 팀원 검토다.** [완료 작업·병합 근거](docs/reviews/2026-10-05-cloud-integration/README.md)·[문서 점검](docs/reviews/2026-10-05-document-audit/README.md)·[아키텍처와 이식 검토](docs/reviews/2026-10-05-architecture-adoption/README.md)를 참고한다. 현재 기능·남은 제한은 [FEATURES](docs/FEATURES.md), 위치는 [문서 지도](docs/DOCUMENT-MAP.md)와 [현재 구조](app/ARCHITECTURE.md)가 기준이다. schema 17·기존 소비 기록을 유지한다. 아래 GR 순서는 유지하고, 검토에서 재현한 답 소비 hash·기억의 판단 판 보완은 담당 범위의 작은 PR로 함께 다룬다.
 
 1. **GR-1 — 일반 팀원 교차검토.** [설계](docs/architecture/general-team-review/README.md) §2/3/7의 코드 지도·입력 계약·실패 확인표부터 읽는다. 과제·답·자료 범위·호출 수 확인, 순차 검토, 공개 조회·상태·화면·검색/사용량을 한 경로로 완성한다. 일반 `collected`를 격리 `revealed`로 바꾸지 않는다. 모의/HTTP/JavaScript 검증은 클라우드에서 가능하다.
 2. **GR-2 — 일반 작성자 수정·다른 작성자 재검토.** 자기 배정 자료만 사용하고 원본·지적·앞 판·상한·복구·일반 수정 보고를 연결한다. 완료 조건은 같은 설계 §6/7이다.
