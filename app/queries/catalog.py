@@ -45,7 +45,8 @@ def search(snapshot, query, *, task_id=None, kind=None, limit=30):
         add(run, 'question', run['run_id'], run['question'],
             run['run_id'] + '\n' + titles.get(run['task_id'], ''))
         for source in run['sources']:
-            add(run, 'source', source['name'], source['name'], source['sha256'])
+            add(run, 'source', source['name'], source['name'],
+                source['sha256'] + '\n' + json.dumps(source.get('provenance', {}), ensure_ascii=False))
         for participant in run['participants']:
             if participant.get('draft') is not None:
                 add(run, 'answer', participant['pid'], participant['label'], participant['draft'])

@@ -72,7 +72,7 @@ jobs:
       - name: bubblewrap for isolation tests
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq --no-install-recommends bubblewrap
+          sudo apt-get install -y -qq --no-install-recommends bubblewrap poppler-utils
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
           bwrap --unshare-all --share-net --die-with-parent --ro-bind /usr /usr --symlink usr/bin /bin \
             --symlink usr/lib /lib --symlink usr/lib64 /lib64 --proc /proc -- /usr/bin/true
@@ -81,6 +81,7 @@ jobs:
       - name: full test suite
         env:
           DML_REQUIRE_BWRAP: "1"
+          DML_REQUIRE_POPPLER: "1"
         run: python -m unittest discover -s tests -v
 
       - name: compile

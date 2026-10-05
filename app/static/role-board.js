@@ -395,7 +395,8 @@ function callLimitLine(calls) {
     `이 원장의 실제 호출 상한 ${calls.live_cap} · ${Object.entries(calls.provider_caps).map(([p, n]) => `${p} ${n}회`).join(" · ")}`);
 }
 function sourceLine(s) {
-  return h("li", { class: "sm" }, `${s.name} · ${fmtSize(s.bytes)} · sha256 ${s.sha256}` + (s.kind === "original" ? " · 원문 파일 전체" : ""));
+  return h("li", { class: "sm stack" }, `${s.name} · ${fmtSize(s.bytes)} · sha256 ${s.sha256}` + (s.kind === "original" ? " · 원문 파일 전체" : ""),
+    s.provenance ? sourceProvenance(s.provenance) : s.provenance_error ? h("p", {class: "cell cell-alert"}, "추출 출처 기록 손상") : null);
 }
 function confirmButton() {
   return h("button", { type: "button", id: "confirmStart", class: "btn btn-brand", onclick: confirmRun },
@@ -468,7 +469,7 @@ function showInputPreview(preview, body) {
     h("p", { class: "cap muted" }, orchestrator ? `${orchestrator.label}: 공개 뒤 기존 합성을 직접 눌러 실행합니다. ${calls.model_calls === 0 ? "모의 합성도 모델 호출 없음." : "누를 때마다 같은 원장 상한에서 1회 사용."}` :
       "오케스트레이터는 나입니다. 합성을 부르지 않고 원문 대조표를 읽습니다."),
     h("p", { class: "sm strong" }, "공통 자료 · 모든 격리 팀원이 받음"),
-    preview.sources.length ? h("ul", { class: "stack" }, preview.sources.map(s => h("li", { class: "sm" }, `${s.name} · ${fmtSize(s.bytes)} · sha256 ${s.sha256}`))) : h("p", { class: "sm muted" }, "자료 없음"),
+    preview.sources.length ? h("ul", { class: "stack" }, preview.sources.map(sourceLine)) : h("p", { class: "sm muted" }, "자료 없음"),
     h("p", { class: "cap muted" }, "원본 앱에는 아래 전달문과 자료를 직접 옮깁니다. 입력·역할·자료는 시작할 때 고정됩니다."),
     h("p", { class: "sm strong" }, "질문 전문"), h("pre", { class: "input-full" }, preview.question),
     collapsible("preview-prompt", "CLI에 보낼 전달문 전문", h("pre", { class: "input-full" }, preview.prompt), { open: true }),

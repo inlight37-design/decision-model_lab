@@ -15,10 +15,12 @@
 | 질문을 함께 다듬기 | 원문·대화·수정 내역을 보존하고 사람이 승인한 질문만 격리 팀원에게 전달 | [계획 명령](../app/application/planning.py), [refine 형식](../app/refine.py) | [다듬기 검사](../tests/test_refine_mode.py) |
 | 분담안을 제안받기 | 오케스트레이터가 일·자료 분담을 제안. 사람이 고치고 확인해야 실행 | [계획 명령](../app/application/planning.py), [split 형식](../app/split.py) | [분담 검사](../tests/test_split_proposal.py) |
 | 자료 파일 주기 | UTF-8 자료를 사본·해시로 고정. 격리는 공통 자료, 일반은 팀원별 자료 | [입력 구성](../app/context/inputs.py) | [자료 검사](../tests/test_sources.py) |
+| PDF·웹 자료 준비하기 | 쪽/줄 범위 추출→출처·누락 미리보기→명시적 첨부. 템플릿과 원장에도 출처 유지 | [추출](../app/ingestion/extract.py), [출처 문서](../app/source_document.py), [화면](../app/static/extraction.js) | [자료 추출 검사](../tests/test_extraction.py). PDF는 Poppler 필요, OCR·동적 웹·로그인 없음 |
 | 이전 작업 기억 쓰기 | 같은 작업의 공개 이력 자동 선택, 일반 팀원·상위 역할에 전달, 기본 켬·실행별 끄기 | [memory](../app/memory.py), 아래 동작 설명 | [기억 검사](../tests/test_memory.py). 실제 모델 품질 효과는 미측정 |
 | 원본 앱 답 참여시키기 | 사람이 전달문을 옮기고 답을 붙여 넣음. 입력·독립성·사용량은 자동 검증하지 않음 | [실행 조정](../app/execution/coordinator.py), [화면](../app/static/index.html) | [앱 사용법](../app/README.md) |
 | 결과를 모으고 비교하기 | 일반 결과 취합·격리 결과 합성, 원문 인용 대조, 미확인 주장 표시 | [검토 명령](../app/application/reviews.py), [합성 명령](../app/application/synthesis.py) | [취합 검사](../tests/test_collate.py), [합성 검사](../tests/test_model_synthesis.py) |
 | 서로의 답을 검토시키기 | 공개 뒤 한 라운드, 원문 인용 대조, 지적별 처분·미해결 보존, 보고서 반영 | [검토 명령](../app/application/reviews.py), [cross_review 형식](../app/cross_review.py), [report](../app/report.py) | [교차검토 검사](../tests/test_cross_review.py), 실제 관측은 인계 |
+| 검토 지적으로 답 고치기 | 입력 확인→원래 작성자의 별도 수정 판→다른 팀원 재검토. 원본·반례 보존과 전후 비교 | [수정 명령](../app/application/revisions.py), [화면](../app/static/revisions.js) | [수정·복구 검사](../tests/test_revisions.py). 수정/재검토 각 상한, 사실 검증 아님 |
 | 다음 단계를 제안받기 | 슈퍼바이저가 공개 결과를 보고 계속/종료·다음 질문 제안. 자동 실행은 안 함 | [계획 명령](../app/application/planning.py), [next_step 형식](../app/next_step.py) | [앱 사용법](../app/README.md) |
 | 사람이 판단하고 기록하기 | 결과 판을 확인해 메모·판단 완료 저장, 새 결과는 다시 확인 | [검토 명령](../app/application/reviews.py), [행·판 계약](../app/repository.py) | [일반 팀원 검사](../tests/test_general_team.py), [역할판 검사](../tests/test_role_board.py) |
 | 비용과 상태 보기 | 호출 예약·사용량·실패·종료 미확인, 계정 한도 조회와 오래된 값 표시 | [usage](../app/usage.py), [account_quota](../app/account_quota.py) | [사용량](../tests/test_usage.py), [한도](../tests/test_account_quota.py) 검사. 토큰 추정과 구독 차감량은 다름 |
@@ -52,7 +54,7 @@
 | 기반 반영 | 조회/입력/호출/계획/검토 책임 분리, 공통 예약, 공개 검색·기억 이유·호출 기록 | 이후 기능을 controller 한 파일에 계속 얹지 않고 담당 경계에 연결 | 구현과 오프라인/브라우저 확인. PC runtime 재관측은 별도 |
 | 반영 | 저장·복제 가능한 팀/작업 템플릿 — H02/19–23, D07 | 반복 역할·자료·질문 설정 감소. 같은 입력 검증과 새 확인 사용 | 현재 카드/모델 재검사·자료 사본·다듬기 재승인. 원장 간에는 파일 복사이며 자동 동기화 아님 |
 | 반영 | 검토→수정 답→재검토 — H28, O11/12, OP06 | 지적을 별도 새 판으로 연결. [RevisionService](../app/application/revisions.py)·공통 호출 원장 | 원문/근거 hash·반례·처분·판 보존, 호출 상한·실패/복구. [검사](../tests/test_revisions.py); 실제 개선 효과 미측정 |
-| P1 다음 | 자료 추출·부분 첨부 — H03/45/47 | PDF/URL 준비 부담 감소. InputBuilder 앞 extractor/preview | 원본/변환본/누락 범위·hash, extraction 실패 fixture |
+| 반영 | 자료 추출·부분 첨부 — H03/45/47 | PDF/URL 준비 부담 감소. InputBuilder 앞 추출·미리보기 | 원본/변환/선택 hash·출처·누락 범위를 사본에 결속. PDF/HTML·실패·주소/redirect 경계 검사. OCR·동적 페이지 제외 |
 | P1 보강 | 목록/상세 query·대량 검색·선택 평가 — D05, OP01/03/08 | 원장이 커졌을 때 조회량 개선, 선택 누락 확인 | 현재 snapshot 동등성·큰 원장 baseline·한국어/반례 평가. FTS 도입 전 비용 비교 |
 | P2 | 명세·의존성·수신함·설정 설명 — OP04/05/10/11 | 다음 할 일과 막힌 이유를 한 흐름으로 표시 | 현재 command/service 경계 위 typed step, 전역 revision/receipt/outbox 필요성 별도 확정 |
 | P3 조건부 | 지속 실행·예약·원격/코딩·고급 검색 — OP02, H33–60, O31/33 | 장기 작업·실제 파일 변경·다른 도구 연결 | 기기 관측, writer 소유권, 파일/원장/지출 복구 구별, 효과·운영 부담 근거 |

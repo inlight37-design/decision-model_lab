@@ -13,7 +13,7 @@ from __future__ import annotations
 import hashlib
 import re
 from typing import Any
-from app.report import SCHEMA as DRAFT_SCHEMA
+from app.report import SCHEMA as DRAFT_SCHEMA, EXTRACTED_SCHEMA
 # 상위 자리들이 함께 쓰는 조각. boundary·failed_reply·MAX_RAW_CHARS는 이 모듈의 이름으로도 쓴다(시험).
 from app.reply import MAX_RAW_CHARS, block, boundary, check_items, check_text, failed_reply, json_object  # noqa: F401
 
@@ -47,7 +47,7 @@ class SynthesisError(ValueError):
 
 
 def _sources(report: dict[str, Any]) -> dict[str, dict]:
-    if report.get("schema") != DRAFT_SCHEMA or report.get("source", {}).get("phase") != "revealed":
+    if report.get("schema") not in (DRAFT_SCHEMA, EXTRACTED_SCHEMA) or report.get("source", {}).get("phase") != "revealed":
         raise SynthesisError("synthesis requires a revealed draft report")
     sources = {}
     for part in report["participants"]:

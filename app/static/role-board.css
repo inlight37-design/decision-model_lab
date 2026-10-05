@@ -28,3 +28,6 @@
 #question[readonly] { opacity: .75; }
 .assignment textarea { width: 100%; }
 @media (max-width: 600px) { .task-grid, .role-grid { grid-template-columns: 1fr; } .compose-dialog { padding: var(--s-4); } }
+#extractionPanel input { max-width:100%; min-width:0; }
+#extractionPanel input[type="number"] { width:9rem; }
+#extractionPanel label { min-width:0; max-width:100%; }

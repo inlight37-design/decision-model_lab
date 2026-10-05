@@ -28,7 +28,7 @@ import secrets
 import socket
 import sys
 import threading
-from urllib.parse import urlsplit, parse_qs
+from urllib.parse import urlsplit, parse_qs, unquote
 
 if __package__ in (None, ""):  # `python app/server.py`로 실행해도 저장소 루트에서 app·core를 찾는다
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -38,6 +38,7 @@ from app.report import ReportError, build_report, decision_report, revision_repo
 from app.store import LedgerBusy, Store, StoreError
 from app.live_config import Provider, load as load_live_config
 from app.account_quota import AccountQuota
+from app.ingestion.extract import extract
 # 배선은 app.wiring에 있고 헤드리스 실행(app.run)과 나눠 쓴다. 시험은 이 모듈의 이름으로도 부른다.
 from app.wiring import (BEHAVIORS, EXIT_NOT_ELIGIBLE, MOCK_MODEL_CHOICES, PARTICIPANTS, live_setup,  # noqa: F401
                         model_choices, new_controller)
@@ -49,6 +50,7 @@ ASSETS = {"/island-ui/themes.css": ("island-ui/themes.css", "text/css; charset=u
           "/catalog.js": ("catalog.js", "text/javascript; charset=utf-8"),
           "/templates.js": ("templates.js", "text/javascript; charset=utf-8"),
           "/revisions.js": ("revisions.js", "text/javascript; charset=utf-8"),
+          "/extraction.js": ("extraction.js", "text/javascript; charset=utf-8"),
           "/role-board.js": ("role-board.js", "text/javascript; charset=utf-8"),
           "/role-board.css": ("role-board.css", "text/css; charset=utf-8"),
           "/island-ui/base.css": ("island-ui/base.css", "text/css; charset=utf-8"),
@@ -212,6 +214,11 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                 self._send(200, (STATIC / name).read_bytes(), kind)
             elif path == "/api/state":
                 self._json(200, controller.view())
+            elif len(parts) == 5 and parts[:2] == ['api', 'runs'] and parts[3] == 'sources':
+                try:
+                    self._json(200, controller.queries.source(parts[2], unquote(parts[4])))
+                except (ControllerError, ValueError) as exc:
+                    self._json(409, {'error': str(exc)})
             elif parts[:2] == ['api', 'templates'] and (len(parts) in (2, 3) or len(parts) == 4 and parts[3] == 'export'):
                 try:
                     if len(parts) == 2:
@@ -281,6 +288,8 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                 parts = urlsplit(self.path).path.strip("/").split("/")
                 if parts == ["api", "account-quota", "refresh"]:
                     self._json(200, account_quota.refresh())
+                elif parts == ['api', 'sources', 'extract']:
+                    self._json(200, extract(body))
                 elif parts == ['api', 'templates']:
                     draft = body.get('draft')
                     if not isinstance(draft, dict):

@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-10-05** · 작성 세션: codex(클라우드·GitHub — 수정·재검토, 사용자 PC·CLI 미확인, 모델 호출 없음) · 브랜치 `codex/revision-cycle-20261004`.
+최종 갱신 **2026-10-05** · 작성 세션: codex(클라우드·GitHub — PDF·URL 추출, 사용자 PC·CLI 미확인, 모델 호출 없음) · 브랜치 `codex/source-extraction-20261005`.
 
 이 파일은 **지금 상태와 다음 일만** 담는다. 끝난 일의 경위는 PR·git 이력과 날짜가 붙은 기록에 있고, 옛 판은 [docs/handoff/](docs/handoff/README.md)에 있다. **3절에는 진행 중인 일과 "이 판을 들인 PR" 한 줄만 둔다** — 새 PR은 그 줄을 자기 PR로 바꾸고, 병합 전에도 뒤에도 맞는 말만 쓴다("병합했다"고 미리 적지 않는다). 크기 상한과 3절의 모양은 CI가 본다. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있는 규칙은 여기 다시 적지 않는다 — 쌓임을 막는 원칙은 협업 규칙 7절이다.
 
@@ -77,7 +77,7 @@
 
 ## 4. 다음 작업
 
-**사용자는 기반 점검·통합 → 템플릿 → 수정·재검토 → 자료 추출을 순서대로 진행하라고 요청했다.** 템플릿과 별도 수정 판·재검토를 반영했다. [문서 지도](docs/DOCUMENT-MAP.md) → [현재 구조](app/ARCHITECTURE.md) → [후속 순서](docs/FEATURES.md#후속-우선순위)로 이어간다. 다음 구현은 PDF·URL 자료 추출이다. PC·모델 관측은 별도다.
+**사용자가 요청한 기반 점검·통합 → 템플릿 → 수정·재검토 → PDF·URL 추출을 구현했다.** [문서 지도](docs/DOCUMENT-MAP.md) → [현재 구조](app/ARCHITECTURE.md) → [후속 우선순위](docs/FEATURES.md#후속-우선순위)로 찾는다. 템플릿 PR #163·수정 PR #165 위에 자료 추출을 쌓았다. 각 PR의 정확한 head CI와 순서를 확인한다. 사용자 PC의 설치·새 흐름 관측은 별도이며, 다음 클라우드 후보는 큰 원장 조회·검색 비용과 기억 선택 누락 평가다.
 
 1. **2026-10-27 전 — 주 PC 재관측**([SETUP 4절](docs/SETUP.md)의 절차, 모델 호출 Claude 2·Codex 3). main-pc-wsl은 10월 27일부터 만료이고, 이 PC의 세션만 관측·등록할 수 있다. 참여자 계획이나 CLI 판이 바뀌면 그때 바로 한다. 관측 기록은 `tools/w2/assemble.py`가 조립한다. 추론 강도를 연결하는 PR은 그 계획으로 바로 관측한다 — 이 날짜를 기다리지 않는다([역할판 검토](docs/reviews/2026-09-26-role-board-review/README.md) RB-01). S4(카드 #111)로 `~/.codex/hooks.json`이 있으면 Codex 참여자 계획을 거절한다 — 재관측 때 그 검사와 훅 표면을 함께 확인한다([훅 관측](docs/reviews/2026-09-27-codex-hooks/README.md)). 파일 하나 검사로 전체 문맥 검증을 대신하지 않는다.
 2. **역할판 후속.** 일반 작업의 교차검토·혼합 배치, P7 절약 규칙, 문서함 공유, 일반 칸의 원본 앱 카드, 다듬은 문장 직접 편집, 팀 구성 제안은 필요할 때 카드로 연다. 완료 조건은 [역할판 검토](docs/reviews/2026-09-26-role-board-review/README.md) §6와 [리뷰 통합](docs/reviews/2026-09-26-review-consolidation/README.md) §6에서 가져온다. CLI 스키마 출력 전환은 [프롬프트 감사](docs/reviews/2026-09-29-prompt-audit/README.md) §4, 합성의 공통 자리 편입은 [전체 점검](docs/reviews/2026-09-29-health-review/README.md) §4를 따른다. **추론 강도는 연결하지 않았다.** 관측한 값만 넣고 그 계획으로 재관측해야 한다(RB-01).
