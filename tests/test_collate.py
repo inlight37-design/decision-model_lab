@@ -98,7 +98,7 @@ class CollateTests(support.Base):
         claims = item["reply"]["claims"]
         self.assertEqual([q["source_check"] for q in claims[0]["quotes"]], ["exact_match", "exact_match"])
         self.assertEqual([cl["support"] for cl in claims], ["quoted", "unsupported_addition", "unsupported_addition"])
-        self.assertEqual(item["reply"]["checks"], {"quotes": 3, "exact_matches": 2, "unsupported_additions": 2,
+        self.assertEqual(item["reply"]["checks"], {"quotes": 3, "exact_matches": 2, "short_matches": 0, "unsupported_additions": 2,
                                                    "method": "exact_verbatim_quote", "factual_check": "not_performed",
                                                    "agreement_is_verification": False})
         self.assertEqual(len(ctl.view()["runs"]), 1)                           # 모으기는 실행을 시작하지 않는다
@@ -296,6 +296,19 @@ class CollateCheckTests(unittest.TestCase):
                          ["exact_match", "not_found", "not_found", "not_found"])
         self.assertEqual(reply["claims"][0]["statement"], "s")
         self.assertEqual((reply["overlaps"], reply["gaps"], reply["next"]), ([], [], []))
+
+    def test_a_verbatim_but_too_short_quote_does_not_support_a_claim(self):
+        drafts = {"T1": "결론은 A다. 비용이 낮다."}
+        reply = collate.check(json.dumps({"claims": [
+            {"statement": "지어낸 주장", "quotes": [{"member": "T1", "text": "다."}]},
+            {"statement": "받친 주장", "quotes": [{"member": "T1", "text": "다."}, {"member": "T1", "text": "비용이 낮다"}]}]},
+            ensure_ascii=False), drafts)
+        made_up, backed = reply["claims"]
+        self.assertEqual(made_up["quotes"][0]["source_check"], "exact_match")   # 일치는 사실대로 남긴다
+        self.assertEqual([q["substantive"] for q in backed["quotes"]], [False, True])
+        self.assertEqual((made_up["support"], backed["support"]), ("unsupported_addition", "quoted"))
+        self.assertEqual((reply["checks"]["exact_matches"], reply["checks"]["short_matches"]), (3, 2))
+        self.assertEqual(reply["checks"]["unsupported_additions"], 1)
 
     def test_shape_errors_fail(self):
         for bad in ('{"claims": []}', '{"claims": [{"statement": "s"}], "verdict": "맞다"}',

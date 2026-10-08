@@ -126,6 +126,22 @@ class CheckTests(unittest.TestCase):
         self.assertEqual(result["card"]["overturnedBy"], ["B"])
         self.assertTrue(all(item["factual_check"] == "not_performed" for item in result["claims"]))
 
+    def test_a_verbatim_but_too_short_quote_does_not_support_a_claim(self):
+        # 한 글자·문장부호 인용은 어느 초안에나 있어서 지어낸 주장을 "인용됨"으로 바꿔 버린다
+        labels = {"D1": "claude", "D2": "codex"}
+        for short in ("다", ".", "A", "결론은", "\n근거"):
+            body = {"claims": [{"statement": "지어낸 주장", "quotes": [{"draft": "D1", "text": short}]}]}
+            with self.subTest(short=short):
+                result = s.check_model_synthesis(json.dumps(body, ensure_ascii=False), report(), labels, {})
+                quote = result["claims"][0]["quotes"][0]
+                self.assertEqual((quote["source_check"], quote["substantive"]), ("exact_match", False))
+                self.assertEqual(result["claims"][0]["support"], "unsupported_addition")
+                self.assertEqual((result["checks"]["short_matches"], result["checks"]["unsupported_additions"]), (1, 1))
+        body = {"claims": [{"statement": "받친 주장", "quotes": [{"draft": "D2", "text": "속도가 빠르다"}]}]}
+        result = s.check_model_synthesis(json.dumps(body, ensure_ascii=False), report(), labels, {})
+        self.assertTrue(result["claims"][0]["quotes"][0]["substantive"])
+        self.assertEqual(result["claims"][0]["support"], "quoted")
+
     def test_fenced_json_and_unknown_labels(self):
         labels = s.model_prompt(report())[1]
         text = "설명입니다.\n```json\n" + reply([{"statement": "x", "quotes": [{"draft": "D9", "text": "결론은 A다."}]}]) + "\n```"
