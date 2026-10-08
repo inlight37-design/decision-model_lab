@@ -1,4 +1,4 @@
-"""Explicit revision/recheck commands over immutable post-reveal answer variants."""
+"""Explicit revision/recheck commands over immutable answer variants: post-reveal isolated or collected general (GR-2)."""
 from __future__ import annotations
 from dataclasses import asdict
 import json
@@ -28,7 +28,9 @@ class RevisionService:
     def _context(self, run_id, pid):
         run = self.repository._run(run_id)
         gate = self.repository._gate(run_id)
-        if gate.general or not gate.revealed:
+        if gate.general and (not gate.collected or run['cancel_requested']):
+            raise ControllerError('일반 팀원의 수정은 모두 끝난(모음으로 닫힌) 실행의 교차검토 뒤에 준비합니다.')
+        if not gate.general and not gate.revealed:
             raise ControllerError('수정은 격리 초안의 공개와 교차검토 뒤에 준비합니다.')
         part = self.repository._part(run_id, pid)
         spec = ParticipantSpec(**json.loads(part['spec']))
@@ -82,9 +84,20 @@ class RevisionService:
                                      'disposition': 'unresolved', **finding})
         if not findings:
             raise ControllerError('이 답에 연결된 검토 지적이 없습니다.')
-        snapshot = {'run_id': run_id, 'pid': pid, 'question': run['question'],
+        if not gate.general:
+            snapshot = {'run_id': run_id, 'pid': pid, 'question': run['question'],
+                        'original': dict(original), 'base': base, 'findings': findings, 'prior_checks': checks,
+                        'sources': self.repository.sources(run_id), 'source_folder': self.inputs._source_root(run_id)}
+            return spec, snapshot
+        # 일반 팀원(GR-2): 전체 목표와 자기 맡은 일, 자기 자료 목록만 고정한다. 맡긴 일의 입력 전문(assignment prompt)은
+        # 다시 쓰지 않는다 — 자동 기억 전달문이 들어 있을 수 있다. 다른 팀원의 자료·공통 자료 폴더는 넣지 않는다.
+        work = self.inputs._checked_assignment(run_id, pid)
+        listed = [{key: source[key] for key in ('name', 'sha256', 'bytes')} for source in json.loads(work['sources'])]
+        snapshot = {'contract': format_.GENERAL_CONTRACT, 'mode': 'general', 'run_id': run_id, 'pid': pid,
+                    'goal': run['question'], 'task': work['task'], 'assignment_sha256': work['input_sha256'],
                     'original': dict(original), 'base': base, 'findings': findings, 'prior_checks': checks,
-                    'sources': self.repository.sources(run_id), 'source_folder': self.inputs._source_root(run_id)}
+                    'sources': listed, 'source_folder': self.inputs._member_source_root(run_id, pid) if listed else None,
+                    'source_bodies': 'own_assigned_only', 'memory_pack': 'not_added'}
         return spec, snapshot
 
     def prepare(self, run_id, pid, revision_id=None):
@@ -142,8 +155,11 @@ class RevisionService:
             spec = ParticipantSpec(**json.loads(part['spec']))
             if reviewer_pid == row['pid'] or part['state'] != ACCEPTED or spec.transport != CLI:
                 raise ControllerError('원래 답을 낸 다른 CLI 팀원을 재검토자로 고르세요.')
-            if not self.repository._gate(row['run_id']).revealed:
-                raise ControllerError('공개된 실행의 수정 답만 재검토합니다.')
+            gate = self.repository._gate(row['run_id'])
+            if not (gate.collected if gate.general else gate.revealed) or format_.general(snapshot) != gate.general:
+                raise ControllerError('공개된 격리 실행이나 모두 끝난 일반 실행의 수정 답만 재검토합니다.')
+            if gate.general and self.repository._run(row['run_id'])['cancel_requested']:
+                raise ControllerError('취소한 실행의 수정 답은 재검토하지 않습니다.')
             self.invocations._cli_card(spec, '수정 재검토자')
             previous = self.store.rows('SELECT state FROM revision_checks WHERE revision_id = ?', revision_id)
             if any(r['state'] in (RUNNING, UNKNOWN) for r in previous):

@@ -81,7 +81,7 @@ flowchart TD
 
 **검토 배정:** 실행 coordinator는 조립 때 받은 `advance_reviews` callback으로 다음 준비된 검토자를 알린다. callback은 같은 lock과 호출 관문을 이용한다. 서비스 import의 순환이나 새 daemon은 없다. 사용자 확인·한 라운드·종료 미확정 중단 조건은 유지된다.
 
-교차검토는 격리 실행의 공개 뒤, 또는 일반 실행의 수집 완료 뒤에 한 라운드다. 일반 실행은 [설계](../docs/architecture/general-team-review/README.md) GR-1대로 `ReviewService._general_round`가 입력 확인과 시작에서 같은 입력을 다시 만들고 확인 값으로 견주며, 검토 뒤에도 `collected`를 유지한다. 수정·재검토는 아직 격리 실행에만 있다(GR-2).
+교차검토는 격리 실행의 공개 뒤, 또는 일반 실행의 수집 완료 뒤에 한 라운드다. 일반 실행은 [설계](../docs/architecture/general-team-review/README.md) GR-1대로 `ReviewService._general_round`가 입력 확인과 시작에서 같은 입력을 다시 만들고 확인 값으로 견주며, 검토 뒤에도 `collected`를 유지한다. 수정·재검토도 같은 두 관문 뒤에 열린다. 일반 실행은 GR-2대로 `RevisionService._context`가 맡긴 일을 다시 확인해 자기 맡은 일·자료 목록만 snapshot(`mode: general`)에 넣고, 시작은 그 팀원의 자료 폴더만 붙인다. 형식 모듈은 snapshot의 mode로 문구와 독립성 표시를 고른다.
 
 ## API와 호환
 
@@ -101,7 +101,7 @@ flowchart TD
 | `POST /api/runs/{id}/revisions/preview`, `POST /api/runs/{id}/revisions` | 수정 근거·작성자·입력 미리보기와 hash 확인 후 호출 |
 | `POST /api/revisions/{id}/recheck` | 해당 판을 원래 다른 CLI 팀원에게 재검토 요청 |
 | `POST /api/{revisions,rechecks}/{id}/acknowledge` | 자손 종료를 직접 확인한 사용자가 unknown 자리 해제. 재호출·환불 없음 |
-| `GET /api/runs/{id}/revision-report` | 원본·수정·재검토 hash를 확인한 `decision-revision-history/1` 내보내기 |
+| `GET /api/runs/{id}/revision-report` | 원본·수정·재검토 hash를 확인한 내보내기. 격리 실행은 `decision-revision-history/1`, 일반 실행은 `general-revision-history/1` |
 | `POST /api/sources/extract` | PDF 파일 또는 공개 URL의 선택 범위를 추출. 원장 쓰기·실행 없음 |
 | `GET /api/runs/{id}/sources/{name}` | 해시 확인 후 저장한 자료 사본과 추출 출처 조회. 입력 자료이며 모델 답은 반환하지 않음 |
 

@@ -132,11 +132,61 @@ def decision_report(run: dict[str, Any], draft_report: dict[str, Any]) -> dict[s
             "model_syntheses": attempts, "usage": run.get("usage")}
 
 
+GENERAL_REVISION_SCHEMA = 'general-revision-history/1'
+MEMBER_FIELDS = ('pid', 'label', 'provider', 'transport', 'state', 'status', 'execution')
+
+
 def revision_report(view, run_id):
-    """Separate post-review history; legacy draft/synthesis inputs stay immutable."""
+    """Separate post-review history; legacy draft/synthesis inputs stay immutable. 일반 실행(GR-2)은 격리 보고를 가장하지
+    않고 general-revision-history/1로 낸다 — 공개·정족수·합성 없이 맡은 일·원래 결과·검토·수정 이력만 싣는다."""
+    run = next((r for r in view['runs'] if r['run_id'] == run_id), None)
+    if run is not None and run.get('mode') == 'general':
+        return _general_revision_report(run)
     original = build_report(view, run_id)
     run = next(r for r in view['runs'] if r['run_id'] == run_id)
     drafts = {p['pid']: p for p in original['participants'] if p['state'] == 'accepted'}
+    return {'schema': 'decision-revision-history/1', 'draft_report': original, 'revisions': _variants(run, drafts),
+            'human_judgment': {'reviewed': run['reviewed'], 'memo': run.get('review_memo')},
+            'factual_check': 'not_performed', 'independence': 'post_reveal_not_independent',
+            'synthesis_scope': 'original_drafts_only'}
+
+
+def _general_revision_report(run):
+    if not run['gate'].get('collected') or any(p['state'] not in ('accepted', 'rejected') for p in run['participants']):
+        raise ReportError('general revision report requires a collected run with settled members')
+    members, drafts = [], {}
+    for part in run['participants']:
+        work = part.get('assignment')
+        if not work:
+            raise ReportError('general member has no fixed assignment')
+        item = {key: deepcopy(part.get(key)) for key in MEMBER_FIELDS}
+        item['assignment'] = {'task': work['task'], 'input_sha256': work['input_sha256'],
+                              'sources': [{k: s[k] for k in ('name', 'sha256', 'bytes')} for s in work['sources']]}
+        if part['state'] == 'accepted':
+            text = part.get('draft')
+            if not isinstance(text, str) or revisions.digest(text) != part.get('draft_sha256'):
+                raise ReportError('general answer does not match its recorded digest')
+            item['answer'], item['answer_sha256'] = text, part['draft_sha256']
+            drafts[part['pid']] = {'draft': text, 'draft_sha256': part['draft_sha256']}
+        members.append(item)
+    variants = _variants(run, drafts)
+    if any(not revisions.general(v['snapshot']) for v in variants):
+        raise ReportError('general run holds a non-general revision snapshot')
+    return {'schema': GENERAL_REVISION_SCHEMA, 'mode': 'general',
+            'source': {'run_id': run['run_id'], 'created_at': run['created_at'], 'phase': run['phase']},
+            'goal': run['question'], 'input_sha256': run['input_sha256'], 'members': members,
+            'cross_review': _cross_review(run.get('cross_review')), 'revisions': variants,
+            'human_judgment': {'reviewed': run['reviewed'], 'memo': run.get('review_memo')},
+            'factual_check': 'not_performed', 'independence': 'general_team_not_independent',
+            'collation_scope': 'original_answers_only',
+            'limitations': ['General members saw each other\'s answers; reviews and revisions are not independent.',
+                            'Quote matches and recheck assessments do not verify facts; source bodies were not sent to reviewers.',
+                            'Collations in this run used the original answers, not these revisions.',
+                            'Mock/synthetic execution is not evidence of real model quality or entitlement.']}
+
+
+def _variants(run, drafts):
+    """수정 판마다 snapshot·입력·앞 판·원래 답 hash를 다시 맞춘다. 어긋나면 내보내지 않는다."""
     prior, variants = {}, []
     for v in run.get('answer_revisions', []):
         source = v['snapshot']
@@ -158,7 +208,4 @@ def revision_report(view, run_id):
         # Explicit new schema; no future projection fields leak into this export.
         variants.append({k: deepcopy(v[k]) for k in ('revision_id', 'pid', 'parent_id', 'created_at', 'state', 'status',
             'snapshot', 'snapshot_sha256', 'input_sha256', 'author', 'execution', 'reply', 'reason', 'raw', 'rechecks')})
-    return {'schema': 'decision-revision-history/1', 'draft_report': original, 'revisions': variants,
-            'human_judgment': {'reviewed': run['reviewed'], 'memo': run.get('review_memo')},
-            'factual_check': 'not_performed', 'independence': 'post_reveal_not_independent',
-            'synthesis_scope': 'original_drafts_only'}
+    return variants

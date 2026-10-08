@@ -842,6 +842,9 @@ function generalResults(run) {
 // 표시한다 — 맞는 말인지(사실)는 확인하지 않는다. 판단은 내가 한다.
 const COLLATION_STATE = { running: "모으는 중", unknown: "종료 미확인" };
 const QUOTE_CHECK = { exact_match: "원문 일치", not_found: "원문에 없음" };
+// 글자 그대로 맞아도 글자·숫자 4개 미만이면(substantive: false) 근거로 세지 않는다 — 그 사실을 배지에 함께 쓴다.
+const quoteCheckBadge = q => q.source_check === "exact_match" && q.substantive === false
+  ? badge("원문 일치 · 너무 짧아 근거 아님", "badge-neutral") : badge(QUOTE_CHECK[q.source_check] || q.source_check);
 function collationList(title, items) {
   return items.length ? [h("p", { class: "cap muted" }, title), h("ul", { class: "stack" }, items.map(x => h("li", { class: "sm" }, x)))] : null;
 }
@@ -850,12 +853,13 @@ function collationCard(run, col) {
     : COLLATION_STATE[col.state] || col.state;
   const who = tag => { const p = run.participants.find(x => x.pid === col.labels[tag]); return p ? `${tag} ${p.label}` : `${tag}(없는 이름표)`; };
   const r = col.reply;
-  const body = r ? [h("p", { class: "cap muted" }, `인용 ${r.checks.quotes}개 중 원문 일치 ${r.checks.exact_matches}개 · ` +
+  const body = r ? [h("p", { class: "cap muted" }, `인용 ${r.checks.quotes}개 중 원문 일치 ${r.checks.exact_matches}개` +
+        `${r.checks.short_matches ? `(그중 너무 짧아 근거 아님 ${r.checks.short_matches}개)` : ""} · ` +
         `원문에 없는 추가 주장 ${r.checks.unsupported_additions}개 · 사실 검증 안 함`),
       ...r.claims.map(cl => h("div", { class: "cell stack" },
         h("div", { class: "row between" }, h("p", { class: "sm strong" }, cl.statement),
           badge(cl.support === "quoted" ? "원문 인용 있음" : "원문에 없는 추가 주장")),
-        cl.quotes.map(q => h("div", { class: "row" }, badge(QUOTE_CHECK[q.source_check] || q.source_check),
+        cl.quotes.map(q => h("div", { class: "row" }, quoteCheckBadge(q),
           h("span", { class: "sm" }, `${who(q.member)} · "${q.text}"`))))),
       collationList("겹침·어긋남", r.overlaps), collationList("빈 곳", r.gaps), collationList("다음 할 일(제안)", r.next)]
     : col.state === "unknown" ? [h("p", { class: "sm cell cell-alert" }, "끝났는지 확인하지 못했습니다. 자리를 차지하고 있어 새 호출을 막습니다."),

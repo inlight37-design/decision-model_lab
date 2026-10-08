@@ -253,11 +253,12 @@ class PublicQueries:
                     runs[-1]["cross_review"] = ({'reviews': [self._seat_summary(row, 'reviewer') for row in self.store.rows(
                         f"SELECT {self._seat_columns('reviews')} FROM reviews WHERE run_id = ? ORDER BY seq", run['run_id'])]}
                         if _summary else self._cross_review_view(run["run_id"], drafts))
+                    # 수정·재검토도 같은 관문이다(일반은 GR-2). 원래 답·합성·취합의 입력은 바꾸지 않는다
+                    runs[-1]['answer_revisions'] = self._revisions_view(run['run_id'], summary=_summary)
                 if revealed:
                     # 다음 단계 제안은 공개 뒤의 일이다. 봉인 중에는 부를 수도 없고 목록도 비어 있다
                     runs[-1]["proposals"] = [(self._seat_summary(row, 'supervisor') if _summary else self._proposal_view(row)) for row in self.store.rows(
                         f"SELECT {self._seat_columns('proposals') if _summary else '*'} FROM proposals WHERE run_id = ? ORDER BY created_at", run["run_id"])]
-                    runs[-1]['answer_revisions'] = self._revisions_view(run['run_id'], summary=_summary)
                     artifact = None if _summary else self.store.row("SELECT payload FROM events WHERE run_id = ? "
                                               "AND kind = 'synthesis_completed' ORDER BY seq DESC LIMIT 1", run["run_id"])
                     if artifact:

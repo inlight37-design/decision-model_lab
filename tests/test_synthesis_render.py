@@ -36,6 +36,35 @@ assert.ok(!text.includes("모델 불일치"));
         result = subprocess.run([shutil.which("node"), "-e", script], capture_output=True, text=True, timeout=15)
         self.assertEqual(result.returncode, 0, result.stderr)
 
+    def test_short_exact_quote_is_not_shown_as_plain_support(self):
+        # 글자·숫자 4개 미만의 일치 인용(substantive: false)은 근거가 아니다(PR #185). "원문 일치"만 보이면 같은 주장의
+        # "원문에 없는 추가 주장"과 어긋나 보이므로 짧다는 것을 함께 쓰고 근거 없는 줄로 그린다.
+        html = (Path(__file__).resolve().parents[1] / "app/static/index.html").read_text(encoding="utf-8")
+        functions = html[html.index("function modelSynthesisLines("):html.index("function modelSynthesisView(")]
+        script = r'''
+const assert = require("node:assert/strict");
+''' + functions + r'''
+const lines = modelSynthesisLines({
+  synthesizer: {adapter_id: "claude-code", requested_model: "m", reported_models: ["m"], model_match: true},
+  checks: {quotes: 2, exact_matches: 2, short_matches: 1, unsupported_additions: 1},
+  claims: [{id: "S001", statement: "A다", support: "unsupported_addition",
+            quotes: [{draft: "D1", pid: "claude", text: "A", source_check: "exact_match", substantive: false}]},
+           {id: "S002", statement: "B다", support: "quoted",
+            quotes: [{draft: "D2", pid: "codex", text: "결론은 B다", source_check: "exact_match", substantive: true}]}],
+  disagreements: [], strongest_counterexample: null, unresolved: []});
+const text = lines.map(([, t]) => t).join("\n");
+assert.ok(text.includes("인용 2개 중 원문 일치 2개(그중 너무 짧아 근거 아님 1개) · 원문에 없는 추가 주장 1개"), text);
+const short = lines.find(([, t]) => t.includes("D1(claude)"));
+assert.deepEqual(short, ["kv st-unknown", "원문 일치 · 너무 짧아 근거 아님 · D1(claude) “A”"]);
+assert.deepEqual(lines.find(([, t]) => t.includes("D2(codex)")), ["kv", "원문 일치 · D2(codex) “결론은 B다”"]);
+// short_matches가 없던 예전 결과는 예전 문구 그대로
+const old = modelSynthesisLines({synthesizer: {}, checks: {quotes: 1, exact_matches: 1, unsupported_additions: 0},
+  claims: [], disagreements: [], strongest_counterexample: null, unresolved: []});
+assert.equal(old[1][1], "인용 1개 중 원문 일치 1개 · 원문에 없는 추가 주장 0개 · 사실 검증 안 함");
+'''
+        result = subprocess.run([shutil.which("node"), "-e", script], capture_output=True, text=True, timeout=15)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_controls_offer_a_new_call_except_while_running_or_unconfirmed(self):
         # 사용자 결정(2026-09-25): 같은 실행에 합성자를 바꿔 여러 번 부를 수 있다. 끝났는지 모르는 시도가 있을 때만 막는다.
         html = (Path(__file__).resolve().parents[1] / "app/static/index.html").read_text(encoding="utf-8")
