@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-10-08** · 작성 세션: claude(웹 컨테이너에서 사전 등록, 실제 호출과 결과 기록은 주 PC WSL 세션 — 합본 재평가) · 브랜치 `claude/synthesis-reeval-v5we3j`.
+최종 갱신 **2026-10-08** · 작성 세션: claude(웹 컨테이너, 사용자 PC·CLI 보지 않음 — 기억 속 과거 판단의 결과 판 표시(CR-02), 모델 호출 없음) · 브랜치 `claude/p1-review-fixes-sthmsi`.
 
 이 파일은 **지금 상태와 다음 일만** 담는다. 끝난 일의 경위는 PR·git 이력과 날짜가 붙은 기록에 있고, 옛 판은 [docs/handoff/](docs/handoff/README.md)에 있다. **3절에는 진행 중인 일과 "이 판을 들인 PR" 한 줄만 둔다** — 새 PR은 그 줄을 자기 PR로 바꾸고, 병합 전에도 뒤에도 맞는 말만 쓴다("병합했다"고 미리 적지 않는다). 크기 상한과 3절의 모양은 CI가 본다. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있는 규칙은 여기 다시 적지 않는다 — 쌓임을 막는 원칙은 협업 규칙 7절이다.
 
@@ -66,7 +66,7 @@
 
 일은 `card` 라벨 이슈에서 [협업 규칙](docs/COLLABORATION.md) 3절의 보드 규칙대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #192](https://github.com/inlight37-design/decision-model_lab/pull/192)(`claude/synthesis-reeval-v5we3j`) — 더 어려운 새 과제 8개로 형식 수정(PR #190)과 합본이 단독 답보다 나은지를 다시 잰다([사전 등록](docs/experiments/2026-10-08-synthesis-reeval/README.md)). 주 PC에서 돌렸고 결과는 같은 폴더의 [RESULTS.md](docs/experiments/2026-10-08-synthesis-reeval/RESULTS.md)에 있다(형식 실패 16번 중 1번으로 형식 수정은 통함, 갈린 과제가 둘이라 두 합성자 모두 판단 불가). CI·병합 상태는 PR에서 확인한다.
+- **이 판을 들인 PR:** [PR #193](https://github.com/inlight37-design/decision-model_lab/pull/193)(`claude/p1-review-fixes-sthmsi`) — 기억 항목이 사람의 판단이 본 결과 판과 현재 판단 여부를 싣고, 판단 뒤 새 결과가 나오면 옛 메모를 "이전 결과 판에 대한 판단"으로 표시한다(CR-02). 남은 P1 WF-02·WF-01은 같은 브랜치의 다음 PR로 다룬다. CI·병합 상태는 PR에서 확인한다.
 
 | 사용자만 할 수 있는 것 | 지금 |
 |---|---|
@@ -77,7 +77,7 @@
 
 ## 4. 다음 작업
 
-**다음 구현은 선택한 판 취합(GR-3)이다.** [완료 작업·병합 근거](docs/reviews/2026-10-05-cloud-integration/README.md)·[문서 점검](docs/reviews/2026-10-05-document-audit/README.md)·[아키텍처와 이식 검토](docs/reviews/2026-10-05-architecture-adoption/README.md)를 참고한다. 현재 기능·남은 제한은 [FEATURES](docs/FEATURES.md), 위치는 [문서 지도](docs/DOCUMENT-MAP.md)와 [현재 구조](app/ARCHITECTURE.md)가 기준이다. schema 18·기존 소비 기록을 유지한다. 아래 GR 순서는 유지하고, 검토에서 재현한 기억의 판단 판 보완(CR-02)은 담당 범위의 작은 PR로 함께 다룬다. 받은 답은 hash를 확인하는 `RunRepository._answers`로 읽는다.
+**다음 구현은 선택한 판 취합(GR-3)이다.** [완료 작업·병합 근거](docs/reviews/2026-10-05-cloud-integration/README.md)·[문서 점검](docs/reviews/2026-10-05-document-audit/README.md)·[아키텍처와 이식 검토](docs/reviews/2026-10-05-architecture-adoption/README.md)를 참고한다. 현재 기능·남은 제한은 [FEATURES](docs/FEATURES.md), 위치는 [문서 지도](docs/DOCUMENT-MAP.md)와 [현재 구조](app/ARCHITECTURE.md)가 기준이다. schema 18·기존 소비 기록을 유지한다. 아래 GR 순서는 유지한다. 판을 올리는 새 사건 종류는 `repository.RESULT_EVENTS`에 넣는다(화면·기억이 함께 쓴다). 받은 답은 hash를 확인하는 `RunRepository._answers`로 읽는다.
 
 1. **GR-3 — 선택한 판 취합.** [설계](docs/architecture/general-team-review/README.md) §6/7이 완료 조건이다. 팀원별 답의 판/hash·미해결·누락을 확인해 모은다. 일반 수정 판은 `answer_revisions.snapshot`(`mode: general`)에 맡은 일·자료 목록과 함께 있다. 그 전의 취합은 원래 답을 쓴다. 실제 개선 효과·비용은 구현과 별도로 비교한다.
 2. **2026-10-27 전 — 주 PC 재관측**([SETUP 4절](docs/SETUP.md)의 절차, 모델 호출 Claude 2·Codex 3). main-pc-wsl은 10월 27일부터 만료이고, 이 PC의 세션만 관측·등록할 수 있다. 참여자 계획이나 CLI 판이 바뀌면 그때 바로 한다. 관측 기록은 `tools/w2/assemble.py`가 조립한다. 추론 강도를 연결하는 PR은 그 계획으로 바로 관측한다 — 이 날짜를 기다리지 않는다([역할판 검토](docs/reviews/2026-09-26-role-board-review/README.md) RB-01). S4(카드 #111)로 `~/.codex/hooks.json`이 있으면 Codex 참여자 계획을 거절한다 — 재관측 때 그 검사와 훅 표면을 함께 확인한다([훅 관측](docs/reviews/2026-09-27-codex-hooks/README.md)). 파일 하나 검사로 전체 문맥 검증을 대신하지 않는다.

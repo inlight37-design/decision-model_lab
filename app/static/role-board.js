@@ -402,6 +402,14 @@ function confirmButton() {
   return h("button", { type: "button", id: "confirmStart", class: "btn btn-brand", onclick: confirmRun },
     liveMode ? "확인한 입력으로 시작 — 실제 CLI 호출" : "확인한 입력으로 시작 (모의)");
 }
+// 기억 항목의 판단이 어느 결과 판을 보았는지(CR-02). 옛 pack에는 result_state가 없어 아무것도 덧붙이지 않는다.
+function judgmentNote(state) {
+  if (!state || state.judgment_revision === null || state.judgment_revision === undefined) return null;
+  const notes = [state.judgment_is_current ? "판단 메모는 이 실행의 현재 결과를 본 것입니다."
+    : "판단 메모는 이전 결과를 본 것입니다. 그 뒤 나온 새 결과는 아직 판단하지 않았습니다."];
+  if (state.dispositions_changed_after_judgment) notes.push("판단 뒤 지적의 처분이 바뀌었습니다.");
+  return h("p", { class: state.judgment_is_current ? "cap muted" : "sm strong" }, notes.join(" "));
+}
 // 일반 팀원 작업의 확인 화면: 팀원마다 실제로 보낼 입력 전문과 받을 자료 목록을 그대로 보인다.
 function memoryPreview(config, id = "preview-memory", expanded = true) {
   const pack = config.memory;
@@ -422,6 +430,7 @@ function memoryPreview(config, id = "preview-memory", expanded = true) {
     ...entries.map((e, index) => h("section", { class: "stack" },
       h("p", { class: "sm strong" }, `이전 실행 · ${fmtTime(e.created_at)} · ${e.excerpt_policy ? "선택 항목 발췌" : e.truncated ? "일부 발췌" : "전체 기록"}`),
       h("pre", { class: "input-full" }, e.excerpt),
+      judgmentNote(e.result_state),
       h("p", {class: "cap muted"}, !e.selection ? "선택 이유가 저장되기 전의 기록입니다."
         : e.selection.recent_fallback ? "일치하는 표현이 없어 최근 공개 기록을 참고로 골랐습니다."
         : `일치한 표현: ${e.selection.overlap_terms.join(", ")} · ` +
