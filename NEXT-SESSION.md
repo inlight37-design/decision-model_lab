@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-10-08** · 작성 세션: claude(웹 컨테이너·GitHub — 합성·모으기의 짧은 인용 판정, 사용자 PC·CLI 미확인, 실제 모델 호출 없음) · 브랜치 `claude/project-thread-cpr95x`.
+최종 갱신 **2026-10-08** · 작성 세션: claude(웹 컨테이너·GitHub — 교차검토·결과 모으기의 저장된 답 hash 확인(CR-01), 사용자 PC·CLI 미확인, 실제 모델 호출 없음) · 브랜치 `claude/gr-1-cross-review-wlwknv`.
 
 이 파일은 **지금 상태와 다음 일만** 담는다. 끝난 일의 경위는 PR·git 이력과 날짜가 붙은 기록에 있고, 옛 판은 [docs/handoff/](docs/handoff/README.md)에 있다. **3절에는 진행 중인 일과 "이 판을 들인 PR" 한 줄만 둔다** — 새 PR은 그 줄을 자기 PR로 바꾸고, 병합 전에도 뒤에도 맞는 말만 쓴다("병합했다"고 미리 적지 않는다). 크기 상한과 3절의 모양은 CI가 본다. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있는 규칙은 여기 다시 적지 않는다 — 쌓임을 막는 원칙은 협업 규칙 7절이다.
 
@@ -66,7 +66,7 @@
 
 일은 `card` 라벨 이슈에서 [협업 규칙](docs/COLLABORATION.md) 3절의 보드 규칙대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #185](https://github.com/inlight37-design/decision-model_lab/pull/185)(`claude/project-thread-cpr95x`) — 합성·결과 모으기에서 "."·"다" 같은 아주 짧은 일치 인용이 지어낸 주장을 "인용됨"으로 바꾸던 빈틈을 막았다(`short_matches`). 화면은 짧은 일치 인용을 아직 "원문 일치"로만 보인다. 최종 CI와 병합 상태는 PR에서 확인한다.
+- **이 판을 들인 PR:** [PR #PRNUM](https://github.com/inlight37-design/decision-model_lab/pull/PRNUM)(`claude/gr-1-cross-review-wlwknv`) — 교차검토·결과 모으기가 받은 답 본문(자기 답 포함)과 맡긴 일을 기록한 hash와 맞추고 어긋나면 호출 없이 거절한다(CR-01). 최종 CI와 병합 상태는 PR에서 확인한다.
 
 | 사용자만 할 수 있는 것 | 지금 |
 |---|---|
@@ -77,7 +77,7 @@
 
 ## 4. 다음 작업
 
-**다음 구현은 일반 팀원 검토다.** [완료 작업·병합 근거](docs/reviews/2026-10-05-cloud-integration/README.md)·[문서 점검](docs/reviews/2026-10-05-document-audit/README.md)·[아키텍처와 이식 검토](docs/reviews/2026-10-05-architecture-adoption/README.md)를 참고한다. 현재 기능·남은 제한은 [FEATURES](docs/FEATURES.md), 위치는 [문서 지도](docs/DOCUMENT-MAP.md)와 [현재 구조](app/ARCHITECTURE.md)가 기준이다. schema 17·기존 소비 기록을 유지한다. 아래 GR 순서는 유지하고, 검토에서 재현한 답 소비 hash·기억의 판단 판 보완은 담당 범위의 작은 PR로 함께 다룬다.
+**다음 구현은 일반 팀원 검토다.** [완료 작업·병합 근거](docs/reviews/2026-10-05-cloud-integration/README.md)·[문서 점검](docs/reviews/2026-10-05-document-audit/README.md)·[아키텍처와 이식 검토](docs/reviews/2026-10-05-architecture-adoption/README.md)를 참고한다. 현재 기능·남은 제한은 [FEATURES](docs/FEATURES.md), 위치는 [문서 지도](docs/DOCUMENT-MAP.md)와 [현재 구조](app/ARCHITECTURE.md)가 기준이다. schema 17·기존 소비 기록을 유지한다. 아래 GR 순서는 유지하고, 검토에서 재현한 기억의 판단 판 보완(CR-02)은 담당 범위의 작은 PR로 함께 다룬다. 받은 답은 hash를 확인하는 `RunRepository._answers`로 읽는다.
 
 1. **GR-1 — 일반 팀원 교차검토.** [설계](docs/architecture/general-team-review/README.md) §2/3/7의 코드 지도·입력 계약·실패 확인표부터 읽는다. 과제·답·자료 범위·호출 수 확인, 순차 검토, 공개 조회·상태·화면·검색/사용량을 한 경로로 완성한다. 일반 `collected`를 격리 `revealed`로 바꾸지 않는다. 모의/HTTP/JavaScript 검증은 클라우드에서 가능하다.
 2. **GR-2 — 일반 작성자 수정·다른 작성자 재검토.** 자기 배정 자료만 사용하고 원본·지적·앞 판·상한·복구·일반 수정 보고를 연결한다. 완료 조건은 같은 설계 §6/7이다.

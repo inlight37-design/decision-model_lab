@@ -14,6 +14,17 @@ from app.domain import ParticipantSpec, ControllerError, _CapReached, storable, 
 from app.execution.seats import COLLATE_SEAT, REVIEW_SEAT
 
 
+def _digest(text) -> str | None:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest() if isinstance(text, str) else None
+
+
+def _intact(row) -> bool:
+    """검토 행에 고정한 입력 전문과 대상 답 본문이 기록한 hash와 아직 맞는가."""
+    targets = json.loads(row["targets"])
+    return _digest(row["prompt"]) == row["input_sha256"] and all(
+        _digest(item.get("text")) == item.get("sha256") for item in targets.values())
+
+
 class ReviewService:
     def __init__(self, runtime, execution, inputs, invocations, repository):
         self.runtime = runtime
@@ -49,12 +60,9 @@ class ReviewService:
             spec = ParticipantSpec(**orchestrator)
             self.invocations._cli_card(spec, "오케스트레이터")
             members, labels, drafts = [], {}, {}
-            for index, part in enumerate(self.store.rows(
-                    "SELECT pid, spec, state FROM participants WHERE run_id = ? ORDER BY rowid", run_id), 1):
-                label, member = f"T{index}", ParticipantSpec(**json.loads(part["spec"]))
-                work = self.inputs._assignment(run_id, member.pid)
-                draft = self.store.row("SELECT text FROM drafts WHERE run_id = ? AND pid = ?", run_id, member.pid)
-                text = draft["text"] if draft and part["state"] == ACCEPTED else None
+            for index, answer in enumerate(self.repository._answers(run_id), 1):   # 본문 hash 확인(CR-01)
+                label, member = f"T{index}", ParticipantSpec(**answer["spec"])
+                work, text = self.inputs._checked_assignment(run_id, member.pid), answer["text"]
                 labels[label], drafts[label] = member.pid, text
                 members.append({"label": label, "name": member.label, "task": work["task"], "text": text})
             text = collating.prompt(run["question"], members)
@@ -103,12 +111,9 @@ class ReviewService:
             if self.store.row("SELECT 1 FROM reviews WHERE run_id = ?", run_id):
                 raise ControllerError("교차검토는 실행 하나에 한 라운드입니다.")
             self.invocations._upper_call_gate("교차검토는")
-            answers = {}   # pid → (명세, 답 원문, sha256). 받은 답만, 참여자 순서대로
-            for part in self.store.rows("SELECT pid, spec, state FROM participants WHERE run_id = ? ORDER BY rowid",
-                                        run_id):
-                draft = self.store.row("SELECT text, sha256 FROM drafts WHERE run_id = ? AND pid = ?", run_id, part["pid"])
-                if part["state"] == ACCEPTED and draft:
-                    answers[part["pid"]] = (ParticipantSpec(**json.loads(part["spec"])), draft["text"], draft["sha256"])
+            # pid → (명세, 답 원문, sha256). 받은 답만, 참여자 순서대로. 자기 답을 포함해 본문 hash를 확인한다(CR-01)
+            answers = {item["pid"]: (ParticipantSpec(**item["spec"]), item["text"], item["sha256"])
+                       for item in self.repository._answers(run_id) if item["state"] == ACCEPTED}
             reviewers = [pid for pid, (spec, _, _) in answers.items()
                          if spec.transport == CLI and spec.adapter_id in self.runtime.executor.adapter_ids]
             if len(answers) < 2 or not reviewers:
@@ -160,6 +165,9 @@ class ReviewService:
                 continue
             row = next(row for row in rows if row["state"] == QUEUED)
             spec = ParticipantSpec(**json.loads(row["reviewer"]))
+            if not _intact(row):   # 라운드에 고정한 입력이 저장 뒤 바뀌었다(CR-01): 이 검토자부터 시작하지 않는다
+                self._close_reviews(run_id, "not_started: fixed review input does not match its digest")
+                return
 
             def insert(tx, attempt, kind, review_id=row["review_id"]):
                 if not tx.execute("UPDATE reviews SET state = ?, attempt = ?, kind = ? WHERE review_id = ? AND state = ?",

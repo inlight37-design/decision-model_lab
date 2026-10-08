@@ -272,6 +272,22 @@ class InputBuilder:
     def _member_source_dir(self, run_id: str, pid: str) -> str | None:
         """일반 팀원의 입력 전문을 원장의 목표·맡긴 일·자료 목록으로 다시 만들어 저장한 입력과 해시를 맞추고, 그 팀원이
         받은 자료만 폴더로 둔다. 다르면 거절한다 — 아무것도 시작하지 않았다. _source_dir와 같은 규칙이다."""
+        item = self._checked_assignment(run_id, pid)
+        listed, root = json.loads(item["sources"]), self._member_source_root(run_id, pid)
+        if not listed:
+            return None
+        rows = [self.store.row("SELECT name, sha256, bytes, content FROM sources WHERE run_id = ? AND name = ?",
+                               run_id, source["name"]) for source in listed]
+        if any(row is None or (row["sha256"], row["bytes"]) != (source["sha256"], source["bytes"])
+               or source != source_document.listing(row['name'], row['content'], assignment=True)
+               for row, source in zip(rows, listed)):
+            raise ControllerError("the source snapshot changed after the run was created; no call was started")
+        return self._snapshot(root, rows)
+
+
+    def _checked_assignment(self, run_id: str, pid: str):
+        """그 팀원의 배정 행을 원장의 목표·맡긴 일·자료 목록으로 다시 만든 입력과 해시·실행의 묶음 해시까지 맞춰 준다.
+        다르면 거절한다. 자료 폴더는 만들지 않는다 — 결과 모으기·교차검토가 맡긴 일을 읽을 때도 이 확인을 거친다."""
         run, item = self.repository._run(run_id), self._assignment(run_id, pid)
         listed = json.loads(item["sources"])
         root = self._member_source_root(run_id, pid)
@@ -289,15 +305,7 @@ class InputBuilder:
         if _bundle_digest(members) != run["input_sha256"]:
             raise ControllerError("the fixed assignment differs from the input bundled when the run was created; "
                                   "no call was started")
-        if not listed:
-            return None
-        rows = [self.store.row("SELECT name, sha256, bytes, content FROM sources WHERE run_id = ? AND name = ?",
-                               run_id, source["name"]) for source in listed]
-        if any(row is None or (row["sha256"], row["bytes"]) != (source["sha256"], source["bytes"])
-               or source != source_document.listing(row['name'], row['content'], assignment=True)
-               for row, source in zip(rows, listed)):
-            raise ControllerError("the source snapshot changed after the run was created; no call was started")
-        return self._snapshot(root, rows)
+        return item
 
 
     def _attempt_input(self, run_id: str, pid: str) -> tuple[str, str | None]:

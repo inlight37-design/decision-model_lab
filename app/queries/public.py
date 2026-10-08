@@ -1,6 +1,7 @@
 """Trusted public projection. Sealed outputs never become search or UI data."""
 from __future__ import annotations
 from dataclasses import asdict
+import hashlib
 import json
 from typing import Any
 from app import memory, refine as refining, usage as token_usage
@@ -393,7 +394,10 @@ class PublicQueries:
         rows = self.store.rows("SELECT * FROM reviews WHERE run_id = ? ORDER BY seq", run_id)
         if not rows:
             return None
-        current = {pid: draft["sha256"] for pid, draft in drafts.items()}
+        # 지금 답의 본문이 기록한 hash와 맞을 때만 그 hash를 "지금 판"으로 본다(CR-01). 대상 본문도 같은 규칙이다
+        current = {pid: draft["sha256"] for pid, draft in drafts.items()
+                   if isinstance(draft["text"], str)
+                   and hashlib.sha256(draft["text"].encode("utf-8")).hexdigest() == draft["sha256"]}
         reviews, missing, reviewed = [], [], 0
         for row in rows:
             record = json.loads(row["result"]) if row["result"] else {}
@@ -418,7 +422,8 @@ class PublicQueries:
                             "reviewer": _card(spec),
                             "labels": json.loads(row["labels"]),
                             "targets": {label: {"pid": t["pid"], "sha256": t["sha256"],
-                                                "fresh": current.get(t["pid"]) == t["sha256"]}
+                                                "fresh": current.get(t["pid"]) == t["sha256"] and isinstance(t.get("text"), str)
+                                                and hashlib.sha256(t["text"].encode("utf-8")).hexdigest() == t["sha256"]}
                                         for label, t in targets.items()},
                             "prompt": row["prompt"], "input_sha256": row["input_sha256"], "reply": reply,
                             "reason": record.get("reason"), "raw": record.get("raw"),
