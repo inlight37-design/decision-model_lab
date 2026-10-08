@@ -1,0 +1,142 @@
+{
+ "scores": {
+  "Q1": {
+   "S-codex": 0.0,
+   "S-claude": 1.0,
+   "X-codex": 0.0,
+   "X-claude": 1.0
+  },
+  "Q2": {
+   "S-codex": 1.0,
+   "S-claude": 1.0,
+   "X-codex": 0.0,
+   "X-claude": 1.0
+  },
+  "Q3": {
+   "S-codex": 1.0,
+   "S-claude": 1.0,
+   "X-codex": 1.0,
+   "X-claude": 1.0
+  },
+  "Q4": {
+   "S-codex": 1.0,
+   "S-claude": 1.0,
+   "X-codex": 0.0,
+   "X-claude": 1.0
+  },
+  "Q5": {
+   "S-codex": 1.0,
+   "S-claude": 1.0,
+   "X-codex": 1.0,
+   "X-claude": 1.0
+  },
+  "Q6": {
+   "S-codex": 1.0,
+   "S-claude": 1.0,
+   "X-codex": 1.0,
+   "X-claude": 0.0
+  },
+  "Q7": {
+   "S-codex": 1.0,
+   "S-claude": 1.0,
+   "X-codex": 1.0,
+   "X-claude": 1.0
+  },
+  "Q8": {
+   "S-codex": 1.0,
+   "S-claude": 1.0,
+   "X-codex": 1.0,
+   "X-claude": 1.0
+  }
+ },
+ "kinds": {
+  "Q1": {
+   "S-codex": "wrong",
+   "S-claude": "correct",
+   "X-codex": "failed",
+   "X-claude": "correct"
+  },
+  "Q2": {
+   "S-codex": "correct",
+   "S-claude": "correct",
+   "X-codex": "failed",
+   "X-claude": "correct"
+  },
+  "Q3": {
+   "S-codex": "correct",
+   "S-claude": "correct",
+   "X-codex": "correct",
+   "X-claude": "correct"
+  },
+  "Q4": {
+   "S-codex": "correct",
+   "S-claude": "correct",
+   "X-codex": "failed",
+   "X-claude": "correct"
+  },
+  "Q5": {
+   "S-codex": "correct",
+   "S-claude": "correct",
+   "X-codex": "correct",
+   "X-claude": "correct"
+  },
+  "Q6": {
+   "S-codex": "correct",
+   "S-claude": "correct",
+   "X-codex": "correct",
+   "X-claude": "failed"
+  },
+  "Q7": {
+   "S-codex": "rubric",
+   "S-claude": "rubric",
+   "X-codex": "rubric",
+   "X-claude": "rubric"
+  },
+  "Q8": {
+   "S-codex": "rubric",
+   "S-claude": "rubric",
+   "X-codex": "rubric",
+   "X-claude": "rubric"
+  }
+ },
+ "totals": {
+  "S-codex": 7.0,
+  "S-claude": 8.0,
+  "X-codex": 5.0,
+  "X-claude": 7.0
+ },
+ "best_single_total": 8.0,
+ "split_tasks": [
+  "Q1"
+ ],
+ "synthesizers": {
+  "X-codex": {
+   "total": 5.0,
+   "gains": [],
+   "losses": [
+    "Q1",
+    "Q2",
+    "Q4"
+   ],
+   "held_or_manual_losses": [],
+   "failed_or_missing": [
+    "Q1",
+    "Q2",
+    "Q4"
+   ],
+   "rule": "판단 불가 — 갈린 과제가 3개 미만"
+  },
+  "X-claude": {
+   "total": 7.0,
+   "gains": [],
+   "losses": [
+    "Q6"
+   ],
+   "held_or_manual_losses": [],
+   "failed_or_missing": [
+    "Q6"
+   ],
+   "rule": "판단 불가 — 갈린 과제가 3개 미만"
+  }
+ }
+}

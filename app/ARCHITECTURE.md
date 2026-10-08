@@ -81,7 +81,7 @@ flowchart TD
 
 **검토 배정:** 실행 coordinator는 조립 때 받은 `advance_reviews` callback으로 다음 준비된 검토자를 알린다. callback은 같은 lock과 호출 관문을 이용한다. 서비스 import의 순환이나 새 daemon은 없다. 사용자 확인·한 라운드·종료 미확정 중단 조건은 유지된다.
 
-현재 교차검토·수정·재검토는 격리 실행의 공개 이후에만 가능하다. 일반 팀원으로 넓히는 [구현 전 설계](../docs/architecture/general-team-review/README.md)는 기존 실행·예약을 재사용하면서 팀원별 과제·자료, 공개 조회·상태·보고서 경계를 함께 바꾸는 순서를 정한다. 일반 실행은 `collected`를 유지하며 이 제안은 아직 명령/API·schema에 반영하지 않았다.
+교차검토는 격리 실행의 공개 뒤, 또는 일반 실행의 수집 완료 뒤에 한 라운드다. 일반 실행은 [설계](../docs/architecture/general-team-review/README.md) GR-1대로 `ReviewService._general_round`가 입력 확인과 시작에서 같은 입력을 다시 만들고 확인 값으로 견주며, 검토 뒤에도 `collected`를 유지한다. 수정·재검토는 아직 격리 실행에만 있다(GR-2).
 
 ## API와 호환
 
@@ -105,7 +105,7 @@ flowchart TD
 | `POST /api/sources/extract` | PDF 파일 또는 공개 URL의 선택 범위를 추출. 원장 쓰기·실행 없음 |
 | `GET /api/runs/{id}/sources/{name}` | 해시 확인 후 저장한 자료 사본과 추출 출처 조회. 입력 자료이며 모델 답은 반환하지 않음 |
 
-schema 17은 기존 템플릿·수정/재검토 표에 선택적 `task_plans`를 더한다. 기존 실행 행/event 의미는 유지한다. 역할별 저장 adapter가 공통 Invocation을 만들며 manual·미시작 review·모델 없는 합성을 호출로 발명하지 않는다. 전역 event revision이나 command receipt table은 아직 없다.
+schema 17은 기존 템플릿·수정/재검토 표에 선택적 `task_plans`를 더하고, 18은 `reviews`에 일반 검토의 확인한 입력(`snapshot`·`snapshot_sha256`, 옛 행은 NULL)을 더한다. 기존 실행 행/event 의미는 유지한다. 역할별 저장 adapter가 공통 Invocation을 만들며 manual·미시작 review·모델 없는 합성을 호출로 발명하지 않는다. 전역 event revision이나 command receipt table은 아직 없다.
 
 계획은 목표·완료 기준·선행 작업과 자체 revision을 가진다. 편집은 예상 판을 조건으로 쓰고 사건에 새 판을 남긴다. 선행 작업은 현재 계획에 속한 실행들의 사람 판단 완료와 진행/종료 미확정 부재로 준비 상태를 계산한다. 계획 없는 기존 작업은 기존 전체 타임라인의 완료 기준을 유지한다. 순환/누락은 거절한다. 입력 미리보기와 실제 생성 거래에서 계획/선행 결과를 다시 검사하고 role_config에 그 판·근거 실행 ID/결과 판을 고정한다. 다듬기·분담 제안도 시작 전에 조건을 본다. 이미 시작한 실행은 선행 조건이 바뀌어도 소급 취소하거나 입력을 고치지 않는다.
 
@@ -128,7 +128,7 @@ PDF는 로컬 Poppler를 shell 없이 호출하며 원본 1 MiB, 한 번에 20�
 - 구독 경로·기기 관측·최종 plan 고정, 전체 tree/input/native outcome 수용 의미를 유지한다.
 - 격리 초안과 자동 기억의 역할 범위, 같은 원장의 호출 상한·unknown 슬롯, 한 writer를 유지한다.
 - 취소·시작 실패·결과 저장 실패·재시작·늦은 결과를 분리하고 소비 기록을 지우지 않는다.
-- schema 17 이행 전에 자동 backup을 만든다. 이전 버전 코드는 새 원장을 거절한다. 실제 호출 뒤 코드·DB를 되돌릴 때 원장을 과거 backup으로 덮어 소비 기록을 지우지 않는다.
+- schema 18 이행 전에 자동 backup을 만든다. 이전 버전 코드는 새 원장을 거절한다. 실제 호출 뒤 코드·DB를 되돌릴 때 원장을 과거 backup으로 덮어 소비 기록을 지우지 않는다.
 
 새 기능을 넣을 때는 담당 service와 순수 형식 모듈에 넣고, 실제 실행은 coordinator와 InvocationLedger를 통과시킨다. 공개 경로는 PublicQueries를 재사용한다. 기존 회귀와 [새 경계 검사](../tests/test_foundation.py), [전송 검사](../tests/test_api_client.py)가 기준이며, 실제 기기 계약을 바꾸면 PC 관측을 별도로 갖춘다.
 

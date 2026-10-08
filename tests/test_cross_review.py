@@ -369,6 +369,56 @@ class CrossReviewTests(support.Base):
         self.assertEqual(reopened.row("PRAGMA user_version")[0], SCHEMA_VERSION)
 
 
+class StoredAnswerIntegrityTests(support.Base):
+    """CR-01: 교차검토는 모델에 넘기기 전에 자기 답을 포함한 모든 받은 답의 본문을 기록한 hash와 맞춘다."""
+
+    def revealed(self, ctl):
+        return CrossReviewTests.revealed(self, ctl)
+
+    def corrupt(self, sql, *args):
+        with self.store.tx() as tx:
+            self.assertEqual(tx.execute(sql, *args), 1)
+
+    def test_a_changed_body_hash_or_missing_answer_refuses_the_round_before_any_call(self):
+        cases = {"own body": ("UPDATE drafts SET text = 'CORRUPTED-CONTENT' WHERE pid = 'claude'",),
+                 "target body": ("UPDATE drafts SET text = 'CORRUPTED-CONTENT' WHERE pid = 'codex'",),
+                 "hash only": ("UPDATE drafts SET sha256 = ? WHERE pid = 'codex'", "0" * 64),
+                 "missing answer": ("DELETE FROM drafts WHERE pid = 'codex'",)}
+        ex = Reviewer()
+        ctl = self.controller(ex)
+        for name, (sql, *args) in cases.items():
+            with self.subTest(name):
+                rid = self.revealed(ctl)   # 사례마다 새 실행. 검토 라운드는 실행마다 따로다
+                self.corrupt(sql + " AND run_id = ?", *args, rid)
+                started = list(ex.started)
+                with self.assertRaisesRegex(c.ControllerError, "해시"):
+                    ctl.cross_review(rid)
+                self.assertTrue(ctl.wait_idle())
+                self.assertEqual(ex.started, started)                     # 새 호출 없음
+                self.assertIsNone(self.store.row("SELECT 1 FROM reviews WHERE run_id = ?", rid))
+
+    def test_a_fixed_input_changed_after_the_round_was_saved_is_not_started_and_shows_stale(self):
+        ex = Reviewer(hold=("reviewer",))
+        ctl = self.controller(ex)
+        rid = self.revealed(ctl)
+        first, second = ctl.cross_review(rid)
+        self.assertTrue(support.wait_for(lambda: self.round(ctl, rid)["reviews"][0]["state"] == c.RUNNING))
+        targets = json.loads(self.store.row("SELECT targets FROM reviews WHERE review_id = ?", second)["targets"])
+        targets["D1"]["text"] = "CORRUPTED-CONTENT"
+        self.corrupt("UPDATE reviews SET targets = ? WHERE review_id = ?", json.dumps(targets, ensure_ascii=False), second)
+        ex.release("reviewer")
+        self.assertTrue(ctl.wait_idle())
+        reviews = self.round(ctl, rid)["reviews"]
+        self.assertEqual([r["state"] for r in reviews], [c.ACCEPTED, "skipped"])
+        self.assertIn("digest", reviews[1]["status"])
+        self.assertTrue(reviews[0]["targets"]["D1"]["fresh"])
+        self.assertFalse(reviews[1]["targets"]["D1"]["fresh"])   # 저장된 대상 본문이 hash와 맞지 않는다
+        self.corrupt("UPDATE drafts SET text = 'CORRUPTED-CONTENT' WHERE pid = 'codex' AND run_id = ?", rid)
+        self.assertFalse(self.round(ctl, rid)["reviews"][0]["targets"]["D1"]["fresh"])   # 지금 답이 hash와 맞지 않는다
+
+    round = CrossReviewTests.round
+
+
 class CrossReviewCheckTests(unittest.TestCase):
     TARGETS = {"D1": "첫 줄\n  공백 그대로  ", "D2": "둘째 답"}
 

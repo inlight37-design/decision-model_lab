@@ -1,5 +1,6 @@
 """Row-backed identities, transitions and revision policy over the existing ledger."""
 from __future__ import annotations
+import hashlib
 import json
 from typing import Any
 from app.state import QUEUED, RUNNING, AWAITING_USER, ACCEPTED, REJECTED, UNKNOWN, RunGate, gate
@@ -73,6 +74,26 @@ class RunRepository:
             payload = self.store.row("SELECT payload FROM events WHERE run_id = ? AND seq = ?", run_id, row["reviewed"])
             memo = json.loads(payload["payload"]).get("memo")
         return row["revision"], row["reviewed"] > row["revision"], memo
+
+
+    def _answers(self, run_id: str) -> list[dict[str, Any]]:
+        """참여자 순서대로 {pid, spec, state, text, sha256}. 받은 답(accepted)만 본문을 싣고, 그 본문은 저장된 sha256과
+        다시 맞춘다 — 본문이 없거나 어긋나면 거절한다(CR-01). 받지 못한 팀원은 text·sha256이 None이다. 교차검토·결과
+        모으기가 모델에 넘기기 전에 이 확인을 거친다. 입력 hash를 새로 계산하는 것은 이 확인을 대신하지 않는다."""
+        drafts = {row["pid"]: row for row in self.store.rows(
+            "SELECT pid, text, sha256 FROM drafts WHERE run_id = ?", run_id)}
+        answers = []
+        for part in self.store.rows("SELECT pid, spec, state FROM participants WHERE run_id = ? ORDER BY rowid", run_id):
+            item = {"pid": part["pid"], "spec": json.loads(part["spec"]), "state": part["state"],
+                    "text": None, "sha256": None}
+            if part["state"] == ACCEPTED:
+                draft = drafts.get(part["pid"])
+                if (draft is None or not isinstance(draft["text"], str) or draft["sha256"] !=
+                        hashlib.sha256(draft["text"].encode("utf-8")).hexdigest()):
+                    raise ControllerError("저장된 답이 기록된 해시와 맞지 않습니다. 호출을 시작하지 않았습니다.")
+                item.update(text=draft["text"], sha256=draft["sha256"])
+            answers.append(item)
+        return answers
 
 
     def sources(self, run_id: str) -> list[dict[str, Any]]:

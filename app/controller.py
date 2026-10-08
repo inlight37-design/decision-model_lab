@@ -172,8 +172,11 @@ class Controller:
     def acknowledge_collation_unknown(self, collation_id: str) -> None:
         return self.reviews.acknowledge_collation_unknown(collation_id)
 
-    def cross_review(self, run_id: str, question: str | None = None) -> list[str]:
-        return self.reviews.cross_review(run_id, question)
+    def cross_review(self, run_id: str, question: str | None = None, *, round_id=None, confirmation=None) -> list[str]:
+        return self.reviews.cross_review(run_id, question, round_id=round_id, confirmation=confirmation)
+
+    def preview_cross_review(self, run_id: str, question: str | None = None) -> dict:
+        return self.reviews.preview_cross_review(run_id, question)
 
     def acknowledge_review_unknown(self, review_id: str) -> None:
         return self.reviews.acknowledge_review_unknown(review_id)
