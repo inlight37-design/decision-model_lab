@@ -66,7 +66,7 @@
 
 일은 `card` 라벨 이슈에서 [협업 규칙](docs/COLLABORATION.md) 3절의 보드 규칙대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #192](https://github.com/inlight37-design/decision-model_lab/pull/192)(`claude/synthesis-reeval-v5we3j`) — 더 어려운 새 과제 8개로 합본을 다시 잰다: 형식 수정(PR #190)이 통했는지와 합본이 더 좋은 단독 답보다 나은지([사전 등록](docs/experiments/2026-10-08-synthesis-reeval/README.md)). 실제 호출은 주 PC에서 하고, 결과는 같은 폴더의 `RESULTS.md`에 쓴다. 결과가 들어왔는지와 CI·병합 상태는 PR에서 확인한다.
+- **이 판을 들인 PR:** [PR #192](https://github.com/inlight37-design/decision-model_lab/pull/192)(`claude/synthesis-reeval-v5we3j`) — 더 어려운 새 과제 8개로 형식 수정(PR #190)과 합본이 단독 답보다 나은지를 다시 잰다([사전 등록](docs/experiments/2026-10-08-synthesis-reeval/README.md)). 실제 호출은 주 PC에서 하고 결과는 같은 폴더의 `RESULTS.md`에 쓴다. 결과·CI·병합 상태는 PR에서 확인한다.
 
 | 사용자만 할 수 있는 것 | 지금 |
 |---|---|
