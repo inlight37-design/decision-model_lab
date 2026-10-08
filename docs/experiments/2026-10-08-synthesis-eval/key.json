@@ -1,0 +1,34 @@
+{
+ "Q7-a8b4": {
+  "task": "Q7",
+  "condition": "S-claude"
+ },
+ "Q7-3b17": {
+  "task": "Q7",
+  "condition": "S-codex"
+ },
+ "Q7-79e4": {
+  "task": "Q7",
+  "condition": "X-codex"
+ },
+ "Q7-2e9b": {
+  "task": "Q7",
+  "condition": "X-claude"
+ },
+ "Q8-c626": {
+  "task": "Q8",
+  "condition": "S-claude"
+ },
+ "Q8-9c4b": {
+  "task": "Q8",
+  "condition": "S-codex"
+ },
+ "Q8-6cda": {
+  "task": "Q8",
+  "condition": "X-claude"
+ },
+ "Q8-131c": {
+  "task": "Q8",
+  "condition": "X-codex"
+ }
+}

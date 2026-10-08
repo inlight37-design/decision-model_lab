@@ -1,0 +1,110 @@
+{
+ "Q1": {
+  "S-codex": {
+   "verdict": "wrong",
+   "answer": "69001"
+  },
+  "S-claude": {
+   "verdict": "correct",
+   "answer": "20001"
+  },
+  "X-codex": {
+   "verdict": "failed",
+   "status": "unavailable"
+  },
+  "X-claude": {
+   "verdict": "correct",
+   "why": "correct value only"
+  }
+ },
+ "Q2": {
+  "S-codex": {
+   "verdict": "correct",
+   "answer": "127/547"
+  },
+  "S-claude": {
+   "verdict": "correct",
+   "answer": "127/547"
+  },
+  "X-codex": {
+   "verdict": "failed",
+   "status": "unavailable"
+  },
+  "X-claude": {
+   "verdict": "correct",
+   "why": "correct value only"
+  }
+ },
+ "Q3": {
+  "S-codex": {
+   "verdict": "correct",
+   "answer": "오류 ([1, 2, 3], 3)"
+  },
+  "S-claude": {
+   "verdict": "correct",
+   "answer": "오류 ([1, 2, 3], 3)"
+  },
+  "X-codex": {
+   "verdict": "correct",
+   "why": "correct value only"
+  },
+  "X-claude": {
+   "verdict": "correct",
+   "why": "correct value only"
+  }
+ },
+ "Q4": {
+  "S-codex": {
+   "verdict": "correct",
+   "answer": "3 끝"
+  },
+  "S-claude": {
+   "verdict": "correct",
+   "answer": "3 끝"
+  },
+  "X-codex": {
+   "verdict": "failed",
+   "status": "unavailable"
+  },
+  "X-claude": {
+   "verdict": "correct",
+   "why": "correct value only"
+  }
+ },
+ "Q5": {
+  "S-codex": {
+   "verdict": "correct",
+   "answer": "1, 3, 0"
+  },
+  "S-claude": {
+   "verdict": "correct",
+   "answer": "1, 3, 0"
+  },
+  "X-codex": {
+   "verdict": "correct",
+   "why": "correct value only"
+  },
+  "X-claude": {
+   "verdict": "correct",
+   "why": "correct value only"
+  }
+ },
+ "Q6": {
+  "S-codex": {
+   "verdict": "correct",
+   "answer": "2:00:00"
+  },
+  "S-claude": {
+   "verdict": "correct",
+   "answer": "2:00:00"
+  },
+  "X-codex": {
+   "verdict": "correct",
+   "why": "correct value only"
+  },
+  "X-claude": {
+   "verdict": "failed",
+   "status": "unavailable"
+  }
+ }
+}
