@@ -166,8 +166,11 @@ class Controller:
                       task_id=None, use_memory=True) -> str:
         return self.planning.propose_split(goal, orchestrator, members, sources, task_id, use_memory)
 
-    def collate(self, run_id: str) -> str:
-        return self.reviews.collate(run_id)
+    def collate(self, run_id: str, choices=None, *, collation_id=None, confirmation=None) -> str:
+        return self.reviews.collate(run_id, choices, collation_id=collation_id, confirmation=confirmation)
+
+    def preview_collation(self, run_id: str, choices=None) -> dict:
+        return self.reviews.preview_collation(run_id, choices)
 
     def acknowledge_collation_unknown(self, collation_id: str) -> None:
         return self.reviews.acknowledge_collation_unknown(collation_id)

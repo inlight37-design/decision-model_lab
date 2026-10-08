@@ -4,9 +4,10 @@ from dataclasses import asdict
 import hashlib
 import json
 import os
+import re
 import time
 import uuid
-from app import collate as collating, cross_review as cross
+from app import collate as collating, cross_review as cross, revisions as revising
 from app.synthesis import label_order
 from app.state import CLI, QUEUED, RUNNING, ACCEPTED, UNKNOWN
 from core import contract
@@ -41,51 +42,167 @@ class ReviewService:
         self.invocations = invocations
         self.repository = repository
 
-    def collate(self, run_id: str) -> str:
+    def preview_collation(self, run_id: str, choices=None) -> dict:
+        """고른 판 취합(GR-3)의 입력 확인. 모델을 부르지 않고 원장·예산을 예약하지 않는다. 새 collation_id로 팀원별
+        판(원래 결과 또는 수정 판)/hash·미해결 지적·누락과 오케스트레이터에 보낼 입력 전문을 만들고, 그 전부를 묶은 확인
+        값(confirmation)을 준다. 시작은 같은 choices·collation_id·확인 값으로 한다."""
+        with self.runtime.lock:
+            return self._collation(run_id, choices, self._collation_key())[0]
+
+
+    @staticmethod
+    def _collation_key() -> str:
+        return f"c{time.strftime('%m%d-%H%M%S')}-{uuid.uuid4().hex}"
+
+
+    def collate(self, run_id: str, choices=None, *, collation_id=None, confirmation=None) -> str:
         """모두 끝난 일반 실행의 팀원 결과를 역할판의 오케스트레이터 모델이 원문 인용으로 취합한다 — 호출 1회.
 
-        오케스트레이터는 전체 목표와 팀원마다 맡긴 일·결과 원문(이름표 T1·T2, 결과가 없으면 "결과 없음")을 받는다. 자료
-        원문은 주지 않는다. 인용은 이 호출이 받은 원문과 글자 그대로 대조하고, 사실 검증은 하지 않는다. 실행 하나에
-        collate.MAX_PER_RUN번까지, 다른 상위 모델 호출과 같은 관문(한 번에 하나·예약·상한·종료 미확인·재시작)을 지난다.
-        판단 완료는 사람이 한다."""
+        오케스트레이터는 전체 목표와 팀원마다 맡긴 일·고른 판의 결과 원문(이름표 T1·T2, 결과가 없으면 "결과 없음")과 그
+        판에 남은 지적을 받는다. 자료 원문은 주지 않는다. 인용은 이 호출이 받은 그 판의 원문과 글자 그대로 대조하고, 사실
+        검증은 하지 않는다. 실행 하나에 collate.MAX_PER_RUN번까지, 다른 상위 모델 호출과 같은 관문(한 번에 하나·예약·
+        상한·종료 미확인·재시작)을 지난다. 판단 완료는 사람이 한다.
+
+        확인 값이 있으면 preview_collation이 준 collation_id·choices로 입력을 다시 만들어 같을 때만 시작한다(GR-3). 확인
+        값이 없으면 모든 팀원의 원래 결과를 모으는 예전 호출이다 — 받아들인 수정 판이 있는 실행에서는 판을 몰래 고르지
+        않도록 거절한다."""
         with self.runtime.lock:
-            if self.runtime.closing:
-                raise ControllerError("controller is shutting down")
-            run = self.repository._run(run_id)
-            roles = json.loads(run["role_config"]) if run["role_config"] else {}
-            orchestrator = roles.get("orchestrator")
-            current_gate = self.repository._gate(run_id)
-            if not current_gate.general or not current_gate.collected:
-                raise ControllerError("결과 모으기는 모두 끝난 일반 팀원 작업에만 부릅니다.")
-            if not orchestrator:
-                raise ControllerError("오케스트레이터 칸이 비어 있습니다(나). 결과는 내가 모읍니다.")
-            if self.store.row("SELECT COUNT(*) AS n FROM collations WHERE run_id = ?", run_id)["n"] >= collating.MAX_PER_RUN:
-                raise ControllerError(f"결과 모으기는 실행 하나에 {collating.MAX_PER_RUN}번까지입니다.")
-            if self.store.row("SELECT 1 FROM collations WHERE run_id = ? AND state = ?", run_id, UNKNOWN):
-                raise ControllerError("끝났는지 모르는 결과 모으기가 있습니다. 종료를 먼저 확인하세요.")
+            if confirmation is None:
+                if choices is not None or collation_id is not None:
+                    raise ControllerError("판을 고른 결과 모으기는 입력 확인 값과 함께 시작합니다.")
+                if self.store.row("SELECT 1 FROM answer_revisions WHERE run_id = ? AND state = ?", run_id, ACCEPTED):
+                    raise ControllerError("수정 판이 있는 실행은 입력 확인에서 팀원마다 쓸 판을 고른 뒤 모읍니다.")
+                manifest, prepared = self._collation(run_id, None, self._collation_key())
+            else:
+                manifest, prepared = self._collation(run_id, choices, collation_id)
+                if not isinstance(confirmation, str) or manifest["confirmation"] != confirmation:
+                    raise ControllerError("확인한 뒤 모을 입력이 바뀌었습니다. 호출하지 않았습니다. 입력 확인을 다시 받으세요.")
+                if self.store.row("SELECT 1 FROM collations WHERE collation_id = ?", manifest["collation_id"]):
+                    raise ControllerError("이미 시작한 결과 모으기입니다. 같은 확인으로 다시 부르지 않습니다.")
             self.invocations._upper_call_gate("결과 모으기는")
-            spec = ParticipantSpec(**orchestrator)
-            self.invocations._cli_card(spec, "오케스트레이터")
-            members, labels, drafts = [], {}, {}
-            for index, answer in enumerate(self.repository._answers(run_id), 1):   # 본문 hash 확인(CR-01)
-                label, member = f"T{index}", ParticipantSpec(**answer["spec"])
-                work, text = self.inputs._checked_assignment(run_id, member.pid), answer["text"]
-                labels[label], drafts[label] = member.pid, text
-                members.append({"label": label, "name": member.label, "task": work["task"], "text": text})
-            text = collating.prompt(run["question"], members)
-            text += self.inputs._run_memory(run)
-            key = f"c{time.strftime('%m%d-%H%M%S')}-{uuid.uuid4().hex}"
+            key, text, orchestrator = manifest["collation_id"], manifest["prompt"], prepared["orchestrator"]
+            selection = json.dumps({k: v for k, v in manifest.items() if k != "prompt"}, sort_keys=True, ensure_ascii=False)
 
             def insert(tx, attempt, kind):
                 tx.execute("INSERT INTO collations (collation_id, run_id, created_at, orchestrator, labels, drafts, prompt, "
-                           "input_sha256, attempt, kind, state) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", key, run_id,
-                           time.time(), json.dumps(orchestrator, ensure_ascii=False), json.dumps(labels),
-                           json.dumps(drafts, ensure_ascii=False), text, hashlib.sha256(text.encode("utf-8")).hexdigest(),
-                           attempt, kind, RUNNING)
+                           "input_sha256, attempt, kind, state, selection, selection_sha256) "
+                           "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", key, run_id,
+                           time.time(), json.dumps(orchestrator, ensure_ascii=False), json.dumps(prepared["labels"]),
+                           json.dumps(prepared["drafts"], ensure_ascii=False), text, manifest["input_sha256"],
+                           attempt, kind, RUNNING, selection, _digest(selection))
 
-            self.execution._start_seat(COLLATE_SEAT, run_id, {"collation_id": key}, spec, text,
+            self.execution._start_seat(COLLATE_SEAT, run_id, {"collation_id": key}, ParticipantSpec(**orchestrator), text,
                              os.path.join(self.runtime.work_root, run_id, f"collation-{key[-12:]}"), insert)
             return key
+
+
+    def _collation(self, run_id: str, choices, key) -> tuple[dict, dict]:
+        """lock 안에서 부른다. 지금 원장으로 결과 모으기 입력을 다시 만든다 — (화면에 보일 확인 명세, 저장할 이름표·원문).
+        같은 key·choices·원장이면 같은 결과다. choices는 {팀원 pid: "original" 또는 그 팀원의 받아들인 수정 판 ID}이고 빠진
+        팀원은 원래 결과다. 원래 답(CR-01)·수정 판·재검토의 hash와 맡긴 일의 고정 입력을 확인하고, 다르면 거절한다."""
+        if self.runtime.closing:
+            raise ControllerError("controller is shutting down")
+        if not isinstance(key, str) or not re.fullmatch(r"c\d{4}-\d{6}-[0-9a-f]{32}", key):
+            raise ControllerError("결과 모으기 ID가 올바르지 않습니다. 입력 확인을 다시 받으세요.")
+        choices = {} if choices is None else choices
+        if not isinstance(choices, dict) or any(not isinstance(k, str) or not isinstance(v, str) for k, v in choices.items()):
+            raise ControllerError('쓸 판은 {팀원: "original" 또는 수정 판 ID}로 고릅니다.')
+        run = self.repository._run(run_id)
+        roles = json.loads(run["role_config"]) if run["role_config"] else {}
+        orchestrator = roles.get("orchestrator")
+        current_gate = self.repository._gate(run_id)
+        if not current_gate.general or not current_gate.collected:
+            raise ControllerError("결과 모으기는 모두 끝난 일반 팀원 작업에만 부릅니다.")
+        if not orchestrator:
+            raise ControllerError("오케스트레이터 칸이 비어 있습니다(나). 결과는 내가 모읍니다.")
+        if self.store.row("SELECT COUNT(*) AS n FROM collations WHERE run_id = ?", run_id)["n"] >= collating.MAX_PER_RUN:
+            raise ControllerError(f"결과 모으기는 실행 하나에 {collating.MAX_PER_RUN}번까지입니다.")
+        if self.store.row("SELECT 1 FROM collations WHERE run_id = ? AND state = ?", run_id, UNKNOWN):
+            raise ControllerError("끝났는지 모르는 결과 모으기가 있습니다. 종료를 먼저 확인하세요.")
+        spec = ParticipantSpec(**orchestrator)
+        self.invocations._cli_card(spec, "오케스트레이터")
+        answers = self.repository._answers(run_id)   # 본문 hash 확인(CR-01)
+        if set(choices) - {item["pid"] for item in answers if item["state"] == ACCEPTED}:
+            raise ControllerError("결과를 낸 팀원의 판만 고릅니다.")
+        members, entries, missing, labels, drafts = [], [], [], {}, {}
+        for index, answer in enumerate(answers, 1):
+            label, member = f"T{index}", ParticipantSpec(**answer["spec"])
+            work = self.inputs._checked_assignment(run_id, member.pid)
+            labels[label] = member.pid
+            entry = {"label": label, "pid": member.pid, "name": member.label, "task": work["task"],
+                     "assignment_sha256": work["input_sha256"]}
+            if answer["state"] != ACCEPTED:
+                drafts[label] = None
+                entries.append({**entry, "version": None, "sha256": None, "bytes": None, "rechecked": None, "open": []})
+                missing.append({"pid": member.pid, "task": work["task"], "reason": "결과 없음"})
+                members.append({"label": label, "name": member.label, "task": work["task"], "text": None})
+                continue
+            pick = choices.get(member.pid, collating.ORIGINAL)
+            if pick == collating.ORIGINAL:
+                text, sha, rechecked = answer["text"], answer["sha256"], None
+                found = self._review_open(run_id, member.pid, sha)
+                version = "원래 결과"
+            else:
+                text, sha, rechecked, found = self._revision_open(run_id, member.pid, pick, answer["sha256"])
+                version = f"수정 판 {pick} · " + ("다른 팀원이 재검토함" if rechecked else "재검토 없음")
+            drafts[label] = text
+            entries.append({**entry, "version": pick, "sha256": sha, "bytes": len(text.encode("utf-8")),
+                            "rechecked": rechecked, "open": found})
+            members.append({"label": label, "name": member.label, "task": work["task"], "text": text, "version": version,
+                            "open": [f"[{item['from']} · {item['status']}] {item['detail']}" for item in found]})
+        footer = self.inputs._run_memory(run)
+        text = collating.prompt(run["question"], members, hashlib.sha256(key.encode("utf-8")).hexdigest()[:12]) + footer
+        data = text.encode("utf-8")
+        manifest = {"contract": collating.SELECTION_CONTRACT, "mode": "general", "run_id": run_id, "collation_id": key,
+                    "result_revision": self.repository._review_state(run_id)[0], "goal": run["question"],
+                    "orchestrator": {"adapter_id": spec.adapter_id, "label": spec.label, "model": spec.model},
+                    "members": entries, "missing": missing, "memory": _digest(footer) if footer else None,
+                    "prompt": text, "input_sha256": hashlib.sha256(data).hexdigest(), "input_bytes": len(data),
+                    "calls": 1, "factual_check": "not_performed", "source_bodies": "not_sent"}
+        manifest["confirmation"] = hashlib.sha256(json.dumps(manifest, sort_keys=True, ensure_ascii=False)
+                                                  .encode("utf-8")).hexdigest()
+        return manifest, {"orchestrator": orchestrator, "labels": labels, "drafts": drafts}
+
+
+    def _review_open(self, run_id: str, pid: str, sha: str) -> list[dict]:
+        """원래 결과에 남은 교차검토 지적. 사람이 아니라고(rejected) 한 지적은 뺀다. 처분이 없으면 보류(unresolved)다."""
+        found = []
+        for review in self.store.rows("SELECT * FROM reviews WHERE run_id = ? AND state = ? ORDER BY seq", run_id, ACCEPTED):
+            targets = json.loads(review["targets"])
+            chosen = {r["finding"]: r["disposition"] for r in self.store.rows(
+                "SELECT finding, disposition FROM review_dispositions WHERE review_id = ?", review["review_id"])}
+            for index, finding in enumerate(json.loads(review["result"])["reply"]["findings"]):
+                target = targets[finding["target"]]
+                status = chosen.get(index, "unresolved")
+                if target["pid"] == pid and target["sha256"] == sha and status != "rejected":
+                    found.append({"from": "review", "id": f"{review['review_id']}:{index}", "status": status,
+                                  "detail": finding["detail"]})
+        return found
+
+
+    def _revision_open(self, run_id: str, pid: str, revision_id: str, original_sha: str):
+        """고른 수정 판의 (본문, sha256, 재검토 여부, 남은 지적). 판·근거·재검토의 hash가 기록과 다르면 거절한다."""
+        row = self.store.row("SELECT * FROM answer_revisions WHERE revision_id = ? AND run_id = ?", revision_id, run_id)
+        reply = (json.loads(row["result"] or "{}").get("reply") if row is not None else None) or {}
+        snapshot = json.loads(row["snapshot"]) if row is not None else {}
+        if (row is None or row["pid"] != pid or row["state"] != ACCEPTED or not isinstance(reply.get("answer"), str)
+                or _digest(reply["answer"]) != reply.get("sha256") or revising.digest(revising.encoded(snapshot)) != row["snapshot_sha256"]
+                or snapshot.get("mode") != "general" or snapshot["original"]["sha256"] != original_sha):
+            raise ControllerError("그 팀원의 받아들인 수정 판이 아니거나 기록된 hash와 맞지 않습니다.")
+        found = [{"from": "revision", "id": item["finding"], "status": item["status"], "detail": item["detail"]}
+                 for item in reply["responses"] if item["status"] != "addressed"]
+        rechecked = False
+        for check in self.store.rows("SELECT * FROM revision_checks WHERE revision_id = ? AND state = ? "
+                                     "ORDER BY created_at, check_id", revision_id, ACCEPTED):
+            if check["answer_sha256"] != reply["sha256"] or _digest(check["answer"]) != reply["sha256"]:
+                raise ControllerError("재검토가 다른 판을 가리킵니다.")
+            checked = json.loads(check["result"])["reply"]
+            rechecked = True
+            found += [{"from": "recheck", "id": item["finding"], "status": item["status"], "detail": item["detail"]}
+                      for item in checked["assessments"] if item["status"] != "addressed"]
+            found += [{"from": "recheck", "id": f"{check['check_id']}:{index}", "status": item["kind"],
+                       "detail": item["detail"]} for index, item in enumerate(checked["findings"])]
+        return reply["answer"], reply["sha256"], rechecked, found
 
 
     def acknowledge_collation_unknown(self, collation_id: str) -> None:

@@ -98,6 +98,7 @@ flowchart TD
 | `GET /api/runs/{id}/memory` | 그 실행에서 고정한 pack·선택 근거·출처 가용성. 지금 다시 선택하지 않음 |
 | `GET/POST /api/templates`, `GET /api/templates/{id}` | 설정 목록/저장/복원. 목록은 자료 본문을 읽지 않고 복원은 현재 카드·모델을 재검사 |
 | `POST /api/templates/{id}/delete`, `GET /api/templates/{id}/export`, `POST /api/templates/import` | 확인한 템플릿 삭제, 해시 결속 파일 내보내기/가져오기. 실행·관측·예산은 옮기지 않음 |
+| `POST /api/runs/{id}/collate/preview`, `POST /api/runs/{id}/collate` | 팀원별 쓸 판(원래 결과·받아들인 수정 판)의 입력 확인과 같은 확인 값으로만 결과 모으기 시작(GR-3). 확인 값 없는 예전 호출은 수정 판이 없을 때만 원래 결과로 |
 | `POST /api/runs/{id}/revisions/preview`, `POST /api/runs/{id}/revisions` | 수정 근거·작성자·입력 미리보기와 hash 확인 후 호출 |
 | `POST /api/revisions/{id}/recheck` | 해당 판을 원래 다른 CLI 팀원에게 재검토 요청 |
 | `POST /api/{revisions,rechecks}/{id}/acknowledge` | 자손 종료를 직접 확인한 사용자가 unknown 자리 해제. 재호출·환불 없음 |
@@ -105,7 +106,7 @@ flowchart TD
 | `POST /api/sources/extract` | PDF 파일 또는 공개 URL의 선택 범위를 추출. 원장 쓰기·실행 없음 |
 | `GET /api/runs/{id}/sources/{name}` | 해시 확인 후 저장한 자료 사본과 추출 출처 조회. 입력 자료이며 모델 답은 반환하지 않음 |
 
-schema 17은 기존 템플릿·수정/재검토 표에 선택적 `task_plans`를 더하고, 18은 `reviews`에 일반 검토의 확인한 입력(`snapshot`·`snapshot_sha256`, 옛 행은 NULL)을 더한다. 기존 실행 행/event 의미는 유지한다. 역할별 저장 adapter가 공통 Invocation을 만들며 manual·미시작 review·모델 없는 합성을 호출로 발명하지 않는다. 전역 event revision이나 command receipt table은 아직 없다.
+schema 17은 기존 템플릿·수정/재검토 표에 선택적 `task_plans`를 더하고, 18은 `reviews`에 일반 검토의 확인한 입력(`snapshot`·`snapshot_sha256`, 옛 행은 NULL)을, 19는 `collations`에 고른 판의 확인한 선택(`selection`·`selection_sha256`, 옛 행은 NULL = 원래 결과)을 더한다. 기존 실행 행/event 의미는 유지한다. 역할별 저장 adapter가 공통 Invocation을 만들며 manual·미시작 review·모델 없는 합성을 호출로 발명하지 않는다. 전역 event revision이나 command receipt table은 아직 없다.
 
 계획은 목표·완료 기준·선행 작업과 자체 revision을 가진다. 편집은 예상 판을 조건으로 쓰고 사건에 새 판을 남긴다. 선행 작업은 현재 계획에 속한 실행들의 사람 판단 완료와 진행/종료 미확정 부재로 준비 상태를 계산한다. 계획 없는 기존 작업은 기존 전체 타임라인의 완료 기준을 유지한다. 순환/누락은 거절한다. 입력 미리보기와 실제 생성 거래에서 계획/선행 결과를 다시 검사하고 role_config에 그 판·근거 실행 ID/결과 판을 고정한다. 다듬기·분담 제안도 시작 전에 조건을 본다. 이미 시작한 실행은 선행 조건이 바뀌어도 소급 취소하거나 입력을 고치지 않는다.
 
@@ -128,7 +129,7 @@ PDF는 로컬 Poppler를 shell 없이 호출하며 원본 1 MiB, 한 번에 20�
 - 구독 경로·기기 관측·최종 plan 고정, 전체 tree/input/native outcome 수용 의미를 유지한다.
 - 격리 초안과 자동 기억의 역할 범위, 같은 원장의 호출 상한·unknown 슬롯, 한 writer를 유지한다.
 - 취소·시작 실패·결과 저장 실패·재시작·늦은 결과를 분리하고 소비 기록을 지우지 않는다.
-- schema 18 이행 전에 자동 backup을 만든다. 이전 버전 코드는 새 원장을 거절한다. 실제 호출 뒤 코드·DB를 되돌릴 때 원장을 과거 backup으로 덮어 소비 기록을 지우지 않는다.
+- schema 19 이행 전에 자동 backup을 만든다. 이전 버전 코드는 새 원장을 거절한다. 실제 호출 뒤 코드·DB를 되돌릴 때 원장을 과거 backup으로 덮어 소비 기록을 지우지 않는다.
 
 새 기능을 넣을 때는 담당 service와 순수 형식 모듈에 넣고, 실제 실행은 coordinator와 InvocationLedger를 통과시킨다. 공개 경로는 PublicQueries를 재사용한다. 기존 회귀와 [새 경계 검사](../tests/test_foundation.py), [전송 검사](../tests/test_api_client.py)가 기준이며, 실제 기기 계약을 바꾸면 PC 관측을 별도로 갖춘다.
 
