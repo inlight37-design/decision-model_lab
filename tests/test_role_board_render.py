@@ -210,6 +210,10 @@ assert.ok(all(cisle).every(x=>x.kids.every(k=>typeof k!=="object"||isNode(k))));
 let ctext=text(cisle);
 for (const piece of ["둘 다 도입 찬성","원문 일치","T1 CLI A","찬성한다","원문에 없음","T2 CLI Z","원문에 없는 추가 주장",
   "겹침 X","빈 곳 Y","다음 Z","사실 검증 안 함","(2/2)"]) assert.ok(ctext.includes(piece), piece);
+// 글자 그대로 맞아도 너무 짧은 인용은 근거가 아니다 — 배지와 요약 줄에 그렇게 쓴다
+ctext=text(collationIsland(crun([{...gathered,reply:{...gathered.reply,claims:[{statement:"짧은 근거",support:"unsupported_addition",
+  quotes:[{member:"T1",text:"A",source_check:"exact_match",substantive:false}]}],checks:{quotes:1,exact_matches:1,short_matches:1,unsupported_additions:1}}}])));
+assert.ok(ctext.includes("원문 일치 · 너무 짧아 근거 아님") && ctext.includes("원문 일치 1개(그중 너무 짧아 근거 아님 1개)"), ctext);
 ctext=text(collationIsland(crun([gathered,gathered])));
 assert.ok(!ctext.includes("(3/2)") && !ctext.includes("호출 1회"));
 ctext=text(collationIsland(crun([{collation_id:"c2",state:"unknown",labels:{}}])));
