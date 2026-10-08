@@ -66,7 +66,7 @@
 
 일은 `card` 라벨 이슈에서 [협업 규칙](docs/COLLABORATION.md) 3절의 보드 규칙대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #NNN](https://github.com/inlight37-design/decision-model_lab/pull/NNN)(`claude/p1-review-fixes-sthmsi`) — 기억 항목이 사람의 판단이 본 결과 판과 현재 판단 여부를 싣고, 판단 뒤 새 결과가 나오면 옛 메모를 "이전 결과 판에 대한 판단"으로 표시한다(CR-02). 남은 P1 WF-02·WF-01은 같은 브랜치의 다음 PR로 다룬다. CI·병합 상태는 PR에서 확인한다.
+- **이 판을 들인 PR:** [PR #193](https://github.com/inlight37-design/decision-model_lab/pull/193)(`claude/p1-review-fixes-sthmsi`) — 기억 항목이 사람의 판단이 본 결과 판과 현재 판단 여부를 싣고, 판단 뒤 새 결과가 나오면 옛 메모를 "이전 결과 판에 대한 판단"으로 표시한다(CR-02). 남은 P1 WF-02·WF-01은 같은 브랜치의 다음 PR로 다룬다. CI·병합 상태는 PR에서 확인한다.
 
 | 사용자만 할 수 있는 것 | 지금 |
 |---|---|
