@@ -15,7 +15,8 @@ import re
 from typing import Any
 from app.report import SCHEMA as DRAFT_SCHEMA, EXTRACTED_SCHEMA
 # 상위 자리들이 함께 쓰는 조각. boundary·failed_reply·MAX_RAW_CHARS는 이 모듈의 이름으로도 쓴다(시험).
-from app.reply import MAX_RAW_CHARS, block, boundary, check_items, check_text, failed_reply, json_object  # noqa: F401
+from app.reply import (MAX_RAW_CHARS, block, boundary, check_items, check_text, failed_reply, json_object,  # noqa: F401
+                       substantive)
 
 SCHEMA = "a1-mock-synthesis/1"
 MODEL_SCHEMA = "a1-model-synthesis/1"
@@ -170,12 +171,13 @@ def check_model_synthesis(text: str, report: dict, labels: dict[str, str], synth
     """합성자의 JSON을 검사한다. 인용은 이름표가 가리키는 초안에 글자 그대로 있어야 원문 일치다.
 
     일치하지 않는 인용도 지우지 않고 not_found로 남기며, 일치하는 인용이 없는 주장은 원문에 없는 추가 주장이다.
+    일치해도 너무 짧은 인용(substantive가 False)은 주장을 받치지 못한다.
     모든 주장은 미해결이고 사실 검사는 하지 않았다. 원문 위치는 compare_claims로 한 번 더 대조한다.
     """
     sources = _sources(report)
     raw = _json_object(text)
     run_id = report["source"]["run_id"]
-    counts = {"quotes": 0, "exact_matches": 0}
+    counts = {"quotes": 0, "exact_matches": 0, "short_matches": 0}
     matched: list[dict] = []
 
     def quotes(value: Any) -> list[dict]:
@@ -193,11 +195,12 @@ def check_model_synthesis(text: str, report: dict, labels: dict[str, str], synth
                 checked.append({"draft": item["draft"], "pid": pid, "text": quote, "source_check": "not_found"})
                 continue
             counts["exact_matches"] += 1
+            counts["short_matches"] += not substantive(quote)
             reference = {"run_id": run_id, "pid": pid, "sha256": sources[pid]["draft_sha256"],
                          "start": start, "end": start + len(quote)}
             matched.append({"id": f"Q{len(matched) + 1:03}", "text": quote, "references": [reference]})
             checked.append({"draft": item["draft"], "pid": pid, "text": quote, "source_check": "exact_match",
-                            "reference": reference})
+                            "substantive": substantive(quote), "reference": reference})
         return checked
 
     def entry(item: Any, key: str, prefix: str, index: int) -> dict:
@@ -205,7 +208,7 @@ def check_model_synthesis(text: str, report: dict, labels: dict[str, str], synth
             raise SynthesisError(f"each {prefix} item must be an object")
         checked = quotes(item.get("quotes"))
         return {"id": f"{prefix}{index:03}", key: _text(item.get(key), key), "quotes": checked,
-                "support": "quoted" if any(q["source_check"] == "exact_match" for q in checked)
+                "support": "quoted" if any(q["source_check"] == "exact_match" and q["substantive"] for q in checked)
                 else "unsupported_addition", "disposition": "unresolved", "factual_check": "not_performed"}
 
     claims = [entry(item, "statement", "S", index) for index, item in enumerate(_items(raw.get("claims"), "claims"), 1)]

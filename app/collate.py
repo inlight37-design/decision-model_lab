@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.reply import block, boundary, check_items, check_text, json_object
+from app.reply import block, boundary, check_items, check_text, json_object, substantive
 
 # 지시문의 첫 줄. 모의 CLI(fake_cli.py)가 이 줄로 결과 모으기 요청을 알아본다 — 두 곳을 같이 바꾼다.
 MARKER = "[결과 모으기 요청]"
@@ -61,7 +61,7 @@ def check(text: str, drafts: dict[str, str | None]) -> dict[str, Any]:
     raw = json_object(text, error=CollateError, who="orchestrator", what="collation")
     if set(raw) - {"claims", "overlaps", "gaps", "next"}:
         raise CollateError("the collation may only have claims, overlaps, gaps and next")
-    counts = {"quotes": 0, "exact_matches": 0}
+    counts = {"quotes": 0, "exact_matches": 0, "short_matches": 0}
     claims = []
     for item in _list(raw.get("claims"), "claims", MAX_CLAIMS):
         if not isinstance(item, dict) or set(item) - {"statement", "quotes"}:
@@ -75,9 +75,11 @@ def check(text: str, drafts: dict[str, str | None]) -> dict[str, Any]:
             found = source is not None and quote["text"] in source   # 공백까지 원래 인용 그대로 대조한다
             counts["quotes"] += 1
             counts["exact_matches"] += found
-            quotes.append({"member": quote["member"], "text": said, "source_check": "exact_match" if found else "not_found"})
+            counts["short_matches"] += found and not substantive(quote["text"])
+            quotes.append({"member": quote["member"], "text": said, "source_check": "exact_match" if found else "not_found",
+                           **({"substantive": substantive(quote["text"])} if found else {})})
         claims.append({"statement": _text(item.get("statement"), "statement"), "quotes": quotes,
-                       "support": "quoted" if any(q["source_check"] == "exact_match" for q in quotes)
+                       "support": "quoted" if any(q.get("substantive") for q in quotes)
                        else "unsupported_addition"})
     if not claims:
         raise CollateError("the collation has no claims")

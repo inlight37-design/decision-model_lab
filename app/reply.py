@@ -13,6 +13,13 @@ import secrets
 from typing import Any, Iterable
 
 MAX_RAW_CHARS = 65536
+# 원문과 글자 그대로 일치해도 글자·숫자가 이보다 적은 인용("다", ".", "A")은 어느 초안에나 있어 근거가 되지 못한다.
+MIN_QUOTE_CHARS = 4
+
+
+def substantive(quote: str) -> bool:
+    """인용이 주장을 받칠 만큼 긴가. 글자·숫자만 센다(공백·문장부호 제외). 원문 일치 여부와는 따로 본다."""
+    return sum(ch.isalnum() for ch in quote) >= MIN_QUOTE_CHARS
 
 
 def boundary(texts: Iterable[str], nonce: str | None = None) -> str:
