@@ -66,7 +66,7 @@
 
 일은 `card` 라벨 이슈에서 [협업 규칙](docs/COLLABORATION.md) 3절의 보드 규칙대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #PRNUM](https://github.com/inlight37-design/decision-model_lab/pull/PRNUM)(`claude/gr-1-cross-review-wlwknv`) — 교차검토·결과 모으기가 받은 답 본문(자기 답 포함)과 맡긴 일을 기록한 hash와 맞추고 어긋나면 호출 없이 거절한다(CR-01). 최종 CI와 병합 상태는 PR에서 확인한다.
+- **이 판을 들인 PR:** [PR #188](https://github.com/inlight37-design/decision-model_lab/pull/188)(`claude/gr-1-cross-review-wlwknv`) — 교차검토·결과 모으기가 받은 답 본문(자기 답 포함)과 맡긴 일을 기록한 hash와 맞추고 어긋나면 호출 없이 거절한다(CR-01). 최종 CI와 병합 상태는 PR에서 확인한다.
 
 | 사용자만 할 수 있는 것 | 지금 |
 |---|---|
