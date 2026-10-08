@@ -66,7 +66,7 @@
 
 일은 `card` 라벨 이슈에서 [협업 규칙](docs/COLLABORATION.md) 3절의 보드 규칙대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** PR_LINK(`claude/main-pc-reobserve-20261008`) — 주 PC `main-pc-wsl`을 SETUP 4절대로 다시 관측해 [새 기록](docs/reviews/2026-10-09-main-pc-reobserve/README.md)을 만들고 이 PC에 등록했다(Claude 2·Codex 3, 모두 기대대로, 2026-11-09부터 만료). CLI 판·참여자 계획은 그대로다. 최종 CI와 병합 상태는 PR에서 확인한다.
+- **이 판을 들인 PR:** [PR #197](https://github.com/inlight37-design/decision-model_lab/pull/197)(`claude/main-pc-reobserve-20261008`) — 주 PC `main-pc-wsl`을 SETUP 4절대로 다시 관측해 [새 기록](docs/reviews/2026-10-09-main-pc-reobserve/README.md)을 만들고 이 PC에 등록했다(Claude 2·Codex 3, 모두 기대대로, 2026-11-09부터 만료). CLI 판·참여자 계획은 그대로다. 최종 CI와 병합 상태는 PR에서 확인한다.
 
 | 사용자만 할 수 있는 것 | 지금 |
 |---|---|
