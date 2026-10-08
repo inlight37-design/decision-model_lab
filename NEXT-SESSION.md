@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-10-08** · 작성 세션: claude(웹 컨테이너·GitHub — 외부 프로젝트 mixdog 검토, 사용자 PC·CLI 미확인, 실제 모델 호출 없음) · 브랜치 `claude/mixdog-review-akff0a`.
+최종 갱신 **2026-10-08** · 작성 세션: claude(웹 컨테이너, 사용자 PC·CLI 보지 않음 — 합성 형식 실패 수정, 모델 호출 없음) · 브랜치 `claude/synthesis-format-fix-r43a3o`.
 
 이 파일은 **지금 상태와 다음 일만** 담는다. 끝난 일의 경위는 PR·git 이력과 날짜가 붙은 기록에 있고, 옛 판은 [docs/handoff/](docs/handoff/README.md)에 있다. **3절에는 진행 중인 일과 "이 판을 들인 PR" 한 줄만 둔다** — 새 PR은 그 줄을 자기 PR로 바꾸고, 병합 전에도 뒤에도 맞는 말만 쓴다("병합했다"고 미리 적지 않는다). 크기 상한과 3절의 모양은 CI가 본다. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있는 규칙은 여기 다시 적지 않는다 — 쌓임을 막는 원칙은 협업 규칙 7절이다.
 
@@ -66,7 +66,7 @@
 
 일은 `card` 라벨 이슈에서 [협업 규칙](docs/COLLABORATION.md) 3절의 보드 규칙대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #187](https://github.com/inlight37-design/decision-model_lab/pull/187)(`claude/mixdog-review-akff0a`) — 외부 코딩 에이전트 mixdog의 기능·코드 검토 기록([검토](docs/reviews/2026-10-08-mixdog/README.md))만 더한다. 제품 기능 변경은 없으며 최종 CI와 병합 상태는 PR에서 확인한다.
+- **이 판을 들인 PR:** [PR #190](https://github.com/inlight37-design/decision-model_lab/pull/190)(`claude/synthesis-format-fix-r43a3o`) — 합본 평가의 형식 실패를 고친다: 합성이 질문의 출력 형식 지시를 따르지 않게 하고, 인용의 escape 누락은 고쳐 읽은 뒤 원문과 대조한다. 실제 호출로는 확인하지 않았다. 최종 CI와 병합 상태는 PR에서 확인한다.
 
 | 사용자만 할 수 있는 것 | 지금 |
 |---|---|

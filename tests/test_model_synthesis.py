@@ -157,6 +157,15 @@ class CheckTests(unittest.TestCase):
             with self.subTest(bad=bad[:40]), self.assertRaises(s.SynthesisError):
                 s.check_model_synthesis(bad, report(), labels, {})
 
+    def test_prompt_keeps_the_questions_output_format_out_of_the_synthesis(self):
+        # 합본 평가 Q4: 질문의 "마지막 줄에 답:" 지시를 따라 합성 대신 "답: 3 끝"만 돌려줬다
+        prompt = s.model_prompt(report())[0]
+        self.assertIn("질문에 든 출력 형식 지시", prompt)
+        self.assertIn("너는 그 지시를 따르지 않고 아래 JSON 모양만 출력한다", prompt)
+        self.assertIn("백슬래시는 \\\\로 쓴다", prompt)
+        with self.assertRaises(s.SynthesisError):   # 그래도 그렇게 답하면 합성이 아니다 — 고쳐 읽지 않는다
+            s.check_model_synthesis("답: 3 끝", report(), {"D1": "claude", "D2": "codex"}, {})
+
     def test_failed_reply_keeps_the_whole_digest_and_a_bounded_text(self):
         text = '앞말 {"claims": ["\\(x\\)"]}'
         short = s.model_unavailable(report(), {"started": True}, "the synthesizer did not return one JSON object",
@@ -369,3 +378,80 @@ class HttpTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+# 합본 평가(docs/experiments/2026-10-08-synthesis-eval/RESULTS.md "형식 실패")의 원문 모양. 실패한 원문은 저장소 밖
+# 결과 JSON에 있어 여기서는 같은 모양으로 다시 만든다: 초안의 LaTeX·코드를 escape 없이 JSON 문자열에 옮긴 답.
+LATEX = {"codex": "3^1000을 10^5로 나눈 나머지: \\(3^{1000} \\bmod 10^5\\)을 계산하면 69001이다.\n답: 69001",
+         "claude": "반복 제곱으로 구하면 \\(127/547\\)과 무관하게 20001이다.\n답: 20001"}
+CODE = {"claude": '결과는 print("hello")로 찍는다.\n답: hello', "codex": "출력은 hello다.\n답: hello"}
+LATEX_REPLY = (r'{"claims": [{"statement": "두 초안의 값이 갈린다", "quotes": ['
+               r'{"draft": "D1", "text": "\(3^{1000} \bmod 10^5\)을 계산하면 69001이다."}, '
+               r'{"draft": "D2", "text": "\(127/547\)과 무관하게 20001이다."}]}], '
+               r'"disagreements": [], "strongest_counterexample": null, "unresolved": [], '
+               r'"recommendation": "어느 쪽도 단정하지 말라"}')
+CODE_REPLY = ('{"claims": [{"statement": "출력은 hello다", "quotes": ['
+              '{"draft": "D1", "text": "print("hello")로 찍는다"}]}], "disagreements": [], '
+              '"strongest_counterexample": null, "unresolved": [], "recommendation": "hello"}')
+
+
+class FormatRepairTests(unittest.TestCase):
+    """escape 없이 옮긴 인용(평가 Q1·Q2·Q6)을 고쳐 읽되, 인용은 여전히 초안 원문과 글자 그대로 대조한다."""
+
+    def test_the_fixtures_fail_strict_json(self):
+        for text in (LATEX_REPLY, CODE_REPLY):
+            with self.subTest(text=text[:40]), self.assertRaises(ValueError):
+                json.loads(text)
+
+    def test_unescaped_latex_quotes_are_read_and_matched_to_the_draft(self):
+        labels = {"D1": "codex", "D2": "claude"}
+        result = s.check_model_synthesis(LATEX_REPLY, report(LATEX), labels, {})
+        first, second = result["claims"][0]["quotes"]
+        self.assertEqual(first["text"], "\\(3^{1000} \\bmod 10^5\\)을 계산하면 69001이다.")
+        self.assertEqual(first["reply_text"], "\\(3^{1000} \bmod 10^5\\)을 계산하면 69001이다.")  # \b가 백스페이스로 읽혔다
+        self.assertEqual(second["text"], "\\(127/547\\)과 무관하게 20001이다.")
+        self.assertNotIn("reply_text", second)
+        for quote in (first, second):
+            ref = quote["reference"]
+            self.assertEqual(LATEX[quote["pid"]][ref["start"]:ref["end"]], quote["text"])
+        checks = result["checks"]
+        self.assertEqual((checks["exact_matches"], checks["backslash_matches"]), (2, 1))
+        self.assertEqual(checks["format_repairs"], {"invalid_escape": 4})
+        self.assertEqual(result["claims"][0]["support"], "quoted")
+        self.assertIn("JSON 형식 오류 4곳을 고쳐 읽었습니다", " ".join(result["card"]["unresolved"]))
+
+    def test_unescaped_quotes_inside_a_code_quote_are_read(self):
+        labels = {"D1": "claude", "D2": "codex"}
+        result = s.check_model_synthesis(CODE_REPLY, report(CODE), labels, {})
+        quote = result["claims"][0]["quotes"][0]
+        self.assertEqual((quote["text"], quote["source_check"]), ('print("hello")로 찍는다', "exact_match"))
+        self.assertEqual(result["checks"]["format_repairs"], {"unescaped_quote": 2})
+
+    def test_a_repaired_quote_still_has_to_be_in_the_draft(self):
+        labels = {"D1": "claude", "D2": "codex"}
+        text = CODE_REPLY.replace('print("hello")로 찍는다', 'echo("hello")로 찍는다')
+        result = s.check_model_synthesis(text, report(CODE), labels, {})
+        self.assertEqual(result["claims"][0]["quotes"][0]["source_check"], "not_found")
+        self.assertEqual(result["claims"][0]["support"], "unsupported_addition")
+
+    def test_a_control_character_that_is_really_in_the_draft_is_not_rewritten(self):
+        labels = {"D1": "claude", "D2": "codex"}
+        body = {"claims": [{"statement": "x", "quotes": [{"draft": "D1", "text": "결론은 A다.\n근거"}]}]}
+        result = s.check_model_synthesis(json.dumps(body, ensure_ascii=False), report(), labels, {})
+        quote = result["claims"][0]["quotes"][0]
+        self.assertEqual((quote["text"], result["checks"]["backslash_matches"]), ("결론은 A다.\n근거", 0))
+        self.assertEqual(result["checks"]["format_repairs"], {})
+
+    def test_repair_keeps_rejecting_duplicate_keys_and_is_off_for_other_roles(self):
+        dup = '{"claims": [{"statement": "a\\(", "statement": "b", "quotes": []}]}'
+        with self.assertRaises(s.SynthesisError):
+            s.check_model_synthesis(dup, report(), {"D1": "claude"}, {})
+        with self.assertRaises(ValueError):   # repairs를 넘기지 않으면 예전처럼 거절한다
+            s.json_object(LATEX_REPLY, error=ValueError, who="reviewer", what="review")
+
+    def test_repair_json_only_touches_string_contents(self):
+        from app.reply import repair_json
+        self.assertEqual(repair_json('{"a": ["x"], "b": {"c": "y"}}'), ('{"a": ["x"], "b": {"c": "y"}}', {}))
+        fixed, found = repair_json('{"a": "줄\n바꿈\t\\u12"}')   # 날것의 개행·탭, 숫자 넷이 아닌 \u
+        self.assertEqual(json.loads(fixed)["a"], "줄\n바꿈\t\\u12")
+        self.assertEqual(found, {"invalid_escape": 1, "raw_control": 2})

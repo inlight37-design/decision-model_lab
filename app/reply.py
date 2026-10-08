@@ -39,11 +39,69 @@ def block(label: str, nonce: str, body: str) -> str:
     return f"<<<{label} 시작 {nonce}>>>\n{body}\n<<<{label} 끝 {nonce}>>>"
 
 
-def json_object(text: str, *, error: type[ValueError], who: str, what: str) -> dict:
+_VALID_ESCAPES = '"\\/bfnrtu'
+_HEX = set("0123456789abcdefABCDEF")
+_CONTROL = {"\n": "\\n", "\r": "\\r", "\t": "\\t"}
+
+
+def _closes(text: str, index: int) -> bool:
+    """문자열 안의 큰따옴표(text[index])가 문자열을 닫는가. 뒤에 칸 구분(: , ] })이 와야 닫는다."""
+    rest = text[index + 1:].lstrip()
+    if not rest or rest[0] in ":]}":
+        return True
+    return rest[0] == "," and rest[1:].lstrip()[:1] in ('"', "{", "[", "]", "}")
+
+
+def repair_json(text: str) -> tuple[str, dict[str, int]]:
+    """원문을 글자 그대로 옮기다 깨진 JSON 문자열을 고친다(합본 평가 2026-10-08의 형식 실패).
+
+    문자열 안에서만 고친다: JSON에 없는 escape(`\\(`, `\\s` 같은)는 백슬래시를 하나 더 붙이고, 칸 구분이
+    뒤따르지 않는 큰따옴표는 escape하고, 날것의 개행·탭은 escape 표기로 바꾼다. 고친 곳의 수를 종류별로 돌려준다.
+    고친 글이 맞는 해석이라는 보장은 없다 — 인용은 부른 쪽이 초안 원문과 다시 대조한다.
+    """
+    out: list[str] = []
+    counts = {"invalid_escape": 0, "unescaped_quote": 0, "raw_control": 0}
+    inside = False
+    index = 0
+    while index < len(text):
+        ch = text[index]
+        if not inside:
+            inside = ch == '"'
+            out.append(ch)
+        elif ch == "\\":
+            nxt = text[index + 1:index + 2]
+            if nxt and nxt in _VALID_ESCAPES and (nxt != "u" or set(text[index + 2:index + 6]) <= _HEX
+                                                    and len(text[index + 2:index + 6]) == 4):
+                out.append(ch + nxt)
+                index += 2
+                continue
+            counts["invalid_escape"] += 1
+            out.append("\\\\")
+        elif ch == '"':
+            if _closes(text, index):
+                inside = False
+                out.append(ch)
+            else:
+                counts["unescaped_quote"] += 1
+                out.append('\\"')
+        elif ch in _CONTROL:
+            counts["raw_control"] += 1
+            out.append(_CONTROL[ch])
+        else:
+            out.append(ch)
+        index += 1
+    return "".join(out), {key: value for key, value in counts.items() if value}
+
+
+def json_object(text: str, *, error: type[ValueError], who: str, what: str,
+                repairs: dict[str, int] | None = None) -> dict:
     """답에서 JSON 객체 하나를 찾는다. 통째로, 코드 울타리 안, 첫 { 부터 마지막 } 까지 순서로 본다.
 
     who는 답한 쪽(synthesizer·supervisor·orchestrator·reviewer), what은 그 답의 이름(synthesis·proposal·…)이다 —
     둘 다 오류 문구에만 쓴다. 중복 키의 마지막 값만 남기면 반례·인용이 조용히 사라지므로 중첩 객체까지 거절한다.
+
+    repairs에 dict를 넘기면, 어느 후보도 그대로 읽히지 않을 때 같은 순서로 repair_json을 거쳐 한 번 더 보고
+    고친 곳의 수를 거기에 채운다. 넘기지 않으면 고치지 않는다.
     """
     def unique(pairs: list[tuple[str, Any]]) -> dict:
         result = {}
@@ -60,15 +118,21 @@ def json_object(text: str, *, error: type[ValueError], who: str, what: str) -> d
     start, end = text.find("{"), text.rfind("}")
     if 0 <= start < end:
         candidates.append(text[start:end + 1])
-    for candidate in candidates:
-        try:
-            value = json.loads(candidate, object_pairs_hook=unique)
-        except error:
-            raise   # 모호한 객체에서 다른 후보를 골라 근거를 조용히 버리지 않는다.
-        except (ValueError, RecursionError):
-            continue
-        if isinstance(value, dict):
-            return value
+    for fix in (False, True) if repairs is not None else (False,):
+        for candidate in candidates:
+            found: dict[str, int] = {}
+            if fix:
+                candidate, found = repair_json(candidate)
+            try:
+                value = json.loads(candidate, object_pairs_hook=unique)
+            except error:
+                raise   # 모호한 객체에서 다른 후보를 골라 근거를 조용히 버리지 않는다.
+            except (ValueError, RecursionError):
+                continue
+            if isinstance(value, dict):
+                if repairs is not None:
+                    repairs.update(found)
+                return value
     raise error(f"the {who} did not return one JSON object")
 
 
