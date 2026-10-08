@@ -66,7 +66,7 @@
 
 일은 `card` 라벨 이슈에서 [협업 규칙](docs/COLLABORATION.md) 3절의 보드 규칙대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #NNN](https://github.com/inlight37-design/decision-model_lab/pull/NNN)(`claude/p1-review-fixes-sthmsi`) — 새 작업 창에서 실행에 쓰지 않은 다듬기·분담 제안을 기존 ID로 다시 열고(WF-02), 같은 live 폴더의 이전 원장을 읽기 전용으로 찾아 작업의 공개 결과를 인계 자료로 붙인다(WF-01). 이전 원장의 종료 미확인은 홈에 알린다. 모의·HTTP·JS 검사만 했다. CI·병합 상태는 PR에서 확인한다.
+- **이 판을 들인 PR:** [PR #196](https://github.com/inlight37-design/decision-model_lab/pull/196)(`claude/p1-review-fixes-sthmsi`) — 새 작업 창에서 실행에 쓰지 않은 다듬기·분담 제안을 기존 ID로 다시 열고(WF-02), 같은 live 폴더의 이전 원장을 읽기 전용으로 찾아 작업의 공개 결과를 인계 자료로 붙인다(WF-01). 이전 원장의 종료 미확인은 홈에 알린다. 모의·HTTP·JS 검사만 했다. CI·병합 상태는 PR에서 확인한다.
 
 | 사용자만 할 수 있는 것 | 지금 |
 |---|---|
