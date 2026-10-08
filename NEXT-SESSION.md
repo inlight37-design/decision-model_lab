@@ -66,7 +66,7 @@
 
 일은 `card` 라벨 이슈에서 [협업 규칙](docs/COLLABORATION.md) 3절의 보드 규칙대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #PRNUM](https://github.com/inlight37-design/decision-model_lab/pull/PRNUM)(`claude/synthesis-format-fix-r43a3o`) — 합본 평가의 형식 실패를 고친다: 합성이 질문의 출력 형식 지시를 따르지 않게 하고, 인용의 escape 누락은 고쳐 읽은 뒤 원문과 대조한다. 실제 호출로는 확인하지 않았다. 최종 CI와 병합 상태는 PR에서 확인한다.
+- **이 판을 들인 PR:** [PR #190](https://github.com/inlight37-design/decision-model_lab/pull/190)(`claude/synthesis-format-fix-r43a3o`) — 합본 평가의 형식 실패를 고친다: 합성이 질문의 출력 형식 지시를 따르지 않게 하고, 인용의 escape 누락은 고쳐 읽은 뒤 원문과 대조한다. 실제 호출로는 확인하지 않았다. 최종 CI와 병합 상태는 PR에서 확인한다.
 
 | 사용자만 할 수 있는 것 | 지금 |
 |---|---|
