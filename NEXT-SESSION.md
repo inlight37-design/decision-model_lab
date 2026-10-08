@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-10-08** · 작성 세션: claude(웹 컨테이너, 사용자 PC·CLI 보지 않음 — 기억 속 과거 판단의 결과 판 표시(CR-02), 모델 호출 없음) · 브랜치 `claude/p1-review-fixes-sthmsi`.
+최종 갱신 **2026-10-08** · 작성 세션: claude(웹 컨테이너, 사용자 PC·CLI 보지 않음 — 받은 다듬기·분담 다시 열기(WF-02)와 이전 원장에서 이어가기(WF-01), 모델 호출 없음) · 브랜치 `claude/p1-review-fixes-sthmsi`.
 
 이 파일은 **지금 상태와 다음 일만** 담는다. 끝난 일의 경위는 PR·git 이력과 날짜가 붙은 기록에 있고, 옛 판은 [docs/handoff/](docs/handoff/README.md)에 있다. **3절에는 진행 중인 일과 "이 판을 들인 PR" 한 줄만 둔다** — 새 PR은 그 줄을 자기 PR로 바꾸고, 병합 전에도 뒤에도 맞는 말만 쓴다("병합했다"고 미리 적지 않는다). 크기 상한과 3절의 모양은 CI가 본다. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있는 규칙은 여기 다시 적지 않는다 — 쌓임을 막는 원칙은 협업 규칙 7절이다.
 
@@ -66,7 +66,7 @@
 
 일은 `card` 라벨 이슈에서 [협업 규칙](docs/COLLABORATION.md) 3절의 보드 규칙대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #193](https://github.com/inlight37-design/decision-model_lab/pull/193)(`claude/p1-review-fixes-sthmsi`) — 기억 항목이 사람의 판단이 본 결과 판과 현재 판단 여부를 싣고, 판단 뒤 새 결과가 나오면 옛 메모를 "이전 결과 판에 대한 판단"으로 표시한다(CR-02). 남은 P1 WF-02·WF-01은 같은 브랜치의 다음 PR로 다룬다. CI·병합 상태는 PR에서 확인한다.
+- **이 판을 들인 PR:** [PR #NNN](https://github.com/inlight37-design/decision-model_lab/pull/NNN)(`claude/p1-review-fixes-sthmsi`) — 새 작업 창에서 실행에 쓰지 않은 다듬기·분담 제안을 기존 ID로 다시 열고(WF-02), 같은 live 폴더의 이전 원장을 읽기 전용으로 찾아 작업의 공개 결과를 인계 자료로 붙인다(WF-01). 이전 원장의 종료 미확인은 홈에 알린다. 모의·HTTP·JS 검사만 했다. CI·병합 상태는 PR에서 확인한다.
 
 | 사용자만 할 수 있는 것 | 지금 |
 |---|---|
