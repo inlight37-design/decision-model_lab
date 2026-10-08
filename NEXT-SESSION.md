@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-10-08** · 작성 세션: claude(웹 컨테이너, 사용자 PC·CLI 보지 않음 — 고른 판 취합(GR-3), 모델 호출 없음) · 브랜치 `claude/gr-3-collate-chosen-aee0sy`.
+최종 갱신 **2026-10-08** · 작성 세션: claude(웹 컨테이너, 사용자 PC·CLI 보지 않음 — 받은 다듬기·분담 다시 열기(WF-02)와 이전 원장에서 이어가기(WF-01), 모델 호출 없음) · 브랜치 `claude/p1-review-fixes-sthmsi`.
 
 이 파일은 **지금 상태와 다음 일만** 담는다. 끝난 일의 경위는 PR·git 이력과 날짜가 붙은 기록에 있고, 옛 판은 [docs/handoff/](docs/handoff/README.md)에 있다. **3절에는 진행 중인 일과 "이 판을 들인 PR" 한 줄만 둔다** — 새 PR은 그 줄을 자기 PR로 바꾸고, 병합 전에도 뒤에도 맞는 말만 쓴다("병합했다"고 미리 적지 않는다). 크기 상한과 3절의 모양은 CI가 본다. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있는 규칙은 여기 다시 적지 않는다 — 쌓임을 막는 원칙은 협업 규칙 7절이다.
 
@@ -66,8 +66,7 @@
 
 일은 `card` 라벨 이슈에서 [협업 규칙](docs/COLLABORATION.md) 3절의 보드 규칙대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #195](https://github.com/inlight37-design/decision-model_lab/pull/195)(`claude/gr-3-collate-chosen-aee0sy`) — 결과 모으기에서 팀원마다 원래 결과나 받아들인 수정 판을 고르고, 판/hash·남은 지적·누락을 입력 확인 값에 묶어 같을 때만 부른다(schema 19, 모음마다 쓴 판 기록). 모의·HTTP·JS 검사만 했다. 최종 CI와 병합 상태는 PR에서 확인한다.
-- **진행 중:** 남은 P1 WF-02·WF-01은 `claude/p1-review-fixes-sthmsi`의 다음 PR로 다룬다.
+- **이 판을 들인 PR:** [PR #196](https://github.com/inlight37-design/decision-model_lab/pull/196)(`claude/p1-review-fixes-sthmsi`) — 새 작업 창에서 실행에 쓰지 않은 다듬기·분담 제안을 기존 ID로 다시 열고(WF-02), 같은 live 폴더의 이전 원장을 읽기 전용으로 찾아 작업의 공개 결과를 인계 자료로 붙인다(WF-01). 이전 원장의 종료 미확인은 홈에 알린다. 모의·HTTP·JS 검사만 했다. CI·병합 상태는 PR에서 확인한다.
 
 | 사용자만 할 수 있는 것 | 지금 |
 |---|---|

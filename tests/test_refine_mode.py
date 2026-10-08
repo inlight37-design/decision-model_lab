@@ -233,6 +233,26 @@ class RefineTests(support.Base):
         self.assertEqual((turn["state"], turn["status"]), (c.UNKNOWN, "controller_restarted"))
         self.assertEqual(ex.started, [])
 
+    def test_a_received_refinement_is_found_again_after_restart_and_used_without_another_call(self):
+        # WF-02: the window forgets its refine ID on reload; the ledger listing is how it comes back.
+        ctl = self.controller(Refiner())
+        rid = ctl.refine(ROSTER["claude"], ORIGINAL)
+        self.assertTrue(ctl.wait_idle()); self.assertTrue(ctl.shutdown())
+        self.store.close()
+        reopened = Store(self.tmp / "store" / "journal.db"); self.addCleanup(reopened.close)
+        ex = Refiner()
+        again = c.Controller(reopened, ex, work_root=str(self.tmp / "work")); self.addCleanup(again.shutdown)
+        listed = next(item for item in again.view()["refinements"] if item["refine_id"] == rid)
+        self.assertEqual((listed["task_id"], listed["run_id"], listed["approved_turn"]), (None, None, None))
+        self.assertEqual(listed["supervisor"]["pid"], ROSTER["claude"].pid)
+        self.assertEqual([t["state"] for t in listed["turns"]], [c.ACCEPTED])
+        run_id = self.start(again, rid, 1, task_title="다시 연 다듬기")
+        self.assertTrue(again.wait_idle())
+        self.assertEqual(self.run_view(again, run_id)["refinement"]["approved_turn"], 1)
+        self.assertNotIn("supervisor", ex.started)                       # the received turn is not asked again
+        with self.assertRaises(c.ControllerError):
+            self.start(again, rid, 1)
+
     def test_board_rules_for_the_supervisor_slot(self):
         ctl = self.controller(Refiner(), max_parallel=0)
         cases = [("original app", board("codex", supervisor=("claude-app",))),
