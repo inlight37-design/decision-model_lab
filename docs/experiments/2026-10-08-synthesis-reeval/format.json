@@ -1,0 +1,172 @@
+{
+ "syntheses": [
+  {
+   "task": "Q1",
+   "by": "codex",
+   "status": "completed",
+   "reason": null,
+   "format_repairs": {},
+   "backslash_matches": 0,
+   "quotes": 4,
+   "exact_matches": 4
+  },
+  {
+   "task": "Q1",
+   "by": "claude-code",
+   "status": "completed",
+   "reason": null,
+   "format_repairs": {},
+   "backslash_matches": 0,
+   "quotes": 4,
+   "exact_matches": 4
+  },
+  {
+   "task": "Q2",
+   "by": "claude-code",
+   "status": "completed",
+   "reason": null,
+   "format_repairs": {},
+   "backslash_matches": 0,
+   "quotes": 5,
+   "exact_matches": 5
+  },
+  {
+   "task": "Q2",
+   "by": "codex",
+   "status": "completed",
+   "reason": null,
+   "format_repairs": {},
+   "backslash_matches": 0,
+   "quotes": 4,
+   "exact_matches": 4
+  },
+  {
+   "task": "Q3",
+   "by": "codex",
+   "status": "completed",
+   "reason": null,
+   "format_repairs": {},
+   "backslash_matches": 0,
+   "quotes": 6,
+   "exact_matches": 6
+  },
+  {
+   "task": "Q3",
+   "by": "claude-code",
+   "status": "completed",
+   "reason": null,
+   "format_repairs": {},
+   "backslash_matches": 0,
+   "quotes": 9,
+   "exact_matches": 9
+  },
+  {
+   "task": "Q4",
+   "by": "claude-code",
+   "status": "unavailable",
+   "reason": "\"the synthesizer did not return one JSON object\"",
+   "format_repairs": null,
+   "backslash_matches": null,
+   "quotes": null,
+   "exact_matches": null
+  },
+  {
+   "task": "Q4",
+   "by": "codex",
+   "status": "completed",
+   "reason": null,
+   "format_repairs": {},
+   "backslash_matches": 0,
+   "quotes": 2,
+   "exact_matches": 2
+  },
+  {
+   "task": "Q5",
+   "by": "codex",
+   "status": "completed",
+   "reason": null,
+   "format_repairs": {},
+   "backslash_matches": 0,
+   "quotes": 8,
+   "exact_matches": 7
+  },
+  {
+   "task": "Q5",
+   "by": "claude-code",
+   "status": "completed",
+   "reason": null,
+   "format_repairs": {},
+   "backslash_matches": 0,
+   "quotes": 10,
+   "exact_matches": 10
+  },
+  {
+   "task": "Q6",
+   "by": "claude-code",
+   "status": "completed",
+   "reason": null,
+   "format_repairs": {},
+   "backslash_matches": 0,
+   "quotes": 10,
+   "exact_matches": 10
+  },
+  {
+   "task": "Q6",
+   "by": "codex",
+   "status": "completed",
+   "reason": null,
+   "format_repairs": {
+    "invalid_escape": 10
+   },
+   "backslash_matches": 0,
+   "quotes": 7,
+   "exact_matches": 6
+  },
+  {
+   "task": "Q7",
+   "by": "codex",
+   "status": "completed",
+   "reason": null,
+   "format_repairs": {},
+   "backslash_matches": 0,
+   "quotes": 4,
+   "exact_matches": 4
+  },
+  {
+   "task": "Q7",
+   "by": "claude-code",
+   "status": "completed",
+   "reason": null,
+   "format_repairs": {},
+   "backslash_matches": 0,
+   "quotes": 7,
+   "exact_matches": 7
+  },
+  {
+   "task": "Q8",
+   "by": "claude-code",
+   "status": "completed",
+   "reason": null,
+   "format_repairs": {},
+   "backslash_matches": 0,
+   "quotes": 8,
+   "exact_matches": 8
+  },
+  {
+   "task": "Q8",
+   "by": "codex",
+   "status": "completed",
+   "reason": null,
+   "format_repairs": {
+    "invalid_escape": 10
+   },
+   "backslash_matches": 0,
+   "quotes": 6,
+   "exact_matches": 6
+  }
+ ],
+ "failed": 1,
+ "total": 16,
+ "repaired": 2,
+ "held": true
+}
