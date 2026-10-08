@@ -66,7 +66,7 @@
 
 일은 `card` 라벨 이슈에서 [협업 규칙](docs/COLLABORATION.md) 3절의 보드 규칙대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** GR-2 PR(`claude/gr-2-revise-rereview-i5qpp3`) — 모은 일반 실행의 교차검토 뒤 작성자가 자기 맡은 일·자기 자료만으로 수정하고 다른 팀원이 자료 본문 없이 재검토한다. 실행은 `collected` 그대로이고 내보내기는 `general-revision-history/1`이다. 모의·HTTP·JS 검사만 했다. 최종 CI와 병합 상태는 PR에서 확인한다.
+- **이 판을 들인 PR:** [PR #194](https://github.com/inlight37-design/decision-model_lab/pull/194)(`claude/gr-2-revise-rereview-i5qpp3`) — 모은 일반 실행의 교차검토 뒤 작성자가 자기 맡은 일·자기 자료만으로 수정하고 다른 팀원이 자료 본문 없이 재검토한다. 실행은 `collected` 그대로이고 내보내기는 `general-revision-history/1`이다. 모의·HTTP·JS 검사만 했다. 최종 CI와 병합 상태는 PR에서 확인한다.
 
 | 사용자만 할 수 있는 것 | 지금 |
 |---|---|
