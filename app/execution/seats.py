@@ -64,7 +64,9 @@ REVIEW_SEAT = _Seat("reviews", ("review_id",), ("review_id",), "cross_review", "
                     {ACCEPTED: "review_completed", REJECTED: "review_failed", UNKNOWN: "review_unknown"},
                     "review_result_ignored", "review_result_not_stored", "review_unknown_acknowledged",
                     lambda text, row: cross.check(text, {label: item["text"] for label, item
-                                                         in json.loads(row["targets"]).items()}),
+                                                         in json.loads(row["targets"]).items()},
+                                                  cross.GENERAL_INDEPENDENCE if row["snapshot"] is not None
+                                                  else cross.ISOLATED_INDEPENDENCE),
                     "run_id", "reviewer", "교차검토자", "reviewer")
 
 REVISION_SEAT = _Seat('answer_revisions', ('revision_id',), ('revision_id',), 'answer_revision', 'revision_started',

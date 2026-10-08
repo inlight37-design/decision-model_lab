@@ -99,7 +99,7 @@ def task_projection(tasks, runs, held=None, plans=None):
             reviews = [*reviews, *variants, *(c for v in variants for c in v['rechecks'])]
             checked = {r["state"] for r in reviews}
             if run.get("mode") == "general":
-                status, action = _general_status(run, states, held)
+                status, action = _general_status(run, states, checked, held)
             elif ("unknown" in states or synth == "unknown" or "unknown" in asked or "unknown" in checked
                   or (synth == "failed" and not run["reviewed"])):
                 status, action = "problem", "종료·실패 확인"
@@ -157,15 +157,20 @@ def task_projection(tasks, runs, held=None, plans=None):
     return projected
 
 
-def _general_status(run, states, held):
-    """일반 실행의 작업 상태. 결과는 끝나는 대로 보이지만, 판단 완료는 모든 팀원이 끝나 모음으로 닫힌 뒤에 한다."""
+def _general_status(run, states, checked, held):
+    """일반 실행의 작업 상태. 결과는 끝나는 대로 보이지만, 판단 완료는 모든 팀원이 끝나 모음으로 닫힌 뒤에 한다.
+    checked: 교차검토(GR-1)의 검토자 상태. 진행·대기·종료 미확인이 판단 완료보다 먼저 보인다."""
     gate = run["gate"]
     gathered = {c["state"] for c in run.get("collations", [])}   # 결과 모으기도 제안처럼 본다(#137)
-    if "unknown" in states or "unknown" in gathered:
+    if "unknown" in states or "unknown" in gathered or "unknown" in checked:
         return "problem", "종료·실패 확인"
     if run["cancel_requested"]:
         return "problem", "실행 확인"
-    if "running" in gathered:
+    if "queued" in checked and held == "unsettled":
+        return "problem", "종료 미확인 정리 뒤 검토 시작"
+    if "queued" in checked and held == "paused":
+        return "my_turn", "멈춘 교차검토 이어서 시작"
+    if "running" in gathered or checked & {"running", "queued"}:
         return "working", None
     if gate["collected"]:
         return ("done", None) if run["reviewed"] else ("my_turn", "결과 모아 판단")
