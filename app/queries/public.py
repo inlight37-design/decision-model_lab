@@ -389,6 +389,10 @@ class PublicQueries:
                 "state": row["state"], "status": row["status"], "execution": row["kind"],
                 "orchestrator": _card(json.loads(row["orchestrator"])),
                 "labels": json.loads(row["labels"]), "prompt": row["prompt"], "input_sha256": row["input_sha256"],
+                # 고른 판 취합(GR-3)이 확인한 팀원별 판/hash·미해결·누락. 옛 행(None)은 모두 원래 결과를 모았다
+                "selection": json.loads(row["selection"]) if row["selection"] else None,
+                "selection_intact": (None if row["selection"] is None else
+                                     hashlib.sha256(row["selection"].encode("utf-8")).hexdigest() == row["selection_sha256"]),
                 **_seat_result(row)}
 
 

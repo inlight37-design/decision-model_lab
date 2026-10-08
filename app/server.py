@@ -457,8 +457,13 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                 elif len(parts) == 4 and parts[:2] == ["api", "proposals"] and parts[3] == "acknowledge":
                     controller.acknowledge_proposal_unknown(parts[2])
                     self._json(200, {"ok": True})
+                elif len(parts) == 5 and parts[:2] == ["api", "runs"] and parts[3:] == ["collate", "preview"]:
+                    # 고른 판 취합(GR-3)의 입력 확인 — 모델을 부르지 않는다
+                    self._json(200, controller.preview_collation(parts[2], body.get("choices")))
                 elif len(parts) == 4 and parts[:2] == ["api", "runs"] and parts[3] == "collate":   # 호출 1회
-                    self._json(200, {"collation_id": controller.collate(parts[2])})
+                    self._json(200, {"collation_id": controller.collate(
+                        parts[2], body.get("choices"), collation_id=body.get("collation_id"),
+                        confirmation=body.get("confirmation"))})
                 elif len(parts) == 4 and parts[:2] == ["api", "collations"] and parts[3] == "acknowledge":
                     controller.acknowledge_collation_unknown(parts[2])
                     self._json(200, {"ok": True})
