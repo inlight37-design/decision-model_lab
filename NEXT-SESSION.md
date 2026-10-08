@@ -66,7 +66,7 @@
 
 일은 `card` 라벨 이슈에서 [협업 규칙](docs/COLLABORATION.md) 3절의 보드 규칙대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** `claude/gr-3-collate-chosen-aee0sy`의 PR — 결과 모으기에서 팀원마다 원래 결과나 받아들인 수정 판을 고르고, 판/hash·남은 지적·누락을 입력 확인 값에 묶어 같을 때만 부른다(schema 19, 모음마다 쓴 판 기록). 모의·HTTP·JS 검사만 했다. 최종 CI와 병합 상태는 PR에서 확인한다.
+- **이 판을 들인 PR:** [PR #195](https://github.com/inlight37-design/decision-model_lab/pull/195)(`claude/gr-3-collate-chosen-aee0sy`) — 결과 모으기에서 팀원마다 원래 결과나 받아들인 수정 판을 고르고, 판/hash·남은 지적·누락을 입력 확인 값에 묶어 같을 때만 부른다(schema 19, 모음마다 쓴 판 기록). 모의·HTTP·JS 검사만 했다. 최종 CI와 병합 상태는 PR에서 확인한다.
 
 | 사용자만 할 수 있는 것 | 지금 |
 |---|---|
