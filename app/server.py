@@ -434,11 +434,17 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                 elif len(parts) == 4 and parts[:2] == ["api", "collations"] and parts[3] == "acknowledge":
                     controller.acknowledge_collation_unknown(parts[2])
                     self._json(200, {"ok": True})
+                elif len(parts) == 5 and parts[:2] == ["api", "runs"] and parts[3:] == ["cross-review", "preview"]:
+                    question = body.get("question")   # 일반 실행의 검토 입력 확인 — 모델을 부르지 않는다
+                    if question is not None and not isinstance(question, str):
+                        raise ControllerError("question must be text")
+                    self._json(200, controller.preview_cross_review(parts[2], question))
                 elif len(parts) == 4 and parts[:2] == ["api", "runs"] and parts[3] == "cross-review":   # 검토자 1명 = 호출 1회
                     question = body.get("question")
                     if question is not None and not isinstance(question, str):
                         raise ControllerError("question must be text")
-                    self._json(200, {"review_ids": controller.cross_review(parts[2], question)})
+                    self._json(200, {"review_ids": controller.cross_review(
+                        parts[2], question, round_id=body.get("round_id"), confirmation=body.get("confirmation"))})
                 elif len(parts) == 4 and parts[:2] == ["api", "reviews"] and parts[3] == "acknowledge":
                     controller.acknowledge_review_unknown(parts[2])
                     self._json(200, {"ok": True})

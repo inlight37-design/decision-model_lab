@@ -242,6 +242,19 @@ for (const piece of ["검토 질문: 비용을 따져라","검토한 관계 2/4"
   "D1 CLI Z · 반례","원문 일치","대상 원문에 없음","반례 설명","판독 실패","'지적 없음'이 아닙니다","RAW_V","호출 상한에 닿음",
   "종료를 직접 확인했음","지적 없음 — 검토자가 형식에 맞게","대상 답이 바뀌었습니다: D1"]) assert.ok(vtext.includes(piece), piece);
 assert.ok(!vtext.includes("교차검토 받기"));   // 한 라운드
+// 일반 팀원 교차검토(GR-1): 모음으로 닫힌 뒤에만, 바로 시작하지 않고 입력 확인부터. 대상의 맡은 일을 함께 보인다.
+const gparts=[{pid:"a",label:"CLI A",transport:"cli",draft:"A 결과"},{pid:"z",label:"CLI Z",transport:"cli",draft:"Z 결과"}];
+const grun=(round,extra={})=>({run_id:"g1",mode:"general",phase:"collected",gate:{collected:true},participants:gparts,cross_review:round,...extra});
+assert.equal(crossReviewIsland(grun(null,{gate:{collected:false}})),null);
+let gtext=text(crossReviewIsland(grun(null)));
+assert.ok(gtext.includes("교차검토 입력 확인 · 호출 2회 예정") && gtext.includes("자료 본문은 보내지 않습니다") &&
+  !gtext.includes("교차검토 받기"), gtext);
+const ground={question:"분담 충돌",coverage:{pairs:2,reviewed:1,missing:[]},missing_members:[{pid:"x",task:"일 X"}],
+  reviews:[vreview("accepted",{labels:{D1:"z"},targets:{D1:{pid:"z",fresh:true}},snapshot:{targets:{D1:{task:"B 보기"}}},
+    reply:{findings:[]}})]};
+gtext=text(crossReviewIsland(grun(ground)));
+for (const piece of ["교차검토 · 일반 팀원, 독립 아님","D1 = CLI Z (맡은 일: B 보기)","결과가 없어 검토하지 않은 팀원: x — 일 X"])
+  assert.ok(gtext.includes(piece), piece);
 const pressed=all(visle).filter(x=>x.tag==="button"&&x.attrs["aria-pressed"]==="true").map(text);
 assert.deepEqual(pressed,["받아들임","보류"]);
 // 토큰 사용량(카드 #141): provider별로 나누고 더하지 않는다. 관측 안 됨·원본 앱·봉인 중·정가 추정(청구액 아님)을 글로 적는다.
@@ -307,8 +320,8 @@ assert.ok(text(expandedRecall).includes("표현 3개를 제외"));
 assert.ok(text(memoryPreview({memory:{enabled:true,entries:[{run_id:"old",created_at:1,excerpt:"옛 발췌"}]}}))
   .includes("선택 이유가 저장되기 전"));
 // 두 번 눌러도 요청은 하나이고, 응답 전에 원문으로 돌아가면(창을 새로 연 것과 같다) 늦은 응답을 붙이지 않는다
-let pending=[], apiCalls=0;
-function api(path, body) { apiCalls++; return new Promise(resolve => pending.push(() => resolve({refine_id:"late"}))); }
+let pending=[], apiCalls=0, apiHook=null;
+function api(path, body) { if (apiHook) return apiHook(path, body); apiCalls++; return new Promise(resolve => pending.push(() => resolve({refine_id:"late"}))); }
 async function refresh() { return true; }
 (async () => {
   roleBoard={...emptyBoard(),isolated:["z"],supervisor:["a"],input_mode:"refine"}; state.refinements=[];
@@ -318,6 +331,33 @@ async function refresh() { return true; }
   resetRefine();
   pending.forEach(f => f()); await first; await second;
   assert.equal(refineCurrent,null); assert.equal(refineBusy,false);
+  // 일반 교차검토 입력 확인(GR-1): 미리보기를 보인 뒤 같은 round_id·확인 값으로만 시작한다. 다른 창을 연 뒤 늦게 온
+  // 미리보기는 붙이지 않는다.
+  let frames=[], generation=0, sent=[];
+  const keep=k => k.flat(Infinity).filter(x => x!==null && x!==false && x!==undefined);
+  globalThis.catalogFrame=(title, body) => { generation++; frames.push(body);
+    body.replaceChildren=(...k) => { body.kids=keep(k); }; body.append=(...k) => { body.kids.push(...keep(k)); }; };
+  globalThis.catalogRequest={begin() { const mine=generation; return {current: () => mine===generation}; }};
+  globalThis.closeCatalog=() => { generation++; };
+  const manifest={round_id:"g"+"1".repeat(32),confirmation:"c".repeat(64),calls:2,input_bytes:120,question:"분담 충돌",
+    missing:[],members:[{pid:"a",label:"CLI A",task:"A 보기",sources:[{name:"a.md"}],answer_sha256:"f".repeat(64)}],
+    reviewers:[{pid:"a",label:"CLI A",input_bytes:60,prompt:"PROMPT_A"}]};
+  apiHook=async (path, body) => { sent.push([path, body]); return path.endsWith("/preview") ? manifest : {review_ids:["v"]}; };
+  await previewGeneralReview(grun(null), "분담 충돌");
+  const shown=frames[0];
+  const ptext=text(shown);
+  for (const piece of ["PROMPT_A","CLI A에게 보낼 입력 · 60바이트","A 보기","이 입력으로 교차검토 받기 · 호출 2회","자료 본문과 자동 기억은 보내지 않고"])
+    assert.ok(ptext.includes(piece), piece);
+  const go=all(shown).find(x => x.tag==="button");
+  await go.attrs.onclick();
+  assert.deepEqual(sent.at(-1), ["/api/runs/g1/cross-review",{question:"분담 충돌",round_id:manifest.round_id,confirmation:manifest.confirmation}]);
+  let release;
+  apiHook=() => new Promise(resolve => { release=() => resolve(manifest); });
+  const late=previewGeneralReview(grun(null), "분담 충돌");
+  catalogFrame("다른 창", {});
+  release(); await late;
+  assert.ok(!text(frames[1]).includes("PROMPT_A"));
+  apiHook=null;
 })().catch(e => { console.error(e); process.exit(1); });
 '''
         # 스크립트가 Windows 명령줄 길이 한도(약 32K자)를 넘으므로 표준 입력으로 준다.

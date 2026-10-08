@@ -19,10 +19,17 @@ def _digest(text) -> str | None:
 
 
 def _intact(row) -> bool:
-    """검토 행에 고정한 입력 전문과 대상 답 본문이 기록한 hash와 아직 맞는가."""
+    """검토 행에 고정한 입력 전문과 대상 답 본문(일반 검토면 확인한 snapshot까지)이 기록한 hash와 아직 맞는가."""
     targets = json.loads(row["targets"])
-    return _digest(row["prompt"]) == row["input_sha256"] and all(
-        _digest(item.get("text")) == item.get("sha256") for item in targets.values())
+    if _digest(row["prompt"]) != row["input_sha256"] or any(
+            _digest(item.get("text")) != item.get("sha256") for item in targets.values()):
+        return False
+    if row["snapshot"] is None:
+        return row["snapshot_sha256"] is None
+    snapshot = json.loads(row["snapshot"])
+    return (_digest(row["snapshot"]) == row["snapshot_sha256"] and snapshot["input_sha256"] == row["input_sha256"]
+            and {label: item["answer_sha256"] for label, item in snapshot["targets"].items()}
+            == {label: item["sha256"] for label, item in targets.items()})
 
 
 class ReviewService:
@@ -89,7 +96,132 @@ class ReviewService:
         self.execution._acknowledge_seat(COLLATE_SEAT, row["run_id"], {"collation_id": collation_id})
 
 
-    def cross_review(self, run_id: str, question: str | None = None) -> list[str]:
+    def preview_cross_review(self, run_id: str, question: str | None = None) -> dict:
+        """일반 실행의 교차검토 입력 확인(GR-1). 모델을 부르지 않고 원장·예산을 예약하지 않는다. 새 round_id로 검토자마다
+        보낼 입력 전문을 만들고, 그 전부를 묶은 확인 값(confirmation)을 준다. 시작은 같은 round_id·확인 값으로 한다."""
+        question = self._question(question)
+        with self.runtime.lock:
+            manifest, _ = self._general_round(run_id, question, "g" + uuid.uuid4().hex)
+            return manifest
+
+
+    def _question(self, question):
+        question = question.strip() if isinstance(question, str) else ""
+        question = question or cross.DEFAULT_QUESTION
+        if len(question) > cross.MAX_QUESTION or not storable(question):
+            raise ControllerError(f"검토 질문은 {cross.MAX_QUESTION}자까지의 올바른 글이어야 합니다.")
+        return question
+
+
+    def _general_round(self, run_id: str, question: str, round_id: str) -> tuple[dict, list[dict]]:
+        """lock 안에서 부른다. 지금 원장으로 일반 검토 라운드를 다시 만든다 — (화면에 보일 확인 명세, 검토자별 행).
+        같은 round_id와 같은 원장이면 같은 결과다. 답 본문 hash(CR-01)와 맡긴 일의 고정 입력을 확인하고, 다르면
+        거절한다. 수집 전·취소·받은 답 둘 미만·CLI 검토자 없음도 거절한다. 실패한 팀원을 채우지 않는다."""
+        if self.runtime.closing:
+            raise ControllerError("controller is shutting down")
+        if not isinstance(round_id, str) or len(round_id) != 33 or round_id[0] != "g" or any(
+                ch not in "0123456789abcdef" for ch in round_id[1:]):
+            raise ControllerError("검토 라운드 ID가 올바르지 않습니다. 입력 확인을 다시 받으세요.")
+        run = self.repository._run(run_id)
+        current_gate = self.repository._gate(run_id)
+        if not current_gate.general or not current_gate.collected or run["cancel_requested"]:
+            raise ControllerError("일반 팀원 교차검토는 모두 끝난(모음으로 닫힌) 일반 실행에만 부릅니다.")
+        if self.store.row("SELECT 1 FROM reviews WHERE run_id = ?", run_id):
+            raise ControllerError("교차검토는 실행 하나에 한 라운드입니다.")
+        members, answers = {}, {}
+        for item in self.repository._answers(run_id):   # 본문 hash 확인(CR-01)
+            spec = ParticipantSpec(**item["spec"])
+            work = self.inputs._checked_assignment(run_id, spec.pid)   # 맡긴 일·입력·묶음 해시 확인
+            listed = [{key: source[key] for key in ("name", "sha256", "bytes")} for source in json.loads(work["sources"])]
+            members[spec.pid] = {"pid": spec.pid, "label": spec.label, "state": item["state"], "task": work["task"],
+                                 "assignment_sha256": work["input_sha256"], "sources": listed,
+                                 "answer_sha256": item["sha256"],
+                                 "answer_bytes": len(item["text"].encode("utf-8")) if item["text"] is not None else None}
+            if item["state"] == ACCEPTED:
+                answers[spec.pid] = (spec, item["text"])
+        reviewers = [pid for pid, (spec, _) in answers.items()
+                     if spec.transport == CLI and spec.adapter_id in self.runtime.executor.adapter_ids]
+        if len(answers) < 2 or not reviewers:
+            raise ControllerError("교차검토에는 받은 결과가 둘 이상이고, 그중 설정된 CLI 팀원이 하나 이상 있어야 합니다.")
+        missing = [{"pid": pid, "task": m["task"], "reason": "결과 없음"} for pid, m in members.items()
+                   if pid not in answers]
+        rows, previews = [], []
+        for pid in reviewers:
+            spec, own = answers[pid]
+            others = [other for other in answers if other != pid]
+            labels = {f"D{index}": other for index, other in
+                      enumerate(label_order(f"{run_id}\0review\0{pid}", others), 1)}
+            nonce = hashlib.sha256(f"{round_id}\0{pid}".encode("utf-8")).hexdigest()[:12]
+            text = cross.general_prompt(
+                question, run["question"], {"task": members[pid]["task"], "text": own, "sources": members[pid]["sources"]},
+                [(label, {"task": members[other]["task"], "text": answers[other][1], "sources": members[other]["sources"]})
+                 for label, other in labels.items()],
+                [{"task": m["task"], "reason": m["reason"]} for m in missing], nonce)
+            data = text.encode("utf-8")
+            rows.append({"pid": pid, "spec": spec, "labels": labels, "prompt": text,
+                         "input_sha256": hashlib.sha256(data).hexdigest(),
+                         "targets": {label: {"pid": other, "sha256": members[other]["answer_sha256"],
+                                             "text": answers[other][1]} for label, other in labels.items()}})
+            previews.append({"pid": pid, "label": spec.label, "labels": labels, "prompt": text,
+                             "input_sha256": rows[-1]["input_sha256"], "input_bytes": len(data)})
+        revision = self.repository._review_state(run_id)[0]
+        manifest = {"contract": cross.GENERAL_CONTRACT, "mode": "general", "run_id": run_id, "round_id": round_id,
+                    "result_revision": revision, "goal": run["question"], "question": question,
+                    "input_sha256": run["input_sha256"], "members": list(members.values()), "missing": missing,
+                    "reviewers": previews, "calls": len(reviewers),
+                    "input_bytes": sum(item["input_bytes"] for item in previews),
+                    "independence": cross.GENERAL_INDEPENDENCE, "factual_check": "not_performed",
+                    "source_bodies": "not_sent", "memory_pack": "not_added"}
+        manifest["confirmation"] = hashlib.sha256(json.dumps(manifest, sort_keys=True, ensure_ascii=False)
+                                                  .encode("utf-8")).hexdigest()
+        for row in rows:
+            snapshot = {"contract": cross.GENERAL_CONTRACT, "mode": "general", "round_id": round_id,
+                        "confirmation": manifest["confirmation"], "result_revision": revision,
+                        "goal": run["question"], "question": question, "reviewer": row["pid"], "labels": row["labels"],
+                        "own": {key: members[row["pid"]][key] for key in ("pid", "task", "answer_sha256", "sources")},
+                        "targets": {label: {key: members[other][key] for key in ("pid", "task", "answer_sha256", "sources")}
+                                    for label, other in row["labels"].items()},
+                        "missing": missing, "input_sha256": row["input_sha256"]}
+            row["snapshot"] = json.dumps(snapshot, sort_keys=True, ensure_ascii=False)
+        return manifest, rows
+
+
+    def _create_general_round(self, run_id: str, question: str, round_id, confirmation) -> list[str]:
+        """확인한 일반 검토 라운드를 저장하고 첫 검토자를 시작한다. 확인 뒤 답·맡긴 일·결과 판·질문이 바뀌었으면 원장을
+        쓰지 않고 거절한다. 한 라운드 제한은 같은 lock·거래 안에서 다시 본다 — 새 round_id로 우회하지 못한다."""
+        if not isinstance(confirmation, str) or not confirmation:
+            raise ControllerError("일반 팀원 교차검토는 입력 확인(round_id·confirmation)을 받은 뒤에 시작합니다.")
+        with self.runtime.lock:
+            manifest, rows = self._general_round(run_id, question, round_id)
+            if manifest["confirmation"] != confirmation:
+                raise ControllerError("확인한 뒤 검토 입력이 바뀌었습니다. 호출하지 않았습니다. 입력 확인을 다시 받으세요.")
+            self.invocations._upper_call_gate("교차검토는")
+            first = rows[0]["spec"]
+            if (self.runtime.executor.kind == contract.REAL and self.runtime.max_real_calls is not None
+                    and self.invocations._budget_exhausted(first.adapter_id)):
+                raise ControllerError("real CLI call budget exhausted; no call was started")
+            keys, now = [], time.time()
+            with self.store.tx() as tx:
+                if self.store.row("SELECT 1 FROM reviews WHERE run_id = ?", run_id):
+                    raise ControllerError("교차검토는 실행 하나에 한 라운드입니다.")
+                for seq, row in enumerate(rows, 1):
+                    key = f"v{time.strftime('%m%d-%H%M%S')}-{uuid.uuid4().hex}"
+                    tx.execute("INSERT INTO reviews (review_id, run_id, seq, created_at, question, reviewer, labels, "
+                               "targets, prompt, input_sha256, state, snapshot, snapshot_sha256) "
+                               "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                               key, run_id, seq, now, question, json.dumps(asdict(row["spec"]), ensure_ascii=False),
+                               json.dumps(row["labels"]), json.dumps(row["targets"], ensure_ascii=False), row["prompt"],
+                               row["input_sha256"], QUEUED, row["snapshot"],
+                               hashlib.sha256(row["snapshot"].encode("utf-8")).hexdigest())
+                    keys.append(key)
+                tx.event(run_id, "review_round_created", reviewers=[row["pid"] for row in rows], calls=len(rows),
+                         default_question=question == cross.DEFAULT_QUESTION, mode="general",
+                         round_id=round_id, confirmation=confirmation)
+            self._advance_reviews(start=True)
+            return keys
+
+
+    def cross_review(self, run_id: str, question: str | None = None, *, round_id=None, confirmation=None) -> list[str]:
         """공개된 격리 실행에서 교차검토 한 라운드를 연다 — 받은 답을 낸 CLI 팀원 한 명 = 호출 1회.
 
         검토자는 답을 낸 그 카드·모델이다(같은 관측된 계획, 읽기 전용). 자기 답(따로 표시)과 다른 팀원의 답(이름표,
@@ -97,16 +229,15 @@ class ReviewService:
         검토자는 다른 상위 모델 호출처럼 한 번에 하나씩 차례로 부른다(pump). 앞 검토자가 받지 못하면(실패·종료
         미확인·상한·시작 못 함) 남은 검토자는 시작하지 않는다. 실행 하나에 한 라운드. 공개 뒤 다른 답을 본 검토라
         독립 정족수에 세지 않는다. 검토는 새 실행을 시작하지 않고, 지적의 처분은 사람이 한다."""
-        question = question.strip() if isinstance(question, str) else ""
-        question = question or cross.DEFAULT_QUESTION
-        if len(question) > cross.MAX_QUESTION or not storable(question):
-            raise ControllerError(f"검토 질문은 {cross.MAX_QUESTION}자까지의 올바른 글이어야 합니다.")
+        question = self._question(question)
         with self.runtime.lock:
             if self.runtime.closing:
                 raise ControllerError("controller is shutting down")
             run = self.repository._run(run_id)
             current_gate = self.repository._gate(run_id)
-            if current_gate.general or not current_gate.revealed:
+            if current_gate.general:   # 일반 실행은 입력 확인을 거친다(GR-1)
+                return self._create_general_round(run_id, question, round_id, confirmation)
+            if not current_gate.revealed:
                 raise ControllerError("교차검토는 공개된 격리 실행에만 부릅니다. 봉인 중에는 부르지 않습니다.")
             if self.store.row("SELECT 1 FROM reviews WHERE run_id = ?", run_id):
                 raise ControllerError("교차검토는 실행 하나에 한 라운드입니다.")
