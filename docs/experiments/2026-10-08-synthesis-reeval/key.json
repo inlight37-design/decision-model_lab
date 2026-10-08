@@ -1,0 +1,14 @@
+{
+ "Q5-dd70": {
+  "task": "Q5",
+  "condition": "X-codex"
+ },
+ "Q5-bda2": {
+  "task": "Q5",
+  "condition": "X-claude"
+ },
+ "Q6-6d55": {
+  "task": "Q6",
+  "condition": "X-codex"
+ }
+}
