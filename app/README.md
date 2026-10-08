@@ -25,6 +25,7 @@
 | [server.py](server.py) | localhost API·인증·전체 준비 조회·화면 연결 |
 | [wiring.py](wiring.py) | 서버와 헤드리스 실행이 같이 쓰는 배선: 참여자 명단, 모의 동작·모델 목록, provider 설정에서 실행기·명단·상한 만들기(`live_setup`), 원장 위에 controller 만들기(`new_controller`) |
 | [run.py](run.py) | 헤드리스 실행: 화면 없이 질문 하나를 끝까지 돌리고 결과 JSON 하나를 쓴다 |
+| [ledgers.py](ledgers.py) | 같은 live 폴더의 이전 원장을 읽기 전용으로 요약(상한·쓴 호출·종료 미확인·작업)하고, 고른 작업의 공개 결과를 인계 자료 하나로 만든다 |
 | [start.ps1](start.ps1), [launch.py](launch.py) | 바탕 화면 아이콘의 입구: Windows 쪽이 WSL 쪽을 불러 관측 기록·모델·원장을 고르고 서버를 띄운 뒤 앱 창으로 연다. 창을 닫으면 끈다 |
 | [split.py](split.py) | 일반 작업의 분담 제안 지시문 만들기와 답 검사(모델을 부르지 않는다) |
 | [collate.py](collate.py) | 일반 작업의 결과 모으기 지시문 만들기와 답의 형식·원문 인용 대조(모델을 부르지 않고, 사실 검증을 하지 않는다) |
@@ -54,7 +55,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File app\start.ps1 -InstallShortc
 | 관측 기록 | `docs/reviews/*/manifest.v2.json` 가운데 **이 기기에 등록된** 가장 새 것(`updated_at`). 재관측해 등록하면 다음에 열 때 저절로 바뀐다 |
 | 모델 | `launch.py`의 `MODELS`(Codex `gpt-6-luna`·Claude `claude-sonnet-5`) |
 | 포트 | 8765–8774 가운데 WSL 안에서 빈 첫 포트. 단 Windows 쪽 프로그램이 이미 듣는 포트는 [start.ps1](start.ps1)이 `--avoid-ports`로 넘겨 건너뛴다 — WSL 안에서는 비어 보여도 Windows의 `127.0.0.1:<포트>`는 그 프로그램에 닿는다([2026-09-27 기록](../docs/reviews/2026-09-27-c1-d1-live/README.md)) |
-| 원장 | WSL `~/.local/state/decision-model-lab/app/live/<시각>`. 가장 새 원장에 provider마다 호출이 남았으면 이어 쓰고(앞 실행이 화면에 보인다), 하나라도 다 썼으면 새 원장. 원장 하나의 상한은 `CAPS`(Codex 5·Claude 5, 합 10 — 앱의 최대)이며 앞 원장은 지우지 않는다. 모의 모드는 `…/app/mock` |
+| 원장 | WSL `~/.local/state/decision-model-lab/app/live/<시각>`. 가장 새 원장에 provider마다 호출이 남았으면 이어 쓰고(앞 실행이 화면에 보인다), 하나라도 다 썼으면 새 원장. 원장 하나의 상한은 `CAPS`(Codex 5·Claude 5, 합 10 — 앱의 최대)이며 앞 원장은 지우지 않는다. 새 원장을 열면 앞 작업은 새 작업 창의 **이전 원장에서 이어가기**에서 읽기 전용으로 찾고, 고른 작업의 공개 결과를 자료 하나로 붙여 이어 간다(아래 "이전 원장에서 이어가기"). 모의 모드는 `…/app/mock` |
 
 준비 조회가 거절하면(관측 기록 만료·CLI 판 변경·등록 없음) 이유를 보이고 **모의 모드로 열지 묻는다** — 조용히 바꾸지 않는다. 서버 기록은 `…/app/server.log`, 상태는 `…/app/launcher.json`(토큰 없음). 토큰은 원장의 `control-token`에만 있다. WSL 쪽만 쓸 때는 `python3 -m app.launch serve|url|stop|status`(설명은 [launch.py](launch.py) 첫머리).
 
@@ -290,6 +291,10 @@ PDF에는 서버와 같은 환경의 `pdfinfo`·`pdftotext`(Poppler)가 필요�
 시도마다 원장의 사본을 데이터 폴더 밖(`<work_root>/_sources/<run>`)에 두고 목록·크기·sha256을 다시 맞춘다. 다르면 그 시도를 시작 전에 거절한다. 자료 목록과 제공 폴더가 원래 고정 질문에 적힌 것과 같은지도 계획·예약 전에 확인한다. 복원 시 `work_root`만 바꾸어 옛 질문으로 다른 폴더를 주지 않는다. 기존 경로로 복원하거나 새 실행을 만들며 원래 질문을 덮어쓰지 않는다. CLI 참여자는 provider별 빈 입력 폴더 대신 이 폴더 하나를 읽기 전용으로 받으므로 계획의 판(입력 폴더 하나)이 그대로다. 수동 참여자는 같은 목록을 받지만 파일 첨부 여부는 확인하지 못한다(K21). 시도 도중의 바꿔치기(K14)는 막지 못한다. 실제 확인은 [공통 자료 기록](../docs/reviews/2026-09-24-source-snapshot/README.md)에 있다.
 
 ## 회계와 원장
+
+### 이전 원장에서 이어가기
+
+앱 입구는 provider 하나의 호출을 다 쓰면 다음 시작 때 새 원장을 연다. 작업·기억·템플릿은 원장 안의 행이라 새 원장에서는 앞 작업이 보이지 않는다(WF-01). 새 작업 창의 **이전 원장에서 이어가기**는 같은 live 폴더의 다른 원장을 SQLite 읽기 전용으로 열어(잠금·쓰기·스키마 이전 없음) 원장마다 provider별 쓴 호출/상한, 종료를 확인하지 못한 호출 수, 작업 목록을 보여 준다(`GET /api/ledgers`). 작업의 **인계 자료로 붙이기**는 그 작업의 공개 완료 실행(봉인 중·취소 제외)의 질문, 사람의 판단과 그 판단이 본 결과 판, 교차검토 지적과 처분, 해시가 맞는 원래 답을 글 하나(240 KiB 이내, 새것부터 담고 시간순으로 적음)로 만들어 자료로 붙인다(`GET /api/ledgers/<원장>/tasks/<작업>/handoff`). 그 자료는 새 실행의 다른 자료처럼 해시와 함께 새 원장에 고정된다. 이전 원장의 호출 소비·승인·종료 확인은 옮기지 않으며 새 원장의 상한과 따로 센다. 이전 원장에 종료 미확인이 남아 있으면 홈에 알리고, 새 원장을 연 것으로 정리된 것처럼 보이지 않는다 — 그 원장을 다시 열어 확인하는 화면은 아직 없다. 서버를 앱 입구 밖에서 띄우면(`python -m app.server`) 이 목록은 비어 있다.
 
 현재 schema는 **18**이다([Store](store.py)의 `SCHEMA_VERSION`). 선택적인 목표·완료 기준·선행 조건은 `task_plans`, 템플릿은 `work_templates`, 수정·재검토는 `answer_revisions`·`revision_checks`에 둔다. 책임은 [현재 구조](ARCHITECTURE.md)가 관리하며 자료 추출은 기존 텍스트 사본 형식을 사용한다.
 

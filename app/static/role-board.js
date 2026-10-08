@@ -401,6 +401,47 @@ function renderPrepared(force = false) {
       `${fmtTime(s.created_at)} · 오케스트레이터 ${s.orchestrator.label || s.orchestrator.pid} · 자료 ${s.sources.length}개`, () => restoreSplit(s))));
   pressAll($("preparedList"));
 }
+// ---- 이전 원장에서 이어가기(WF-01) ------------------------------------------------------------------------------
+// provider 하나의 호출을 다 쓰면 앱은 다음 시작 때 새 원장을 연다. 이전 원장은 읽기만 해서 작업을 찾고, 고른 작업의 공개
+// 결과를 인계 자료(파일 하나)로 붙인다. 이전 원장의 소비·승인·종료 미확인은 옮기지 않고 해결된 것으로 보이지도 않는다.
+let previousLedgers = null, ledgerGeneration = 0;
+async function loadLedgers() {
+  try { previousLedgers = await api("/api/ledgers"); } catch (e) { previousLedgers = null; }
+  renderLedgers();
+}
+function ledgerBudget(budget) {
+  if (!budget || !budget.provider_caps) return "호출 기록 " + Object.values(budget?.used || {}).reduce((a, b) => a + b, 0) + "회";
+  return Object.entries(budget.provider_caps).map(([id, cap]) => `${PROVIDER_NAME[id] || id} ${budget.used[id] || 0}/${cap}`).join(" · ");
+}
+function renderLedgers() {
+  const items = (previousLedgers && previousLedgers.ledgers) || [];
+  const open = items.filter(l => l.unsettled);
+  $("ledgerNotice").hidden = !open.length;
+  $("ledgerNotice").textContent = open.length ? `이전 원장 ${open.map(l => l.name).join(", ")}에 종료를 확인하지 못한 호출이 ` +
+    `${open.reduce((n, l) => n + l.unsettled, 0)}개 남아 있습니다. 새 원장을 연 것으로 정리되지 않습니다 — 그 프로세스가 끝났는지 PC에서 확인하세요.` : "";
+  $("ledgerBox").hidden = !items.length;
+  $("ledgerList").replaceChildren(...items.map(l => h("section", { class: "stack" },
+    h("p", { class: "sm strong" }, `원장 ${l.name}`, h("span", { class: "cap muted" },
+      " · " + (l.error || ledgerBudget(l.budget) + (l.unsettled ? ` · 종료 미확인 ${l.unsettled}` : "")))),
+    ...(l.tasks || []).map(t => h("div", { class: "row between" },
+      h("span", { class: "sm" }, t.title, h("span", { class: "cap muted" }, ` · 실행 ${t.runs}개`)),
+      h("button", { type: "button", class: "btn", onclick: () => attachHandoff(l.name, t.task_id) }, "인계 자료로 붙이기"))))));
+  pressAll($("ledgerList"));
+}
+async function attachHandoff(ledger, taskId) {
+  const generation = ++ledgerGeneration;
+  $("ledgerStatus").textContent = "이전 원장에서 공개 결과를 모으는 중입니다.";
+  try {
+    const made = await api(`/api/ledgers/${encodeURIComponent(ledger)}/tasks/${encodeURIComponent(taskId)}/handoff`);
+    if (generation !== ledgerGeneration || !$("composeDialog").open) return;
+    picked = [...picked.filter(f => f.name !== made.name), new File([made.text], made.name, { type: "text/plain" })];
+    if (!composeTask && !$("taskTitle").value.trim()) $("taskTitle").value = made.title;
+    renderPicked(""); renderAssignments();
+    $("ledgerStatus").textContent = `“${made.title}”의 공개 결과를 자료 ${made.name}로 붙였습니다. 보낼 입력 확인에서 전문을 볼 수 있습니다.`;
+  } catch (e) {
+    if (generation === ledgerGeneration) $("ledgerStatus").textContent = e.message;
+  }
+}
 // 창이 열린 동안 제안 상태가 바뀌었을 때만 다시 그린다 — 맡길 일을 쓰는 중에 칸을 지우지 않는다.
 function renderSplitIfChanged() {
   if (!roleBoard || !roleBoard.general.length) return;

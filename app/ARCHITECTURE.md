@@ -46,6 +46,7 @@ flowchart TD
 | [domain.py](domain.py), [state.py](state.py) | 참여자 값, 오류, Unicode·입력 표식·수용·정족수 정책 | HTTP·저장·모델 실행 |
 | [context/inputs.py](context/inputs.py) | 역할/자료/승인 확인, manifest·확인 hash, 입력 사본, 이전 기억 고정 | thread 시작, 실행 결과의 진실 판정 |
 | [ingestion/extract.py](ingestion/extract.py), [ingestion/url_fetch.py](ingestion/url_fetch.py), [source_document.py](source_document.py) | 제한된 PDF/공개 URL 추출, 출처·원본/변환/선택 hash와 누락을 텍스트에 결속 | 자동 첨부·모델 호출·OCR·페이지 렌더·로그인 |
+| [ledgers.py](ledgers.py) | 이전 원장의 읽기 전용 요약과 작업 인계 자료 | 이전 원장에 쓰기, 소비·승인·종료 확인 옮기기 |
 | [memory.py](memory.py) | 공개 완료 이력 선택·발췌·크기 상한·선택 이유 | 과거 pack 재계산, 전역 기억·의미 검색 |
 | [application/work.py](application/work.py) | 작업/실행/배정/승인 사용을 같은 거래로 생성 | 전송 방식·worker 내부 turn |
 | [application/tasks.py](application/tasks.py), [workflow.py](workflow.py), [static/workflow.js](static/workflow.js) | 계획 판·선행 참조·CAS 편집, 현재 결과의 준비 상태·단계·다음 행동 | 자동 실행, 새 결과 상태 복제, 알림 전달 큐 |

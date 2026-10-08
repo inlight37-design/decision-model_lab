@@ -38,6 +38,7 @@ from app.report import ReportError, build_report, decision_report, revision_repo
 from app.store import LedgerBusy, Store, StoreError
 from app.live_config import Provider, load as load_live_config
 from app.account_quota import AccountQuota
+from app import ledgers
 from app.ingestion.extract import extract
 # 배선은 app.wiring에 있고 헤드리스 실행(app.run)과 나눠 쓴다. 시험은 이 모듈의 이름으로도 부른다.
 from app.wiring import (BEHAVIORS, EXIT_NOT_ELIGIBLE, MOCK_MODEL_CHOICES, PARTICIPANTS, live_setup,  # noqa: F401
@@ -100,7 +101,7 @@ def _text(body: dict, key: str, default: str = "") -> str:
 
 
 def make_handler(controller: Controller, token: str, port: int, *, participants=None, account_quota=None,
-                 choices=None):
+                 choices=None, ledger_root: Path | None = None):
     allowed_hosts = {f"127.0.0.1:{port}", f"localhost:{port}"}
     roster = dict(PARTICIPANTS if participants is None else participants)
     live = controller.executor.kind == "real"
@@ -259,6 +260,16 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                 try:
                     self._json(200, controller.queries.source(parts[2], unquote(parts[4])))
                 except (ControllerError, ValueError) as exc:
+                    self._json(409, {'error': str(exc)})
+            elif path == '/api/ledgers':
+                # 같은 live 폴더의 이전 원장 — 읽기만 한다. 앱 입구가 ledger_root를 줄 때만 보인다(WF-01)
+                self._json(200, {'current': controller.store.path.parent.name if ledger_root else None,
+                                 'ledgers': ledgers.previous(ledger_root, controller.store.path.parent)})
+            elif len(parts) == 6 and parts[:2] == ['api', 'ledgers'] and parts[3] == 'tasks' and parts[5] == 'handoff':
+                try:
+                    self._json(200, ledgers.handoff(ledger_root, controller.store.path.parent, unquote(parts[2]),
+                                                    unquote(parts[4])))
+                except ledgers.LedgerError as exc:
                     self._json(409, {'error': str(exc)})
             elif parts[:2] == ['api', 'templates'] and (len(parts) in (2, 3) or len(parts) == 4 and parts[3] == 'export'):
                 try:
@@ -553,7 +564,8 @@ def serve(data_dir: Path, port: int, *, timeout: float = 20.0, live_cli: str | N
           inventory: Path | None = None, model: str | None = None, call_budget: int | None = None,
           allow_context_unverified: bool = False,
           input_dir: Path | None = None,
-          live_providers: tuple[Provider, ...] | None = None) -> tuple[ThreadingHTTPServer, str, Controller]:
+          live_providers: tuple[Provider, ...] | None = None,
+          ledger_root: Path | None = None) -> tuple[ThreadingHTTPServer, str, Controller]:
     executor, roster, providers, call_budget = live_setup(
         data_dir, timeout=timeout, live_cli=live_cli, inventory=inventory, model=model, call_budget=call_budget,
         allow_context_unverified=allow_context_unverified, input_dir=input_dir, live_providers=live_providers)
@@ -581,7 +593,7 @@ def serve(data_dir: Path, port: int, *, timeout: float = 20.0, live_cli: str | N
                                  if any(p.adapter_id == "claude-code" for p in providers) else None))
     server.RequestHandlerClass = make_handler(controller, token, server.server_address[1],
                                               participants=roster, account_quota=quota,
-                                              choices=model_choices(providers))
+                                              choices=model_choices(providers), ledger_root=ledger_root)
     return server, token, controller
 
 

@@ -411,6 +411,25 @@ async function refresh() { return true; }
   let releaseCopy; apiHook=() => new Promise(resolve => { releaseCopy=() => resolve({text:"늦은 사본"}); });
   const lateSplit=restoreSplit({...gsplit,sources:[{name:"a.md"}]}); preparedGeneration+=1; releaseCopy(); await lateSplit;
   assert.equal(picked.length,2);
+  // 이전 원장에서 이어가기(WF-01): 종료 미확인은 남아 있다고 알리고, 고른 작업의 인계 자료를 파일 하나로 붙인다.
+  previousLedgers={current:"new",ledgers:[{name:"20261001-090000",unsettled:2,error:null,
+    budget:{cap:10,provider_caps:{codex:5,"claude-code":5},used:{codex:5,"claude-code":1}},
+    tasks:[{task_id:"t-old",title:"이전 작업",runs:3}]}]};
+  renderLedgers();
+  assert.equal(nodes.ledgerBox.hidden,false); assert.equal(nodes.ledgerNotice.hidden,false);
+  assert.ok(nodes.ledgerNotice.textContent.includes("종료를 확인하지 못한 호출이 2개") && nodes.ledgerNotice.textContent.includes("정리되지 않습니다"));
+  const ltext=text({kids:nodes.ledgerList.kids});
+  assert.ok(ltext.includes("Codex 5/5") && ltext.includes("Claude 1/5") && ltext.includes("이전 작업"), ltext);
+  nodes.taskTitle={value:""}; composeTask=null; picked=[];
+  apiHook=async path => { fetched.push(path); return {name:"handoff-20261001-090000-t-old.md",title:"이전 작업",text:"인계 본문"}; };
+  const attach=all({kids:nodes.ledgerList.kids}).find(x => x.tag==="button");
+  await attach.attrs.onclick();
+  assert.equal(fetched.at(-1),"/api/ledgers/20261001-090000/tasks/t-old/handoff");
+  assert.deepEqual(picked.map(f => f.name),["handoff-20261001-090000-t-old.md"]); assert.equal(await picked[0].text(),"인계 본문");
+  assert.equal(nodes.taskTitle.value,"이전 작업");
+  await attach.attrs.onclick(); assert.equal(picked.length,1);   // 같은 인계 자료를 두 번 붙이지 않는다
+  previousLedgers={ledgers:[{name:"x",unsettled:0,budget:null,tasks:[]}]}; renderLedgers();
+  assert.equal(nodes.ledgerNotice.hidden,true);
   apiHook=null;
 })().catch(e => { console.error(e); process.exit(1); });
 '''
