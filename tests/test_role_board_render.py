@@ -361,6 +361,26 @@ async function refresh() { return true; }
   catalogFrame("다른 창", {});
   release(); await late;
   assert.ok(!text(frames[1]).includes("PROMPT_A"));
+  // 고른 판 취합(GR-3): 수정 판이 있으면 기본으로 가장 최근 수정 판을 고르고, 같은 판·ID·확인 값으로만 시작한다.
+  const rev="rev-"+"a".repeat(32);
+  const vrun={run_id:"g2",mode:"general",gate:{collected:true},participants:[{pid:"a",label:"CLI A",draft:"A 답"},{pid:"z",label:"CLI Z",draft:"Z 답"}],
+    answer_revisions:[{revision_id:rev,pid:"a",state:"accepted",rechecks:[{state:"accepted"}]}]};
+  const cm={collation_id:"c1008-120000-"+"b".repeat(32),confirmation:"d".repeat(64),input_bytes:300,memory:null,prompt:"PROMPT_C",
+    orchestrator:{label:"CLI A"},missing:[],members:[
+      {label:"T1",pid:"a",name:"CLI A",task:"A 보기",version:rev,sha256:"e".repeat(64),open:[{from:"recheck",status:"uncertain",detail:"반례 남음"}]},
+      {label:"T2",pid:"z",name:"CLI Z",task:"Z 보기",version:"original",sha256:"f".repeat(64),open:[]}]};
+  sent=[]; frames=[];
+  apiHook=async (path, body) => { sent.push([path, body]); return path.endsWith("/preview") ? cm : {collation_id:cm.collation_id}; };
+  await previewCollation(vrun);
+  assert.deepEqual(sent[0], ["/api/runs/g2/collate/preview",{choices:{a:rev,z:"original"}}]);
+  const ctxt=text(frames[0]);
+  for (const piece of ["PROMPT_C","수정 판 1 · 다른 팀원이 재검토함","원래 결과(수정 판 없음)","반례 남음","남은 지적 없음","이 입력으로 결과 모으기 · 호출 1회"])
+    assert.ok(ctxt.includes(piece), piece);
+  await all(frames[0]).find(x => x.tag==="button").attrs.onclick();
+  assert.deepEqual(sent.at(-1), ["/api/runs/g2/collate",{choices:{a:rev,z:"original"},collation_id:cm.collation_id,confirmation:cm.confirmation}]);
+  const usedText=text(collationIsland({...vrun,role_config:{orchestrator:orch},collations:[{...gathered,selection:{members:cm.members},selection_intact:true}]}));
+  assert.ok(usedText.includes("쓴 판: T1 수정 판 1 · 다른 팀원이 재검토함 · T2 원래 결과"), usedText);
+  assert.ok(text(collationIsland(crun([gathered]))).includes("쓴 판: 모두 원래 결과"));
   apiHook=null;
 })().catch(e => { console.error(e); process.exit(1); });
 '''
