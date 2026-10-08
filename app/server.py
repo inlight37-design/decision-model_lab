@@ -38,6 +38,7 @@ from app.report import ReportError, build_report, decision_report, revision_repo
 from app.store import LedgerBusy, Store, StoreError
 from app.live_config import Provider, load as load_live_config
 from app.account_quota import AccountQuota
+from app import ledgers
 from app.ingestion.extract import extract
 # 배선은 app.wiring에 있고 헤드리스 실행(app.run)과 나눠 쓴다. 시험은 이 모듈의 이름으로도 부른다.
 from app.wiring import (BEHAVIORS, EXIT_NOT_ELIGIBLE, MOCK_MODEL_CHOICES, PARTICIPANTS, live_setup,  # noqa: F401
@@ -83,6 +84,7 @@ def chosen_models(roster: dict, choices: dict, requested) -> dict:
 
 
 MAX_BODY = 2 * 1024 * 1024
+DISCARD_BODY = 64 * 1024   # 거절할 요청에서 읽어 버릴 본문의 상한
 
 
 class RequestError(ValueError):
@@ -99,7 +101,7 @@ def _text(body: dict, key: str, default: str = "") -> str:
 
 
 def make_handler(controller: Controller, token: str, port: int, *, participants=None, account_quota=None,
-                 choices=None):
+                 choices=None, ledger_root: Path | None = None):
     allowed_hosts = {f"127.0.0.1:{port}", f"localhost:{port}"}
     roster = dict(PARTICIPANTS if participants is None else participants)
     live = controller.executor.kind == "real"
@@ -162,18 +164,34 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
         def _json(self, code: int, data) -> None:
             self._send(code, json.dumps(data, ensure_ascii=False).encode("utf-8"))
 
+        def _discard_small_body(self) -> None:
+            """거절하기 전에 이미 보낸 작은 본문만 읽어 버린다. 읽지 않은 채 연결을 닫으면 Windows는 RST를 보내 클라이언트가
+            401·403 대신 연결 끊김을 받는다(CI windows-checks, PR #193). 큰 본문·모호한 길이는 읽지 않는다."""
+            lengths = self.headers.get_all("Content-Length", [])
+            if len(lengths) != 1 or self.headers.get_all("Transfer-Encoding", []):
+                return
+            value = lengths[0]
+            if value.isascii() and value.isdecimal() and len(value) <= 6 and 0 < int(value) <= DISCARD_BODY:
+                try:
+                    self.rfile.read(int(value))
+                except (OSError, TimeoutError):
+                    pass
+
         def _guard(self) -> bool:
             if len(self.headers.get_all("Host", [])) != 1 or self.headers.get("Host") not in allowed_hosts:
+                self._discard_small_body()
                 self._json(403, {"error": "unexpected Host header"})
                 return False
             origins = self.headers.get_all("Origin", [])
             if origins and origins != [f"http://{self.headers['Host']}"]:
+                self._discard_small_body()
                 self._json(403, {"error": "unexpected Origin header"})
                 return False
             if urlsplit(self.path).path.startswith("/api/"):
                 given = self.headers.get("Authorization", "")
                 if (len(self.headers.get_all("Authorization", [])) != 1
                         or not hmac.compare_digest(given.encode(), f"Bearer {token}".encode())):
+                    self._discard_small_body()
                     self._json(401, {"error": "missing or wrong token"})
                     return False
             return True
@@ -242,6 +260,16 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                 try:
                     self._json(200, controller.queries.source(parts[2], unquote(parts[4])))
                 except (ControllerError, ValueError) as exc:
+                    self._json(409, {'error': str(exc)})
+            elif path == '/api/ledgers':
+                # 같은 live 폴더의 이전 원장 — 읽기만 한다. 앱 입구가 ledger_root를 줄 때만 보인다(WF-01)
+                self._json(200, {'current': controller.store.path.parent.name if ledger_root else None,
+                                 'ledgers': ledgers.previous(ledger_root, controller.store.path.parent)})
+            elif len(parts) == 6 and parts[:2] == ['api', 'ledgers'] and parts[3] == 'tasks' and parts[5] == 'handoff':
+                try:
+                    self._json(200, ledgers.handoff(ledger_root, controller.store.path.parent, unquote(parts[2]),
+                                                    unquote(parts[4])))
+                except ledgers.LedgerError as exc:
                     self._json(409, {'error': str(exc)})
             elif parts[:2] == ['api', 'templates'] and (len(parts) in (2, 3) or len(parts) == 4 and parts[3] == 'export'):
                 try:
@@ -429,8 +457,13 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
                 elif len(parts) == 4 and parts[:2] == ["api", "proposals"] and parts[3] == "acknowledge":
                     controller.acknowledge_proposal_unknown(parts[2])
                     self._json(200, {"ok": True})
+                elif len(parts) == 5 and parts[:2] == ["api", "runs"] and parts[3:] == ["collate", "preview"]:
+                    # 고른 판 취합(GR-3)의 입력 확인 — 모델을 부르지 않는다
+                    self._json(200, controller.preview_collation(parts[2], body.get("choices")))
                 elif len(parts) == 4 and parts[:2] == ["api", "runs"] and parts[3] == "collate":   # 호출 1회
-                    self._json(200, {"collation_id": controller.collate(parts[2])})
+                    self._json(200, {"collation_id": controller.collate(
+                        parts[2], body.get("choices"), collation_id=body.get("collation_id"),
+                        confirmation=body.get("confirmation"))})
                 elif len(parts) == 4 and parts[:2] == ["api", "collations"] and parts[3] == "acknowledge":
                     controller.acknowledge_collation_unknown(parts[2])
                     self._json(200, {"ok": True})
@@ -536,7 +569,8 @@ def serve(data_dir: Path, port: int, *, timeout: float = 20.0, live_cli: str | N
           inventory: Path | None = None, model: str | None = None, call_budget: int | None = None,
           allow_context_unverified: bool = False,
           input_dir: Path | None = None,
-          live_providers: tuple[Provider, ...] | None = None) -> tuple[ThreadingHTTPServer, str, Controller]:
+          live_providers: tuple[Provider, ...] | None = None,
+          ledger_root: Path | None = None) -> tuple[ThreadingHTTPServer, str, Controller]:
     executor, roster, providers, call_budget = live_setup(
         data_dir, timeout=timeout, live_cli=live_cli, inventory=inventory, model=model, call_budget=call_budget,
         allow_context_unverified=allow_context_unverified, input_dir=input_dir, live_providers=live_providers)
@@ -564,7 +598,7 @@ def serve(data_dir: Path, port: int, *, timeout: float = 20.0, live_cli: str | N
                                  if any(p.adapter_id == "claude-code" for p in providers) else None))
     server.RequestHandlerClass = make_handler(controller, token, server.server_address[1],
                                               participants=roster, account_quota=quota,
-                                              choices=model_choices(providers))
+                                              choices=model_choices(providers), ledger_root=ledger_root)
     return server, token, controller
 
 

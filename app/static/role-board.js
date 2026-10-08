@@ -320,6 +320,128 @@ function splitBody() {
   if (!split || split.state !== "accepted" || splitApplied !== split.split_id || !roleBoard.general.length) return {};
   return splitMatchesNow() ? { split: { id: split.split_id } } : {};
 }
+// ---- 받은 다듬기·분담 다시 열기(WF-02) -----------------------------------------------------------------------
+// 창을 닫거나 새로고침하면 지금 다듬는 ID·받은 분담은 화면 메모리에서 사라지지만 원장에는 남는다. 실행에 쓰지 않은 기록을
+// 기존 ID로 골라 창에 되돌린다. 모델을 다시 부르지 않고, 이전 승인도 옮기지 않는다 — 승인할 차례는 다시 고르고,
+// 시작할 때 서버가 슈퍼바이저·모델·목표·팀원·자료 해시를 다시 확인한다.
+let preparedSig = null, preparedGeneration = 0;
+function sameTask(record) { return (record.task_id ?? null) === (composeTask ?? null); }
+function restorableRefinements() {
+  return ((state && state.refinements) || []).filter(r => !r.run_id && sameTask(r) &&
+    r.turns.some(t => t.state === "accepted") && !r.turns.some(t => t.state === "running" || t.state === "unknown"));
+}
+function restorableSplits() {
+  return ((state && state.splits) || []).filter(s => !s.used_by && s.state === "accepted" && sameTask(s));
+}
+// 기록이 만든 카드·모델을 지금 고를 수 있는가. 못 고르면 되돌린 기록은 볼 수만 있고 시작은 서버가 거절한다.
+function restoreCard(card) {
+  const listed = roleOptions.participants.find(p => p.pid === card.pid);
+  if (!listed || listed.transport !== "cli") return `${card.label || card.pid} 카드가 지금 명단에 없습니다.`;
+  const select = $("m-" + card.pid);
+  if (select && card.model) {
+    select.value = card.model;
+    if (select.value !== card.model) return `${listed.label}의 모델 ${card.model}을 지금 고를 수 없습니다.`;
+  }
+  return null;
+}
+function restoreDone(problem, done) {
+  $("preparedStatus").textContent = problem ? problem + " 기록은 볼 수 있지만 이대로는 시작할 수 없습니다."
+    : done + " 보낼 입력은 새로 확인합니다.";
+}
+function restoreRefinement(ref) {
+  preparedGeneration += 1;
+  resetSplit(); resetRefine(); invalidatePreview();
+  const pid = ref.supervisor.pid;
+  roleBoard = { ...roleBoard, supervisor: [pid], general: [], input_mode: "refine" };
+  const problem = restoreCard(ref.supervisor);
+  refineCurrent = ref.refine_id;   // 승인한 차례는 옮기지 않는다
+  $("question").value = ref.original;
+  renderRoleBoard(); renderRefine(true);
+  restoreDone(problem, "다듬기를 다시 열었습니다. 승인할 차례를 다시 고르세요.");
+}
+async function restoreSplit(split) {
+  const generation = ++preparedGeneration;
+  $("preparedStatus").textContent = "분담 제안의 자료 사본을 읽는 중입니다.";
+  try {
+    // 서버에 저장한 사본으로 새 File을 만든다. 이름만 같은 파일로 바꿔 끼우지 않는다 — 서버가 해시로 다시 본다.
+    const files = [];
+    for (const item of split.sources) {
+      const copy = await api(`/api/runs/${encodeURIComponent(split.split_id)}/sources/${encodeURIComponent(item.name)}`);
+      files.push(new File([copy.text], item.name, { type: "text/plain" }));
+    }
+    if (generation !== preparedGeneration || !$("composeDialog").open) return;
+    resetRefine(); resetSplit(); invalidatePreview();
+    const members = Object.values(split.members);
+    roleBoard = { ...roleBoard, supervisor: [], isolated: [], orchestrator: [split.orchestrator.pid], general: members,
+                  input_mode: "original" };
+    const missing = members.filter(pid => !roleOptions.participants.some(p => p.pid === pid && p.transport === "cli"));
+    const problem = restoreCard(split.orchestrator) || (missing.length ? `팀원 ${missing.join(", ")}이 지금 명단에 없습니다.` : null);
+    $("question").value = split.goal;
+    picked = files; assignDraft = {}; renderPicked("");
+    splitCurrent = split.split_id; splitAsked = 1; splitInputs = splitSnapshot();
+    renderRoleBoard();   // 칸을 그리며 같은 입력이면 제안대로 채운다
+    restoreDone(problem, "분담 제안을 다시 열었습니다. 팀원별 칸을 제안대로 채웠습니다.");
+  } catch (e) {
+    if (generation === preparedGeneration) $("preparedStatus").textContent = e.message;
+  }
+}
+function renderPrepared(force = false) {
+  const refinements = restorableRefinements(), splits = restorableSplits();
+  const sig = JSON.stringify([composeTask, refinements.map(r => [r.refine_id, r.turns.length]), splits.map(s => s.split_id)]);
+  if (!force && sig === preparedSig) return;
+  preparedSig = sig;
+  $("preparedBox").hidden = !refinements.length && !splits.length;
+  const row = (head, detail, onclick) => h("div", { class: "row between" },
+    h("span", { class: "sm" }, head, h("span", { class: "cap muted" }, " · " + detail)),
+    h("button", { type: "button", class: "btn", onclick }, "다시 열기"));
+  $("preparedList").replaceChildren(
+    ...refinements.map(r => row(`다듬기 · ${r.original.slice(0, 60)}`,
+      `${fmtTime(r.created_at)} · 슈퍼바이저 ${r.supervisor.label || r.supervisor.pid} · 차례 ${r.turns.length}`, () => restoreRefinement(r))),
+    ...splits.map(s => row(`분담 제안 · ${s.goal.slice(0, 60)}`,
+      `${fmtTime(s.created_at)} · 오케스트레이터 ${s.orchestrator.label || s.orchestrator.pid} · 자료 ${s.sources.length}개`, () => restoreSplit(s))));
+  pressAll($("preparedList"));
+}
+// ---- 이전 원장에서 이어가기(WF-01) ------------------------------------------------------------------------------
+// provider 하나의 호출을 다 쓰면 앱은 다음 시작 때 새 원장을 연다. 이전 원장은 읽기만 해서 작업을 찾고, 고른 작업의 공개
+// 결과를 인계 자료(파일 하나)로 붙인다. 이전 원장의 소비·승인·종료 미확인은 옮기지 않고 해결된 것으로 보이지도 않는다.
+let previousLedgers = null, ledgerGeneration = 0;
+async function loadLedgers() {
+  try { previousLedgers = await api("/api/ledgers"); } catch (e) { previousLedgers = null; }
+  renderLedgers();
+}
+function ledgerBudget(budget) {
+  if (!budget || !budget.provider_caps) return "호출 기록 " + Object.values(budget?.used || {}).reduce((a, b) => a + b, 0) + "회";
+  return Object.entries(budget.provider_caps).map(([id, cap]) => `${PROVIDER_NAME[id] || id} ${budget.used[id] || 0}/${cap}`).join(" · ");
+}
+function renderLedgers() {
+  const items = (previousLedgers && previousLedgers.ledgers) || [];
+  const open = items.filter(l => l.unsettled);
+  $("ledgerNotice").hidden = !open.length;
+  $("ledgerNotice").textContent = open.length ? `이전 원장 ${open.map(l => l.name).join(", ")}에 종료를 확인하지 못한 호출이 ` +
+    `${open.reduce((n, l) => n + l.unsettled, 0)}개 남아 있습니다. 새 원장을 연 것으로 정리되지 않습니다 — 그 프로세스가 끝났는지 PC에서 확인하세요.` : "";
+  $("ledgerBox").hidden = !items.length;
+  $("ledgerList").replaceChildren(...items.map(l => h("section", { class: "stack" },
+    h("p", { class: "sm strong" }, `원장 ${l.name}`, h("span", { class: "cap muted" },
+      " · " + (l.error || ledgerBudget(l.budget) + (l.unsettled ? ` · 종료 미확인 ${l.unsettled}` : "")))),
+    ...(l.tasks || []).map(t => h("div", { class: "row between" },
+      h("span", { class: "sm" }, t.title, h("span", { class: "cap muted" }, ` · 실행 ${t.runs}개`)),
+      h("button", { type: "button", class: "btn", onclick: () => attachHandoff(l.name, t.task_id) }, "인계 자료로 붙이기"))))));
+  pressAll($("ledgerList"));
+}
+async function attachHandoff(ledger, taskId) {
+  const generation = ++ledgerGeneration;
+  $("ledgerStatus").textContent = "이전 원장에서 공개 결과를 모으는 중입니다.";
+  try {
+    const made = await api(`/api/ledgers/${encodeURIComponent(ledger)}/tasks/${encodeURIComponent(taskId)}/handoff`);
+    if (generation !== ledgerGeneration || !$("composeDialog").open) return;
+    picked = [...picked.filter(f => f.name !== made.name), new File([made.text], made.name, { type: "text/plain" })];
+    if (!composeTask && !$("taskTitle").value.trim()) $("taskTitle").value = made.title;
+    renderPicked(""); renderAssignments();
+    $("ledgerStatus").textContent = `“${made.title}”의 공개 결과를 자료 ${made.name}로 붙였습니다. 보낼 입력 확인에서 전문을 볼 수 있습니다.`;
+  } catch (e) {
+    if (generation === ledgerGeneration) $("ledgerStatus").textContent = e.message;
+  }
+}
 // 창이 열린 동안 제안 상태가 바뀌었을 때만 다시 그린다 — 맡길 일을 쓰는 중에 칸을 지우지 않는다.
 function renderSplitIfChanged() {
   if (!roleBoard || !roleBoard.general.length) return;
@@ -402,6 +524,14 @@ function confirmButton() {
   return h("button", { type: "button", id: "confirmStart", class: "btn btn-brand", onclick: confirmRun },
     liveMode ? "확인한 입력으로 시작 — 실제 CLI 호출" : "확인한 입력으로 시작 (모의)");
 }
+// 기억 항목의 판단이 어느 결과 판을 보았는지(CR-02). 옛 pack에는 result_state가 없어 아무것도 덧붙이지 않는다.
+function judgmentNote(state) {
+  if (!state || state.judgment_revision === null || state.judgment_revision === undefined) return null;
+  const notes = [state.judgment_is_current ? "판단 메모는 이 실행의 현재 결과를 본 것입니다."
+    : "판단 메모는 이전 결과를 본 것입니다. 그 뒤 나온 새 결과는 아직 판단하지 않았습니다."];
+  if (state.dispositions_changed_after_judgment) notes.push("판단 뒤 지적의 처분이 바뀌었습니다.");
+  return h("p", { class: state.judgment_is_current ? "cap muted" : "sm strong" }, notes.join(" "));
+}
 // 일반 팀원 작업의 확인 화면: 팀원마다 실제로 보낼 입력 전문과 받을 자료 목록을 그대로 보인다.
 function memoryPreview(config, id = "preview-memory", expanded = true) {
   const pack = config.memory;
@@ -422,6 +552,7 @@ function memoryPreview(config, id = "preview-memory", expanded = true) {
     ...entries.map((e, index) => h("section", { class: "stack" },
       h("p", { class: "sm strong" }, `이전 실행 · ${fmtTime(e.created_at)} · ${e.excerpt_policy ? "선택 항목 발췌" : e.truncated ? "일부 발췌" : "전체 기록"}`),
       h("pre", { class: "input-full" }, e.excerpt),
+      judgmentNote(e.result_state),
       h("p", {class: "cap muted"}, !e.selection ? "선택 이유가 저장되기 전의 기록입니다."
         : e.selection.recent_fallback ? "일치하는 표현이 없어 최근 공개 기록을 참고로 골랐습니다."
         : `일치한 표현: ${e.selection.overlap_terms.join(", ")} · ` +
@@ -861,7 +992,11 @@ function collationCard(run, col) {
     : col.state === "rejected" ? [h("p", { class: "sm cell cell-alert" }, "이 모음은 쓸 수 없습니다 · " + (col.reason || col.status || "이유 미확인")),
       col.raw ? h("pre", { class: "input-full" }, col.raw.text) : null]
     : h("p", { class: "sm muted" }, "오케스트레이터가 팀원 결과를 읽는 중입니다.");
-  return h("section", { class: "cell stack" }, h("div", { class: "row between" }, h("span", { class: "sm strong" }, "결과 모으기"), badge(label)), body);
+  // 이 모음이 쓴 판(GR-3). 옛 모음(selection 없음)은 모두 원래 결과다.
+  const used = col.selection ? col.selection.members.filter(m => m.version).map(m => `${m.label} ${versionName(run, m.pid, m.version)}`)
+    : ["모두 원래 결과"];
+  return h("section", { class: "cell stack" }, h("div", { class: "row between" }, h("span", { class: "sm strong" }, "결과 모으기"), badge(label)),
+    h("p", { class: "cap muted" }, "쓴 판: " + used.join(" · ") + (col.selection_intact === false ? " · 기록된 hash와 맞지 않음" : "")), body);
 }
 function collationIsland(run) {
   const orch = run.role_config && run.role_config.orchestrator;
@@ -872,7 +1007,64 @@ function collationIsland(run) {
       "그대로 인용하게 하고, 인용이 결과와 글자 그대로 맞는지만 확인합니다 — 맞는 말인지는 확인하지 않습니다. 판단은 내가 합니다."),
     ...items.map(x => collationCard(run, x)),
     !busy && items.length < 2 ? h("div", { class: "island-part" }, h("button", { type: "button", class: "btn",
-      onclick: () => act(`/api/runs/${run.run_id}/collate`) }, `결과 모으기 · 호출 1회 (${items.length + 1}/2)`)) : null]);
+      onclick: () => previewCollation(run) }, `결과 모으기 입력 확인 · 호출 1회 (${items.length + 1}/2)`)) : null]);
+}
+// 고른 판 취합(GR-3). 팀원마다 원래 결과나 받아들인 수정 판 하나를 고른다(기본은 가장 최근에 받아들인 수정 판). 모델을
+// 부르지 않는 입력 확인으로 판/hash·남은 지적·누락과 보낼 입력 전문을 보인 뒤, 같은 확인 값으로만 시작한다. 판을 바꾸면
+// 확인을 새로 받는다. 늦게 온 미리보기 응답은 버린다.
+const collationChoice = {};
+function collationVersions(run, pid) {
+  return (run.answer_revisions || []).filter(v => v.pid === pid && v.state === "accepted");
+}
+function versionName(run, pid, version) {
+  if (version === "original") return "원래 결과";
+  const all = collationVersions(run, pid), index = all.findIndex(v => v.revision_id === version);
+  if (index < 0) return `수정 판 ${version.slice(4, 12)}…`;
+  const rechecked = (all[index].rechecks || []).some(x => x.state === "accepted");
+  return `수정 판 ${index + 1} · ${rechecked ? "다른 팀원이 재검토함" : "재검토 없음"}`;
+}
+async function previewCollation(run) {
+  const chosen = collationChoice[run.run_id] ||= Object.fromEntries(run.participants.filter(p => p.draft != null)
+    .map(p => [p.pid, (collationVersions(run, p.pid).at(-1) || {}).revision_id || "original"]));
+  const body = h("div", { class: "stack", role: "status" }, "모을 입력을 준비하는 중…");
+  catalogFrame("결과 모으기 입력 확인", body);
+  const request = catalogRequest.begin();
+  try {
+    const m = await api(`/api/runs/${run.run_id}/collate/preview`, { choices: chosen });
+    if (!request.current()) return;
+    const start = h("button", { class: "btn btn-brand", type: "button", onclick: async () => {
+      start.disabled = true;
+      try {
+        await api(`/api/runs/${run.run_id}/collate`, { choices: chosen, collation_id: m.collation_id, confirmation: m.confirmation });
+        if (request.current()) closeCatalog();
+        await refresh();
+      } catch (error) { if (request.current()) body.append(h("p", { class: "cell cell-alert" }, error.message)); }
+      // 시작은 한 번만. 오류나 모호한 응답 뒤에는 입력 확인을 다시 받는다.
+    } }, "이 입력으로 결과 모으기 · 호출 1회");
+    const picker = x => {
+      const versions = collationVersions(run, x.pid);
+      if (!versions.length) return h("span", { class: "sm" }, "원래 결과(수정 판 없음)");
+      const select = h("select", { "aria-label": `${x.name}의 쓸 판`, onchange: () => {
+        chosen[x.pid] = select.value; previewCollation(run);
+      } }, ["original", ...versions.map(v => v.revision_id)].map(v =>
+        h("option", { value: v, ...(v === x.version ? { selected: "" } : {}) }, versionName(run, x.pid, v))));
+      return select;
+    };
+    body.replaceChildren(
+      h("p", { class: "sm" }, `오케스트레이터 ${m.orchestrator.label}에게 팀원마다 맡긴 일과 고른 판의 결과, 그 판에 남은 지적을 보냅니다. ` +
+        `보낼 입력 ${m.input_bytes}바이트. 자료 원문은 보내지 않습니다. 인용은 고른 판의 결과와 글자 그대로 맞는지만 확인합니다.`),
+      m.memory ? h("p", { class: "sm muted" }, "이 실행에 고정한 자동 기억을 함께 보냅니다(새로 고르지 않음).") : null,
+      m.missing.length ? h("p", { class: "sm cell cell-alert" }, "결과가 없는 팀원(채우지 않음): " +
+        m.missing.map(x => `${(m.members.find(y => y.pid === x.pid) || {}).name || x.pid} — ${x.task}`).join(" · ")) : null,
+      ...m.members.filter(x => x.version).map(x => h("section", { class: "cell stack" },
+        h("div", { class: "row between" }, h("span", { class: "sm strong" }, `${x.label} ${x.name}`), picker(x)),
+        h("p", { class: "sm" }, `맡은 일: ${x.task} · sha256 ${x.sha256.slice(0, 12)}…`),
+        x.open.length ? [h("p", { class: "cap muted" }, `남은 지적 ${x.open.length}개(참고로 보냄, 사실 확인 아님)`),
+          h("ul", { class: "stack" }, x.open.map(o => h("li", { class: "sm" }, `[${o.status}] ${o.detail}`)))]
+          : h("p", { class: "sm muted" }, "남은 지적 없음"))),
+      h("details", {}, h("summary", {}, `오케스트레이터에게 보낼 입력 전문 · ${m.input_bytes}바이트`), h("pre", { class: "input-full" }, m.prompt)),
+      h("p", { class: "cap muted" }, "확인 값 ", h("span", { class: "mono hash" }, m.confirmation)), start);
+  } catch (error) { if (request.current()) body.replaceChildren(h("p", {}, error.message)); }
 }
 function humanComparison(run) {
   return island("원문 대조표 · 오케스트레이터는 나", [h("p", { class: "sm muted" }, "합성 호출 없이 공개된 답을 그대로 나란히 봅니다. 판단과 다음 실행은 내가 정합니다."),

@@ -321,6 +321,15 @@ assert.ok(text(expandedRecall).includes("공개 이력 80개를 검색"));
 assert.ok(text(expandedRecall).includes("공개 답"));
 assert.ok(text(expandedRecall).includes("약한 표현 일치 2개"));
 assert.ok(text(expandedRecall).includes("표현 3개를 제외"));
+const staleJudgment = text(memoryPreview({memory:{enabled:true,entries:[{run_id:"s",created_at:1,excerpt:"메모",
+  result_state:{result_revision:9,judgment_revision:4,judgment_is_current:false,dispositions_changed_after_judgment:true}}]}}));
+assert.ok(staleJudgment.includes("이전 결과를 본 것") && staleJudgment.includes("처분이 바뀌었습니다"));
+assert.ok(text(memoryPreview({memory:{enabled:true,entries:[{run_id:"c",created_at:1,excerpt:"메모",
+  result_state:{result_revision:4,judgment_revision:4,judgment_is_current:true,dispositions_changed_after_judgment:false}}]}}))
+  .includes("현재 결과를 본 것"));
+assert.ok(!text(memoryPreview({memory:{enabled:true,entries:[{run_id:"n",created_at:1,excerpt:"메모",
+  result_state:{result_revision:4,judgment_revision:null,judgment_is_current:false,dispositions_changed_after_judgment:false}}]}}))
+  .includes("판단 메모는"));
 assert.ok(text(memoryPreview({memory:{enabled:true,entries:[{run_id:"old",created_at:1,excerpt:"옛 발췌"}]}}))
   .includes("선택 이유가 저장되기 전"));
 // 두 번 눌러도 요청은 하나이고, 응답 전에 원문으로 돌아가면(창을 새로 연 것과 같다) 늦은 응답을 붙이지 않는다
@@ -361,6 +370,86 @@ async function refresh() { return true; }
   catalogFrame("다른 창", {});
   release(); await late;
   assert.ok(!text(frames[1]).includes("PROMPT_A"));
+  // 고른 판 취합(GR-3): 수정 판이 있으면 기본으로 가장 최근 수정 판을 고르고, 같은 판·ID·확인 값으로만 시작한다.
+  const rev="rev-"+"a".repeat(32);
+  const vrun={run_id:"g2",mode:"general",gate:{collected:true},participants:[{pid:"a",label:"CLI A",draft:"A 답"},{pid:"z",label:"CLI Z",draft:"Z 답"}],
+    answer_revisions:[{revision_id:rev,pid:"a",state:"accepted",rechecks:[{state:"accepted"}]}]};
+  const cm={collation_id:"c1008-120000-"+"b".repeat(32),confirmation:"d".repeat(64),input_bytes:300,memory:null,prompt:"PROMPT_C",
+    orchestrator:{label:"CLI A"},missing:[],members:[
+      {label:"T1",pid:"a",name:"CLI A",task:"A 보기",version:rev,sha256:"e".repeat(64),open:[{from:"recheck",status:"uncertain",detail:"반례 남음"}]},
+      {label:"T2",pid:"z",name:"CLI Z",task:"Z 보기",version:"original",sha256:"f".repeat(64),open:[]}]};
+  sent=[]; frames=[];
+  apiHook=async (path, body) => { sent.push([path, body]); return path.endsWith("/preview") ? cm : {collation_id:cm.collation_id}; };
+  await previewCollation(vrun);
+  assert.deepEqual(sent[0], ["/api/runs/g2/collate/preview",{choices:{a:rev,z:"original"}}]);
+  const ctxt=text(frames[0]);
+  for (const piece of ["PROMPT_C","수정 판 1 · 다른 팀원이 재검토함","원래 결과(수정 판 없음)","반례 남음","남은 지적 없음","이 입력으로 결과 모으기 · 호출 1회"])
+    assert.ok(ctxt.includes(piece), piece);
+  await all(frames[0]).find(x => x.tag==="button").attrs.onclick();
+  assert.deepEqual(sent.at(-1), ["/api/runs/g2/collate",{choices:{a:rev,z:"original"},collation_id:cm.collation_id,confirmation:cm.confirmation}]);
+  const usedText=text(collationIsland({...vrun,role_config:{orchestrator:orch},collations:[{...gathered,selection:{members:cm.members},selection_intact:true}]}));
+  assert.ok(usedText.includes("쓴 판: T1 수정 판 1 · 다른 팀원이 재검토함 · T2 원래 결과"), usedText);
+  assert.ok(text(collationIsland(crun([gathered]))).includes("쓴 판: 모두 원래 결과"));
+  // 받은 다듬기·분담 다시 열기(WF-02): 실행에 쓰지 않았고 끝난, 같은 작업의 기록만. 모델을 부르지 않고 승인은 옮기지 않는다.
+  globalThis.renderPicked=() => {}; nodes.composeDialog={open:true}; composeTask=null;
+  roleOptions={participants:sroster,live:false,behaviors:["ok"]}; roleBoard=emptyBoard(); nodes["m-a"]={value:"m1"};
+  const turn=(state, n=1) => ({turn:n,state,note:"",reply:state==="accepted"?{refined:"다듬은 문장",changes:[],ask:null}:null});
+  const ref=(id, extra={}) => ({refine_id:id,run_id:null,task_id:null,original:"원래 질문 "+id,created_at:1,max_turns:3,
+    supervisor:{pid:"a",label:"CLI A",model:"m1"},approved_turn:null,turns:[turn("accepted")],...extra});
+  state.refinements=[ref("q9"), ref("used",{run_id:"r1"}), ref("other",{task_id:"t2"}), ref("open",{turns:[turn("accepted"),turn("unknown",2)]}),
+    ref("failed",{turns:[{...turn("rejected"),status:"format_error"}]})];
+  const gsplit={split_id:"s7",used_by:null,state:"accepted",task_id:null,goal:"나눌 목표",created_at:2,members:{M1:"a",M2:"z"},
+    sources:[{name:"a.md"},{name:"b.md"}],orchestrator:{pid:"a",label:"CLI A",model:"m1"},
+    reply:{assignments:{a:{task:"A 맡기",sources:["a.md"]},z:{task:"Z 맡기",sources:["b.md"]}},reason:"자료마다"}};
+  state.splits=[gsplit,{...gsplit,split_id:"s8",used_by:"r2"},{...gsplit,split_id:"s9",state:"rejected"}];
+  assert.deepEqual(restorableRefinements().map(r => r.refine_id),["q9"]);
+  assert.deepEqual(restorableSplits().map(s => s.split_id),["s7"]);
+  renderPrepared(true);
+  assert.equal(nodes.preparedBox.hidden,false);
+  assert.ok(text({kids:nodes.preparedList.kids}).includes("다듬기 · 원래 질문 q9"));
+  composeTask="t2"; renderPrepared(); assert.equal(nodes.preparedBox.hidden,false);   // 그 작업의 창에서는 그 작업의 기록만
+  assert.ok(text({kids:nodes.preparedList.kids}).includes("원래 질문 other") && !text({kids:nodes.preparedList.kids}).includes("q9"));
+  composeTask=null;
+  refineApproved=3; restoreRefinement(state.refinements[0]);
+  assert.equal(refineCurrent,"q9"); assert.equal(refineApproved,null);
+  assert.deepEqual(roleBoard.supervisor,["a"]); assert.equal(roleBoard.input_mode,"refine");
+  assert.equal(nodes.question.value,"원래 질문 q9"); assert.ok(nodes.preparedStatus.textContent.includes("승인할 차례를 다시"));
+  // 그 모델을 지금 고를 수 없으면 볼 수만 있다고 알린다
+  nodes["m-a"]={options:["m1"],v:"m1",get value(){return this.v;},set value(x){if(this.options.includes(x))this.v=x;}};
+  restoreRefinement(ref("q9",{supervisor:{pid:"a",label:"CLI A",model:"m9"}}));
+  assert.ok(nodes.preparedStatus.textContent.includes("m9을 지금 고를 수 없습니다"));
+  nodes["m-a"]={value:"m1"};
+  const fetched=[]; apiHook=async path => { fetched.push(path); return {text:"사본 "+decodeURIComponent(path.split("/").pop())}; };
+  await restoreSplit(gsplit);
+  assert.deepEqual(fetched,["/api/runs/s7/sources/a.md","/api/runs/s7/sources/b.md"]);
+  assert.equal(refineCurrent,null); assert.equal(nodes.question.value,"나눌 목표");
+  assert.deepEqual([roleBoard.orchestrator,roleBoard.general,roleBoard.isolated,roleBoard.supervisor],[["a"],["a","z"],[],[]]);
+  assert.deepEqual(picked.map(f => f.name),["a.md","b.md"]); assert.equal(await picked[0].text(),"사본 a.md");
+  assert.equal(assignDraft.a.task,"A 맡기"); assert.deepEqual([...assignDraft.a.off].map(f => f.name),["b.md"]);
+  assert.deepEqual(splitBody(),{split:{id:"s7"}});
+  // 사본을 읽는 동안 창을 새로 열면 늦게 온 사본을 붙이지 않는다
+  let releaseCopy; apiHook=() => new Promise(resolve => { releaseCopy=() => resolve({text:"늦은 사본"}); });
+  const lateSplit=restoreSplit({...gsplit,sources:[{name:"a.md"}]}); preparedGeneration+=1; releaseCopy(); await lateSplit;
+  assert.equal(picked.length,2);
+  // 이전 원장에서 이어가기(WF-01): 종료 미확인은 남아 있다고 알리고, 고른 작업의 인계 자료를 파일 하나로 붙인다.
+  previousLedgers={current:"new",ledgers:[{name:"20261001-090000",unsettled:2,error:null,
+    budget:{cap:10,provider_caps:{codex:5,"claude-code":5},used:{codex:5,"claude-code":1}},
+    tasks:[{task_id:"t-old",title:"이전 작업",runs:3}]}]};
+  renderLedgers();
+  assert.equal(nodes.ledgerBox.hidden,false); assert.equal(nodes.ledgerNotice.hidden,false);
+  assert.ok(nodes.ledgerNotice.textContent.includes("종료를 확인하지 못한 호출이 2개") && nodes.ledgerNotice.textContent.includes("정리되지 않습니다"));
+  const ltext=text({kids:nodes.ledgerList.kids});
+  assert.ok(ltext.includes("Codex 5/5") && ltext.includes("Claude 1/5") && ltext.includes("이전 작업"), ltext);
+  nodes.taskTitle={value:""}; composeTask=null; picked=[];
+  apiHook=async path => { fetched.push(path); return {name:"handoff-20261001-090000-t-old.md",title:"이전 작업",text:"인계 본문"}; };
+  const attach=all({kids:nodes.ledgerList.kids}).find(x => x.tag==="button");
+  await attach.attrs.onclick();
+  assert.equal(fetched.at(-1),"/api/ledgers/20261001-090000/tasks/t-old/handoff");
+  assert.deepEqual(picked.map(f => f.name),["handoff-20261001-090000-t-old.md"]); assert.equal(await picked[0].text(),"인계 본문");
+  assert.equal(nodes.taskTitle.value,"이전 작업");
+  await attach.attrs.onclick(); assert.equal(picked.length,1);   // 같은 인계 자료를 두 번 붙이지 않는다
+  previousLedgers={ledgers:[{name:"x",unsettled:0,budget:null,tasks:[]}]}; renderLedgers();
+  assert.equal(nodes.ledgerNotice.hidden,true);
   apiHook=null;
 })().catch(e => { console.error(e); process.exit(1); });
 '''
