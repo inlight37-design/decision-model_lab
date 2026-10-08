@@ -1,0 +1,10 @@
+{
+ "Q1": "CPython 3.12에서 다음 코드를 실행하면 화면에 정확히 무엇이 찍히는가?\n\n```python\nclass A:\n    xs = [1, 2, 3]\n    try:\n        ys = [x for x in xs if x in xs]\n    except NameError:\n        ys = \"이름 오류\"\n\nprint(A.ys)\n```\n\n맨 마지막 줄에 `답: <찍히는 한 줄 그대로>` 한 줄만 쓴다.",
+ "Q2": "CPython 3.12에서 다음 코드를 실행하면 화면에 정확히 무엇이 찍히는가?\n\n```python\nd = {True: \"a\", 1: \"b\", 1.0: \"c\"}\nprint(d, len(d))\n```\n\n맨 마지막 줄에 `답: <찍히는 한 줄 그대로>` 한 줄만 쓴다.",
+ "Q3": "CPython 3.12에서 다음 코드를 실행하면 화면에 정확히 무엇이 찍히는가?\n\n```python\nprint(round(2.675, 2), round(-2.5), f\"{0.125:.2f}\", f\"{0.375:.2f}\")\n```\n\n맨 마지막 줄에 `답: <찍히는 한 줄 그대로>` 한 줄만 쓴다.",
+ "Q4": "SQLite 3에서 다음 문장을 차례로 실행한다. 마지막 SELECT가 돌려주는 세 값은 각각 무엇인가?\n\n```sql\nCREATE TABLE t(x);\nCREATE TABLE u(y);\nINSERT INTO t VALUES (1), (2), (NULL);\nINSERT INTO u VALUES (2), (NULL);\nSELECT\n  (SELECT COUNT(*) FROM t WHERE x NOT IN (SELECT y FROM u)),\n  (SELECT COUNT(*) FROM t WHERE NOT EXISTS (SELECT 1 FROM u WHERE u.y = t.x)),\n  (SELECT COUNT(x) FROM t);\n```\n\n맨 마지막 줄에 `답: <첫째>, <둘째>, <셋째>` 한 줄만 쓴다.",
+ "Q5": "2026!(1부터 2026까지의 곱)을 12진법으로 쓰면 맨 끝에 0이 몇 개 이어지는가?\n\n맨 마지막 줄에 `답: <정수>` 한 줄만 쓴다.",
+ "Q6": "1 이상 2026 이하의 정수 n 가운데, 양의 정수 a와 b로 n = a² − b²라고 쓸 수 있는 n은 몇 개인가? (b도 양의 정수여야 하므로 b = 0은 안 된다.)\n\n맨 마지막 줄에 `답: <정수>` 한 줄만 쓴다.",
+ "Q7": "그레고리력으로 2026년 1월 1일부터 2035년 12월 31일까지, 13일이 금요일인 날은 모두 몇 번인가?\n\n맨 마지막 줄에 `답: <정수>` 한 줄만 쓴다.",
+ "Q8": "공정한 육면체 주사위를 던져 나온 눈을 차례로 더하다가, 합이 처음으로 10 이상이 되면 멈춘다. 멈췄을 때 합이 정확히 10일 확률은 얼마인가? 기약분수로 쓴다.\n\n맨 마지막 줄에 `답: <분자>/<분모>` 한 줄만 쓴다."
+}

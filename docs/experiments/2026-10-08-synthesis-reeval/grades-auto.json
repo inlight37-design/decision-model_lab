@@ -1,0 +1,146 @@
+{
+ "Q1": {
+  "S-codex": {
+   "verdict": "correct",
+   "answer": "이름 오류"
+  },
+  "S-claude": {
+   "verdict": "correct",
+   "answer": "이름 오류"
+  },
+  "X-codex": {
+   "verdict": "correct",
+   "why": "correct value only"
+  },
+  "X-claude": {
+   "verdict": "correct",
+   "why": "correct value only"
+  }
+ },
+ "Q2": {
+  "S-codex": {
+   "verdict": "correct",
+   "answer": "{True: 'c'} 1"
+  },
+  "S-claude": {
+   "verdict": "correct",
+   "answer": "{True: 'c'} 1"
+  },
+  "X-codex": {
+   "verdict": "correct",
+   "why": "correct value only"
+  },
+  "X-claude": {
+   "verdict": "correct",
+   "why": "correct value only"
+  }
+ },
+ "Q3": {
+  "S-codex": {
+   "verdict": "correct",
+   "answer": "2.67 -2 0.12 0.38"
+  },
+  "S-claude": {
+   "verdict": "correct",
+   "answer": "`2.67 -2 0.12 0.38`"
+  },
+  "X-codex": {
+   "verdict": "correct",
+   "why": "correct value only"
+  },
+  "X-claude": {
+   "verdict": "correct",
+   "why": "correct value only"
+  }
+ },
+ "Q4": {
+  "S-codex": {
+   "verdict": "correct",
+   "answer": "0, 2, 2"
+  },
+  "S-claude": {
+   "verdict": "correct",
+   "answer": "0, 2, 2"
+  },
+  "X-codex": {
+   "verdict": "correct",
+   "why": "correct value only"
+  },
+  "X-claude": {
+   "verdict": "failed",
+   "status": "unavailable"
+  }
+ },
+ "Q5": {
+  "S-codex": {
+   "verdict": "wrong",
+   "answer": "1010"
+  },
+  "S-claude": {
+   "verdict": "correct",
+   "answer": "1009"
+  },
+  "X-codex": {
+   "verdict": "manual",
+   "why": "both values"
+  },
+  "X-claude": {
+   "verdict": "manual",
+   "why": "both values"
+  }
+ },
+ "Q6": {
+  "S-codex": {
+   "verdict": "wrong",
+   "answer": "1519"
+  },
+  "S-claude": {
+   "verdict": "correct",
+   "answer": "1517"
+  },
+  "X-codex": {
+   "verdict": "manual",
+   "why": "both values"
+  },
+  "X-claude": {
+   "verdict": "correct",
+   "why": "correct value only"
+  }
+ },
+ "Q7": {
+  "S-codex": {
+   "verdict": "correct",
+   "answer": "17"
+  },
+  "S-claude": {
+   "verdict": "correct",
+   "answer": "17"
+  },
+  "X-codex": {
+   "verdict": "correct",
+   "why": "correct value only"
+  },
+  "X-claude": {
+   "verdict": "correct",
+   "why": "correct value only"
+  }
+ },
+ "Q8": {
+  "S-codex": {
+   "verdict": "correct",
+   "answer": "17492167/60466176"
+  },
+  "S-claude": {
+   "verdict": "correct",
+   "answer": "17492167/60466176"
+  },
+  "X-codex": {
+   "verdict": "correct",
+   "why": "correct value only"
+  },
+  "X-claude": {
+   "verdict": "correct",
+   "why": "correct value only"
+  }
+ }
+}
