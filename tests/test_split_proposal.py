@@ -114,6 +114,29 @@ class SplitTests(support.Base):
         self.assertIs(self.run_view(ctl, edited)["split"]["as_proposed"], False)   # 고쳐도 받되 고쳤다고 남긴다
         self.assertEqual(ctl.view()["splits"], [])
 
+    def test_a_received_split_is_rebuilt_from_its_stored_copies_without_another_call(self):
+        # WF-02: the window's File objects are gone after a reload; the stored copies rebuild the same sources.
+        ex = Splitter(); ctl = self.controller(ex)
+        sid = self.ask(ctl)
+        item = self.split_of(ctl, sid)
+        self.assertIsNone(item["task_id"])
+        copies = [(s["name"], ctl.queries.source(sid, s["name"])["text"]) for s in item["sources"]]
+        self.assertEqual(copies, list(SOURCES))
+        with self.store.tx() as tx:   # a stored copy that no longer matches its hash is never handed back
+            tx.execute("UPDATE sources SET content = ? WHERE run_id = ? AND name = 'a.md'", b"changed", sid)
+        with self.assertRaises(c.ControllerError):
+            ctl.queries.source(sid, "a.md")
+        with self.store.tx() as tx:
+            tx.execute("UPDATE sources SET content = ? WHERE run_id = ? AND name = 'a.md'", copies[0][1].encode(), sid)
+        rid = ctl.create_run(item["goal"], [ROSTER[pid] for pid in item["members"].values()], min_independent=1,
+                             role_board=board(*item["members"].values()), roster=ROSTER, sources=copies,
+                             assignments={pid: dict(work) for pid, work in item["reply"]["assignments"].items()},
+                             split={"id": sid}, task_title="다시 연 분담")
+        self.assertTrue(ctl.wait_idle())
+        self.assertEqual((self.run_view(ctl, rid)["split"]["split_id"], self.run_view(ctl, rid)["split"]["as_proposed"]),
+                         (sid, True))
+        self.assertEqual(ex.started.count("supervisor"), 1)
+
     def test_a_split_must_match_members_files_goal_task_and_orchestrator(self):
         ctl = self.controller(Splitter())
         sid = self.ask(ctl)

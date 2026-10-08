@@ -172,17 +172,35 @@ def _general_revision_report(run):
     variants = _variants(run, drafts)
     if any(not revisions.general(v['snapshot']) for v in variants):
         raise ReportError('general run holds a non-general revision snapshot')
+    collations = _collations(run)
+    chosen = any(m['version'] not in (None, 'original') for c in collations if c['members'] for m in c['members'])
     return {'schema': GENERAL_REVISION_SCHEMA, 'mode': 'general',
             'source': {'run_id': run['run_id'], 'created_at': run['created_at'], 'phase': run['phase']},
             'goal': run['question'], 'input_sha256': run['input_sha256'], 'members': members,
             'cross_review': _cross_review(run.get('cross_review')), 'revisions': variants,
             'human_judgment': {'reviewed': run['reviewed'], 'memo': run.get('review_memo')},
             'factual_check': 'not_performed', 'independence': 'general_team_not_independent',
-            'collation_scope': 'original_answers_only',
+            'collation_scope': 'selected_versions' if chosen else 'original_answers_only', 'collations': collations,
             'limitations': ['General members saw each other\'s answers; reviews and revisions are not independent.',
                             'Quote matches and recheck assessments do not verify facts; source bodies were not sent to reviewers.',
+                            ('Each collation records the answer version it used per member; choosing a revision is a human '
+                             'choice, not evidence that it is better.') if chosen else
                             'Collations in this run used the original answers, not these revisions.',
                             'Mock/synthetic execution is not evidence of real model quality or entitlement.']}
+
+
+def _collations(run):
+    """결과 모으기마다 쓴 판(GR-3). 옛 행은 members가 None — 원래 결과를 모았다. 확인한 선택이 훼손됐으면 내보내지 않는다."""
+    found = []
+    for item in run.get('collations') or []:
+        selection = item.get('selection')
+        if selection is not None and not item.get('selection_intact'):
+            raise ReportError('collation selection does not match its recorded digest')
+        found.append({'collation_id': item['collation_id'], 'state': item['state'],
+                      'members': None if selection is None else [
+                          {k: m[k] for k in ('pid', 'task', 'version', 'sha256', 'rechecked')} | {'open': len(m['open'])}
+                          for m in selection['members']]})
+    return found
 
 
 def _variants(run, drafts):

@@ -389,6 +389,10 @@ class PublicQueries:
                 "state": row["state"], "status": row["status"], "execution": row["kind"],
                 "orchestrator": _card(json.loads(row["orchestrator"])),
                 "labels": json.loads(row["labels"]), "prompt": row["prompt"], "input_sha256": row["input_sha256"],
+                # 고른 판 취합(GR-3)이 확인한 팀원별 판/hash·미해결·누락. 옛 행(None)은 모두 원래 결과를 모았다
+                "selection": json.loads(row["selection"]) if row["selection"] else None,
+                "selection_intact": (None if row["selection"] is None else
+                                     hashlib.sha256(row["selection"].encode("utf-8")).hexdigest() == row["selection_sha256"]),
                 **_seat_result(row)}
 
 
@@ -463,7 +467,10 @@ class PublicQueries:
             turns.append({"turn": turn["turn"], "note": turn["note"], "state": turn["state"], "status": turn["status"],
                           "execution": turn["kind"], "prompt": turn["prompt"], "input_sha256": turn["input_sha256"],
                           **_seat_result(turn)})
+        snapshot = self.store.row("SELECT payload FROM events WHERE run_id = ? AND kind = 'memory_selected'", row["refine_id"])
         return {"refine_id": row["refine_id"], "created_at": row["created_at"], "original": row["original"],
+                # 첫 차례에 고정한 기억의 작업. 다시 열 때 같은 작업의 창에서만 고르게 한다(WF-02)
+                "task_id": (json.loads(snapshot["payload"]).get("memory") or {}).get("task_id") if snapshot else None,
                 "supervisor": _card(json.loads(row["supervisor"])),
                 "run_id": row["run_id"], "approved_turn": row["approved_turn"], "max_turns": refining.MAX_TURNS,
                 "turns": turns}

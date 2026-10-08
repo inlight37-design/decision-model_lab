@@ -43,7 +43,8 @@ from typing import Any, Iterator
 # 16: answer_revisions/revision_checks preserve post-review variants separately from blind drafts.
 # 17: optional task plans and prerequisite references; admitted runs freeze their plan.
 # 18: reviews.snapshot/snapshot_sha256 — 일반 팀원 교차검토(GR-1)가 확인한 라운드 입력. 옛 행은 NULL(격리 형식)이다.
-SCHEMA_VERSION = 18
+# 19: collations.selection/selection_sha256 — 고른 판 취합(GR-3)이 확인한 팀원별 판/hash·미해결·누락. 옛 행은 NULL(원래 답)이다.
+SCHEMA_VERSION = 19
 # 스키마 5 이전 시도의 종류는 시작 사건에 남은 실행기 이름에서만 복원한다. 모의 실행기의 이름은 격리 방식이었다.
 # 근거가 없으면 NULL로 두고, 화면은 "실행 종류 기록 없음"으로 보인다.
 LEGACY_EXECUTORS = {"bubblewrap": "mock", "job_object": "mock", "process_group": "mock", "cli": "real"}
@@ -99,7 +100,8 @@ CREATE TABLE IF NOT EXISTS splits (
 CREATE TABLE IF NOT EXISTS collations (
   collation_id TEXT PRIMARY KEY, run_id TEXT NOT NULL, created_at REAL NOT NULL, orchestrator TEXT NOT NULL,
   labels TEXT NOT NULL, drafts TEXT NOT NULL, prompt TEXT NOT NULL, input_sha256 TEXT NOT NULL,
-  attempt TEXT NOT NULL, kind TEXT, state TEXT NOT NULL, status TEXT, result TEXT
+  attempt TEXT NOT NULL, kind TEXT, state TEXT NOT NULL, status TEXT, result TEXT,
+  selection TEXT, selection_sha256 TEXT
 );
 CREATE TABLE IF NOT EXISTS reviews (
   review_id TEXT PRIMARY KEY, run_id TEXT NOT NULL, seq INTEGER NOT NULL, created_at REAL NOT NULL,
@@ -289,6 +291,11 @@ class Store:
                     for name in ("snapshot", "snapshot_sha256"):
                         if name not in columns:
                             self._db.execute(f"ALTER TABLE reviews ADD COLUMN {name} TEXT")
+                if version < 19:
+                    columns = self._columns("collations")
+                    for name in ("selection", "selection_sha256"):
+                        if name not in columns:
+                            self._db.execute(f"ALTER TABLE collations ADD COLUMN {name} TEXT")
                 if version != SCHEMA_VERSION:
                     self._db.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
                 # Additive lookup indexes; after column migration so legacy ledgers

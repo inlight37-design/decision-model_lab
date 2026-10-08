@@ -7,6 +7,40 @@ from app.state import QUEUED, RUNNING, AWAITING_USER, ACCEPTED, REJECTED, UNKNOW
 from app.domain import ControllerError
 from app import source_document
 
+# 사람이 보는 결과를 바꾸는 사건 — 공개, 일반 실행의 모음, 합성 완료·실패, 다음 단계 제안·결과 모으기·교차검토의 결과,
+# 수정·재검토의 결과. 종료 미확인도 새 결과다 — 종료 확인이 판단을 대신하지 않게 판을 올린다(Codex 교차검토, PR #144).
+RESULT_EVENTS = ('revealed', 'collected', 'synthesis_completed', 'synthesis_failed',
+                 'proposal_completed', 'proposal_failed', 'collation_completed', 'collation_failed',
+                 'review_completed', 'review_failed', 'review_skipped',
+                 'proposal_unknown', 'collation_unknown', 'review_unknown',
+                 'revision_completed', 'revision_failed', 'revision_unknown', 'revision_result_not_stored',
+                 'recheck_completed', 'recheck_failed', 'recheck_unknown', 'recheck_result_not_stored')
+_RESULT_KINDS = ", ".join(f"'{kind}'" for kind in RESULT_EVENTS)
+
+
+def review_state(store, run_id: str) -> dict[str, Any]:
+    """결과 판과 마지막 판단 완료의 관계. 판은 RESULT_EVENTS 중 마지막 사건의 seq다. 판단 완료 사건이 그보다 뒤에 있어야
+    현재 판을 본 것이다. 새 합성이 끝나면 판이 올라가 다시 내 차례가 된다(AH-01). 판단이 본 판은 사건에 실린 revision이고,
+    판을 싣지 않은 옛 원장의 판단 완료 사건은 같은 순서 규칙으로 그 앞의 마지막 결과 사건에서 읽는다. 지적 처분은 판을
+    올리지 않으므로 판단 뒤에 처분이 바뀌었는지를 따로 센다. 화면·판단 완료·기억이 이 한 계산을 함께 쓴다(CR-02)."""
+    row = store.row(
+        f"SELECT COALESCE(MAX(CASE WHEN kind IN ({_RESULT_KINDS}) THEN seq END), 0) AS revision, "
+        "COALESCE(MAX(CASE WHEN kind = 'human_reviewed' THEN seq END), 0) AS reviewed "
+        "FROM events WHERE run_id = ?", run_id)
+    state = {"result_revision": row["revision"], "judgment": None, "judgment_revision": None,
+             "judgment_is_current": row["reviewed"] > row["revision"], "dispositions_changed_after_judgment": False}
+    if row["reviewed"]:
+        payload = json.loads(store.row("SELECT payload FROM events WHERE run_id = ? AND seq = ?",
+                                       run_id, row["reviewed"])["payload"])
+        seen = payload.get("revision")
+        if type(seen) is not int:
+            seen = store.row(f"SELECT COALESCE(MAX(seq), 0) AS seq FROM events WHERE run_id = ? AND seq < ? "
+                             f"AND kind IN ({_RESULT_KINDS})", run_id, row["reviewed"])["seq"]
+        changed = store.row("SELECT 1 FROM events WHERE run_id = ? AND seq > ? AND kind = 'review_disposition' LIMIT 1",
+                            run_id, row["reviewed"])
+        state.update(judgment=payload, judgment_revision=seen, dispositions_changed_after_judgment=changed is not None)
+    return state
+
 
 class RunRepository:
     def __init__(self, runtime):
@@ -55,25 +89,9 @@ class RunRepository:
 
 
     def _review_state(self, run_id: str) -> tuple[int, bool, str | None]:
-        """(결과 판, 그 판을 판단 완료했는가, 그때 남긴 취합 메모). 판은 사람이 보는 결과를 바꾼 마지막 사건의 seq다 —
-        공개, 일반 실행의 모음, 합성 완료·실패, 다음 단계 제안·결과 모으기·교차검토의 결과. 판단 완료 사건이 그보다 뒤에 있어야 그 판을 본 것이다. 새 합성이 끝나면
-        판이 올라가 다시 내 차례가 된다(AH-01). 판을 싣지 않은 옛 원장의 판단 완료 사건도 같은 순서 규칙으로 읽는다."""
-        row = self.store.row(
-            "SELECT COALESCE(MAX(CASE WHEN kind IN ('revealed', 'collected', 'synthesis_completed', 'synthesis_failed', "
-            "'proposal_completed', 'proposal_failed', 'collation_completed', 'collation_failed', "
-            "'review_completed', 'review_failed', 'review_skipped', "
-            # 종료 미확인도 새 결과다 — 종료 확인이 판단을 대신하지 않게 판을 올린다(Codex 교차검토, PR #144)
-            "'proposal_unknown', 'collation_unknown', 'review_unknown', "
-            "'revision_completed', 'revision_failed', 'revision_unknown', 'revision_result_not_stored', "
-            "'recheck_completed', 'recheck_failed', 'recheck_unknown', 'recheck_result_not_stored') "
-            "THEN seq END), 0) AS revision, "
-            "COALESCE(MAX(CASE WHEN kind = 'human_reviewed' THEN seq END), 0) AS reviewed "
-            "FROM events WHERE run_id = ?", run_id)
-        memo = None
-        if row["reviewed"]:
-            payload = self.store.row("SELECT payload FROM events WHERE run_id = ? AND seq = ?", run_id, row["reviewed"])
-            memo = json.loads(payload["payload"]).get("memo")
-        return row["revision"], row["reviewed"] > row["revision"], memo
+        """(결과 판, 그 판을 판단 완료했는가, 그때 남긴 취합 메모). 계산은 `review_state`가 한다."""
+        state = review_state(self.store, run_id)
+        return state["result_revision"], state["judgment_is_current"], (state["judgment"] or {}).get("memo")
 
 
     def _answers(self, run_id: str) -> list[dict[str, Any]]:

@@ -332,7 +332,9 @@ def serve(args) -> int:
         return 1
     for port in ports:
         try:
-            server, _token, controller = start_server(ledger, port, timeout=TIMEOUT, live_providers=providers)
+            # 앞 원장은 읽기 전용으로 찾아 이어 갈 수 있게 한다(WF-01). 모의 원장은 하나뿐이다.
+            server, _token, controller = start_server(ledger, port, timeout=TIMEOUT, live_providers=providers,
+                                                      ledger_root=None if args.mock else paths["live"])
             break
         except OSError as exc:        # 포트를 다른 프로그램이 쓰고 있다 — 다음 포트
             last = exc
