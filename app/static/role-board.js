@@ -682,7 +682,8 @@ function reviewCard(run, r) {
     : { running: "검토 중", queued: "차례 기다림", unknown: "종료 미확인", skipped: "시작하지 않음" }[r.state] || r.state;
   const stale = Object.entries(r.targets).filter(([, t]) => !t.fresh).map(([l]) => l);
   const body = r.state === "accepted" ? [
-      h("p", { class: "cap muted" }, "이름표: " + Object.entries(r.labels).map(([l, pid]) => `${l} = ${name(pid)}`).join(" · ")),
+      h("p", { class: "cap muted" }, "이름표: " + Object.entries(r.labels).map(([l, pid]) => `${l} = ${name(pid)}` +
+        (r.snapshot ? ` (맡은 일: ${r.snapshot.targets[l].task})` : "")).join(" · ")),
       stale.length ? h("p", { class: "sm cell cell-alert" }, `검토한 뒤 대상 답이 바뀌었습니다: ${stale.join(", ")}`) : null,
       r.reply.findings.length ? r.reply.findings.map((f, i) => h("div", { class: "cell stack" },
         h("div", { class: "row between" }, h("span", { class: "sm strong" }, `${f.target} ${name(f.target_pid)} · ${FINDING_KIND[f.kind] || f.kind}`),
@@ -704,28 +705,70 @@ function reviewCard(run, r) {
   return h("section", { class: "cell stack" }, h("div", { class: "row between" },
     h("span", { class: "sm strong" }, `검토자 ${name(r.reviewer.pid)}`), badge(label)), body);
 }
+// 일반 팀원 교차검토(GR-1)의 입력 확인. 모델을 부르지 않고, 검토자마다 보낼 입력 전문과 호출 수를 보인 뒤 같은 확인
+// 값으로만 시작한다. 늦게 온 미리보기 응답은 버린다(창을 닫았거나 다른 미리보기를 연 경우).
+async function previewGeneralReview(run, question) {
+  const body = h("div", { class: "stack", role: "status" }, "검토에 보낼 입력을 준비하는 중…");
+  catalogFrame("교차검토 입력 확인", body);
+  const request = catalogRequest.begin();
+  try {
+    const m = await api(`/api/runs/${run.run_id}/cross-review/preview`, { question });
+    if (!request.current()) return;
+    const start = h("button", { class: "btn btn-brand", type: "button", onclick: async () => {
+      start.disabled = true;
+      try {
+        await api(`/api/runs/${run.run_id}/cross-review`, { question, round_id: m.round_id, confirmation: m.confirmation });
+        if (request.current()) closeCatalog();
+        await refresh();
+      } catch (error) { if (request.current()) body.append(h("p", { class: "cell cell-alert" }, error.message)); }
+      // 시작은 한 번만. 오류나 모호한 응답 뒤에는 입력 확인을 다시 받는다.
+    } }, `이 입력으로 교차검토 받기 · 호출 ${m.calls}회`);
+    body.replaceChildren(
+      h("p", { class: "sm" }, `검토자 ${m.calls}명이 한 명씩 차례로 다른 팀원의 결과를 읽습니다. 보낼 입력 합계 ${m.input_bytes}바이트. ` +
+        "자료 본문과 자동 기억은 보내지 않고, 맡은 일과 자료의 이름·sha256만 보냅니다."),
+      h("p", { class: "sm" }, "검토 질문: " + m.question),
+      m.missing.length ? h("p", { class: "sm cell cell-alert" }, "결과가 없는 팀원(검토하지 않고 채우지 않음): " +
+        m.missing.map(x => `${(m.members.find(y => y.pid === x.pid) || {}).label || x.pid} — ${x.task}`).join(" · ")) : null,
+      h("ul", { class: "stack" }, m.members.map(x => h("li", { class: "sm" },
+        `${x.label} · 맡은 일: ${x.task} · 자료 ${x.sources.length ? x.sources.map(s => s.name).join(", ") : "없음"}` +
+        (x.answer_sha256 ? ` · 결과 sha256 ${x.answer_sha256.slice(0, 12)}…` : " · 결과 없음")))),
+      ...m.reviewers.map(r => h("details", {}, h("summary", {}, `${r.label}에게 보낼 입력 · ${r.input_bytes}바이트`),
+        h("pre", { class: "input-full" }, r.prompt))),
+      h("p", { class: "cap muted" }, "확인 값 ", h("span", { class: "mono hash" }, m.confirmation)), start);
+  } catch (error) { if (request.current()) body.replaceChildren(h("p", {}, error.message)); }
+}
 function crossReviewIsland(run) {
-  if (run.mode === "general" || run.phase !== "revealed") return null;
+  const general = run.mode === "general";
+  if (general ? !(run.gate || {}).collected : run.phase !== "revealed") return null;
   const answered = run.participants.filter(p => p.draft != null);
   const reviewers = answered.filter(p => p.transport === "cli");
   const round = run.cross_review;
-  const intro = h("p", { class: "sm muted" }, "답을 낸 CLI 팀원이 다른 팀원의 답을 이름표로 읽고 반례·빠진 조건·근거 없는 주장을 지적합니다. " +
-    "인용이 대상 답과 글자 그대로 맞는지만 확인하고, 맞는 말인지는 확인하지 않습니다. 다른 답을 본 검토라 독립 정족수에 세지 않습니다.");
+  const title = general ? "교차검토 · 일반 팀원, 독립 아님" : "교차검토 · 공개 뒤, 독립 아님";
+  const intro = h("p", { class: "sm muted" }, general
+    ? "결과를 낸 팀원이 다른 팀원의 맡은 일과 결과를 이름표로 읽고 분담 사이의 충돌·빠진 조건·근거 없는 주장을 지적합니다. " +
+      "자료 본문은 보내지 않습니다. 인용이 대상 결과와 글자 그대로 맞는지만 확인하고, 맞는 말인지는 확인하지 않습니다."
+    : "답을 낸 CLI 팀원이 다른 팀원의 답을 이름표로 읽고 반례·빠진 조건·근거 없는 주장을 지적합니다. " +
+      "인용이 대상 답과 글자 그대로 맞는지만 확인하고, 맞는 말인지는 확인하지 않습니다. 다른 답을 본 검토라 독립 정족수에 세지 않습니다.");
   if (!round) {
     if (answered.length < 2 || !reviewers.length) return null;
     const box = h("textarea", { rows: 2, maxlength: "1000", "aria-label": "검토 질문(비우면 기본 질문)",
       placeholder: "비우면: 다른 팀원의 답에서 반례, 빠진 조건, 근거 없는 주장, 틀린 곳을 찾아라." });
     box.value = reviewQuestion[run.run_id] || "";
     box.oninput = () => { reviewQuestion[run.run_id] = box.value; };
-    return island("교차검토 · 공개 뒤, 독립 아님", [intro, box,
-      h("div", { class: "island-part" }, h("button", { type: "button", class: "btn", onclick: () => {
+    return island(title, [intro, box,
+      h("div", { class: "island-part" }, general
+        ? h("button", { type: "button", class: "btn", onclick: () => previewGeneralReview(run, box.value) },
+            `교차검토 입력 확인 · 호출 ${reviewers.length}회 예정`)
+        : h("button", { type: "button", class: "btn", onclick: () => {
         if (window.confirm(`검토자 ${reviewers.length}명이 한 명씩 차례로 검토합니다. 호출 ${reviewers.length}회를 씁니다. 시작할까요?`))
           act(`/api/runs/${run.run_id}/cross-review`, { question: box.value });
       } }, `교차검토 받기 · 호출 ${reviewers.length}회(검토자 ${reviewers.length}명)`))]);
   }
   const name = pid => (run.participants.find(p => p.pid === pid) || {}).label || pid;
   const cov = round.coverage;
-  return island("교차검토 · 공개 뒤, 독립 아님", [intro,
+  return island(title, [intro,
+    (round.missing_members || []).length ? h("p", { class: "sm muted" }, "결과가 없어 검토하지 않은 팀원: " +
+      round.missing_members.map(x => `${name(x.pid)} — ${x.task}`).join(" · ")) : null,
     h("p", { class: "sm" }, "검토 질문: " + round.question),
     h("p", { class: "cap muted" }, `검토한 관계 ${cov.reviewed}/${cov.pairs} · 사실 검증 안 함 · 한 라운드`),
     cov.missing.length ? h("ul", { class: "stack" }, cov.missing.map(m => h("li", { class: "sm" },

@@ -247,14 +247,16 @@ class PublicQueries:
                     # 결과 모으기는 모두 끝난 일반 실행의 일이다(#137). 그 전에는 부를 수도 없고 목록도 비어 있다
                     runs[-1]["collations"] = [(self._seat_summary(row, 'orchestrator') if _summary else self._collation_view(row)) for row in self.store.rows(
                         f"SELECT {self._seat_columns('collations') if _summary else '*'} FROM collations WHERE run_id = ? ORDER BY created_at", run["run_id"])]
+                if (general and current_gate.collected) or revealed:
+                    # 교차검토 라운드: 격리 실행은 공개 뒤(#140), 일반 실행은 모음 뒤(GR-1). 없으면 None. 일반 실행은 검토 뒤에도
+                    # collected다 — 공개·정족수·합성의 관문은 열지 않는다
+                    runs[-1]["cross_review"] = ({'reviews': [self._seat_summary(row, 'reviewer') for row in self.store.rows(
+                        f"SELECT {self._seat_columns('reviews')} FROM reviews WHERE run_id = ? ORDER BY seq", run['run_id'])]}
+                        if _summary else self._cross_review_view(run["run_id"], drafts))
                 if revealed:
                     # 다음 단계 제안은 공개 뒤의 일이다. 봉인 중에는 부를 수도 없고 목록도 비어 있다
                     runs[-1]["proposals"] = [(self._seat_summary(row, 'supervisor') if _summary else self._proposal_view(row)) for row in self.store.rows(
                         f"SELECT {self._seat_columns('proposals') if _summary else '*'} FROM proposals WHERE run_id = ? ORDER BY created_at", run["run_id"])]
-                    # 공개 뒤 교차검토 라운드(#140). 없으면 None
-                    runs[-1]["cross_review"] = ({'reviews': [self._seat_summary(row, 'reviewer') for row in self.store.rows(
-                        f"SELECT {self._seat_columns('reviews')} FROM reviews WHERE run_id = ? ORDER BY seq", run['run_id'])]}
-                        if _summary else self._cross_review_view(run["run_id"], drafts))
                     runs[-1]['answer_revisions'] = self._revisions_view(run['run_id'], summary=_summary)
                     artifact = None if _summary else self.store.row("SELECT payload FROM events WHERE run_id = ? "
                                               "AND kind = 'synthesis_completed' ORDER BY seq DESC LIMIT 1", run["run_id"])
@@ -417,6 +419,7 @@ class PublicQueries:
                 else:
                     missing.append({"reviewer": spec["pid"], "target": target["pid"],
                                     "reason": row["status"] or row["state"]})
+            snapshot = json.loads(row["snapshot"]) if row["snapshot"] else None
             reviews.append({"review_id": row["review_id"], "seq": row["seq"], "state": row["state"],
                             "status": row["status"], "execution": row["kind"],
                             "reviewer": _card(spec),
@@ -427,10 +430,17 @@ class PublicQueries:
                                         for label, t in targets.items()},
                             "prompt": row["prompt"], "input_sha256": row["input_sha256"], "reply": reply,
                             "reason": record.get("reason"), "raw": record.get("raw"),
-                            "observation": record.get("observation")})
+                            "observation": record.get("observation"),
+                            # 일반 검토(GR-1)는 확인한 입력을 함께 보인다. 대상마다 맡은 일·자료 목록은 snapshot에 있다
+                            "snapshot": snapshot, "snapshot_sha256": row["snapshot_sha256"]})
+        general = rows[0]["snapshot"] is not None
+        first = json.loads(rows[0]["snapshot"]) if general else {}
         return {"question": rows[0]["question"], "created_at": rows[0]["created_at"], "reviews": reviews,
                 "coverage": {"pairs": reviewed + len(missing), "reviewed": reviewed, "missing": missing},
-                "independence": "post_reveal_not_independent"}
+                "mode": "general" if general else "isolated",
+                "round_id": first.get("round_id"), "confirmation": first.get("confirmation"),
+                "missing_members": first.get("missing", []),
+                "independence": "general_team_not_independent" if general else "post_reveal_not_independent"}
 
 
     def _split_view(self, row) -> dict[str, Any]:
