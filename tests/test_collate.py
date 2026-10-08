@@ -267,6 +267,38 @@ class CollateTests(support.Base):
         self.assertEqual(reopened.row("PRAGMA user_version")[0], SCHEMA_VERSION)
 
 
+class StoredAnswerIntegrityTests(support.Base):
+    """CR-01: 결과 모으기는 받은 답의 본문 hash와 배정 과제의 결속을 확인한 뒤에만 오케스트레이터를 부른다."""
+
+    collected = CollateTests.collected
+
+    def test_a_changed_answer_or_assignment_refuses_collation_before_any_call(self):
+        cases = {"answer body": ("UPDATE drafts SET text = 'CORRUPTED-CONTENT' WHERE pid = 'codex'", "해시"),
+                 "answer hash": ("UPDATE drafts SET sha256 = '" + "0" * 64 + "' WHERE pid = 'claude'", "해시"),
+                 "missing answer": ("DELETE FROM drafts WHERE pid = 'codex'", "해시"),
+                 "assigned task": ("UPDATE assignments SET task = '바꾼 일' WHERE pid = 'codex'", "assignment")}
+        ex = Collator()
+        ctl = self.controller(ex)
+        for name, (sql, error) in cases.items():
+            with self.subTest(name):
+                rid = self.collected(ctl)
+                with self.store.tx() as tx:
+                    self.assertEqual(tx.execute(sql + " AND run_id = ?", rid), 1)
+                with self.assertRaisesRegex(c.ControllerError, error):
+                    ctl.collate(rid)
+                self.assertTrue(ctl.wait_idle())
+                self.assertNotIn("supervisor", ex.prompts)                # 새 호출 없음
+                self.assertIsNone(self.store.row("SELECT 1 FROM collations WHERE run_id = ?", rid))
+
+    def test_a_failed_member_still_goes_in_as_no_result(self):
+        ex = Collator(outcomes={"codex": "fail"})
+        ctl = self.controller(ex)
+        rid = self.collected(ctl)
+        ctl.collate(rid)
+        self.assertTrue(ctl.wait_idle())
+        self.assertEqual(self.run_view(ctl, rid)["collations"][0]["state"], c.ACCEPTED)
+
+
 class CollateCheckTests(unittest.TestCase):
     DRAFTS = {"T1": "첫 줄\n  공백 그대로  ", "T2": None}
 
