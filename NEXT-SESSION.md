@@ -66,7 +66,7 @@
 
 일은 `card` 라벨 이슈에서 [협업 규칙](docs/COLLABORATION.md) 3절의 보드 규칙대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** `claude/project-thread-cpr95x`의 PR — 합성·결과 모으기에서 "."·"다" 같은 아주 짧은 일치 인용이 지어낸 주장을 "인용됨"으로 바꾸던 빈틈을 막았다(`short_matches`). 화면은 짧은 일치 인용을 아직 "원문 일치"로만 보인다. 최종 CI와 병합 상태는 PR에서 확인한다.
+- **이 판을 들인 PR:** [PR #185](https://github.com/inlight37-design/decision-model_lab/pull/185)(`claude/project-thread-cpr95x`) — 합성·결과 모으기에서 "."·"다" 같은 아주 짧은 일치 인용이 지어낸 주장을 "인용됨"으로 바꾸던 빈틈을 막았다(`short_matches`). 화면은 짧은 일치 인용을 아직 "원문 일치"로만 보인다. 최종 CI와 병합 상태는 PR에서 확인한다.
 
 | 사용자만 할 수 있는 것 | 지금 |
 |---|---|
