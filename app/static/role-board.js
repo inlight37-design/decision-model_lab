@@ -320,6 +320,87 @@ function splitBody() {
   if (!split || split.state !== "accepted" || splitApplied !== split.split_id || !roleBoard.general.length) return {};
   return splitMatchesNow() ? { split: { id: split.split_id } } : {};
 }
+// ---- 받은 다듬기·분담 다시 열기(WF-02) -----------------------------------------------------------------------
+// 창을 닫거나 새로고침하면 지금 다듬는 ID·받은 분담은 화면 메모리에서 사라지지만 원장에는 남는다. 실행에 쓰지 않은 기록을
+// 기존 ID로 골라 창에 되돌린다. 모델을 다시 부르지 않고, 이전 승인도 옮기지 않는다 — 승인할 차례는 다시 고르고,
+// 시작할 때 서버가 슈퍼바이저·모델·목표·팀원·자료 해시를 다시 확인한다.
+let preparedSig = null, preparedGeneration = 0;
+function sameTask(record) { return (record.task_id ?? null) === (composeTask ?? null); }
+function restorableRefinements() {
+  return ((state && state.refinements) || []).filter(r => !r.run_id && sameTask(r) &&
+    r.turns.some(t => t.state === "accepted") && !r.turns.some(t => t.state === "running" || t.state === "unknown"));
+}
+function restorableSplits() {
+  return ((state && state.splits) || []).filter(s => !s.used_by && s.state === "accepted" && sameTask(s));
+}
+// 기록이 만든 카드·모델을 지금 고를 수 있는가. 못 고르면 되돌린 기록은 볼 수만 있고 시작은 서버가 거절한다.
+function restoreCard(card) {
+  const listed = roleOptions.participants.find(p => p.pid === card.pid);
+  if (!listed || listed.transport !== "cli") return `${card.label || card.pid} 카드가 지금 명단에 없습니다.`;
+  const select = $("m-" + card.pid);
+  if (select && card.model) {
+    select.value = card.model;
+    if (select.value !== card.model) return `${listed.label}의 모델 ${card.model}을 지금 고를 수 없습니다.`;
+  }
+  return null;
+}
+function restoreDone(problem, done) {
+  $("preparedStatus").textContent = problem ? problem + " 기록은 볼 수 있지만 이대로는 시작할 수 없습니다."
+    : done + " 보낼 입력은 새로 확인합니다.";
+}
+function restoreRefinement(ref) {
+  preparedGeneration += 1;
+  resetSplit(); resetRefine(); invalidatePreview();
+  const pid = ref.supervisor.pid;
+  roleBoard = { ...roleBoard, supervisor: [pid], general: [], input_mode: "refine" };
+  const problem = restoreCard(ref.supervisor);
+  refineCurrent = ref.refine_id;   // 승인한 차례는 옮기지 않는다
+  $("question").value = ref.original;
+  renderRoleBoard(); renderRefine(true);
+  restoreDone(problem, "다듬기를 다시 열었습니다. 승인할 차례를 다시 고르세요.");
+}
+async function restoreSplit(split) {
+  const generation = ++preparedGeneration;
+  $("preparedStatus").textContent = "분담 제안의 자료 사본을 읽는 중입니다.";
+  try {
+    // 서버에 저장한 사본으로 새 File을 만든다. 이름만 같은 파일로 바꿔 끼우지 않는다 — 서버가 해시로 다시 본다.
+    const files = [];
+    for (const item of split.sources) {
+      const copy = await api(`/api/runs/${encodeURIComponent(split.split_id)}/sources/${encodeURIComponent(item.name)}`);
+      files.push(new File([copy.text], item.name, { type: "text/plain" }));
+    }
+    if (generation !== preparedGeneration || !$("composeDialog").open) return;
+    resetRefine(); resetSplit(); invalidatePreview();
+    const members = Object.values(split.members);
+    roleBoard = { ...roleBoard, supervisor: [], isolated: [], orchestrator: [split.orchestrator.pid], general: members,
+                  input_mode: "original" };
+    const missing = members.filter(pid => !roleOptions.participants.some(p => p.pid === pid && p.transport === "cli"));
+    const problem = restoreCard(split.orchestrator) || (missing.length ? `팀원 ${missing.join(", ")}이 지금 명단에 없습니다.` : null);
+    $("question").value = split.goal;
+    picked = files; assignDraft = {}; renderPicked("");
+    splitCurrent = split.split_id; splitAsked = 1; splitInputs = splitSnapshot();
+    renderRoleBoard();   // 칸을 그리며 같은 입력이면 제안대로 채운다
+    restoreDone(problem, "분담 제안을 다시 열었습니다. 팀원별 칸을 제안대로 채웠습니다.");
+  } catch (e) {
+    if (generation === preparedGeneration) $("preparedStatus").textContent = e.message;
+  }
+}
+function renderPrepared(force = false) {
+  const refinements = restorableRefinements(), splits = restorableSplits();
+  const sig = JSON.stringify([composeTask, refinements.map(r => [r.refine_id, r.turns.length]), splits.map(s => s.split_id)]);
+  if (!force && sig === preparedSig) return;
+  preparedSig = sig;
+  $("preparedBox").hidden = !refinements.length && !splits.length;
+  const row = (head, detail, onclick) => h("div", { class: "row between" },
+    h("span", { class: "sm" }, head, h("span", { class: "cap muted" }, " · " + detail)),
+    h("button", { type: "button", class: "btn", onclick }, "다시 열기"));
+  $("preparedList").replaceChildren(
+    ...refinements.map(r => row(`다듬기 · ${r.original.slice(0, 60)}`,
+      `${fmtTime(r.created_at)} · 슈퍼바이저 ${r.supervisor.label || r.supervisor.pid} · 차례 ${r.turns.length}`, () => restoreRefinement(r))),
+    ...splits.map(s => row(`분담 제안 · ${s.goal.slice(0, 60)}`,
+      `${fmtTime(s.created_at)} · 오케스트레이터 ${s.orchestrator.label || s.orchestrator.pid} · 자료 ${s.sources.length}개`, () => restoreSplit(s))));
+  pressAll($("preparedList"));
+}
 // 창이 열린 동안 제안 상태가 바뀌었을 때만 다시 그린다 — 맡길 일을 쓰는 중에 칸을 지우지 않는다.
 function renderSplitIfChanged() {
   if (!roleBoard || !roleBoard.general.length) return;

@@ -370,6 +370,47 @@ async function refresh() { return true; }
   catalogFrame("다른 창", {});
   release(); await late;
   assert.ok(!text(frames[1]).includes("PROMPT_A"));
+  // 받은 다듬기·분담 다시 열기(WF-02): 실행에 쓰지 않았고 끝난, 같은 작업의 기록만. 모델을 부르지 않고 승인은 옮기지 않는다.
+  globalThis.renderPicked=() => {}; nodes.composeDialog={open:true}; composeTask=null;
+  roleOptions={participants:sroster,live:false,behaviors:["ok"]}; roleBoard=emptyBoard(); nodes["m-a"]={value:"m1"};
+  const turn=(state, n=1) => ({turn:n,state,note:"",reply:state==="accepted"?{refined:"다듬은 문장",changes:[],ask:null}:null});
+  const ref=(id, extra={}) => ({refine_id:id,run_id:null,task_id:null,original:"원래 질문 "+id,created_at:1,max_turns:3,
+    supervisor:{pid:"a",label:"CLI A",model:"m1"},approved_turn:null,turns:[turn("accepted")],...extra});
+  state.refinements=[ref("q9"), ref("used",{run_id:"r1"}), ref("other",{task_id:"t2"}), ref("open",{turns:[turn("accepted"),turn("unknown",2)]}),
+    ref("failed",{turns:[{...turn("rejected"),status:"format_error"}]})];
+  const gsplit={split_id:"s7",used_by:null,state:"accepted",task_id:null,goal:"나눌 목표",created_at:2,members:{M1:"a",M2:"z"},
+    sources:[{name:"a.md"},{name:"b.md"}],orchestrator:{pid:"a",label:"CLI A",model:"m1"},
+    reply:{assignments:{a:{task:"A 맡기",sources:["a.md"]},z:{task:"Z 맡기",sources:["b.md"]}},reason:"자료마다"}};
+  state.splits=[gsplit,{...gsplit,split_id:"s8",used_by:"r2"},{...gsplit,split_id:"s9",state:"rejected"}];
+  assert.deepEqual(restorableRefinements().map(r => r.refine_id),["q9"]);
+  assert.deepEqual(restorableSplits().map(s => s.split_id),["s7"]);
+  renderPrepared(true);
+  assert.equal(nodes.preparedBox.hidden,false);
+  assert.ok(text({kids:nodes.preparedList.kids}).includes("다듬기 · 원래 질문 q9"));
+  composeTask="t2"; renderPrepared(); assert.equal(nodes.preparedBox.hidden,false);   // 그 작업의 창에서는 그 작업의 기록만
+  assert.ok(text({kids:nodes.preparedList.kids}).includes("원래 질문 other") && !text({kids:nodes.preparedList.kids}).includes("q9"));
+  composeTask=null;
+  refineApproved=3; restoreRefinement(state.refinements[0]);
+  assert.equal(refineCurrent,"q9"); assert.equal(refineApproved,null);
+  assert.deepEqual(roleBoard.supervisor,["a"]); assert.equal(roleBoard.input_mode,"refine");
+  assert.equal(nodes.question.value,"원래 질문 q9"); assert.ok(nodes.preparedStatus.textContent.includes("승인할 차례를 다시"));
+  // 그 모델을 지금 고를 수 없으면 볼 수만 있다고 알린다
+  nodes["m-a"]={options:["m1"],v:"m1",get value(){return this.v;},set value(x){if(this.options.includes(x))this.v=x;}};
+  restoreRefinement(ref("q9",{supervisor:{pid:"a",label:"CLI A",model:"m9"}}));
+  assert.ok(nodes.preparedStatus.textContent.includes("m9을 지금 고를 수 없습니다"));
+  nodes["m-a"]={value:"m1"};
+  const fetched=[]; apiHook=async path => { fetched.push(path); return {text:"사본 "+decodeURIComponent(path.split("/").pop())}; };
+  await restoreSplit(gsplit);
+  assert.deepEqual(fetched,["/api/runs/s7/sources/a.md","/api/runs/s7/sources/b.md"]);
+  assert.equal(refineCurrent,null); assert.equal(nodes.question.value,"나눌 목표");
+  assert.deepEqual([roleBoard.orchestrator,roleBoard.general,roleBoard.isolated,roleBoard.supervisor],[["a"],["a","z"],[],[]]);
+  assert.deepEqual(picked.map(f => f.name),["a.md","b.md"]); assert.equal(await picked[0].text(),"사본 a.md");
+  assert.equal(assignDraft.a.task,"A 맡기"); assert.deepEqual([...assignDraft.a.off].map(f => f.name),["b.md"]);
+  assert.deepEqual(splitBody(),{split:{id:"s7"}});
+  // 사본을 읽는 동안 창을 새로 열면 늦게 온 사본을 붙이지 않는다
+  let releaseCopy; apiHook=() => new Promise(resolve => { releaseCopy=() => resolve({text:"늦은 사본"}); });
+  const lateSplit=restoreSplit({...gsplit,sources:[{name:"a.md"}]}); preparedGeneration+=1; releaseCopy(); await lateSplit;
+  assert.equal(picked.length,2);
   apiHook=null;
 })().catch(e => { console.error(e); process.exit(1); });
 '''

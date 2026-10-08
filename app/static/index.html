@@ -325,6 +325,12 @@ button.is-pressed { background-image: linear-gradient(color-mix(in oklch, curren
               <p class="cap muted">질문·역할·모델·자료 사본·분담을 이 원장에 보관합니다. 다른 원장에서는 템플릿 파일을 가져오세요. 불러온 뒤 보낼 입력을 새로 확인합니다.</p>
               <p class="sm" id="templateStatus" role="status" aria-live="polite"></p>
             </details>
+            <details class="cell stack" id="preparedBox" hidden>
+              <summary class="form-label">받은 다듬기·분담 다시 열기</summary>
+              <p class="cap muted">실행에 쓰지 않은 기록을 다시 엽니다. 모델을 다시 부르지 않고, 승인한 차례는 다시 고릅니다.</p>
+              <div class="stack" id="preparedList"></div>
+              <p class="sm" id="preparedStatus" role="status" aria-live="polite"></p>
+            </details>
             <div class="form-field" id="taskTitleField">
               <label class="form-label" for="taskTitle">작업 제목</label>
               <input id="taskTitle" type="text" maxlength="120" placeholder="예: 문서 검색 방식 검토">
@@ -1238,7 +1244,7 @@ function renderRun(run) {
 function render() {
   renderHeader();
   if (!state) return;
-  if ($("composeDialog").open && roleBoard) { renderRefine(); renderSplitIfChanged(); }   // 다듬기·분담 제안의 결과가 오면 창 안을 다시 그린다
+  if ($("composeDialog").open && roleBoard) { renderRefine(); renderSplitIfChanged(); renderPrepared(); }   // 다듬기·분담 제안의 결과가 오면 창 안을 다시 그린다
   const run = state.runs.find(r => r.run_id === selected) || null;
   if (run) taskSelected = run.task_id;
   renderTaskNavigation();
@@ -1337,6 +1343,7 @@ function openNewRun(taskId = null) {
   if (plan) $("question").value = plan.goal + "\n\n완료 기준: " + plan.done_when;
   $("composeDialog").showModal(); $("newRunBtn").setAttribute("aria-expanded", "true");
   $("templateName").value = ""; $("templateStatus").textContent = ""; refreshTemplates();
+  preparedGeneration += 1; $("preparedStatus").textContent = ""; renderPrepared(true);
   (taskId ? $("question") : $("taskTitle")).focus();
 }
 $("newRunBtn").addEventListener("click", () => openNewRun());
