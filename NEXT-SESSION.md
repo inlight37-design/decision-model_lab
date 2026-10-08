@@ -66,7 +66,7 @@
 
 일은 `card` 라벨 이슈에서 [협업 규칙](docs/COLLABORATION.md) 3절의 보드 규칙대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** `claude/mixdog-review-akff0a`의 PR — 외부 코딩 에이전트 mixdog의 기능·코드 검토 기록([검토](docs/reviews/2026-10-08-mixdog/README.md))만 더한다. 제품 기능 변경은 없으며 최종 CI와 병합 상태는 PR에서 확인한다.
+- **이 판을 들인 PR:** [PR #187](https://github.com/inlight37-design/decision-model_lab/pull/187)(`claude/mixdog-review-akff0a`) — 외부 코딩 에이전트 mixdog의 기능·코드 검토 기록([검토](docs/reviews/2026-10-08-mixdog/README.md))만 더한다. 제품 기능 변경은 없으며 최종 CI와 병합 상태는 PR에서 확인한다.
 
 | 사용자만 할 수 있는 것 | 지금 |
 |---|---|
