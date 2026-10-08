@@ -945,9 +945,9 @@ function modelSynthesisLines(result) {
   const s = result.synthesizer || {}, checks = result.checks || {};
   const lines = [["caption", `실제 합성 · ${s.adapter_id} · 요청 ${s.requested_model} · 보고 ${(s.reported_models || []).join(", ") || "없음"}` +
                    `${s.model_match === false ? " · 모델 불일치" : ""} · 추가 호출 1`],
-                 ["caption", `인용 ${checks.quotes}개 중 원문 일치 ${checks.exact_matches}개 · 원문에 없는 추가 주장 ${checks.unsupported_additions}개 · 사실 검증 안 함`]];
-  const quote = q => [q.source_check === "exact_match" ? "kv" : "kv st-unknown",
-    `${q.source_check === "exact_match" ? "원문 일치" : "원문에 없음"} · ${q.draft}(${q.pid || "?"}) “${q.text}”`];
+                 ["caption", `인용 ${checks.quotes}개 중 원문 일치 ${checks.exact_matches}개${shortNote(checks.short_matches)} · 원문에 없는 추가 주장 ${checks.unsupported_additions}개 · 사실 검증 안 함`]];
+  const quote = q => [q.source_check === "exact_match" && q.substantive !== false ? "kv" : "kv st-unknown",
+    `${quoteCheckLabel(q)} · ${q.draft}(${q.pid || "?"}) “${q.text}”`];
   for (const c of result.claims) {
     lines.push([c.support === "quoted" ? "claim" : "claim st-unknown",
       `${c.id} ${c.statement}${c.support === "unsupported_addition" ? " — 원문에 없는 추가 주장" : ""}`]);
@@ -959,13 +959,21 @@ function modelSynthesisLines(result) {
   for (const u of result.unresolved) lines.push(["caption", `미해결 · ${u}`]);
   return lines;
 }
+// 원문과 글자 그대로 맞아도 글자·숫자 4개 미만인 인용(substantive: false)은 근거로 세지 않는다(app/reply.py).
+// "원문 일치"만 보이면 같은 주장의 "원문에 없는 추가 주장"과 어긋나 보이므로 짧다는 것을 함께 쓴다.
+function quoteCheckLabel(q) {
+  if (q.source_check !== "exact_match") return "원문에 없음";
+  return q.substantive === false ? "원문 일치 · 너무 짧아 근거 아님" : "원문 일치";
+}
+function shortNote(n) { return n ? `(그중 너무 짧아 근거 아님 ${n}개)` : ""; }
 // 3층: 실제 합성의 주장·인용·갈리는 점. 합성자 줄과 검사 줄(앞 두 줄)은 결정 카드 아래에 있다.
 function modelSynthesisView(result, run) {
   const lines = modelSynthesisLines(result).slice(2);
   return collapsible(`evidence-${run.run_id}`, `주장과 인용 보기 (인용 ${(result.checks || {}).quotes ?? "?"}개)`, lines.map(([cls, text]) =>
     cls === "claim" ? h("p", { class: "sm claim-line" }, text)
     : cls === "claim st-unknown" ? h("p", { class: "sm cell cell-alert strong" }, text)
-    : cls === "kv st-unknown" ? h("p", { class: "sm quote" }, h("span", { class: "flag" }, "원문에 없음"), text.replace(/^원문에 없음/, ""))
+    : cls === "kv st-unknown" ? h("p", { class: "sm quote" }, h("span", { class: "flag" }, text.split(" · ")[0] === "원문 일치"
+        ? "원문 일치 · 너무 짧아 근거 아님" : "원문에 없음"), text.replace(/^(원문 일치 · 너무 짧아 근거 아님|원문에 없음)/, ""))
     : cls === "kv" ? h("p", { class: "sm quote muted" }, text)
     : h("p", { class: "sm cell cell-alert" }, text)));
 }
@@ -1006,7 +1014,7 @@ function modelHistory(run) {
     attempts.map((a, i) => {
       const r = a.result || {}, s = r.synthesizer || {}, c = r.checks || {};
       const detail = r.status === "completed"
-        ? ` · 인용 ${c.exact_matches}/${c.quotes} 원문 일치 · 권고: ${(r.card || {}).recommendation || ""}`
+        ? ` · 인용 ${c.exact_matches}/${c.quotes} 원문 일치${c.short_matches ? `(짧아 근거 아님 ${c.short_matches})` : ""} · 권고: ${(r.card || {}).recommendation || ""}`
         : (r.reason ? ` · ${r.reason}` : "");
       return h("p", {}, `${i + 1}. ${s.adapter_id || "?"} · ${a.status}${detail}`);
     })));
@@ -1216,7 +1224,7 @@ function renderRun(run) {
   if (!run) return;
   const revealed = run.phase === "revealed";
   // 일반 실행: 결과 모음은 처음부터, 판단은 모두 끝난 뒤. 합성·원문 보고는 공개된 격리 실행에만 있다.
-  const body = run.mode === "general" ? [generalResults(run), collationIsland(run), crossReviewIsland(run), (run.gate || {}).collected ? reviewIsland(run) : null, usageIsland(run)]
+  const body = run.mode === "general" ? [generalResults(run), collationIsland(run), crossReviewIsland(run), revisionIsland(run), (run.gate || {}).collected ? reviewIsland(run) : null, usageIsland(run)]
     : revealed ? [...synthesisPanel(run), proposalIsland(run), crossReviewIsland(run), revisionIsland(run), reviewIsland(run), saveIsland(run), usageIsland(run)] : [];
   $("mainCol").replaceChildren(questionIsland(run), ...[workflowSteps(run)].filter(Boolean),
     island("기록 탐색", [h("div", {class: "row"},

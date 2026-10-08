@@ -29,7 +29,10 @@ async function previewRevision(run, pid) {
       } catch (error) { if (request.current()) body.append(h("p", {class: "cell cell-alert"}, error.message)); }
       // Starting is single use. Prepare again after an error or ambiguous response.
     }}, "이 입력으로 수정 답 받기 · 호출 1회");
+    const snap = preview.snapshot, general = snap.mode === "general";
     body.replaceChildren(h("p", {class: "sm"}, `${preview.author.label} · 원본과 지적을 읽고 별도 판을 씁니다. 기존 답은 보존됩니다.`),
+      general ? h("p", {class: "sm"}, `맡은 일: ${snap.task} · 다시 붙이는 자료(자기 것만): ` +
+        (snap.sources.length ? snap.sources.map(s => s.name).join(", ") : "없음") + " · 다른 팀원 자료와 자동 기억은 보내지 않습니다.") : null,
       h("pre", {class: "input-full"}, preview.prompt), start);
   } catch (error) { if (request.current()) body.replaceChildren(h("p", {}, error.message)); }
 }
@@ -42,18 +45,21 @@ async function downloadRevisions(run) {
   } catch (error) { toast(error.message, true); }
 }
 function revisionIsland(run) {
-  if (run.mode === "general" || !run.cross_review) return null;
+  if (!run.cross_review) return null;
+  const general = run.mode === "general";
   const variants = run.answer_revisions || [];
   const authors = run.participants.filter(p => p.state === "accepted" && p.transport === "cli");
   const ready = !run.cross_review.reviews.some(r => ["queued", "running", "unknown"].includes(r.state));
-  return island("수정 답과 재검토", [h("p", {class: "sm muted"},
-    "원래 답은 보존합니다. 수정은 팀원마다 최대 2회, 재검토는 판마다 최대 2회이며 실패도 포함합니다. 공개 뒤의 판단으로 사실 검증이나 독립 답이 아닙니다. 합성은 원래 초안을 사용합니다."),
+  return island("수정 답과 재검토", [h("p", {class: "sm muted"}, general
+    ? "원래 결과는 보존합니다. 수정은 자기 맡은 일과 자기 자료만으로 하고, 재검토는 다른 팀원이 자료 본문 없이 합니다. 수정은 팀원마다 최대 2회, 재검토는 판마다 최대 2회이며 실패도 포함합니다. 사실 검증이나 독립 답이 아니고, 결과 모으기는 원래 결과를 사용합니다."
+    : "원래 답은 보존합니다. 수정은 팀원마다 최대 2회, 재검토는 판마다 최대 2회이며 실패도 포함합니다. 공개 뒤의 판단으로 사실 검증이나 독립 답이 아닙니다. 합성은 원래 초안을 사용합니다."),
     h("div", {class: "row"}, authors.map(p => h("button", {type: "button", class: "btn",
       disabled: !ready || variants.filter(v => v.pid === p.pid).length >= 2,
       onclick: () => previewRevision(run, p.pid)}, `${p.label} 수정 입력 확인`))),
     ...variants.map(v => h("section", {class: "cell stack"},
       h("h3", {class: "sm strong"}, `${v.author.label} · 수정 ${variants.filter(x => x.pid === v.pid).indexOf(v) + 1} · ${v.state}`),
       h("p", {class: "cap muted"}, `이전 판: ${v.parent_id || "원래 초안"} · ${v.revision_id}`),
+      v.snapshot.task ? h("p", {class: "sm muted"}, "맡은 일: " + v.snapshot.task) : null,
       v.reply ? [h("div", {class: "task-grid"},
         h("section", {class: "stack"}, h("p", {class: "strong"}, "수정 전"), h("pre", {class: "input-full"}, v.snapshot.base.text)),
         h("section", {class: "stack"}, h("p", {class: "strong"}, "수정 후"), h("pre", {class: "input-full"}, v.reply.answer))),
