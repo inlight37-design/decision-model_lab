@@ -83,6 +83,7 @@ def chosen_models(roster: dict, choices: dict, requested) -> dict:
 
 
 MAX_BODY = 2 * 1024 * 1024
+DISCARD_BODY = 64 * 1024   # 거절할 요청에서 읽어 버릴 본문의 상한
 
 
 class RequestError(ValueError):
@@ -162,18 +163,34 @@ def make_handler(controller: Controller, token: str, port: int, *, participants=
         def _json(self, code: int, data) -> None:
             self._send(code, json.dumps(data, ensure_ascii=False).encode("utf-8"))
 
+        def _discard_small_body(self) -> None:
+            """거절하기 전에 이미 보낸 작은 본문만 읽어 버린다. 읽지 않은 채 연결을 닫으면 Windows는 RST를 보내 클라이언트가
+            401·403 대신 연결 끊김을 받는다(CI windows-checks, PR #193). 큰 본문·모호한 길이는 읽지 않는다."""
+            lengths = self.headers.get_all("Content-Length", [])
+            if len(lengths) != 1 or self.headers.get_all("Transfer-Encoding", []):
+                return
+            value = lengths[0]
+            if value.isascii() and value.isdecimal() and len(value) <= 6 and 0 < int(value) <= DISCARD_BODY:
+                try:
+                    self.rfile.read(int(value))
+                except (OSError, TimeoutError):
+                    pass
+
         def _guard(self) -> bool:
             if len(self.headers.get_all("Host", [])) != 1 or self.headers.get("Host") not in allowed_hosts:
+                self._discard_small_body()
                 self._json(403, {"error": "unexpected Host header"})
                 return False
             origins = self.headers.get_all("Origin", [])
             if origins and origins != [f"http://{self.headers['Host']}"]:
+                self._discard_small_body()
                 self._json(403, {"error": "unexpected Origin header"})
                 return False
             if urlsplit(self.path).path.startswith("/api/"):
                 given = self.headers.get("Authorization", "")
                 if (len(self.headers.get_all("Authorization", [])) != 1
                         or not hmac.compare_digest(given.encode(), f"Bearer {token}".encode())):
+                    self._discard_small_body()
                     self._json(401, {"error": "missing or wrong token"})
                     return False
             return True

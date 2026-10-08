@@ -92,6 +92,53 @@ class Revisions(Base):
         stale = copy.deepcopy(ctl.view()); stale['runs'][0]['answer_revisions'][0]['reply']['answer'] = 'corrupt'
         with self.assertRaises(ReportError): revision_report(stale, rid)
 
+    def test_memory_marks_which_result_a_past_judgment_saw(self):
+        # CR-02: a judgment stays in memory but never reads as a judgment of a newer result.
+        ctl = self.controller(RealLike(results=['ok', 'unknown']), max_real_calls=7)
+        rid = self.reviewed(ctl); task = self.run_view(ctl, rid)['task_id']
+        def recall():
+            entry = memory.select(self.store, task, '수정 연결')['entries'][0]
+            self.assertEqual(entry['source_format'], 'canonical-public-context-v3')
+            return entry['result_state'], entry['excerpt']
+        state, excerpt = recall()
+        self.assertEqual((state['judgment_revision'], state['judgment_is_current']), (None, False))
+        self.assertIn('판단 기록 없음', excerpt)
+        judged = self.run_view(ctl, rid)['result_revision']
+        ctl.mark_reviewed(rid, judged, 'OLD-JUDGMENT')
+        state, excerpt = recall()
+        self.assertEqual(state, {'result_revision': judged, 'judgment_revision': judged,
+                                 'judgment_is_current': True, 'dispositions_changed_after_judgment': False})
+        self.assertIn(f'현재 결과 판 {judged}을 판단함): OLD-JUDGMENT', excerpt)
+        review = self.store.row("SELECT review_id FROM reviews WHERE run_id = ? AND state = 'accepted' ORDER BY seq", rid)['review_id']
+        ctl.set_review_disposition(review, 0, 'rejected')
+        state, excerpt = recall()
+        self.assertTrue(state['judgment_is_current'] and state['dispositions_changed_after_judgment'])
+        self.assertIn('판단 뒤 교차검토 지적의 처분이 바뀌었다', excerpt)
+        first = self.revise(ctl, rid)
+        view = self.run_view(ctl, rid)
+        self.assertFalse(view['reviewed'])
+        state, excerpt = recall()
+        self.assertEqual((state['result_revision'], state['judgment_revision'], state['judgment_is_current']),
+                         (view['result_revision'], judged, False))
+        self.assertIn(f'이전 결과 판 {judged}에 대한 사람의 판단', excerpt)
+        self.assertIn('OLD-JUDGMENT', excerpt)                   # kept, never deleted
+        self.assertNotIn('을 판단함)', excerpt)
+        ctl.mark_reviewed(rid, view['result_revision'], 'NEW-JUDGMENT')
+        self.assertTrue(recall()[0]['judgment_is_current'])
+        check = ctl.revisions.recheck(first, 'codex'); self.assertTrue(ctl.wait_idle(SLOW_RUNNER_TIMEOUT))
+        self.assertEqual(self.store.row('SELECT state FROM revision_checks WHERE check_id = ?', check)['state'], c.UNKNOWN)
+        ctl.revisions.acknowledge(check, recheck=True)
+        state, excerpt = recall()
+        self.assertFalse(state['judgment_is_current'])           # an unknown result is a new result too
+        self.assertFalse(self.run_view(ctl, rid)['reviewed'])
+        self.assertIn('NEW-JUDGMENT', excerpt)
+        # An old ledger's judgment carried no revision; the event order still says what it saw.
+        seen = state['judgment_revision']
+        with self.store.tx() as tx:
+            tx.execute("UPDATE events SET payload = json_remove(payload, '$.revision') "
+                       "WHERE run_id = ? AND kind = 'human_reviewed'", rid)
+        self.assertEqual(recall()[0]['judgment_revision'], seen)
+
     def test_preview_is_free_and_stale_disposition_rejects_without_starting(self):
         ex = RevisionExecutor(); ctl = self.controller(ex)
         rid = self.reviewed(ctl); n = len(ex.started)

@@ -321,6 +321,15 @@ assert.ok(text(expandedRecall).includes("공개 이력 80개를 검색"));
 assert.ok(text(expandedRecall).includes("공개 답"));
 assert.ok(text(expandedRecall).includes("약한 표현 일치 2개"));
 assert.ok(text(expandedRecall).includes("표현 3개를 제외"));
+const staleJudgment = text(memoryPreview({memory:{enabled:true,entries:[{run_id:"s",created_at:1,excerpt:"메모",
+  result_state:{result_revision:9,judgment_revision:4,judgment_is_current:false,dispositions_changed_after_judgment:true}}]}}));
+assert.ok(staleJudgment.includes("이전 결과를 본 것") && staleJudgment.includes("처분이 바뀌었습니다"));
+assert.ok(text(memoryPreview({memory:{enabled:true,entries:[{run_id:"c",created_at:1,excerpt:"메모",
+  result_state:{result_revision:4,judgment_revision:4,judgment_is_current:true,dispositions_changed_after_judgment:false}}]}}))
+  .includes("현재 결과를 본 것"));
+assert.ok(!text(memoryPreview({memory:{enabled:true,entries:[{run_id:"n",created_at:1,excerpt:"메모",
+  result_state:{result_revision:4,judgment_revision:null,judgment_is_current:false,dispositions_changed_after_judgment:false}}]}}))
+  .includes("판단 메모는"));
 assert.ok(text(memoryPreview({memory:{enabled:true,entries:[{run_id:"old",created_at:1,excerpt:"옛 발췌"}]}}))
   .includes("선택 이유가 저장되기 전"));
 // 두 번 눌러도 요청은 하나이고, 응답 전에 원문으로 돌아가면(창을 새로 연 것과 같다) 늦은 응답을 붙이지 않는다
