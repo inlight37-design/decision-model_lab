@@ -24,6 +24,7 @@
 | ai_unslop의 island-ui | 색·글자·간격·테마·화면 움직임 | **코드 그대로 복사.** [app/static/island-ui](../app/static/island-ui/README.md). 원본 버전과 변경 절차는 이 폴더의 README가 관리 | [원본 저장소](https://github.com/inlight37-design/ai_unslop), `skills/island-ui/`. 변경은 원본에서 한 뒤 다시 복사 |
 | 여러 AI 작업 도구 | 역할판, 사용자 개입, 작업 상태, 문맥 인계 | **선별 설계 참고.** 실제 기능은 [기능 안내](FEATURES.md), 미구현 후보는 조사 기록에서 구별 | [요구·후보·비용](research/multi-ai-workflow-2026-09-25/README.md), [역할판 요청](reviews/2026-09-26-role-board-request/README.md), [구현 순서 판단](reviews/2026-09-26-review-consolidation/README.md) |
 | Jev·Lite-Harness·Fusion 등 | 선택적 판단 모델, native CLI 연결, 토큰·비용 평가 | **조사·설계 후보.** Jev가 필수 지휘자이거나 이들 프레임워크가 runtime 의존성인 것은 아님 | [추가 조사](research-2026-09-22/README.md), [초기 Jev 조사](research-notes-2026-09-21.md), [Codex 연결 비교](research-2026-09-22/codex-bridge.md) |
+| mixdog·Concord MCP | 토큰 절약 장치와 그 벤치마크, 여러 에이전트의 작업 claim·메시지 중계 | **도입하지 않음.** mixdog는 구독 토큰으로 서버를 직접 부르며 공식 CLI로 자신을 표시하고, Concord는 격리 팀원의 봉인과 맞지 않음. 사용량 비교 때 캐시 읽기를 따로 보는 것과 호출마다 추론 강도를 고르는 것(RB-01)만 참고 | [검토와 다시 볼 조건](research/agent-tools-2026-10-12/README.md). 읽은 커밋은 그 기록에 고정 |
 
 AnchorMind 조사 당시의 수동 기억 우선 제안은 **2026-10-04 사용자 결정으로 일반 팀원·상위 역할의 자동 기억**으로 좁혀 적용했다. 격리 팀원은 제외한다. 당시 검토 기록은 그대로 보존하며, 현재 동작은 [기능 안내](FEATURES.md)의 자동 기억 절이 관리한다. 임베딩·RRF·그래프 DB·자동 회고·충돌 자동 해소·신뢰 점수는 이번 적용에 포함하지 않았다. `probes.mjs`는 upstream 이해를 위한 조사 도구이며 앱 runtime이 아니다.
 

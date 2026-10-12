@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-10-09** · 작성 세션: claude(주 PC WSL `main-pc-wsl`, CLI 직접 확인 — 주 PC 재관측, 모델 호출 Claude 2·Codex 3) · 브랜치 `claude/main-pc-reobserve-20261008`.
+최종 갱신 **2026-10-12** · 작성 세션: claude(웹 컨테이너, CLI 미확인 — 외부 도구 검토, 모델 호출 없음) · 브랜치 `ccr-8740d7c2-0zgljd`.
 
 이 파일은 **지금 상태와 다음 일만** 담는다. 끝난 일의 경위는 PR·git 이력과 날짜가 붙은 기록에 있고, 옛 판은 [docs/handoff/](docs/handoff/README.md)에 있다. **3절에는 진행 중인 일과 "이 판을 들인 PR" 한 줄만 둔다** — 새 PR은 그 줄을 자기 PR로 바꾸고, 병합 전에도 뒤에도 맞는 말만 쓴다("병합했다"고 미리 적지 않는다). 크기 상한과 3절의 모양은 CI가 본다. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있는 규칙은 여기 다시 적지 않는다 — 쌓임을 막는 원칙은 협업 규칙 7절이다.
 
