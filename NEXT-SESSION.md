@@ -1,6 +1,6 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-10-09** · 작성 세션: claude(주 PC WSL `main-pc-wsl`, CLI 직접 확인 — 주 PC 재관측, 모델 호출 Claude 2·Codex 3) · 브랜치 `claude/main-pc-reobserve-20261008`.
+최종 갱신 **2026-10-12** · 작성 세션: claude(웹 컨테이너, CLI 미확인 — 외부 도구 검토, 모델 호출 없음) · 브랜치 `ccr-8740d7c2-0zgljd`.
 
 이 파일은 **지금 상태와 다음 일만** 담는다. 끝난 일의 경위는 PR·git 이력과 날짜가 붙은 기록에 있고, 옛 판은 [docs/handoff/](docs/handoff/README.md)에 있다. **3절에는 진행 중인 일과 "이 판을 들인 PR" 한 줄만 둔다** — 새 PR은 그 줄을 자기 PR로 바꾸고, 병합 전에도 뒤에도 맞는 말만 쓴다("병합했다"고 미리 적지 않는다). 크기 상한과 3절의 모양은 CI가 본다. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있는 규칙은 여기 다시 적지 않는다 — 쌓임을 막는 원칙은 협업 규칙 7절이다.
 
@@ -66,7 +66,7 @@
 
 일은 `card` 라벨 이슈에서 [협업 규칙](docs/COLLABORATION.md) 3절의 보드 규칙대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #197](https://github.com/inlight37-design/decision-model_lab/pull/197)(`claude/main-pc-reobserve-20261008`) — 주 PC `main-pc-wsl`을 SETUP 4절대로 다시 관측해 [새 기록](docs/reviews/2026-10-09-main-pc-reobserve/README.md)을 만들고 이 PC에 등록했다(Claude 2·Codex 3, 모두 기대대로, 2026-11-09부터 만료). CLI 판·참여자 계획은 그대로다. 최종 CI와 병합 상태는 PR에서 확인한다.
+- **이 판을 들인 PR:** [PR #198](https://github.com/inlight37-design/decision-model_lab/pull/198)(`ccr-8740d7c2-0zgljd`) — 사용자가 물어본 토큰 절약 에이전트 mixdog와 다중 에이전트 조정 서버 Concord MCP를 원본 코드로 검토한 [날짜 기록](docs/research/agent-tools-2026-10-12/README.md)을 더했다. 둘 다 도입하지 않고, 다시 볼 조건과 참고할 두 가지(사용량 비교 때 캐시 읽기 분리, 호출마다 추론 강도 = RB-01)만 남겼다. 앱 코드·참여자 계획은 그대로다. 최종 CI와 병합 상태는 PR에서 확인한다.
 
 | 사용자만 할 수 있는 것 | 지금 |
 |---|---|
