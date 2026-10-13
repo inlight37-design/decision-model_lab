@@ -66,7 +66,7 @@
 
 일은 `card` 라벨 이슈에서 [협업 규칙](docs/COLLABORATION.md) 3절의 보드 규칙대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** `claude/p4-review-fixes-20261013` — GPT-6 Pro 검토 7의 두 지적을 고쳤다. P4-D1: 수정 판을 골라 모을 때 원래 결과의 지적이 사람의 지금 처분과 함께 남고, 처분을 바꾸면 옛 미리보기 확인 값으로는 시작하지 않는다([일반 팀원 검토 설계](docs/architecture/general-team-review/README.md) 4절). P4-D2: Claude preflight가 도움말에서 기본 참여자 계획의 `--safe-mode`도 확인한다. 모의 실행기·합성 도움말로만 검사했고 실제 모델·CLI는 부르지 않았다. 최종 CI와 병합 상태는 PR에서 확인한다.
+- **이 판을 들인 PR:** [PR #199](https://github.com/inlight37-design/decision-model_lab/pull/199)(`claude/p4-review-fixes-20261013`) — GPT-6 Pro 검토 7의 두 지적을 고쳤다. P4-D1: 수정 판을 골라 모을 때 원래 결과의 지적이 사람의 지금 처분과 함께 남고, 처분을 바꾸면 옛 미리보기 확인 값으로는 시작하지 않는다([일반 팀원 검토 설계](docs/architecture/general-team-review/README.md) 4절). P4-D2: Claude preflight가 도움말에서 기본 참여자 계획의 `--safe-mode`도 확인한다. 모의 실행기·합성 도움말로만 검사했고 실제 모델·CLI는 부르지 않았다. 최종 CI와 병합 상태는 PR에서 확인한다.
 
 | 사용자만 할 수 있는 것 | 지금 |
 |---|---|
