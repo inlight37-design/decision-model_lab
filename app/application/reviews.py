@@ -33,6 +33,16 @@ def _intact(row) -> bool:
             == {label: item["sha256"] for label, item in targets.items()})
 
 
+def _open_line(item) -> str:
+    """오케스트레이터에게 보낼 남은 지적 한 줄. 수정 판을 골랐을 때 원래 결과의 지적은 사람 처분·작성자 응답·재검토를
+    나눠 적는다 — 작성자가 고쳤다고 한 말은 사람의 판단도 사실 확인도 아니다."""
+    if item.get("scope") != "original":
+        return f"[{item['from']} · {item['status']}] {item['detail']}"
+    checks = ", ".join(item["recheck"]) or "없음"
+    return (f"[원래 결과 지적 · 사람 처분 {item['status']} · 작성자 응답 {item['author'] or '없음'} · 재검토 {checks}] "
+            f"{item['detail']}")
+
+
 class ReviewService:
     def __init__(self, runtime, execution, inputs, invocations, repository):
         self.runtime = runtime
@@ -149,7 +159,7 @@ class ReviewService:
             entries.append({**entry, "version": pick, "sha256": sha, "bytes": len(text.encode("utf-8")),
                             "rechecked": rechecked, "open": found})
             members.append({"label": label, "name": member.label, "task": work["task"], "text": text, "version": version,
-                            "open": [f"[{item['from']} · {item['status']}] {item['detail']}" for item in found]})
+                            "open": [_open_line(item) for item in found]})
         footer = self.inputs._run_memory(run)
         text = collating.prompt(run["question"], members, hashlib.sha256(key.encode("utf-8")).hexdigest()[:12]) + footer
         data = text.encode("utf-8")
@@ -189,20 +199,28 @@ class ReviewService:
                 or _digest(reply["answer"]) != reply.get("sha256") or revising.digest(revising.encoded(snapshot)) != row["snapshot_sha256"]
                 or snapshot.get("mode") != "general" or snapshot["original"]["sha256"] != original_sha):
             raise ControllerError("그 팀원의 받아들인 수정 판이 아니거나 기록된 hash와 맞지 않습니다.")
+        # 원래 결과에 대한 지적은 사람의 지금 처분으로 따로 싣는다(P4-D1). 작성자가 addressed라고 해도 사람이 보류·
+        # 받아들인 지적은 빠지지 않고, 처분이 바뀌면 이 목록과 확인 값이 바뀐다. 작성자 응답·재검토 평가는 별도 칸이다.
+        held = self._review_open(run_id, pid, original_sha)
+        authored = {item["finding"]: item["status"] for item in reply["responses"]}
         found = [{"from": "revision", "id": item["finding"], "status": item["status"], "detail": item["detail"]}
                  for item in reply["responses"] if item["status"] != "addressed"]
-        rechecked = False
+        rechecked, assessed = False, {}
         for check in self.store.rows("SELECT * FROM revision_checks WHERE revision_id = ? AND state = ? "
                                      "ORDER BY created_at, check_id", revision_id, ACCEPTED):
             if check["answer_sha256"] != reply["sha256"] or _digest(check["answer"]) != reply["sha256"]:
                 raise ControllerError("재검토가 다른 판을 가리킵니다.")
             checked = json.loads(check["result"])["reply"]
             rechecked = True
+            for item in checked["assessments"]:
+                assessed.setdefault(item["finding"], []).append(item["status"])
             found += [{"from": "recheck", "id": item["finding"], "status": item["status"], "detail": item["detail"]}
                       for item in checked["assessments"] if item["status"] != "addressed"]
             found += [{"from": "recheck", "id": f"{check['check_id']}:{index}", "status": item["kind"],
                        "detail": item["detail"]} for index, item in enumerate(checked["findings"])]
-        return reply["answer"], reply["sha256"], rechecked, found
+        held = [{**item, "scope": "original", "author": authored.get(item["id"]), "recheck": assessed.get(item["id"], [])}
+                for item in held]
+        return reply["answer"], reply["sha256"], rechecked, held + found
 
 
     def acknowledge_collation_unknown(self, collation_id: str) -> None:

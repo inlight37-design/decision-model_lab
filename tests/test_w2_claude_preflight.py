@@ -99,6 +99,16 @@ class ClaudePreflightTests(unittest.TestCase):
                 self.assertEqual(report["auth"]["status"], "not_run_preflight_failed")
                 self.assertEqual(launch.call_count, 2)
 
+    def test_help_without_the_default_plans_safe_mode_is_not_ready(self):
+        self.assertIn("--safe-mode", self.exact.spec.argv)                    # 기본 참여자 계획이 쓰는 옵션이다
+        help_text = "\n".join("  " + flag + "  help" for flag in probe.HELP_FLAGS if flag != "--safe-mode")
+        with mock.patch.object(probe.sys, "platform", "linux"), \
+             mock.patch.object(probe.isolation, "run", side_effect=[result("2.1.280 (Claude Code)\n"),
+                                                                    result(help_text)]):
+            report = probe.preflight(self.exact)
+        self.assertIsNone(report["help"]["sections"]["--safe-mode"])
+        self.assertFalse(report["ready_for_review"])
+
     def accepted_summary(self):
         return {"probe": "plain-claude", "spec": self.exact.record(), "argv_changes": [],
                 "gate": "ok", "as_expected": True, "runner_state": "exited", "exit": 0,

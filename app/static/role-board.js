@@ -1060,7 +1060,9 @@ async function previewCollation(run) {
         h("div", { class: "row between" }, h("span", { class: "sm strong" }, `${x.label} ${x.name}`), picker(x)),
         h("p", { class: "sm" }, `맡은 일: ${x.task} · sha256 ${x.sha256.slice(0, 12)}…`),
         x.open.length ? [h("p", { class: "cap muted" }, `남은 지적 ${x.open.length}개(참고로 보냄, 사실 확인 아님)`),
-          h("ul", { class: "stack" }, x.open.map(o => h("li", { class: "sm" }, `[${o.status}] ${o.detail}`)))]
+          h("ul", { class: "stack" }, x.open.map(o => h("li", { class: "sm" }, o.scope === "original"
+            ? `[원래 결과 지적 · 사람 처분 ${o.status} · 작성자 응답 ${o.author || "없음"} · 재검토 ${o.recheck.join(", ") || "없음"}] ${o.detail}`
+            : `[${o.status}] ${o.detail}`)))]
           : h("p", { class: "sm muted" }, "남은 지적 없음"))),
       h("details", {}, h("summary", {}, `오케스트레이터에게 보낼 입력 전문 · ${m.input_bytes}바이트`), h("pre", { class: "input-full" }, m.prompt)),
       h("p", { class: "cap muted" }, "확인 값 ", h("span", { class: "mono hash" }, m.confirmation)), start);
