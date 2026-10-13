@@ -77,7 +77,10 @@ class GeneralCollationTests(support.Base):
         self.assertEqual((mine["pid"], mine["version"], mine["rechecked"], mine["task"]),
                          ("claude", key, True, WORK["claude"]["task"]))
         self.assertEqual(mine["sha256"], run["answer_revisions"][0]["reply"]["sha256"])
-        self.assertEqual({o["from"] for o in mine["open"]}, {"revision", "recheck"})   # 모의 응답은 반례를 남겨 둔다
+        self.assertEqual({o["from"] for o in mine["open"]}, {"review", "revision", "recheck"})   # 모의 응답은 반례를 남겨 둔다
+        held = [o for o in mine["open"] if o["from"] == "review"]                    # 원래 지적은 사람 처분과 따로 간다
+        self.assertTrue(held and all(o["scope"] == "original" and o["status"] == "unresolved" and o["recheck"]
+                                     for o in held))
         self.assertEqual((other["version"], other["rechecked"]), ("original", None))
         self.assertTrue(other["open"] and all(o["from"] == "review" for o in other["open"]))
         self.assertIn(revised, m["prompt"])
@@ -131,6 +134,59 @@ class GeneralCollationTests(support.Base):
             ctl.collate(rid, {"claude": key}, collation_id=m["collation_id"], confirmation=m["confirmation"])
         self.assertEqual(len(ex.started), started)
         self.assertIsNone(self.store.row("SELECT 1 FROM collations"))
+
+    def _claude_findings(self, rid):
+        """claude의 원래 결과를 겨눈 교차검토 지적: (review_id, 번호, 내용)."""
+        found = []
+        for review in self.store.rows("SELECT * FROM reviews WHERE run_id = ? AND state = ?", rid, c.ACCEPTED):
+            targets = json.loads(review["targets"])
+            for index, finding in enumerate(json.loads(review["result"])["reply"]["findings"]):
+                if targets[finding["target"]]["pid"] == "claude":
+                    found.append((review["review_id"], index, finding["detail"]))
+        return found
+
+    def test_a_held_concern_survives_an_addressed_revision_and_its_disposition_binds_the_preview(self):
+        """P4-D1: 작성자가 addressed라고 해도 사람이 보류·받아들인 원래 지적은 고른 수정 판의 입력에 남고, 처분이
+        바뀌면 그 판의 옛 확인 값으로는 시작하지 않는다. 사람이 아니라고 한 지적은 원래 결과 쪽과 같이 뺀다."""
+        ex = Team()
+        ctl = self.controller(ex)
+        rid, key = self.team(ctl, recheck=False)
+        row = self.store.row("SELECT result FROM answer_revisions WHERE revision_id = ?", key)
+        result = json.loads(row["result"])
+        for item in result["reply"]["responses"]:
+            item["status"] = "addressed"                                             # 작성자가 다 고쳤다고 한다
+        with self.store.tx() as tx:
+            tx.execute("UPDATE answer_revisions SET result = ? WHERE revision_id = ?",
+                       json.dumps(result, ensure_ascii=False), key)
+        (review_id, index, detail), *_ = self._claude_findings(rid)
+        for disposition in (None, "unresolved", "qualified"):                       # 처분 없음은 보류다
+            with self.subTest(disposition=disposition):
+                if disposition:
+                    ctl.set_review_disposition(review_id, index, disposition)
+                m = ctl.preview_collation(rid, {"claude": key})
+                mine = m["members"][0]
+                self.assertFalse(mine["rechecked"])
+                held = [o for o in mine["open"] if o["id"] == f"{review_id}:{index}"]
+                self.assertEqual([(o["from"], o["scope"], o["status"], o["author"], o["recheck"], o["detail"])
+                                  for o in held],
+                                 [("review", "original", disposition or "unresolved", "addressed", [], detail)])
+                self.assertIn(f"사람 처분 {disposition or 'unresolved'} · 작성자 응답 addressed · 재검토 없음] {detail}",
+                              m["prompt"])
+        ctl.set_review_disposition(review_id, index, "rejected")
+        self.assertFalse([o for o in ctl.preview_collation(rid, {"claude": key})["members"][0]["open"]
+                          if o["id"] == f"{review_id}:{index}"])
+        ctl.set_review_disposition(review_id, index, "unresolved")
+        m = ctl.preview_collation(rid, {"claude": key})
+        started = len(ex.started)
+        ctl.set_review_disposition(review_id, index, "qualified")                   # 확인 뒤 사람이 처분을 바꾼다
+        with self.assertRaises(c.ControllerError):
+            ctl.collate(rid, {"claude": key}, collation_id=m["collation_id"], confirmation=m["confirmation"])
+        self.assertEqual(len(ex.started), started)
+        self.assertIsNone(self.store.row("SELECT 1 FROM collations"))
+        fresh = ctl.preview_collation(rid, {"claude": key})                          # 다시 확인하면 시작한다
+        ctl.collate(rid, {"claude": key}, collation_id=fresh["collation_id"], confirmation=fresh["confirmation"])
+        self.assertTrue(ctl.wait_idle(SLOW_RUNNER_TIMEOUT))
+        self.assertEqual(self.run_view(ctl, rid)["collations"][0]["state"], c.ACCEPTED)
 
     def test_choices_must_name_a_members_own_accepted_revision(self):
         ctl = self.controller(Team())

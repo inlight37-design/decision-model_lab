@@ -23,7 +23,7 @@ from core import contract, isolation, runner  # noqa: E402
 from tools.redaction import scrub_all  # noqa: E402
 from tools.w2 import observe  # noqa: E402
 
-HELP_FLAGS = ("--output-format", "--tools", "--restricted", "--strict-mcp-config",
+HELP_FLAGS = ("--output-format", "--tools", "--restricted", "--safe-mode", "--strict-mcp-config",
               "--disable-slash-commands", "--no-session-persistence", "--permission-mode")
 LIMITS = {
     "permission_conformance": "insufficient: no active denial evidence in this observation; "

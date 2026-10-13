@@ -66,7 +66,7 @@
 
 일은 `card` 라벨 이슈에서 [협업 규칙](docs/COLLABORATION.md) 3절의 보드 규칙대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #198](https://github.com/inlight37-design/decision-model_lab/pull/198)(`ccr-8740d7c2-0zgljd`) — 사용자가 물어본 토큰 절약 에이전트 mixdog와 다중 에이전트 조정 서버 Concord MCP를 원본 코드로 검토한 [날짜 기록](docs/research/agent-tools-2026-10-12/README.md)을 더했다. 둘 다 도입하지 않고, 다시 볼 조건과 참고할 두 가지(사용량 비교 때 캐시 읽기 분리, 호출마다 추론 강도 = RB-01)만 남겼다. 앱 코드·참여자 계획은 그대로다. 최종 CI와 병합 상태는 PR에서 확인한다.
+- **이 판을 들인 PR:** `claude/p4-review-fixes-20261013` — GPT-6 Pro 검토 7의 두 지적을 고쳤다. P4-D1: 수정 판을 골라 모을 때 원래 결과의 지적이 사람의 지금 처분과 함께 남고, 처분을 바꾸면 옛 미리보기 확인 값으로는 시작하지 않는다([일반 팀원 검토 설계](docs/architecture/general-team-review/README.md) 4절). P4-D2: Claude preflight가 도움말에서 기본 참여자 계획의 `--safe-mode`도 확인한다. 모의 실행기·합성 도움말로만 검사했고 실제 모델·CLI는 부르지 않았다. 최종 CI와 병합 상태는 PR에서 확인한다.
 
 | 사용자만 할 수 있는 것 | 지금 |
 |---|---|
