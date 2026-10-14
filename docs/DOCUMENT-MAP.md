@@ -41,6 +41,7 @@ flowchart TD
 | [외부 기능 후보 목록](research/feature-catalog-2026-10-04/README.md) | Hermes와 다른 도구의 편의·검색·스킬·자동화·연동 후보 | H/O 후보 → 작업 묶음·기대 효용 |
 | [AnchorMind 등 부품 분석](research/component-comparison-2026-10-04/README.md) | 저장·검색·기억 수명·검토·인계의 코드와 대안 비교 | D 후보 → 문맥·기억·근거·원장 책임 |
 | [tmux 등 운영 분석](research/operations-comparison-2026-10-04/README.md) | 실행/연결 분리, 작업 배정·복구·adapter·workflow | OP 후보 → 작업·실행·조회·자동화 책임 |
+| [여러 AI 세션 작업의 불편과 해법](research/session-pain-points-2026-10-14/README.md) | 다른 프로젝트에서 모은 불편, 상황판, Claude Code 공식 기능, 세션 관리·캐시 유지 도구 | 상황판 → 기록·대조 → 부재 모드 단계, 사용자 결정 A–C |
 | [이전 조사와 적용 현황](REFERENCE-MAP.md) | Hermes·tmux 초기 분석, Peek·WorkTrail·다중 AI·Jev 등 | 이미 반영한 원리와 아직 남은 제안을 구별 |
 | [v0.4](architecture/v0.4/README.md), [v0.3](architecture/v0.3/README.md), [v0.2](architecture/v0.2/README.md) | 협업·회계·native CLI·독립성·합성 계약의 기반 | 개편 시 유지할 계약과 평가 조건 |
 
