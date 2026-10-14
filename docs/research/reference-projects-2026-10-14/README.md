@@ -12,7 +12,7 @@
 2. **이 앱의 핵심 흐름(독립 답 → 익명 검토 → 합성)은 이제 흔하다.** cli-council·agent-council·deliberation(모두 MIT)이 같은 일을 한다. 그 코드에 의존하지 말고 참고와 시험 기준으로 쓴다. 원장, 독립성이 확인된 참여자만 세는 정족수, 자손 종료 확인, 호출 상한, 원문 대조를 함께 하는 곳은 없어서 그것이 이 앱의 몫으로 남는다. 2026-09-22 외부 검토와 같은 결론이다.
 3. **배선은 공식 도구 쪽으로 옮길 수 있다.**
    - Codex: OpenAI 공식 파이썬 SDK(app-server)와 OpenAI가 낸 Claude Code용 Codex 플러그인.
-   - Claude: `claude -p`의 새 공식 기능 — `--json-schema`, 도구 호출을 미뤘다가 잇는 `defer`, `--permission-prompts none`, `claude auth status`.
+   - Claude: `claude -p`의 새 공식 기능 — `--json-schema`, 도구 호출을 미뤘다가 잇는 `defer`, `claude auth status`. 문맥을 빼는 공식 옵션(`--restricted`·`--safe-mode`)은 이미 쓴다.
    - Agent SDK와 ACP는 지금은 쓰지 않는다. 로그인 규정이 걸리고, ACP는 남이 만든 번역 계층이 하나 더 생긴다.
 4. **큰 위험 하나.** Claude Code 공식 문서는 `--bare`가 앞으로 `-p`의 기본이 되고, bare 모드는 구독 로그인을 읽지 않는다고 적었다. 그대로 오면 이 앱이 구독으로 Claude를 부르는 방식이 막힌다. WSL에 설치된 판은 2.1.280이고 최신은 2.1.299다. 판을 올리기 전에 확인할 목록에 이것을 넣는다.
 5. **다른 프로젝트의 불편 일부는 오늘 바로 쓸 도구가 있다.** 이 앱을 고치지 않고 그 프로젝트에서 먼저 쓸 수 있다.
@@ -58,11 +58,11 @@
 
 | 프로젝트 | 라이선스·활동 | 하는 일 | 가져올 것 | 판단 |
 |---|---|---|---|---|
-| [codex-plugin-cc](https://github.com/openai/codex-plugin-cc)(OpenAI 공식) | Apache-2.0, 2026-07-08 | Claude Code 안에서 Codex에게 검토·위임을 맡긴다. `codex app-server`로 스레드를 열고 승인 정책은 기본 `never`, 검토는 읽기 전용 | 검토 결과 스키마(판정·지적·파일·줄·확신도), 운영체제별 프로세스 트리 종료, 상태·결과·취소 명령 | **참고하고 다른 프로젝트에서는 바로 써 볼 만하다.** 웹 AI를 손으로 오가던 검토(P16)를 Claude Code 안에서 공식 도구로 한다. 다만 위임(`rescue`)은 기본이 쓰기 가능이다 |
+| [codex-plugin-cc](https://github.com/openai/codex-plugin-cc)(OpenAI 공식) | Apache-2.0, 2026-07-08 | Claude Code 안에서 Codex에게 검토·위임을 맡긴다. `codex app-server`로 스레드를 열고 승인 정책은 기본 `never`, 검토는 읽기 전용 | 검토 결과 스키마(판정·지적·파일·줄·확신도), 상태·결과·취소 명령 | **참고하고 다른 프로젝트에서는 바로 써 볼 만하다.** 웹 AI를 손으로 오가던 검토(P16)를 Claude Code 안에서 공식 도구로 한다. 다만 위임(`rescue`)은 기본이 쓰기 가능이다 |
 | [openai-codex](https://github.com/openai/codex/tree/5670b1c18e861e5f89bafaff768b86ed579edd81/sdk/python)(OpenAI 공식 파이썬 SDK, PyPI 0.162.1) | Apache-2.0 | `codex app-server`를 감싼 라이브러리. 스레드 시작(샌드박스·승인 모드), 실행, 스트림, 출력 스키마, 이어 부르기 | 이 앱의 Codex 쪽 명령 조립·JSONL 해석·이어 부르기 | **시험 후보.** 기본 승인 모드가 `auto_review`라 명시적으로 막아야 하고, 닫을 때 직계 자식만 끝내므로 이 앱의 자손 종료 확인은 남긴다. 설치된 Codex 0.156.1과 프로토콜이 맞는지는 확인하지 않았다 |
-| Claude Code 공식 옵션 | — | `claude -p`의 `--json-schema`(검증된 JSON 출력), `--no-session-persistence`, `--restricted`, `--permission-prompts none`, 그리고 `claude auth status`(로그인 방식 JSON, 모델 호출 없음) | 형식 모듈의 자유 글 해석 대신 스키마 출력, 로그인 방식 확인 | **바로 쓸 수 있다.** Agent SDK는 Anthropic이 제3자 제품이 claude.ai 로그인을 제공하는 것을 허락하지 않는다고 적어 쓰지 않는다([Agent SDK 개요](https://code.claude.com/docs/en/agent-sdk/overview)). Codex 0.156.1의 `exec`도 `--output-schema`·`--ephemeral`이 있다([관측한 help](../../experiments/v04-01-inventory/hosts/aux-pc-wsl/help/codex-2.txt)) |
-| [cli-council](https://github.com/LARIkoz/cli-council) | MIT, 2026-07 시작, 별 0 | 파이썬 표준 라이브러리만으로 이 앱과 같은 흐름: 첫 의견을 동시에 → "Response A/B" 익명 순위 → Borda 합산 → 의장 합성 → 감사·레드팀 | [익명화·순위·의장](https://github.com/LARIkoz/cli-council/blob/b47b43b573e06c344544e0dacbab8d124fff2c3a/council/stages.py#L99-L211), [판정·순위 해석기](https://github.com/LARIkoz/cli-council/blob/b47b43b573e06c344544e0dacbab8d124fff2c3a/council/aggregate.py#L48-L95), 빈 출력은 실패로 보는 규칙 | 참고와 시험 기준으로. 한 사람이 만든 새 프로젝트이고 샌드박스가 없다 |
-| [agent-council](https://github.com/yogirk/agent-council) | MIT, 2026-04, 별 91 | 세 CLI를 동시에 부르고, 2/3이 오면 30초 기다린 뒤 진행(정족수 N−1). 익명 검토 선택. 부른 CLI가 의장 | [오류 분류·사전 점검](https://github.com/yogirk/agent-council/blob/f6d1e1ad9c6597c03e7922f2bae41c73b7b760b2/src/adapters.ts#L86-L162), 세 CLI의 실제 출력 견본(시험 자료) | 실패한 참여자를 빼고 진행하는 방식(K3)의 참고 |
+| Claude Code 공식 옵션 | — | `claude -p`의 `--json-schema`(검증된 JSON 출력)와 `claude auth status`(로그인 방식 JSON, 모델 호출 없음). 이 앱의 참여자 명령은 이미 `--restricted`·`--safe-mode`·`--no-session-persistence`·`--permission-mode dontAsk`를 쓴다([adapters](../../../core/adapters.py)) | 형식 모듈의 자유 글 해석 대신 스키마 출력, 로그인 방식 확인 | **바로 쓸 수 있다.** Agent SDK는 Anthropic이 제3자 제품이 claude.ai 로그인을 제공하는 것을 허락하지 않는다고 적어 쓰지 않는다([Agent SDK 개요](https://code.claude.com/docs/en/agent-sdk/overview)). Codex 0.156.1의 `exec`도 `--output-schema`·`--ephemeral`이 있다([관측한 help](../../experiments/v04-01-inventory/hosts/aux-pc-wsl/help/codex-2.txt)) |
+| [cli-council](https://github.com/LARIkoz/cli-council) | MIT, 2026-07 시작, 별 0 | 파이썬 표준 라이브러리만으로 이 앱과 같은 흐름: 첫 의견을 동시에 → "Response A/B" 익명 순위 → Borda 합산 → 의장 합성 → 감사·레드팀 | [익명화·순위·의장](https://github.com/LARIkoz/cli-council/blob/b47b43b573e06c344544e0dacbab8d124fff2c3a/council/stages.py#L99-L211), [판정·순위 해석기](https://github.com/LARIkoz/cli-council/blob/b47b43b573e06c344544e0dacbab8d124fff2c3a/council/aggregate.py#L48-L95) | 참고와 시험 기준으로. 한 사람이 만든 새 프로젝트이고 샌드박스가 없다 |
+| [agent-council](https://github.com/yogirk/agent-council) | MIT, 2026-04, 별 91 | 세 CLI를 동시에 부르고, 2/3이 오면 30초 기다린 뒤 진행(정족수 N−1). 익명 검토 선택. 부른 CLI가 의장 | [오류 분류](https://github.com/yogirk/agent-council/blob/f6d1e1ad9c6597c03e7922f2bae41c73b7b760b2/src/adapters.ts#L86-L95)(stderr로 인증·한도·시간 초과·형식·시작 실패를 나눈다 — K3의 "일시적 실패만 한 번 다시"에 쓴다), 세 CLI의 실제 출력 견본(시험 자료). 사전 점검은 모델을 한 번 부르므로 빌리지 않는다 | 실패한 참여자를 빼고 진행하는 방식(K3)의 참고 |
 | [deliberation](https://github.com/antonbabenko/deliberation) | MIT, 2026-10-11, 별 172 | MCP 서버. Codex는 `--sandbox read-only`, 자식 환경에서 `OPENAI_API_KEY`를 뺀다(키가 있어 조용히 과금된 일이 있었다고 적음), 600초 상한. blind 선제출이 끝나야 서로 공개, 정족수 하한, 회로 차단 | [Codex 실행·환경 정리](https://github.com/antonbabenko/deliberation/blob/dc4e3e1856e681ad02433566e0cfe4adbb6051ad/core/providers/codex.js#L97-L124), [공개 관문](https://github.com/antonbabenko/deliberation/blob/dc4e3e1856e681ad02433566e0cfe4adbb6051ad/core/consensus-loop.js#L252-L263) | 이 앱의 공개 규칙·환경 정책과 대조할 참고 |
 
 **쓰지 않을 것.**
@@ -78,7 +78,7 @@
 
 | 무엇 | 하는 일 | 불편 | 판단 |
 |---|---|---|---|
-| `claude -p`의 새 공식 기능 | `defer`: PreToolUse 훅이 도구 호출을 미루면 `-p` 실행이 `tool_deferred`로 끝나고, 부른 쪽이 답을 받아 `--resume`으로 이어 간다(`-p`에서만, 한 차례에 도구 호출이 하나일 때). `--permission-prompts none`: 답할 사람이 없으면 거절한다. `claude auth status`: 로그인 방식을 JSON으로 준다 | P6, P11 | **이 앱의 승인 수신함을 여기에 얹는다.** 승인을 창마다 묻지 않고 앱의 한 목록에서 받는다([훅 문서](https://code.claude.com/docs/en/hooks) "Defer a tool call for later") |
+| `claude -p`의 새 공식 기능 | `defer`: PreToolUse 훅이 도구 호출을 미루면 `-p` 실행이 `tool_deferred`로 끝나고, 부른 쪽이 답을 받아 `--resume`으로 이어 간다(`-p`에서만, 한 차례에 도구 호출이 하나일 때). `--permission-prompts none`: 승인을 받는 쪽(SDK 앱이나 `--permission-prompt-tool`)이 있는 실행에서 답할 사람이 없으면 기다리지 않고 거절한다 — 자리 비움 작업용이다. 이 앱의 참여자는 이미 `dontAsk`로 미리 허락하지 않은 호출을 거절한다. `claude auth status`: 로그인 방식을 JSON으로 준다 | P6, P11 | **이 앱의 승인 수신함을 여기에 얹는다.** 승인을 창마다 묻지 않고 앱의 한 목록에서 받는다([훅 문서](https://code.claude.com/docs/en/hooks) "Defer a tool call for later") |
 | [Claude Agent SDK](https://github.com/anthropics/claude-agent-sdk-python)(파이썬 MIT, TS 비공개) | `claude`를 stream-json으로 띄우고 승인 콜백·훅·이어 부르기를 준다. 실험 기능 `get_usage`가 5시간·주간 한도 이용률을 준다 | P6, P10 | **의존하지 않고 코드만 참고한다.** 공식 문서가 제3자 제품이 claude.ai 로그인을 제공하는 것을 허락하지 않는다([법적 고지](https://code.claude.com/docs/en/legal-and-compliance)). SDK 패키지는 기본으로 자기 안에 든 `claude` 실행 파일을 써서, 이 앱이 판을 고정해 관측한 실행 파일과 달라진다(`cli_path`로 바꿀 수는 있다). `get_usage`는 이름부터 "바뀔 수 있으니 기대지 말라"는 실험 기능이다 |
 | Codex app-server와 공식 파이썬 SDK | 승인 요청에 accept·acceptForSession·decline·cancel로 답한다. `account/rateLimits/read`로 한도를 읽고, `thread/resume`+`turn/start`로 끝난 작업을 이어 깨운다 | P6, P10, P11 | **시험 후보**(§3.1). 이 앱은 이미 app-server로 Codex 한도를 읽는다 |
 | ACP 어댑터([claude-agent-acp](https://github.com/agentclientprotocol/claude-agent-acp)·[codex-acp](https://github.com/agentclientprotocol/codex-acp), Apache-2.0)와 파이썬 SDK | 세션·승인 요청 중계·취소·스트림을 한 규약으로 묶는다 | P6 | **지금은 아니다.** 공식 경로 둘 위에 남이 만든 번역 계층을 하나 더 얹는다. 2026-09-23 이후 codex-acp는 호환이 깨지는 2.0.0을 포함해 새 판을 일곱 번 냈고, 한도 칸이 표준에 없다. 세 번째 에이전트를 붙일 때 다시 본다 |
@@ -124,6 +124,12 @@
 | Docker Sandboxes(`sbx`), container-use | 닫힌 바이너리("All rights reserved") / Apache-2.0 실험 기능 | 에이전트마다 microVM이나 컨테이너를 준다 | 계정·로그인 조건과 WSL2 궁합을 확인하지 않았다. 지금은 아니다 |
 
 **관측 제도는 샌드박스로 없어지지 않는다.** 관측은 CLI가 자기 설정 폴더에서 사용자 지시문·플러그인·연결 앱·훅을 모델 문맥에 싣는지를 본다. 어느 샌드박스도 그것을 대신 보장하지 않는다. 그래서 K1을 푸는 길은 샌드박스 교체가 아니라 정책(일상 모드)이다.
+
+문맥을 빼는 일 자체는 이미 실행 옵션이 한다([adapters](../../../core/adapters.py)).
+- Claude: 공식 문서에 따르면 `--safe-mode`는 CLAUDE.md·스킬·플러그인·훅·MCP·자동 메모리를 싣지 않고 로그인은 그대로 둔다([CLI 문서](https://code.claude.com/docs/en/cli-reference)).
+- Codex: 설정값으로 연결 앱·플러그인·작업 폴더 지시문을 끄고, 전역 지시문·훅 파일이 있으면 실행 전에 거절한다. 다만 플러그인을 끄는 키는 공식 설정 참조에 없어 관측으로만 뜻을 확인했다. 판이 바뀔 때 위험은 이쪽이 더 크다.
+
+관측은 이 옵션들이 설치된 판에서 실제로 지켜지는지 보는 확인이다. 그래서 일상 모드는 옵션과 실행 전 검사를 믿고 돌리고, 엄격 비교만 관측을 요구하는 나눔이 자연스럽다.
 
 **GPU·작업 큐·온도·작업 공간(P3·P14·P15·P21) — 다른 프로젝트에서 바로 쓸 것.**
 
