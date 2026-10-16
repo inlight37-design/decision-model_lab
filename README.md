@@ -11,7 +11,7 @@ Jev류 판단 모델은 교체 가능한 선택 부품이며, 전체 시스템�
 
 ## 이어서 작업한다면
 
-**[NEXT-SESSION.md](NEXT-SESSION.md)부터 읽습니다.** 환경, 확정된 방침, 열린 결정, 다음 작업이 한 장에 있습니다. **새 컴퓨터에서 처음 연다면 [docs/SETUP.md](docs/SETUP.md)를 먼저 합니다** — PowerShell 명령 한 줄이 도구·clone·WSL·Ubuntu·CLI·로그인·확인을 순서대로 진행하고, 사람은 관리자 승인·Ubuntu 사용자·브라우저 로그인 승인만 합니다. 현재 남은 일은 [후속 우선순위](docs/FEATURES.md#후속-우선순위)와 인계 4절이 기준입니다. [9월 25일 검토 요청서](docs/reviews/2026-09-25-review-request/README.md)는 당시 문제와 판단의 근거로 보존합니다.
+**이 저장소는 2026-10-14부터 참고용으로 멈춰 있습니다**([인계](NEXT-SESSION.md) 2절 28, 이유는 [방향 검토](docs/reviews/2026-10-14-direction-review/README.md)). 다시 열거나 부품을 가져갈 때도 **[NEXT-SESSION.md](NEXT-SESSION.md)부터 읽습니다.** 환경, 확정된 방침, 열린 결정, 다음 작업이 한 장에 있습니다. **새 컴퓨터에서 처음 연다면 [docs/SETUP.md](docs/SETUP.md)를 먼저 합니다** — PowerShell 명령 한 줄이 도구·clone·WSL·Ubuntu·CLI·로그인·확인을 순서대로 진행하고, 사람은 관리자 승인·Ubuntu 사용자·브라우저 로그인 승인만 합니다. 현재 남은 일은 [후속 우선순위](docs/FEATURES.md#후속-우선순위)와 인계 4절이 기준입니다. [9월 25일 검토 요청서](docs/reviews/2026-09-25-review-request/README.md)는 당시 문제와 판단의 근거로 보존합니다.
 
 | 갈래 | 위치 |
 |---|---|
