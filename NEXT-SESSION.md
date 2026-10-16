@@ -69,7 +69,7 @@
 
 일은 `card` 라벨 이슈에서 [협업 규칙](docs/COLLABORATION.md) 3절의 보드 규칙대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** PR_PLACEHOLDER(`claude/auto-merge-20261016`) — 자동 병합을 켜고 Windows 검사를 필수로 넣은 사용자 결정을 2절 8에 적었다. 앱 코드는 그대로다. 최종 CI와 병합 상태는 PR에서 확인한다.
+- **이 판을 들인 PR:** [PR #203](https://github.com/inlight37-design/decision-model_lab/pull/203)(`claude/auto-merge-20261016`) — 자동 병합을 켜고 Windows 검사를 필수로 넣은 사용자 결정을 2절 8에 적었다. 앱 코드는 그대로다. 최종 CI와 병합 상태는 PR에서 확인한다.
 
 | 사용자만 할 수 있는 것 | 지금 |
 |---|---|
