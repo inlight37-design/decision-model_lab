@@ -69,7 +69,7 @@
 
 일은 `card` 라벨 이슈에서 [협업 규칙](docs/COLLABORATION.md) 3절의 보드 규칙대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** PR_PLACEHOLDER(`claude/direction-review-20261014`) — "목표대로 가고 있나"를 Gemini·ChatGPT에 물은 [방향 검토](docs/reviews/2026-10-14-direction-review/README.md)의 원문·비교를 더하고, 이 저장소를 멈춘 사용자 결정(2절 28)을 적었다. 앱 코드·참여자 계획은 그대로다. 최종 CI와 병합 상태는 PR에서 확인한다.
+- **이 판을 들인 PR:** [PR #202](https://github.com/inlight37-design/decision-model_lab/pull/202)(`claude/direction-review-20261014`) — "목표대로 가고 있나"를 Gemini·ChatGPT에 물은 [방향 검토](docs/reviews/2026-10-14-direction-review/README.md)의 원문·비교를 더하고, 이 저장소를 멈춘 사용자 결정(2절 28)을 적었다. 앱 코드·참여자 계획은 그대로다. 최종 CI와 병합 상태는 PR에서 확인한다.
 
 | 사용자만 할 수 있는 것 | 지금 |
 |---|---|
