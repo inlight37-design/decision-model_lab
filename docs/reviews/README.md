@@ -87,6 +87,7 @@
 | [`2026-10-05-architecture-adoption/`](2026-10-05-architecture-adoption/README.md) | 현재 구조·실행/기억/결과 판·작업 복귀의 코드 대조와 합성 재현, 수집한 기능 후보 전체의 현재 상태·이식 상한·우선순위·검증 조건. [PR #184](https://github.com/inlight37-design/decision-model_lab/pull/184). CR-01은 [PR #188](https://github.com/inlight37-design/decision-model_lab/pull/188)에서 고쳤다 |
 | [`2026-10-08-mixdog/`](2026-10-08-mixdog/README.md) | claude(웹 컨테이너)의 mixdog 기능·코드 검토. 공식 CLI를 흉내 낸 직접 호출이라 설치·도입하지 않음, 봉인·교차검토 기능은 없음. 한도 이력 표·원장 중복 방지·압축 인계 칸·기억 주입 상한·큰 출력 보존 등 설계만 참고할 후보와 붙일 곳, 가져오지 말 것, 라이선스. 설치·실행·모델 호출 없음. [PR #187](https://github.com/inlight37-design/decision-model_lab/pull/187) |
 | [`2026-10-09-main-pc-reobserve/`](2026-10-09-main-pc-reobserve/README.md) | claude(주 PC WSL)의 `main-pc-wsl` 재관측. SETUP 4절의 대조 다섯 번(Claude 2·Codex 3)이 모두 기대대로, 판·계획은 2026-09-26 기록과 같다. 이 PC에 등록, 준비 조회 두 provider 허가. 2026-11-09부터 만료 |
+| [`2026-10-14-direction-review/`](2026-10-14-direction-review/README.md) | "목표대로 가고 있나"를 Gemini("Argon", 첨부)와 ChatGPT("Pro", GitHub 플러그인)에 따로 물은 방향 검토. 요청 세션이 먼저 쓴 판단, 두 답 원문, 비교·사실 확인과 새 저장소로 넘길 점. 셋 다 "목표에서 벗어났다"였고, 사용자는 Gemini 답을 본 뒤 이 저장소를 참고용으로 멈추고 새 비공개 저장소에서 다시 만들기로 했다. 정리는 2026-10-16 claude(주 PC Windows), 모델 CLI 호출 없음 |
 
 ## 읽는 순서
 
@@ -100,6 +101,7 @@
 - 2026-09-25에 끝난 일회성 도구를 뺐다: `tools/smoke_review_preview.py`, `tools/v04-03/`, `tools/review_boundary.py`, `tools/w2/`의 `cli_boundary.py`·`auth_mounts.py`·`codex_sandbox.py`·`codex_account.py`(시험 포함). 앞의 기록에서 그 파일로 가던 상대 링크는 마지막으로 있던 main `01cedd3`의 GitHub 주소로 고정했다.
 - 2026-09-27에 V04-01의 Windows 네이티브 조사 도구 `tools/v04-01/probe.ps1`·`summarize_claude_init.py`(시험 포함)를 뺐다([카드 #149](https://github.com/inlight37-design/decision-model_lab/issues/149)). 그 파일로 가던 상대 링크는 마지막으로 있던 main `af90a9f`의 GitHub 주소로 고정했다. 절차서가 맡던 확인 절차는 [SETUP](../SETUP.md) 4절로 옮겼다.
 - [초기 D 결과](../experiments/2026-09-24-comparison-pilot/RESULTS.md) "읽는 법과 한계"의 T2 "인용은 모두 진짜였지만"은 같은 파일의 원문 일치 표(T2 9/10)와 다르다 — 표가 맞다. 맞게 인용된 틀린 설명이 옮겨졌다는 결론은 그대로다([외부 검토](2026-09-25-review/README.md) R07).
+- [긴 자료 결과](../experiments/2026-09-25-long-sources/RESULTS.md)와 [9월 25일 요청서](2026-09-25-review-request/README.md) C5의 "약 33배"는 Claude CLI가 낸 API 환산 추정액의 비율이다. 구독 사용량이 그만큼 늘었다는 뜻으로 읽지 않는다 — 전후 한도 차감은 재지 않았다([방향 검토](2026-10-14-direction-review/README.md) 5절, ChatGPT 2-1).
 
 아래 번호 목록(1–38)은 2026-09-24까지의 기록을 시간순으로 적은 것이다. 뒤의 '단서' 절이 그 번호로 가리키므로 **고치지 않고 남긴다.** 그 뒤의 기록은 위 표에만 있다. 뒤로 갈수록 최신이며, 앞의 것은 그 시점의 기록으로 남긴다.
 
