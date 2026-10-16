@@ -1,8 +1,8 @@
 # 다음 세션 인계 — decision-model_lab
 
-최종 갱신 **2026-10-16** · 작성 세션: claude(주 PC Windows 쪽 — 방향 검토 기록 정리, 모델 호출 없음) · 브랜치 `claude/direction-review-20261014`.
+최종 갱신 **2026-10-16** · 작성 세션: claude(주 PC Windows 쪽 — 자동 병합 설정, 모델 호출 없음) · 브랜치 `claude/auto-merge-20261016`.
 
-**이 저장소는 2026-10-14부터 참고용으로 멈춰 있다(2절 28).** 새 작업은 사용자의 비공개 저장소 [ai-workbench](https://github.com/inlight37-design/ai-workbench)에서 한다. 이유와 두 외부 검토는 [방향 검토](docs/reviews/2026-10-14-direction-review/README.md)에 있다. 아래는 이 저장소를 다시 열거나 부품을 가져갈 때의 상태다.
+**이 저장소는 2026-10-14부터 참고용으로 멈춰 있다(2절 28).** 새 작업은 사용자의 비공개 저장소 [ai-workbench](https://github.com/inlight37-design/ai-workbench)에서 한다. 이유와 두 외부 검토는 [방향 검토](docs/reviews/2026-10-14-direction-review/README.md)에 있다.
 
 이 파일은 **지금 상태와 다음 일만** 담는다. 끝난 일의 경위는 PR·git 이력과 날짜가 붙은 기록에 있고, 옛 판은 [docs/handoff/](docs/handoff/README.md)에 있다. **3절에는 진행 중인 일과 "이 판을 들인 PR" 한 줄만 둔다** — 새 PR은 그 줄을 자기 PR로 바꾸고, 병합 전에도 뒤에도 맞는 말만 쓴다("병합했다"고 미리 적지 않는다). 크기 상한과 3절의 모양은 CI가 본다. [AGENTS.md](AGENTS.md)와 [협업 규칙](docs/COLLABORATION.md)에 있는 규칙은 여기 다시 적지 않는다 — 쌓임을 막는 원칙은 협업 규칙 7절이다.
 
@@ -43,7 +43,7 @@
 5. **상태 표시에 자원을 과하게 쓰지 않는다.** 사용량이나 색을 보여 주려고 모델을 더 부르지 않는다.
 6. 공식 native 구독 CLI가 우선이다. API·추가 크레딧은 명시적 opt-in만. `agy`는 Gemini CLI가 아니다.
 7. 논의자는 읽기 전용, 구현자는 한 writer. 합의는 검증이 아니다. blind 초안·반례·미합의·호출 예산을 보존한다.
-8. **여러 AI가 함께 작업한다.** [협업 규칙](docs/COLLABORATION.md)을 따른다. main 병합은 사용자가 하거나, CI 녹색을 확인한 claude 세션이 한다(사용자 허락). (2026-09-23)
+8. **여러 AI가 함께 작업한다.** [협업 규칙](docs/COLLABORATION.md)을 따른다. main 병합은 사용자가 하거나, CI 녹색을 확인한 claude 세션이 한다(사용자 허락). (2026-09-23) 2026-10-16부터 claude 세션은 PR을 올리면 GitHub 자동 병합을 걸어 둔다 — 필수 검사(Linux 3.12·3.13, Windows)가 모두 녹색일 때만 GitHub이 병합한다. 그 뒤 사용자 clone의 `git pull --ff-only`는 다음 세션이 시작할 때 한다(사용자).
 9. **V04-01은 절차서로 진행한다.** 로그인은 사용자가 직접 한다. 설치는 사용자 승인을 받고 AI 세션이 실행해도 된다. (2026-09-23)
 10. **첫 V04-01은 보조 PC(`aux-pc`)에서 한다.** 운용 PC는 필요할 때 따로 기록한다. (2026-09-23)
 11. **GitHub이 유일한 공유 지점이다.** ChatGPT 웹 세션은 GitHub만 보므로 커밋은 바로 push하고, 끝난 작업은 제때 main에 반영한다. (2026-09-23)
@@ -69,7 +69,7 @@
 
 일은 `card` 라벨 이슈에서 [협업 규칙](docs/COLLABORATION.md) 3절의 보드 규칙대로 가져간다. 카드의 상태는 이슈 라벨이 기준이고 여기에 다시 적지 않는다.
 
-- **이 판을 들인 PR:** [PR #202](https://github.com/inlight37-design/decision-model_lab/pull/202)(`claude/direction-review-20261014`) — "목표대로 가고 있나"를 Gemini·ChatGPT에 물은 [방향 검토](docs/reviews/2026-10-14-direction-review/README.md)의 원문·비교를 더하고, 이 저장소를 멈춘 사용자 결정(2절 28)을 적었다. 앱 코드·참여자 계획은 그대로다. 최종 CI와 병합 상태는 PR에서 확인한다.
+- **이 판을 들인 PR:** [PR #203](https://github.com/inlight37-design/decision-model_lab/pull/203)(`claude/auto-merge-20261016`) — 자동 병합을 켜고 Windows 검사를 필수로 넣은 사용자 결정을 2절 8에 적었다. 앱 코드는 그대로다. 최종 CI와 병합 상태는 PR에서 확인한다.
 
 | 사용자만 할 수 있는 것 | 지금 |
 |---|---|
